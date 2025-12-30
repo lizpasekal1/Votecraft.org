@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Votecraft - Find Your Legislators</title>
+    <link rel="stylesheet" href="src/css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS for maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+    <div class="votecraft-widget">
+        <header class="widget-header">
+            <h1>Find Your Legislators</h1>
+            <p>Enter your address to see who represents you</p>
+        </header>
+
+        <!-- Main Content Area -->
+        <div id="main-content" class="main-content">
+            <!-- Address Input (always visible at top) -->
+            <div id="address-section" class="address-section">
+                <div class="address-form">
+                    <input
+                        type="text"
+                        id="address-input"
+                        placeholder="Enter your address or zip code..."
+                        autocomplete="street-address"
+                    >
+                    <button id="use-location-btn" class="btn-location" title="Use my current location">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <line x1="12" y1="2" x2="12" y2="6"></line>
+                            <line x1="12" y1="18" x2="12" y2="22"></line>
+                            <line x1="2" y1="12" x2="6" y2="12"></line>
+                            <line x1="18" y1="12" x2="22" y2="12"></line>
+                        </svg>
+                    </button>
+                    <button id="lookup-btn" class="btn-primary">
+                        Search
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading Overlay -->
+            <div id="loading-screen" class="loading-overlay">
+                <div class="loader"></div>
+                <p>Finding your legislators...</p>
+            </div>
+
+            <!-- Results Header (hidden until search) -->
+            <div id="results-header" class="results-header" style="display: none;">
+                <p id="searched-address" class="searched-address"></p>
+            </div>
+
+            <!-- Two Column Layout (always visible with placeholder) -->
+            <div class="results-layout">
+                <!-- Left Column: Legislators List -->
+                <div class="results-column results-left">
+                    <div id="legislators-list" class="legislators-list">
+                        <!-- Federal Section -->
+                        <div id="federal-section" class="legislator-section">
+                            <h2 class="section-title">Federal Legislators</h2>
+                            <div id="federal-list" class="legislator-group"></div>
+                        </div>
+
+                        <!-- State Section -->
+                        <div id="state-section" class="legislator-section">
+                            <h2 class="section-title">State Legislators</h2>
+                            <div id="state-list" class="legislator-group"></div>
+                        </div>
+                    </div>
+                    <p class="disclaimer">This tool is provided as a courtesy. For official information, contact your Secretary of State.</p>
+                </div>
+
+                <!-- Right Column: Map -->
+                <div class="results-column results-right">
+                    <div id="map-container" class="map-container">
+                        <div id="map"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Message (inline) -->
+            <div id="error-screen" class="error-inline" style="display: none;">
+                <div class="error-message">
+                    <span class="error-icon">!</span>
+                    <p id="error-text">We couldn't find legislators for that address. Please try again.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS for maps -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="src/js/civic-api.js"></script>
+    <script src="src/js/app.js"></script>
+</body>
+</html>
