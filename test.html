@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <h1>Votecraft API Test</h1>
+    <input type="text" id="address" value="350 5th Ave, New York, NY 10118" style="width: 300px;">
+    <button onclick="testAPI()">Test API</button>
+    <pre id="output" style="background: #f0f0f0; padding: 20px; margin-top: 20px;"></pre>
+
+    <script src="src/js/civic-api.js"></script>
+    <script>
+        async function testAPI() {
+            const output = document.getElementById('output');
+            const address = document.getElementById('address').value;
+
+            output.textContent = 'Testing...\n\n';
+
+            try {
+                // Step 1: Test geocoding
+                output.textContent += '1. Geocoding address...\n';
+                const coords = await CivicAPI.geocodeAddress(address);
+                output.textContent += `   Coordinates: ${coords.lat}, ${coords.lng}\n\n`;
+
+                // Step 2: Test OpenStates API
+                output.textContent += '2. Fetching legislators...\n';
+                const legislators = await CivicAPI.getStateLegislators(coords.lat, coords.lng);
+                output.textContent += `   Found ${legislators.results?.length || 0} legislators\n\n`;
+
+                // Step 3: Parse and display
+                output.textContent += '3. Legislators:\n';
+                if (legislators.results) {
+                    legislators.results.forEach(p => {
+                        output.textContent += `   - ${p.name} (${p.party}) - ${p.current_role?.title || 'Unknown'}\n`;
+                    });
+                }
+
+                output.textContent += '\n\nSUCCESS!';
+
+            } catch (error) {
+                output.textContent += `\nERROR: ${error.message}\n`;
+                console.error('Full error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

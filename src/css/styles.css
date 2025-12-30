@@ -37,7 +37,7 @@ body {
     max-width: 1000px;
     background: var(--background);
     border-radius: var(--radius);
-    box-shadow: var(--shadow);
+    box-shadow: none;
     overflow: hidden;
 }
 
