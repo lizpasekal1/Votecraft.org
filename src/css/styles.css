@@ -498,6 +498,12 @@ body {
     background: var(--background);
 }
 
+.placeholder-icon {
+    color: #008BFF;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
 .placeholder-item .legislator-name {
     color: var(--text-light);
 }
