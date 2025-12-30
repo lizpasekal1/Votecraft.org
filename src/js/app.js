@@ -47,7 +47,7 @@ class VotecraftApp {
         this.federalSection.style.display = 'flex';
         this.federalList.innerHTML = `
             <div class="legislator-item placeholder-item">
-                <div class="legislator-photo">🏛️</div>
+                <div class="legislator-photo placeholder-icon">?</div>
                 <div class="legislator-info">
                     <div class="legislator-name">Your U.S. Senator</div>
                     <div class="legislator-details">
@@ -57,7 +57,7 @@ class VotecraftApp {
                 <span class="chamber-badge upper">Senate</span>
             </div>
             <div class="legislator-item placeholder-item">
-                <div class="legislator-photo">🏛️</div>
+                <div class="legislator-photo placeholder-icon">?</div>
                 <div class="legislator-info">
                     <div class="legislator-name">Your U.S. Representative</div>
                     <div class="legislator-details">
@@ -72,7 +72,7 @@ class VotecraftApp {
         this.stateSection.style.display = 'flex';
         this.stateList.innerHTML = `
             <div class="legislator-item placeholder-item">
-                <div class="legislator-photo">🏢</div>
+                <div class="legislator-photo placeholder-icon">?</div>
                 <div class="legislator-info">
                     <div class="legislator-name">Your State Senator</div>
                     <div class="legislator-details">
@@ -82,7 +82,7 @@ class VotecraftApp {
                 <span class="chamber-badge upper">Senate</span>
             </div>
             <div class="legislator-item placeholder-item">
-                <div class="legislator-photo">🏢</div>
+                <div class="legislator-photo placeholder-icon">?</div>
                 <div class="legislator-info">
                     <div class="legislator-name">Your State Representative</div>
                     <div class="legislator-details">
