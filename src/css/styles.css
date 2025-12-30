@@ -1,0 +1,576 @@
+/* Votecraft Widget Styles - Plural Policy inspired */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --upper-chamber: #14CCB0;  /* Teal for Senate/Upper */
+    --lower-chamber: #FFC280;  /* Orange for House/Lower */
+    --democrat: #3b82f6;
+    --republican: #ef4444;
+    --background: #ffffff;
+    --background-alt: #f8fafc;
+    --text: #1e293b;
+    --text-light: #64748b;
+    --border: #e2e8f0;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --radius: 8px;
+}
+
+body {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--background-alt);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+}
+
+.votecraft-widget {
+    width: 100%;
+    max-width: 1000px;
+    background: var(--background);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+/* Header */
+.widget-header {
+    background: var(--background);
+    padding: 24px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+}
+
+.widget-header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.75rem;
+    font-weight: 400;
+    margin-bottom: 4px;
+    color: var(--text);
+}
+
+.widget-header p {
+    color: var(--text-light);
+    font-size: 0.95rem;
+}
+
+/* Main Content */
+.main-content {
+    padding: 24px;
+    position: relative;
+}
+
+/* Address Section */
+.address-section {
+    margin-bottom: 24px;
+}
+
+/* Address Form */
+.address-form {
+    display: flex;
+    gap: 12px;
+}
+
+#address-input {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 1rem;
+    font-family: inherit;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#address-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.btn-primary {
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: inherit;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+}
+
+.btn-location {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    color: var(--primary);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+    flex-shrink: 0;
+}
+
+.btn-location:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.btn-location svg {
+    flex-shrink: 0;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 100;
+}
+
+.loading-overlay.active {
+    display: flex;
+}
+
+.loader {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-overlay p {
+    color: var(--text-light);
+}
+
+/* Results */
+.results-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.btn-back {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 0.9rem;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 8px 0;
+}
+
+.btn-back:hover {
+    text-decoration: underline;
+}
+
+.searched-address {
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+/* Two Column Layout */
+.results-layout {
+    display: flex;
+    gap: 24px;
+}
+
+.results-column {
+    flex: 1;
+}
+
+.results-left {
+    flex: 1;
+    min-width: 0;
+}
+
+.results-right {
+    flex: 0 0 350px;
+    position: sticky;
+    top: 24px;
+    align-self: flex-start;
+}
+
+/* Map Container */
+.map-container {
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+#map {
+    height: 400px;
+    width: 100%;
+    background: #f8f9fa;
+}
+
+/* Custom Map Marker */
+.custom-marker {
+    background: none;
+    border: none;
+}
+
+.marker-pin {
+    width: 24px;
+    height: 24px;
+    border-radius: 50% 50% 50% 0;
+    background: var(--primary);
+    position: absolute;
+    transform: rotate(-45deg);
+    left: 50%;
+    top: 50%;
+    margin: -20px 0 0 -12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.marker-pin::after {
+    content: '';
+    width: 12px;
+    height: 12px;
+    margin: 6px 0 0 6px;
+    background: #fff;
+    position: absolute;
+    border-radius: 50%;
+}
+
+/* Map popup styling */
+.leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+.leaflet-popup-content {
+    margin: 12px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.leaflet-popup-tip {
+    box-shadow: none;
+}
+
+/* Hide default Leaflet attribution styling */
+.leaflet-control-attribution {
+    font-size: 10px;
+    background: rgba(255, 255, 255, 0.8) !important;
+    padding: 2px 6px;
+}
+
+/* Legislators List */
+.legislators-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.legislator-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.25rem;
+    font-weight: 400;
+    color: var(--text);
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border);
+}
+
+.legislator-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Legislator Item */
+.legislator-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: box-shadow 0.2s;
+}
+
+.legislator-item:hover {
+    box-shadow: var(--shadow);
+}
+
+.legislator-photo {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--border);
+    overflow: hidden;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+.legislator-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.legislator-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.legislator-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.legislator-name a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.legislator-name a:hover {
+    color: var(--primary);
+}
+
+.legislator-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+.legislator-party {
+    font-weight: 500;
+}
+
+.legislator-party.democratic {
+    color: var(--democrat);
+}
+
+.legislator-party.republican {
+    color: var(--republican);
+}
+
+.legislator-district {
+    color: var(--text-light);
+}
+
+/* Chamber Badge */
+.chamber-badge {
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.chamber-badge.upper {
+    background: var(--upper-chamber);
+    color: #0d4a42;
+}
+
+.chamber-badge.lower {
+    background: var(--lower-chamber);
+    color: #6b4a00;
+}
+
+/* Contact Link */
+.legislator-link {
+    color: var(--primary);
+    font-size: 0.85rem;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.legislator-link:hover {
+    text-decoration: underline;
+}
+
+/* Disclaimer */
+.disclaimer {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 0.8rem;
+    color: var(--text-light);
+    text-align: center;
+}
+
+/* Error Screen */
+#error-screen {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 200px;
+}
+
+.error-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 16px;
+    background: #fef2f2;
+    color: #dc2626;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.error-message h2 {
+    font-family: 'DM Serif Display', serif;
+    font-weight: 400;
+    margin-bottom: 8px;
+}
+
+.error-message p {
+    color: var(--text-light);
+    margin-bottom: 24px;
+}
+
+/* No Data State */
+.no-legislators {
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--text-light);
+}
+
+/* Placeholder Items */
+.placeholder-item {
+    opacity: 0.6;
+    background: var(--background-alt);
+}
+
+.placeholder-item .legislator-photo {
+    font-size: 1.5rem;
+    background: var(--background);
+}
+
+.placeholder-item .legislator-name {
+    color: var(--text-light);
+}
+
+.placeholder-item .chamber-badge {
+    opacity: 0.5;
+}
+
+/* Error Inline */
+.error-inline {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-top: 16px;
+}
+
+.error-inline .error-message {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.error-inline .error-icon {
+    width: 32px;
+    height: 32px;
+    margin: 0;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .results-layout {
+        flex-direction: column-reverse;
+    }
+
+    .results-right {
+        flex: none;
+        position: static;
+        width: 100%;
+    }
+
+    #map {
+        height: 250px;
+    }
+}
+
+@media (max-width: 520px) {
+    body {
+        padding: 0;
+    }
+
+    .votecraft-widget {
+        max-width: 100%;
+        min-height: 100vh;
+        border-radius: 0;
+    }
+
+    .address-form {
+        flex-direction: column;
+    }
+
+    .btn-primary {
+        width: 100%;
+    }
+
+    .legislator-item {
+        flex-wrap: wrap;
+    }
+
+    .chamber-badge {
+        order: -1;
+        margin-left: auto;
+    }
+}
