@@ -499,8 +499,9 @@ body {
 }
 
 .placeholder-icon {
-    color: #008BFF;
-    font-size: 2rem;
+    background: #008BFF !important;
+    color: #ffffff;
+    font-size: 2.2rem;
     font-weight: 700;
 }
 
