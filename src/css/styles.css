@@ -489,8 +489,8 @@ body {
 
 /* Placeholder Items */
 .placeholder-item {
-    opacity: 0.6;
-    background: var(--background-alt);
+    opacity: 1;
+    background: var(--background);
 }
 
 .placeholder-item .legislator-photo {
@@ -505,11 +505,11 @@ body {
 }
 
 .placeholder-item .legislator-name {
-    color: var(--text-light);
+    color: var(--text);
 }
 
 .placeholder-item .chamber-badge {
-    opacity: 0.5;
+    opacity: 1;
 }
 
 /* Error Inline */
