@@ -23,7 +23,7 @@
 
 body {
     font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: var(--background-alt);
+    background: #ffffff;
     color: var(--text);
     min-height: 100vh;
     display: flex;
