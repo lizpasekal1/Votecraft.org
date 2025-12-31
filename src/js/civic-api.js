@@ -209,7 +209,7 @@ const CivicAPI = {
      * @param {number} billsPerLegislator - Max bills per legislator
      * @returns {Promise<Array>} - Array of bills with legislator info
      */
-    async getBillsForLegislators(legislators, billsPerLegislator = 3) {
+    async getBillsForLegislators(legislators, billsPerLegislator = 5) {
         const allBills = [];
         const seenBillIds = new Set();
 
@@ -236,15 +236,14 @@ const CivicAPI = {
 
             console.log(`  Found ${bills.length} bills for ${lastName}`);
 
-            // Filter to only bills where this legislator is a primary sponsor
+            // Filter to bills where this legislator is a sponsor (primary or co-sponsor)
             // and add legislator reference
             for (const bill of bills) {
                 if (seenBillIds.has(bill.id)) continue;
 
-                // Check if this legislator is a primary sponsor
-                // Match by last name (case-insensitive) or full name contains last name
-                const isPrimarySponsor = bill.sponsorships?.some(s => {
-                    if (!s.primary) return false;
+                // Check if this legislator is a sponsor (any type)
+                // Match by last name (case-insensitive)
+                const isSponsor = bill.sponsorships?.some(s => {
                     const sponsorName = s.name.toLowerCase();
                     const searchName = lastName.toLowerCase();
                     return sponsorName === searchName ||
@@ -252,7 +251,7 @@ const CivicAPI = {
                            searchName.includes(sponsorName);
                 });
 
-                if (isPrimarySponsor) {
+                if (isSponsor) {
                     seenBillIds.add(bill.id);
                     allBills.push({
                         ...bill,
