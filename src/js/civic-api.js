@@ -169,6 +169,91 @@ const CivicAPI = {
     },
 
     /**
+     * Get recent bills sponsored by a legislator
+     * @param {string} jurisdiction - State name (e.g., "California")
+     * @param {string} sponsorName - Legislator's last name
+     * @param {number} limit - Max bills to return (default 5)
+     * @returns {Promise<Array>} - Array of bills
+     */
+    async getBillsBySponsor(jurisdiction, sponsorName, limit = 5) {
+        const apiUrl = new URL(`${this.OPENSTATES_URL}/bills`);
+        apiUrl.searchParams.append('jurisdiction', jurisdiction);
+        apiUrl.searchParams.append('sponsor', sponsorName);
+        apiUrl.searchParams.append('include', 'sponsorships');
+        apiUrl.searchParams.append('per_page', limit.toString());
+        apiUrl.searchParams.append('sort', 'latest_action_date');
+        apiUrl.searchParams.append('apikey', this.OPENSTATES_API_KEY);
+
+        const url = this.CORS_PROXY + apiUrl.toString();
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.error('Bills API error:', response.status);
+                return [];
+            }
+            const data = await response.json();
+            return data.results || [];
+        } catch (error) {
+            console.error('Error fetching bills:', error);
+            return [];
+        }
+    },
+
+    /**
+     * Get recent bills for multiple legislators
+     * @param {Array} legislators - Array of legislator objects
+     * @param {number} billsPerLegislator - Max bills per legislator
+     * @returns {Promise<Array>} - Array of bills with legislator info
+     */
+    async getBillsForLegislators(legislators, billsPerLegislator = 3) {
+        const allBills = [];
+        const seenBillIds = new Set();
+
+        // Get state legislators only
+        const stateLegislators = legislators.filter(l => l.level === 'state');
+
+        for (const legislator of stateLegislators) {
+            // Extract last name for sponsor search
+            const nameParts = legislator.name.split(' ');
+            const lastName = nameParts[nameParts.length - 1];
+
+            if (!legislator.jurisdiction) continue;
+
+            const bills = await this.getBillsBySponsor(
+                legislator.jurisdiction,
+                lastName,
+                billsPerLegislator
+            );
+
+            // Filter to only bills where this legislator is a primary sponsor
+            // and add legislator reference
+            for (const bill of bills) {
+                if (seenBillIds.has(bill.id)) continue;
+
+                const isPrimarySponsor = bill.sponsorships?.some(
+                    s => s.name === lastName && s.primary
+                );
+
+                if (isPrimarySponsor) {
+                    seenBillIds.add(bill.id);
+                    allBills.push({
+                        ...bill,
+                        sponsorLegislator: legislator
+                    });
+                }
+            }
+        }
+
+        // Sort by latest action date
+        allBills.sort((a, b) =>
+            new Date(b.latest_action_date) - new Date(a.latest_action_date)
+        );
+
+        return allBills.slice(0, 6); // Return top 6 most recent
+    },
+
+    /**
      * Get voter/ballot info - placeholder for future election data
      * Note: This would need an election data source
      */

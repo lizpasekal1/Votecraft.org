@@ -23,12 +23,17 @@ class VotecraftApp {
         this.federalList = document.getElementById('federal-list');
         this.stateList = document.getElementById('state-list');
 
+        // Activity section
+        this.activitySection = document.getElementById('activity-section');
+        this.activityList = document.getElementById('activity-list');
+
         // Map
         this.map = null;
         this.marker = null;
 
         // State
         this.legislators = [];
+        this.bills = [];
         this.currentAddress = '';
         this.currentCoords = null;
 
@@ -182,6 +187,10 @@ class VotecraftApp {
             this.currentAddress = 'Your current location';
             this.renderLegislators();
             this.initMap();
+
+            // Fetch bills in background
+            this.loadBills();
+
             this.showLoading(false);
 
         } catch (error) {
@@ -228,12 +237,28 @@ class VotecraftApp {
 
             this.renderLegislators();
             this.initMap();
+
+            // Fetch bills in background (don't block main results)
+            this.loadBills();
+
             this.showLoading(false);
 
         } catch (error) {
             console.error('Lookup error:', error);
             this.showLoading(false);
             this.showError(error.message || 'Unable to find legislators. Please check the address and try again.');
+        }
+    }
+
+    async loadBills() {
+        try {
+            console.log('Fetching bills for legislators...');
+            this.bills = await window.CivicAPI.getBillsForLegislators(this.legislators);
+            console.log('Bills found:', this.bills.length);
+            this.renderBills();
+        } catch (error) {
+            console.error('Error loading bills:', error);
+            // Don't show error to user - bills are supplementary
         }
     }
 
@@ -320,6 +345,69 @@ class VotecraftApp {
             .join('')
             .substring(0, 2)
             .toUpperCase();
+    }
+
+    renderBills() {
+        if (!this.bills || this.bills.length === 0) {
+            if (this.activitySection) {
+                this.activitySection.style.display = 'none';
+            }
+            return;
+        }
+
+        if (this.activitySection) {
+            this.activitySection.style.display = 'flex';
+        }
+
+        if (this.activityList) {
+            this.activityList.innerHTML = this.bills.map(bill => this.renderBillItem(bill)).join('');
+        }
+    }
+
+    renderBillItem(bill) {
+        const sponsor = bill.sponsorLegislator;
+        const sponsorName = sponsor ? sponsor.name : 'Unknown';
+
+        // Format date
+        const actionDate = bill.latest_action_date
+            ? new Date(bill.latest_action_date).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            })
+            : '';
+
+        // Determine bill status color
+        let statusClass = 'status-pending';
+        const action = (bill.latest_action_description || '').toLowerCase();
+        if (action.includes('passed') || action.includes('approved') || action.includes('enacted')) {
+            statusClass = 'status-passed';
+        } else if (action.includes('failed') || action.includes('vetoed') || action.includes('died')) {
+            statusClass = 'status-failed';
+        }
+
+        // Truncate title if too long
+        const title = bill.title.length > 100
+            ? bill.title.substring(0, 100) + '...'
+            : bill.title;
+
+        return `
+            <div class="bill-item">
+                <div class="bill-header">
+                    <span class="bill-id">${bill.identifier}</span>
+                    <span class="bill-date">${actionDate}</span>
+                </div>
+                <div class="bill-title">
+                    <a href="${bill.openstates_url}" target="_blank">${title}</a>
+                </div>
+                <div class="bill-meta">
+                    <span class="bill-sponsor">Sponsored by ${sponsorName}</span>
+                </div>
+                <div class="bill-status ${statusClass}">
+                    ${bill.latest_action_description || 'No recent action'}
+                </div>
+            </div>
+        `;
     }
 
     initMap() {
