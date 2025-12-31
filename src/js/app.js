@@ -98,8 +98,51 @@ class VotecraftApp {
             </div>
         `;
 
+        // Render placeholder activity section
+        this.showPlaceholderBills();
+
         // Initialize map with USA view
         this.initPlaceholderMap();
+    }
+
+    showPlaceholderBills() {
+        if (this.activitySection) {
+            this.activitySection.style.display = 'flex';
+        }
+        if (this.activityList) {
+            this.activityList.innerHTML = `
+                <div class="bill-item placeholder-bill">
+                    <div class="bill-header">
+                        <span class="bill-id placeholder-bill-id">📜 Bill #???</span>
+                        <span class="bill-date">Search to find</span>
+                    </div>
+                    <div class="bill-title">
+                        Recent legislation from your representatives
+                    </div>
+                    <div class="bill-meta">
+                        <span class="bill-sponsor">Sponsored by your legislator</span>
+                    </div>
+                    <div class="bill-status">
+                        Enter your address to see activity
+                    </div>
+                </div>
+                <div class="bill-item placeholder-bill">
+                    <div class="bill-header">
+                        <span class="bill-id placeholder-bill-id">📜 Bill #???</span>
+                        <span class="bill-date">Search to find</span>
+                    </div>
+                    <div class="bill-title">
+                        See what your representatives are working on
+                    </div>
+                    <div class="bill-meta">
+                        <span class="bill-sponsor">Sponsored by your legislator</span>
+                    </div>
+                    <div class="bill-status">
+                        Enter your address to see activity
+                    </div>
+                </div>
+            `;
+        }
     }
 
     initPlaceholderMap() {
