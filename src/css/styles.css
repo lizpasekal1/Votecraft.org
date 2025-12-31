@@ -539,6 +539,107 @@ body {
     opacity: 1;
 }
 
+/* Activity Section - Recent Bills */
+.activity-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+}
+
+.activity-subtitle {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin-top: -8px;
+    margin-bottom: 8px;
+}
+
+.activity-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.bill-item {
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    transition: box-shadow 0.2s;
+}
+
+.bill-item:hover {
+    box-shadow: var(--shadow);
+}
+
+.bill-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.bill-id {
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 0.9rem;
+}
+
+.bill-date {
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.bill-title {
+    font-size: 0.95rem;
+    line-height: 1.4;
+    margin-bottom: 8px;
+}
+
+.bill-title a {
+    color: var(--text);
+    text-decoration: none;
+}
+
+.bill-title a:hover {
+    color: var(--primary);
+}
+
+.bill-meta {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-bottom: 8px;
+}
+
+.bill-sponsor {
+    font-style: italic;
+}
+
+.bill-status {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+    border-radius: 4px;
+    background: #f1f5f9;
+    color: var(--text-light);
+}
+
+.bill-status.status-passed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.bill-status.status-failed {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.bill-status.status-pending {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
 /* Error Inline */
 .error-inline {
     background: #fef2f2;
@@ -608,11 +709,12 @@ body {
     }
 }
 
-/* Print Styles */
+/* Print Styles - 2 Page PDF Layout */
 @media print {
     body {
         padding: 0;
         background: white;
+        font-size: 11pt;
     }
 
     .address-section,
@@ -628,6 +730,10 @@ body {
         box-shadow: none;
     }
 
+    .main-content {
+        padding: 16px;
+    }
+
     .results-layout {
         display: block;
     }
@@ -636,17 +742,114 @@ body {
         width: 100%;
     }
 
-    .legislator-item {
-        break-inside: avoid;
-        page-break-inside: avoid;
-    }
-
     .results-header {
-        margin-bottom: 20px;
+        margin-bottom: 16px;
+        border-bottom: 2px solid var(--text);
+        padding-bottom: 8px;
     }
 
     .searched-address {
         font-size: 1.2rem;
         font-weight: 600;
+    }
+
+    /* Page 1: Legislators */
+    .legislator-section {
+        margin-bottom: 16px;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+        padding-bottom: 4px;
+    }
+
+    .legislator-item {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        padding: 12px;
+        margin-bottom: 8px;
+        border: 1px solid #ccc;
+    }
+
+    .legislator-photo {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .legislator-name {
+        font-size: 1rem;
+    }
+
+    .legislator-details {
+        font-size: 0.85rem;
+    }
+
+    .chamber-badge {
+        font-size: 0.7rem;
+        padding: 3px 8px;
+    }
+
+    /* Page 2: Recent Activity - force page break before */
+    .activity-section {
+        break-before: page;
+        page-break-before: always;
+        margin-top: 0;
+        padding-top: 16px;
+        border-top: none;
+    }
+
+    .activity-subtitle {
+        margin-bottom: 12px;
+    }
+
+    .activity-list {
+        display: block;
+    }
+
+    .bill-item {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        padding: 12px;
+        margin-bottom: 12px;
+        border: 1px solid #ccc;
+    }
+
+    .bill-header {
+        margin-bottom: 4px;
+    }
+
+    .bill-id {
+        font-size: 0.85rem;
+        color: #000;
+    }
+
+    .bill-title {
+        font-size: 0.9rem;
+        margin-bottom: 4px;
+    }
+
+    .bill-title a {
+        color: #000;
+        text-decoration: none;
+    }
+
+    .bill-meta {
+        font-size: 0.8rem;
+        margin-bottom: 4px;
+    }
+
+    .bill-status {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        background: #f0f0f0 !important;
+        color: #333 !important;
+    }
+
+    /* Remove link styling for print */
+    a {
+        color: inherit;
+        text-decoration: none;
     }
 }
