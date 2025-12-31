@@ -128,6 +128,16 @@ class VotecraftApp {
         if (this.locationBtn) {
             this.locationBtn.addEventListener('click', () => this.useCurrentLocation());
         }
+
+        // PDF button
+        const pdfBtn = document.getElementById('save-pdf-btn');
+        if (pdfBtn) {
+            pdfBtn.addEventListener('click', () => this.savePDF());
+        }
+    }
+
+    savePDF() {
+        window.print();
     }
 
     showLoading(show) {

@@ -138,6 +138,28 @@ body {
     color: white;
 }
 
+.btn-pdf {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    font-weight: 500;
+    color: var(--primary);
+    background: none;
+    border: 1px solid var(--primary);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    margin-left: auto;
+}
+
+.btn-pdf:hover {
+    background: var(--primary);
+    color: white;
+}
+
 .btn-location svg {
     flex-shrink: 0;
 }
@@ -583,5 +605,48 @@ body {
     .chamber-badge {
         order: -1;
         margin-left: auto;
+    }
+}
+
+/* Print Styles */
+@media print {
+    body {
+        padding: 0;
+        background: white;
+    }
+
+    .address-section,
+    .btn-pdf,
+    .map-container,
+    .results-right,
+    .disclaimer {
+        display: none !important;
+    }
+
+    .votecraft-widget {
+        max-width: 100%;
+        box-shadow: none;
+    }
+
+    .results-layout {
+        display: block;
+    }
+
+    .results-left {
+        width: 100%;
+    }
+
+    .legislator-item {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .results-header {
+        margin-bottom: 20px;
+    }
+
+    .searched-address {
+        font-size: 1.2rem;
+        font-weight: 600;
     }
 }
