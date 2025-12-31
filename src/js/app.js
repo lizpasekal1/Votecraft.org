@@ -27,6 +27,15 @@ class VotecraftApp {
         this.activitySection = document.getElementById('activity-section');
         this.activityList = document.getElementById('activity-list');
 
+        // Votes section
+        this.votesSection = document.getElementById('votes-section');
+        this.votesList = document.getElementById('votes-list');
+
+        // Topics section
+        this.topicsSection = document.getElementById('topics-section');
+        this.topicsFilters = document.getElementById('topics-filters');
+        this.topicsList = document.getElementById('topics-list');
+
         // Map
         this.map = null;
         this.marker = null;
@@ -34,8 +43,11 @@ class VotecraftApp {
         // State
         this.legislators = [];
         this.bills = [];
+        this.voteRecords = [];
         this.currentAddress = '';
         this.currentCoords = null;
+        this.currentJurisdiction = null;
+        this.selectedTopic = null;
 
         this.bindEvents();
         this.showPlaceholderState();
@@ -101,6 +113,12 @@ class VotecraftApp {
         // Render placeholder activity section
         this.showPlaceholderBills();
 
+        // Render placeholder votes section
+        this.showPlaceholderVotes();
+
+        // Render placeholder topics section
+        this.showPlaceholderTopics();
+
         // Initialize map with USA view
         this.initPlaceholderMap();
     }
@@ -140,6 +158,59 @@ class VotecraftApp {
                     <div class="bill-status">
                         Enter your address to see activity
                     </div>
+                </div>
+            `;
+        }
+    }
+
+    showPlaceholderVotes() {
+        if (this.votesSection) {
+            this.votesSection.style.display = 'flex';
+        }
+        if (this.votesList) {
+            this.votesList.innerHTML = `
+                <div class="vote-item placeholder-vote">
+                    <div class="vote-indicator vote-unknown">?</div>
+                    <div class="vote-content">
+                        <div class="vote-bill">🗳️ Bill #???</div>
+                        <div class="vote-title">See how your representatives voted</div>
+                        <div class="vote-meta">
+                            <span class="vote-legislator">Your Legislator</span>
+                            <span class="vote-date">Search to find</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="vote-item placeholder-vote">
+                    <div class="vote-indicator vote-unknown">?</div>
+                    <div class="vote-content">
+                        <div class="vote-bill">🗳️ Bill #???</div>
+                        <div class="vote-title">Track voting records on key issues</div>
+                        <div class="vote-meta">
+                            <span class="vote-legislator">Your Legislator</span>
+                            <span class="vote-date">Search to find</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    showPlaceholderTopics() {
+        if (this.topicsSection) {
+            this.topicsSection.style.display = 'flex';
+        }
+        if (this.topicsFilters) {
+            this.topicsFilters.innerHTML = window.CivicAPI.BILL_SUBJECTS.map(subject => `
+                <button class="topic-btn placeholder-topic" disabled>
+                    <span class="topic-emoji">${subject.emoji}</span>
+                    <span class="topic-label">${subject.label}</span>
+                </button>
+            `).join('');
+        }
+        if (this.topicsList) {
+            this.topicsList.innerHTML = `
+                <div class="topics-placeholder">
+                    <p>📋 Enter your address to explore bills by topic</p>
                 </div>
             `;
         }
@@ -278,11 +349,18 @@ class VotecraftApp {
                 return;
             }
 
+            // Store jurisdiction for topic filtering
+            const stateLegislators = this.legislators.filter(l => l.level === 'state');
+            if (stateLegislators.length > 0 && stateLegislators[0].jurisdiction) {
+                this.currentJurisdiction = stateLegislators[0].jurisdiction;
+            }
+
             this.renderLegislators();
             this.initMap();
 
-            // Fetch bills in background (don't block main results)
+            // Fetch bills, votes, and enable topics in background (don't block main results)
             this.loadBills();
+            this.enableTopicFilters();
 
             this.showLoading(false);
 
@@ -297,14 +375,23 @@ class VotecraftApp {
         try {
             console.log('Fetching bills for legislators...');
             this.showBillsLoading();
+            this.showVotesLoading();
             this.bills = await window.CivicAPI.getBillsForLegislators(this.legislators);
             console.log('Bills found:', this.bills.length);
             this.renderBills();
+
+            // Extract and render vote records from the bills
+            this.voteRecords = window.CivicAPI.extractVoteRecords(this.bills, this.legislators);
+            console.log('Vote records found:', this.voteRecords.length);
+            this.renderVotes();
         } catch (error) {
             console.error('Error loading bills:', error);
             // Hide loading on error
             if (this.activitySection) {
                 this.activitySection.style.display = 'none';
+            }
+            if (this.votesSection) {
+                this.votesSection.style.display = 'none';
             }
         }
     }
@@ -318,6 +405,20 @@ class VotecraftApp {
                 <div class="bills-loading">
                     <div class="bills-loader"></div>
                     <p>Loading legislative activity...</p>
+                </div>
+            `;
+        }
+    }
+
+    showVotesLoading() {
+        if (this.votesSection) {
+            this.votesSection.style.display = 'flex';
+        }
+        if (this.votesList) {
+            this.votesList.innerHTML = `
+                <div class="bills-loading">
+                    <div class="bills-loader"></div>
+                    <p>Loading vote records...</p>
                 </div>
             `;
         }
@@ -551,6 +652,177 @@ class VotecraftApp {
     showError(message) {
         this.errorText.textContent = message;
         this.errorScreen.style.display = 'block';
+    }
+
+    renderVotes() {
+        if (!this.voteRecords || this.voteRecords.length === 0) {
+            if (this.votesSection) {
+                this.votesSection.style.display = 'none';
+            }
+            return;
+        }
+
+        if (this.votesSection) {
+            this.votesSection.style.display = 'flex';
+        }
+
+        if (this.votesList) {
+            this.votesList.innerHTML = this.voteRecords.map(record => this.renderVoteItem(record)).join('');
+        }
+    }
+
+    renderVoteItem(record) {
+        // Determine vote indicator
+        let voteClass = 'vote-unknown';
+        let voteSymbol = '?';
+        const vote = (record.vote || '').toLowerCase();
+
+        if (vote === 'yea' || vote === 'yes' || vote === 'aye') {
+            voteClass = 'vote-yea';
+            voteSymbol = '✓';
+        } else if (vote === 'nay' || vote === 'no') {
+            voteClass = 'vote-nay';
+            voteSymbol = '✗';
+        } else if (vote === 'abstain' || vote === 'not voting' || vote === 'absent') {
+            voteClass = 'vote-abstain';
+            voteSymbol = '—';
+        }
+
+        // Format date
+        const voteDate = record.voteDate
+            ? new Date(record.voteDate).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            })
+            : '';
+
+        // Truncate title
+        const title = record.bill.title.length > 80
+            ? record.bill.title.substring(0, 80) + '...'
+            : record.bill.title;
+
+        return `
+            <div class="vote-item">
+                <div class="vote-indicator ${voteClass}">${voteSymbol}</div>
+                <div class="vote-content">
+                    <div class="vote-bill">
+                        <a href="${record.bill.url}" target="_blank">${record.bill.identifier}</a>
+                    </div>
+                    <div class="vote-title">${title}</div>
+                    <div class="vote-meta">
+                        <span class="vote-legislator">${record.legislator.name}</span>
+                        <span class="vote-result">${record.result || ''}</span>
+                        <span class="vote-date">${voteDate}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    enableTopicFilters() {
+        if (!this.currentJurisdiction || !this.topicsFilters) return;
+
+        // Re-render topic buttons as enabled
+        this.topicsFilters.innerHTML = window.CivicAPI.BILL_SUBJECTS.map(subject => `
+            <button class="topic-btn" data-topic="${subject.id}">
+                <span class="topic-emoji">${subject.emoji}</span>
+                <span class="topic-label">${subject.label}</span>
+            </button>
+        `).join('');
+
+        // Add click handlers
+        this.topicsFilters.querySelectorAll('.topic-btn').forEach(btn => {
+            btn.addEventListener('click', () => this.loadTopicBills(btn.dataset.topic));
+        });
+
+        // Clear placeholder
+        if (this.topicsList) {
+            this.topicsList.innerHTML = `
+                <div class="topics-placeholder">
+                    <p>Select a topic above to see related bills</p>
+                </div>
+            `;
+        }
+    }
+
+    async loadTopicBills(topic) {
+        if (!this.currentJurisdiction) return;
+
+        // Update selected state
+        this.selectedTopic = topic;
+        this.topicsFilters.querySelectorAll('.topic-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.topic === topic);
+        });
+
+        // Show loading
+        if (this.topicsList) {
+            this.topicsList.innerHTML = `
+                <div class="bills-loading">
+                    <div class="bills-loader"></div>
+                    <p>Loading ${topic} bills...</p>
+                </div>
+            `;
+        }
+
+        try {
+            const bills = await window.CivicAPI.getBillsBySubject(this.currentJurisdiction, topic, 6);
+
+            if (bills.length === 0) {
+                this.topicsList.innerHTML = `
+                    <div class="topics-placeholder">
+                        <p>No recent bills found for "${topic}"</p>
+                    </div>
+                `;
+                return;
+            }
+
+            this.topicsList.innerHTML = bills.map(bill => this.renderTopicBill(bill)).join('');
+        } catch (error) {
+            console.error('Error loading topic bills:', error);
+            this.topicsList.innerHTML = `
+                <div class="topics-placeholder">
+                    <p>Error loading bills. Please try again.</p>
+                </div>
+            `;
+        }
+    }
+
+    renderTopicBill(bill) {
+        // Format date
+        const actionDate = bill.latest_action_date
+            ? new Date(bill.latest_action_date).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            })
+            : '';
+
+        // Truncate title
+        const title = bill.title.length > 100
+            ? bill.title.substring(0, 100) + '...'
+            : bill.title;
+
+        // Get primary sponsor
+        const sponsor = bill.sponsorships?.find(s => s.primary)?.name || 'Unknown';
+
+        return `
+            <div class="bill-item topic-bill">
+                <div class="bill-header">
+                    <span class="bill-id">${bill.identifier}</span>
+                    <span class="bill-date">${actionDate}</span>
+                </div>
+                <div class="bill-title">
+                    <a href="${bill.openstates_url}" target="_blank">${title}</a>
+                </div>
+                <div class="bill-meta">
+                    <span class="bill-sponsor">Sponsored by ${sponsor}</span>
+                </div>
+                <div class="bill-status">
+                    ${bill.latest_action_description || 'No recent action'}
+                </div>
+            </div>
+        `;
     }
 }
 

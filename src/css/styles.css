@@ -680,6 +680,195 @@ body {
     font-size: 0.9rem;
 }
 
+/* Votes Section */
+.votes-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+}
+
+.votes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.vote-item {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: box-shadow 0.2s;
+}
+
+.vote-item:hover {
+    box-shadow: var(--shadow);
+}
+
+.vote-indicator {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.vote-yea {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.vote-nay {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.vote-abstain {
+    background: #f1f5f9;
+    color: var(--text-light);
+}
+
+.vote-unknown {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
+.vote-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.vote-bill {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.vote-bill a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.vote-bill a:hover {
+    text-decoration: underline;
+}
+
+.vote-title {
+    font-size: 0.95rem;
+    color: var(--text);
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.vote-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.vote-legislator {
+    font-weight: 500;
+}
+
+.vote-result {
+    text-transform: capitalize;
+}
+
+/* Placeholder Votes */
+.placeholder-vote {
+    opacity: 1;
+}
+
+.placeholder-vote .vote-bill {
+    color: #008BFF;
+}
+
+/* Topics Section */
+.topics-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+}
+
+.topics-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.topic-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.topic-btn:hover:not(:disabled) {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.topic-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.topic-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.placeholder-topic {
+    opacity: 0.7;
+}
+
+.topic-emoji {
+    font-size: 1rem;
+}
+
+.topic-label {
+    font-weight: 500;
+}
+
+.topics-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.topics-placeholder {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--text-light);
+}
+
+.topics-placeholder p {
+    font-size: 0.95rem;
+}
+
 /* Error Inline */
 .error-inline {
     background: #fef2f2;
