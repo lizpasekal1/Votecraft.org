@@ -640,6 +640,21 @@ body {
     color: #854d0e;
 }
 
+/* Placeholder Bills */
+.placeholder-bill {
+    opacity: 1;
+    background: var(--background);
+}
+
+.placeholder-bill .bill-title {
+    color: var(--text);
+}
+
+.placeholder-bill-id {
+    color: #008BFF !important;
+    font-weight: 600;
+}
+
 /* Error Inline */
 .error-inline {
     background: #fef2f2;
