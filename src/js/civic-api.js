@@ -180,7 +180,7 @@ const CivicAPI = {
         const apiUrl = new URL(`${this.OPENSTATES_URL}/bills`);
         apiUrl.searchParams.append('jurisdiction', jurisdiction);
         apiUrl.searchParams.append('q', sponsorName);
-        apiUrl.searchParams.append('include', 'sponsorships');
+        apiUrl.searchParams.append('include', 'sponsorships,votes');
         apiUrl.searchParams.append('per_page', limit.toString());
         apiUrl.searchParams.append('sort', 'latest_action_desc');
         apiUrl.searchParams.append('apikey', this.OPENSTATES_API_KEY);
@@ -268,6 +268,102 @@ const CivicAPI = {
 
         return allBills.slice(0, 8); // Return top 8 most recent
     },
+
+    /**
+     * Get bills by subject/topic
+     * @param {string} jurisdiction - State name
+     * @param {string} subject - Topic to search for (e.g., "education", "healthcare")
+     * @param {number} limit - Max bills to return
+     * @returns {Promise<Array>} - Array of bills
+     */
+    async getBillsBySubject(jurisdiction, subject, limit = 10) {
+        const apiUrl = new URL(`${this.OPENSTATES_URL}/bills`);
+        apiUrl.searchParams.append('jurisdiction', jurisdiction);
+        apiUrl.searchParams.append('q', subject);
+        apiUrl.searchParams.append('include', 'sponsorships,votes');
+        apiUrl.searchParams.append('per_page', limit.toString());
+        apiUrl.searchParams.append('sort', 'latest_action_desc');
+        apiUrl.searchParams.append('apikey', this.OPENSTATES_API_KEY);
+
+        const url = this.CORS_PROXY + apiUrl.toString();
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.error('Bills by subject API error:', response.status);
+                return [];
+            }
+            const data = await response.json();
+            return data.results || [];
+        } catch (error) {
+            console.error('Error fetching bills by subject:', error);
+            return [];
+        }
+    },
+
+    /**
+     * Extract vote records for legislators from bills
+     * @param {Array} bills - Array of bills with votes included
+     * @param {Array} legislators - Array of legislator objects
+     * @returns {Array} - Vote records grouped by legislator
+     */
+    extractVoteRecords(bills, legislators) {
+        const voteRecords = [];
+
+        for (const bill of bills) {
+            if (!bill.votes || bill.votes.length === 0) continue;
+
+            for (const vote of bill.votes) {
+                // Check if any of our legislators voted on this
+                const individualVotes = vote.votes || [];
+
+                for (const legislator of legislators) {
+                    if (legislator.level !== 'state') continue;
+
+                    const lastName = legislator.name.split(' ').pop().toLowerCase();
+
+                    const theirVote = individualVotes.find(v => {
+                        const voterName = (v.voter_name || '').toLowerCase();
+                        return voterName.includes(lastName) || lastName.includes(voterName);
+                    });
+
+                    if (theirVote) {
+                        voteRecords.push({
+                            legislator: legislator,
+                            bill: {
+                                identifier: bill.identifier,
+                                title: bill.title,
+                                url: bill.openstates_url
+                            },
+                            vote: theirVote.option, // yea, nay, abstain, etc.
+                            voteDate: vote.start_date,
+                            motion: vote.motion_text,
+                            result: vote.result
+                        });
+                    }
+                }
+            }
+        }
+
+        // Sort by date, most recent first
+        voteRecords.sort((a, b) => new Date(b.voteDate) - new Date(a.voteDate));
+
+        return voteRecords.slice(0, 12); // Return top 12 vote records
+    },
+
+    /**
+     * Available bill subjects/topics for filtering
+     */
+    BILL_SUBJECTS: [
+        { id: 'education', label: 'Education', emoji: '📚' },
+        { id: 'healthcare', label: 'Healthcare', emoji: '🏥' },
+        { id: 'taxes', label: 'Taxes', emoji: '💰' },
+        { id: 'environment', label: 'Environment', emoji: '🌿' },
+        { id: 'housing', label: 'Housing', emoji: '🏠' },
+        { id: 'transportation', label: 'Transportation', emoji: '🚗' },
+        { id: 'public safety', label: 'Public Safety', emoji: '🛡️' },
+        { id: 'elections', label: 'Elections', emoji: '🗳️' }
+    ],
 
     /**
      * Get voter/ballot info - placeholder for future election data
