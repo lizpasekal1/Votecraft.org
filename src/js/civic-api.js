@@ -218,7 +218,12 @@ const CivicAPI = {
             const nameParts = legislator.name.split(' ');
             const lastName = nameParts[nameParts.length - 1];
 
-            if (!legislator.jurisdiction) continue;
+            console.log(`Fetching bills for ${legislator.name} (${lastName}) in ${legislator.jurisdiction}`);
+
+            if (!legislator.jurisdiction) {
+                console.log('  Skipping - no jurisdiction');
+                continue;
+            }
 
             const bills = await this.getBillsBySponsor(
                 legislator.jurisdiction,
@@ -226,14 +231,23 @@ const CivicAPI = {
                 billsPerLegislator
             );
 
+            console.log(`  Found ${bills.length} bills for ${lastName}`);
+
             // Filter to only bills where this legislator is a primary sponsor
             // and add legislator reference
             for (const bill of bills) {
                 if (seenBillIds.has(bill.id)) continue;
 
-                const isPrimarySponsor = bill.sponsorships?.some(
-                    s => s.name === lastName && s.primary
-                );
+                // Check if this legislator is a primary sponsor
+                // Match by last name (case-insensitive) or full name contains last name
+                const isPrimarySponsor = bill.sponsorships?.some(s => {
+                    if (!s.primary) return false;
+                    const sponsorName = s.name.toLowerCase();
+                    const searchName = lastName.toLowerCase();
+                    return sponsorName === searchName ||
+                           sponsorName.includes(searchName) ||
+                           searchName.includes(sponsorName);
+                });
 
                 if (isPrimarySponsor) {
                     seenBillIds.add(bill.id);
