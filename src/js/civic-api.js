@@ -266,7 +266,7 @@ const CivicAPI = {
             new Date(b.latest_action_date) - new Date(a.latest_action_date)
         );
 
-        return allBills.slice(0, 6); // Return top 6 most recent
+        return allBills.slice(0, 8); // Return top 8 most recent
     },
 
     /**
