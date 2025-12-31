@@ -296,12 +296,30 @@ class VotecraftApp {
     async loadBills() {
         try {
             console.log('Fetching bills for legislators...');
+            this.showBillsLoading();
             this.bills = await window.CivicAPI.getBillsForLegislators(this.legislators);
             console.log('Bills found:', this.bills.length);
             this.renderBills();
         } catch (error) {
             console.error('Error loading bills:', error);
-            // Don't show error to user - bills are supplementary
+            // Hide loading on error
+            if (this.activitySection) {
+                this.activitySection.style.display = 'none';
+            }
+        }
+    }
+
+    showBillsLoading() {
+        if (this.activitySection) {
+            this.activitySection.style.display = 'flex';
+        }
+        if (this.activityList) {
+            this.activityList.innerHTML = `
+                <div class="bills-loading">
+                    <div class="bills-loader"></div>
+                    <p>Loading legislative activity...</p>
+                </div>
+            `;
         }
     }
 
