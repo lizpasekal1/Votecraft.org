@@ -176,15 +176,18 @@ const CivicAPI = {
      * @returns {Promise<Array>} - Array of bills
      */
     async getBillsBySponsor(jurisdiction, sponsorName, limit = 5) {
+        // Use 'q' parameter for text search since 'sponsor' filter is unreliable
         const apiUrl = new URL(`${this.OPENSTATES_URL}/bills`);
         apiUrl.searchParams.append('jurisdiction', jurisdiction);
-        apiUrl.searchParams.append('sponsor', sponsorName);
+        apiUrl.searchParams.append('q', sponsorName);
         apiUrl.searchParams.append('include', 'sponsorships');
         apiUrl.searchParams.append('per_page', limit.toString());
-        apiUrl.searchParams.append('sort', 'latest_action_date');
+        apiUrl.searchParams.append('sort', 'latest_action_desc');
         apiUrl.searchParams.append('apikey', this.OPENSTATES_API_KEY);
 
         const url = this.CORS_PROXY + apiUrl.toString();
+
+        console.log(`  API URL: ${apiUrl.toString()}`);
 
         try {
             const response = await fetch(url);
