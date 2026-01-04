@@ -10,6 +10,11 @@ const CivicAPI = {
     OPENSTATES_API_KEY: '064f1e91-b0a3-4e4b-b4c7-4313e70bc47d',
     OPENSTATES_URL: 'https://v3.openstates.org',
 
+    // Google Civic Information API key - get yours at https://console.cloud.google.com/
+    // Enable "Google Civic Information API" in your project
+    GOOGLE_CIVIC_API_KEY: 'AIzaSyCnUhJKt7HKGMZF8e_VGBbDvvOFLCH7aAw',
+    GOOGLE_CIVIC_URL: 'https://www.googleapis.com/civicinfo/v2',
+
     // CORS proxy for OpenStates API (needed for browser requests)
     // corsproxy.io blocks curl but works from browsers
     CORS_PROXY: 'https://corsproxy.io/?',
@@ -366,15 +371,87 @@ const CivicAPI = {
     ],
 
     /**
-     * Get voter/ballot info - placeholder for future election data
-     * Note: This would need an election data source
+     * Get voter/ballot info from Google Civic Information API
+     * Returns election info, polling places, and ballot contests
+     * @param {string} address - Full address to look up
+     * @returns {Promise<object>} - Voter info including election, polling, contests
      */
     async getVoterInfo(address) {
-        // For now, return empty - ballot data requires active elections
-        return {
-            election: null,
-            contests: []
-        };
+        const apiUrl = new URL(`${this.GOOGLE_CIVIC_URL}/voterinfo`);
+        apiUrl.searchParams.append('address', address);
+        apiUrl.searchParams.append('key', this.GOOGLE_CIVIC_API_KEY);
+
+        console.log('Fetching voter info for:', address);
+
+        try {
+            const response = await fetch(apiUrl.toString());
+
+            if (!response.ok) {
+                const error = await response.json();
+                console.log('Voter info API response:', error);
+
+                // "Election unknown" or no election means no active election
+                if (error.error?.message?.includes('Election') ||
+                    error.error?.code === 400) {
+                    return {
+                        election: null,
+                        pollingLocations: [],
+                        earlyVoteSites: [],
+                        dropOffLocations: [],
+                        contests: [],
+                        state: null,
+                        noElection: true
+                    };
+                }
+                throw new Error(error.error?.message || 'Failed to fetch voter info');
+            }
+
+            const data = await response.json();
+            console.log('Voter info received:', data);
+
+            return {
+                election: data.election || null,
+                pollingLocations: data.pollingLocations || [],
+                earlyVoteSites: data.earlyVoteSites || [],
+                dropOffLocations: data.dropOffLocations || [],
+                contests: data.contests || [],
+                state: data.state?.[0] || null,
+                noElection: false
+            };
+        } catch (error) {
+            console.error('Error fetching voter info:', error);
+            return {
+                election: null,
+                pollingLocations: [],
+                earlyVoteSites: [],
+                dropOffLocations: [],
+                contests: [],
+                state: null,
+                noElection: true,
+                error: error.message
+            };
+        }
+    },
+
+    /**
+     * Get list of upcoming elections from Google Civic API
+     * @returns {Promise<Array>} - Array of upcoming elections
+     */
+    async getElections() {
+        const apiUrl = new URL(`${this.GOOGLE_CIVIC_URL}/elections`);
+        apiUrl.searchParams.append('key', this.GOOGLE_CIVIC_API_KEY);
+
+        try {
+            const response = await fetch(apiUrl.toString());
+            if (!response.ok) {
+                throw new Error('Failed to fetch elections');
+            }
+            const data = await response.json();
+            return data.elections || [];
+        } catch (error) {
+            console.error('Error fetching elections:', error);
+            return [];
+        }
     },
 
     /**

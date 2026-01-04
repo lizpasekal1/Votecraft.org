@@ -869,6 +869,185 @@ body {
     font-size: 0.95rem;
 }
 
+/* Ballot Section */
+.ballot-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+}
+
+.ballot-info {
+    margin-bottom: 8px;
+}
+
+.ballot-election-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.ballot-election-info.no-election {
+    background: #f8fafc;
+}
+
+.ballot-election-info.placeholder-ballot {
+    background: var(--background);
+}
+
+.election-icon {
+    font-size: 2.5rem;
+}
+
+.election-details {
+    flex: 1;
+}
+
+.election-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.election-date {
+    font-size: 0.95rem;
+    color: var(--text-light);
+}
+
+.polling-location {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.polling-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 8px;
+}
+
+.polling-name {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.polling-address {
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+.polling-hours {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-top: 4px;
+}
+
+.ballot-contests {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.contest-item {
+    padding: 16px;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: box-shadow 0.2s;
+}
+
+.contest-item:hover {
+    box-shadow: var(--shadow);
+}
+
+.contest-item.placeholder-contest {
+    opacity: 1;
+}
+
+.contest-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.contest-office {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text);
+}
+
+.contest-level {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    text-transform: capitalize;
+}
+
+.contest-candidates {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.candidate-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-radius: 6px;
+}
+
+.candidate-name {
+    font-weight: 500;
+}
+
+.candidate-party {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    padding: 2px 8px;
+    background: var(--background);
+    border-radius: 4px;
+}
+
+.contest-description {
+    font-size: 0.95rem;
+    color: var(--text);
+    line-height: 1.5;
+}
+
+.referendum-arguments {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.referendum-arguments .argument {
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.referendum-arguments .argument.pro {
+    background: #dcfce7;
+    border-left: 3px solid #22c55e;
+}
+
+.referendum-arguments .argument.con {
+    background: #fef2f2;
+    border-left: 3px solid #ef4444;
+}
+
 /* Error Inline */
 .error-inline {
     background: #fef2f2;
