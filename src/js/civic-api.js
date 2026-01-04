@@ -373,15 +373,65 @@ const CivicAPI = {
     /**
      * Get voter/ballot info from Google Civic Information API
      * Returns election info, polling places, and ballot contests
+     * If no current election, tries to fetch the most recent past election
      * @param {string} address - Full address to look up
      * @returns {Promise<object>} - Voter info including election, polling, contests
      */
     async getVoterInfo(address) {
+        // First try without election ID (gets current/upcoming election)
+        let result = await this.fetchVoterInfo(address, null);
+
+        // If no current election, try to get the most recent election
+        if (result.noElection) {
+            console.log('No current election, checking for recent elections...');
+            const elections = await this.getElections();
+
+            if (elections.length > 0) {
+                // Filter out the "VIP Test Election" and sort by date descending
+                const realElections = elections.filter(e =>
+                    e.id !== '2000' && !e.name.toLowerCase().includes('test')
+                );
+
+                // Sort by election day (most recent first)
+                realElections.sort((a, b) => {
+                    const dateA = new Date(a.electionDay || '1900-01-01');
+                    const dateB = new Date(b.electionDay || '1900-01-01');
+                    return dateB - dateA;
+                });
+
+                console.log('Available elections:', realElections.map(e => `${e.name} (${e.electionDay})`));
+
+                // Try the most recent elections until we find one with data
+                for (const election of realElections.slice(0, 3)) {
+                    console.log(`Trying election: ${election.name} (ID: ${election.id})`);
+                    const electionResult = await this.fetchVoterInfo(address, election.id);
+
+                    if (!electionResult.noElection && electionResult.contests.length > 0) {
+                        electionResult.isPastElection = true;
+                        return electionResult;
+                    }
+                }
+            }
+        }
+
+        return result;
+    },
+
+    /**
+     * Fetch voter info for a specific election (or current if no ID)
+     * @param {string} address - Full address to look up
+     * @param {string|null} electionId - Optional election ID
+     * @returns {Promise<object>} - Voter info
+     */
+    async fetchVoterInfo(address, electionId) {
         const apiUrl = new URL(`${this.GOOGLE_CIVIC_URL}/voterinfo`);
         apiUrl.searchParams.append('address', address);
         apiUrl.searchParams.append('key', this.GOOGLE_CIVIC_API_KEY);
+        if (electionId) {
+            apiUrl.searchParams.append('electionId', electionId);
+        }
 
-        console.log('Fetching voter info for:', address);
+        console.log('Fetching voter info for:', address, electionId ? `(election ${electionId})` : '(current)');
 
         try {
             const response = await fetch(apiUrl.toString());
@@ -392,6 +442,7 @@ const CivicAPI = {
 
                 // "Election unknown" or no election means no active election
                 if (error.error?.message?.includes('Election') ||
+                    error.error?.message?.includes('election') ||
                     error.error?.code === 400) {
                     return {
                         election: null,
@@ -416,7 +467,8 @@ const CivicAPI = {
                 dropOffLocations: data.dropOffLocations || [],
                 contests: data.contests || [],
                 state: data.state?.[0] || null,
-                noElection: false
+                noElection: false,
+                isPastElection: false
             };
         } catch (error) {
             console.error('Error fetching voter info:', error);
@@ -434,8 +486,8 @@ const CivicAPI = {
     },
 
     /**
-     * Get list of upcoming elections from Google Civic API
-     * @returns {Promise<Array>} - Array of upcoming elections
+     * Get list of elections from Google Civic API
+     * @returns {Promise<Array>} - Array of elections
      */
     async getElections() {
         const apiUrl = new URL(`${this.GOOGLE_CIVIC_URL}/elections`);
@@ -447,6 +499,7 @@ const CivicAPI = {
                 throw new Error('Failed to fetch elections');
             }
             const data = await response.json();
+            console.log('Elections available:', data.elections?.length || 0);
             return data.elections || [];
         } catch (error) {
             console.error('Error fetching elections:', error);
