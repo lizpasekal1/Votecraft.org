@@ -948,11 +948,20 @@ class VotecraftApp {
                 })
                 : '';
 
+            const isPast = this.voterInfo.isPastElection;
+            const pastBadge = isPast ? '<span class="past-election-badge">Past Election</span>' : '';
+
             this.ballotInfo.innerHTML = `
-                <div class="ballot-election-info">
+                ${isPast ? `
+                    <div class="past-election-notice">
+                        <span class="notice-icon">📋</span>
+                        <span>Showing results from the most recent election. New ballot data will appear closer to the next election.</span>
+                    </div>
+                ` : ''}
+                <div class="ballot-election-info ${isPast ? 'past-election' : ''}">
                     <div class="election-icon">🗳️</div>
                     <div class="election-details">
-                        <div class="election-name">${election.name}</div>
+                        <div class="election-name">${election.name} ${pastBadge}</div>
                         <div class="election-date">${electionDate}</div>
                     </div>
                 </div>
