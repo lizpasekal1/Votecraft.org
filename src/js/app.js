@@ -36,6 +36,11 @@ class VotecraftApp {
         this.topicsFilters = document.getElementById('topics-filters');
         this.topicsList = document.getElementById('topics-list');
 
+        // Ballot section
+        this.ballotSection = document.getElementById('ballot-section');
+        this.ballotInfo = document.getElementById('ballot-info');
+        this.ballotContests = document.getElementById('ballot-contests');
+
         // Map
         this.map = null;
         this.marker = null;
@@ -44,6 +49,7 @@ class VotecraftApp {
         this.legislators = [];
         this.bills = [];
         this.voteRecords = [];
+        this.voterInfo = null;
         this.currentAddress = '';
         this.currentCoords = null;
         this.currentJurisdiction = null;
@@ -118,6 +124,9 @@ class VotecraftApp {
 
         // Render placeholder topics section
         this.showPlaceholderTopics();
+
+        // Render placeholder ballot section
+        this.showPlaceholderBallot();
 
         // Initialize map with USA view
         this.initPlaceholderMap();
@@ -211,6 +220,52 @@ class VotecraftApp {
             this.topicsList.innerHTML = `
                 <div class="topics-placeholder">
                     <p>📋 Enter your address to explore bills by topic</p>
+                </div>
+            `;
+        }
+    }
+
+    showPlaceholderBallot() {
+        if (this.ballotSection) {
+            this.ballotSection.style.display = 'flex';
+        }
+        if (this.ballotInfo) {
+            this.ballotInfo.innerHTML = `
+                <div class="ballot-election-info placeholder-ballot">
+                    <div class="election-icon">🗳️</div>
+                    <div class="election-details">
+                        <div class="election-name">Upcoming Election</div>
+                        <div class="election-date">Enter your address to see your ballot</div>
+                    </div>
+                </div>
+            `;
+        }
+        if (this.ballotContests) {
+            this.ballotContests.innerHTML = `
+                <div class="contest-item placeholder-contest">
+                    <div class="contest-header">
+                        <span class="contest-office">🏛️ Office ???</span>
+                        <span class="contest-level">Search to find</span>
+                    </div>
+                    <div class="contest-candidates">
+                        <div class="candidate-item">
+                            <span class="candidate-name">�� Candidate Name</span>
+                            <span class="candidate-party">Party</span>
+                        </div>
+                        <div class="candidate-item">
+                            <span class="candidate-name">👤 Candidate Name</span>
+                            <span class="candidate-party">Party</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="contest-item placeholder-contest">
+                    <div class="contest-header">
+                        <span class="contest-office">📜 Ballot Measure ???</span>
+                        <span class="contest-level">Search to find</span>
+                    </div>
+                    <div class="contest-description">
+                        See ballot measures and referendums for your area
+                    </div>
                 </div>
             `;
         }
@@ -358,8 +413,9 @@ class VotecraftApp {
             this.renderLegislators();
             this.initMap();
 
-            // Fetch bills, votes, and enable topics in background (don't block main results)
+            // Fetch bills, votes, ballot, and enable topics in background (don't block main results)
             this.loadBills();
+            this.loadBallot();
             this.enableTopicFilters();
 
             this.showLoading(false);
@@ -821,6 +877,174 @@ class VotecraftApp {
                 <div class="bill-status">
                     ${bill.latest_action_description || 'No recent action'}
                 </div>
+            </div>
+        `;
+    }
+
+    async loadBallot() {
+        try {
+            console.log('Fetching ballot info...');
+            this.showBallotLoading();
+            this.voterInfo = await window.CivicAPI.getVoterInfo(this.currentAddress);
+            console.log('Voter info:', this.voterInfo);
+            this.renderBallot();
+        } catch (error) {
+            console.error('Error loading ballot:', error);
+            if (this.ballotSection) {
+                this.ballotSection.style.display = 'none';
+            }
+        }
+    }
+
+    showBallotLoading() {
+        if (this.ballotSection) {
+            this.ballotSection.style.display = 'flex';
+        }
+        if (this.ballotInfo) {
+            this.ballotInfo.innerHTML = `
+                <div class="bills-loading">
+                    <div class="bills-loader"></div>
+                    <p>Checking for upcoming elections...</p>
+                </div>
+            `;
+        }
+        if (this.ballotContests) {
+            this.ballotContests.innerHTML = '';
+        }
+    }
+
+    renderBallot() {
+        if (!this.voterInfo || this.voterInfo.noElection) {
+            // No active election - show helpful message
+            if (this.ballotInfo) {
+                this.ballotInfo.innerHTML = `
+                    <div class="ballot-election-info no-election">
+                        <div class="election-icon">📅</div>
+                        <div class="election-details">
+                            <div class="election-name">No Upcoming Elections</div>
+                            <div class="election-date">There are no elections with ballot data available for your area right now. Check back closer to election day!</div>
+                        </div>
+                    </div>
+                `;
+            }
+            if (this.ballotContests) {
+                this.ballotContests.innerHTML = '';
+            }
+            return;
+        }
+
+        // Show election info
+        if (this.ballotInfo && this.voterInfo.election) {
+            const election = this.voterInfo.election;
+            const electionDate = election.electionDay
+                ? new Date(election.electionDay).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
+                })
+                : '';
+
+            this.ballotInfo.innerHTML = `
+                <div class="ballot-election-info">
+                    <div class="election-icon">🗳️</div>
+                    <div class="election-details">
+                        <div class="election-name">${election.name}</div>
+                        <div class="election-date">${electionDate}</div>
+                    </div>
+                </div>
+                ${this.renderPollingLocations()}
+            `;
+        }
+
+        // Show contests
+        if (this.ballotContests && this.voterInfo.contests.length > 0) {
+            this.ballotContests.innerHTML = this.voterInfo.contests
+                .map(contest => this.renderContest(contest))
+                .join('');
+        } else if (this.ballotContests) {
+            this.ballotContests.innerHTML = `
+                <div class="topics-placeholder">
+                    <p>Ballot details not yet available for this election</p>
+                </div>
+            `;
+        }
+    }
+
+    renderPollingLocations() {
+        const locations = [
+            ...this.voterInfo.pollingLocations || [],
+            ...this.voterInfo.earlyVoteSites || [],
+            ...this.voterInfo.dropOffLocations || []
+        ];
+
+        if (locations.length === 0) return '';
+
+        const location = locations[0];
+        const address = location.address;
+        const addressStr = address
+            ? `${address.line1 || ''}, ${address.city || ''}, ${address.state || ''} ${address.zip || ''}`
+            : '';
+
+        return `
+            <div class="polling-location">
+                <div class="polling-label">📍 Your Polling Place</div>
+                <div class="polling-name">${location.name || 'Polling Location'}</div>
+                <div class="polling-address">${addressStr}</div>
+                ${location.pollingHours ? `<div class="polling-hours">Hours: ${location.pollingHours}</div>` : ''}
+            </div>
+        `;
+    }
+
+    renderContest(contest) {
+        if (contest.type === 'Referendum') {
+            return this.renderReferendum(contest);
+        }
+        return this.renderRace(contest);
+    }
+
+    renderRace(contest) {
+        const candidates = contest.candidates || [];
+
+        return `
+            <div class="contest-item">
+                <div class="contest-header">
+                    <span class="contest-office">${contest.office || 'Office'}</span>
+                    <span class="contest-level">${contest.level?.join(', ') || ''}</span>
+                </div>
+                <div class="contest-candidates">
+                    ${candidates.map(c => `
+                        <div class="candidate-item">
+                            <span class="candidate-name">${c.name}</span>
+                            <span class="candidate-party">${c.party || ''}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    renderReferendum(contest) {
+        return `
+            <div class="contest-item referendum">
+                <div class="contest-header">
+                    <span class="contest-office">📜 ${contest.referendumTitle || contest.office || 'Ballot Measure'}</span>
+                </div>
+                <div class="contest-description">
+                    ${contest.referendumSubtitle || contest.referendumBrief || contest.referendumText || 'No description available'}
+                </div>
+                ${contest.referendumProStatement ? `
+                    <div class="referendum-arguments">
+                        <div class="argument pro">
+                            <strong>For:</strong> ${contest.referendumProStatement}
+                        </div>
+                        ${contest.referendumConStatement ? `
+                            <div class="argument con">
+                                <strong>Against:</strong> ${contest.referendumConStatement}
+                            </div>
+                        ` : ''}
+                    </div>
+                ` : ''}
             </div>
         `;
     }
