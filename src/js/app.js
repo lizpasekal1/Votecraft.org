@@ -234,9 +234,14 @@ class VotecraftApp {
                 <div class="ballot-election-info placeholder-ballot">
                     <div class="election-icon">🗳️</div>
                     <div class="election-details">
-                        <div class="election-name">Upcoming Election</div>
-                        <div class="election-date">Enter your address to see your ballot</div>
+                        <div class="election-name placeholder-field">Election: ???</div>
+                        <div class="election-date placeholder-field">Date: ???</div>
                     </div>
+                </div>
+                <div class="polling-location placeholder-polling">
+                    <div class="polling-label">📍 Your Polling Place</div>
+                    <div class="polling-name placeholder-field">Location: ???</div>
+                    <div class="polling-address placeholder-field">Address: ???</div>
                 </div>
             `;
         }
@@ -244,27 +249,25 @@ class VotecraftApp {
             this.ballotContests.innerHTML = `
                 <div class="contest-item placeholder-contest">
                     <div class="contest-header">
-                        <span class="contest-office">🏛️ Office ???</span>
-                        <span class="contest-level">Search to find</span>
+                        <span class="contest-office placeholder-field">🏛️ Office: ???</span>
                     </div>
                     <div class="contest-candidates">
-                        <div class="candidate-item">
-                            <span class="candidate-name">�� Candidate Name</span>
-                            <span class="candidate-party">Party</span>
+                        <div class="candidate-item placeholder-candidate">
+                            <span class="candidate-name">👤 ???</span>
+                            <span class="candidate-party">Party: ???</span>
                         </div>
-                        <div class="candidate-item">
-                            <span class="candidate-name">👤 Candidate Name</span>
-                            <span class="candidate-party">Party</span>
+                        <div class="candidate-item placeholder-candidate">
+                            <span class="candidate-name">👤 ???</span>
+                            <span class="candidate-party">Party: ???</span>
                         </div>
                     </div>
                 </div>
                 <div class="contest-item placeholder-contest">
                     <div class="contest-header">
-                        <span class="contest-office">📜 Ballot Measure ???</span>
-                        <span class="contest-level">Search to find</span>
+                        <span class="contest-office placeholder-field">📜 Ballot Measure: ???</span>
                     </div>
-                    <div class="contest-description">
-                        See ballot measures and referendums for your area
+                    <div class="contest-description placeholder-field">
+                        Description: ???
                     </div>
                 </div>
             `;

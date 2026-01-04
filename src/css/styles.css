@@ -972,6 +972,48 @@ body {
     opacity: 1;
 }
 
+/* Placeholder field styles - look like form inputs */
+.placeholder-field {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 4px;
+    padding: 8px 12px;
+    color: #64748b;
+    font-style: italic;
+}
+
+.placeholder-ballot .election-name.placeholder-field,
+.placeholder-ballot .election-date.placeholder-field {
+    display: inline-block;
+    margin-bottom: 4px;
+}
+
+.placeholder-polling {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-top: 12px;
+}
+
+.placeholder-polling .polling-name,
+.placeholder-polling .polling-address {
+    background: transparent;
+    border: none;
+    padding: 4px 0;
+}
+
+.placeholder-candidate {
+    background: #f1f5f9;
+    border: 1px dashed #cbd5e1;
+}
+
+.placeholder-candidate .candidate-name,
+.placeholder-candidate .candidate-party {
+    color: #64748b;
+    font-style: italic;
+}
+
 .contest-header {
     display: flex;
     justify-content: space-between;
