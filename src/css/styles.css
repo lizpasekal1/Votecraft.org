@@ -320,6 +320,35 @@ body {
     padding: 2px 6px;
 }
 
+/* Always visible loader below map */
+.map-loader-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    margin-top: 16px;
+}
+
+.map-loader {
+    width: 50px;
+    padding: 8px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: #25b09b;
+    --_m:
+        conic-gradient(#0000 10%,#000),
+        linear-gradient(#000 0 0) content-box;
+    -webkit-mask: var(--_m);
+            mask: var(--_m);
+    -webkit-mask-composite: source-out;
+            mask-composite: subtract;
+    animation: mapLoaderSpin 1s infinite linear;
+}
+
+@keyframes mapLoaderSpin {
+    to { transform: rotate(1turn); }
+}
+
 /* Legislators List */
 .legislators-list {
     display: flex;
