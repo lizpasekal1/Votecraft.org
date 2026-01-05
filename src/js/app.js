@@ -41,6 +41,9 @@ class VotecraftApp {
         this.ballotInfo = document.getElementById('ballot-info');
         this.ballotContests = document.getElementById('ballot-contests');
 
+        // State website link section
+        this.stateWebsiteSection = document.getElementById('state-website-section');
+
         // Map
         this.map = null;
         this.marker = null;
@@ -53,6 +56,7 @@ class VotecraftApp {
         this.currentAddress = '';
         this.currentCoords = null;
         this.currentJurisdiction = null;
+        this.currentStateName = null;
         this.selectedTopic = null;
 
         this.bindEvents();
@@ -128,8 +132,24 @@ class VotecraftApp {
         // Render placeholder ballot section
         this.showPlaceholderBallot();
 
+        // Render placeholder state website section
+        this.showPlaceholderStateWebsite();
+
         // Initialize map with USA view
         this.initPlaceholderMap();
+    }
+
+    showPlaceholderStateWebsite() {
+        if (this.stateWebsiteSection) {
+            this.stateWebsiteSection.style.display = 'block';
+            this.stateWebsiteSection.innerHTML = `
+                <div class="state-website-btn placeholder-state-website">
+                    <span class="state-website-icon">🗳️</span>
+                    <span class="state-website-text">Visit Your State's Official Elections Website</span>
+                    <span class="state-website-arrow">→</span>
+                </div>
+            `;
+        }
     }
 
     showPlaceholderBills() {
@@ -357,8 +377,17 @@ class VotecraftApp {
             });
 
             this.currentAddress = 'Your current location';
+
+            // Store jurisdiction for state website
+            const stateLegislators = this.legislators.filter(l => l.level === 'state');
+            if (stateLegislators.length > 0 && stateLegislators[0].jurisdiction) {
+                this.currentJurisdiction = stateLegislators[0].jurisdiction;
+                this.currentStateName = stateLegislators[0].jurisdiction;
+            }
+
             this.renderLegislators();
             this.initMap();
+            this.renderStateWebsiteLink();
 
             // Fetch bills in background
             this.loadBills();
@@ -407,14 +436,16 @@ class VotecraftApp {
                 return;
             }
 
-            // Store jurisdiction for topic filtering
+            // Store jurisdiction for topic filtering and state website
             const stateLegislators = this.legislators.filter(l => l.level === 'state');
             if (stateLegislators.length > 0 && stateLegislators[0].jurisdiction) {
                 this.currentJurisdiction = stateLegislators[0].jurisdiction;
+                this.currentStateName = stateLegislators[0].jurisdiction;
             }
 
             this.renderLegislators();
             this.initMap();
+            this.renderStateWebsiteLink();
 
             // Fetch bills, votes, ballot, and enable topics in background (don't block main results)
             this.loadBills();
@@ -1059,6 +1090,41 @@ class VotecraftApp {
                 ` : ''}
             </div>
         `;
+    }
+
+    renderStateWebsiteLink() {
+        if (!this.stateWebsiteSection) return;
+
+        // Try to get state from jurisdiction (most reliable)
+        let stateName = this.currentStateName;
+
+        if (!stateName && this.currentJurisdiction) {
+            // Jurisdiction is usually the state name (e.g., "California")
+            stateName = this.currentJurisdiction;
+        }
+
+        // Try to extract state from legislators
+        if (!stateName && this.legislators.length > 0) {
+            const stateLeg = this.legislators.find(l => l.level === 'state' && l.jurisdiction);
+            if (stateLeg) {
+                stateName = stateLeg.jurisdiction;
+            }
+        }
+
+        const websiteUrl = window.CivicAPI.getStateElectionsWebsite(stateName);
+
+        if (websiteUrl && stateName) {
+            this.stateWebsiteSection.style.display = 'block';
+            this.stateWebsiteSection.innerHTML = `
+                <a href="${websiteUrl}" target="_blank" rel="noopener" class="state-website-btn">
+                    <span class="state-website-icon">🗳️</span>
+                    <span class="state-website-text">Visit ${stateName}'s Official Elections Website</span>
+                    <span class="state-website-arrow">→</span>
+                </a>
+            `;
+        } else {
+            this.stateWebsiteSection.style.display = 'none';
+        }
     }
 }
 

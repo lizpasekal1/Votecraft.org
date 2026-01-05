@@ -1,0 +1,105 @@
+/**
+ * Layout Styles
+ * Grid, containers, and structural elements
+ */
+
+/* Widget Container */
+.votecraft-widget {
+  width: 100%;
+  max-width: 1000px;
+  background: var(--background);
+  border-radius: var(--radius);
+  box-shadow: none;
+  overflow: hidden;
+}
+
+/* Header */
+.widget-header {
+  background: var(--background);
+  padding: 24px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.widget-header h1 {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+
+.widget-header p {
+  color: var(--text-light);
+  font-size: 0.95rem;
+}
+
+/* Main Content */
+.main-content {
+  padding: 24px;
+  position: relative;
+}
+
+/* Two Column Layout */
+.results-layout {
+  display: flex;
+  gap: 24px;
+}
+
+.results-column {
+  flex: 1;
+}
+
+.results-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.results-right {
+  flex: 0 0 350px;
+  position: sticky;
+  top: 24px;
+  align-self: flex-start;
+}
+
+/* Results Header */
+.results-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.searched-address {
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+/* Section Title */
+.section-title {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+}
+
+/* Activity Subtitle */
+.activity-subtitle {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  margin-top: -8px;
+  margin-bottom: 8px;
+}
+
+/* Disclaimer */
+.disclaimer {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 0.8rem;
+  color: var(--text-light);
+  text-align: center;
+}
