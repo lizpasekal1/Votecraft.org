@@ -357,6 +357,84 @@ const CivicAPI = {
     },
 
     /**
+     * State elections websites - official Secretary of State sites
+     */
+    STATE_ELECTIONS_WEBSITES: {
+        'Alabama': 'https://sos.alabama.gov/alabama-votes',
+        'Alaska': 'https://www.elections.alaska.gov/',
+        'Arizona': 'https://azsos.gov/elections',
+        'Arkansas': 'https://www.sos.arkansas.gov/elections',
+        'California': 'https://www.sos.ca.gov/elections',
+        'Colorado': 'https://www.sos.state.co.us/pubs/elections/main.html',
+        'Connecticut': 'https://portal.ct.gov/SOTS/Common-Elements/V5-Template---Redesign/Elections--Voting--Home-Page',
+        'Delaware': 'https://elections.delaware.gov/index.shtml',
+        'District of Columbia': 'https://www.dcboe.org/',
+        'Florida': 'https://dos.myflorida.com/elections/',
+        'Georgia': 'https://sos.ga.gov/index.php/?section=elections',
+        'Hawaii': 'http://hawaii.gov/elections',
+        'Idaho': 'https://sos.idaho.gov/elections-division/',
+        'Illinois': 'https://www.elections.il.gov/',
+        'Indiana': 'https://www.in.gov/sos/elections/',
+        'Iowa': 'https://sos.iowa.gov/elections/voterinformation/index.html',
+        'Kansas': 'https://sos.ks.gov/elections/elections.html',
+        'Kentucky': 'https://elect.ky.gov/Pages/default.aspx',
+        'Louisiana': 'https://www.sos.la.gov/electionsandvoting/Pages/default.aspx',
+        'Maine': 'https://www.maine.gov/sos/cec/elec/',
+        'Maryland': 'https://elections.maryland.gov/',
+        'Massachusetts': 'https://www.sec.state.ma.us/ele/eleidx.htm',
+        'Michigan': 'https://www.michigan.gov/sos/elections',
+        'Minnesota': 'https://www.sos.state.mn.us/elections-voting/',
+        'Mississippi': 'https://www.sos.ms.gov/elections-voting',
+        'Missouri': 'https://www.sos.mo.gov/elections',
+        'Montana': 'https://sosmt.gov/elections/',
+        'Nebraska': 'https://www.nebraska.gov/featured/elections-voting/',
+        'Nevada': 'https://www.nvsos.gov/sos/elections',
+        'New Hampshire': 'https://www.sos.nh.gov/elections',
+        'New Jersey': 'https://www.state.nj.us/state/elections/index.shtml',
+        'New Mexico': 'https://www.sos.state.nm.us/voting-and-elections/',
+        'New York': 'https://www.elections.ny.gov/',
+        'North Carolina': 'https://www.ncsbe.gov/',
+        'North Dakota': 'https://vip.sos.nd.gov/PortalList.aspx',
+        'Ohio': 'https://www.ohiosos.gov/elections/',
+        'Oklahoma': 'https://oklahoma.gov/elections.html',
+        'Oregon': 'https://sos.oregon.gov/voting-elections/Pages/default.aspx',
+        'Pennsylvania': 'https://www.dos.pa.gov/VotingElections/Pages/default.aspx',
+        'Rhode Island': 'https://vote.sos.ri.gov/',
+        'South Carolina': 'https://www.scvotes.org/',
+        'South Dakota': 'https://sdsos.gov/elections-voting/default.aspx',
+        'Tennessee': 'https://sos.tn.gov/elections',
+        'Texas': 'https://www.sos.state.tx.us/elections/index.shtml',
+        'Utah': 'https://elections.utah.gov/',
+        'Vermont': 'https://sos.vermont.gov/elections/',
+        'Virginia': 'https://www.elections.virginia.gov/',
+        'Washington': 'https://www.sos.wa.gov/elections/',
+        'West Virginia': 'https://sos.wv.gov/elections/Pages/default.aspx',
+        'Wisconsin': 'https://elections.wi.gov/',
+        'Wyoming': 'https://sos.wyo.gov/Elections/'
+    },
+
+    /**
+     * Get the official elections website for a state
+     * @param {string} stateName - Full state name (e.g., "California")
+     * @returns {string|null} - URL or null if not found
+     */
+    getStateElectionsWebsite(stateName) {
+        if (!stateName) return null;
+        // Try direct match first
+        if (this.STATE_ELECTIONS_WEBSITES[stateName]) {
+            return this.STATE_ELECTIONS_WEBSITES[stateName];
+        }
+        // Try case-insensitive match
+        const normalized = stateName.trim();
+        for (const [state, url] of Object.entries(this.STATE_ELECTIONS_WEBSITES)) {
+            if (state.toLowerCase() === normalized.toLowerCase()) {
+                return url;
+            }
+        }
+        return null;
+    },
+
+    /**
      * Available bill subjects/topics for filtering
      */
     BILL_SUBJECTS: [

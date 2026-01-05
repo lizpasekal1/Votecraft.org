@@ -1,0 +1,31 @@
+{
+  "name": "votecraft",
+  "version": "1.0.0",
+  "description": "Know Your Ballot - An embeddable widget to help citizens find their elected representatives and ballot information",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write \"src/**/*.{js,css,html}\""
+  },
+  "keywords": [
+    "civic",
+    "voting",
+    "elections",
+    "legislators",
+    "ballot",
+    "democracy"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "eslint": "^9.0.0",
+    "@eslint/js": "^9.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "prettier": "^3.0.0"
+  }
+}

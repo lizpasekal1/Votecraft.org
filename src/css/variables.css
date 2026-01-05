@@ -1,0 +1,29 @@
+/**
+ * CSS Custom Properties (Design Tokens)
+ * Votecraft Widget Design System
+ */
+
+:root {
+  /* Primary Colors */
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+
+  /* Chamber Colors */
+  --upper-chamber: #14CCB0; /* Teal for Senate/Upper */
+  --lower-chamber: #FFC280; /* Orange for House/Lower */
+
+  /* Party Colors */
+  --democrat: #3b82f6;
+  --republican: #ef4444;
+
+  /* Neutral Colors */
+  --background: #ffffff;
+  --background-alt: #f8fafc;
+  --text: #1e293b;
+  --text-light: #64748b;
+  --border: #e2e8f0;
+
+  /* Effects */
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --radius: 8px;
+}
