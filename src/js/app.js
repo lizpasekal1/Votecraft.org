@@ -677,21 +677,22 @@ class VotecraftApp {
     initMap() {
         if (!this.currentCoords) return;
 
+        // Clear existing district layers
+        if (this.districtLayers) {
+            this.districtLayers.forEach(layer => {
+                if (this.map) this.map.removeLayer(layer);
+            });
+        }
+        this.districtLayers = [];
+
         // Map already exists from placeholder, update it
         if (this.map) {
-            this.map.setView([this.currentCoords.lat, this.currentCoords.lng], 11);
+            this.map.setView([this.currentCoords.lat, this.currentCoords.lng], 10);
 
-            // Add or update the location circle
+            // Remove old location circle if exists
             if (this.locationCircle) {
-                this.locationCircle.setLatLng([this.currentCoords.lat, this.currentCoords.lng]);
-            } else {
-                this.locationCircle = L.circle([this.currentCoords.lat, this.currentCoords.lng], {
-                    color: '#14CCB0',
-                    fillColor: '#14CCB0',
-                    fillOpacity: 0.15,
-                    radius: 3000,
-                    weight: 2
-                }).addTo(this.map);
+                this.map.removeLayer(this.locationCircle);
+                this.locationCircle = null;
             }
 
             // Add or update the marker
@@ -712,6 +713,9 @@ class VotecraftApp {
             }
 
             this.map.invalidateSize();
+
+            // Fetch and draw district boundaries
+            this.loadDistrictBoundaries();
             return;
         }
 
@@ -719,20 +723,12 @@ class VotecraftApp {
         this.map = L.map('map', {
             zoomControl: true,
             scrollWheelZoom: false
-        }).setView([this.currentCoords.lat, this.currentCoords.lng], 11);
+        }).setView([this.currentCoords.lat, this.currentCoords.lng], 10);
 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
             maxZoom: 19
-        }).addTo(this.map);
-
-        this.locationCircle = L.circle([this.currentCoords.lat, this.currentCoords.lng], {
-            color: '#14CCB0',
-            fillColor: '#14CCB0',
-            fillOpacity: 0.15,
-            radius: 3000,
-            weight: 2
         }).addTo(this.map);
 
         const customIcon = L.divIcon({
@@ -749,6 +745,79 @@ class VotecraftApp {
         setTimeout(() => {
             this.map.invalidateSize();
         }, 100);
+
+        // Fetch and draw district boundaries
+        this.loadDistrictBoundaries();
+    }
+
+    async loadDistrictBoundaries() {
+        if (!this.currentCoords) return;
+
+        try {
+            console.log('Fetching district boundaries...');
+            const districts = await window.CivicAPI.getDistrictBoundaries(
+                this.currentCoords.lat,
+                this.currentCoords.lng
+            );
+
+            // District colors and styles
+            const districtStyles = {
+                congressional: {
+                    color: '#2563eb',
+                    fillColor: '#2563eb',
+                    fillOpacity: 0.1,
+                    weight: 3,
+                    dashArray: null
+                },
+                stateSenate: {
+                    color: '#14CCB0',
+                    fillColor: '#14CCB0',
+                    fillOpacity: 0.1,
+                    weight: 2,
+                    dashArray: '5, 5'
+                },
+                stateHouse: {
+                    color: '#FFC280',
+                    fillColor: '#FFC280',
+                    fillOpacity: 0.1,
+                    weight: 2,
+                    dashArray: '3, 3'
+                }
+            };
+
+            // Add each district to the map
+            Object.entries(districts).forEach(([type, feature]) => {
+                if (feature && feature.geometry) {
+                    const style = districtStyles[type];
+                    const districtName = feature.properties.NAMELSAD || feature.properties.NAME || type;
+
+                    const layer = L.geoJSON(feature, {
+                        style: {
+                            color: style.color,
+                            fillColor: style.fillColor,
+                            fillOpacity: style.fillOpacity,
+                            weight: style.weight,
+                            dashArray: style.dashArray
+                        }
+                    }).addTo(this.map);
+
+                    // Add popup with district info
+                    layer.bindPopup(`<b>${feature.properties.districtLabel}</b><br>${districtName}`);
+
+                    this.districtLayers.push(layer);
+                }
+            });
+
+            // Fit map to show all district boundaries
+            if (this.districtLayers.length > 0) {
+                const group = L.featureGroup(this.districtLayers);
+                this.map.fitBounds(group.getBounds(), { padding: [20, 20] });
+            }
+
+            console.log('District boundaries drawn:', this.districtLayers.length);
+        } catch (error) {
+            console.error('Error loading district boundaries:', error);
+        }
     }
 
     showError(message) {
