@@ -228,11 +228,10 @@ const CivicAPI = {
         console.log('State legislators:', stateLegislators.map(l => ({ name: l.name, level: l.level, jurisdiction: l.jurisdiction })));
 
         for (const legislator of stateLegislators) {
-            // Extract last name for sponsor search
-            const nameParts = legislator.name.split(' ');
-            const lastName = nameParts[nameParts.length - 1];
+            // Use full name for sponsor search (API requires full name match)
+            const sponsorName = legislator.name;
 
-            console.log(`Fetching bills for ${legislator.name} (${lastName}) in ${legislator.jurisdiction}`);
+            console.log(`Fetching bills for ${legislator.name} in ${legislator.jurisdiction}`);
 
             if (!legislator.jurisdiction) {
                 console.log('  Skipping - no jurisdiction');
@@ -241,11 +240,11 @@ const CivicAPI = {
 
             const bills = await this.getBillsBySponsor(
                 legislator.jurisdiction,
-                lastName,
+                sponsorName,
                 billsPerLegislator
             );
 
-            console.log(`  Found ${bills.length} bills for ${lastName}`);
+            console.log(`  Found ${bills.length} bills for ${sponsorName}`);
 
             // Add bills to the list, avoiding duplicates
             for (const bill of bills) {
