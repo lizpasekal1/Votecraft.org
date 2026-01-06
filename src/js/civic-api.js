@@ -16,7 +16,6 @@ const CivicAPI = {
     GOOGLE_CIVIC_URL: 'https://www.googleapis.com/civicinfo/v2',
 
     // CORS proxy for OpenStates API (needed for browser requests)
-    // corsproxy.io blocks curl but works from browsers
     CORS_PROXY: 'https://corsproxy.io/?',
 
     /**
@@ -192,15 +191,19 @@ const CivicAPI = {
 
         const url = this.CORS_PROXY + apiUrl.toString();
 
-        console.log(`  API URL: ${apiUrl.toString()}`);
+        console.log(`  Bills API URL: ${url}`);
 
         try {
             const response = await fetch(url);
+            console.log(`  Bills API response status: ${response.status}`);
+
             if (!response.ok) {
-                console.error('Bills API error:', response.status);
+                const errorText = await response.text();
+                console.error('Bills API error:', response.status, errorText);
                 return [];
             }
             const data = await response.json();
+            console.log(`  Bills API returned ${data.results?.length || 0} results`);
             return data.results || [];
         } catch (error) {
             console.error('Error fetching bills:', error);
@@ -220,6 +223,8 @@ const CivicAPI = {
 
         // Get state legislators only
         const stateLegislators = legislators.filter(l => l.level === 'state');
+        console.log(`Total legislators: ${legislators.length}, State legislators: ${stateLegislators.length}`);
+        console.log('State legislators:', stateLegislators.map(l => ({ name: l.name, level: l.level, jurisdiction: l.jurisdiction })));
 
         for (const legislator of stateLegislators) {
             // Extract last name for sponsor search
