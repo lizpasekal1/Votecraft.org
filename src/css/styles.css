@@ -248,7 +248,7 @@ body {
 }
 
 .results-right {
-    flex: 0 0 450px;
+    flex: 1;
     position: sticky;
     top: 24px;
     align-self: flex-start;
@@ -1328,11 +1328,7 @@ body {
 }
 
 /* Responsive */
-@media (max-width: 1024px) {
-    .results-right {
-        flex: 0 0 380px;
-    }
-}
+/* Removed 1024px breakpoint - both columns now flex: 1 (50/50 split) */
 
 @media (max-width: 768px) {
     .results-layout {
