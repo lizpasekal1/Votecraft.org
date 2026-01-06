@@ -952,6 +952,13 @@ class VotecraftApp {
                 return;
             }
 
+            // Sort by first action date (when bill was introduced) - newest first
+            bills.sort((a, b) => {
+                const dateA = new Date(a.first_action_date || a.created_at || 0);
+                const dateB = new Date(b.first_action_date || b.created_at || 0);
+                return dateB - dateA;
+            });
+
             this.topicsList.innerHTML = bills.map(bill => this.renderTopicBill(bill)).join('');
         } catch (error) {
             console.error('Error loading topic bills:', error);
@@ -964,9 +971,9 @@ class VotecraftApp {
     }
 
     renderTopicBill(bill) {
-        // Format date
-        const actionDate = bill.latest_action_date
-            ? new Date(bill.latest_action_date).toLocaleDateString('en-US', {
+        // Format introduced date (first action date)
+        const introducedDate = bill.first_action_date
+            ? new Date(bill.first_action_date).toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric',
                 year: 'numeric'
@@ -985,7 +992,7 @@ class VotecraftApp {
             <div class="bill-item topic-bill">
                 <div class="bill-header">
                     <span class="bill-id">${bill.identifier}</span>
-                    <span class="bill-date">${actionDate}</span>
+                    <span class="bill-date">${introducedDate}</span>
                 </div>
                 <div class="bill-title">
                     <a href="${bill.openstates_url}" target="_blank">${title}</a>
