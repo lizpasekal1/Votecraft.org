@@ -181,10 +181,10 @@ const CivicAPI = {
      * @returns {Promise<Array>} - Array of bills
      */
     async getBillsBySponsor(jurisdiction, sponsorName, limit = 5) {
-        // Use 'q' parameter for text search since 'sponsor' filter is unreliable
+        // Use 'sponsor' parameter for sponsor name search
         const apiUrl = new URL(`${this.OPENSTATES_URL}/bills`);
         apiUrl.searchParams.append('jurisdiction', jurisdiction);
-        apiUrl.searchParams.append('q', sponsorName);
+        apiUrl.searchParams.append('sponsor', sponsorName);
         apiUrl.searchParams.append('include', 'sponsorships,votes');
         apiUrl.searchParams.append('per_page', limit.toString());
         apiUrl.searchParams.append('sort', 'latest_action_desc');
@@ -241,28 +241,15 @@ const CivicAPI = {
 
             console.log(`  Found ${bills.length} bills for ${lastName}`);
 
-            // Filter to bills where this legislator is a sponsor (primary or co-sponsor)
-            // and add legislator reference
+            // Add bills to the list, avoiding duplicates
             for (const bill of bills) {
                 if (seenBillIds.has(bill.id)) continue;
 
-                // Check if this legislator is a sponsor (any type)
-                // Match by last name (case-insensitive)
-                const isSponsor = bill.sponsorships?.some(s => {
-                    const sponsorName = s.name.toLowerCase();
-                    const searchName = lastName.toLowerCase();
-                    return sponsorName === searchName ||
-                           sponsorName.includes(searchName) ||
-                           searchName.includes(sponsorName);
+                seenBillIds.add(bill.id);
+                allBills.push({
+                    ...bill,
+                    sponsorLegislator: legislator
                 });
-
-                if (isSponsor) {
-                    seenBillIds.add(bill.id);
-                    allBills.push({
-                        ...bill,
-                        sponsorLegislator: legislator
-                    });
-                }
             }
         }
 
@@ -664,17 +651,17 @@ const CivicAPI = {
             stateHouse: null
         };
 
-        // Census TIGERweb MapServer layers:
-        // 54 = 118th Congressional Districts
-        // 55 = State Legislative Districts - Upper (Senate)
-        // 56 = State Legislative Districts - Lower (House/Assembly)
+        // Census TIGERweb MapServer layers (current/most recent):
+        // 0 = 119th Congressional Districts
+        // 1 = 2024 State Legislative Districts - Upper (Senate)
+        // 2 = 2024 State Legislative Districts - Lower (House/Assembly)
 
         const baseUrl = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer';
 
         const layers = [
-            { id: 54, name: 'congressional', label: 'Congressional District' },
-            { id: 55, name: 'stateSenate', label: 'State Senate District' },
-            { id: 56, name: 'stateHouse', label: 'State House District' }
+            { id: 0, name: 'congressional', label: 'Congressional District' },
+            { id: 1, name: 'stateSenate', label: 'State Senate District' },
+            { id: 2, name: 'stateHouse', label: 'State House District' }
         ];
 
         // Fetch all district boundaries in parallel
@@ -683,6 +670,7 @@ const CivicAPI = {
                 const url = `${baseUrl}/${layer.id}/query?` + new URLSearchParams({
                     geometry: `${lng},${lat}`,
                     geometryType: 'esriGeometryPoint',
+                    inSR: '4326',
                     spatialRel: 'esriSpatialRelIntersects',
                     outFields: '*',
                     returnGeometry: true,
