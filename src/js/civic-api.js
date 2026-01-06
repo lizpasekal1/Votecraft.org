@@ -156,6 +156,7 @@ const CivicAPI = {
             }
 
             return {
+                id: person.id,  // OpenStates person ID for bill lookups
                 name: person.name,
                 office: office,
                 level: level,
@@ -228,10 +229,10 @@ const CivicAPI = {
         console.log('State legislators:', stateLegislators.map(l => ({ name: l.name, level: l.level, jurisdiction: l.jurisdiction })));
 
         for (const legislator of stateLegislators) {
-            // Use full name for sponsor search (API requires full name match)
-            const sponsorName = legislator.name;
+            // Use person ID for sponsor search (more reliable than name matching)
+            const sponsorId = legislator.id || legislator.name;
 
-            console.log(`Fetching bills for ${legislator.name} in ${legislator.jurisdiction}`);
+            console.log(`Fetching bills for ${legislator.name} (${sponsorId}) in ${legislator.jurisdiction}`);
 
             if (!legislator.jurisdiction) {
                 console.log('  Skipping - no jurisdiction');
@@ -240,11 +241,11 @@ const CivicAPI = {
 
             const bills = await this.getBillsBySponsor(
                 legislator.jurisdiction,
-                sponsorName,
+                sponsorId,
                 billsPerLegislator
             );
 
-            console.log(`  Found ${bills.length} bills for ${sponsorName}`);
+            console.log(`  Found ${bills.length} bills for ${legislator.name}`);
 
             // Add bills to the list, avoiding duplicates
             for (const bill of bills) {
