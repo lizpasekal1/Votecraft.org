@@ -649,6 +649,76 @@ const CivicAPI = {
         }
 
         return 'local';
+    },
+
+    /**
+     * Get legislative district boundaries from Census Bureau TIGERweb
+     * @param {number} lat - Latitude
+     * @param {number} lng - Longitude
+     * @returns {Promise<object>} - GeoJSON features for districts
+     */
+    async getDistrictBoundaries(lat, lng) {
+        const results = {
+            congressional: null,
+            stateSenate: null,
+            stateHouse: null
+        };
+
+        // Census TIGERweb MapServer layers:
+        // 54 = 118th Congressional Districts
+        // 55 = State Legislative Districts - Upper (Senate)
+        // 56 = State Legislative Districts - Lower (House/Assembly)
+
+        const baseUrl = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer';
+
+        const layers = [
+            { id: 54, name: 'congressional', label: 'Congressional District' },
+            { id: 55, name: 'stateSenate', label: 'State Senate District' },
+            { id: 56, name: 'stateHouse', label: 'State House District' }
+        ];
+
+        // Fetch all district boundaries in parallel
+        const promises = layers.map(async (layer) => {
+            try {
+                const url = `${baseUrl}/${layer.id}/query?` + new URLSearchParams({
+                    geometry: `${lng},${lat}`,
+                    geometryType: 'esriGeometryPoint',
+                    spatialRel: 'esriSpatialRelIntersects',
+                    outFields: '*',
+                    returnGeometry: true,
+                    f: 'geojson'
+                });
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    console.error(`Failed to fetch ${layer.name} district`);
+                    return null;
+                }
+
+                const data = await response.json();
+                if (data.features && data.features.length > 0) {
+                    const feature = data.features[0];
+                    feature.properties.districtType = layer.name;
+                    feature.properties.districtLabel = layer.label;
+                    return { name: layer.name, feature };
+                }
+                return null;
+            } catch (error) {
+                console.error(`Error fetching ${layer.name} district:`, error);
+                return null;
+            }
+        });
+
+        const districtResults = await Promise.all(promises);
+
+        districtResults.forEach(result => {
+            if (result) {
+                results[result.name] = result.feature;
+            }
+        });
+
+        console.log('District boundaries fetched:', results);
+        return results;
     }
 };
 
