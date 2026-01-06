@@ -476,12 +476,20 @@ class VotecraftApp {
             this.renderVotes();
         } catch (error) {
             console.error('Error loading bills:', error);
-            // Hide loading on error
-            if (this.activitySection) {
-                this.activitySection.style.display = 'none';
+            // Show error message instead of hiding
+            if (this.activityList) {
+                this.activityList.innerHTML = `
+                    <div class="bills-loading">
+                        <p>Unable to load legislative activity. Please try again later.</p>
+                    </div>
+                `;
             }
-            if (this.votesSection) {
-                this.votesSection.style.display = 'none';
+            if (this.votesList) {
+                this.votesList.innerHTML = `
+                    <div class="bills-loading">
+                        <p>Unable to load vote records. Please try again later.</p>
+                    </div>
+                `;
             }
         }
     }
@@ -600,15 +608,19 @@ class VotecraftApp {
     }
 
     renderBills() {
-        if (!this.bills || this.bills.length === 0) {
-            if (this.activitySection) {
-                this.activitySection.style.display = 'none';
-            }
-            return;
-        }
-
         if (this.activitySection) {
             this.activitySection.style.display = 'flex';
+        }
+
+        if (!this.bills || this.bills.length === 0) {
+            if (this.activityList) {
+                this.activityList.innerHTML = `
+                    <div class="bills-loading">
+                        <p>No recent legislative activity found for your representatives.</p>
+                    </div>
+                `;
+            }
+            return;
         }
 
         if (this.activityList) {
@@ -745,15 +757,19 @@ class VotecraftApp {
     }
 
     renderVotes() {
-        if (!this.voteRecords || this.voteRecords.length === 0) {
-            if (this.votesSection) {
-                this.votesSection.style.display = 'none';
-            }
-            return;
-        }
-
         if (this.votesSection) {
             this.votesSection.style.display = 'flex';
+        }
+
+        if (!this.voteRecords || this.voteRecords.length === 0) {
+            if (this.votesList) {
+                this.votesList.innerHTML = `
+                    <div class="bills-loading">
+                        <p>No recent vote records found for your representatives.</p>
+                    </div>
+                `;
+            }
+            return;
         }
 
         if (this.votesList) {
