@@ -184,7 +184,8 @@ const CivicAPI = {
         const apiUrl = new URL(`${this.OPENSTATES_URL}/bills`);
         apiUrl.searchParams.append('jurisdiction', jurisdiction);
         apiUrl.searchParams.append('sponsor', sponsorName);
-        apiUrl.searchParams.append('include', 'sponsorships,votes');
+        apiUrl.searchParams.append('include', 'sponsorships');
+        apiUrl.searchParams.append('include', 'votes');
         apiUrl.searchParams.append('per_page', limit.toString());
         apiUrl.searchParams.append('sort', 'latest_action_desc');
         apiUrl.searchParams.append('apikey', this.OPENSTATES_API_KEY);
@@ -277,7 +278,8 @@ const CivicAPI = {
         const apiUrl = new URL(`${this.OPENSTATES_URL}/bills`);
         apiUrl.searchParams.append('jurisdiction', jurisdiction);
         apiUrl.searchParams.append('q', subject);
-        apiUrl.searchParams.append('include', 'sponsorships,votes');
+        apiUrl.searchParams.append('include', 'sponsorships');
+        apiUrl.searchParams.append('include', 'votes');
         apiUrl.searchParams.append('per_page', limit.toString());
         apiUrl.searchParams.append('sort', 'latest_action_desc');
         apiUrl.searchParams.append('apikey', this.OPENSTATES_API_KEY);
