@@ -48,6 +48,17 @@ class VotecraftApp {
         this.map = null;
         this.marker = null;
 
+        // District explorer
+        this.districtExplorer = document.getElementById('district-explorer');
+        this.districtCards = document.getElementById('district-cards');
+        this.stateNameDisplay = document.getElementById('state-name-display');
+        this.scrollLeftBtn = document.getElementById('scroll-left');
+        this.scrollRightBtn = document.getElementById('scroll-right');
+        this.closeExplorerBtn = document.getElementById('close-explorer');
+        this.allStateDistricts = [];
+        this.userCongressionalDistrict = null;
+        this.explorerDistrictLayer = null;
+
         // State
         this.legislators = [];
         this.bills = [];
@@ -330,6 +341,17 @@ class VotecraftApp {
         const pdfBtn = document.getElementById('save-pdf-btn');
         if (pdfBtn) {
             pdfBtn.addEventListener('click', () => this.savePDF());
+        }
+
+        // District explorer
+        if (this.scrollLeftBtn) {
+            this.scrollLeftBtn.addEventListener('click', () => this.scrollDistricts('left'));
+        }
+        if (this.scrollRightBtn) {
+            this.scrollRightBtn.addEventListener('click', () => this.scrollDistricts('right'));
+        }
+        if (this.closeExplorerBtn) {
+            this.closeExplorerBtn.addEventListener('click', () => this.hideDistrictExplorer());
         }
     }
 
@@ -815,8 +837,153 @@ class VotecraftApp {
             }
 
             console.log('District boundaries drawn:', this.districtLayers.length);
+
+            // Store user's congressional district and load district explorer
+            if (districts.congressional) {
+                this.userCongressionalDistrict = districts.congressional.properties.CD119FP ||
+                    districts.congressional.properties.BASENAME || null;
+            }
+
+            // Load all state districts for explorer
+            this.loadDistrictExplorer();
         } catch (error) {
             console.error('Error loading district boundaries:', error);
+        }
+    }
+
+    async loadDistrictExplorer() {
+        if (!this.currentStateName || !this.districtExplorer) return;
+
+        const stateFips = window.CivicAPI.STATE_FIPS[this.currentStateName];
+        if (!stateFips) {
+            console.log('No FIPS code found for state:', this.currentStateName);
+            return;
+        }
+
+        try {
+            console.log('Loading all congressional districts for', this.currentStateName);
+            this.allStateDistricts = await window.CivicAPI.getAllCongressionalDistricts(stateFips);
+
+            if (this.allStateDistricts.length === 0) {
+                console.log('No districts found for state');
+                return;
+            }
+
+            // Update state name display
+            this.stateNameDisplay.textContent = this.currentStateName;
+
+            // Render district cards
+            this.renderDistrictCards();
+
+            // Show the explorer
+            this.districtExplorer.style.display = 'block';
+
+            console.log(`Loaded ${this.allStateDistricts.length} districts for ${this.currentStateName}`);
+        } catch (error) {
+            console.error('Error loading district explorer:', error);
+        }
+    }
+
+    renderDistrictCards() {
+        if (!this.districtCards) return;
+
+        this.districtCards.innerHTML = this.allStateDistricts.map((district, index) => {
+            const districtNum = district.properties.CD119FP || district.properties.BASENAME || (index + 1);
+            const isUserDistrict = this.userCongressionalDistrict &&
+                (districtNum === this.userCongressionalDistrict ||
+                 districtNum === parseInt(this.userCongressionalDistrict));
+
+            // Handle at-large districts (district 00 or 98)
+            const displayNum = districtNum === '00' || districtNum === '98' ? 'AL' : parseInt(districtNum);
+
+            return `
+                <div class="district-card ${isUserDistrict ? 'user-district' : ''}"
+                     data-index="${index}"
+                     data-district="${districtNum}">
+                    <div class="district-number">${displayNum}</div>
+                    <div class="district-label">District</div>
+                </div>
+            `;
+        }).join('');
+
+        // Add click handlers
+        this.districtCards.querySelectorAll('.district-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const index = parseInt(card.dataset.index);
+                this.showDistrictOnMap(index);
+
+                // Update active state
+                this.districtCards.querySelectorAll('.district-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+            });
+        });
+
+        // Scroll to user's district if found
+        if (this.userCongressionalDistrict) {
+            const userCard = this.districtCards.querySelector('.user-district');
+            if (userCard) {
+                setTimeout(() => {
+                    userCard.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                }, 100);
+            }
+        }
+    }
+
+    showDistrictOnMap(index) {
+        if (!this.map || index < 0 || index >= this.allStateDistricts.length) return;
+
+        const district = this.allStateDistricts[index];
+
+        // Remove previous explorer district layer
+        if (this.explorerDistrictLayer) {
+            this.map.removeLayer(this.explorerDistrictLayer);
+        }
+
+        // Add new district layer with highlight style
+        this.explorerDistrictLayer = L.geoJSON(district, {
+            style: {
+                color: '#2563eb',
+                fillColor: '#2563eb',
+                fillOpacity: 0.25,
+                weight: 3
+            }
+        }).addTo(this.map);
+
+        // Add popup
+        const districtName = district.properties.NAMELSAD || district.properties.NAME ||
+            `Congressional District ${district.properties.CD119FP || index + 1}`;
+        this.explorerDistrictLayer.bindPopup(`<b>${districtName}</b>`).openPopup();
+
+        // Fit map to this district
+        this.map.fitBounds(this.explorerDistrictLayer.getBounds(), { padding: [30, 30] });
+    }
+
+    scrollDistricts(direction) {
+        if (!this.districtCards) return;
+
+        const scrollAmount = 200;
+        if (direction === 'left') {
+            this.districtCards.scrollLeft -= scrollAmount;
+        } else {
+            this.districtCards.scrollLeft += scrollAmount;
+        }
+    }
+
+    hideDistrictExplorer() {
+        if (this.districtExplorer) {
+            this.districtExplorer.style.display = 'none';
+        }
+
+        // Remove explorer district layer and restore original view
+        if (this.explorerDistrictLayer && this.map) {
+            this.map.removeLayer(this.explorerDistrictLayer);
+            this.explorerDistrictLayer = null;
+        }
+
+        // Restore original district boundaries view
+        if (this.districtLayers && this.districtLayers.length > 0) {
+            const group = L.featureGroup(this.districtLayers);
+            this.map.fitBounds(group.getBounds(), { padding: [20, 20] });
         }
     }
 

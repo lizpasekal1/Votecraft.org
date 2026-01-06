@@ -110,9 +110,25 @@
                     <div id="map-container" class="map-container">
                         <div id="map"></div>
                     </div>
-                    <!-- Always visible loader below map -->
-                    <div class="map-loader-container">
-                        <div class="map-loader"></div>
+                    <!-- District Explorer -->
+                    <div id="district-explorer" class="district-explorer" style="display: none;">
+                        <div class="district-explorer-header">
+                            <h3>Explore <span id="state-name-display">State</span> Districts</h3>
+                            <button id="close-explorer" class="close-explorer" title="Close">&times;</button>
+                        </div>
+                        <div class="district-scroll-container">
+                            <button id="scroll-left" class="scroll-btn scroll-left" aria-label="Scroll left">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="15 18 9 12 15 6"></polyline>
+                                </svg>
+                            </button>
+                            <div id="district-cards" class="district-cards"></div>
+                            <button id="scroll-right" class="scroll-btn scroll-right" aria-label="Scroll right">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
