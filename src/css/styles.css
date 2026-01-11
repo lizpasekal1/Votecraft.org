@@ -1742,9 +1742,8 @@ body {
 
     .address-section,
     .btn-pdf,
-    .map-container,
-    .results-right,
-    .disclaimer {
+    .disclaimer,
+    .district-explorer {
         display: none !important;
     }
 
@@ -1763,6 +1762,25 @@ body {
 
     .results-left {
         width: 100%;
+    }
+
+    .results-right {
+        width: 100%;
+        max-width: 100%;
+        position: static;
+        margin-bottom: 24px;
+    }
+
+    .map-container {
+        border: 1px solid #ccc;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    #map {
+        height: 300px !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
 
     .results-header {
