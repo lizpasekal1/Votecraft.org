@@ -1543,18 +1543,20 @@ body {
     }
 
     .address-form .btn-pdf {
-        margin-left: 8px;
-        padding: 12px 12px;
-        font-size: 0.8rem;
+        margin-left: 6px;
+        padding: 10px 8px;
+        font-size: 0.75rem;
+        white-space: nowrap;
     }
 
-    .btn-primary {
-        padding: 12px 14px;
-        font-size: 0.95rem;
+    .address-form .btn-primary {
+        padding: 10px 10px;
+        font-size: 0.85rem;
     }
 
     #address-input {
-        padding: 12px 14px;
+        padding: 10px 12px;
+        min-width: 0;
     }
 
     .section-title {
@@ -1629,18 +1631,19 @@ body {
     }
 
     .address-form .btn-pdf {
-        margin-left: 6px;
-        padding: 10px 10px;
-        font-size: 0.75rem;
+        margin-left: 4px;
+        padding: 8px 6px;
+        font-size: 0.7rem;
     }
 
-    .btn-primary {
-        padding: 10px 12px;
-        font-size: 0.9rem;
+    .address-form .btn-primary {
+        padding: 8px 8px;
+        font-size: 0.8rem;
     }
 
     #address-input {
-        padding: 10px 12px;
+        padding: 8px 10px;
+        font-size: 0.9rem;
     }
 
     .section-title {
