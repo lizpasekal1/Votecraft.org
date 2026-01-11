@@ -545,12 +545,10 @@ class VotecraftApp {
     }
 
     renderLegislators() {
-        // Show results header with searched address
-        if (this.resultsHeader) {
-            this.resultsHeader.style.display = 'flex';
-        }
-        if (this.searchedAddress) {
-            this.searchedAddress.textContent = `Results for: ${this.currentAddress}`;
+        // Swap button styles to highlight Save PDF
+        const addressForm = document.querySelector('.address-form');
+        if (addressForm) {
+            addressForm.classList.add('has-results');
         }
 
         // Separate federal and state legislators
