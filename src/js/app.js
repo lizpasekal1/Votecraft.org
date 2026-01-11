@@ -337,10 +337,11 @@ class VotecraftApp {
             this.locationBtn.addEventListener('click', () => this.useCurrentLocation());
         }
 
-        // PDF button
-        const pdfBtn = document.getElementById('save-pdf-btn');
-        if (pdfBtn) {
-            pdfBtn.addEventListener('click', () => this.savePDF());
+        // PDF button - initially disabled
+        this.pdfBtn = document.getElementById('save-pdf-btn');
+        if (this.pdfBtn) {
+            this.pdfBtn.disabled = true;
+            this.pdfBtn.addEventListener('click', () => this.savePDF());
         }
 
         // District explorer
@@ -355,8 +356,68 @@ class VotecraftApp {
         }
     }
 
-    savePDF() {
-        window.print();
+    async savePDF() {
+        if (!this.map || !this.currentCoords) return;
+
+        try {
+            // Create a static map image using the map's current view
+            const bounds = this.map.getBounds();
+            const center = this.map.getCenter();
+            const zoom = this.map.getZoom();
+
+            // Use leaflet-image or canvas approach to capture map
+            // For now, use a static map image from a tile service
+            const width = 600;
+            const height = 300;
+
+            // Create a canvas to capture the map
+            const mapContainer = document.getElementById('map');
+            const mapImage = document.getElementById('map-print-image');
+
+            // Use html2canvas-like approach with leaflet
+            // Get all visible tile layers and draw them to canvas
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+
+            // Draw a simple static map using OpenStreetMap static tiles
+            const lat = center.lat;
+            const lng = center.lng;
+
+            // Create static map URL (using OSM static map service)
+            const staticMapUrl = `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lng}&zoom=${Math.min(zoom, 12)}&size=${width}x${height}&maptype=osmarenderer`;
+
+            // Create or update print image element
+            let printImg = document.getElementById('map-print-image');
+            if (!printImg) {
+                printImg = document.createElement('img');
+                printImg.id = 'map-print-image';
+                printImg.className = 'map-print-image';
+                mapContainer.parentNode.insertBefore(printImg, mapContainer.nextSibling);
+            }
+
+            // Load the static map image
+            printImg.src = staticMapUrl;
+            printImg.alt = 'District Map';
+
+            // Wait for image to load before printing
+            await new Promise((resolve, reject) => {
+                printImg.onload = resolve;
+                printImg.onerror = () => {
+                    // If static map fails, try alternative
+                    console.log('Static map failed, printing without map image');
+                    resolve();
+                };
+                // Timeout after 3 seconds
+                setTimeout(resolve, 3000);
+            });
+
+            window.print();
+        } catch (error) {
+            console.error('Error preparing PDF:', error);
+            window.print();
+        }
     }
 
     showLoading(show) {
@@ -545,10 +606,13 @@ class VotecraftApp {
     }
 
     renderLegislators() {
-        // Swap button styles to highlight Save PDF
+        // Swap button styles to highlight Save PDF and enable it
         const addressForm = document.querySelector('.address-form');
         if (addressForm) {
             addressForm.classList.add('has-results');
+        }
+        if (this.pdfBtn) {
+            this.pdfBtn.disabled = false;
         }
 
         // Separate federal and state legislators

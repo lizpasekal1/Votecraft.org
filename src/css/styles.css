@@ -146,9 +146,22 @@ body {
     margin-left: auto;
 }
 
-.btn-pdf:hover {
+.btn-pdf:hover:not(:disabled) {
     background: var(--primary);
     color: white;
+}
+
+.btn-pdf:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Static map image for printing */
+.map-print-image {
+    display: none;
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius);
 }
 
 /* Swapped button states after search */
@@ -1777,8 +1790,17 @@ body {
         page-break-inside: avoid;
     }
 
+    /* Hide interactive map, show static image for print */
     #map {
-        height: 300px !important;
+        display: none !important;
+    }
+
+    .map-print-image {
+        display: block !important;
+        width: 100%;
+        height: auto;
+        max-height: 300px;
+        object-fit: contain;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }
