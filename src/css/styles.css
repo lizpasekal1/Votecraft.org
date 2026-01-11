@@ -80,7 +80,20 @@ body {
 /* Address Form */
 .address-form {
     display: flex;
-    gap: 12px;
+    gap: 0;
+}
+
+.address-form #address-input {
+    border-right: none;
+    border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.address-form .btn-primary {
+    border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.address-form .btn-pdf {
+    margin-left: 12px;
 }
 
 #address-input {
@@ -136,6 +149,27 @@ body {
 .btn-pdf:hover {
     background: var(--primary);
     color: white;
+}
+
+/* Swapped button states after search */
+.address-form.has-results .btn-primary {
+    background: white;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+}
+
+.address-form.has-results .btn-primary:hover {
+    background: var(--background-alt);
+}
+
+.address-form.has-results .btn-pdf {
+    background: var(--primary);
+    color: white;
+    border: 1px solid var(--primary);
+}
+
+.address-form.has-results .btn-pdf:hover {
+    background: var(--primary-dark);
 }
 
 /* Loading Overlay */
@@ -1489,10 +1523,111 @@ body {
     }
 }
 
+/* iPhone 16 Pro and similar (around 400px width) */
+@media (max-width: 430px) {
+    .address-form {
+        gap: 0;
+    }
+
+    .address-form .btn-pdf {
+        margin-left: 8px;
+        padding: 12px 12px;
+        font-size: 0.8rem;
+    }
+
+    .btn-primary {
+        padding: 12px 14px;
+        font-size: 0.95rem;
+    }
+
+    #address-input {
+        padding: 12px 14px;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+    }
+
+    .legislator-item {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .legislator-photo {
+        width: 42px;
+        height: 42px;
+    }
+
+    .legislator-name {
+        font-size: 0.95rem;
+    }
+
+    .legislator-details {
+        font-size: 0.85rem;
+        gap: 6px;
+    }
+
+    .chamber-badge {
+        padding: 3px 8px;
+        font-size: 0.7rem;
+    }
+
+    #map {
+        height: 260px;
+    }
+
+    .bill-item,
+    .vote-item,
+    .contest-item {
+        padding: 12px;
+    }
+
+    .bill-title {
+        font-size: 0.9rem;
+    }
+
+    .bill-id {
+        font-size: 0.85rem;
+    }
+
+    .topic-btn {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+
+    .district-card {
+        width: 60px;
+        padding: 6px 4px;
+    }
+
+    .district-number {
+        font-size: 1.1rem;
+    }
+
+    .district-label {
+        font-size: 0.6rem;
+    }
+}
+
 /* Very small phones */
 @media (max-width: 360px) {
     .main-content {
         padding: 12px;
+    }
+
+    .address-form .btn-pdf {
+        margin-left: 6px;
+        padding: 10px 10px;
+        font-size: 0.75rem;
+    }
+
+    .btn-primary {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+
+    #address-input {
+        padding: 10px 12px;
     }
 
     .section-title {
@@ -1504,20 +1639,25 @@ body {
     }
 
     .legislator-item {
-        padding: 12px;
+        padding: 10px;
+    }
+
+    .legislator-photo {
+        width: 38px;
+        height: 38px;
     }
 
     .legislator-details {
-        font-size: 0.85rem;
+        font-size: 0.8rem;
     }
 
     .bill-item,
     .contest-item {
-        padding: 12px;
+        padding: 10px;
     }
 
     .bill-title {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
 }
 
