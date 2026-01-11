@@ -1428,7 +1428,6 @@ body {
     }
 
     .legislator-item {
-        flex-wrap: wrap;
         padding: 14px;
         gap: 12px;
     }
@@ -1436,24 +1435,6 @@ body {
     .legislator-photo {
         width: 44px;
         height: 44px;
-    }
-
-    .legislator-info {
-        flex: 1 1 calc(100% - 60px);
-    }
-
-    .chamber-badge {
-        order: -1;
-        margin-left: auto;
-    }
-
-    .legislator-link {
-        width: 100%;
-        text-align: center;
-        padding: 10px;
-        background: var(--background-alt);
-        border-radius: var(--radius);
-        margin-top: 4px;
     }
 
     .activity-list,
