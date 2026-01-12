@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rank Choice Voting - Votecraft</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="src/css/styles.css">
+    <link rel="stylesheet" href="src/css/rcv.css">
+</head>
+<body>
+    <div class="rcv-page">
+        <!-- Header -->
+        <header class="rcv-header">
+            <div class="rcv-container">
+                <a href="index.html" class="rcv-logo">Votecraft</a>
+                <nav class="rcv-nav">
+                    <a href="index.html">Find Your Legislators</a>
+                    <a href="rank-choice-voting.html" class="active">Rank Choice Voting</a>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="rcv-hero">
+            <div class="rcv-container">
+                <h1>What is Rank Choice Voting?</h1>
+                <p class="rcv-subtitle">A fairer way to vote that gives you more power and more choices</p>
+            </div>
+        </section>
+
+        <!-- Main Content -->
+        <main class="rcv-main">
+            <div class="rcv-container">
+
+                <!-- Description Section -->
+                <section class="rcv-section rcv-description">
+                    <h2>How It Works</h2>
+                    <div class="rcv-steps">
+                        <div class="rcv-step">
+                            <div class="step-number">1</div>
+                            <h3>Rank Your Choices</h3>
+                            <p>Instead of picking just one candidate, you rank them in order of preference: 1st choice, 2nd choice, 3rd choice, and so on.</p>
+                        </div>
+                        <div class="rcv-step">
+                            <div class="step-number">2</div>
+                            <h3>First Choices Are Counted</h3>
+                            <p>All the first-choice votes are counted. If a candidate has more than 50% of the votes, they win!</p>
+                        </div>
+                        <div class="rcv-step">
+                            <div class="step-number">3</div>
+                            <h3>Elimination Rounds</h3>
+                            <p>If no one has 50%, the candidate with the fewest votes is eliminated. Their voters' second choices are then counted.</p>
+                        </div>
+                        <div class="rcv-step">
+                            <div class="step-number">4</div>
+                            <h3>Repeat Until a Winner</h3>
+                            <p>This process continues until one candidate has a majority. Your vote always counts toward your highest-ranked candidate still in the race.</p>
+                        </div>
+                    </div>
+
+                    <div class="rcv-benefits">
+                        <h3>Why Rank Choice Voting?</h3>
+                        <ul>
+                            <li><strong>No More "Spoiler" Effect:</strong> Vote for your favorite without worrying about "wasting" your vote</li>
+                            <li><strong>More Civil Campaigns:</strong> Candidates seek to be voters' second choice too, reducing negative campaigning</li>
+                            <li><strong>Better Representation:</strong> Winners must appeal to a broader coalition of voters</li>
+                            <li><strong>Higher Voter Turnout:</strong> More meaningful choices encourage more participation</li>
+                            <li><strong>Saves Money:</strong> No need for separate runoff elections</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Interactive Demo Section -->
+                <section class="rcv-section rcv-demo-section">
+                    <h2>Try It Yourself!</h2>
+                    <p class="section-intro">See how rank choice voting works with this interactive simulation. Drag to rank the candidates, then watch the votes get counted!</p>
+
+                    <div class="rcv-demo">
+                        <div class="demo-ballot">
+                            <h3>Your Ballot</h3>
+                            <p class="ballot-instructions">Drag candidates to rank them (1 = favorite)</p>
+                            <div id="candidate-list" class="candidate-list">
+                                <div class="candidate-item" data-candidate="Pizza Party" draggable="true">
+                                    <span class="rank-badge">1</span>
+                                    <span class="candidate-icon">🍕</span>
+                                    <span class="candidate-name">Pizza Party</span>
+                                    <span class="drag-handle">⋮⋮</span>
+                                </div>
+                                <div class="candidate-item" data-candidate="Taco Team" draggable="true">
+                                    <span class="rank-badge">2</span>
+                                    <span class="candidate-icon">🌮</span>
+                                    <span class="candidate-name">Taco Team</span>
+                                    <span class="drag-handle">⋮⋮</span>
+                                </div>
+                                <div class="candidate-item" data-candidate="Burger Brigade" draggable="true">
+                                    <span class="rank-badge">3</span>
+                                    <span class="candidate-icon">🍔</span>
+                                    <span class="candidate-name">Burger Brigade</span>
+                                    <span class="drag-handle">⋮⋮</span>
+                                </div>
+                                <div class="candidate-item" data-candidate="Sushi Squad" draggable="true">
+                                    <span class="rank-badge">4</span>
+                                    <span class="candidate-icon">🍣</span>
+                                    <span class="candidate-name">Sushi Squad</span>
+                                    <span class="drag-handle">⋮⋮</span>
+                                </div>
+                            </div>
+                            <button id="cast-vote-btn" class="btn-primary">Cast Your Vote!</button>
+                        </div>
+
+                        <div class="demo-results">
+                            <h3>Election Results</h3>
+                            <div id="results-display" class="results-display">
+                                <p class="results-placeholder">Cast your vote to see how RCV works!</p>
+                            </div>
+                            <button id="reset-demo-btn" class="btn-secondary" style="display: none;">Reset Demo</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Resources Section -->
+                <section class="rcv-section rcv-resources">
+                    <h2>Learn More About RCV</h2>
+                    <p class="section-intro">Explore these excellent resources to dive deeper into rank choice voting</p>
+
+                    <div class="resource-grid">
+                        <a href="https://www.fairvote.org/rcv" target="_blank" rel="noopener" class="resource-card">
+                            <div class="resource-icon">🗳️</div>
+                            <h3>FairVote</h3>
+                            <p>The leading organization advocating for RCV. Comprehensive research, maps, and resources.</p>
+                        </a>
+                        <a href="https://www.rcvresources.org/" target="_blank" rel="noopener" class="resource-card">
+                            <div class="resource-icon">📚</div>
+                            <h3>RCV Resources</h3>
+                            <p>Educational materials, talking points, and tools for advocates and voters.</p>
+                        </a>
+                        <a href="https://ballotpedia.org/Ranked-choice_voting_(RCV)" target="_blank" rel="noopener" class="resource-card">
+                            <div class="resource-icon">📖</div>
+                            <h3>Ballotpedia</h3>
+                            <p>Detailed encyclopedia entry with history, current usage, and state-by-state information.</p>
+                        </a>
+                        <a href="https://www.rankedvote.co/" target="_blank" rel="noopener" class="resource-card">
+                            <div class="resource-icon">🎯</div>
+                            <h3>Ranked Vote</h3>
+                            <p>Create your own RCV polls and elections. Great for groups and organizations.</p>
+                        </a>
+                        <a href="https://www.represent.us/action/ranked-choice-voting/" target="_blank" rel="noopener" class="resource-card">
+                            <div class="resource-icon">✊</div>
+                            <h3>RepresentUs</h3>
+                            <p>Anti-corruption organization with great explainers on voting reform including RCV.</p>
+                        </a>
+                        <a href="https://electionscience.org/library/approval-voting-versus-irv/" target="_blank" rel="noopener" class="resource-card">
+                            <div class="resource-icon">🔬</div>
+                            <h3>Center for Election Science</h3>
+                            <p>Scientific approach to voting methods. Compare RCV to other alternative voting systems.</p>
+                        </a>
+                    </div>
+                </section>
+
+                <!-- Videos Section -->
+                <section class="rcv-section rcv-videos">
+                    <h2>Videos & Explainers</h2>
+                    <p class="section-intro">Watch these entertaining and informative videos about rank choice voting</p>
+
+                    <div class="video-grid">
+                        <div class="video-card">
+                            <div class="video-embed">
+                                <iframe
+                                    src="https://www.youtube.com/embed/oHRPMJmzBBw"
+                                    title="Ranked Choice Voting Explained"
+                                    frameborder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowfullscreen>
+                                </iframe>
+                            </div>
+                            <h3>CGP Grey: The Alternative Vote Explained</h3>
+                            <p>Classic animated explainer that makes RCV easy to understand with animal elections!</p>
+                        </div>
+                        <div class="video-card">
+                            <div class="video-embed">
+                                <iframe
+                                    src="https://www.youtube.com/embed/3Y3jE3B8HsE"
+                                    title="How Ranked Choice Voting Works"
+                                    frameborder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowfullscreen>
+                                </iframe>
+                            </div>
+                            <h3>FairVote: Ranked Choice Voting</h3>
+                            <p>Official FairVote explainer showing how RCV works in real elections.</p>
+                        </div>
+                        <div class="video-card">
+                            <div class="video-embed">
+                                <iframe
+                                    src="https://www.youtube.com/embed/P10PFuBFVL8"
+                                    title="Ranked Choice Voting Animation"
+                                    frameborder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowfullscreen>
+                                </iframe>
+                            </div>
+                            <h3>MinuteEarth: A Better Voting System?</h3>
+                            <p>Quick, fun animation exploring why our current voting system has problems and how RCV helps.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Comics Section -->
+                <section class="rcv-section rcv-comics">
+                    <h2>Comics & Fun Stuff</h2>
+                    <p class="section-intro">Because learning about voting should be fun!</p>
+
+                    <div class="comics-grid">
+                        <div class="comic-card">
+                            <div class="comic-image">
+                                <img src="https://images.squarespace-cdn.com/content/v1/5e7fb809cbf59e4a0475f4d9/1609259449815-TMQX5W5PLWJJNWPQVL9Y/RCV+Comic+1.png" alt="RCV Comic explaining the basics" loading="lazy">
+                            </div>
+                            <p>How RCV eliminates the "spoiler effect"</p>
+                        </div>
+                        <div class="comic-card fun-fact">
+                            <div class="fun-fact-content">
+                                <span class="fun-emoji">🎉</span>
+                                <h3>Fun Fact!</h3>
+                                <p>The Academy Awards (Oscars) uses ranked choice voting to pick Best Picture! So does the Hugo Awards for sci-fi books.</p>
+                            </div>
+                        </div>
+                        <div class="comic-card fun-fact">
+                            <div class="fun-fact-content">
+                                <span class="fun-emoji">🌍</span>
+                                <h3>Used Worldwide!</h3>
+                                <p>Australia has used RCV for over 100 years. It's also used in Ireland, New Zealand, Scotland, and many US cities!</p>
+                            </div>
+                        </div>
+                        <div class="comic-card fun-fact">
+                            <div class="fun-fact-content">
+                                <span class="fun-emoji">📈</span>
+                                <h3>Growing Fast!</h3>
+                                <p>Over 50 US jurisdictions now use RCV, including New York City, San Francisco, and the entire state of Alaska and Maine!</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- CTA Section -->
+                <section class="rcv-section rcv-cta">
+                    <h2>Ready to Make a Difference?</h2>
+                    <p>Learn who represents you and how they vote on election reform issues.</p>
+                    <a href="index.html" class="btn-primary btn-large">Find Your Legislators</a>
+                </section>
+
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="rcv-footer">
+            <div class="rcv-container">
+                <p>&copy; 2025 Votecraft. Empowering voters with information.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="src/js/rcv-demo.js"></script>
+</body>
+</html>

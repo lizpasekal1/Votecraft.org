@@ -306,10 +306,15 @@ class VotecraftApp {
     }
 
     initPlaceholderMap() {
-        // Initialize map centered on USA
+        // Initialize map centered on USA with all interactions disabled
         this.map = L.map('map', {
-            zoomControl: true,
-            scrollWheelZoom: false
+            zoomControl: false,
+            scrollWheelZoom: false,
+            dragging: false,
+            touchZoom: false,
+            doubleClickZoom: false,
+            boxZoom: false,
+            keyboard: false
         }).setView([39.8283, -98.5795], 4); // Center of USA
 
         // Use CartoDB Positron for a clean, light map style
@@ -771,6 +776,16 @@ class VotecraftApp {
 
         // Map already exists from placeholder, update it
         if (this.map) {
+            // Enable map interactions after search
+            this.map.dragging.enable();
+            this.map.touchZoom.enable();
+            this.map.doubleClickZoom.enable();
+            this.map.boxZoom.enable();
+            this.map.keyboard.enable();
+            if (!this.map.zoomControl) {
+                this.map.addControl(L.control.zoom());
+            }
+
             this.map.setView([this.currentCoords.lat, this.currentCoords.lng], 10);
 
             // Remove old location circle if exists
