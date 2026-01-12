@@ -22,12 +22,9 @@
 body {
     font-family: Arial, -apple-system, BlinkMacSystemFont, sans-serif;
     color: var(--rcv-text);
-    background: var(--rcv-background);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
+    background: transparent;
+    margin: 0;
+    padding: 0;
 }
 
 .rcv-widget {
@@ -40,11 +37,8 @@ body {
     display: grid;
     grid-template-columns: 1fr 1.5fr;
     gap: 32px;
-    background: white;
-    border-radius: 8px;
-    padding: 32px;
-    box-shadow: 6px 6px 9px rgba(0, 0, 0, 0.08);
-    border: 1px solid var(--rcv-border);
+    background: transparent;
+    padding: 0;
 }
 
 .demo-ballot h3,
