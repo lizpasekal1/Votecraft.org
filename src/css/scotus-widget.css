@@ -1,0 +1,410 @@
+/**
+ * Supreme Court Interpretation Demo Widget Styles
+ * Standalone widget version for embedding
+ */
+
+:root {
+    --scotus-primary: #5087e5;
+    --scotus-primary-dark: #3a6bc7;
+    --scotus-text: #32373c;
+    --scotus-text-light: #666;
+    --scotus-background: #fafafa;
+    --scotus-border: #eaeaea;
+    --scotus-white: #ffffff;
+    --scotus-accent: #8b5cf6;
+    --scotus-early: #dc2626;
+    --scotus-middle: #f59e0b;
+    --scotus-modern: #10b981;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--scotus-text);
+    background: transparent;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.scotus-widget {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.scotus-demo {
+    background: transparent;
+    padding: 0;
+}
+
+.demo-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.demo-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--scotus-text);
+    margin-bottom: 8px;
+}
+
+.demo-subtitle {
+    color: var(--scotus-text-light);
+    font-size: 0.95rem;
+}
+
+/* Clause Selector */
+.clause-selector {
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.clause-selector label {
+    display: block;
+    font-weight: 600;
+    color: var(--scotus-text);
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.clause-selector select {
+    padding: 12px 20px;
+    font-size: 1rem;
+    font-family: inherit;
+    border: 2px solid var(--scotus-border);
+    border-radius: 6px;
+    background: var(--scotus-white);
+    color: var(--scotus-text);
+    cursor: pointer;
+    min-width: 280px;
+    transition: border-color 0.2s;
+}
+
+.clause-selector select:hover,
+.clause-selector select:focus {
+    border-color: var(--scotus-primary);
+    outline: none;
+}
+
+/* Interpretation Container */
+.interpretation-container {
+    background: var(--scotus-white);
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--scotus-border);
+    margin-bottom: 20px;
+}
+
+/* Constitutional Text */
+.constitutional-text {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+    color: white;
+    padding: 24px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.text-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.8;
+    margin-bottom: 12px;
+}
+
+.constitutional-text blockquote {
+    font-size: 1.1rem;
+    font-style: italic;
+    line-height: 1.6;
+    margin: 0 0 12px 0;
+}
+
+.text-source {
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+/* Era Toggle */
+.era-toggle {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.era-btn {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: inherit;
+    background: var(--scotus-background);
+    color: var(--scotus-text);
+    border: 2px solid var(--scotus-border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex: 1;
+    min-width: 140px;
+}
+
+.era-btn:hover {
+    border-color: var(--scotus-primary);
+}
+
+.era-btn.active[data-era="early"] {
+    background: var(--scotus-early);
+    color: white;
+    border-color: var(--scotus-early);
+}
+
+.era-btn.active[data-era="middle"] {
+    background: var(--scotus-middle);
+    color: white;
+    border-color: var(--scotus-middle);
+}
+
+.era-btn.active[data-era="modern"] {
+    background: var(--scotus-modern);
+    color: white;
+    border-color: var(--scotus-modern);
+}
+
+/* Interpretation Display */
+.interpretation-display {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.era-info {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.era-label {
+    display: inline-block;
+    padding: 6px 16px;
+    background: var(--scotus-background);
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--scotus-text);
+}
+
+.era-label.early {
+    background: rgba(220, 38, 38, 0.1);
+    color: var(--scotus-early);
+}
+
+.era-label.middle {
+    background: rgba(245, 158, 11, 0.1);
+    color: #b45309;
+}
+
+.era-label.modern {
+    background: rgba(16, 185, 129, 0.1);
+    color: #047857;
+}
+
+/* Key Phrase */
+.key-phrase {
+    background: var(--scotus-background);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid var(--scotus-primary);
+}
+
+.phrase-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--scotus-text-light);
+    margin-bottom: 8px;
+}
+
+.phrase-highlight {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--scotus-primary);
+    margin-bottom: 8px;
+}
+
+.phrase-meaning {
+    color: var(--scotus-text);
+    line-height: 1.6;
+}
+
+.phrase-meaning strong {
+    color: var(--scotus-primary);
+}
+
+/* Landmark Case */
+.landmark-case {
+    background: var(--scotus-white);
+    border: 1px solid var(--scotus-border);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.case-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--scotus-text-light);
+    margin-bottom: 8px;
+}
+
+.case-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--scotus-text);
+    margin-bottom: 12px;
+}
+
+.case-ruling {
+    color: var(--scotus-text-light);
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+/* Practical Impact */
+.practical-impact {
+    background: linear-gradient(135deg, var(--scotus-primary) 0%, var(--scotus-primary-dark) 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.impact-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.9;
+    margin-bottom: 12px;
+}
+
+.impact-content ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.impact-content li {
+    padding: 8px 0 8px 24px;
+    position: relative;
+    line-height: 1.5;
+}
+
+.impact-content li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    opacity: 0.8;
+}
+
+/* Comparison Note */
+.comparison-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(139, 92, 246, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.note-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.note-text {
+    color: var(--scotus-text);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    font-style: italic;
+}
+
+/* Buttons */
+.btn-secondary {
+    display: block;
+    width: 100%;
+    padding: 14px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: inherit;
+    background: var(--scotus-white);
+    color: var(--scotus-primary);
+    border: 2px solid var(--scotus-primary);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background: var(--scotus-primary);
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    body {
+        padding: 12px;
+    }
+
+    .interpretation-container {
+        padding: 20px;
+    }
+
+    .constitutional-text {
+        padding: 20px 16px;
+    }
+
+    .constitutional-text blockquote {
+        font-size: 1rem;
+    }
+
+    .era-toggle {
+        flex-direction: column;
+    }
+
+    .era-btn {
+        min-width: 100%;
+    }
+
+    .demo-header h2 {
+        font-size: 1.25rem;
+    }
+
+    .phrase-highlight {
+        font-size: 1.1rem;
+    }
+
+    .clause-selector select {
+        min-width: 100%;
+        width: 100%;
+    }
+}
