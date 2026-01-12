@@ -24,12 +24,15 @@ body {
     color: var(--rcv-text);
     background: transparent;
     margin: 0;
-    padding: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
 }
 
 .rcv-widget {
     width: 100%;
     max-width: 900px;
+    margin: 0 auto;
 }
 
 /* Interactive Demo */
