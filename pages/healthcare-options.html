@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthcare Widget Options - Votecraft</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #5087e5;
+            --primary-dark: #3a6bc7;
+            --text: #32373c;
+            --text-light: #666;
+            --background: #f5f5f5;
+            --white: #ffffff;
+            --border: #e0e0e0;
+            --green: #10b981;
+            --red: #ef4444;
+            --orange: #f59e0b;
+            --purple: #8b5cf6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Open Sans', Arial, sans-serif;
+            color: var(--text);
+            background: var(--background);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-light);
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .option-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .option-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .option-number {
+            width: 36px;
+            height: 36px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .option-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .option-description {
+            color: var(--text-light);
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        /* Option 1: Cost Comparison Demo */
+        .cost-demo {
+            background: var(--background);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .cost-demo h4 {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .slider-container {
+            margin-bottom: 20px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            background: var(--border);
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .cost-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .cost-box {
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .cost-box.current {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .cost-box.universal {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .cost-box-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .cost-box.current .cost-box-label { color: var(--red); }
+        .cost-box.universal .cost-box-label { color: var(--green); }
+
+        .cost-box-amount {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .cost-box.current .cost-box-amount { color: var(--red); }
+        .cost-box.universal .cost-box-amount { color: var(--green); }
+
+        .cost-box-detail {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        /* Option 2: Follow the Dollar Demo */
+        .dollar-demo {
+            background: var(--background);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .dollar-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .dollar-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dollar-bar-label {
+            width: 120px;
+            font-size: 0.8rem;
+            text-align: right;
+        }
+
+        .dollar-bar-track {
+            flex: 1;
+            height: 24px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .dollar-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+            font-size: 0.75rem;
+            color: white;
+            font-weight: 600;
+        }
+
+        .dollar-bar-fill.admin { background: var(--red); }
+        .dollar-bar-fill.billing { background: var(--orange); }
+        .dollar-bar-fill.pharma { background: var(--purple); }
+        .dollar-bar-fill.care { background: var(--green); }
+
+        .dollar-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .dollar-toggle-btn {
+            flex: 1;
+            padding: 8px 16px;
+            border: 2px solid var(--border);
+            background: var(--white);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .dollar-toggle-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Option 3: Country Comparison Demo */
+        .country-demo {
+            background: var(--background);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .country-select {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .country-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--border);
+            background: var(--white);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .country-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .country-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .country-stat {
+            background: var(--white);
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .country-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .country-stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .country-stat-note {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        /* Option 4: Risk Pool Demo */
+        .pool-demo {
+            background: var(--background);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .pool-visual {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 16px;
+        }
+
+        .pool {
+            flex: 1;
+            text-align: center;
+        }
+
+        .pool-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .pool-people {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: center;
+            padding: 12px;
+            background: var(--white);
+            border-radius: 8px;
+            min-height: 80px;
+        }
+
+        .person {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .person.healthy { background: var(--green); }
+        .person.sick { background: var(--red); }
+
+        .pool-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 8px;
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .pool-insight {
+            background: rgba(80, 135, 229, 0.1);
+            border: 1px solid rgba(80, 135, 229, 0.2);
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+
+        .pool-insight strong {
+            color: var(--primary);
+        }
+
+        /* Option 5: Scenario Demo */
+        .scenario-demo {
+            background: var(--background);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .scenario-select {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .scenario-btn {
+            padding: 10px 14px;
+            border: 2px solid var(--border);
+            background: var(--white);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .scenario-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .scenario-result {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .scenario-box {
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .scenario-box.current {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .scenario-box.universal {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .scenario-box-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .scenario-box.current .scenario-box-label { color: var(--red); }
+        .scenario-box.universal .scenario-box-label { color: var(--green); }
+
+        .scenario-box-amount {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .scenario-box.current .scenario-box-amount { color: var(--red); }
+        .scenario-box.universal .scenario-box-amount { color: var(--green); }
+
+        .scenario-box-items {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            text-align: left;
+            margin-top: 8px;
+        }
+
+        .scenario-box-items li {
+            margin-bottom: 4px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../index.html" class="back-link">&larr; Back to Votecraft</a>
+
+        <h1>Healthcare Widget Options</h1>
+        <p class="subtitle">Interactive demos to help explain universal healthcare economics</p>
+
+        <div class="options-grid">
+            <!-- Option 1: Cost Comparison -->
+            <div class="option-card">
+                <div class="option-header">
+                    <span class="option-number">1</span>
+                    <span class="option-title">"Where Does Your Money Go?"</span>
+                </div>
+                <p class="option-description">
+                    Users input their income and see a side-by-side comparison of what they pay now vs. what they'd pay under universal healthcare. Makes it personal and tangible.
+                </p>
+                <div class="cost-demo">
+                    <h4>Your Annual Healthcare Costs</h4>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Household Income</span>
+                            <span id="income-display">$75,000</span>
+                        </div>
+                        <input type="range" class="slider" id="income-slider" min="30000" max="200000" value="75000" step="5000">
+                    </div>
+                    <div class="cost-comparison">
+                        <div class="cost-box current">
+                            <div class="cost-box-label">Current System</div>
+                            <div class="cost-box-amount" id="current-cost">$12,530</div>
+                            <div class="cost-box-detail">Premiums + deductibles + copays</div>
+                        </div>
+                        <div class="cost-box universal">
+                            <div class="cost-box-label">Universal System</div>
+                            <div class="cost-box-amount" id="universal-cost">$6,000</div>
+                            <div class="cost-box-detail">8% income tax, no other costs</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Option 2: Follow the Dollar -->
+            <div class="option-card">
+                <div class="option-header">
+                    <span class="option-number">2</span>
+                    <span class="option-title">"Follow the Dollar"</span>
+                </div>
+                <p class="option-description">
+                    Animated visualization showing where healthcare dollars actually go. Toggle between current system and simplified universal system to see the difference.
+                </p>
+                <div class="dollar-demo">
+                    <div class="dollar-toggle">
+                        <button class="dollar-toggle-btn active" data-system="current">Current System</button>
+                        <button class="dollar-toggle-btn" data-system="universal">Universal System</button>
+                    </div>
+                    <div class="dollar-flow" id="dollar-flow">
+                        <div class="dollar-bar">
+                            <span class="dollar-bar-label">Insurance Admin</span>
+                            <div class="dollar-bar-track">
+                                <div class="dollar-bar-fill admin" style="width: 18%">18%</div>
+                            </div>
+                        </div>
+                        <div class="dollar-bar">
+                            <span class="dollar-bar-label">Hospital Billing</span>
+                            <div class="dollar-bar-track">
+                                <div class="dollar-bar-fill billing" style="width: 15%">15%</div>
+                            </div>
+                        </div>
+                        <div class="dollar-bar">
+                            <span class="dollar-bar-label">Pharma Marketing</span>
+                            <div class="dollar-bar-track">
+                                <div class="dollar-bar-fill pharma" style="width: 12%">12%</div>
+                            </div>
+                        </div>
+                        <div class="dollar-bar">
+                            <span class="dollar-bar-label">Actual Care</span>
+                            <div class="dollar-bar-track">
+                                <div class="dollar-bar-fill care" style="width: 55%">55%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Option 3: Country Comparison -->
+            <div class="option-card">
+                <div class="option-header">
+                    <span class="option-number">3</span>
+                    <span class="option-title">"Country Comparison"</span>
+                </div>
+                <p class="option-description">
+                    Compare what you'd pay and receive in different countries. Shows taxes, coverage, and health outcomes side by side.
+                </p>
+                <div class="country-demo">
+                    <div class="country-select">
+                        <button class="country-btn active">🇺🇸 USA</button>
+                        <button class="country-btn">🇨🇦 Canada</button>
+                        <button class="country-btn">🇬🇧 UK</button>
+                        <button class="country-btn">🇩🇪 Germany</button>
+                    </div>
+                    <div class="country-comparison">
+                        <div class="country-stat">
+                            <div class="country-stat-label">Cost per Person</div>
+                            <div class="country-stat-value">$12,530</div>
+                            <div class="country-stat-note">Highest in world</div>
+                        </div>
+                        <div class="country-stat">
+                            <div class="country-stat-label">Life Expectancy</div>
+                            <div class="country-stat-value">76.4 yrs</div>
+                            <div class="country-stat-note">Rank: #46</div>
+                        </div>
+                        <div class="country-stat">
+                            <div class="country-stat-label">Uninsured</div>
+                            <div class="country-stat-value">8.6%</div>
+                            <div class="country-stat-note">~28 million people</div>
+                        </div>
+                        <div class="country-stat">
+                            <div class="country-stat-label">Medical Bankruptcy</div>
+                            <div class="country-stat-value">66.5%</div>
+                            <div class="country-stat-note">of all bankruptcies</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Option 4: Risk Pool -->
+            <div class="option-card">
+                <div class="option-header">
+                    <span class="option-number">4</span>
+                    <span class="option-title">"Risk Pool Simulator"</span>
+                </div>
+                <p class="option-description">
+                    Interactive demo showing how insurance works - why larger pools are more stable and why "everyone in" makes costs predictable.
+                </p>
+                <div class="pool-demo">
+                    <div class="pool-visual">
+                        <div class="pool">
+                            <div class="pool-label">Small Company Pool</div>
+                            <div class="pool-people">
+                                <span class="person healthy"></span>
+                                <span class="person healthy"></span>
+                                <span class="person sick"></span>
+                                <span class="person healthy"></span>
+                                <span class="person sick"></span>
+                                <span class="person healthy"></span>
+                                <span class="person sick"></span>
+                                <span class="person healthy"></span>
+                            </div>
+                            <div class="pool-stats">
+                                <span>8 people</span>
+                                <span>37% sick</span>
+                                <span>Unstable</span>
+                            </div>
+                        </div>
+                        <div class="pool">
+                            <div class="pool-label">Universal Pool</div>
+                            <div class="pool-people">
+                                <span class="person healthy"></span>
+                                <span class="person healthy"></span>
+                                <span class="person healthy"></span>
+                                <span class="person healthy"></span>
+                                <span class="person sick"></span>
+                                <span class="person healthy"></span>
+                                <span class="person healthy"></span>
+                                <span class="person healthy"></span>
+                                <span class="person healthy"></span>
+                                <span class="person sick"></span>
+                                <span class="person healthy"></span>
+                                <span class="person healthy"></span>
+                                <span class="person healthy"></span>
+                                <span class="person healthy"></span>
+                                <span class="person sick"></span>
+                                <span class="person healthy"></span>
+                            </div>
+                            <div class="pool-stats">
+                                <span>Everyone</span>
+                                <span>~18% sick</span>
+                                <span>Stable</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pool-insight">
+                        <strong>Key insight:</strong> When everyone is in the pool, costs are predictable. Small pools are vulnerable to a few sick people driving up costs for everyone.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Option 5: Scenario Builder -->
+            <div class="option-card" style="grid-column: span 2;">
+                <div class="option-header">
+                    <span class="option-number">5</span>
+                    <span class="option-title">"Your Healthcare Story" (Bonus Option)</span>
+                </div>
+                <p class="option-description">
+                    Users select real-life scenarios and see the cost difference. Makes abstract policy concrete and personal.
+                </p>
+                <div class="scenario-demo">
+                    <div class="scenario-select">
+                        <button class="scenario-btn active">🤰 Have a Baby</button>
+                        <button class="scenario-btn">🦴 Break a Leg</button>
+                        <button class="scenario-btn">🎗️ Cancer Treatment</button>
+                        <button class="scenario-btn">💊 Routine Checkup</button>
+                        <button class="scenario-btn">🏥 ER Visit</button>
+                    </div>
+                    <div class="scenario-result">
+                        <div class="scenario-box current">
+                            <div class="scenario-box-label">Current System</div>
+                            <div class="scenario-box-amount">$4,500</div>
+                            <ul class="scenario-box-items">
+                                <li>$2,500 deductible</li>
+                                <li>$1,200 copays (visits, labs)</li>
+                                <li>$800 "surprise" bills</li>
+                                <li>+ Monthly premiums</li>
+                            </ul>
+                        </div>
+                        <div class="scenario-box universal">
+                            <div class="scenario-box-label">Universal System</div>
+                            <div class="scenario-box-amount">$0</div>
+                            <ul class="scenario-box-items">
+                                <li>All prenatal care covered</li>
+                                <li>Hospital stay covered</li>
+                                <li>No surprise bills</li>
+                                <li>No additional cost</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Option 1: Income slider
+        const incomeSlider = document.getElementById('income-slider');
+        const incomeDisplay = document.getElementById('income-display');
+        const currentCost = document.getElementById('current-cost');
+        const universalCost = document.getElementById('universal-cost');
+
+        incomeSlider.addEventListener('input', function() {
+            const income = parseInt(this.value);
+            incomeDisplay.textContent = '$' + income.toLocaleString();
+
+            // Current system: roughly $7,500 base + 6.7% of income for employer+employee premiums
+            const current = Math.round(7500 + (income * 0.067));
+            currentCost.textContent = '$' + current.toLocaleString();
+
+            // Universal: 8% of income
+            const universal = Math.round(income * 0.08);
+            universalCost.textContent = '$' + universal.toLocaleString();
+        });
+
+        // Option 2: Dollar flow toggle
+        const dollarBtns = document.querySelectorAll('.dollar-toggle-btn');
+        const dollarFlow = document.getElementById('dollar-flow');
+
+        const dollarData = {
+            current: [
+                { label: 'Insurance Admin', class: 'admin', pct: 18 },
+                { label: 'Hospital Billing', class: 'billing', pct: 15 },
+                { label: 'Pharma Marketing', class: 'pharma', pct: 12 },
+                { label: 'Actual Care', class: 'care', pct: 55 }
+            ],
+            universal: [
+                { label: 'Admin (Medicare)', class: 'admin', pct: 3 },
+                { label: 'Hospital Billing', class: 'billing', pct: 2 },
+                { label: 'Pharma (negotiated)', class: 'pharma', pct: 8 },
+                { label: 'Actual Care', class: 'care', pct: 87 }
+            ]
+        };
+
+        dollarBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                dollarBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                const system = this.dataset.system;
+                const data = dollarData[system];
+
+                dollarFlow.innerHTML = data.map(item => `
+                    <div class="dollar-bar">
+                        <span class="dollar-bar-label">${item.label}</span>
+                        <div class="dollar-bar-track">
+                            <div class="dollar-bar-fill ${item.class}" style="width: ${item.pct}%">${item.pct}%</div>
+                        </div>
+                    </div>
+                `).join('');
+            });
+        });
+
+        // Option 3: Country comparison
+        const countryBtns = document.querySelectorAll('.country-btn');
+        const countryStats = document.querySelectorAll('.country-stat');
+
+        const countryData = {
+            '🇺🇸 USA': {
+                cost: '$12,530', costNote: 'Highest in world',
+                life: '76.4 yrs', lifeNote: 'Rank: #46',
+                uninsured: '8.6%', uninsuredNote: '~28 million people',
+                bankruptcy: '66.5%', bankruptcyNote: 'of all bankruptcies'
+            },
+            '🇨🇦 Canada': {
+                cost: '$5,370', costNote: '57% less than USA',
+                life: '82.7 yrs', lifeNote: 'Rank: #16',
+                uninsured: '0%', uninsuredNote: 'Universal coverage',
+                bankruptcy: '8%', bankruptcyNote: 'of all bankruptcies'
+            },
+            '🇬🇧 UK': {
+                cost: '$4,653', costNote: '63% less than USA',
+                life: '81.8 yrs', lifeNote: 'Rank: #23',
+                uninsured: '0%', uninsuredNote: 'NHS covers all',
+                bankruptcy: '<1%', bankruptcyNote: 'Medical debt rare'
+            },
+            '🇩🇪 Germany': {
+                cost: '$6,731', costNote: '46% less than USA',
+                life: '81.4 yrs', lifeNote: 'Rank: #27',
+                uninsured: '0.1%', uninsuredNote: 'Near universal',
+                bankruptcy: '<1%', bankruptcyNote: 'Medical debt rare'
+            }
+        };
+
+        countryBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                countryBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                const country = this.textContent;
+                const data = countryData[country];
+
+                const stats = document.querySelectorAll('.country-stat');
+                stats[0].querySelector('.country-stat-value').textContent = data.cost;
+                stats[0].querySelector('.country-stat-note').textContent = data.costNote;
+                stats[1].querySelector('.country-stat-value').textContent = data.life;
+                stats[1].querySelector('.country-stat-note').textContent = data.lifeNote;
+                stats[2].querySelector('.country-stat-value').textContent = data.uninsured;
+                stats[2].querySelector('.country-stat-note').textContent = data.uninsuredNote;
+                stats[3].querySelector('.country-stat-value').textContent = data.bankruptcy;
+                stats[3].querySelector('.country-stat-note').textContent = data.bankruptcyNote;
+            });
+        });
+
+        // Option 5: Scenario buttons
+        const scenarioBtns = document.querySelectorAll('.scenario-btn');
+        const scenarioData = {
+            '🤰 Have a Baby': {
+                current: '$4,500',
+                currentItems: ['$2,500 deductible', '$1,200 copays (visits, labs)', '$800 "surprise" bills', '+ Monthly premiums'],
+                universal: '$0',
+                universalItems: ['All prenatal care covered', 'Hospital stay covered', 'No surprise bills', 'No additional cost']
+            },
+            '🦴 Break a Leg': {
+                current: '$7,500',
+                currentItems: ['$2,500 deductible', '$2,000 ER copay', '$1,500 surgery copay', '$1,500 physical therapy'],
+                universal: '$0',
+                universalItems: ['ER visit covered', 'Surgery covered', 'Physical therapy covered', 'No out-of-pocket costs']
+            },
+            '🎗️ Cancer Treatment': {
+                current: '$12,000+',
+                currentItems: ['Hit out-of-pocket max', 'Prior authorization delays', 'Some drugs not covered', 'Risk of "network" issues'],
+                universal: '$0',
+                universalItems: ['All treatment covered', 'No authorization delays', 'All drugs included', 'Focus on recovery']
+            },
+            '💊 Routine Checkup': {
+                current: '$250',
+                currentItems: ['$50 copay', '$150 lab work', '$50 if anything found', 'Many skip due to cost'],
+                universal: '$0',
+                universalItems: ['Checkup covered', 'Labs covered', 'Preventive care free', 'No reason to skip']
+            },
+            '🏥 ER Visit': {
+                current: '$2,200',
+                currentItems: ['$500 ER copay', '$1,200 tests/scans', '$500 doctor fees', 'Surprise billing risk'],
+                universal: '$0',
+                universalItems: ['ER covered', 'All tests covered', 'No surprise bills', 'No hesitation to go']
+            }
+        };
+
+        scenarioBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                scenarioBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                const scenario = this.textContent;
+                const data = scenarioData[scenario];
+
+                document.querySelector('.scenario-box.current .scenario-box-amount').textContent = data.current;
+                document.querySelector('.scenario-box.current .scenario-box-items').innerHTML =
+                    data.currentItems.map(item => `<li>${item}</li>`).join('');
+
+                document.querySelector('.scenario-box.universal .scenario-box-amount').textContent = data.universal;
+                document.querySelector('.scenario-box.universal .scenario-box-items').innerHTML =
+                    data.universalItems.map(item => `<li>${item}</li>`).join('');
+            });
+        });
+    </script>
+</body>
+</html>
