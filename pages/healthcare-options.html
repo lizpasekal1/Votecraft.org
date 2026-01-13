@@ -568,6 +568,22 @@
             border-radius: 4px;
         }
 
+        /* Inline Source Citations */
+        .inline-source {
+            font-size: 0.7rem;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        .inline-source a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .inline-source a:hover {
+            text-decoration: underline;
+        }
+
         /* Option 5: Scenario Demo */
         .scenario-demo {
             background: var(--background);
@@ -824,6 +840,7 @@
                             <div class="pool-cost">
                                 <div class="pool-cost-label">Monthly Premium Per Person</div>
                                 <div class="pool-cost-value high" id="pool-cost">$847</div>
+                                <div class="inline-source">(<a href="https://www.kff.org/health-costs/report/employer-health-benefits-annual-survey/" target="_blank">KFF Employer Survey 2024</a>)</div>
                             </div>
                         </div>
                     </div>
@@ -831,41 +848,10 @@
                     <div class="pool-insight" id="pool-insight">
                         <strong>Try it:</strong> Click "Add Sick Person" to see how one person with high costs affects everyone's premium in a small pool. Then switch to a larger pool to see the difference.
                     </div>
-
-                    <div class="data-sources">
-                        <button class="data-sources-toggle" id="pool-sources-toggle">
-                            <span>Data Sources & Methodology</span>
-                            <span class="icon">▼</span>
-                        </button>
-                        <div class="data-sources-content" id="pool-sources-content">
-                            <div class="source-item">
-                                <div class="source-label">Average Premium Costs</div>
-                                <div class="source-text">
-                                    <a href="https://www.kff.org/health-costs/report/employer-health-benefits-annual-survey/" target="_blank">Kaiser Family Foundation Employer Health Benefits Survey 2024</a> - Annual family premium averages $24,479 ($847/month employer + employee share).
-                                </div>
-                            </div>
-                            <div class="source-item">
-                                <div class="source-label">High-Cost Patient Impact</div>
-                                <div class="source-text">
-                                    <a href="https://www.healthsystemtracker.org/chart-collection/health-spending-u-s-compare-countries/" target="_blank">Peterson-KFF Health System Tracker</a> - Top 5% of patients account for ~50% of healthcare spending. Average annual cost for chronic conditions: $36,000+.
-                                </div>
-                            </div>
-                            <div class="source-item">
-                                <div class="source-label">Small vs. Large Pool Volatility</div>
-                                <div class="source-text">
-                                    <a href="https://www.cms.gov/cciio/resources/data-resources/mlr" target="_blank">CMS Medical Loss Ratio Data</a> - Small group markets show 2-3x premium volatility compared to large group markets.
-                                </div>
-                            </div>
-                            <div class="source-item">
-                                <div class="source-label">Universal Pool Stability</div>
-                                <div class="source-text">
-                                    <a href="https://www.cms.gov/research-statistics-data-and-systems/statistics-trends-and-reports/nationalhealthexpenddata" target="_blank">CMS National Health Expenditure Data</a> - Medicare per-capita spending grows more predictably (~4-5%/year) than private insurance (~6-8%/year).
-                                </div>
-                            </div>
-                            <div class="source-note">
-                                Note: This simulator uses simplified models for educational purposes. Actual premium calculations involve many more factors including age rating, geography, and plan design.
-                            </div>
-                        </div>
+                    <div class="inline-source" style="margin-top: 12px; text-align: center;">
+                        Sources: <a href="https://www.kff.org/health-costs/report/employer-health-benefits-annual-survey/" target="_blank">KFF Employer Survey</a> ·
+                        <a href="https://www.healthsystemtracker.org/chart-collection/health-spending-u-s-compare-countries/" target="_blank">Peterson-KFF Tracker</a> ·
+                        <a href="https://www.cms.gov/cciio/resources/data-resources/mlr" target="_blank">CMS MLR Data</a>
                     </div>
                 </div>
             </div>
@@ -1174,15 +1160,6 @@
 
         // Initial render
         renderPool();
-
-        // Data sources toggle
-        const poolSourcesToggle = document.getElementById('pool-sources-toggle');
-        const poolSourcesContent = document.getElementById('pool-sources-content');
-
-        poolSourcesToggle.addEventListener('click', function() {
-            this.classList.toggle('open');
-            poolSourcesContent.classList.toggle('open');
-        });
 
         // Option 5: Scenario buttons
         const scenarioBtns = document.querySelectorAll('.scenario-btn');
