@@ -8,7 +8,7 @@
     --scotus-primary-dark: #3a6bc7;
     --scotus-text: #32373c;
     --scotus-text-light: #666;
-    --scotus-background: #fafafa;
+    --scotus-background: #ebebeb;
     --scotus-border: #eaeaea;
     --scotus-white: #ffffff;
     --scotus-accent: #8b5cf6;
@@ -104,19 +104,20 @@ body {
 
 /* Constitutional Text */
 .constitutional-text {
-    background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
-    color: white;
+    background: linear-gradient(135deg, #f5e6c8 0%, #e8d4a8 100%);
+    color: #2c1810;
     padding: 24px;
     border-radius: 8px;
     margin-bottom: 24px;
     text-align: center;
+    border: 1px solid #d4c4a0;
 }
 
 .text-label {
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 1px;
-    opacity: 0.8;
+    color: #5c4a3a;
     margin-bottom: 12px;
 }
 
@@ -125,11 +126,17 @@ body {
     font-style: italic;
     line-height: 1.6;
     margin: 0 0 12px 0;
+    color: #2c1810;
 }
 
 .text-source {
     font-size: 0.85rem;
-    opacity: 0.7;
+    color: #6b5a4a;
+}
+
+.key-phrase-highlight {
+    font-weight: 700;
+    color: #8b4513;
 }
 
 /* Era Toggle */
