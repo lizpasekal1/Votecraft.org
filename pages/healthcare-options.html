@@ -197,6 +197,235 @@
             margin-top: 4px;
         }
 
+        /* Income-based Healthcare Cost Visualization */
+        .income-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .income-btn {
+            flex: 1;
+            min-width: 80px;
+            padding: 10px 8px;
+            border: 2px solid var(--border);
+            background: var(--white);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .income-btn:hover {
+            border-color: var(--primary);
+        }
+
+        .income-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .income-btn.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: var(--background);
+        }
+
+        .income-btn.disabled:hover {
+            border-color: var(--border);
+        }
+
+        .income-btn .income-label {
+            display: block;
+            font-size: 0.7rem;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        .income-visual {
+            background: var(--white);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .income-bar-container {
+            margin-bottom: 16px;
+        }
+
+        .income-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+        }
+
+        .income-bar-label strong {
+            color: var(--text);
+        }
+
+        .income-bar {
+            height: 32px;
+            background: var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .income-bar-fill {
+            height: 100%;
+            display: flex;
+            transition: width 0.5s ease-out;
+        }
+
+        .income-bar-segment {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: white;
+            transition: width 0.5s ease-out;
+        }
+
+        .income-bar-segment.healthcare {
+            background: var(--red);
+        }
+
+        .income-bar-segment.taxes {
+            background: var(--orange);
+        }
+
+        .income-bar-segment.remaining {
+            background: var(--green);
+        }
+
+        .income-legend {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 0.8rem;
+            margin-top: 12px;
+        }
+
+        .income-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .income-legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .income-legend-dot.healthcare { background: var(--red); }
+        .income-legend-dot.taxes { background: var(--orange); }
+        .income-legend-dot.remaining { background: var(--green); }
+
+        .income-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .income-compare-box {
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .income-compare-box.current {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .income-compare-box.universal {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .income-compare-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .income-compare-box.current .income-compare-label { color: var(--red); }
+        .income-compare-box.universal .income-compare-label { color: var(--green); }
+
+        .income-compare-pct {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .income-compare-box.current .income-compare-pct { color: var(--red); }
+        .income-compare-box.universal .income-compare-pct { color: var(--green); }
+
+        .income-compare-detail {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        .income-impact {
+            margin-top: 16px;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .income-impact.regressive {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--text);
+        }
+
+        .income-impact.regressive strong {
+            color: var(--red);
+        }
+
+        .income-impact.progressive {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--text);
+        }
+
+        .income-impact.progressive strong {
+            color: var(--green);
+        }
+
+        .employment-note {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            color: var(--text);
+        }
+
+        .employment-note strong {
+            color: var(--purple);
+        }
+
+        .employment-note.warning {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .employment-note.warning strong {
+            color: var(--red);
+        }
+
         /* Cost Breakdown Rows */
         .cost-breakdown {
             display: flex;
@@ -771,6 +1000,666 @@
         .back-link:hover {
             text-decoration: underline;
         }
+
+        /* Widget 6: Healthcare Tiers */
+        .tiers-demo {
+            background: var(--background);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .tiers-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .tier-card {
+            background: var(--white);
+            border-radius: 8px;
+            padding: 16px;
+            border-left: 4px solid var(--border);
+            transition: all 0.3s;
+        }
+
+        .tier-card.basic {
+            border-left-color: var(--green);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .tier-card.plus {
+            border-left-color: var(--primary);
+        }
+
+        .tier-card.premium {
+            border-left-color: var(--purple);
+        }
+
+        .tier-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .tier-name {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .tier-card.basic .tier-name { color: var(--green); }
+        .tier-card.plus .tier-name { color: var(--primary); }
+        .tier-card.premium .tier-name { color: var(--purple); }
+
+        .tier-cost {
+            font-size: 0.85rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .tier-card.basic .tier-cost {
+            background: rgba(16, 185, 129, 0.15);
+            color: #047857;
+        }
+
+        .tier-card.plus .tier-cost {
+            background: rgba(80, 135, 229, 0.15);
+            color: var(--primary-dark);
+        }
+
+        .tier-card.premium .tier-cost {
+            background: rgba(139, 92, 246, 0.15);
+            color: #6d28d9;
+        }
+
+        .tier-items {
+            list-style: none;
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .tier-items li {
+            padding: 4px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .tier-items li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--green);
+        }
+
+        .tier-card.plus .tier-items li::before,
+        .tier-card.premium .tier-items li::before {
+            content: "+";
+            color: var(--primary);
+        }
+
+        .tier-note {
+            margin-top: 16px;
+            padding: 12px;
+            background: rgba(80, 135, 229, 0.1);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+
+        .tier-note strong {
+            color: var(--primary);
+        }
+
+        /* Widget 7: Tax Dollars Flow */
+        .tax-demo {
+            background: var(--background);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .tax-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .tax-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--white);
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .tax-icon {
+            font-size: 1.5rem;
+            width: 40px;
+            text-align: center;
+        }
+
+        .tax-info {
+            flex: 1;
+        }
+
+        .tax-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+
+        .tax-sublabel {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .tax-amount {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--primary);
+        }
+
+        .tax-arrow {
+            text-align: center;
+            font-size: 1.5rem;
+            color: var(--text-light);
+        }
+
+        .tax-leakage {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(239, 68, 68, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px dashed rgba(239, 68, 68, 0.3);
+        }
+
+        .tax-leakage .tax-icon { color: var(--red); }
+        .tax-leakage .tax-amount { color: var(--red); }
+
+        .tax-total {
+            background: rgba(80, 135, 229, 0.1);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .tax-total-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-light);
+            margin-bottom: 4px;
+        }
+
+        .tax-total-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .tax-total-note {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        /* Widget 8: Corporate Shuffle */
+        .shuffle-demo {
+            background: var(--background);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .shuffle-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .shuffle-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: 2px solid var(--border);
+            background: var(--white);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .shuffle-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .shuffle-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .shuffle-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--white);
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid var(--border);
+        }
+
+        .shuffle-step.profit {
+            border-left-color: var(--red);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .shuffle-step.worker {
+            border-left-color: var(--orange);
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .shuffle-step-num {
+            width: 24px;
+            height: 24px;
+            background: var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-light);
+        }
+
+        .shuffle-step.profit .shuffle-step-num { background: rgba(239, 68, 68, 0.2); color: var(--red); }
+        .shuffle-step.worker .shuffle-step-num { background: rgba(245, 158, 11, 0.2); color: #b45309; }
+
+        .shuffle-step-text {
+            flex: 1;
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+
+        .shuffle-step-amount {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .shuffle-step.profit .shuffle-step-amount { color: var(--red); }
+        .shuffle-step.worker .shuffle-step-amount { color: var(--orange); }
+
+        .shuffle-result {
+            margin-top: 12px;
+            padding: 16px;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .shuffle-result-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--red);
+            margin-bottom: 4px;
+        }
+
+        .shuffle-result-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--red);
+        }
+
+        /* Widget 9: Basic Coverage Clarity */
+        .coverage-demo {
+            background: var(--background);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .coverage-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 600px) {
+            .coverage-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .coverage-column {
+            background: var(--white);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .coverage-column.covered {
+            border: 2px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .coverage-column.optional {
+            border: 2px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .coverage-column-header {
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .coverage-column.covered .coverage-column-header { color: var(--green); }
+        .coverage-column.optional .coverage-column-header { color: var(--purple); }
+
+        .coverage-list {
+            list-style: none;
+            font-size: 0.85rem;
+        }
+
+        .coverage-list li {
+            padding: 6px 0;
+            padding-left: 22px;
+            position: relative;
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .coverage-list li:last-child {
+            border-bottom: none;
+        }
+
+        .coverage-column.covered .coverage-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--green);
+            font-weight: 700;
+        }
+
+        .coverage-column.optional .coverage-list li::before {
+            content: "$";
+            position: absolute;
+            left: 0;
+            color: var(--purple);
+            font-weight: 700;
+        }
+
+        .coverage-note {
+            grid-column: span 2;
+            margin-top: 4px;
+            padding: 12px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+
+        @media (max-width: 600px) {
+            .coverage-note {
+                grid-column: span 1;
+            }
+        }
+
+        .coverage-note strong {
+            color: var(--green);
+        }
+
+        /* Widget 6: Interactive Tier Selection */
+        .tier-card {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .tier-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .tier-card.selected {
+            box-shadow: 0 0 0 3px var(--primary);
+        }
+
+        .tier-card.selected::after {
+            content: "✓ Selected";
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 0.7rem;
+            background: var(--primary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .tier-comparison {
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--white);
+            border-radius: 8px;
+            border: 2px solid var(--primary);
+            display: none;
+        }
+
+        .tier-comparison.show {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tier-comparison-header {
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+
+        .tier-comparison-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+        }
+
+        .tier-comparison-row:last-child {
+            border-bottom: none;
+        }
+
+        .tier-comparison-label {
+            color: var(--text-light);
+        }
+
+        .tier-comparison-value {
+            font-weight: 600;
+        }
+
+        .tier-comparison-value.savings {
+            color: var(--green);
+        }
+
+        /* Widget 7: Animated Tax Flow */
+        .tax-row {
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .tax-row:hover {
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .tax-row.highlighted {
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+
+        .tax-detail {
+            display: none;
+            background: var(--white);
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            border-left: 3px solid var(--primary);
+        }
+
+        .tax-detail.show {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .tax-toggle-view {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .tax-view-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: 2px solid var(--border);
+            background: var(--white);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tax-view-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Widget 8: Step-by-step animation */
+        .shuffle-step {
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: all 0.3s;
+        }
+
+        .shuffle-step.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .shuffle-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .shuffle-control-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: 2px solid var(--border);
+            background: var(--white);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .shuffle-control-btn:hover {
+            border-color: var(--primary);
+        }
+
+        .shuffle-control-btn.primary {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Widget 9: Interactive Coverage Explorer */
+        .coverage-scenario-select {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .coverage-scenario-btn {
+            padding: 8px 14px;
+            border: 2px solid var(--border);
+            background: var(--white);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .coverage-scenario-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .coverage-list li {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .coverage-list li:hover {
+            background: rgba(0,0,0,0.03);
+            padding-left: 26px;
+        }
+
+        .coverage-list li.expanded {
+            background: rgba(80, 135, 229, 0.1);
+        }
+
+        .coverage-detail {
+            display: none;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            padding: 8px 0 4px 0;
+            font-style: italic;
+        }
+
+        .coverage-list li.expanded .coverage-detail {
+            display: block;
+        }
+
+        .coverage-scenario-result {
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--white);
+            border-radius: 8px;
+            border: 2px solid var(--green);
+            display: none;
+        }
+
+        .coverage-scenario-result.show {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .coverage-scenario-header {
+            font-weight: 700;
+            color: var(--green);
+            margin-bottom: 8px;
+        }
+
+        .coverage-scenario-text {
+            font-size: 0.9rem;
+            color: var(--text);
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
@@ -781,54 +1670,105 @@
         <p class="subtitle">Interactive demos to help explain universal healthcare economics</p>
 
         <div class="options-grid">
-            <!-- Option 1: Hidden Cost Reveal -->
+            <!-- Option 1: Healthcare Cost by Income -->
             <div class="option-card">
                 <div class="option-header">
                     <span class="option-number">1</span>
-                    <span class="option-title">"The Hidden Cost of Healthcare"</span>
+                    <span class="option-title">"Healthcare Hits Different by Income"</span>
                 </div>
                 <p class="option-description">
-                    Most workers only see what comes out of their paycheck. This reveals the full cost - including what your employer pays on your behalf (money that could be your wages).
+                    Select your employment type and income to see how much of your earnings go to healthcare. The current system punishes gig workers and lower incomes.
                 </p>
                 <div class="cost-demo">
-                    <h4>Your True Annual Healthcare Cost</h4>
-                    <div class="slider-container">
-                        <div class="slider-label">
-                            <span>Family Size</span>
-                            <span id="family-display">Family</span>
+                    <h4>1. Select Your Employment Type</h4>
+                    <div class="income-selector" id="employment-selector">
+                        <button class="income-btn" data-employment="minimum">
+                            Min. Wage
+                            <span class="income-label">Retail/Service</span>
+                        </button>
+                        <button class="income-btn" data-employment="gig">
+                            Gig/Contract
+                            <span class="income-label">1099 Worker</span>
+                        </button>
+                        <button class="income-btn" data-employment="parttime">
+                            Part-Time
+                            <span class="income-label">No Benefits</span>
+                        </button>
+                        <button class="income-btn active" data-employment="fulltime">
+                            Full-Time
+                            <span class="income-label">W-2 + Benefits</span>
+                        </button>
+                    </div>
+
+                    <h4 style="margin-top: 16px;">2. Select Your Household Income</h4>
+                    <div class="income-selector" id="income-selector">
+                        <button class="income-btn" data-income="30000">
+                            $30K
+                            <span class="income-label">Low Income</span>
+                        </button>
+                        <button class="income-btn" data-income="50000">
+                            $50K
+                            <span class="income-label">Median</span>
+                        </button>
+                        <button class="income-btn active" data-income="75000">
+                            $75K
+                            <span class="income-label">Middle Class</span>
+                        </button>
+                        <button class="income-btn" data-income="100000">
+                            $100K
+                            <span class="income-label">Upper Middle</span>
+                        </button>
+                        <button class="income-btn" data-income="200000">
+                            $200K+
+                            <span class="income-label">High Income</span>
+                        </button>
+                    </div>
+
+                    <div class="income-visual">
+                        <div class="income-bar-label">
+                            <span>Your Income: <strong id="income-amount">$75,000</strong></span>
+                            <span>Healthcare: <strong id="healthcare-amount">$27,000</strong></span>
                         </div>
-                        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-                            <button class="pool-btn" id="single-btn">Single</button>
-                            <button class="pool-btn active" id="family-btn">Family</button>
+                        <div class="income-bar">
+                            <div class="income-bar-fill">
+                                <div class="income-bar-segment healthcare" id="bar-healthcare" style="width: 36%">36%</div>
+                                <div class="income-bar-segment remaining" id="bar-remaining" style="width: 64%"></div>
+                            </div>
+                        </div>
+                        <div class="income-legend">
+                            <div class="income-legend-item">
+                                <span class="income-legend-dot healthcare"></span>
+                                <span id="legend-healthcare">Healthcare (premiums + employer + out-of-pocket)</span>
+                            </div>
+                            <div class="income-legend-item">
+                                <span class="income-legend-dot remaining"></span>
+                                <span>What's left for everything else</span>
+                            </div>
+                        </div>
+                        <div id="employment-note" class="employment-note" style="display: none;">
+                            <!-- Filled dynamically based on employment type -->
                         </div>
                     </div>
-                    <div class="cost-breakdown" id="cost-breakdown">
-                        <div class="cost-row visible">
-                            <div class="cost-row-label">Your Premium (from paycheck)</div>
-                            <div class="cost-row-amount" id="employee-premium">$6,575</div>
+
+                    <div class="income-comparison">
+                        <div class="income-compare-box current">
+                            <div class="income-compare-label">Current System</div>
+                            <div class="income-compare-pct" id="current-pct">36%</div>
+                            <div class="income-compare-detail" id="current-detail">of income to healthcare</div>
                         </div>
-                        <div class="cost-row visible">
-                            <div class="cost-row-label">Deductible + Copays (avg.)</div>
-                            <div class="cost-row-amount" id="out-of-pocket">$3,000</div>
-                        </div>
-                        <div class="cost-row-subtotal">
-                            <div class="cost-row-label">What you think you pay</div>
-                            <div class="cost-row-amount" id="visible-total">$9,575</div>
-                        </div>
-                        <div class="cost-row hidden-cost">
-                            <div class="cost-row-label">Employer's "hidden" contribution</div>
-                            <div class="cost-row-amount" id="employer-premium">$17,393</div>
-                        </div>
-                        <div class="cost-row-total">
-                            <div class="cost-row-label">TRUE TOTAL COST</div>
-                            <div class="cost-row-amount" id="true-total">$26,968</div>
+                        <div class="income-compare-box universal">
+                            <div class="income-compare-label">Universal System</div>
+                            <div class="income-compare-pct" id="universal-pct">8%</div>
+                            <div class="income-compare-detail" id="universal-detail">income-based tax</div>
                         </div>
                     </div>
-                    <div class="pool-insight" id="cost-insight">
-                        <strong>Why this matters:</strong> That $17,393 your employer pays? It comes from the same budget as your salary. If healthcare costs dropped, that money could go to your wages instead.
+
+                    <div class="income-impact regressive" id="income-impact">
+                        <strong>The problem:</strong> A family earning $30K pays 90% of their income to healthcare (true total cost), while a family earning $200K pays only 13.5%. Same coverage, wildly unfair burden.
                     </div>
                     <div class="inline-source" style="margin-top: 12px; text-align: center;">
-                        Source: <a href="https://www.kff.org/health-costs/report/employer-health-benefits-annual-survey/" target="_blank">KFF Employer Health Benefits Survey 2024</a>
+                        Sources: <a href="https://www.kff.org/health-costs/report/employer-health-benefits-annual-survey/" target="_blank">KFF 2024</a> ·
+                        <a href="https://www.bls.gov/cex/" target="_blank">BLS Consumer Expenditure</a>
                     </div>
                 </div>
             </div>
@@ -1021,68 +1961,531 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Widget 6: Healthcare Tiers -->
+            <div class="option-card">
+                <div class="option-header">
+                    <span class="option-number">6</span>
+                    <span class="option-title">"Universal = Floor, Not Ceiling"</span>
+                </div>
+                <p class="option-description">
+                    Click each tier to see how it compares to what you pay now. Universal is the floor - you can always add more!
+                </p>
+                <div class="tiers-demo">
+                    <div class="tiers-container" id="tiers-container">
+                        <div class="tier-card basic" data-tier="basic">
+                            <div class="tier-header">
+                                <span class="tier-name">Universal Basic (Everyone Gets This)</span>
+                                <span class="tier-cost">Tax-funded</span>
+                            </div>
+                            <ul class="tier-items">
+                                <li>Primary care & checkups</li>
+                                <li>Preventive screenings</li>
+                                <li>Emergency room visits</li>
+                                <li>Essential prescriptions</li>
+                                <li>Mental health services</li>
+                                <li>Standard surgeries</li>
+                            </ul>
+                        </div>
+                        <div class="tier-card plus" data-tier="plus">
+                            <div class="tier-header">
+                                <span class="tier-name">Plus Tier (Optional)</span>
+                                <span class="tier-cost">~$150/mo</span>
+                            </div>
+                            <ul class="tier-items">
+                                <li>Private rooms in hospitals</li>
+                                <li>Faster specialist appointments</li>
+                                <li>Expanded dental & vision</li>
+                                <li>Alternative therapies</li>
+                            </ul>
+                        </div>
+                        <div class="tier-card premium" data-tier="premium">
+                            <div class="tier-header">
+                                <span class="tier-name">Premium Tier (Optional)</span>
+                                <span class="tier-cost">~$400/mo</span>
+                            </div>
+                            <ul class="tier-items">
+                                <li>Concierge medicine / VIP access</li>
+                                <li>Experimental treatments</li>
+                                <li>Luxury facility upgrades</li>
+                                <li>International coverage</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="tier-comparison" id="tier-comparison">
+                        <div class="tier-comparison-header" id="tier-comparison-header">Basic Tier vs. Current System</div>
+                        <div class="tier-comparison-row">
+                            <span class="tier-comparison-label">Your current annual cost:</span>
+                            <span class="tier-comparison-value">$9,575</span>
+                        </div>
+                        <div class="tier-comparison-row">
+                            <span class="tier-comparison-label">This tier annual cost:</span>
+                            <span class="tier-comparison-value" id="tier-cost-value">$0 (tax-funded)</span>
+                        </div>
+                        <div class="tier-comparison-row">
+                            <span class="tier-comparison-label">Your savings:</span>
+                            <span class="tier-comparison-value savings" id="tier-savings">$9,575/year</span>
+                        </div>
+                        <div class="tier-comparison-row">
+                            <span class="tier-comparison-label">Coverage level:</span>
+                            <span class="tier-comparison-value" id="tier-coverage">Same or better for 95% of needs</span>
+                        </div>
+                    </div>
+                    <div class="tier-note">
+                        <strong>Click a tier above</strong> to compare costs. In countries with universal healthcare, about 10-15% buy supplemental coverage. The difference? Nobody goes bankrupt for basic care.
+                    </div>
+                    <div class="inline-source" style="margin-top: 12px; text-align: center;">
+                        Sources: <a href="https://www.commonwealthfund.org/international-health-policy-center" target="_blank">Commonwealth Fund International Comparisons</a> ·
+                        <a href="https://www.oecd.org/health/" target="_blank">OECD Health Statistics</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Widget 7: Where Your Tax Dollars Already Go -->
+            <div class="option-card">
+                <div class="option-header">
+                    <span class="option-number">7</span>
+                    <span class="option-title">"Where Your Tax Dollars Already Go"</span>
+                </div>
+                <p class="option-description">
+                    Click each program to learn more. Toggle views to see where the money actually ends up.
+                </p>
+                <div class="tax-demo">
+                    <div class="tax-toggle-view">
+                        <button class="tax-view-btn active" data-view="programs">By Program</button>
+                        <button class="tax-view-btn" data-view="destination">Where It Goes</button>
+                        <button class="tax-view-btn" data-view="perperson">Per Person</button>
+                    </div>
+                    <div class="tax-flow" id="tax-flow">
+                        <div class="tax-row" data-program="medicare">
+                            <span class="tax-icon">🏥</span>
+                            <div class="tax-info">
+                                <div class="tax-label">Medicare</div>
+                                <div class="tax-sublabel">65+ and disabled Americans</div>
+                            </div>
+                            <span class="tax-amount">$900B</span>
+                        </div>
+                        <div class="tax-detail" id="detail-medicare">
+                            <strong>Did you know?</strong> About 50% of Medicare beneficiaries are now in private Medicare Advantage plans. These insurers take 15-20% for admin/profit before paying for care. Traditional Medicare admin costs are only 2%.
+                        </div>
+                        <div class="tax-row" data-program="medicaid">
+                            <span class="tax-icon">👨‍👩‍👧‍👦</span>
+                            <div class="tax-info">
+                                <div class="tax-label">Medicaid & CHIP</div>
+                                <div class="tax-sublabel">Low-income families & children</div>
+                            </div>
+                            <span class="tax-amount">$800B</span>
+                        </div>
+                        <div class="tax-detail" id="detail-medicaid">
+                            <strong>The managed care problem:</strong> Most states contract with private insurers to "manage" Medicaid. These companies keep 10-15% for themselves. Some have been caught denying care to boost profits.
+                        </div>
+                        <div class="tax-row" data-program="va">
+                            <span class="tax-icon">🎖️</span>
+                            <div class="tax-info">
+                                <div class="tax-label">VA Healthcare</div>
+                                <div class="tax-sublabel">Veterans' medical care</div>
+                            </div>
+                            <span class="tax-amount">$115B</span>
+                        </div>
+                        <div class="tax-detail" id="detail-va">
+                            <strong>True single-payer:</strong> The VA is the closest thing America has to government-run healthcare. It consistently scores higher in patient satisfaction than private healthcare, with lower costs per patient.
+                        </div>
+                        <div class="tax-row" data-program="subsidies">
+                            <span class="tax-icon">💼</span>
+                            <div class="tax-info">
+                                <div class="tax-label">Employer Tax Subsidies</div>
+                                <div class="tax-sublabel">Tax breaks for employer insurance</div>
+                            </div>
+                            <span class="tax-amount">$300B</span>
+                        </div>
+                        <div class="tax-detail" id="detail-subsidies">
+                            <strong>Hidden subsidy:</strong> When employers pay for your insurance, that money isn't taxed. This costs the government $300B/year - a subsidy that benefits higher earners more (they're in higher tax brackets).
+                        </div>
+                        <div class="tax-arrow">↓</div>
+                        <div class="tax-leakage" data-program="leakage">
+                            <span class="tax-icon">💸</span>
+                            <div class="tax-info">
+                                <div class="tax-label">Private Insurer "Cut"</div>
+                                <div class="tax-sublabel">Admin, profits, marketing</div>
+                            </div>
+                            <span class="tax-amount">~$200B</span>
+                        </div>
+                        <div class="tax-detail" id="detail-leakage">
+                            <strong>The skim:</strong> Private insurers managing Medicare Advantage and Medicaid keep $200B+ for admin, executive pay, marketing, and shareholder profits. This is money that could pay for actual healthcare.
+                        </div>
+                    </div>
+                    <div class="tax-total">
+                        <div class="tax-total-label">Total Government Healthcare Spending</div>
+                        <div class="tax-total-value" id="tax-total-value">$2.1 Trillion/year</div>
+                        <div class="tax-total-note" id="tax-total-note">That's ~$6,400 per person - already more than Canada spends TOTAL ($5,370)</div>
+                    </div>
+                    <div class="pool-insight" id="tax-insight" style="margin-top: 12px;">
+                        <strong>Click any program above</strong> to learn how the money actually flows. We're already paying enough to cover everyone - it's just going to the wrong places.
+                    </div>
+                    <div class="inline-source" style="margin-top: 12px; text-align: center;">
+                        Sources: <a href="https://www.cms.gov/research-statistics-data-and-systems/statistics-trends-and-reports/nationalhealthexpenddata" target="_blank">CMS National Health Expenditure 2023</a> ·
+                        <a href="https://www.cbpp.org/research/health/medicaid-and-chip" target="_blank">CBPP Medicaid Analysis</a> ·
+                        <a href="https://www.taxpolicycenter.org/briefing-book/how-does-tax-exclusion-employer-sponsored-health-insurance-work" target="_blank">Tax Policy Center</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Widget 8: The Corporate Healthcare Shuffle -->
+            <div class="option-card">
+                <div class="option-header">
+                    <span class="option-number">8</span>
+                    <span class="option-title">"The Corporate Healthcare Shuffle"</span>
+                </div>
+                <p class="option-description">
+                    Click "Next Step" to follow the money. See how corporations extract profit at every stage of your healthcare journey.
+                </p>
+                <div class="shuffle-demo">
+                    <div class="shuffle-toggle">
+                        <button class="shuffle-btn active" data-view="insurance">Insurance Game</button>
+                        <button class="shuffle-btn" data-view="pharma">Pharma Game</button>
+                        <button class="shuffle-btn" data-view="hospital">Hospital Game</button>
+                    </div>
+                    <div class="shuffle-flow" id="shuffle-flow">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div class="shuffle-controls">
+                        <button class="shuffle-control-btn" id="shuffle-prev">← Previous</button>
+                        <button class="shuffle-control-btn primary" id="shuffle-next">Next Step →</button>
+                        <button class="shuffle-control-btn" id="shuffle-show-all">Show All</button>
+                    </div>
+                    <div class="shuffle-result" id="shuffle-result" style="display: none;">
+                        <div class="shuffle-result-label">Who Wins?</div>
+                        <div class="shuffle-result-value" id="shuffle-winner">Insurance shareholders</div>
+                    </div>
+                    <div class="pool-insight" id="shuffle-insight" style="margin-top: 12px;">
+                        <strong>Follow the money:</strong> Click "Next Step" to see how your healthcare dollar gets divided up before it ever pays for care.
+                    </div>
+                    <div class="inline-source" style="margin-top: 12px; text-align: center;">
+                        Sources: <a href="https://www.ama-assn.org/about/research/competition-health-insurance" target="_blank">AMA Insurance Competition Report</a> ·
+                        <a href="https://www.drugchannels.net/" target="_blank">Drug Channels Analysis</a> ·
+                        <a href="https://www.healthaffairs.org/topic/1702" target="_blank">Health Affairs Hospital Studies</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Widget 9: What Basic Coverage Actually Means -->
+            <div class="option-card">
+                <div class="option-header">
+                    <span class="option-number">9</span>
+                    <span class="option-title">"What 'Basic' Actually Covers"</span>
+                </div>
+                <p class="option-description">
+                    Pick a life situation to see what's covered. Click any item to learn more details.
+                </p>
+                <div class="coverage-demo">
+                    <div class="coverage-scenario-select">
+                        <button class="coverage-scenario-btn active" data-scenario="general">General</button>
+                        <button class="coverage-scenario-btn" data-scenario="pregnancy">Pregnancy</button>
+                        <button class="coverage-scenario-btn" data-scenario="chronic">Chronic Illness</button>
+                        <button class="coverage-scenario-btn" data-scenario="elderly">Senior Care</button>
+                        <button class="coverage-scenario-btn" data-scenario="accident">Accident</button>
+                    </div>
+                    <div class="coverage-columns" id="coverage-columns">
+                        <div class="coverage-column covered">
+                            <div class="coverage-column-header">
+                                <span>Covered (No Extra Cost)</span>
+                            </div>
+                            <ul class="coverage-list" id="covered-list">
+                                <li data-item="checkups">Annual checkups & screenings
+                                    <div class="coverage-detail">Includes physical exams, blood pressure, cholesterol, diabetes screening, cancer screenings (mammograms, colonoscopies). All at $0 cost.</div>
+                                </li>
+                                <li data-item="vaccines">All vaccinations
+                                    <div class="coverage-detail">Flu shots, COVID, tetanus, shingles, pneumonia - all vaccines recommended by CDC. No copay.</div>
+                                </li>
+                                <li data-item="labs">Lab work & diagnostics
+                                    <div class="coverage-detail">Blood tests, X-rays, MRIs, CT scans when medically necessary. No separate billing.</div>
+                                </li>
+                                <li data-item="rx">Generic & essential prescriptions
+                                    <div class="coverage-detail">Insulin, blood pressure meds, antidepressants, antibiotics - all at low or no cost. Brand-name only if no generic exists.</div>
+                                </li>
+                                <li data-item="er">Emergency room visits
+                                    <div class="coverage-detail">No bills, no "surprise" charges from out-of-network doctors. Go when you need to without financial fear.</div>
+                                </li>
+                                <li data-item="hospital">Hospital stays
+                                    <div class="coverage-detail">Fully covered. No $2,000/night room charges. No separate billing for every doctor who walks in.</div>
+                                </li>
+                                <li data-item="surgery">Surgeries (medically necessary)
+                                    <div class="coverage-detail">Appendectomy, hip replacement, heart surgery - covered when needed. No prior authorization battles.</div>
+                                </li>
+                                <li data-item="mental">Mental health therapy
+                                    <div class="coverage-detail">Therapy sessions, psychiatry, addiction treatment. Mental health treated like physical health.</div>
+                                </li>
+                                <li data-item="maternity">Maternity & newborn care
+                                    <div class="coverage-detail">All prenatal visits, delivery, postpartum care, newborn care. Currently costs $4,500+ out of pocket.</div>
+                                </li>
+                                <li data-item="pt">Physical therapy
+                                    <div class="coverage-detail">Rehab after surgery, injury recovery, chronic pain management. No session limits.</div>
+                                </li>
+                                <li data-item="chronic">Chronic disease management
+                                    <div class="coverage-detail">Diabetes care, asthma, heart disease, arthritis - ongoing care without ongoing costs.</div>
+                                </li>
+                                <li data-item="cancer">Cancer treatment (standard)
+                                    <div class="coverage-detail">Chemo, radiation, surgery - proven treatments fully covered. No $12,000 out-of-pocket maximums.</div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="coverage-column optional">
+                            <div class="coverage-column-header">
+                                <span>Optional (Pay Extra)</span>
+                            </div>
+                            <ul class="coverage-list" id="optional-list">
+                                <li data-item="cosmetic">Cosmetic surgery
+                                    <div class="coverage-detail">Nose jobs, facelifts, liposuction - elective appearance changes. Reconstructive surgery after injury IS covered.</div>
+                                </li>
+                                <li data-item="experimental">Experimental treatments
+                                    <div class="coverage-detail">Unproven therapies, clinical trials. Once proven effective, they become covered.</div>
+                                </li>
+                                <li data-item="brand">Brand-name drugs (when generic exists)
+                                    <div class="coverage-detail">Want Advil instead of ibuprofen? Pay the difference. Same medicine, different label.</div>
+                                </li>
+                                <li data-item="private-room">Private hospital rooms
+                                    <div class="coverage-detail">Standard is semi-private. Want a suite? Upgrade is available for a fee.</div>
+                                </li>
+                                <li data-item="elective">Elective procedures
+                                    <div class="coverage-detail">Procedures that aren't medically necessary but you want anyway.</div>
+                                </li>
+                                <li data-item="concierge">Concierge/VIP services
+                                    <div class="coverage-detail">24/7 doctor access, same-day appointments, boutique care. Luxury healthcare.</div>
+                                </li>
+                                <li data-item="fertility">Fertility treatments (varies)
+                                    <div class="coverage-detail">IVF, egg freezing - coverage varies by country. Many do cover basic fertility care.</div>
+                                </li>
+                                <li data-item="lasik">Vision correction surgery
+                                    <div class="coverage-detail">LASIK, PRK - elective vision correction. Basic glasses/contacts often ARE covered.</div>
+                                </li>
+                                <li data-item="luxury-rehab">Luxury rehab facilities
+                                    <div class="coverage-detail">Beach resort rehab vs. standard facility. Treatment covered, luxury amenities aren't.</div>
+                                </li>
+                                <li data-item="alt-med">Alternative medicine (unproven)
+                                    <div class="coverage-detail">Homeopathy, unproven supplements. Acupuncture and chiropractic often ARE covered.</div>
+                                </li>
+                                <li data-item="travel">International travel coverage
+                                    <div class="coverage-detail">Care abroad. Within the country, you're covered everywhere.</div>
+                                </li>
+                                <li data-item="fast-track">Faster appointment times
+                                    <div class="coverage-detail">Skip the line? Pay for it. Standard wait times are reasonable in well-funded systems.</div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="coverage-scenario-result" id="coverage-result">
+                            <div class="coverage-scenario-header" id="coverage-result-header">For Your Situation</div>
+                            <div class="coverage-scenario-text" id="coverage-result-text">Select a life scenario above to see specific coverage details.</div>
+                        </div>
+                        <div class="coverage-note">
+                            <strong>Click any item</strong> to see details. "Basic" covers everything most people ever need. Currently, 28 million Americans can't even get checkups.
+                        </div>
+                    </div>
+                    <div class="inline-source" style="margin-top: 12px; text-align: center;">
+                        Sources: <a href="https://www.cms.gov/CCIIO/Resources/Files/essential-health-benefits" target="_blank">CMS Essential Health Benefits</a> ·
+                        <a href="https://www.commonwealthfund.org/publications/issue-briefs/2023/jan/us-health-care-global-perspective-2022" target="_blank">Commonwealth Fund Global Comparison</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Option 1: Hidden Cost Reveal
-        const singleBtn = document.getElementById('single-btn');
-        const familyBtn = document.getElementById('family-btn');
-        const familyDisplay = document.getElementById('family-display');
-        const employeePremium = document.getElementById('employee-premium');
-        const outOfPocket = document.getElementById('out-of-pocket');
-        const visibleTotal = document.getElementById('visible-total');
-        const employerPremium = document.getElementById('employer-premium');
-        const trueTotal = document.getElementById('true-total');
-        const costInsight = document.getElementById('cost-insight');
+        // Option 1: Income & Employment-Based Healthcare Cost
+        const employmentBtns = document.querySelectorAll('#employment-selector .income-btn');
+        const incomeBtns = document.querySelectorAll('#income-selector .income-btn');
+        const incomeAmount = document.getElementById('income-amount');
+        const healthcareAmount = document.getElementById('healthcare-amount');
+        const barHealthcare = document.getElementById('bar-healthcare');
+        const barRemaining = document.getElementById('bar-remaining');
+        const currentPct = document.getElementById('current-pct');
+        const currentDetail = document.getElementById('current-detail');
+        const universalPct = document.getElementById('universal-pct');
+        const universalDetail = document.getElementById('universal-detail');
+        const incomeImpact = document.getElementById('income-impact');
+        const legendHealthcare = document.getElementById('legend-healthcare');
+        const employmentNote = document.getElementById('employment-note');
 
-        // KFF 2024 data
-        const costData = {
-            single: {
-                employeePremium: 1368,   // Annual employee contribution
-                employerPremium: 7034,   // Annual employer contribution
-                outOfPocket: 1500,       // Avg deductible + copays
-                totalPremium: 8951       // Total annual premium
+        // Current state
+        let currentEmployment = 'fulltime';
+        let currentIncome = 75000;
+
+        // Employment type data - how costs differ by employment
+        const employmentData = {
+            fulltime: {
+                label: 'Full-Time W-2',
+                employerPays: 17393,    // Employer contribution (hidden from worker)
+                employeePays: 6575,     // Employee premium share
+                outOfPocket: 3000,      // Deductibles, copays, etc.
+                totalCost: 27000,       // True total cost
+                legendText: 'Healthcare (your premium + employer\'s hidden share + out-of-pocket)',
+                note: null
             },
-            family: {
-                employeePremium: 6575,   // Annual employee contribution
-                employerPremium: 17393,  // Annual employer contribution
-                outOfPocket: 3000,       // Avg deductible + copays
-                totalPremium: 24968      // Total annual premium
+            parttime: {
+                label: 'Part-Time (No Benefits)',
+                employerPays: 0,        // No employer contribution
+                employeePays: 15000,    // ACA marketplace plan (unsubsidized)
+                outOfPocket: 5000,      // Higher deductibles on ACA bronze/silver
+                totalCost: 20000,       // What you actually pay
+                legendText: 'Healthcare (ACA premium + out-of-pocket - NO employer help)',
+                note: '<strong>No employer help:</strong> Part-time workers must buy their own insurance on the ACA marketplace. No employer contribution means YOU pay the full cost.'
+            },
+            gig: {
+                label: 'Gig/Contract (1099)',
+                employerPays: 0,        // No employer contribution
+                employeePays: 15000,    // ACA marketplace plan
+                outOfPocket: 5000,      // Higher deductibles
+                totalCost: 20000,       // What you actually pay
+                legendText: 'Healthcare (ACA premium + out-of-pocket - NO employer help)',
+                note: '<strong>The gig economy trap:</strong> As a 1099 contractor, you\'re "your own boss" but also your own HR department. No employer contribution, no group rates, no pre-tax benefits.'
+            },
+            minimum: {
+                label: 'Minimum Wage (Retail/Service)',
+                employerPays: 0,        // Many don't offer or workers can't afford
+                employeePays: 12000,    // Subsidized ACA plan (lower income = more subsidy)
+                outOfPocket: 4000,      // Still significant
+                totalCost: 16000,       // With ACA subsidies
+                legendText: 'Healthcare (subsidized ACA premium + out-of-pocket)',
+                note: '<strong>The subsidy cliff:</strong> ACA subsidies help, but many minimum wage workers still can\'t afford coverage. In non-expansion states, they may fall in the "coverage gap" - too poor for ACA subsidies, but not eligible for Medicaid.'
             }
         };
 
-        function updateCostDisplay(type) {
-            const data = costData[type];
-            const visible = data.employeePremium + data.outOfPocket;
-            const total = visible + data.employerPremium;
+        // Income labels
+        const incomeLabels = {
+            30000: '$30,000',
+            50000: '$50,000',
+            75000: '$75,000',
+            100000: '$100,000',
+            200000: '$200,000+'
+        };
 
-            employeePremium.textContent = '$' + data.employeePremium.toLocaleString();
-            outOfPocket.textContent = '$' + data.outOfPocket.toLocaleString();
-            visibleTotal.textContent = '$' + visible.toLocaleString();
-            employerPremium.textContent = '$' + data.employerPremium.toLocaleString();
-            trueTotal.textContent = '$' + total.toLocaleString();
+        function getInsight(income, employment) {
+            const emp = employmentData[employment];
+            const pct = Math.round((emp.totalCost / income) * 100);
 
-            if (type === 'family') {
-                costInsight.innerHTML = `<strong>Why this matters:</strong> That $${data.employerPremium.toLocaleString()} your employer pays? It comes from the same budget as your salary. If healthcare costs dropped, that money could go to your wages instead.`;
-            } else {
-                costInsight.innerHTML = `<strong>Why this matters:</strong> Your employer spends $${data.employerPremium.toLocaleString()}/year on your health insurance - money that could be part of your paycheck if we had a more efficient system.`;
+            if (employment === 'fulltime') {
+                if (income <= 30000) {
+                    return '<strong>Crushing burden:</strong> Even with employer benefits, the TRUE cost of healthcare ($27K including your employer\'s hidden contribution) would be 90% of your income. This is money that could be your wages.';
+                } else if (income <= 50000) {
+                    return '<strong>Stretched thin:</strong> At median income, healthcare takes over half your earnings when you count the employer\'s "hidden" contribution. That money is part of your compensation package.';
+                } else if (income <= 75000) {
+                    return '<strong>Still significant:</strong> Even at $75K with good benefits, healthcare consumes 36% of household income. The "employer contribution" is still YOUR money.';
+                } else if (income <= 100000) {
+                    return '<strong>Getting easier:</strong> At $100K, healthcare is 27% of income - still substantial but more manageable. Same coverage, but dramatically lower burden than lower-income families.';
+                } else {
+                    return '<strong>The unfairness:</strong> At $200K, healthcare is just 13.5% of income. Same insurance, same coverage, but dramatically lower burden than lower-income families.';
+                }
+            } else if (employment === 'parttime' || employment === 'gig') {
+                if (income <= 30000) {
+                    return '<strong>Impossible choice:</strong> At $30K with no employer benefits, healthcare costs $20K/year - that\'s 67% of your income! Many gig workers and part-timers simply go uninsured.';
+                } else if (income <= 50000) {
+                    return '<strong>Barely manageable:</strong> Without employer help, you\'re paying $20K out of $50K - 40% of your income just for healthcare. Full-time W-2 workers get $17K of hidden employer support.';
+                } else if (income <= 75000) {
+                    return '<strong>The hidden penalty:</strong> Gig/part-time workers at $75K pay 27% of income for healthcare. A full-time employee at the same income only pays $9,575 directly (13%) - the rest is hidden employer contribution.';
+                } else {
+                    return '<strong>The self-employment tax:</strong> Even at higher incomes, lack of employer benefits means paying the FULL cost yourself. This is a hidden $17K/year penalty for not having traditional employment.';
+                }
+            } else { // minimum
+                if (income <= 30000) {
+                    return '<strong>The coverage gap:</strong> At minimum wage, even ACA subsidies may not be enough. Many workers face the choice: pay 53% of income for coverage, or risk going uninsured.';
+                } else {
+                    return '<strong>Subsidy cliff:</strong> As income rises, ACA subsidies phase out quickly. This creates weird incentives where earning slightly more can make you significantly worse off.';
+                }
             }
         }
 
-        singleBtn.addEventListener('click', function() {
-            singleBtn.classList.add('active');
-            familyBtn.classList.remove('active');
-            familyDisplay.textContent = 'Single';
-            updateCostDisplay('single');
+        function updateDisplay() {
+            const emp = employmentData[currentEmployment];
+            const universalTax = Math.round(currentIncome * 0.08);
+            const currentPctVal = Math.round((emp.totalCost / currentIncome) * 100);
+            const universalPctVal = Math.round((universalTax / currentIncome) * 100);
+            const savingsAmt = emp.totalCost - universalTax;
+
+            // Update text values
+            incomeAmount.textContent = incomeLabels[currentIncome];
+            healthcareAmount.textContent = '$' + emp.totalCost.toLocaleString();
+
+            // Update legend
+            legendHealthcare.textContent = emp.legendText;
+
+            // Update bar chart
+            const healthcarePct = Math.min(currentPctVal, 100);
+            const remainingPct = Math.max(100 - healthcarePct, 0);
+            barHealthcare.style.width = healthcarePct + '%';
+            barHealthcare.textContent = currentPctVal > 100 ? '>100%' : healthcarePct + '%';
+            barRemaining.style.width = remainingPct + '%';
+
+            // Update comparison boxes
+            currentPct.textContent = currentPctVal + '%';
+            currentDetail.textContent = '$' + emp.totalCost.toLocaleString() + '/year';
+            universalPct.textContent = universalPctVal + '%';
+            universalDetail.textContent = '$' + universalTax.toLocaleString() + '/year (save $' + savingsAmt.toLocaleString() + ')';
+
+            // Update insight
+            incomeImpact.innerHTML = getInsight(currentIncome, currentEmployment);
+
+            // Update employment note
+            if (emp.note) {
+                employmentNote.innerHTML = emp.note;
+                employmentNote.style.display = 'block';
+                employmentNote.className = 'employment-note warning';
+            } else {
+                employmentNote.style.display = 'none';
+            }
+        }
+
+        // Function to update income button availability based on employment
+        function updateIncomeAvailability() {
+            incomeBtns.forEach(btn => {
+                const income = parseInt(btn.dataset.income);
+                if (currentEmployment === 'minimum') {
+                    // Minimum wage workers can only select $30K
+                    if (income > 30000) {
+                        btn.classList.add('disabled');
+                        btn.disabled = true;
+                    } else {
+                        btn.classList.remove('disabled');
+                        btn.disabled = false;
+                    }
+                } else {
+                    // Other employment types can select any income
+                    btn.classList.remove('disabled');
+                    btn.disabled = false;
+                }
+            });
+
+            // If minimum wage and current income > 30K, reset to 30K
+            if (currentEmployment === 'minimum' && currentIncome > 30000) {
+                currentIncome = 30000;
+                incomeBtns.forEach(b => b.classList.remove('active'));
+                document.querySelector('[data-income="30000"]').classList.add('active');
+            }
+        }
+
+        // Employment button handlers
+        employmentBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                employmentBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentEmployment = this.dataset.employment;
+                updateIncomeAvailability();
+                updateDisplay();
+            });
         });
 
-        familyBtn.addEventListener('click', function() {
-            familyBtn.classList.add('active');
-            singleBtn.classList.remove('active');
-            familyDisplay.textContent = 'Family';
-            updateCostDisplay('family');
+        // Income button handlers
+        incomeBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.disabled) return;
+                incomeBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentIncome = parseInt(this.dataset.income);
+                updateDisplay();
+            });
         });
+
+        // Initialize
+        updateIncomeAvailability();
+        updateDisplay();
 
         // Option 2: Dollar flow toggle
         const dollarBtns = document.querySelectorAll('.dollar-toggle-btn');
@@ -1375,6 +2778,286 @@
                 document.querySelector('.scenario-box.universal .scenario-box-amount').textContent = data.universal;
                 document.querySelector('.scenario-box.universal .scenario-box-items').innerHTML =
                     data.universalItems.map(item => `<li>${item}</li>`).join('');
+            });
+        });
+
+        // Widget 6: Healthcare Tiers Interactive
+        const tierCards = document.querySelectorAll('.tier-card');
+        const tierComparison = document.getElementById('tier-comparison');
+        const tierComparisonHeader = document.getElementById('tier-comparison-header');
+        const tierCostValue = document.getElementById('tier-cost-value');
+        const tierSavings = document.getElementById('tier-savings');
+        const tierCoverage = document.getElementById('tier-coverage');
+
+        const tierData = {
+            basic: {
+                name: 'Universal Basic',
+                cost: '$0 (tax-funded)',
+                annualCost: 0,
+                savings: '$9,575/year',
+                coverage: 'Same or better for 95% of healthcare needs'
+            },
+            plus: {
+                name: 'Plus Tier',
+                cost: '$1,800/year ($150/mo)',
+                annualCost: 1800,
+                savings: '$7,775/year',
+                coverage: 'All basic + private rooms, faster appointments, expanded dental/vision'
+            },
+            premium: {
+                name: 'Premium Tier',
+                cost: '$4,800/year ($400/mo)',
+                annualCost: 4800,
+                savings: '$4,775/year',
+                coverage: 'All basic + plus + concierge care, experimental treatments, VIP access'
+            }
+        };
+
+        tierCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const tier = this.dataset.tier;
+                const data = tierData[tier];
+
+                // Update selection
+                tierCards.forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+
+                // Update comparison
+                tierComparisonHeader.textContent = `${data.name} vs. Current System`;
+                tierCostValue.textContent = data.cost;
+                tierSavings.textContent = data.savings;
+                tierCoverage.textContent = data.coverage;
+
+                // Show comparison
+                tierComparison.classList.add('show');
+            });
+        });
+
+        // Widget 7: Tax Dollars Interactive
+        const taxRows = document.querySelectorAll('.tax-row, .tax-leakage');
+        const taxViewBtns = document.querySelectorAll('.tax-view-btn');
+        const taxTotalValue = document.getElementById('tax-total-value');
+        const taxTotalNote = document.getElementById('tax-total-note');
+        const taxInsight = document.getElementById('tax-insight');
+
+        // Click to expand details
+        taxRows.forEach(row => {
+            row.addEventListener('click', function() {
+                const program = this.dataset.program;
+                const detail = document.getElementById('detail-' + program);
+
+                // Close all other details
+                document.querySelectorAll('.tax-detail').forEach(d => {
+                    if (d !== detail) d.classList.remove('show');
+                });
+                taxRows.forEach(r => {
+                    if (r !== this) r.classList.remove('highlighted');
+                });
+
+                // Toggle this one
+                if (detail) {
+                    detail.classList.toggle('show');
+                    this.classList.toggle('highlighted');
+                }
+            });
+        });
+
+        // View toggle
+        const taxViews = {
+            programs: {
+                total: '$2.1 Trillion/year',
+                note: "That's ~$6,400 per person - already more than Canada spends TOTAL ($5,370)"
+            },
+            destination: {
+                total: '$1.9T to actual care, $200B to profits',
+                note: "For every $10 spent, nearly $1 goes to insurance admin, marketing, and executive pay"
+            },
+            perperson: {
+                total: '$6,400 per American',
+                note: "You're already paying for universal healthcare through taxes - but not getting it"
+            }
+        };
+
+        taxViewBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const view = this.dataset.view;
+                const data = taxViews[view];
+
+                taxViewBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                taxTotalValue.textContent = data.total;
+                taxTotalNote.textContent = data.note;
+            });
+        });
+
+        // Widget 8: Corporate Healthcare Shuffle with Step Animation
+        const shuffleBtns = document.querySelectorAll('.shuffle-btn');
+        const shuffleFlow = document.getElementById('shuffle-flow');
+        const shuffleWinner = document.getElementById('shuffle-winner');
+        const shuffleResult = document.getElementById('shuffle-result');
+        const shuffleInsight = document.getElementById('shuffle-insight');
+        const shufflePrev = document.getElementById('shuffle-prev');
+        const shuffleNext = document.getElementById('shuffle-next');
+        const shuffleShowAll = document.getElementById('shuffle-show-all');
+
+        let currentShuffleView = 'insurance';
+        let currentStep = 0;
+
+        const shuffleData = {
+            insurance: {
+                winner: 'Insurance shareholders (+$30B/year profits)',
+                steps: [
+                    { num: 1, text: 'You pay $500/mo premium', amount: '$6,000/yr', type: '' },
+                    { num: 2, text: 'Employer pays $17,000 (could be your wages)', amount: '-$17,000', type: 'worker' },
+                    { num: 3, text: 'Insurer keeps 15-20% for admin & profit', amount: '$4,600', type: 'profit' },
+                    { num: 4, text: 'Insurer denies 17% of claims to save money', amount: 'Denied', type: 'profit' },
+                    { num: 5, text: 'CEO makes $20M+/year salary', amount: '$20M+', type: 'profit' },
+                    { num: 6, text: 'You still pay copays, deductibles, surprise bills', amount: '+$3,000', type: 'worker' }
+                ]
+            },
+            pharma: {
+                winner: 'Pharma executives & shareholders',
+                steps: [
+                    { num: 1, text: 'Drug costs $5 to manufacture', amount: '$5', type: '' },
+                    { num: 2, text: 'Company claims "R&D costs" (but spends 2x more on marketing)', amount: '+$50', type: 'profit' },
+                    { num: 3, text: 'PBM (pharmacy middleman) adds their cut', amount: '+$30', type: 'profit' },
+                    { num: 4, text: 'No government negotiation allowed (until 2026 for 10 drugs)', amount: 'No limit', type: 'profit' },
+                    { num: 5, text: 'You pay $300 for a drug that costs $5 to make', amount: '$300', type: 'worker' },
+                    { num: 6, text: 'Same drug in Canada: $50', amount: '$50 🇨🇦', type: '' }
+                ]
+            },
+            hospital: {
+                winner: 'Private equity & hospital executives',
+                steps: [
+                    { num: 1, text: 'Hospital gets bought by private equity', amount: 'Acquired', type: '' },
+                    { num: 2, text: 'Staff cut, services reduced', amount: '-20% staff', type: 'profit' },
+                    { num: 3, text: 'Chargemaster prices inflated 10x', amount: '$50→$500', type: 'profit' },
+                    { num: 4, text: 'ER doctors "out of network" (surprise billing)', amount: '+$2,000', type: 'worker' },
+                    { num: 5, text: 'Hospital pays no property taxes (nonprofit status)', amount: '$0 taxes', type: 'profit' },
+                    { num: 6, text: 'CEO salary: $5-20M; nurses stretched thin', amount: '$10M CEO', type: 'profit' }
+                ]
+            }
+        };
+
+        function renderShuffle(view, showUpTo = 0) {
+            const data = shuffleData[view];
+            shuffleFlow.innerHTML = data.steps.map((step, i) => `
+                <div class="shuffle-step ${step.type} ${i < showUpTo ? 'visible' : ''}">
+                    <span class="shuffle-step-num">${step.num}</span>
+                    <span class="shuffle-step-text">${step.text}</span>
+                    <span class="shuffle-step-amount">${step.amount}</span>
+                </div>
+            `).join('');
+            shuffleWinner.textContent = data.winner;
+
+            // Show result only when all steps visible
+            if (showUpTo >= data.steps.length) {
+                shuffleResult.style.display = 'block';
+                shuffleInsight.innerHTML = `<strong>The result:</strong> ${data.winner}. This is why healthcare costs keep rising.`;
+            } else {
+                shuffleResult.style.display = 'none';
+                shuffleInsight.innerHTML = `<strong>Step ${showUpTo + 1} of ${data.steps.length}:</strong> Click "Next Step" to see how money flows through the system.`;
+            }
+        }
+
+        shuffleBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                shuffleBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentShuffleView = this.dataset.view;
+                currentStep = 0;
+                renderShuffle(currentShuffleView, 0);
+            });
+        });
+
+        shuffleNext.addEventListener('click', function() {
+            const maxSteps = shuffleData[currentShuffleView].steps.length;
+            if (currentStep < maxSteps) {
+                currentStep++;
+                renderShuffle(currentShuffleView, currentStep);
+            }
+        });
+
+        shufflePrev.addEventListener('click', function() {
+            if (currentStep > 0) {
+                currentStep--;
+                renderShuffle(currentShuffleView, currentStep);
+            }
+        });
+
+        shuffleShowAll.addEventListener('click', function() {
+            currentStep = shuffleData[currentShuffleView].steps.length;
+            renderShuffle(currentShuffleView, currentStep);
+        });
+
+        // Initial render
+        renderShuffle('insurance', 0);
+
+        // Widget 9: Coverage Explorer
+        const coverageScenarioBtns = document.querySelectorAll('.coverage-scenario-btn');
+        const coverageResult = document.getElementById('coverage-result');
+        const coverageResultHeader = document.getElementById('coverage-result-header');
+        const coverageResultText = document.getElementById('coverage-result-text');
+        const coveredList = document.getElementById('covered-list');
+        const optionalList = document.getElementById('optional-list');
+
+        const coverageScenarios = {
+            general: {
+                header: 'General Coverage',
+                text: 'For everyday health needs, basic coverage handles it all: checkups, prescriptions, ER visits, surgeries. You\'d only pay extra for cosmetic procedures or luxury amenities.',
+                highlight: ['checkups', 'vaccines', 'rx', 'er']
+            },
+            pregnancy: {
+                header: 'Pregnancy & Birth',
+                text: 'ALL prenatal care, delivery, hospital stay, and newborn care is covered. Currently this costs American families $4,500+ out of pocket. Optional: private birthing suites, doulas.',
+                highlight: ['maternity', 'hospital', 'checkups', 'labs']
+            },
+            chronic: {
+                header: 'Chronic Illness (Diabetes, Heart Disease, etc.)',
+                text: 'Ongoing care, medications, specialists, monitoring - all covered with no copays piling up. Currently, Americans with chronic conditions pay $5,000+ annually in out-of-pocket costs.',
+                highlight: ['chronic', 'rx', 'checkups', 'labs', 'surgery']
+            },
+            elderly: {
+                header: 'Senior Care',
+                text: 'Prescriptions, specialists, surgeries, physical therapy, chronic disease management - all covered. Many seniors currently choose between food and medicine. Not anymore.',
+                highlight: ['rx', 'chronic', 'pt', 'surgery', 'hospital', 'checkups']
+            },
+            accident: {
+                header: 'Accident & Emergency',
+                text: 'ER visit, surgery, hospital stay, physical therapy, follow-up care - ALL covered. No $2,000 ER copays, no surprise bills, no choosing between debt and treatment.',
+                highlight: ['er', 'hospital', 'surgery', 'pt', 'labs']
+            }
+        };
+
+        coverageScenarioBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const scenario = this.dataset.scenario;
+                const data = coverageScenarios[scenario];
+
+                coverageScenarioBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                // Update result
+                coverageResultHeader.textContent = data.header;
+                coverageResultText.textContent = data.text;
+                coverageResult.classList.add('show');
+
+                // Highlight relevant items
+                coveredList.querySelectorAll('li').forEach(li => {
+                    li.classList.remove('expanded');
+                    if (data.highlight.includes(li.dataset.item)) {
+                        li.classList.add('expanded');
+                    }
+                });
+            });
+        });
+
+        // Click to expand individual items
+        document.querySelectorAll('.coverage-list li').forEach(li => {
+            li.addEventListener('click', function(e) {
+                e.stopPropagation();
+                this.classList.toggle('expanded');
             });
         });
     </script>
