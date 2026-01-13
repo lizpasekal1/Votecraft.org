@@ -197,6 +197,97 @@
             margin-top: 4px;
         }
 
+        /* Cost Breakdown Rows */
+        .cost-breakdown {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .cost-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: var(--white);
+            border-radius: 6px;
+            border-left: 3px solid var(--border);
+        }
+
+        .cost-row.visible {
+            border-left-color: var(--text-light);
+        }
+
+        .cost-row-label {
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+
+        .cost-row-amount {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .cost-row-subtotal {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: rgba(102, 102, 102, 0.1);
+            border-radius: 6px;
+            margin-top: 4px;
+        }
+
+        .cost-row-subtotal .cost-row-label {
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .cost-row-subtotal .cost-row-amount {
+            color: var(--text-light);
+        }
+
+        .cost-row.hidden-cost {
+            border-left-color: var(--orange);
+            background: rgba(245, 158, 11, 0.1);
+            margin-top: 8px;
+        }
+
+        .cost-row.hidden-cost .cost-row-label {
+            color: #b45309;
+        }
+
+        .cost-row.hidden-cost .cost-row-amount {
+            color: var(--orange);
+            font-size: 1.1rem;
+        }
+
+        .cost-row-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 12px;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 6px;
+            border: 2px solid rgba(239, 68, 68, 0.3);
+            margin-top: 4px;
+        }
+
+        .cost-row-total .cost-row-label {
+            font-weight: 700;
+            color: var(--red);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .cost-row-total .cost-row-amount {
+            color: var(--red);
+            font-size: 1.4rem;
+        }
+
         /* Option 2: Follow the Dollar Demo */
         .dollar-demo {
             background: var(--background);
@@ -690,39 +781,54 @@
         <p class="subtitle">Interactive demos to help explain universal healthcare economics</p>
 
         <div class="options-grid">
-            <!-- Option 1: Cost Comparison -->
+            <!-- Option 1: Hidden Cost Reveal -->
             <div class="option-card">
                 <div class="option-header">
                     <span class="option-number">1</span>
-                    <span class="option-title">"Where Does Your Money Go?"</span>
+                    <span class="option-title">"The Hidden Cost of Healthcare"</span>
                 </div>
                 <p class="option-description">
-                    Users input their income and see a side-by-side comparison of what they pay now vs. what they'd pay under universal healthcare. Makes it personal and tangible.
+                    Most workers only see what comes out of their paycheck. This reveals the full cost - including what your employer pays on your behalf (money that could be your wages).
                 </p>
                 <div class="cost-demo">
-                    <h4>Your Annual Healthcare Costs</h4>
+                    <h4>Your True Annual Healthcare Cost</h4>
                     <div class="slider-container">
                         <div class="slider-label">
-                            <span>Household Income</span>
-                            <span id="income-display">$75,000</span>
+                            <span>Family Size</span>
+                            <span id="family-display">Family</span>
                         </div>
-                        <input type="range" class="slider" id="income-slider" min="30000" max="200000" value="75000" step="5000">
+                        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                            <button class="pool-btn" id="single-btn">Single</button>
+                            <button class="pool-btn active" id="family-btn">Family</button>
+                        </div>
                     </div>
-                    <div class="cost-comparison">
-                        <div class="cost-box current">
-                            <div class="cost-box-label">Current System</div>
-                            <div class="cost-box-amount" id="current-cost">$12,530</div>
-                            <div class="cost-box-detail">Premiums + deductibles + copays</div>
+                    <div class="cost-breakdown" id="cost-breakdown">
+                        <div class="cost-row visible">
+                            <div class="cost-row-label">Your Premium (from paycheck)</div>
+                            <div class="cost-row-amount" id="employee-premium">$6,575</div>
                         </div>
-                        <div class="cost-box universal">
-                            <div class="cost-box-label">Universal System</div>
-                            <div class="cost-box-amount" id="universal-cost">$6,000</div>
-                            <div class="cost-box-detail">8% income tax, no other costs</div>
+                        <div class="cost-row visible">
+                            <div class="cost-row-label">Deductible + Copays (avg.)</div>
+                            <div class="cost-row-amount" id="out-of-pocket">$3,000</div>
                         </div>
+                        <div class="cost-row-subtotal">
+                            <div class="cost-row-label">What you think you pay</div>
+                            <div class="cost-row-amount" id="visible-total">$9,575</div>
+                        </div>
+                        <div class="cost-row hidden-cost">
+                            <div class="cost-row-label">Employer's "hidden" contribution</div>
+                            <div class="cost-row-amount" id="employer-premium">$17,393</div>
+                        </div>
+                        <div class="cost-row-total">
+                            <div class="cost-row-label">TRUE TOTAL COST</div>
+                            <div class="cost-row-amount" id="true-total">$26,968</div>
+                        </div>
+                    </div>
+                    <div class="pool-insight" id="cost-insight">
+                        <strong>Why this matters:</strong> That $17,393 your employer pays? It comes from the same budget as your salary. If healthcare costs dropped, that money could go to your wages instead.
                     </div>
                     <div class="inline-source" style="margin-top: 12px; text-align: center;">
-                        Sources: <a href="https://www.kff.org/health-costs/report/employer-health-benefits-annual-survey/" target="_blank">KFF Employer Survey</a> ·
-                        <a href="https://www.peri.umass.edu/publication/item/1127-economic-analysis-of-medicare-for-all" target="_blank">PERI Medicare-for-All Study</a>
+                        Source: <a href="https://www.kff.org/health-costs/report/employer-health-benefits-annual-survey/" target="_blank">KFF Employer Health Benefits Survey 2024</a>
                     </div>
                 </div>
             </div>
@@ -919,23 +1025,63 @@
     </div>
 
     <script>
-        // Option 1: Income slider
-        const incomeSlider = document.getElementById('income-slider');
-        const incomeDisplay = document.getElementById('income-display');
-        const currentCost = document.getElementById('current-cost');
-        const universalCost = document.getElementById('universal-cost');
+        // Option 1: Hidden Cost Reveal
+        const singleBtn = document.getElementById('single-btn');
+        const familyBtn = document.getElementById('family-btn');
+        const familyDisplay = document.getElementById('family-display');
+        const employeePremium = document.getElementById('employee-premium');
+        const outOfPocket = document.getElementById('out-of-pocket');
+        const visibleTotal = document.getElementById('visible-total');
+        const employerPremium = document.getElementById('employer-premium');
+        const trueTotal = document.getElementById('true-total');
+        const costInsight = document.getElementById('cost-insight');
 
-        incomeSlider.addEventListener('input', function() {
-            const income = parseInt(this.value);
-            incomeDisplay.textContent = '$' + income.toLocaleString();
+        // KFF 2024 data
+        const costData = {
+            single: {
+                employeePremium: 1368,   // Annual employee contribution
+                employerPremium: 7034,   // Annual employer contribution
+                outOfPocket: 1500,       // Avg deductible + copays
+                totalPremium: 8951       // Total annual premium
+            },
+            family: {
+                employeePremium: 6575,   // Annual employee contribution
+                employerPremium: 17393,  // Annual employer contribution
+                outOfPocket: 3000,       // Avg deductible + copays
+                totalPremium: 24968      // Total annual premium
+            }
+        };
 
-            // Current system: roughly $7,500 base + 6.7% of income for employer+employee premiums
-            const current = Math.round(7500 + (income * 0.067));
-            currentCost.textContent = '$' + current.toLocaleString();
+        function updateCostDisplay(type) {
+            const data = costData[type];
+            const visible = data.employeePremium + data.outOfPocket;
+            const total = visible + data.employerPremium;
 
-            // Universal: 8% of income
-            const universal = Math.round(income * 0.08);
-            universalCost.textContent = '$' + universal.toLocaleString();
+            employeePremium.textContent = '$' + data.employeePremium.toLocaleString();
+            outOfPocket.textContent = '$' + data.outOfPocket.toLocaleString();
+            visibleTotal.textContent = '$' + visible.toLocaleString();
+            employerPremium.textContent = '$' + data.employerPremium.toLocaleString();
+            trueTotal.textContent = '$' + total.toLocaleString();
+
+            if (type === 'family') {
+                costInsight.innerHTML = `<strong>Why this matters:</strong> That $${data.employerPremium.toLocaleString()} your employer pays? It comes from the same budget as your salary. If healthcare costs dropped, that money could go to your wages instead.`;
+            } else {
+                costInsight.innerHTML = `<strong>Why this matters:</strong> Your employer spends $${data.employerPremium.toLocaleString()}/year on your health insurance - money that could be part of your paycheck if we had a more efficient system.`;
+            }
+        }
+
+        singleBtn.addEventListener('click', function() {
+            singleBtn.classList.add('active');
+            familyBtn.classList.remove('active');
+            familyDisplay.textContent = 'Single';
+            updateCostDisplay('single');
+        });
+
+        familyBtn.addEventListener('click', function() {
+            familyBtn.classList.add('active');
+            singleBtn.classList.remove('active');
+            familyDisplay.textContent = 'Family';
+            updateCostDisplay('family');
         });
 
         // Option 2: Dollar flow toggle
