@@ -28,13 +28,13 @@ class SCOTUSDemo {
     getInterpretationData() {
         return {
             'commerce': {
-                text: '"[The Congress shall have Power] To regulate Commerce with foreign Nations, and among the several States, and with the Indian Tribes"',
+                text: '"(The Congress shall have Power) To regulate Commerce with foreign Nations, and among the several States, and with the Indian Tribes"',
                 source: 'Article I, Section 8, Clause 3',
                 comparisonNote: 'The same 16 words have been used to justify completely opposite outcomes - from blocking child labor laws to requiring wheelchair ramps in local businesses.',
                 eras: {
                     early: {
                         label: 'Early Court (1800s-1930s)',
-                        keyPhrase: '"Commerce among the states"',
+                        keyPhrase: '"among the several States"',
                         meaning: 'Means only <strong>direct interstate trade</strong> - the actual buying and selling of goods across state lines',
                         caseName: 'United States v. E.C. Knight (1895)',
                         caseRuling: 'The Court ruled that manufacturing (sugar refining) was NOT commerce, even if products were later sold across state lines. Congress could not regulate a sugar monopoly because "commerce succeeds to manufacture, and is not a part of it."',
@@ -47,7 +47,7 @@ class SCOTUSDemo {
                     },
                     middle: {
                         label: 'Mid-20th Century (1937-1995)',
-                        keyPhrase: '"Commerce among the states"',
+                        keyPhrase: '"among the several States"',
                         meaning: 'Means <strong>anything that affects interstate commerce</strong> - even purely local activities if they have an aggregate economic effect',
                         caseName: 'Wickard v. Filburn (1942)',
                         caseRuling: 'A farmer growing wheat for his own chickens affected interstate commerce because if many farmers did this, it would affect wheat prices. The Court said Congress can regulate activities that "exert a substantial economic effect on interstate commerce."',
@@ -60,7 +60,7 @@ class SCOTUSDemo {
                     },
                     modern: {
                         label: 'Modern Court (1995-Present)',
-                        keyPhrase: '"Commerce among the states"',
+                        keyPhrase: '"among the several States"',
                         meaning: 'Means <strong>economic activity with substantial effects</strong> on interstate commerce - but with new limits on non-economic activity',
                         caseName: 'United States v. Lopez (1995)',
                         caseRuling: 'For the first time in 60 years, the Court struck down a law (Gun-Free School Zones Act) as exceeding commerce power. Possessing a gun near a school was not "economic activity" and had too tenuous a connection to commerce.',
@@ -259,8 +259,13 @@ class SCOTUSDemo {
         const clauseData = this.data[this.currentClause];
         const eraData = clauseData.eras[this.currentEra];
 
-        // Update constitutional text
-        this.clauseText.textContent = clauseData.text;
+        // Update constitutional text with key phrase highlighted in brackets
+        const keyPhraseText = eraData.keyPhrase.replace(/^"|"$/g, ''); // Remove quotes from key phrase
+        const textWithHighlight = clauseData.text.replace(
+            new RegExp(`(${keyPhraseText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'i'),
+            '<span class="key-phrase-highlight">[$1]</span>'
+        );
+        this.clauseText.innerHTML = textWithHighlight;
         this.clauseText.nextElementSibling.textContent = clauseData.source;
 
         // Update era label with color
