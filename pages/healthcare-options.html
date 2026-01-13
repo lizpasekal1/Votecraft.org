@@ -477,6 +477,97 @@
             color: var(--green);
         }
 
+        /* Data Sources Collapsible */
+        .data-sources {
+            margin-top: 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .data-sources-toggle {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--white);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+            transition: background 0.2s;
+        }
+
+        .data-sources-toggle:hover {
+            background: var(--background);
+        }
+
+        .data-sources-toggle .icon {
+            transition: transform 0.2s;
+        }
+
+        .data-sources-toggle.open .icon {
+            transform: rotate(180deg);
+        }
+
+        .data-sources-content {
+            display: none;
+            padding: 16px;
+            background: var(--background);
+            border-top: 1px solid var(--border);
+        }
+
+        .data-sources-content.open {
+            display: block;
+        }
+
+        .source-item {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .source-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .source-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-light);
+            margin-bottom: 4px;
+        }
+
+        .source-text {
+            font-size: 0.85rem;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .source-text a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .source-text a:hover {
+            text-decoration: underline;
+        }
+
+        .source-note {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            font-style: italic;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: var(--white);
+            border-radius: 4px;
+        }
+
         /* Option 5: Scenario Demo */
         .scenario-demo {
             background: var(--background);
@@ -739,6 +830,42 @@
                     <div class="pool-event" id="pool-event"></div>
                     <div class="pool-insight" id="pool-insight">
                         <strong>Try it:</strong> Click "Add Sick Person" to see how one person with high costs affects everyone's premium in a small pool. Then switch to a larger pool to see the difference.
+                    </div>
+
+                    <div class="data-sources">
+                        <button class="data-sources-toggle" id="pool-sources-toggle">
+                            <span>Data Sources & Methodology</span>
+                            <span class="icon">▼</span>
+                        </button>
+                        <div class="data-sources-content" id="pool-sources-content">
+                            <div class="source-item">
+                                <div class="source-label">Average Premium Costs</div>
+                                <div class="source-text">
+                                    <a href="https://www.kff.org/health-costs/report/employer-health-benefits-annual-survey/" target="_blank">Kaiser Family Foundation Employer Health Benefits Survey 2024</a> - Annual family premium averages $24,479 ($847/month employer + employee share).
+                                </div>
+                            </div>
+                            <div class="source-item">
+                                <div class="source-label">High-Cost Patient Impact</div>
+                                <div class="source-text">
+                                    <a href="https://www.healthsystemtracker.org/chart-collection/health-spending-u-s-compare-countries/" target="_blank">Peterson-KFF Health System Tracker</a> - Top 5% of patients account for ~50% of healthcare spending. Average annual cost for chronic conditions: $36,000+.
+                                </div>
+                            </div>
+                            <div class="source-item">
+                                <div class="source-label">Small vs. Large Pool Volatility</div>
+                                <div class="source-text">
+                                    <a href="https://www.cms.gov/cciio/resources/data-resources/mlr" target="_blank">CMS Medical Loss Ratio Data</a> - Small group markets show 2-3x premium volatility compared to large group markets.
+                                </div>
+                            </div>
+                            <div class="source-item">
+                                <div class="source-label">Universal Pool Stability</div>
+                                <div class="source-text">
+                                    <a href="https://www.cms.gov/research-statistics-data-and-systems/statistics-trends-and-reports/nationalhealthexpenddata" target="_blank">CMS National Health Expenditure Data</a> - Medicare per-capita spending grows more predictably (~4-5%/year) than private insurance (~6-8%/year).
+                                </div>
+                            </div>
+                            <div class="source-note">
+                                Note: This simulator uses simplified models for educational purposes. Actual premium calculations involve many more factors including age rating, geography, and plan design.
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1047,6 +1174,15 @@
 
         // Initial render
         renderPool();
+
+        // Data sources toggle
+        const poolSourcesToggle = document.getElementById('pool-sources-toggle');
+        const poolSourcesContent = document.getElementById('pool-sources-content');
+
+        poolSourcesToggle.addEventListener('click', function() {
+            this.classList.toggle('open');
+            poolSourcesContent.classList.toggle('open');
+        });
 
         // Option 5: Scenario buttons
         const scenarioBtns = document.querySelectorAll('.scenario-btn');
