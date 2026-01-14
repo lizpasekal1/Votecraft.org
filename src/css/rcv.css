@@ -4,8 +4,8 @@
  */
 
 :root {
-    --rcv-primary: #5087e5;
-    --rcv-primary-dark: #3a6bc7;
+    --rcv-primary: #008BFF;
+    --rcv-primary-dark: #0070CC;
     --rcv-text: #32373c;
     --rcv-text-light: #666;
     --rcv-background: #fafafa;
@@ -73,12 +73,12 @@
 
 .rcv-nav a.active {
     color: var(--rcv-primary);
-    background: rgba(80, 135, 229, 0.1);
+    background: rgba(0, 139, 255, 0.1);
 }
 
 /* Hero Section */
 .rcv-hero {
-    background: linear-gradient(135deg, var(--rcv-primary) 0%, #3a6bc7 100%);
+    background: linear-gradient(135deg, var(--rcv-primary) 0%, var(--rcv-primary-dark) 100%);
     color: white;
     padding: 80px 0;
     text-align: center;
@@ -252,7 +252,7 @@
 
 .candidate-item:hover {
     border-color: var(--rcv-primary);
-    box-shadow: 0 2px 8px rgba(80, 135, 229, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 139, 255, 0.2);
 }
 
 .candidate-item.dragging {
@@ -262,7 +262,7 @@
 
 .candidate-item.drag-over {
     border-color: var(--rcv-primary);
-    background: rgba(80, 135, 229, 0.05);
+    background: rgba(0, 139, 255, 0.05);
 }
 
 .candidate-item.locked {
@@ -610,7 +610,7 @@
 
 /* CTA Section */
 .rcv-cta {
-    background: linear-gradient(135deg, var(--rcv-primary) 0%, #3a6bc7 100%);
+    background: linear-gradient(135deg, var(--rcv-primary) 0%, var(--rcv-primary-dark) 100%);
     border-radius: 8px;
     padding: 60px 40px;
     text-align: center;
