@@ -71,7 +71,7 @@
 
         .cost-demo h4 {
             font-size: 0.9rem;
-            color: var(--text-light);
+            color: var(--text);
             margin-bottom: 6px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -223,10 +223,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 10px;
+            padding: 8px 30px 8px 10px;
             background: var(--white);
             border-radius: 4px;
             font-size: 0.85rem;
+            position: relative;
         }
 
         .cost-line.hidden-cost {
@@ -413,6 +414,54 @@
             display: block;
         }
 
+        .info-icon-inline {
+            position: absolute;
+            top: 50%;
+            right: 8px;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            background: #999;
+            color: white;
+            border-radius: 50%;
+            font-size: 0.6rem;
+            font-weight: 700;
+            font-style: italic;
+            cursor: help;
+            flex-shrink: 0;
+        }
+
+        .info-icon-inline:hover {
+            background: #666;
+        }
+
+        .info-icon-inline .tooltip {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            margin-bottom: 8px;
+            width: 220px;
+            padding: 8px 10px;
+            background: var(--text);
+            color: white;
+            font-size: 0.75rem;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 1.4;
+            border-radius: 6px;
+            text-align: left;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .info-icon-inline:hover .tooltip {
+            display: block;
+        }
+
         .income-compare-box.current {
             background: var(--red);
             border: 1px solid var(--red-dark);
@@ -570,29 +619,186 @@
 
         @media (max-width: 600px) {
             body {
-                padding: 12px;
+                padding: 8px;
             }
 
             .cost-demo {
-                padding: 20px;
+                padding: 16px;
             }
 
             .widget-header h2 {
-                font-size: 1.25rem;
+                font-size: 1.15rem;
+            }
+
+            .widget-subtitle {
+                font-size: 0.85rem;
+            }
+
+            .cost-demo h4 {
+                font-size: 0.8rem;
+            }
+
+            /* Stack income buttons in 2 rows of 3 */
+            .income-selector {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 6px;
             }
 
             .income-btn {
-                min-width: 70px;
-                padding: 8px 6px;
+                min-width: unset;
+                padding: 8px 4px;
+                font-size: 0.7rem;
+            }
+
+            .income-btn .income-pct,
+            .income-btn .income-label {
+                font-size: 0.55rem;
+            }
+
+            /* Stack employment buttons in 2 rows of 3 */
+            #employment-selector {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 6px;
+            }
+
+            /* Cost breakdown adjustments */
+            .cost-breakdown-grid {
+                min-height: auto;
+            }
+
+            .cost-line {
+                padding: 6px 26px 6px 8px;
+                font-size: 0.8rem;
+            }
+
+            .cost-line-label {
                 font-size: 0.75rem;
             }
 
-            .income-btn .income-pct {
-                font-size: 0.6rem;
+            .cost-line-amount {
+                font-size: 0.8rem;
             }
 
-            .income-comparison {
-                grid-template-columns: 1fr;
+            .hidden-tag {
+                font-size: 0.6rem;
+                padding: 1px 4px;
+            }
+
+            /* Info icon tooltip adjustments for mobile */
+            .info-icon-inline .tooltip {
+                width: 180px;
+                font-size: 0.7rem;
+                right: -10px;
+            }
+
+            .info-icon .tooltip {
+                width: 160px;
+                font-size: 0.7rem;
+            }
+
+            /* Income bar section */
+            .income-bar-label {
+                font-size: 0.75rem;
+                flex-direction: column;
+                gap: 2px;
+            }
+
+            .bar-legend {
+                font-size: 0.65rem;
+                gap: 8px;
+            }
+
+            .legend-dot {
+                width: 8px;
+                height: 8px;
+            }
+
+            /* Comparison boxes */
+            .income-compare-label {
+                font-size: 0.75rem;
+            }
+
+            .income-compare-pct {
+                font-size: 0.9rem;
+            }
+
+            .income-compare-detail {
+                font-size: 0.75rem;
+            }
+
+            .system-comparison-header,
+            .cost-breakdown-header {
+                font-size: 0.7rem;
+            }
+
+            /* Insight box */
+            .income-impact {
+                padding: 12px;
+                font-size: 0.85rem;
+            }
+
+            .insight-content strong {
+                font-size: 0.9rem;
+            }
+
+            .insight-content p {
+                font-size: 0.8rem;
+                line-height: 1.4;
+            }
+
+            /* State selector */
+            .state-selector select {
+                font-size: 0.8rem;
+                padding: 8px 10px;
+            }
+
+            /* Source link */
+            .inline-source {
+                font-size: 0.65rem;
+            }
+        }
+
+        /* Extra small screens */
+        @media (max-width: 380px) {
+            body {
+                padding: 6px;
+            }
+
+            .cost-demo {
+                padding: 12px;
+            }
+
+            .widget-header h2 {
+                font-size: 1rem;
+            }
+
+            .income-btn {
+                padding: 6px 2px;
+                font-size: 0.65rem;
+            }
+
+            .income-btn .income-pct,
+            .income-btn .income-label {
+                font-size: 0.5rem;
+            }
+
+            .cost-line {
+                padding: 5px 24px 5px 6px;
+            }
+
+            .cost-line-label {
+                font-size: 0.7rem;
+            }
+
+            .income-compare-box {
+                padding: 10px 8px;
+            }
+
+            .info-icon-inline .tooltip {
+                width: 150px;
+                right: -20px;
             }
         }
     </style>
@@ -651,6 +857,14 @@
                     Full-Time
                     <span class="income-label">W-2 + Benefits</span>
                 </button>
+                <button class="income-btn" data-employment="laidoff">
+                    Laid-Off
+                    <span class="income-label">COBRA/Market</span>
+                </button>
+                <button class="income-btn" data-employment="quit">
+                    Quit Job
+                    <span class="income-label">No Benefits</span>
+                </button>
             </div>
 
             <h4 style="margin-top: 16px;">Your State Type</h4>
@@ -673,14 +887,17 @@
                             <div class="cost-line">
                                 <span class="cost-line-label">Your Premium (paycheck deduction)</span>
                                 <span class="cost-line-amount" id="cost-premium">—</span>
+                                <span class="info-icon-inline">i<span class="tooltip">Average employee contribution for employer-sponsored family coverage. Source: KFF 2024 Employer Health Benefits Survey.</span></span>
                             </div>
                             <div class="cost-line">
                                 <span class="cost-line-label">Out-of-Pocket (deductibles, copays)</span>
                                 <span class="cost-line-amount" id="cost-oop">—</span>
+                                <span class="info-icon-inline">i<span class="tooltip">Average out-of-pocket spending including deductibles, copays, and coinsurance. Source: KFF analysis of MEPS data.</span></span>
                             </div>
                             <div class="cost-line total">
                                 <span class="cost-line-label">Total Healthcare Cost</span>
                                 <span class="cost-line-amount" id="cost-total">—</span>
+                                <span class="info-icon-inline">i<span class="tooltip">Sum of all healthcare spending: employer contribution + your premium + out-of-pocket costs. This is the TRUE cost of your healthcare.</span></span>
                             </div>
                         </div>
 
@@ -791,6 +1008,20 @@
                 employeePays: 12000,
                 outOfPocket: 4000,
                 totalCost: 16000
+            },
+            laidoff: {
+                label: 'Laid-Off (COBRA/Marketplace)',
+                employerPays: 0,
+                employeePays: 23968,
+                outOfPocket: 4000,
+                totalCost: 28000
+            },
+            quit: {
+                label: 'Quit Job (Marketplace)',
+                employerPays: 0,
+                employeePays: 15000,
+                outOfPocket: 5000,
+                totalCost: 20000
             }
         };
 
@@ -804,9 +1035,27 @@
             350000: '$250-450K+ (avg $350K)'
         };
 
-        function getAdjustedCosts(employment, income, stateType) {
+        // Calculate effective income based on employment type
+        // Quit = $0 income, Laid off = ~45% of previous income (unemployment benefits)
+        function getEffectiveIncome(employment, selectedIncome) {
+            if (employment === 'quit') {
+                return 0;
+            }
+            if (employment === 'laidoff') {
+                // Unemployment benefits are roughly 45% of previous income, capped
+                return Math.round(selectedIncome * 0.45);
+            }
+            return selectedIncome;
+        }
+
+        function getAdjustedCosts(employment, income, stateType, effectiveIncome) {
             const base = employmentData[employment];
-            const medicaidEligible = income === 0 || (income <= 20000 && employment !== 'fulltime');
+            const nonEmployerTypes = ['parttime', 'gig', 'minimum', 'laidoff'];
+
+            // Quit is NOT eligible for Medicaid (voluntarily left job)
+            // Laid off IS eligible based on their unemployment income
+            const medicaidEligible = (employment !== 'quit') &&
+                (effectiveIncome === 0 || (effectiveIncome <= 20000 && nonEmployerTypes.includes(employment)));
 
             if (stateType === 'expansion' && medicaidEligible) {
                 return {
@@ -838,10 +1087,29 @@
             };
         }
 
-        function getInsight(income, employment, adjustedCosts) {
+        function getInsight(income, employment, adjustedCosts, originalIncome) {
             const pct = income > 0 ? Math.round((adjustedCosts.totalCost / income) * 100) : 0;
 
-            // $0 income cases
+            // Quit job - special case: $0 income but NOT eligible for Medicaid
+            if (employment === 'quit') {
+                const prevIncomeLabel = '$' + originalIncome.toLocaleString();
+                return '<div class="insight-content"><strong>The healthcare trap</strong><p>You quit your ' + prevIncomeLabel + '/year job - but healthcare doesn\'t quit you. With $0 income, you still face $20K/year in marketplace costs. You voluntarily left, so you don\'t qualify for unemployment or (in most cases) Medicaid. Medical bills are the #1 cause of bankruptcy in America - 66% of all bankruptcies are tied to medical costs. This "job lock" keeps millions trapped in jobs they\'d leave if healthcare weren\'t tied to employment.</p></div>';
+            }
+
+            // Laid-off - income is now unemployment benefits (~45% of previous)
+            if (employment === 'laidoff') {
+                const prevIncomeLabel = '$' + originalIncome.toLocaleString();
+                const unemploymentLabel = '$' + income.toLocaleString();
+                if (adjustedCosts.isMedicaid) {
+                    return '<div class="insight-content"><strong>Unemployment + Medicaid</strong><p>Your ' + prevIncomeLabel + '/year job is gone. Unemployment pays ~' + unemploymentLabel + '/year (45% of previous). The silver lining: you may now qualify for Medicaid in expansion states, with ~$1,500/year in out-of-pocket costs. Under a universal system, job loss wouldn\'t mean scrambling for coverage.</p></div>';
+                }
+                if (adjustedCosts.isCoverageGap) {
+                    return '<div class="insight-content"><strong>The coverage gap nightmare</strong><p>Laid off from your ' + prevIncomeLabel + '/year job, you now receive ~' + unemploymentLabel + '/year in unemployment. In non-expansion states, you\'re trapped: too poor for ACA subsidies but don\'t qualify for Medicaid. You face $12K+ in uninsured costs while job hunting.</p></div>';
+                }
+                return '<div class="insight-content"><strong>COBRA shock</strong><p>Your ' + prevIncomeLabel + '/year job is gone. Unemployment pays ~' + unemploymentLabel + '/year - but COBRA costs $28K to keep your old insurance. That\'s ' + pct + '% of your reduced income! This is why job loss is the #1 cause of medical bankruptcy in America.</p></div>';
+            }
+
+            // $0 income cases (selected $0 directly)
             if (income === 0) {
                 if (adjustedCosts.isMedicaid) {
                     return '<div class="insight-content"><strong>Medicaid safety net</strong><p>With no income, you likely qualify for Medicaid in expansion states (eligibility varies - some require disability, pregnancy, or dependent children). Coverage includes copays, prescriptions, and some dental/vision gaps averaging ~$1,500/year. This is what healthcare could look like for everyone under a universal system.</p></div>';
@@ -898,10 +1166,33 @@
             // For other incomes, require both income AND employment selection
             const shouldShowResults = currentIncome === 0 || (currentIncome !== null && currentEmployment !== null);
 
-            // Toggle grayed-out state for the insight text only
+            // Toggle grayed-out state and reset display when results shouldn't show
             if (!shouldShowResults) {
                 incomeImpactDiv.classList.add('results-disabled');
                 barLegend.classList.add('empty');
+
+                // Reset all display values to initial state
+                costPremium.textContent = '—';
+                costOop.textContent = '—';
+                costTotal.textContent = '—';
+                costEmployer.textContent = '—';
+                employerRow.style.display = 'none';
+                incomeAmount.textContent = '—';
+                healthcarePctLabel.textContent = '—';
+                currentPct.textContent = '???';
+                currentDetail.textContent = '';
+                universalPct.textContent = '???';
+                universalDetail.textContent = '';
+                barYourShare.style.width = '0%';
+                barEmployerShare.style.width = '0%';
+                barOopShare.style.width = '0%';
+                barRemaining.style.width = '100%';
+                incomeImpact.innerHTML = '<strong>Select your income and employment type above to see your healthcare cost breakdown.</strong>';
+
+                // Show all legend items (grayed out via .empty class)
+                const legendItems = barLegend.querySelectorAll('.legend-item');
+                legendItems.forEach(item => item.style.display = 'flex');
+
                 return;
             }
 
@@ -910,16 +1201,20 @@
 
             // For $0 income, use 'minimum' as default employment type (doesn't affect Medicaid calculation)
             const employmentForCalc = currentIncome === 0 ? 'minimum' : currentEmployment;
-            const adjustedCosts = getAdjustedCosts(employmentForCalc, currentIncome, currentState);
-            const universalTax = Math.round(currentIncome * 0.08);
+
+            // Calculate effective income (quit = $0, laid off = unemployment benefits)
+            const effectiveIncome = currentIncome === 0 ? 0 : getEffectiveIncome(employmentForCalc, currentIncome);
+
+            const adjustedCosts = getAdjustedCosts(employmentForCalc, currentIncome, currentState, effectiveIncome);
+            const universalTax = Math.round(effectiveIncome * 0.08);
 
             let currentPctVal, universalPctVal;
-            if (currentIncome === 0) {
+            if (effectiveIncome === 0) {
                 currentPctVal = adjustedCosts.totalCost > 0 ? Infinity : 0;
                 universalPctVal = 0;
             } else {
-                currentPctVal = Math.round((adjustedCosts.totalCost / currentIncome) * 100);
-                universalPctVal = Math.round((universalTax / currentIncome) * 100);
+                currentPctVal = Math.round((adjustedCosts.totalCost / effectiveIncome) * 100);
+                universalPctVal = Math.round((universalTax / effectiveIncome) * 100);
             }
             const savingsAmt = adjustedCosts.totalCost - universalTax;
 
@@ -935,24 +1230,32 @@
                 employerRow.style.display = 'none';
             }
 
-            incomeAmount.textContent = incomeLabels[currentIncome];
-            if (currentIncome === 0) {
+            // Show effective income label (different for quit/laid-off)
+            if (currentEmployment === 'quit') {
+                incomeAmount.textContent = '$0 (Quit Job)';
+            } else if (currentEmployment === 'laidoff') {
+                incomeAmount.textContent = '$' + effectiveIncome.toLocaleString() + ' (Unemployment)';
+            } else {
+                incomeAmount.textContent = incomeLabels[currentIncome];
+            }
+
+            if (effectiveIncome === 0) {
                 healthcarePctLabel.textContent = adjustedCosts.totalCost > 0 ? 'N/A' : '0%';
             } else {
                 healthcarePctLabel.textContent = currentPctVal > 100 ? '>100%' : currentPctVal + '%';
             }
 
             let yourSharePct, employerSharePct, oopSharePct, totalHealthcarePct, remainingPct;
-            if (currentIncome === 0) {
+            if (effectiveIncome === 0) {
                 yourSharePct = adjustedCosts.employeePays > 0 ? 33 : 0;
                 employerSharePct = adjustedCosts.employerPays > 0 ? 34 : 0;
                 oopSharePct = adjustedCosts.outOfPocket > 0 ? 33 : 0;
                 totalHealthcarePct = 100;
                 remainingPct = 0;
             } else {
-                yourSharePct = Math.min(Math.round((adjustedCosts.employeePays / currentIncome) * 100), 100);
-                employerSharePct = Math.min(Math.round((adjustedCosts.employerPays / currentIncome) * 100), 100);
-                oopSharePct = Math.min(Math.round((adjustedCosts.outOfPocket / currentIncome) * 100), 100);
+                yourSharePct = Math.min(Math.round((adjustedCosts.employeePays / effectiveIncome) * 100), 100);
+                employerSharePct = Math.min(Math.round((adjustedCosts.employerPays / effectiveIncome) * 100), 100);
+                oopSharePct = Math.min(Math.round((adjustedCosts.outOfPocket / effectiveIncome) * 100), 100);
                 totalHealthcarePct = Math.min(yourSharePct + employerSharePct + oopSharePct, 100);
                 remainingPct = Math.max(100 - totalHealthcarePct, 0);
             }
@@ -982,14 +1285,19 @@
                 barEmployerShare.style.display = 'none';
             }
 
-            const employerLegendItem = barLegend.querySelectorAll('.legend-item')[0];
-            if (adjustedCosts.employerPays > 0) {
-                employerLegendItem.style.display = 'flex';
-            } else {
-                employerLegendItem.style.display = 'none';
-            }
+            // Show/hide legend items based on whether their segment is visible
+            const legendItems = barLegend.querySelectorAll('.legend-item');
+            const employerLegendItem = legendItems[0];
+            const premiumLegendItem = legendItems[1];
+            const oopLegendItemRef = legendItems[2];
+            const remainingLegendItem = legendItems[3];
 
-            if (currentIncome === 0) {
+            employerLegendItem.style.display = adjustedCosts.employerPays > 0 ? 'flex' : 'none';
+            premiumLegendItem.style.display = yourSharePct > 0 ? 'flex' : 'none';
+            oopLegendItemRef.style.display = oopSharePct > 0 ? 'flex' : 'none';
+            remainingLegendItem.style.display = remainingPct > 0 ? 'flex' : 'none';
+
+            if (effectiveIncome === 0) {
                 currentPct.textContent = adjustedCosts.totalCost > 0 ? 'N/A' : '$0';
                 universalPct.textContent = '$0';
             } else {
@@ -998,7 +1306,7 @@
             }
             currentDetail.textContent = '$' + adjustedCosts.totalCost.toLocaleString() + '/year';
 
-            if (currentIncome === 0) {
+            if (effectiveIncome === 0) {
                 universalDetail.textContent = '$0/year (no income = no tax)';
             } else if (savingsAmt > 0) {
                 universalDetail.textContent = '$' + universalTax.toLocaleString() + '/year (save $' + savingsAmt.toLocaleString() + ')';
@@ -1008,13 +1316,13 @@
                 universalDetail.textContent = '$' + universalTax.toLocaleString() + '/year (same cost)';
             }
 
-            incomeImpact.innerHTML = getInsight(currentIncome, currentEmployment, adjustedCosts);
+            incomeImpact.innerHTML = getInsight(effectiveIncome, currentEmployment, adjustedCosts, currentIncome);
 
             // Toggle box color based on situation
             incomeImpactDiv.classList.remove('regressive', 'medicaid', 'affordable');
             if (adjustedCosts.isMedicaid) {
                 incomeImpactDiv.classList.add('medicaid');
-            } else if (currentEmployment === 'fulltime' && currentIncome > 100000) {
+            } else if (currentEmployment === 'fulltime' && effectiveIncome > 100000) {
                 // "Getting easier" and "A lighter burden" cases
                 incomeImpactDiv.classList.add('affordable');
             } else {
@@ -1068,7 +1376,15 @@
                 return;
             }
 
-            const medicaidRelevant = currentIncome <= 20000 && currentEmployment !== 'fulltime';
+            // Calculate effective income for laid-off scenario
+            const effectiveIncome = getEffectiveIncome(currentEmployment, currentIncome);
+
+            // Laid-off workers: state matters if their unemployment income qualifies for Medicaid
+            // Quit workers: state doesn't matter (they don't qualify for Medicaid)
+            // Others: state matters if low income and non-fulltime
+            const medicaidRelevant = currentEmployment !== 'quit' &&
+                currentEmployment !== 'fulltime' &&
+                effectiveIncome <= 20000;
 
             if (medicaidRelevant) {
                 stateSelect.disabled = false;
@@ -1104,9 +1420,18 @@
         incomeBtns.forEach(btn => {
             btn.addEventListener('click', function() {
                 if (this.disabled) return;
+                const newIncome = parseInt(this.dataset.income);
+
+                // If switching away from $0 to another income, clear employment selection
+                // so user must re-select employment type
+                if (currentIncome === 0 && newIncome !== 0) {
+                    currentEmployment = null;
+                    employmentBtns.forEach(b => b.classList.remove('active'));
+                }
+
                 incomeBtns.forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
-                currentIncome = parseInt(this.dataset.income);
+                currentIncome = newIncome;
 
                 updateEmploymentAvailability();
                 updateStateAvailability();
