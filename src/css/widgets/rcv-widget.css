@@ -4,8 +4,8 @@
  */
 
 :root {
-    --rcv-primary: #5087e5;
-    --rcv-primary-dark: #3a6bc7;
+    --rcv-primary: #008BFF;
+    --rcv-primary-dark: #0070CC;
     --rcv-text: #32373c;
     --rcv-text-light: #666;
     --rcv-background: #fafafa;
@@ -80,7 +80,7 @@ body {
 
 .candidate-item:hover {
     border-color: var(--rcv-primary);
-    box-shadow: 0 2px 8px rgba(80, 135, 229, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 139, 255, 0.2);
 }
 
 .candidate-item.dragging {
@@ -90,7 +90,7 @@ body {
 
 .candidate-item.drag-over {
     border-color: var(--rcv-primary);
-    background: rgba(80, 135, 229, 0.05);
+    background: rgba(0, 139, 255, 0.05);
 }
 
 .candidate-item.locked {
