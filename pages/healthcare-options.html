@@ -18,8 +18,10 @@
             --border: #e0e0e0;
             --green: #10b981;
             --red: #ef4444;
+            --red-dark: #b91c1c;
             --orange: #f59e0b;
             --purple: #8b5cf6;
+            --yellow: #eab308;
         }
 
         * {
@@ -72,6 +74,10 @@
             border-radius: 12px;
             padding: 30px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .option-card.full-width {
+            grid-column: 1 / -1;
         }
 
         .option-header {
@@ -246,6 +252,14 @@
             margin-top: 2px;
         }
 
+        .income-btn .income-pct {
+            display: block;
+            font-size: 0.65rem;
+            opacity: 0.7;
+            margin-top: 3px;
+            font-weight: 400;
+        }
+
         .income-visual {
             background: var(--white);
             border-radius: 8px;
@@ -293,41 +307,48 @@
             transition: width 0.5s ease-out;
         }
 
-        .income-bar-segment.healthcare {
-            background: var(--red);
+        .income-bar-segment.your-share {
+            background: var(--red-dark);
         }
 
-        .income-bar-segment.taxes {
-            background: var(--orange);
+        .income-bar-segment.employer-share {
+            background: var(--purple);
+        }
+
+        .income-bar-segment.oop-share {
+            background: var(--red);
         }
 
         .income-bar-segment.remaining {
             background: var(--green);
         }
 
-        .income-legend {
+        .bar-legend {
             display: flex;
-            gap: 16px;
+            gap: 12px;
             flex-wrap: wrap;
-            font-size: 0.8rem;
-            margin-top: 12px;
+            font-size: 0.75rem;
+            margin-top: 8px;
+            justify-content: center;
         }
 
-        .income-legend-item {
+        .legend-item {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
+            color: var(--text-light);
         }
 
-        .income-legend-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 3px;
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
         }
 
-        .income-legend-dot.healthcare { background: var(--red); }
-        .income-legend-dot.taxes { background: var(--orange); }
-        .income-legend-dot.remaining { background: var(--green); }
+        .legend-dot.your-share { background: var(--red-dark); }
+        .legend-dot.employer-share { background: var(--purple); }
+        .legend-dot.oop-share { background: var(--red); }
+        .legend-dot.remaining { background: var(--green); }
 
         .income-comparison {
             display: grid;
@@ -424,6 +445,105 @@
 
         .employment-note.warning strong {
             color: var(--red);
+        }
+
+        /* State Selector */
+        .state-selector {
+            margin-bottom: 16px;
+        }
+
+        .state-selector select {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            background: var(--white);
+            color: var(--text);
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .state-selector select:hover,
+        .state-selector select:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        /* Cost Breakdown Grid */
+        .cost-breakdown-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .cost-breakdown-header {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .cost-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            background: var(--background);
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .cost-line.hidden-cost {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px dashed rgba(239, 68, 68, 0.3);
+        }
+
+        .cost-line.hidden-cost .cost-line-amount {
+            color: var(--red);
+        }
+
+        .hidden-tag {
+            font-size: 0.7rem;
+            background: var(--red);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 6px;
+            font-weight: 600;
+        }
+
+        .cost-line.total {
+            background: var(--text);
+            color: white;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .cost-line.total .cost-line-amount {
+            color: white;
+            font-size: 1rem;
+        }
+
+        .cost-line-label {
+            color: var(--text);
+        }
+
+        .cost-line.total .cost-line-label {
+            color: white;
+        }
+
+        .cost-line-amount {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .cost-line.no-employer {
+            display: none;
         }
 
         /* Cost Breakdown Rows */
@@ -1671,16 +1791,44 @@
 
         <div class="options-grid">
             <!-- Option 1: Healthcare Cost by Income -->
-            <div class="option-card">
+            <div class="option-card full-width">
                 <div class="option-header">
                     <span class="option-number">1</span>
                     <span class="option-title">"Healthcare Hits Different by Income"</span>
                 </div>
                 <p class="option-description">
-                    Select your employment type and income to see how much of your earnings go to healthcare. The current system punishes gig workers and lower incomes.
+                    Select your employment type and income to see how much of your earnings go to healthcare. The current system punishes gig workers and lower incomes. <em>Estimates based on KFF Employer Health Benefits Survey and Census Bureau data.</em>
                 </p>
                 <div class="cost-demo">
-                    <h4>1. Select Your Employment Type</h4>
+                    <h4>1. Your Income</h4>
+                    <div class="income-selector" id="income-selector">
+                        <button class="income-btn" data-income="0">
+                            $0
+                            <span class="income-pct">Unemployed</span>
+                        </button>
+                        <button class="income-btn" data-income="20000">
+                            $10-30K
+                            <span class="income-pct">21% of US</span>
+                        </button>
+                        <button class="income-btn" data-income="40000">
+                            $30-50K
+                            <span class="income-pct">18% of US</span>
+                        </button>
+                        <button class="income-btn active" data-income="75000">
+                            $50-100K
+                            <span class="income-pct">24% of US</span>
+                        </button>
+                        <button class="income-btn" data-income="175000">
+                            $100-250K
+                            <span class="income-pct">28% of US</span>
+                        </button>
+                        <button class="income-btn" data-income="350000">
+                            $250-450K+
+                            <span class="income-pct">9% of US</span>
+                        </button>
+                    </div>
+
+                    <h4 style="margin-top: 16px;">2. Your Employment Type</h4>
                     <div class="income-selector" id="employment-selector">
                         <button class="income-btn" data-employment="minimum">
                             Min. Wage
@@ -1700,50 +1848,52 @@
                         </button>
                     </div>
 
-                    <h4 style="margin-top: 16px;">2. Select Your Household Income</h4>
-                    <div class="income-selector" id="income-selector">
-                        <button class="income-btn" data-income="30000">
-                            $30K
-                            <span class="income-label">Low Income</span>
-                        </button>
-                        <button class="income-btn" data-income="50000">
-                            $50K
-                            <span class="income-label">Median</span>
-                        </button>
-                        <button class="income-btn active" data-income="75000">
-                            $75K
-                            <span class="income-label">Middle Class</span>
-                        </button>
-                        <button class="income-btn" data-income="100000">
-                            $100K
-                            <span class="income-label">Upper Middle</span>
-                        </button>
-                        <button class="income-btn" data-income="200000">
-                            $200K+
-                            <span class="income-label">High Income</span>
-                        </button>
+                    <h4 style="margin-top: 16px;">3. Your State Type</h4>
+                    <div class="state-selector">
+                        <select id="state-select">
+                            <option value="expansion">Medicaid Expansion State (41 states + DC)</option>
+                            <option value="non-expansion">Non-Expansion State (TX, FL, GA, etc.)</option>
+                        </select>
                     </div>
 
                     <div class="income-visual">
+                        <div class="cost-breakdown-grid" id="cost-breakdown">
+                            <div class="cost-breakdown-header">Annual Healthcare Costs</div>
+                            <div class="cost-line hidden-cost" id="employer-row">
+                                <span class="cost-line-label">Employer's Share <span class="hidden-tag">invisible to you</span></span>
+                                <span class="cost-line-amount" id="cost-employer">$17,393/yr</span>
+                            </div>
+                            <div class="cost-line">
+                                <span class="cost-line-label">Your Premium (paycheck deduction)</span>
+                                <span class="cost-line-amount" id="cost-premium">$6,575/yr</span>
+                            </div>
+                            <div class="cost-line">
+                                <span class="cost-line-label">Out-of-Pocket (deductibles, copays)</span>
+                                <span class="cost-line-amount" id="cost-oop">$3,000/yr</span>
+                            </div>
+                            <div class="cost-line total">
+                                <span class="cost-line-label">Total Healthcare Cost</span>
+                                <span class="cost-line-amount" id="cost-total">$27,000/yr</span>
+                            </div>
+                        </div>
+
                         <div class="income-bar-label">
                             <span>Your Income: <strong id="income-amount">$75,000</strong></span>
-                            <span>Healthcare: <strong id="healthcare-amount">$27,000</strong></span>
+                            <span>Total Healthcare: <strong id="healthcare-pct-label">36%</strong></span>
                         </div>
                         <div class="income-bar">
                             <div class="income-bar-fill">
-                                <div class="income-bar-segment healthcare" id="bar-healthcare" style="width: 36%">36%</div>
+                                <div class="income-bar-segment employer-share" id="bar-employer-share" style="width: 20%"></div>
+                                <div class="income-bar-segment your-share" id="bar-your-share" style="width: 10%"></div>
+                                <div class="income-bar-segment oop-share" id="bar-oop-share" style="width: 6%"></div>
                                 <div class="income-bar-segment remaining" id="bar-remaining" style="width: 64%"></div>
                             </div>
                         </div>
-                        <div class="income-legend">
-                            <div class="income-legend-item">
-                                <span class="income-legend-dot healthcare"></span>
-                                <span id="legend-healthcare">Healthcare (premiums + employer + out-of-pocket)</span>
-                            </div>
-                            <div class="income-legend-item">
-                                <span class="income-legend-dot remaining"></span>
-                                <span>What's left for everything else</span>
-                            </div>
+                        <div class="bar-legend" id="bar-legend">
+                            <span class="legend-item"><span class="legend-dot employer-share"></span> Employer's Share</span>
+                            <span class="legend-item"><span class="legend-dot your-share"></span> Your Premium</span>
+                            <span class="legend-item"><span class="legend-dot oop-share"></span> Out-of-Pocket</span>
+                            <span class="legend-item"><span class="legend-dot remaining"></span> Remaining</span>
                         </div>
                         <div id="employment-note" class="employment-note" style="display: none;">
                             <!-- Filled dynamically based on employment type -->
@@ -2294,20 +2444,29 @@
         const employmentBtns = document.querySelectorAll('#employment-selector .income-btn');
         const incomeBtns = document.querySelectorAll('#income-selector .income-btn');
         const incomeAmount = document.getElementById('income-amount');
-        const healthcareAmount = document.getElementById('healthcare-amount');
-        const barHealthcare = document.getElementById('bar-healthcare');
+        const barYourShare = document.getElementById('bar-your-share');
+        const barEmployerShare = document.getElementById('bar-employer-share');
+        const barOopShare = document.getElementById('bar-oop-share');
         const barRemaining = document.getElementById('bar-remaining');
+        const barLegend = document.getElementById('bar-legend');
         const currentPct = document.getElementById('current-pct');
         const currentDetail = document.getElementById('current-detail');
         const universalPct = document.getElementById('universal-pct');
         const universalDetail = document.getElementById('universal-detail');
         const incomeImpact = document.getElementById('income-impact');
-        const legendHealthcare = document.getElementById('legend-healthcare');
         const employmentNote = document.getElementById('employment-note');
+        const costPremium = document.getElementById('cost-premium');
+        const costEmployer = document.getElementById('cost-employer');
+        const costOop = document.getElementById('cost-oop');
+        const costTotal = document.getElementById('cost-total');
+        const employerRow = document.getElementById('employer-row');
+        const healthcarePctLabel = document.getElementById('healthcare-pct-label');
+        const stateSelect = document.getElementById('state-select');
 
         // Current state
         let currentEmployment = 'fulltime';
         let currentIncome = 75000;
+        let currentState = 'expansion';
 
         // Employment type data - how costs differ by employment
         const employmentData = {
@@ -2351,123 +2510,291 @@
 
         // Income labels
         const incomeLabels = {
-            30000: '$30,000',
-            50000: '$50,000',
-            75000: '$75,000',
-            100000: '$100,000',
-            200000: '$200,000+'
+            0: '$0 (Unemployed)',
+            20000: '$10-30K (avg $20K)',
+            40000: '$30-50K (avg $40K)',
+            75000: '$50-100K (avg $75K)',
+            175000: '$100-250K (avg $175K)',
+            350000: '$250-450K+ (avg $350K)'
         };
 
-        function getInsight(income, employment) {
-            const emp = employmentData[employment];
-            const pct = Math.round((emp.totalCost / income) * 100);
+        // Federal Poverty Level for 2024 (single person: ~$15,060, family of 4: ~$31,200)
+        // Medicaid expansion covers up to 138% FPL (~$20,800 for single, ~$43,000 for family of 4)
+        // We'll use $20K as the bracket that qualifies for Medicaid in expansion states
+
+        // Get adjusted costs based on state Medicaid status
+        function getAdjustedCosts(employment, income, stateType) {
+            const base = employmentData[employment];
+
+            // $0 income = unemployed, always check for Medicaid regardless of employment setting
+            // For other low incomes, check if non-fulltime (since full-time workers have employer coverage)
+            const medicaidEligible = income === 0 || (income <= 20000 && employment !== 'fulltime');
+
+            if (stateType === 'expansion' && medicaidEligible) {
+                // Medicaid covers nearly everything
+                return {
+                    employerPays: 0,
+                    employeePays: 0,
+                    outOfPocket: 500,       // Minimal copays for some services
+                    totalCost: 500,
+                    isMedicaid: true,
+                    note: income === 0
+                        ? '<strong>Medicaid coverage:</strong> With no income, you qualify for Medicaid in expansion states. Coverage is nearly free - just minimal copays for some services.'
+                        : '<strong>Medicaid coverage:</strong> In expansion states, adults earning up to 138% of the federal poverty level ($20,783/year for an individual) qualify for Medicaid. Coverage is nearly free - just minimal copays for some services.'
+                };
+            } else if (stateType === 'non-expansion' && medicaidEligible) {
+                // The coverage gap - too poor for ACA subsidies, don't qualify for Medicaid
+                return {
+                    employerPays: 0,
+                    employeePays: 0,        // Can't afford it / not eligible
+                    outOfPocket: 8000,      // Emergency room visits, etc.
+                    totalCost: 8000,
+                    isCoverageGap: true,
+                    note: income === 0
+                        ? '<strong>THE COVERAGE GAP:</strong> Even with $0 income, you may not qualify for Medicaid in non-expansion states (TX, FL, GA, WI, etc.). Childless adults often have no options - forced to rely on emergency rooms or go without care entirely.'
+                        : '<strong>THE COVERAGE GAP:</strong> In non-expansion states (TX, FL, GA, WI, etc.), adults without children often can\'t get Medicaid regardless of income. You\'re too poor for ACA subsidies but don\'t qualify for Medicaid. Result: uninsured, relying on emergency rooms.'
+                };
+            }
+
+            // For higher incomes or full-time workers, return base data
+            return {
+                employerPays: base.employerPays,
+                employeePays: base.employeePays,
+                outOfPocket: base.outOfPocket,
+                totalCost: base.totalCost,
+                isMedicaid: false,
+                isCoverageGap: false,
+                note: base.note
+            };
+        }
+
+        function getInsight(income, employment, adjustedCosts) {
+            // Handle $0 income case
+            if (income === 0) {
+                if (adjustedCosts.isMedicaid) {
+                    return '<strong>Medicaid safety net:</strong> With no income, you qualify for Medicaid in expansion states - comprehensive coverage with minimal costs.';
+                } else if (adjustedCosts.isCoverageGap) {
+                    return '<strong>No income, no coverage:</strong> In non-expansion states, having zero income doesn\'t guarantee healthcare. You may fall into the coverage gap with no affordable options.';
+                }
+                return '<strong>No income situation:</strong> Without income, healthcare costs represent an infinite burden. This is why safety net programs exist.';
+            }
+
+            const pct = Math.round((adjustedCosts.totalCost / income) * 100);
+
+            // Check for Medicaid or coverage gap situations first
+            if (adjustedCosts.isMedicaid) {
+                return '<strong>Medicaid safety net:</strong> In expansion states, low-income workers qualify for Medicaid - nearly free comprehensive coverage. This is what the healthcare system could look like for everyone.';
+            }
+            if (adjustedCosts.isCoverageGap) {
+                return '<strong>The coverage gap crisis:</strong> In non-expansion states, ~2.2 million Americans are trapped - earning too little for ACA subsidies, but not qualifying for Medicaid. Many go uninsured and rely on emergency rooms.';
+            }
 
             if (employment === 'fulltime') {
                 if (income <= 30000) {
-                    return '<strong>Crushing burden:</strong> Even with employer benefits, the TRUE cost of healthcare ($27K including your employer\'s hidden contribution) would be 90% of your income. This is money that could be your wages.';
-                } else if (income <= 50000) {
-                    return '<strong>Stretched thin:</strong> At median income, healthcare takes over half your earnings when you count the employer\'s "hidden" contribution. That money is part of your compensation package.';
-                } else if (income <= 75000) {
-                    return '<strong>Still significant:</strong> Even at $75K with good benefits, healthcare consumes 36% of household income. The "employer contribution" is still YOUR money.';
+                    return '<strong>Crushing burden:</strong> For the 21% of Americans in this bracket, even with employer benefits, healthcare\'s TRUE cost ($27K) could be over 100% of income. This hidden cost suppresses wages.';
                 } else if (income <= 100000) {
-                    return '<strong>Getting easier:</strong> At $100K, healthcare is 27% of income - still substantial but more manageable. Same coverage, but dramatically lower burden than lower-income families.';
+                    return '<strong>The middle squeeze:</strong> For the 42% of Americans in this bracket, healthcare takes ' + pct + '% of income when you count the employer\'s "hidden" contribution. That money could be higher wages.';
+                } else if (income <= 250000) {
+                    return '<strong>Getting easier:</strong> For the 28% in this bracket, healthcare is ' + pct + '% of income - more manageable, but you get the same coverage as someone paying 100%+.';
                 } else {
-                    return '<strong>The unfairness:</strong> At $200K, healthcare is just 13.5% of income. Same insurance, same coverage, but dramatically lower burden than lower-income families.';
+                    return '<strong>The unfairness:</strong> For the top 9%, healthcare is just ' + pct + '% of income. Same insurance, same coverage, but dramatically lower burden than lower-income families.';
                 }
             } else if (employment === 'parttime' || employment === 'gig') {
                 if (income <= 30000) {
-                    return '<strong>Impossible choice:</strong> At $30K with no employer benefits, healthcare costs $20K/year - that\'s 67% of your income! Many gig workers and part-timers simply go uninsured.';
-                } else if (income <= 50000) {
-                    return '<strong>Barely manageable:</strong> Without employer help, you\'re paying $20K out of $50K - 40% of your income just for healthcare. Full-time W-2 workers get $17K of hidden employer support.';
-                } else if (income <= 75000) {
-                    return '<strong>The hidden penalty:</strong> Gig/part-time workers at $75K pay 27% of income for healthcare. A full-time employee at the same income only pays $9,575 directly (13%) - the rest is hidden employer contribution.';
+                    return '<strong>Impossible choice:</strong> At this income with no employer benefits, healthcare costs $20K/year - that\'s ' + pct + '% of your income! Many gig workers simply go uninsured.';
+                } else if (income <= 100000) {
+                    return '<strong>The gig penalty:</strong> Without employer help, you\'re paying $20K for healthcare - ' + pct + '% of income. Full-time W-2 workers get $17K of hidden employer support you don\'t.';
                 } else {
                     return '<strong>The self-employment tax:</strong> Even at higher incomes, lack of employer benefits means paying the FULL cost yourself. This is a hidden $17K/year penalty for not having traditional employment.';
                 }
             } else { // minimum
-                if (income <= 30000) {
-                    return '<strong>The coverage gap:</strong> At minimum wage, even ACA subsidies may not be enough. Many workers face the choice: pay 53% of income for coverage, or risk going uninsured.';
-                } else {
-                    return '<strong>Subsidy cliff:</strong> As income rises, ACA subsidies phase out quickly. This creates weird incentives where earning slightly more can make you significantly worse off.';
+                if (currentState === 'non-expansion') {
+                    return '<strong>The coverage gap:</strong> In non-expansion states, minimum wage workers often can\'t afford coverage. You may be too poor for ACA subsidies but not qualify for Medicaid.';
                 }
+                return '<strong>The subsidy cliff:</strong> At minimum wage, ACA subsidies help significantly, but out-of-pocket costs can still be a burden.';
             }
         }
 
         function updateDisplay() {
-            const emp = employmentData[currentEmployment];
+            // Get adjusted costs based on state Medicaid status
+            const adjustedCosts = getAdjustedCosts(currentEmployment, currentIncome, currentState);
             const universalTax = Math.round(currentIncome * 0.08);
-            const currentPctVal = Math.round((emp.totalCost / currentIncome) * 100);
-            const universalPctVal = Math.round((universalTax / currentIncome) * 100);
-            const savingsAmt = emp.totalCost - universalTax;
+
+            // Handle $0 income case for percentages
+            let currentPctVal, universalPctVal;
+            if (currentIncome === 0) {
+                currentPctVal = adjustedCosts.totalCost > 0 ? Infinity : 0;
+                universalPctVal = 0;
+            } else {
+                currentPctVal = Math.round((adjustedCosts.totalCost / currentIncome) * 100);
+                universalPctVal = Math.round((universalTax / currentIncome) * 100);
+            }
+            const savingsAmt = adjustedCosts.totalCost - universalTax;
+
+            // Update cost breakdown
+            costPremium.textContent = '$' + adjustedCosts.employeePays.toLocaleString() + '/yr';
+            costOop.textContent = '$' + adjustedCosts.outOfPocket.toLocaleString() + '/yr';
+            costTotal.textContent = '$' + adjustedCosts.totalCost.toLocaleString() + '/yr';
+
+            // Show/hide employer row based on employment type
+            if (adjustedCosts.employerPays > 0) {
+                employerRow.style.display = 'flex';
+                costEmployer.textContent = '$' + adjustedCosts.employerPays.toLocaleString() + '/yr';
+            } else {
+                employerRow.style.display = 'none';
+            }
 
             // Update text values
             incomeAmount.textContent = incomeLabels[currentIncome];
-            healthcareAmount.textContent = '$' + emp.totalCost.toLocaleString();
+            if (currentIncome === 0) {
+                healthcarePctLabel.textContent = adjustedCosts.totalCost > 0 ? 'N/A' : '0%';
+            } else {
+                healthcarePctLabel.textContent = currentPctVal > 100 ? '>100%' : currentPctVal + '%';
+            }
 
-            // Update legend
-            legendHealthcare.textContent = emp.legendText;
+            // Calculate individual segment percentages (handle $0 income)
+            let yourSharePct, employerSharePct, oopSharePct, totalHealthcarePct, remainingPct;
+            if (currentIncome === 0) {
+                // For $0 income, show bar as 100% healthcare cost (no remaining)
+                yourSharePct = adjustedCosts.employeePays > 0 ? 33 : 0;
+                employerSharePct = adjustedCosts.employerPays > 0 ? 34 : 0;
+                oopSharePct = adjustedCosts.outOfPocket > 0 ? 33 : 0;
+                totalHealthcarePct = 100;
+                remainingPct = 0;
+            } else {
+                yourSharePct = Math.min(Math.round((adjustedCosts.employeePays / currentIncome) * 100), 100);
+                employerSharePct = Math.min(Math.round((adjustedCosts.employerPays / currentIncome) * 100), 100);
+                oopSharePct = Math.min(Math.round((adjustedCosts.outOfPocket / currentIncome) * 100), 100);
+                totalHealthcarePct = Math.min(yourSharePct + employerSharePct + oopSharePct, 100);
+                remainingPct = Math.max(100 - totalHealthcarePct, 0);
+            }
 
-            // Update bar chart
-            const healthcarePct = Math.min(currentPctVal, 100);
-            const remainingPct = Math.max(100 - healthcarePct, 0);
-            barHealthcare.style.width = healthcarePct + '%';
-            barHealthcare.textContent = currentPctVal > 100 ? '>100%' : healthcarePct + '%';
+            // Update bar chart segments
+            barYourShare.style.width = yourSharePct + '%';
+            barOopShare.style.width = oopSharePct + '%';
             barRemaining.style.width = remainingPct + '%';
 
+            // Change oop-share color to yellow for Medicaid coverage
+            const oopLegendItem = barLegend.querySelectorAll('.legend-item')[2];
+            const oopLegendDot = oopLegendItem.querySelector('.legend-dot');
+            if (adjustedCosts.isMedicaid) {
+                barOopShare.style.background = 'var(--yellow)';
+                oopLegendDot.style.background = 'var(--yellow)';
+                oopLegendItem.innerHTML = '<span class="legend-dot oop-share" style="background: var(--yellow)"></span> Medicaid Coverage';
+            } else {
+                barOopShare.style.background = 'var(--red)';
+                oopLegendDot.style.background = 'var(--red)';
+                oopLegendItem.innerHTML = '<span class="legend-dot oop-share"></span> Out-of-Pocket';
+            }
+
+            // Show/hide employer share segment based on employment type
+            if (adjustedCosts.employerPays > 0) {
+                barEmployerShare.style.width = employerSharePct + '%';
+                barEmployerShare.style.display = 'block';
+            } else {
+                barEmployerShare.style.width = '0%';
+                barEmployerShare.style.display = 'none';
+            }
+
+            // Update legend to show/hide employer share
+            const employerLegendItem = barLegend.querySelectorAll('.legend-item')[0];
+            if (adjustedCosts.employerPays > 0) {
+                employerLegendItem.style.display = 'flex';
+            } else {
+                employerLegendItem.style.display = 'none';
+            }
+
             // Update comparison boxes
-            currentPct.textContent = currentPctVal + '%';
-            currentDetail.textContent = '$' + emp.totalCost.toLocaleString() + '/year';
-            universalPct.textContent = universalPctVal + '%';
-            universalDetail.textContent = '$' + universalTax.toLocaleString() + '/year (save $' + savingsAmt.toLocaleString() + ')';
+            if (currentIncome === 0) {
+                currentPct.textContent = adjustedCosts.totalCost > 0 ? 'N/A' : '$0';
+                universalPct.textContent = '$0';
+            } else {
+                currentPct.textContent = currentPctVal + '%';
+                universalPct.textContent = universalPctVal + '%';
+            }
+            currentDetail.textContent = '$' + adjustedCosts.totalCost.toLocaleString() + '/year';
+
+            // Handle negative savings (Medicaid is already cheap) and $0 income
+            if (currentIncome === 0) {
+                universalDetail.textContent = '$0/year (no income = no tax)';
+            } else if (savingsAmt > 0) {
+                universalDetail.textContent = '$' + universalTax.toLocaleString() + '/year (save $' + savingsAmt.toLocaleString() + ')';
+            } else if (savingsAmt < 0) {
+                universalDetail.textContent = '$' + universalTax.toLocaleString() + '/year';
+            } else {
+                universalDetail.textContent = '$' + universalTax.toLocaleString() + '/year (same cost)';
+            }
 
             // Update insight
-            incomeImpact.innerHTML = getInsight(currentIncome, currentEmployment);
+            incomeImpact.innerHTML = getInsight(currentIncome, currentEmployment, adjustedCosts);
 
-            // Update employment note
-            if (emp.note) {
-                employmentNote.innerHTML = emp.note;
+            // Update employment note - use adjusted note if available
+            const noteToShow = adjustedCosts.note;
+            if (noteToShow) {
+                employmentNote.innerHTML = noteToShow;
                 employmentNote.style.display = 'block';
-                employmentNote.className = 'employment-note warning';
+                // Use different styling for Medicaid vs warning
+                if (adjustedCosts.isMedicaid) {
+                    employmentNote.className = 'employment-note'; // Default purple style
+                } else {
+                    employmentNote.className = 'employment-note warning';
+                }
             } else {
                 employmentNote.style.display = 'none';
             }
         }
 
-        // Function to update income button availability based on employment
-        function updateIncomeAvailability() {
-            incomeBtns.forEach(btn => {
-                const income = parseInt(btn.dataset.income);
-                if (currentEmployment === 'minimum') {
-                    // Minimum wage workers can only select $30K
-                    if (income > 30000) {
-                        btn.classList.add('disabled');
-                        btn.disabled = true;
-                    } else {
-                        btn.classList.remove('disabled');
-                        btn.disabled = false;
-                    }
-                } else {
-                    // Other employment types can select any income
+        // Function to update employment button availability based on income
+        function updateEmploymentAvailability() {
+            if (currentIncome === 0) {
+                // $0 income = unemployed, gray out all employment types
+                employmentBtns.forEach(btn => {
+                    btn.classList.add('disabled');
+                    btn.disabled = true;
+                });
+            } else {
+                // Enable all employment types
+                employmentBtns.forEach(btn => {
                     btn.classList.remove('disabled');
                     btn.disabled = false;
-                }
-            });
-
-            // If minimum wage and current income > 30K, reset to 30K
-            if (currentEmployment === 'minimum' && currentIncome > 30000) {
-                currentIncome = 30000;
-                incomeBtns.forEach(b => b.classList.remove('active'));
-                document.querySelector('[data-income="30000"]').classList.add('active');
+                });
             }
+        }
+
+        // Function to update state selector availability based on Medicaid eligibility
+        function updateStateAvailability() {
+            // Medicaid eligibility: $0 income OR (income <= $20K AND not full-time)
+            const medicaidRelevant = currentIncome === 0 || (currentIncome <= 20000 && currentEmployment !== 'fulltime');
+
+            if (medicaidRelevant) {
+                stateSelect.disabled = false;
+                stateSelect.style.opacity = '1';
+                stateSelect.style.cursor = 'pointer';
+            } else {
+                stateSelect.disabled = true;
+                stateSelect.style.opacity = '0.4';
+                stateSelect.style.cursor = 'not-allowed';
+            }
+        }
+
+        // Function to update income button availability - all income buttons always selectable
+        function updateIncomeAvailability() {
+            // All income buttons are always enabled
+            incomeBtns.forEach(btn => {
+                btn.classList.remove('disabled');
+                btn.disabled = false;
+            });
         }
 
         // Employment button handlers
         employmentBtns.forEach(btn => {
             btn.addEventListener('click', function() {
+                if (this.disabled) return;
                 employmentBtns.forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
                 currentEmployment = this.dataset.employment;
                 updateIncomeAvailability();
+                updateStateAvailability();
                 updateDisplay();
             });
         });
@@ -2479,12 +2806,21 @@
                 incomeBtns.forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
                 currentIncome = parseInt(this.dataset.income);
+                updateEmploymentAvailability();
+                updateStateAvailability();
                 updateDisplay();
             });
         });
 
+        // State selector handler
+        stateSelect.addEventListener('change', function() {
+            currentState = this.value;
+            updateDisplay();
+        });
+
         // Initialize
         updateIncomeAvailability();
+        updateStateAvailability();
         updateDisplay();
 
         // Option 2: Dollar flow toggle
