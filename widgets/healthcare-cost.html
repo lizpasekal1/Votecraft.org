@@ -13,7 +13,7 @@
             --primary-dark: #3a6bc7;
             --text: #32373c;
             --text-light: #666;
-            --background: #ebebeb;
+            --background: #f2f2f2;
             --border: #eaeaea;
             --white: #ffffff;
             --green: #10b981;
@@ -89,7 +89,7 @@
             flex: 1;
             min-width: 80px;
             padding: 6px 6px;
-            border: 2px solid var(--border);
+            border: 2px solid var(--primary);
             background: var(--white);
             border-radius: 6px;
             font-size: 0.8rem;
@@ -98,10 +98,12 @@
             cursor: pointer;
             transition: all 0.2s;
             text-align: center;
+            color: var(--primary);
         }
 
         .income-btn:hover {
-            border-color: var(--primary);
+            background: var(--primary);
+            color: white;
         }
 
         .income-btn.active {
@@ -144,12 +146,13 @@
             padding: 10px 12px;
             font-size: 0.9rem;
             font-family: inherit;
-            border: 2px solid var(--border);
+            border: 2px solid var(--primary);
             border-radius: 6px;
             background: var(--white);
-            color: var(--text);
+            color: var(--primary);
             cursor: pointer;
             transition: border-color 0.2s;
+            text-align: center;
         }
 
         .state-selector select:hover,
@@ -159,7 +162,7 @@
         }
 
         .income-visual {
-            background: var(--background);
+            background: rgba(80, 135, 229, 0.1);
             border-radius: 8px;
             padding: 16px;
             margin-bottom: 16px;
@@ -182,6 +185,7 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
+            min-height: 165px;
         }
 
         .income-bar-section {
@@ -192,6 +196,7 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            height: 100%;
         }
 
         .system-comparison-header {
@@ -211,6 +216,7 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 4px;
+            text-align: center;
         }
 
         .cost-line {
@@ -350,39 +356,87 @@
             padding: 12px;
             border-radius: 8px;
             text-align: center;
+            position: relative;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .info-icon {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 14px;
+            height: 14px;
+            background: rgba(255, 255, 255, 0.5);
+            color: white;
+            border-radius: 50%;
+            font-size: 0.6rem;
+            font-weight: 700;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: help;
+            opacity: 0.6;
+        }
+
+        .info-icon:hover {
+            opacity: 1;
+        }
+
+        .info-icon .tooltip {
+            display: none;
+            position: absolute;
+            top: 20px;
+            right: 0;
+            width: 200px;
+            padding: 8px 10px;
+            background: var(--text);
+            color: white;
+            font-size: 0.75rem;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 1.4;
+            border-radius: 6px;
+            text-align: left;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .info-icon:hover .tooltip {
+            display: block;
         }
 
         .income-compare-box.current {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.2);
+            background: var(--red);
+            border: 1px solid var(--red-dark);
         }
 
         .income-compare-box.universal {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.2);
+            background: var(--primary);
+            border: 1px solid var(--primary-dark);
         }
 
         .income-compare-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-size: 0.85rem;
+            font-weight: 600;
             margin-bottom: 4px;
+            color: white;
+            line-height: 1.3;
         }
-
-        .income-compare-box.current .income-compare-label { color: var(--red); }
-        .income-compare-box.universal .income-compare-label { color: var(--green); }
 
         .income-compare-pct {
-            font-size: 1.75rem;
-            font-weight: 700;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
         }
 
-        .income-compare-box.current .income-compare-pct { color: var(--red); }
-        .income-compare-box.universal .income-compare-pct { color: var(--green); }
-
         .income-compare-detail {
-            font-size: 0.8rem;
-            color: var(--text-light);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
             margin-top: 4px;
         }
 
@@ -561,7 +615,7 @@
                         <div class="income-bar-section">
                             <div class="income-bar-label">
                                 <span>Your Income: <strong id="income-amount">—</strong></span>
-                                <span>Total Healthcare: <strong id="healthcare-pct-label">—</strong></span>
+                                <span>Healthcare cost: <strong id="healthcare-pct-label">—</strong></span>
                             </div>
                             <div class="income-bar">
                                 <div class="income-bar-fill">
@@ -581,16 +635,18 @@
                     </div>
 
                     <div class="system-comparison">
-                        <div class="system-comparison-header">% of Income to Healthcare</div>
+                        <div class="system-comparison-header">Coverage %</div>
                         <div class="income-compare-box current">
+                            <span class="info-icon">i<span class="tooltip">Total healthcare cost (premiums + out-of-pocket + employer share) as a percentage of your income. Data from KFF 2024.</span></span>
                             <div class="income-compare-label">Current System</div>
-                            <div class="income-compare-pct" id="current-pct">—</div>
-                            <div class="income-compare-detail" id="current-detail">—</div>
+                            <div class="income-compare-pct" id="current-pct">???</div>
+                            <div class="income-compare-detail" id="current-detail"></div>
                         </div>
                         <div class="income-compare-box universal">
-                            <div class="income-compare-label">Universal System</div>
-                            <div class="income-compare-pct" id="universal-pct">—</div>
-                            <div class="income-compare-detail" id="universal-detail">—</div>
+                            <span class="info-icon">i<span class="tooltip">Based on an 8% income tax, a common rate in Medicare for All proposals to fund universal coverage.</span></span>
+                            <div class="income-compare-label">Universal Basic Healthcare</div>
+                            <div class="income-compare-pct" id="universal-pct">???</div>
+                            <div class="income-compare-detail" id="universal-detail"></div>
                         </div>
                     </div>
                 </div>
@@ -740,7 +796,7 @@
                 } else if (income <= 250000) {
                     return '<strong>Getting easier:</strong> Healthcare is ' + pct + '% of income - more manageable at this level. But you get the exact same coverage as someone paying 100%+ of their income. Same insurance, wildly different burden.';
                 } else {
-                    return '<strong>The unfairness exposed:</strong> Healthcare is just ' + pct + '% of your income. Same insurance, same coverage as a family earning $30K who pays 90%. The current system is deeply regressive - a flat 8% income tax would be far more equitable.';
+                    return '<strong>A lighter burden:</strong> Healthcare is just ' + pct + '% of your income. Same insurance, same coverage as a family earning $30K who pays 90%. The current system is deeply regressive - a flat 8% income tax would be far more equitable.';
                 }
             }
 
