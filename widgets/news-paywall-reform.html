@@ -32,7 +32,7 @@
 
         body {
             font-family: 'Open Sans', sans-serif;
-            background: var(--background);
+            background: white;
             color: var(--text);
             padding: 20px;
             line-height: 1.6;
@@ -76,7 +76,7 @@
         .scenario {
             background: white;
             border-radius: 12px;
-            padding: 25px;
+            padding: 20px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s;
         }
@@ -95,20 +95,13 @@
         }
 
         .scenario-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
             border-bottom: 2px solid var(--border);
         }
 
-        .scenario-icon {
-            font-size: 2.5rem;
-        }
-
         .scenario-title {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             font-weight: 700;
         }
 
@@ -123,32 +116,33 @@
         .news-items {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 8px;
         }
 
         .news-item {
-            padding: 15px;
+            padding: 10px 12px;
             border-radius: 8px;
             border: 2px solid var(--border);
             transition: all 0.3s;
             cursor: pointer;
+            background: #f9f9f9;
         }
 
         .news-item:hover {
-            border-color: var(--primary);
+            border-color: #ccc;
         }
 
-        .news-item.quality {
+        .news-item.selected.quality {
             background: var(--green-light);
             border-color: var(--green);
         }
 
-        .news-item.clickbait {
+        .news-item.selected.clickbait {
             background: var(--red-light);
             border-color: var(--red);
         }
 
-        .news-item.accessible {
+        .news-item.selected.accessible {
             background: rgba(0, 139, 255, 0.1);
             border-color: var(--primary);
         }
@@ -157,69 +151,93 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .news-source {
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .paywall-badge {
             background: var(--red);
             color: white;
-            padding: 4px 10px;
+            padding: 3px 8px;
             border-radius: 20px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 700;
+            display: none;
+        }
+
+        .news-item.selected .paywall-badge {
+            display: inline-block;
         }
 
         .access-badge {
             background: var(--green);
             color: white;
-            padding: 4px 10px;
+            padding: 3px 8px;
             border-radius: 20px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 700;
+            display: none;
+        }
+
+        .news-item.selected .access-badge {
+            display: inline-block;
         }
 
         .news-headline {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             color: var(--text);
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .news-quality {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: var(--text-light);
+        }
+
+        .solution-description {
+            font-size: 0.8rem;
+            color: var(--text);
+            line-height: 1.5;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, margin-top 0.3s ease;
+        }
+
+        .news-item.selected .solution-description {
+            max-height: 500px;
+            margin-top: 8px;
         }
 
         .stats-section {
             background: white;
             border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 30px;
+            padding: 20px;
+            margin-bottom: 20px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+            gap: 12px;
+            margin-top: 12px;
         }
 
         .stat-card {
             text-align: center;
-            padding: 20px;
+            padding: 12px;
             border-radius: 8px;
             background: var(--background);
         }
 
         .stat-value {
-            font-size: 2.5rem;
+            font-size: 1.8rem;
             font-weight: 700;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
 
         .stat-card.negative .stat-value {
@@ -235,7 +253,7 @@
         }
 
         .stat-label {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             color: var(--text-light);
         }
 
@@ -294,25 +312,26 @@
         .interactive-demo {
             background: white;
             border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 30px;
+            padding: 20px;
+            margin-bottom: 20px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .income-slider {
-            margin: 30px 0;
+            margin: 15px 0;
         }
 
         .slider-label {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             font-weight: 600;
+            font-size: 0.9rem;
         }
 
         .slider-container {
             position: relative;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
         }
 
         input[type="range"] {
@@ -344,9 +363,9 @@
         }
 
         .access-result {
-            padding: 20px;
+            padding: 12px;
             border-radius: 8px;
-            margin-top: 20px;
+            margin-top: 10px;
         }
 
         .access-result.limited {
@@ -360,26 +379,27 @@
         }
 
         .result-text {
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             font-weight: 600;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
         }
 
         .result-details {
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             color: var(--text-light);
+            line-height: 1.4;
         }
 
         h2 {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             color: var(--text);
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         h3 {
-            font-size: 1.3rem;
+            font-size: 1.1rem;
             color: var(--text);
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
         @media (max-width: 768px) {
@@ -399,25 +419,39 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>📰 News Paywall Reform</h1>
-            <p class="subtitle">
-                Expanding access to high-quality journalism while reducing misinformation. Today, trusted news is locked behind paywalls, pushing people toward free but unreliable content. This solution explores funding models that keep journalism sustainable while making it accessible to everyone.
-            </p>
+        <div class="stats-section">
+            <h2>By The Numbers</h2>
+            <div class="stats-grid">
+                <div class="stat-card negative">
+                    <div class="stat-value">76%</div>
+                    <div class="stat-label">Of quality news is paywalled</div>
+                </div>
+                <div class="stat-card negative">
+                    <div class="stat-value">$40B</div>
+                    <div class="stat-label">Lost in news revenue since 2008</div>
+                </div>
+                <div class="stat-card positive">
+                    <div class="stat-value">68%</div>
+                    <div class="stat-label">Support public news funding</div>
+                </div>
+                <div class="stat-card neutral">
+                    <div class="stat-value">2.5x</div>
+                    <div class="stat-label">More misinformation in free content</div>
+                </div>
+            </div>
         </div>
 
-        <h2 style="margin-bottom: 20px;">The Problem: Quality vs. Access</h2>
+        <h2 style="margin-bottom: 20px;">Select what you would like to read</h2>
         <div class="comparison-container">
             <div class="scenario current">
                 <div class="scenario-header">
-                    <div class="scenario-icon">🔒</div>
                     <div class="scenario-title">Current System</div>
                 </div>
                 <div class="news-items">
                     <div class="news-item quality">
                         <div class="news-header">
                             <span class="news-source">New York Times</span>
-                            <span class="paywall-badge">🔒 PAYWALL</span>
+                            <span class="paywall-badge">PAYWALL</span>
                         </div>
                         <div class="news-headline">In-depth investigation reveals corruption in local government</div>
                         <div class="news-quality">✓ Fact-checked • Multiple sources • Context</div>
@@ -426,7 +460,7 @@
                     <div class="news-item quality">
                         <div class="news-header">
                             <span class="news-source">Washington Post</span>
-                            <span class="paywall-badge">🔒 PAYWALL</span>
+                            <span class="paywall-badge">PAYWALL</span>
                         </div>
                         <div class="news-headline">Analysis: Economic policy changes and their long-term impact</div>
                         <div class="news-quality">✓ Expert interviews • Data-driven • Balanced</div>
@@ -454,114 +488,46 @@
 
             <div class="scenario reformed">
                 <div class="scenario-header">
-                    <div class="scenario-icon">🔓</div>
                     <div class="scenario-title">With Reform</div>
                 </div>
                 <div class="news-items">
                     <div class="news-item accessible">
                         <div class="news-header">
-                            <span class="news-source">New York Times</span>
-                            <span class="access-badge">✓ ACCESSIBLE</span>
+                            <span class="news-source">📚 Public Library Access</span>
+                            <span class="access-badge">SOLUTION</span>
                         </div>
-                        <div class="news-headline">In-depth investigation reveals corruption in local government</div>
-                        <div class="news-quality">✓ Fact-checked • Multiple sources • Context</div>
+                        <div class="solution-description">Libraries negotiate bulk subscriptions to major news outlets, providing free access through library cards (physical or digital). Already implemented in some cities - your library card gives you free NYT, WaPo, etc.</div>
                     </div>
 
                     <div class="news-item accessible">
                         <div class="news-header">
-                            <span class="news-source">Washington Post</span>
-                            <span class="access-badge">✓ ACCESSIBLE</span>
+                            <span class="news-source">🎟️ Civic News Vouchers</span>
+                            <span class="access-badge">SOLUTION</span>
                         </div>
-                        <div class="news-headline">Analysis: Economic policy changes and their long-term impact</div>
-                        <div class="news-quality">✓ Expert interviews • Data-driven • Balanced</div>
+                        <div class="solution-description">Government provides vouchers (like food stamps for news) that citizens can use to subscribe to outlets of their choice. Keeps government neutral while ensuring access. Estimated cost: $5-10/person/year.</div>
                     </div>
 
                     <div class="news-item accessible">
                         <div class="news-header">
-                            <span class="news-source">Local Investigative</span>
-                            <span class="access-badge">✓ ACCESSIBLE</span>
+                            <span class="news-source">📻 Public Media Expansion</span>
+                            <span class="access-badge">SOLUTION</span>
                         </div>
-                        <div class="news-headline">Community report: School funding allocation explained</div>
-                        <div class="news-quality">✓ Local focus • Transparent • Well-researched</div>
+                        <div class="solution-description">Expand PBS/NPR model to include more investigative journalism and local reporting. Publicly funded but editorially independent, like the BBC. U.S. currently spends $1.40/person vs $80+/person in other democracies.</div>
                     </div>
 
                     <div class="news-item accessible">
                         <div class="news-header">
-                            <span class="news-source">Public News Service</span>
-                            <span class="access-badge">✓ ACCESSIBLE</span>
+                            <span class="news-source">💳 Tax Credits for Subscriptions</span>
+                            <span class="access-badge">SOLUTION</span>
                         </div>
-                        <div class="news-headline">Healthcare policy update: What you need to know</div>
-                        <div class="news-quality">✓ Non-partisan • Educational • Accessible</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="stats-section">
-            <h2>By The Numbers</h2>
-            <div class="stats-grid">
-                <div class="stat-card negative">
-                    <div class="stat-value">76%</div>
-                    <div class="stat-label">Of quality news is paywalled</div>
-                </div>
-                <div class="stat-card negative">
-                    <div class="stat-value">$40B</div>
-                    <div class="stat-label">Lost in news revenue since 2008</div>
-                </div>
-                <div class="stat-card positive">
-                    <div class="stat-value">68%</div>
-                    <div class="stat-label">Support public news funding</div>
-                </div>
-                <div class="stat-card neutral">
-                    <div class="stat-value">2.5x</div>
-                    <div class="stat-label">More misinformation in free content</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="solutions-section">
-            <h2>Proposed Solutions</h2>
-            <p style="margin-bottom: 20px; color: var(--text-light);">Click each model to learn how it works:</p>
-            <div class="solution-cards">
-                <div class="solution-card" onclick="toggleSolution(this)">
-                    <div class="solution-icon">🏛️</div>
-                    <div class="solution-name">Public Subsidies</div>
-                    <div class="solution-description">
-                        Government funding for journalism, similar to public broadcasting. News outlets receive grants to cover essential reporting while maintaining editorial independence.
-                    </div>
-                </div>
-
-                <div class="solution-card" onclick="toggleSolution(this)">
-                    <div class="solution-icon">📚</div>
-                    <div class="solution-name">Library-Style Access</div>
-                    <div class="solution-description">
-                        Libraries and schools provide free access to quality news subscriptions, just like they do with books. Anyone can read premium news at their local library.
-                    </div>
-                </div>
-
-                <div class="solution-card" onclick="toggleSolution(this)">
-                    <div class="solution-icon">🤝</div>
-                    <div class="solution-name">Civic Licenses</div>
-                    <div class="solution-description">
-                        Shared community or employer-sponsored licenses that provide group access. Cities, universities, or companies pay for bulk access for their communities.
-                    </div>
-                </div>
-
-                <div class="solution-card" onclick="toggleSolution(this)">
-                    <div class="solution-icon">💰</div>
-                    <div class="solution-name">Tax Credits</div>
-                    <div class="solution-description">
-                        Tax deductions for news subscriptions, making quality journalism more affordable. Similar to deductions for charitable donations or education expenses.
+                        <div class="solution-description">Tax deduction or credit for news subscriptions, similar to charitable donations. Makes news more affordable while keeping market-based system. Could cover 50-100% of subscription costs up to a cap.</div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="interactive-demo">
-            <h2>Interactive Demo: Access by Income</h2>
-            <p style="margin-bottom: 20px; color: var(--text-light);">
-                Explore how access to quality news changes based on household income in the current system vs. with reform:
-            </p>
+            <h2>Access by Income</h2>
 
             <div class="income-slider">
                 <div class="slider-label">
@@ -593,6 +559,16 @@
     </div>
 
     <script>
+        // Add click handlers to all news items
+        document.addEventListener('DOMContentLoaded', function() {
+            const newsItems = document.querySelectorAll('.news-item');
+            newsItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    this.classList.toggle('selected');
+                });
+            });
+        });
+
         function toggleSolution(card) {
             card.classList.toggle('selected');
         }
