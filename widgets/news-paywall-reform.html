@@ -78,39 +78,50 @@
             border-radius: 12px;
             padding: 20px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s;
         }
 
-        .scenario:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        .toggle-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            background: var(--background);
+            padding: 4px;
+            border-radius: 8px;
         }
 
-        .scenario.current {
-            border: 2px solid var(--red);
+        .toggle-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--text-light);
         }
 
-        .scenario.reformed {
-            border: 2px solid var(--green);
+        .toggle-btn.active {
+            background: white;
+            color: var(--text);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .scenario-header {
-            margin-bottom: 12px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--border);
-        }
-
-        .scenario-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-        }
-
-        .scenario.current .scenario-title {
+        .toggle-btn.current.active {
             color: var(--red);
         }
 
-        .scenario.reformed .scenario-title {
+        .toggle-btn.reformed.active {
             color: var(--green);
+        }
+
+        .news-container {
+            display: none;
+        }
+
+        .news-container.active {
+            display: block;
         }
 
         .news-items {
@@ -200,29 +211,20 @@
 
         .solution-description {
             font-size: 0.8rem;
-            color: var(--text);
-            line-height: 1.5;
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease, margin-top 0.3s ease;
-        }
-
-        .news-item.selected .solution-description {
-            max-height: 500px;
-            margin-top: 8px;
+            color: var(--text-light);
+            line-height: 1.4;
         }
 
         .stats-section {
             background: white;
             border-radius: 12px;
             padding: 20px;
-            margin-bottom: 20px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: 1fr;
             gap: 12px;
             margin-top: 12px;
         }
@@ -419,109 +421,100 @@
 </head>
 <body>
     <div class="container">
-        <div class="stats-section">
-            <h2>By The Numbers</h2>
-            <div class="stats-grid">
-                <div class="stat-card negative">
-                    <div class="stat-value">76%</div>
-                    <div class="stat-label">Of quality news is paywalled</div>
-                </div>
-                <div class="stat-card negative">
-                    <div class="stat-value">$40B</div>
-                    <div class="stat-label">Lost in news revenue since 2008</div>
-                </div>
-                <div class="stat-card positive">
-                    <div class="stat-value">68%</div>
-                    <div class="stat-label">Support public news funding</div>
-                </div>
-                <div class="stat-card neutral">
-                    <div class="stat-value">2.5x</div>
-                    <div class="stat-label">More misinformation in free content</div>
-                </div>
-            </div>
-        </div>
-
-        <h2 style="margin-bottom: 20px;">Select what you would like to read</h2>
         <div class="comparison-container">
-            <div class="scenario current">
-                <div class="scenario-header">
-                    <div class="scenario-title">Current System</div>
+            <div class="scenario">
+                <div class="toggle-container">
+                    <button class="toggle-btn current active" onclick="switchView('current')">Current System</button>
+                    <button class="toggle-btn reformed" onclick="switchView('reformed')">With Reform</button>
                 </div>
-                <div class="news-items">
-                    <div class="news-item quality">
-                        <div class="news-header">
-                            <span class="news-source">New York Times</span>
-                            <span class="paywall-badge">PAYWALL</span>
-                        </div>
-                        <div class="news-headline">In-depth investigation reveals corruption in local government</div>
-                        <div class="news-quality">✓ Fact-checked • Multiple sources • Context</div>
-                    </div>
 
-                    <div class="news-item quality">
-                        <div class="news-header">
-                            <span class="news-source">Washington Post</span>
-                            <span class="paywall-badge">PAYWALL</span>
+                <div class="news-container current active">
+                    <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 12px; text-align: center;">Select to see access</p>
+                    <div class="news-items">
+                        <div class="news-item quality">
+                            <div class="news-header">
+                                <span class="news-source">New York Times</span>
+                                <span class="paywall-badge">PAYWALL</span>
+                            </div>
+                            <div class="news-headline">In-depth investigation reveals corruption in local government</div>
+                            <div class="news-quality">✓ Fact-checked • Multiple sources • Context</div>
                         </div>
-                        <div class="news-headline">Analysis: Economic policy changes and their long-term impact</div>
-                        <div class="news-quality">✓ Expert interviews • Data-driven • Balanced</div>
-                    </div>
 
-                    <div class="news-item clickbait">
-                        <div class="news-header">
-                            <span class="news-source">ClickBaitNews.com</span>
-                            <span class="access-badge">✓ FREE</span>
+                        <div class="news-item quality">
+                            <div class="news-header">
+                                <span class="news-source">Washington Post</span>
+                                <span class="paywall-badge">PAYWALL</span>
+                            </div>
+                            <div class="news-headline">Analysis: Economic policy changes and their long-term impact</div>
+                            <div class="news-quality">✓ Expert interviews • Data-driven • Balanced</div>
                         </div>
-                        <div class="news-headline">You Won't BELIEVE What This Politician Did! (SHOCKING)</div>
-                        <div class="news-quality">✗ Sensationalized • No sources • Misleading</div>
-                    </div>
 
-                    <div class="news-item clickbait">
-                        <div class="news-header">
-                            <span class="news-source">FreeNewsNow</span>
-                            <span class="access-badge">✓ FREE</span>
+                        <div class="news-item clickbait">
+                            <div class="news-header">
+                                <span class="news-source">ClickBaitNews.com</span>
+                                <span class="access-badge">✓ FREE</span>
+                            </div>
+                            <div class="news-headline">You Won't BELIEVE What This Politician Did! (SHOCKING)</div>
+                            <div class="news-quality">✗ Sensationalized • No sources • Misleading</div>
                         </div>
-                        <div class="news-headline">BREAKING: Unverified claim spreads on social media</div>
-                        <div class="news-quality">✗ Single source • Not verified • Partisan</div>
+
+                        <div class="news-item clickbait">
+                            <div class="news-header">
+                                <span class="news-source">FreeNewsNow</span>
+                                <span class="access-badge">✓ FREE</span>
+                            </div>
+                            <div class="news-headline">BREAKING: Unverified claim spreads on social media</div>
+                            <div class="news-quality">✗ Single source • Not verified • Partisan</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="news-container reformed">
+                    <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 12px; text-align: center;">Select to see options</p>
+                    <div class="news-items">
+                        <div class="news-item accessible">
+                            <div class="news-header">
+                                <span class="news-source">📚 Public Library Access</span>
+                                <span class="access-badge">SOLUTION</span>
+                            </div>
+                            <div class="news-headline">Free access to major news outlets through your library card</div>
+                            <div class="solution-description">Libraries negotiate bulk subscriptions - already works in many cities</div>
+                        </div>
+
+                        <div class="news-item accessible">
+                            <div class="news-header">
+                                <span class="news-source">🎟️ Civic News Vouchers</span>
+                                <span class="access-badge">SOLUTION</span>
+                            </div>
+                            <div class="news-headline">Use vouchers to subscribe to news outlets of your choice</div>
+                            <div class="solution-description">Keeps government neutral, ensures access • Est. $5-10/person/year</div>
+                        </div>
+
+                        <div class="news-item accessible">
+                            <div class="news-header">
+                                <span class="news-source">📻 Public Media Expansion</span>
+                                <span class="access-badge">SOLUTION</span>
+                            </div>
+                            <div class="news-headline">Expand PBS/NPR with more investigative journalism</div>
+                            <div class="solution-description">Publicly funded, editorially independent • Like BBC model</div>
+                        </div>
+
+                        <div class="news-item accessible">
+                            <div class="news-header">
+                                <span class="news-source">💳 Tax Credits for Subscriptions</span>
+                                <span class="access-badge">SOLUTION</span>
+                            </div>
+                            <div class="news-headline">Tax credit makes news subscriptions more affordable</div>
+                            <div class="solution-description">Similar to charitable donations • Market-based with 50-100% coverage</div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="scenario reformed">
-                <div class="scenario-header">
-                    <div class="scenario-title">With Reform</div>
-                </div>
-                <div class="news-items">
-                    <div class="news-item accessible">
-                        <div class="news-header">
-                            <span class="news-source">📚 Public Library Access</span>
-                            <span class="access-badge">SOLUTION</span>
-                        </div>
-                        <div class="solution-description">Libraries negotiate bulk subscriptions to major news outlets, providing free access through library cards (physical or digital). Already implemented in some cities - your library card gives you free NYT, WaPo, etc.</div>
-                    </div>
-
-                    <div class="news-item accessible">
-                        <div class="news-header">
-                            <span class="news-source">🎟️ Civic News Vouchers</span>
-                            <span class="access-badge">SOLUTION</span>
-                        </div>
-                        <div class="solution-description">Government provides vouchers (like food stamps for news) that citizens can use to subscribe to outlets of their choice. Keeps government neutral while ensuring access. Estimated cost: $5-10/person/year.</div>
-                    </div>
-
-                    <div class="news-item accessible">
-                        <div class="news-header">
-                            <span class="news-source">📻 Public Media Expansion</span>
-                            <span class="access-badge">SOLUTION</span>
-                        </div>
-                        <div class="solution-description">Expand PBS/NPR model to include more investigative journalism and local reporting. Publicly funded but editorially independent, like the BBC. U.S. currently spends $1.40/person vs $80+/person in other democracies.</div>
-                    </div>
-
-                    <div class="news-item accessible">
-                        <div class="news-header">
-                            <span class="news-source">💳 Tax Credits for Subscriptions</span>
-                            <span class="access-badge">SOLUTION</span>
-                        </div>
-                        <div class="solution-description">Tax deduction or credit for news subscriptions, similar to charitable donations. Makes news more affordable while keeping market-based system. Could cover 50-100% of subscription costs up to a cap.</div>
-                    </div>
+            <div class="stats-section">
+                <h2>By The Numbers</h2>
+                <div class="stats-grid" id="stats-grid">
+                    <!-- Stats populated dynamically by JavaScript -->
                 </div>
             </div>
         </div>
@@ -559,15 +552,125 @@
     </div>
 
     <script>
+        // Stats data for both views
+        const statsData = {
+            current: [
+                { value: '76%', label: 'Of quality news is paywalled', type: 'negative' },
+                { value: '$40B', label: 'Lost in news revenue since 2008', type: 'negative' },
+                { value: '68%', label: 'Support public news funding', type: 'positive' },
+                { value: '2.5x', label: 'More misinformation in free content', type: 'neutral' }
+            ]
+        };
+
+        // Calculate stats based on number of reforms selected
+        function getReformedStats(selectedCount) {
+            if (selectedCount === 0) {
+                return [
+                    { value: '76%', label: 'Of quality news is paywalled', type: 'negative' },
+                    { value: '$40B', label: 'Lost in news revenue since 2008', type: 'negative' },
+                    { value: '0', label: 'Reforms implemented', type: 'neutral' },
+                    { value: '2.5x', label: 'More misinformation in free content', type: 'neutral' }
+                ];
+            } else if (selectedCount === 1) {
+                return [
+                    { value: '50%', label: 'Access to quality journalism', type: 'positive' },
+                    { value: '$8-12', label: 'Cost per person per year', type: 'positive' },
+                    { value: '1.5x', label: 'More informed electorate', type: 'positive' },
+                    { value: '15%', label: 'Reduction in misinformation spread', type: 'positive' }
+                ];
+            } else if (selectedCount === 2) {
+                return [
+                    { value: '70%', label: 'Access to quality journalism', type: 'positive' },
+                    { value: '$6-10', label: 'Cost per person per year', type: 'positive' },
+                    { value: '2x', label: 'More informed electorate', type: 'positive' },
+                    { value: '25%', label: 'Reduction in misinformation spread', type: 'positive' }
+                ];
+            } else if (selectedCount === 3) {
+                return [
+                    { value: '85%', label: 'Access to quality journalism', type: 'positive' },
+                    { value: '$5-8', label: 'Cost per person per year', type: 'positive' },
+                    { value: '2.5x', label: 'More informed electorate', type: 'positive' },
+                    { value: '35%', label: 'Reduction in misinformation spread', type: 'positive' }
+                ];
+            } else {
+                return [
+                    { value: '100%', label: 'Access to quality journalism for all', type: 'positive' },
+                    { value: '$5-10', label: 'Cost per person per year', type: 'positive' },
+                    { value: '3x', label: 'More informed electorate', type: 'positive' },
+                    { value: '45%', label: 'Reduction in misinformation spread', type: 'positive' }
+                ];
+            }
+        }
+
         // Add click handlers to all news items
         document.addEventListener('DOMContentLoaded', function() {
             const newsItems = document.querySelectorAll('.news-item');
             newsItems.forEach(item => {
                 item.addEventListener('click', function() {
                     this.classList.toggle('selected');
+
+                    // Update stats if we're in reformed view
+                    const reformedContainer = document.querySelector('.news-container.reformed');
+                    if (reformedContainer && reformedContainer.classList.contains('active')) {
+                        updateReformedStats();
+                    }
                 });
             });
+
+            // Initialize stats with current view
+            updateStats('current');
         });
+
+        function updateStats(view) {
+            const statsGrid = document.getElementById('stats-grid');
+            const stats = statsData[view];
+
+            statsGrid.innerHTML = stats.map(stat => `
+                <div class="stat-card ${stat.type}">
+                    <div class="stat-value">${stat.value}</div>
+                    <div class="stat-label">${stat.label}</div>
+                </div>
+            `).join('');
+        }
+
+        function updateReformedStats() {
+            const reformedContainer = document.querySelector('.news-container.reformed');
+            const selectedItems = reformedContainer.querySelectorAll('.news-item.selected');
+            const selectedCount = selectedItems.length;
+
+            const stats = getReformedStats(selectedCount);
+            const statsGrid = document.getElementById('stats-grid');
+
+            statsGrid.innerHTML = stats.map(stat => `
+                <div class="stat-card ${stat.type}">
+                    <div class="stat-value">${stat.value}</div>
+                    <div class="stat-label">${stat.label}</div>
+                </div>
+            `).join('');
+        }
+
+        function switchView(view) {
+            // Update toggle buttons
+            const buttons = document.querySelectorAll('.toggle-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.toggle-btn.${view}`).classList.add('active');
+
+            // Update content containers
+            const containers = document.querySelectorAll('.news-container');
+            containers.forEach(container => {
+                container.classList.remove('active');
+            });
+            document.querySelector(`.news-container.${view}`).classList.add('active');
+
+            // Update stats based on view
+            if (view === 'current') {
+                updateStats(view);
+            } else {
+                updateReformedStats();
+            }
+        }
 
         function toggleSolution(card) {
             card.classList.toggle('selected');
