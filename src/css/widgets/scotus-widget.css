@@ -66,15 +66,20 @@ body {
     margin-bottom: 24px;
     display: flex;
     justify-content: center;
-    align-items: center;
-    gap: 8px;
 }
 
 .clause-selector::before {
     content: "Choose Clause:";
     font-weight: 600;
-    color: var(--scotus-text);
-    font-size: 0.9rem;
+    color: white;
+    font-size: 0.85rem;
+    background: var(--scotus-primary);
+    padding: 8px 12px;
+    border-radius: 4px 0 0 4px;
+    border: 1px solid var(--scotus-primary);
+    border-right: none;
+    display: flex;
+    align-items: center;
 }
 
 .clause-selector select {
@@ -83,7 +88,7 @@ body {
     font-weight: 500;
     font-family: inherit;
     border: 1px solid var(--scotus-border);
-    border-radius: 4px;
+    border-radius: 0 4px 4px 0;
     background: var(--scotus-white);
     color: var(--scotus-text);
     cursor: pointer;
@@ -424,11 +429,18 @@ body {
 
     .clause-selector {
         flex-direction: column;
-        gap: 8px;
+    }
+
+    .clause-selector::before {
+        border-radius: 4px 4px 0 0;
+        border-right: 1px solid var(--scotus-primary);
+        border-bottom: none;
+        text-align: center;
     }
 
     .clause-selector select {
         width: 100%;
         min-width: auto;
+        border-radius: 0 0 4px 4px;
     }
 }
