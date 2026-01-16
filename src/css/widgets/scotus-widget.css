@@ -290,6 +290,7 @@ body {
     letter-spacing: 1px;
     color: var(--scotus-text-light);
     margin-bottom: 8px;
+    text-align: center;
 }
 
 .phrase-highlight {
