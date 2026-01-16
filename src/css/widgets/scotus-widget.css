@@ -118,6 +118,13 @@ body {
     margin-bottom: 20px;
 }
 
+.interpretation-container-inner {
+    background: var(--scotus-background);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
 /* Constitutional Text */
 .constitutional-text {
     background: linear-gradient(135deg, #f5e6c8 0%, #e8d4a8 100%);
