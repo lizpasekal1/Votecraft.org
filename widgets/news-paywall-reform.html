@@ -142,13 +142,13 @@
         }
 
         .news-item.selected.quality {
-            background: var(--green-light);
-            border-color: var(--green);
+            background: var(--red-light);
+            border-color: var(--red);
         }
 
         .news-item.selected.clickbait {
-            background: var(--red-light);
-            border-color: var(--red);
+            background: rgba(234, 179, 8, 0.1);
+            border-color: var(--yellow);
         }
 
         .news-item.selected.accessible {
@@ -183,7 +183,7 @@
         }
 
         .access-badge {
-            background: var(--green);
+            background: var(--yellow);
             color: white;
             padding: 3px 8px;
             border-radius: 20px;
@@ -234,10 +234,23 @@
             background: var(--background);
         }
 
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-bottom: 4px;
+            transition: opacity 0.6s ease-in-out;
+        }
+
         .stat-value {
             font-size: 1.8rem;
             font-weight: 700;
-            margin-bottom: 4px;
+            min-height: 2.2rem;
+            transition: opacity 0.6s ease-in-out;
+        }
+
+        .stat-value.hidden,
+        .stat-label.hidden {
+            opacity: 0;
         }
 
         .stat-card.negative {
@@ -258,11 +271,6 @@
 
         .stat-card.neutral .stat-value {
             color: var(--primary);
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            color: var(--text-light);
         }
 
         .solutions-section {
@@ -402,6 +410,7 @@
             font-size: 1.5rem;
             color: var(--text);
             margin-bottom: 8px;
+            text-align: center;
         }
 
         h3 {
@@ -429,13 +438,13 @@
     <div class="container">
         <div class="comparison-container">
             <div class="scenario">
+                <h2>Select to see access</h2>
                 <div class="toggle-container">
                     <button class="toggle-btn current active" onclick="switchView('current')">Current System</button>
                     <button class="toggle-btn reformed" onclick="switchView('reformed')">With Reform</button>
                 </div>
 
                 <div class="news-container current active">
-                    <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 12px; text-align: center;">Select to see access</p>
                     <div class="news-items">
                         <div class="news-item quality">
                             <div class="news-header">
@@ -476,7 +485,6 @@
                 </div>
 
                 <div class="news-container reformed">
-                    <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 12px; text-align: center;">Select to see options</p>
                     <div class="news-items">
                         <div class="news-item accessible">
                             <div class="news-header">
@@ -564,7 +572,7 @@
                 { value: '76%', label: 'Of quality news is paywalled', type: 'negative' },
                 { value: '$40B', label: 'Lost in news revenue since 2008', type: 'negative' },
                 { value: '2.5x', label: 'More misinformation in free content', type: 'negative' },
-                { value: '68%', label: 'Support public news funding', type: 'positive' }
+                { value: '68%', label: 'Support public news funding', type: 'negative' }
             ]
         };
 
@@ -615,17 +623,62 @@
                 item.addEventListener('click', function() {
                     this.classList.toggle('selected');
 
-                    // Update stats if we're in reformed view
+                    // Check which view is active
+                    const currentContainer = document.querySelector('.news-container.current');
                     const reformedContainer = document.querySelector('.news-container.reformed');
-                    if (reformedContainer && reformedContainer.classList.contains('active')) {
+
+                    if (currentContainer && currentContainer.classList.contains('active')) {
+                        // Update stats for current system based on selections
+                        updateCurrentStats();
+                    } else if (reformedContainer && reformedContainer.classList.contains('active')) {
                         updateReformedStats();
                     }
                 });
             });
 
-            // Initialize stats with current view
-            updateStats('current');
+            // Initialize stats with empty containers
+            initializeEmptyStats();
         });
+
+        function initializeEmptyStats() {
+            const statsGrid = document.getElementById('stats-grid');
+            const stats = statsData.current;
+
+            statsGrid.innerHTML = stats.map(stat => `
+                <div class="stat-card ${stat.type}">
+                    <div class="stat-label hidden">${stat.label}</div>
+                    <div class="stat-value hidden">${stat.value}</div>
+                </div>
+            `).join('');
+        }
+
+        function updateCurrentStats() {
+            const currentContainer = document.querySelector('.news-container.current');
+            const selectedItems = currentContainer.querySelectorAll('.news-item.selected');
+            const hasSelection = selectedItems.length > 0;
+            const allSelected = selectedItems.length === 4;
+
+            // Check if any clickbait/free news is selected
+            const clickbaitSelected = currentContainer.querySelectorAll('.news-item.clickbait.selected').length > 0;
+
+            const statsGrid = document.getElementById('stats-grid');
+            const stats = statsData.current;
+
+            statsGrid.innerHTML = stats.map(stat => {
+                // Hide the misinformation stat unless clickbait is selected
+                const isMisinfoStat = stat.label === 'More misinformation in free content';
+                // Hide the support stat unless all four items are selected
+                const isSupportStat = stat.label === 'Support public news funding';
+                const shouldShow = hasSelection && (!isMisinfoStat || clickbaitSelected) && (!isSupportStat || allSelected);
+
+                return `
+                    <div class="stat-card ${stat.type}">
+                        <div class="stat-label ${shouldShow ? '' : 'hidden'}">${stat.label}</div>
+                        <div class="stat-value ${shouldShow ? '' : 'hidden'}">${stat.value}</div>
+                    </div>
+                `;
+            }).join('');
+        }
 
         function updateStats(view) {
             const statsGrid = document.getElementById('stats-grid');
@@ -633,8 +686,8 @@
 
             statsGrid.innerHTML = stats.map(stat => `
                 <div class="stat-card ${stat.type}">
-                    <div class="stat-value">${stat.value}</div>
                     <div class="stat-label">${stat.label}</div>
+                    <div class="stat-value">${stat.value}</div>
                 </div>
             `).join('');
         }
@@ -643,14 +696,15 @@
             const reformedContainer = document.querySelector('.news-container.reformed');
             const selectedItems = reformedContainer.querySelectorAll('.news-item.selected');
             const selectedCount = selectedItems.length;
+            const hasSelection = selectedCount > 0;
 
             const stats = getReformedStats(selectedCount);
             const statsGrid = document.getElementById('stats-grid');
 
             statsGrid.innerHTML = stats.map(stat => `
-                <div class="stat-card ${stat.type}">
-                    <div class="stat-value">${stat.value}</div>
+                <div class="stat-card ${hasSelection ? stat.type : 'neutral'}">
                     <div class="stat-label">${stat.label}</div>
+                    <div class="stat-value ${hasSelection ? '' : 'hidden'}">${stat.value}</div>
                 </div>
             `).join('');
         }
@@ -672,7 +726,7 @@
 
             // Update stats based on view
             if (view === 'current') {
-                updateStats(view);
+                updateCurrentStats();
             } else {
                 updateReformedStats();
             }
