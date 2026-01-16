@@ -270,7 +270,7 @@ body {
 }
 
 .key-phrase.era-early {
-    background: rgba(220, 38, 38, 0.1);
+    background: rgba(243, 43, 68, 0.1);
     border-left-color: var(--scotus-early);
 }
 
