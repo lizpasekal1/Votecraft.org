@@ -52,12 +52,12 @@ body {
 .demo-header h2 {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--scotus-text);
+    color: #000000;
     margin-bottom: 8px;
 }
 
 .demo-subtitle {
-    color: var(--scotus-text-light);
+    color: #000000;
     font-size: 0.95rem;
 }
 
