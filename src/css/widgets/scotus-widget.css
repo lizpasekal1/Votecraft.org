@@ -26,7 +26,7 @@
 body {
     font-family: Arial, -apple-system, BlinkMacSystemFont, sans-serif;
     color: var(--scotus-text);
-    background: transparent;
+    background: #F32B44;
     margin: 0;
     padding: 20px;
     display: flex;
