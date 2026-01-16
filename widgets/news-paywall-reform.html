@@ -238,19 +238,41 @@
             font-size: 0.8rem;
             color: var(--text-light);
             margin-bottom: 4px;
-            transition: opacity 0.6s ease-in-out;
+            transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out;
         }
 
         .stat-value {
             font-size: 1.8rem;
             font-weight: 700;
             min-height: 2.2rem;
-            transition: opacity 0.6s ease-in-out;
+            transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out;
         }
 
         .stat-value.hidden,
         .stat-label.hidden {
             opacity: 0;
+            transform: translateY(-10px);
+            pointer-events: none;
+        }
+
+        .stat-card:nth-child(1) .stat-label,
+        .stat-card:nth-child(1) .stat-value {
+            transition-delay: 0s;
+        }
+
+        .stat-card:nth-child(2) .stat-label,
+        .stat-card:nth-child(2) .stat-value {
+            transition-delay: 0.15s;
+        }
+
+        .stat-card:nth-child(3) .stat-label,
+        .stat-card:nth-child(3) .stat-value {
+            transition-delay: 0.3s;
+        }
+
+        .stat-card:nth-child(4) .stat-label,
+        .stat-card:nth-child(4) .stat-value {
+            transition-delay: 0.45s;
         }
 
         .stat-card.negative {
@@ -662,22 +684,32 @@
             const clickbaitSelected = currentContainer.querySelectorAll('.news-item.clickbait.selected').length > 0;
 
             const statsGrid = document.getElementById('stats-grid');
+            const statCards = statsGrid.querySelectorAll('.stat-card');
             const stats = statsData.current;
 
-            statsGrid.innerHTML = stats.map(stat => {
+            statCards.forEach((card, index) => {
+                const stat = stats[index];
+                const statLabel = card.querySelector('.stat-label');
+                const statValue = card.querySelector('.stat-value');
+
                 // Hide the misinformation stat unless clickbait is selected
                 const isMisinfoStat = stat.label === 'More misinformation in free content';
                 // Hide the support stat unless all four items are selected
                 const isSupportStat = stat.label === 'Support public news funding';
                 const shouldShow = hasSelection && (!isMisinfoStat || clickbaitSelected) && (!isSupportStat || allSelected);
 
-                return `
-                    <div class="stat-card ${stat.type}">
-                        <div class="stat-label ${shouldShow ? '' : 'hidden'}">${stat.label}</div>
-                        <div class="stat-value ${shouldShow ? '' : 'hidden'}">${stat.value}</div>
-                    </div>
-                `;
-            }).join('');
+                // Update classes to trigger CSS transitions
+                if (shouldShow) {
+                    statLabel.classList.remove('hidden');
+                    statValue.classList.remove('hidden');
+                } else {
+                    statLabel.classList.add('hidden');
+                    statValue.classList.add('hidden');
+                }
+
+                // Update card type
+                card.className = `stat-card ${stat.type}`;
+            });
         }
 
         function updateStats(view) {
@@ -700,13 +732,30 @@
 
             const stats = getReformedStats(selectedCount);
             const statsGrid = document.getElementById('stats-grid');
+            const statCards = statsGrid.querySelectorAll('.stat-card');
 
-            statsGrid.innerHTML = stats.map(stat => `
-                <div class="stat-card ${hasSelection ? stat.type : 'neutral'}">
-                    <div class="stat-label">${stat.label}</div>
-                    <div class="stat-value ${hasSelection ? '' : 'hidden'}">${stat.value}</div>
-                </div>
-            `).join('');
+            statCards.forEach((card, index) => {
+                const stat = stats[index];
+                const statLabel = card.querySelector('.stat-label');
+                const statValue = card.querySelector('.stat-value');
+
+                // Update label text
+                statLabel.textContent = stat.label;
+                statValue.textContent = stat.value;
+
+                // Update classes to trigger CSS transitions
+                if (hasSelection) {
+                    statValue.classList.remove('hidden');
+                } else {
+                    statValue.classList.add('hidden');
+                }
+
+                // Labels always visible in reform view
+                statLabel.classList.remove('hidden');
+
+                // Update card type
+                card.className = `stat-card ${hasSelection ? stat.type : 'neutral'}`;
+            });
         }
 
         function switchView(view) {
