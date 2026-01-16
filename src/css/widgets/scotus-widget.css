@@ -361,10 +361,9 @@ body {
     display: flex;
     align-items: flex-start;
     gap: 12px;
-    padding: 16px;
-    background: rgba(139, 92, 246, 0.1);
-    border-radius: 8px;
-    border: 1px solid rgba(139, 92, 246, 0.2);
+    padding: 0 0 16px 0;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .note-icon {
@@ -373,7 +372,7 @@ body {
 }
 
 .note-text {
-    color: var(--scotus-text);
+    color: white;
     font-size: 0.9rem;
     line-height: 1.6;
     font-style: italic;
