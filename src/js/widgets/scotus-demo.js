@@ -8,7 +8,6 @@ class SCOTUSDemo {
         this.clauseSelect = document.getElementById('clause-select');
         this.clauseText = document.getElementById('clause-text');
         this.eraButtons = document.querySelectorAll('.era-btn');
-        this.eraLabel = document.getElementById('era-label');
         this.keyPhrase = document.getElementById('key-phrase');
         this.phraseMeaning = document.getElementById('phrase-meaning');
         this.caseName = document.getElementById('case-name');
@@ -223,6 +222,7 @@ class SCOTUSDemo {
 
         this.resetBtn.addEventListener('click', () => this.reset());
 
+        this.updateButtonLabels();
         this.updateDisplay();
     }
 
@@ -238,6 +238,7 @@ class SCOTUSDemo {
             }
         });
 
+        this.updateButtonLabels();
         this.updateDisplay();
     }
 
@@ -255,6 +256,16 @@ class SCOTUSDemo {
         this.updateDisplay();
     }
 
+    updateButtonLabels() {
+        const clauseData = this.data[this.currentClause];
+
+        this.eraButtons.forEach(btn => {
+            const era = btn.dataset.era;
+            const eraData = clauseData.eras[era];
+            btn.textContent = eraData.label;
+        });
+    }
+
     updateDisplay() {
         const clauseData = this.data[this.currentClause];
         const eraData = clauseData.eras[this.currentEra];
@@ -267,10 +278,6 @@ class SCOTUSDemo {
         );
         this.clauseText.innerHTML = textWithHighlight;
         this.clauseText.nextElementSibling.textContent = clauseData.source;
-
-        // Update era label with color
-        this.eraLabel.textContent = eraData.label;
-        this.eraLabel.className = 'era-label ' + this.currentEra;
 
         // Update key phrase
         this.keyPhrase.textContent = eraData.keyPhrase;

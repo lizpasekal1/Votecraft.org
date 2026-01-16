@@ -233,36 +233,6 @@ body {
     }
 }
 
-.era-info {
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-.era-label {
-    display: inline-block;
-    padding: 6px 16px;
-    background: var(--scotus-background);
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    color: var(--scotus-text);
-}
-
-.era-label.early {
-    background: rgba(220, 38, 38, 0.1);
-    color: var(--scotus-early);
-}
-
-.era-label.middle {
-    background: rgba(245, 158, 11, 0.1);
-    color: #b45309;
-}
-
-.era-label.modern {
-    background: rgba(16, 185, 129, 0.1);
-    color: #047857;
-}
-
 /* Key Phrase */
 .key-phrase {
     background: var(--scotus-background);
