@@ -123,6 +123,7 @@ body {
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 20px;
+    text-align: center;
 }
 
 /* Constitutional Text */
@@ -265,6 +266,7 @@ body {
     margin-bottom: 20px;
     border-left: 4px solid var(--scotus-primary);
     transition: background-color 0.3s ease;
+    text-align: left;
 }
 
 .key-phrase.era-early {
@@ -313,6 +315,7 @@ body {
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 20px;
+    text-align: left;
 }
 
 .case-label {
