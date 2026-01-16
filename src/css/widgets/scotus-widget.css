@@ -112,7 +112,7 @@ body {
 
 /* Interpretation Container */
 .interpretation-container {
-    background: var(--scotus-white);
+    background: transparent;
     border-radius: 4px 4px 12px 12px;
     padding: 0 28px 28px 28px;
     margin-bottom: 20px;
