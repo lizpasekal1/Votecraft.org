@@ -66,7 +66,7 @@ body {
     margin-bottom: 0;
     display: flex;
     justify-content: flex-start;
-    margin: 0 -12px 0 -12px;
+    margin: 0 -28px 0 -28px;
 }
 
 .clause-selector::before {
@@ -100,7 +100,7 @@ body {
     background-repeat: no-repeat;
     background-position: right 8px center;
     background-size: 16px;
-    min-width: 200px;
+    flex: 1;
 }
 
 .clause-selector select option {
@@ -120,8 +120,8 @@ body {
 /* Interpretation Container */
 .interpretation-container {
     background: var(--scotus-white);
-    border-radius: 12px;
-    padding: 28px;
+    border-radius: 4px 4px 12px 12px;
+    padding: 0 28px 28px 28px;
     margin-bottom: 20px;
 }
 
