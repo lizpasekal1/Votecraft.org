@@ -65,13 +65,15 @@ body {
 .clause-selector {
     margin-bottom: 24px;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
 }
 
 .clause-selector label {
-    display: block;
     font-weight: 600;
     color: var(--scotus-text);
-    margin-bottom: 8px;
     font-size: 0.9rem;
 }
 
@@ -408,6 +410,11 @@ body {
 
     .phrase-highlight {
         font-size: 1.1rem;
+    }
+
+    .clause-selector {
+        flex-direction: column;
+        gap: 8px;
     }
 
     .clause-selector select {
