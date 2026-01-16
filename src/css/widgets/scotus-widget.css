@@ -130,8 +130,9 @@ body {
 .constitutional-text {
     background: linear-gradient(135deg, #f5e6c8 0%, #e8d4a8 100%);
     color: #2c1810;
-    padding: 28px 100px;
-    margin: 0 -28px 24px -28px;
+    padding: 28px 60px;
+    margin: 0 auto 24px auto;
+    max-width: 700px;
     text-align: center;
     border: none;
     border-radius: 0 0 0 0;
