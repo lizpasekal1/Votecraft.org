@@ -14,7 +14,6 @@ class SCOTUSDemo {
         this.caseRuling = document.getElementById('case-ruling');
         this.impactContent = document.getElementById('impact-content');
         this.comparisonNote = document.getElementById('comparison-note');
-        this.resetBtn = document.getElementById('reset-btn');
 
         this.currentClause = 'commerce';
         this.currentEra = 'early';
@@ -220,8 +219,6 @@ class SCOTUSDemo {
             btn.addEventListener('click', () => this.handleEraChange(btn.dataset.era));
         });
 
-        this.resetBtn.addEventListener('click', () => this.reset());
-
         this.updateButtonLabels();
         this.updateDisplay();
     }
@@ -301,23 +298,6 @@ class SCOTUSDemo {
         display.style.animation = 'fadeIn 0.3s ease-out';
     }
 
-    reset() {
-        this.clauseSelect.value = 'commerce';
-        this.currentClause = 'commerce';
-        this.currentEra = 'early';
-
-        this.eraButtons.forEach(btn => {
-            btn.classList.remove('active');
-            if (btn.dataset.era === 'early') {
-                btn.classList.add('active');
-            }
-        });
-
-        this.updateDisplay();
-
-        // Scroll to top of widget
-        document.querySelector('.scotus-widget').scrollIntoView({ behavior: 'smooth' });
-    }
 }
 
 // Initialize when DOM is ready
