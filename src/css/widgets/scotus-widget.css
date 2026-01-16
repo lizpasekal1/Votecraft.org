@@ -110,15 +110,6 @@ body {
     color: var(--scotus-text);
 }
 
-.clause-selector select:hover {
-    border-color: #999;
-}
-
-.clause-selector select:focus {
-    border-color: var(--scotus-primary);
-    box-shadow: 0 0 0 3px rgba(0, 139, 255, 0.1);
-}
-
 /* Interpretation Container */
 .interpretation-container {
     background: var(--scotus-white);
