@@ -64,30 +64,40 @@ body {
 /* Clause Selector */
 .clause-selector {
     margin-bottom: 24px;
-    text-align: center;
     display: flex;
-    align-items: center;
     justify-content: center;
-    gap: 12px;
+}
+
+.clause-selector > div {
+    display: inline-flex;
+    align-items: center;
+    border: 2px solid var(--scotus-border);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--scotus-white);
 }
 
 .clause-selector label {
     font-weight: 600;
     color: var(--scotus-text);
     font-size: 0.9rem;
+    padding: 12px 16px;
+    background: var(--scotus-background);
+    border-right: 2px solid var(--scotus-border);
+    white-space: nowrap;
 }
 
 .clause-selector select {
     padding: 12px 20px;
     font-size: 1rem;
     font-family: inherit;
-    border: 2px solid var(--scotus-border);
-    border-radius: 6px;
+    border: none;
     background: var(--scotus-white);
     color: var(--scotus-text);
     cursor: pointer;
     min-width: 280px;
     transition: border-color 0.2s;
+    outline: none;
 }
 
 .clause-selector select:hover,
@@ -412,9 +422,15 @@ body {
         font-size: 1.1rem;
     }
 
-    .clause-selector {
+    .clause-selector > div {
         flex-direction: column;
-        gap: 8px;
+        width: 100%;
+    }
+
+    .clause-selector label {
+        border-right: none;
+        border-bottom: 2px solid var(--scotus-border);
+        text-align: center;
     }
 
     .clause-selector select {
