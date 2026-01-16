@@ -3238,7 +3238,7 @@
         const shuffleShowAll = document.getElementById('shuffle-show-all');
 
         let currentShuffleView = 'insurance';
-        let currentStep = 0;
+        let currentStep = 1;
 
         const shuffleData = {
             insurance: {
@@ -3293,7 +3293,7 @@
                 shuffleInsight.innerHTML = `<strong>The result:</strong> ${data.winner}. This is why healthcare costs keep rising.`;
             } else {
                 shuffleResult.style.display = 'none';
-                shuffleInsight.innerHTML = `<strong>Step ${showUpTo + 1} of ${data.steps.length}:</strong> Click "Next Step" to see how money flows through the system.`;
+                shuffleInsight.innerHTML = `<strong>Step ${showUpTo} of ${data.steps.length}:</strong> Click "Next Step" to see how money flows through the system.`;
             }
         }
 
@@ -3302,8 +3302,8 @@
                 shuffleBtns.forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
                 currentShuffleView = this.dataset.view;
-                currentStep = 0;
-                renderShuffle(currentShuffleView, 0);
+                currentStep = 1;
+                renderShuffle(currentShuffleView, 1);
             });
         });
 
@@ -3327,8 +3327,8 @@
             renderShuffle(currentShuffleView, currentStep);
         });
 
-        // Initial render
-        renderShuffle('insurance', 0);
+        // Initial render - show first step
+        renderShuffle('insurance', 1);
 
         // Widget 9: Coverage Explorer
         const coverageScenarioBtns = document.querySelectorAll('.coverage-scenario-btn');

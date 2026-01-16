@@ -74,12 +74,12 @@ body {
 .clause-selector::before {
     content: "Choose Clause:";
     font-weight: 600;
-    color: #2c1810;
+    color: white;
     font-size: 0.85rem;
-    background: linear-gradient(135deg, #f5e6c8 0%, #e8d4a8 100%);
+    background: linear-gradient(135deg, var(--scotus-primary) 0%, var(--scotus-primary-dark) 100%);
     padding: 8px 12px;
     border-radius: 4px 0 0 0;
-    border: 1px solid #e8d4a8;
+    border: 1px solid var(--scotus-primary);
     border-right: none;
     display: flex;
     align-items: center;
