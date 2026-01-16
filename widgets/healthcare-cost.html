@@ -76,10 +76,15 @@
             margin-bottom: 20px;
         }
 
-        .income-visual {
+        .results-section {
             background: var(--white);
             border-radius: 12px;
             padding: 28px;
+        }
+
+        .income-visual {
+            background: transparent;
+            padding: 0;
         }
 
         .cost-demo h4 {
@@ -894,11 +899,12 @@
                 </div>
             </div>
 
-            <div class="income-visual">
-                <div class="cost-comparison-row">
-                    <div class="cost-left-column">
-                        <div class="cost-breakdown-grid" id="cost-breakdown">
-                            <div class="cost-breakdown-header">Annual Healthcare Costs</div>
+            <div class="results-section">
+                <div class="income-visual">
+                    <div class="cost-comparison-row">
+                        <div class="cost-left-column">
+                            <div class="cost-breakdown-grid" id="cost-breakdown">
+                                <div class="cost-breakdown-header">Annual Healthcare Costs</div>
                             <div class="cost-line hidden-cost" id="employer-row">
                                 <span class="cost-line-label">Employer's Share <span class="hidden-tag">invisible to you</span></span>
                                 <span class="cost-line-amount" id="cost-employer">—</span>
@@ -958,14 +964,15 @@
                         </div>
                     </div>
                 </div>
-            </div>
+                </div>
 
-            <div class="income-impact regressive results-disabled" id="income-impact">
-                <strong>Select your income and employment type above to see your healthcare cost breakdown.</strong>
-            </div>
-            <div class="inline-source" style="margin-top: 12px; text-align: center;">
-                Sources: <a href="https://www.kff.org/health-costs/report/employer-health-benefits-annual-survey/" target="_blank">KFF 2024</a> ·
-                <a href="https://www.bls.gov/cex/" target="_blank">BLS Consumer Expenditure</a>
+                <div class="income-impact regressive results-disabled" id="income-impact">
+                    <strong>Select your income and employment type above to see your healthcare cost breakdown.</strong>
+                </div>
+                <div class="inline-source" style="margin-top: 12px; text-align: center;">
+                    Sources: <a href="https://www.kff.org/health-costs/report/employer-health-benefits-annual-survey/" target="_blank">KFF 2024</a> ·
+                    <a href="https://www.bls.gov/cex/" target="_blank">BLS Consumer Expenditure</a>
+                </div>
             </div>
         </div>
     </div>
