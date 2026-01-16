@@ -89,7 +89,7 @@ body {
     font-family: inherit;
     border: 1px solid var(--scotus-border);
     border-radius: 0 4px 4px 0;
-    background: white;
+    background-color: #ffffff;
     color: var(--scotus-text);
     cursor: pointer;
     transition: all 0.15s ease;
@@ -103,7 +103,7 @@ body {
 }
 
 .clause-selector select option {
-    background: white;
+    background-color: #ffffff;
     color: var(--scotus-text);
 }
 
