@@ -279,7 +279,9 @@ class SCOTUSDemo {
         this.clauseText.innerHTML = textWithHighlight;
         this.clauseText.nextElementSibling.textContent = clauseData.source;
 
-        // Update key phrase
+        // Update key phrase and apply era-specific styling
+        const keyPhraseContainer = document.querySelector('.key-phrase');
+        keyPhraseContainer.className = 'key-phrase era-' + this.currentEra;
         this.keyPhrase.textContent = eraData.keyPhrase;
         this.phraseMeaning.innerHTML = eraData.meaning;
 

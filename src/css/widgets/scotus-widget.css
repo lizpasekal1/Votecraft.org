@@ -264,6 +264,22 @@ body {
     border-radius: 8px;
     margin-bottom: 20px;
     border-left: 4px solid var(--scotus-primary);
+    transition: background-color 0.3s ease;
+}
+
+.key-phrase.era-early {
+    background: rgba(220, 38, 38, 0.1);
+    border-left-color: var(--scotus-early);
+}
+
+.key-phrase.era-middle {
+    background: rgba(245, 158, 11, 0.1);
+    border-left-color: var(--scotus-middle);
+}
+
+.key-phrase.era-modern {
+    background: rgba(16, 185, 129, 0.1);
+    border-left-color: var(--scotus-modern);
 }
 
 .phrase-label {
