@@ -81,14 +81,14 @@ body {
     font-weight: 600;
     color: var(--scotus-text);
     font-size: 0.9rem;
-    padding: 12px 16px;
+    padding: 10px 16px;
     background: var(--scotus-background);
     border-right: 2px solid var(--scotus-border);
     white-space: nowrap;
 }
 
 .clause-selector select {
-    padding: 12px 20px;
+    padding: 10px 20px;
     font-size: 1rem;
     font-family: inherit;
     border: none;
