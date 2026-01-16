@@ -106,7 +106,7 @@ body {
 }
 
 .clause-selector select option {
-    background: linear-gradient(135deg, #f5e6c8 0%, #e8d4a8 100%);
+    background-color: #f0ddb8;
     color: #2c1810;
 }
 
