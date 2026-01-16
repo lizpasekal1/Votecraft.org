@@ -68,7 +68,7 @@
 
         .comparison-container {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 2fr 1fr;
             gap: 20px;
             margin-bottom: 30px;
         }
@@ -183,7 +183,7 @@
         }
 
         .access-badge {
-            background: var(--yellow);
+            background: var(--green);
             color: white;
             padding: 3px 8px;
             border-radius: 20px;
@@ -759,6 +759,12 @@
         }
 
         function switchView(view) {
+            // Clear all selections from both containers
+            const allNewsItems = document.querySelectorAll('.news-item.selected');
+            allNewsItems.forEach(item => {
+                item.classList.remove('selected');
+            });
+
             // Update toggle buttons
             const buttons = document.querySelectorAll('.toggle-btn');
             buttons.forEach(btn => {
