@@ -245,8 +245,6 @@ body {
 /* Interpretation Display */
 .interpretation-display {
     animation: fadeIn 0.3s ease-out;
-    max-width: 700px;
-    margin: 0 auto;
 }
 
 @keyframes fadeIn {
