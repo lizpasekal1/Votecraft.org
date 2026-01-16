@@ -92,7 +92,7 @@ body {
     font-family: inherit;
     border: 1px solid #e8d4a8;
     border-radius: 0 4px 0 0;
-    background: linear-gradient(135deg, #f5e6c8 0%, #e8d4a8 100%);
+    background-color: #f0ddb8;
     color: #2c1810;
     cursor: pointer;
     transition: all 0.15s ease;
