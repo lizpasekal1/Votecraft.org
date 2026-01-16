@@ -63,9 +63,10 @@ body {
 
 /* Clause Selector */
 .clause-selector {
-    margin-bottom: 24px;
+    margin-bottom: 0;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
+    margin: 0 -12px 0 -12px;
 }
 
 .clause-selector::before {
@@ -75,7 +76,7 @@ body {
     font-size: 0.85rem;
     background: var(--scotus-primary);
     padding: 8px 12px;
-    border-radius: 4px 0 0 4px;
+    border-radius: 4px 0 0 0;
     border: 1px solid var(--scotus-primary);
     border-right: none;
     display: flex;
@@ -88,7 +89,7 @@ body {
     font-weight: 500;
     font-family: inherit;
     border: 1px solid var(--scotus-border);
-    border-radius: 0 4px 4px 0;
+    border-radius: 0 4px 0 0;
     background-color: #ffffff;
     color: var(--scotus-text);
     cursor: pointer;
@@ -132,7 +133,7 @@ body {
     margin: 0 -12px 24px -12px;
     text-align: center;
     border: none;
-    border-radius: 0;
+    border-radius: 0 0 0 0;
     position: relative;
     filter: drop-shadow(0 3px 6px rgba(0,0,0,0.15));
 }
