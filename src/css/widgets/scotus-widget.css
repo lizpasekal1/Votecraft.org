@@ -106,8 +106,8 @@ body {
 }
 
 .clause-selector select option {
-    background-color: #ffffff;
-    color: var(--scotus-text);
+    background: linear-gradient(135deg, #f5e6c8 0%, #e8d4a8 100%);
+    color: #2c1810;
 }
 
 /* Interpretation Container */
