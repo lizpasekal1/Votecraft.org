@@ -102,18 +102,16 @@
             color: var(--text-light);
         }
 
-        .toggle-btn.active {
-            background: white;
-            color: var(--text);
+        .toggle-btn.current.active {
+            background: var(--red);
+            color: white;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .toggle-btn.current.active {
-            color: var(--red);
-        }
-
         .toggle-btn.reformed.active {
-            color: var(--green);
+            background: var(--green);
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .news-container {
@@ -242,8 +240,16 @@
             margin-bottom: 4px;
         }
 
+        .stat-card.negative {
+            background: var(--red-light);
+        }
+
         .stat-card.negative .stat-value {
             color: var(--red);
+        }
+
+        .stat-card.positive {
+            background: var(--green-light);
         }
 
         .stat-card.positive .stat-value {
@@ -433,7 +439,7 @@
                     <div class="news-items">
                         <div class="news-item quality">
                             <div class="news-header">
-                                <span class="news-source">New York Times</span>
+                                <span class="news-source">📰 New York Times</span>
                                 <span class="paywall-badge">PAYWALL</span>
                             </div>
                             <div class="news-headline">In-depth investigation reveals corruption in local government</div>
@@ -442,7 +448,7 @@
 
                         <div class="news-item quality">
                             <div class="news-header">
-                                <span class="news-source">Washington Post</span>
+                                <span class="news-source">📊 Washington Post</span>
                                 <span class="paywall-badge">PAYWALL</span>
                             </div>
                             <div class="news-headline">Analysis: Economic policy changes and their long-term impact</div>
@@ -451,7 +457,7 @@
 
                         <div class="news-item clickbait">
                             <div class="news-header">
-                                <span class="news-source">ClickBaitNews.com</span>
+                                <span class="news-source">💥 ClickBaitNews.com</span>
                                 <span class="access-badge">✓ FREE</span>
                             </div>
                             <div class="news-headline">You Won't BELIEVE What This Politician Did! (SHOCKING)</div>
@@ -460,7 +466,7 @@
 
                         <div class="news-item clickbait">
                             <div class="news-header">
-                                <span class="news-source">FreeNewsNow</span>
+                                <span class="news-source">⚡ FreeNewsNow</span>
                                 <span class="access-badge">✓ FREE</span>
                             </div>
                             <div class="news-headline">BREAKING: Unverified claim spreads on social media</div>
@@ -557,8 +563,8 @@
             current: [
                 { value: '76%', label: 'Of quality news is paywalled', type: 'negative' },
                 { value: '$40B', label: 'Lost in news revenue since 2008', type: 'negative' },
-                { value: '68%', label: 'Support public news funding', type: 'positive' },
-                { value: '2.5x', label: 'More misinformation in free content', type: 'neutral' }
+                { value: '2.5x', label: 'More misinformation in free content', type: 'negative' },
+                { value: '68%', label: 'Support public news funding', type: 'positive' }
             ]
         };
 
@@ -569,7 +575,7 @@
                     { value: '76%', label: 'Of quality news is paywalled', type: 'negative' },
                     { value: '$40B', label: 'Lost in news revenue since 2008', type: 'negative' },
                     { value: '0', label: 'Reforms implemented', type: 'neutral' },
-                    { value: '2.5x', label: 'More misinformation in free content', type: 'neutral' }
+                    { value: '2.5x', label: 'More misinformation in free content', type: 'negative' }
                 ];
             } else if (selectedCount === 1) {
                 return [
