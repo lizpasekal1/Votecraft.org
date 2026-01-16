@@ -64,9 +64,16 @@
         }
 
         .cost-demo {
+            background: transparent;
+            border-radius: 12px;
+            padding: 28px;
+        }
+
+        .input-section {
             background: var(--white);
             border-radius: 12px;
             padding: 28px;
+            margin-bottom: 20px;
         }
 
         .cost-demo h4 {
@@ -815,68 +822,70 @@
         </div>
 
         <div class="cost-demo">
-            <h4>Your Income</h4>
-            <div class="income-selector" id="income-selector">
-                <button class="income-btn" data-income="0">
-                    $0
-                    <span class="income-pct">Unemployed</span>
-                </button>
-                <button class="income-btn" data-income="20000">
-                    $10-30K
-                    <span class="income-pct">21% of US</span>
-                </button>
-                <button class="income-btn" data-income="40000">
-                    $30-50K
-                    <span class="income-pct">18% of US</span>
-                </button>
-                <button class="income-btn" data-income="75000">
-                    $50-100K
-                    <span class="income-pct">24% of US</span>
-                </button>
-                <button class="income-btn" data-income="175000">
-                    $100-250K
-                    <span class="income-pct">28% of US</span>
-                </button>
-                <button class="income-btn" data-income="350000">
-                    $250-450K+
-                    <span class="income-pct">9% of US</span>
-                </button>
-            </div>
+            <div class="input-section">
+                <h4>Your Income</h4>
+                <div class="income-selector" id="income-selector">
+                    <button class="income-btn" data-income="0">
+                        $0
+                        <span class="income-pct">Unemployed</span>
+                    </button>
+                    <button class="income-btn" data-income="20000">
+                        $10-30K
+                        <span class="income-pct">21% of US</span>
+                    </button>
+                    <button class="income-btn" data-income="40000">
+                        $30-50K
+                        <span class="income-pct">18% of US</span>
+                    </button>
+                    <button class="income-btn" data-income="75000">
+                        $50-100K
+                        <span class="income-pct">24% of US</span>
+                    </button>
+                    <button class="income-btn" data-income="175000">
+                        $100-250K
+                        <span class="income-pct">28% of US</span>
+                    </button>
+                    <button class="income-btn" data-income="350000">
+                        $250-450K+
+                        <span class="income-pct">9% of US</span>
+                    </button>
+                </div>
 
-            <h4 style="margin-top: 16px;">Your Employment Type</h4>
-            <div class="income-selector" id="employment-selector">
-                <button class="income-btn" data-employment="minimum">
-                    Min. Wage
-                    <span class="income-label">Retail/Service</span>
-                </button>
-                <button class="income-btn" data-employment="gig">
-                    Gig/Contract
-                    <span class="income-label">1099 Worker</span>
-                </button>
-                <button class="income-btn" data-employment="parttime">
-                    Part-Time
-                    <span class="income-label">No Benefits</span>
-                </button>
-                <button class="income-btn" data-employment="fulltime">
-                    Full-Time
-                    <span class="income-label">W-2 + Benefits</span>
-                </button>
-                <button class="income-btn" data-employment="laidoff">
-                    Laid-Off
-                    <span class="income-label">COBRA/Market</span>
-                </button>
-                <button class="income-btn" data-employment="quit">
-                    Quit Job
-                    <span class="income-label">No Benefits</span>
-                </button>
-            </div>
+                <h4 style="margin-top: 16px;">Your Employment Type</h4>
+                <div class="income-selector" id="employment-selector">
+                    <button class="income-btn" data-employment="minimum">
+                        Min. Wage
+                        <span class="income-label">Retail/Service</span>
+                    </button>
+                    <button class="income-btn" data-employment="gig">
+                        Gig/Contract
+                        <span class="income-label">1099 Worker</span>
+                    </button>
+                    <button class="income-btn" data-employment="parttime">
+                        Part-Time
+                        <span class="income-label">No Benefits</span>
+                    </button>
+                    <button class="income-btn" data-employment="fulltime">
+                        Full-Time
+                        <span class="income-label">W-2 + Benefits</span>
+                    </button>
+                    <button class="income-btn" data-employment="laidoff">
+                        Laid-Off
+                        <span class="income-label">COBRA/Market</span>
+                    </button>
+                    <button class="income-btn" data-employment="quit">
+                        Quit Job
+                        <span class="income-label">No Benefits</span>
+                    </button>
+                </div>
 
-            <h4 style="margin-top: 16px;">Your State Type</h4>
-            <div class="state-selector">
-                <select id="state-select">
-                    <option value="expansion">Medicaid Expansion State (41 states + DC)</option>
-                    <option value="non-expansion">Non-Expansion State (TX, FL, GA, etc.)</option>
-                </select>
+                <h4 style="margin-top: 16px;">Your State Type</h4>
+                <div class="state-selector">
+                    <select id="state-select">
+                        <option value="expansion">Medicaid Expansion State (41 states + DC)</option>
+                        <option value="non-expansion">Non-Expansion State (TX, FL, GA, etc.)</option>
+                    </select>
+                </div>
             </div>
 
             <div class="income-visual">
