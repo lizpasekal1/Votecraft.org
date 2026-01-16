@@ -213,6 +213,9 @@ class SCOTUSDemo {
     }
 
     init() {
+        // Set initial value to commerce
+        this.clauseSelect.value = 'commerce';
+
         this.clauseSelect.addEventListener('change', () => this.handleClauseChange());
 
         this.eraButtons.forEach(btn => {
