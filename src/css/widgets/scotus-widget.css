@@ -210,9 +210,9 @@ body {
     font-size: 0.9rem;
     font-weight: 600;
     font-family: inherit;
-    background: var(--scotus-background);
-    color: var(--scotus-text);
-    border: 2px solid var(--scotus-border);
+    background: transparent;
+    color: var(--scotus-primary);
+    border: 2px solid var(--scotus-primary);
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s;
@@ -221,7 +221,7 @@ body {
 }
 
 .era-btn:hover {
-    border-color: var(--scotus-primary);
+    background: rgba(0, 139, 255, 0.1);
 }
 
 .era-btn.active[data-era="early"] {
