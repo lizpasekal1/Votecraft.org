@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         :root {
             --primary: #008BFF;
@@ -32,7 +33,7 @@
 
         body {
             font-family: 'Open Sans', sans-serif;
-            background: white;
+            background: transparent;
             color: var(--text);
             padding: 20px;
             line-height: 1.6;
@@ -176,10 +177,17 @@
             font-size: 0.7rem;
             font-weight: 700;
             display: none;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .paywall-badge .material-icons {
+            font-size: 0.85rem;
+            vertical-align: middle;
         }
 
         .news-item.selected .paywall-badge {
-            display: inline-block;
+            display: inline-flex;
         }
 
         .access-badge {
@@ -229,9 +237,13 @@
 
         .stat-card {
             text-align: center;
-            padding: 12px;
+            padding: 20px 12px;
             border-radius: 8px;
             background: var(--background);
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .stat-label {
@@ -471,7 +483,7 @@
                         <div class="news-item quality">
                             <div class="news-header">
                                 <span class="news-source">📰 New York Times</span>
-                                <span class="paywall-badge">PAYWALL</span>
+                                <span class="paywall-badge"><span class="material-icons">lock</span>PAYWALL</span>
                             </div>
                             <div class="news-headline">In-depth investigation reveals corruption in local government</div>
                             <div class="news-quality">✓ Fact-checked • Multiple sources • Context</div>
@@ -480,7 +492,7 @@
                         <div class="news-item quality">
                             <div class="news-header">
                                 <span class="news-source">📊 Washington Post</span>
-                                <span class="paywall-badge">PAYWALL</span>
+                                <span class="paywall-badge"><span class="material-icons">lock</span>PAYWALL</span>
                             </div>
                             <div class="news-headline">Analysis: Economic policy changes and their long-term impact</div>
                             <div class="news-quality">✓ Expert interviews • Data-driven • Balanced</div>
