@@ -346,6 +346,20 @@
             padding: 20px;
         }
 
+        /* Index fund needs more height for the three-column layout */
+        .stock-item.expanded .stock-detail-chart:has(.index-fund-layout) {
+            max-height: 900px;
+            padding: 0;
+            overflow: visible;
+        }
+
+        /* Fallback for browsers without :has() support */
+        .stock-item.index-fund.expanded .stock-detail-chart {
+            max-height: 900px;
+            padding: 0;
+            overflow: visible;
+        }
+
         .chart-header {
             font-size: 0.9rem;
             font-weight: 600;
@@ -799,6 +813,7 @@
             color: var(--text);
         }
 
+        /* Tablet breakpoint */
         @media (max-width: 968px) {
             .main-grid {
                 grid-template-columns: 1fr;
@@ -813,24 +828,87 @@
             .account-balance {
                 text-align: left;
             }
+
+            .stock-card {
+                grid-template-columns: auto 1fr auto auto auto;
+            }
         }
 
+        /* Mobile breakpoint */
         @media (max-width: 600px) {
             body {
-                padding: 12px;
+                padding: 10px;
             }
 
             .platform-header, .market-panel, .portfolio-panel, .leaderboard-panel, .info-section {
-                padding: 16px;
+                padding: 14px;
+                border-radius: 10px;
             }
 
             .platform-title {
-                font-size: 1.4rem;
+                font-size: 1.3rem;
             }
 
+            .beta-badge {
+                font-size: 0.6rem;
+                padding: 2px 6px;
+            }
+
+            .platform-subtitle {
+                font-size: 0.85rem;
+            }
+
+            .fun-stat {
+                display: block;
+                margin-left: 0;
+                margin-top: 8px;
+                width: fit-content;
+            }
+
+            .balance-amount {
+                font-size: 1.3rem;
+            }
+
+            .news-ticker {
+                padding: 10px 14px;
+            }
+
+            .news-content {
+                font-size: 0.85rem;
+            }
+
+            .panel-header {
+                font-size: 1rem;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            /* Stock card mobile layout */
             .stock-card {
                 grid-template-columns: auto 1fr;
-                gap: 10px;
+                grid-template-rows: auto auto;
+                gap: 8px;
+                padding: 10px;
+            }
+
+            .stock-icon {
+                font-size: 1.6rem;
+                width: 40px;
+                grid-row: span 2;
+                align-self: center;
+            }
+
+            .stock-info {
+                grid-column: 2;
+            }
+
+            .stock-ticker {
+                font-size: 0.9rem;
+            }
+
+            .stock-name {
+                font-size: 0.75rem;
             }
 
             .stock-chart-mini {
@@ -839,67 +917,561 @@
 
             .stock-price {
                 grid-column: 2;
+                grid-row: 2;
                 text-align: left;
+                font-size: 1rem;
+                display: inline;
             }
 
             .stock-change {
                 grid-column: 2;
+                grid-row: 2;
                 text-align: left;
+                font-size: 0.8rem;
+                display: inline;
+                margin-left: 8px;
+            }
+
+            .stock-expand-icon {
+                font-size: 0.8rem;
+            }
+
+            /* Trade section mobile */
+            .stock-detail-chart {
+                padding: 0 12px;
+            }
+
+            .stock-item.expanded .stock-detail-chart {
+                padding: 14px;
+            }
+
+            .stock-trade-section {
+                padding: 0 12px;
+            }
+
+            .stock-item.expanded .stock-trade-section {
+                padding: 14px;
+            }
+
+            .chart-container {
+                height: 160px;
+            }
+
+            .chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+                font-size: 0.85rem;
+            }
+
+            .trade-header {
+                font-size: 0.9rem;
+            }
+
+            .trade-controls {
+                gap: 8px;
+            }
+
+            .trade-btn {
+                padding: 8px;
+                font-size: 0.85rem;
+            }
+
+            .trade-input {
+                padding: 8px 10px;
+                font-size: 0.9rem;
+            }
+
+            .trade-summary {
+                padding: 10px;
+                font-size: 0.85rem;
+            }
+
+            .execute-btn {
+                padding: 12px;
+                font-size: 0.9rem;
+            }
+
+            /* Portfolio mobile */
+            .holding-card {
+                padding: 12px;
+            }
+
+            .holding-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
             }
 
             .holding-stats {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .holding-stat-label {
+                font-size: 0.7rem;
+            }
+
+            .holding-stat-value {
+                font-size: 0.8rem;
+            }
+
+            /* Leaderboard mobile */
+            .contest-info {
+                padding: 12px;
+            }
+
+            .contest-title {
+                font-size: 0.9rem;
+            }
+
+            .contest-prize {
+                font-size: 1.1rem;
+            }
+
+            .contest-time {
+                font-size: 0.75rem;
+            }
+
+            .leaderboard-item {
+                padding: 10px;
                 gap: 8px;
+            }
+
+            .leaderboard-rank {
+                font-size: 1rem;
+                width: 24px;
+            }
+
+            .leaderboard-name {
+                font-size: 0.85rem;
+            }
+
+            .leaderboard-return {
+                font-size: 0.8rem;
+            }
+
+            /* Info section mobile */
+            .info-section h3 {
+                font-size: 1rem;
+            }
+
+            .info-section p {
+                font-size: 0.85rem;
+            }
+
+            .info-section li {
+                font-size: 0.85rem;
+                padding: 6px 0;
+                padding-left: 20px;
+            }
+
+            .empty-portfolio {
+                padding: 24px 14px;
+            }
+
+            .empty-portfolio-icon {
+                font-size: 2.5rem;
             }
         }
 
+        /* Index Fund Layout - Fidelity Style */
+        .index-fund-layout {
+            display: grid;
+            grid-template-columns: 200px 1fr 280px;
+            gap: 24px;
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            background: var(--white);
+        }
+
+        .index-fund-layout .quote-section {
+            border-right: 1px solid var(--border);
+            padding-right: 20px;
+        }
+
+        .quote-section h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .quote-date {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .quote-date .refresh-icon {
+            cursor: pointer;
+            opacity: 0.6;
+        }
+
+        .quote-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .quote-change {
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        .quote-change.positive {
+            color: var(--green);
+        }
+
+        .quote-change.negative {
+            color: var(--red);
+        }
+
+        .quote-details {
+            font-size: 0.85rem;
+        }
+
+        .quote-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .quote-row:last-child {
+            border-bottom: none;
+        }
+
+        .quote-label {
+            color: var(--text-light);
+        }
+
+        .quote-value {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .index-fund-layout .chart-section {
+            padding: 0 20px;
+            border-right: 1px solid var(--border);
+        }
+
+        .chart-section h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 12px;
+        }
+
+        .chart-info-line {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+
+        .index-chart-container {
+            height: 200px;
+            margin-bottom: 12px;
+        }
+
+        .chart-time-selector {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.8rem;
+        }
+
+        .chart-time-btn {
+            padding: 4px 10px;
+            border: 1px solid var(--border);
+            background: var(--white);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .chart-time-btn:first-child {
+            border-radius: 4px 0 0 4px;
+        }
+
+        .chart-time-btn:last-of-type {
+            border-radius: 0 4px 4px 0;
+        }
+
+        .chart-time-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .chart-time-btn:hover:not(.active) {
+            background: rgba(0, 139, 255, 0.05);
+        }
+
+        .chart-freq {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-light);
+            font-size: 0.8rem;
+        }
+
+        .chart-freq select {
+            border: 1px solid var(--border);
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            background: var(--white);
+        }
+
+        /* Holdings Section - Right Column */
+        .holdings-section {
+            padding-left: 0;
+        }
+
+        .holdings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .holdings-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .holdings-title sup {
+            font-size: 0.6rem;
+            color: var(--text-light);
+        }
+
+        .holdings-date {
+            font-size: 0.7rem;
+            color: var(--text-light);
+        }
+
+        .holdings-total {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .holdings-total-text {
+            text-align: right;
+        }
+
+        .holdings-total-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .holdings-total-label {
+            font-size: 0.65rem;
+            color: var(--text-light);
+        }
+
+        /* Donut chart like Fidelity */
+        .donut-chart {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .donut-chart::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            background: var(--white);
+            border-radius: 50%;
+        }
+
+        .holdings-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        .holdings-table th {
+            text-align: left;
+            padding: 6px 4px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            color: var(--text-light);
+            font-size: 0.7rem;
+        }
+
+        .holdings-table th:last-child {
+            text-align: right;
+        }
+
+        .holdings-table td {
+            padding: 6px 4px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .holdings-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .holdings-table tr:hover {
+            background: rgba(0, 139, 255, 0.03);
+        }
+
+        .holding-symbol {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .holding-symbol a {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
+        .holding-symbol a:hover {
+            color: var(--primary-dark);
+        }
+
+        .holding-org-name {
+            color: var(--text);
+            max-width: 140px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .holding-percent {
+            text-align: right;
+            color: var(--text);
+        }
+
+        .holdings-footer {
+            margin-top: 10px;
+            font-size: 0.65rem;
+            color: var(--text-light);
+            line-height: 1.4;
+        }
+
+        /* Responsive for index fund layout */
         @media (max-width: 968px) {
-            .main-grid {
-                grid-template-columns: 1fr;
+            .index-fund-layout {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto auto;
             }
 
-            .header-top {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
+            .index-fund-layout .quote-section {
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                padding-right: 0;
+                padding-bottom: 16px;
             }
 
-            .account-balance {
-                text-align: left;
+            .index-fund-layout .chart-section {
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                padding: 0 0 16px 0;
+            }
+
+            .holdings-section {
+                grid-column: span 2;
             }
         }
 
         @media (max-width: 600px) {
-            body {
-                padding: 12px;
+            .index-fund-layout {
+                grid-template-columns: 1fr;
+                gap: 16px;
+                padding: 14px;
             }
 
-            .platform-header, .market-panel, .portfolio-panel, .leaderboard-panel, .info-section {
-                padding: 16px;
+            .index-fund-layout .quote-section,
+            .index-fund-layout .chart-section {
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                padding: 0 0 16px 0;
+            }
+
+            .holdings-section {
+                grid-column: 1;
+            }
+
+            .quote-price {
+                font-size: 1.3rem;
+            }
+
+            .index-chart-container {
+                height: 160px;
+            }
+
+            .holdings-header {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .holdings-total {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .holdings-table {
+                font-size: 0.75rem;
+            }
+
+            .holding-org-name {
+                max-width: 100px;
+            }
+
+            .donut-chart {
+                width: 40px;
+                height: 40px;
+            }
+
+            .donut-chart::before {
+                width: 24px;
+                height: 24px;
+            }
+        }
+
+        /* Extra small devices */
+        @media (max-width: 380px) {
+            body {
+                padding: 8px;
             }
 
             .platform-title {
-                font-size: 1.4rem;
-            }
-
-            .stock-card {
-                grid-template-columns: auto 1fr;
-                gap: 10px;
-            }
-
-            .stock-price {
-                grid-column: 2;
-                text-align: left;
-            }
-
-            .stock-change {
-                grid-column: 2;
-                text-align: left;
+                font-size: 1.1rem;
             }
 
             .holding-stats {
                 grid-template-columns: 1fr;
-                gap: 8px;
+            }
+
+            .trade-controls {
+                flex-direction: column;
+            }
+
+            .leaderboard-item {
+                flex-wrap: wrap;
+            }
+
+            .leaderboard-return {
+                width: 100%;
+                text-align: right;
+                margin-top: 4px;
             }
         }
     </style>
@@ -1047,7 +1619,7 @@
             },
             {
                 ticker: 'RCV',
-                name: 'Ranked Choice Voting',
+                name: 'Ranked Choice Voting Index',
                 icon: '🗳️',
                 price: 28.75,
                 change: 5.8,
@@ -1056,7 +1628,21 @@
                 dataSource: 'Source: FairVote - Cities & states with RCV',
                 // Number of jurisdictions with RCV
                 historicalData: [8, 12, 18, 25, 34, 42, 53, 62, 75, 89, 105, 124],
-                labels: ['2019', '2020', '2021', '2022', '2023', '2024']
+                labels: ['2019', '2020', '2021', '2022', '2023', '2024'],
+                isIndexFund: true,
+                holdingsDate: 'Jan-2025',
+                holdings: [
+                    { symbol: 'FVOTE', name: 'FairVote', url: 'https://www.fairvote.org', percent: 18.5 },
+                    { symbol: 'RCVRC', name: 'RCV Resource Center', url: 'https://www.rcvresources.org', percent: 12.3 },
+                    { symbol: 'UNITE', name: 'Unite America', url: 'https://www.uniteamerica.org', percent: 10.8 },
+                    { symbol: 'RPUS', name: 'Represent Us', url: 'https://represent.us', percent: 9.2 },
+                    { symbol: 'RTVUS', name: 'Rank The Vote', url: 'https://www.rankthevote.us', percent: 8.1 },
+                    { symbol: 'ELRFM', name: 'Election Reformers Network', url: 'https://electionreformers.org', percent: 7.4 },
+                    { symbol: 'OPNPM', name: 'Open Primaries', url: 'https://www.openprimaries.org', percent: 6.2 },
+                    { symbol: 'ISSVO', name: 'Issue Voter', url: 'https://issuevoter.org', percent: 5.8 },
+                    { symbol: 'RCVWK', name: 'RCV Wikipedia', url: 'https://en.wikipedia.org/wiki/Ranked-choice_voting', percent: 4.9 },
+                    { symbol: 'BLPRC', name: 'Ballotpedia RCV', url: 'https://ballotpedia.org/Ranked-choice_voting_(RCV)', percent: 4.1 }
+                ]
             },
             {
                 ticker: 'CFR',
@@ -1153,10 +1739,171 @@
             renderPortfolio();
         }
 
+        function renderIndexHoldings(stock) {
+            if (!stock.holdings) return '';
+
+            const totalPercent = stock.holdings.reduce((sum, h) => sum + h.percent, 0);
+            const holdingsRows = stock.holdings.map(h => `
+                <tr>
+                    <td class="holding-symbol"><a href="${h.url}" target="_blank" rel="noopener noreferrer">${h.symbol}</a></td>
+                    <td class="holding-org-name">${h.name}</td>
+                    <td class="holding-percent">${h.percent.toFixed(2)}%</td>
+                </tr>
+            `).join('');
+
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+            const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short' });
+            const changeAmt = (stock.price * stock.change / 100).toFixed(2);
+            const changeSign = stock.change >= 0 ? '+' : '';
+            const prevPrice = (stock.price / (1 + stock.change / 100)).toFixed(2);
+
+            return `
+                <div class="index-fund-layout">
+                    <!-- Quote Section - Left Column -->
+                    <div class="quote-section">
+                        <h3>Quote</h3>
+                        <div class="quote-date">As of ${dateStr} ${timeStr} <span class="refresh-icon">↻</span></div>
+
+                        <div class="quote-price">$${stock.price.toFixed(2)}</div>
+                        <div class="quote-change ${stock.change >= 0 ? 'positive' : 'negative'}">
+                            ${changeSign}$${Math.abs(changeAmt)} (${changeSign}${stock.change.toFixed(2)}%)
+                        </div>
+
+                        <div class="quote-details">
+                            <div class="quote-row">
+                                <span class="quote-label">Previous NAV</span>
+                                <span class="quote-value">$${prevPrice}</span>
+                            </div>
+                            <div class="quote-row">
+                                <span class="quote-label">Previous NAV date</span>
+                                <span class="quote-value">${stock.holdingsDate}</span>
+                            </div>
+                            <div class="quote-row">
+                                <span class="quote-label">30 day yield</span>
+                                <span class="quote-value">--</span>
+                            </div>
+                            <div class="quote-row">
+                                <span class="quote-label">Offer price (POP)</span>
+                                <span class="quote-value">$${stock.price.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart Section - Center Column -->
+                    <div class="chart-section">
+                        <h3>Chart</h3>
+                        <div class="chart-info-line">
+                            ${stock.labels[stock.labels.length - 1]} &nbsp; O: ${stock.historicalData[stock.historicalData.length - 2]} &nbsp; H: ${Math.max(...stock.historicalData)} &nbsp; L: ${Math.min(...stock.historicalData)} &nbsp; C: ${stock.historicalData[stock.historicalData.length - 1]}
+                        </div>
+                        <div class="index-chart-container">
+                            <canvas id="index-chart-${stock.ticker}"></canvas>
+                        </div>
+                        <div class="chart-time-selector">
+                            <button class="chart-time-btn">5D</button>
+                            <button class="chart-time-btn">1M</button>
+                            <button class="chart-time-btn">3M</button>
+                            <button class="chart-time-btn active">1Y</button>
+                            <button class="chart-time-btn">5Y</button>
+                            <div class="chart-freq">
+                                Freq <select><option>Daily</option><option>Weekly</option><option>Monthly</option></select> ▾
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Holdings Section - Right Column -->
+                    <div class="holdings-section">
+                        <div class="holdings-header">
+                            <div>
+                                <div class="holdings-title">Top 10 holdings<sup>§</sup></div>
+                                <div class="holdings-date">As of ${stock.holdingsDate}</div>
+                            </div>
+                            <div class="holdings-total">
+                                <div class="holdings-total-text">
+                                    <div class="holdings-total-value">${totalPercent.toFixed(2)}%</div>
+                                    <div class="holdings-total-label">of total portfolio</div>
+                                </div>
+                                <div class="donut-chart" style="background: conic-gradient(var(--primary) 0% ${totalPercent}%, var(--border) ${totalPercent}% 100%);"></div>
+                            </div>
+                        </div>
+
+                        <table class="holdings-table">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Name</th>
+                                    <th>Percent</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${holdingsRows}
+                            </tbody>
+                        </table>
+
+                        <div class="holdings-footer">
+                            ${stock.holdings.length} holdings as of ${stock.holdingsDate}<br>
+                            ${stock.holdings.length} organizations tracked
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Create index fund chart after expansion
+        function createIndexFundChart(ticker, stock) {
+            const canvas = document.getElementById('index-chart-' + ticker);
+            if (!canvas || canvas.chart) return;
+
+            const ctx = canvas.getContext('2d');
+            const isUp = stock.change >= 0;
+
+            canvas.chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: stock.labels,
+                    datasets: [{
+                        label: stock.metric,
+                        data: stock.historicalData,
+                        borderColor: '#6b7280',
+                        backgroundColor: 'rgba(107, 114, 128, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        pointHoverRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(50, 55, 60, 0.95)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            padding: 10,
+                            displayColors: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#666', font: { size: 10 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                            ticks: { color: '#666', font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
         function renderStocks() {
             const stockList = document.getElementById('stock-list');
             stockList.innerHTML = stocks.map(stock => `
-                <div class="stock-item" id="stock-item-${stock.ticker}">
+                <div class="stock-item ${stock.isIndexFund ? 'index-fund' : ''}" id="stock-item-${stock.ticker}">
                     <div class="stock-card" onclick="toggleStock('${stock.ticker}')">
                         <div class="stock-icon">${stock.icon}</div>
                         <div class="stock-info">
@@ -1184,6 +1931,7 @@
                         <div class="chart-container">
                             <canvas id="chart-${stock.ticker}"></canvas>
                         </div>
+                        ${stock.isIndexFund ? renderIndexHoldings(stock) : ''}
                     </div>
 
                     <div class="stock-trade-section">
@@ -1288,6 +2036,10 @@
 
                 // Create chart if not already created
                 setTimeout(() => {
+                    // For index funds, create the special index fund chart
+                    if (stock.isIndexFund) {
+                        createIndexFundChart(ticker, stock);
+                    }
                     const canvas = document.getElementById(`chart-${ticker}`);
                     if (canvas && !canvas.chart) {
                         createStockChart(ticker, stock);

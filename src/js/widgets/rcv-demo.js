@@ -9,6 +9,11 @@ class RCVDemo {
         this.castVoteBtn = document.getElementById('cast-vote-btn');
         this.resetBtn = document.getElementById('reset-demo-btn');
         this.resultsDisplay = document.getElementById('results-display');
+        this.rcvModeBtn = document.getElementById('rcv-mode-btn');
+        this.wtaModeBtn = document.getElementById('wta-mode-btn');
+
+        // Voting mode: 'rcv' or 'wta' (winner take all)
+        this.votingMode = 'rcv';
 
         // Simulated voter preferences (other voters' ballots)
         this.simulatedVoters = this.generateSimulatedVoters();
@@ -20,33 +25,50 @@ class RCVDemo {
         this.setupDragAndDrop();
         this.castVoteBtn.addEventListener('click', () => this.runElection());
         this.resetBtn.addEventListener('click', () => this.resetDemo());
+
+        // Mode toggle buttons
+        this.rcvModeBtn.addEventListener('click', () => this.setMode('rcv'));
+        this.wtaModeBtn.addEventListener('click', () => this.setMode('wta'));
+    }
+
+    setMode(mode) {
+        this.votingMode = mode;
+        this.rcvModeBtn.classList.toggle('active', mode === 'rcv');
+        this.wtaModeBtn.classList.toggle('active', mode === 'wta');
+        this.resetDemo();
     }
 
     generateSimulatedVoters() {
-        // Generate 99 other voters with various preferences
-        // This creates a scenario where RCV matters (no majority winner in round 1)
+        // Generate simulated voters with preferences
+        // This creates a "Fun Food Coalition" split scenario (like Bernie/Warren in 2020)
+        // Pi Za Pies + Pete Zah together have majority support but split the vote
         const voters = [];
-        const candidates = ['Pizza Party', 'Taco Team', 'Burger Brigade', 'Sushi Squad'];
 
-        // Create voting blocs with different preferences
-        // Pizza supporters (30 voters)
+        // FUN FOOD COALITION (combined 54% - but split between two candidates!)
+        // Pi Za Pies supporters (27 voters) - prefer Pete Zah as 2nd choice
+        for (let i = 0; i < 27; i++) {
+            voters.push(['Pi Za Pies', 'Pete Zah', 'Anita Bath', 'Crystal Ball', 'Frank N. Stein']);
+        }
+
+        // Pete Zah supporters (27 voters) - prefer Pi Za Pies as 2nd choice
+        for (let i = 0; i < 27; i++) {
+            voters.push(['Pete Zah', 'Pi Za Pies', 'Anita Bath', 'Crystal Ball', 'Frank N. Stein']);
+        }
+
+        // OTHER CANDIDATES (combined 45%)
+        // Frank N. Stein supporters (30 voters) - the "moderate" who wins WTA
         for (let i = 0; i < 30; i++) {
-            voters.push(['Pizza Party', 'Burger Brigade', 'Taco Team', 'Sushi Squad']);
+            voters.push(['Frank N. Stein', 'Anita Bath', 'Crystal Ball', 'Pi Za Pies', 'Pete Zah']);
         }
 
-        // Taco supporters (25 voters)
-        for (let i = 0; i < 25; i++) {
-            voters.push(['Taco Team', 'Pizza Party', 'Sushi Squad', 'Burger Brigade']);
+        // Anita Bath supporters (10 voters)
+        for (let i = 0; i < 10; i++) {
+            voters.push(['Anita Bath', 'Frank N. Stein', 'Crystal Ball', 'Pi Za Pies', 'Pete Zah']);
         }
 
-        // Burger supporters (24 voters)
-        for (let i = 0; i < 24; i++) {
-            voters.push(['Burger Brigade', 'Taco Team', 'Pizza Party', 'Sushi Squad']);
-        }
-
-        // Sushi supporters (20 voters)
-        for (let i = 0; i < 20; i++) {
-            voters.push(['Sushi Squad', 'Taco Team', 'Burger Brigade', 'Pizza Party']);
+        // Crystal Ball supporters (5 voters)
+        for (let i = 0; i < 5; i++) {
+            voters.push(['Crystal Ball', 'Frank N. Stein', 'Anita Bath', 'Pete Zah', 'Pi Za Pies']);
         }
 
         return voters;
@@ -159,11 +181,15 @@ class RCVDemo {
             item.classList.add('locked');
         });
 
-        this.animateElection(allBallots);
+        if (this.votingMode === 'rcv') {
+            this.animateElection(allBallots);
+        } else {
+            this.animateWTAElection(allBallots);
+        }
     }
 
     async animateElection(ballots) {
-        const candidates = ['Pizza Party', 'Taco Team', 'Burger Brigade', 'Sushi Squad'];
+        const candidates = ['Pi Za Pies', 'Frank N. Stein', 'Anita Bath', 'Crystal Ball', 'Pete Zah'];
         let activeCandidates = [...candidates];
         let currentBallots = ballots.map(b => [...b]);
         let round = 1;
@@ -273,7 +299,19 @@ class RCVDemo {
             }).join('');
 
             roundDiv.innerHTML += barsHtml;
-            roundDiv.innerHTML += `<p class="round-note">No majority yet! ${loser} is eliminated, and their votes transfer to next choices.</p>`;
+
+            const loserVotes = counts[loser];
+            const loserPercent = (loserVotes / totalVotes * 100).toFixed(1);
+            const currentLeaderVotes = counts[sortedCandidates[0]];
+            const votesShort = majorityNeeded - currentLeaderVotes;
+
+            roundDiv.innerHTML += `
+                <div class="round-explanation">
+                    <p class="round-note"><strong>No winner yet!</strong> The leader has ${currentLeaderVotes} votes but needs ${majorityNeeded} to win (${votesShort} more needed).</p>
+                    <p class="round-note">${this.getCandidateIcon(loser)} <strong>${loser}</strong> had the fewest votes (${loserVotes} votes, ${loserPercent}%) and is eliminated.</p>
+                    <p class="round-note">The ${loserVotes} voters who ranked ${loser} first will now have their votes count toward their <em>next choice</em> candidate instead.</p>
+                </div>
+            `;
             roundsContainer.appendChild(roundDiv);
 
             // Animate bars
@@ -289,12 +327,123 @@ class RCVDemo {
         }
     }
 
+    async animateWTAElection(ballots) {
+        const candidates = ['Pi Za Pies', 'Frank N. Stein', 'Anita Bath', 'Crystal Ball', 'Pete Zah'];
+        const totalVotes = ballots.length;
+        const majorityNeeded = Math.floor(totalVotes / 2) + 1;
+
+        // Count only first-choice votes (Winner Take All)
+        const counts = {};
+        candidates.forEach(c => counts[c] = 0);
+
+        ballots.forEach(ballot => {
+            const firstChoice = ballot[0];
+            if (candidates.includes(firstChoice)) {
+                counts[firstChoice]++;
+            }
+        });
+
+        // Sort by votes
+        const sortedCandidates = [...candidates].sort((a, b) => counts[b] - counts[a]);
+        const winner = sortedCandidates[0];
+        const winnerVotes = counts[winner];
+        const winnerPercent = (winnerVotes / totalVotes * 100).toFixed(1);
+
+        this.resultsDisplay.innerHTML = `
+            <div class="election-info">
+                <p><strong>Total Voters:</strong> ${totalVotes} (including you!)</p>
+                <p><strong>Majority Needed:</strong> ${majorityNeeded} votes (50%+1)</p>
+            </div>
+            <div id="rounds-container"></div>
+        `;
+
+        const roundsContainer = document.getElementById('rounds-container');
+
+        // Show results
+        const resultsDiv = document.createElement('div');
+        resultsDiv.className = 'round-result';
+        resultsDiv.innerHTML = `<h4>Final Results</h4>`;
+
+        const barsHtml = sortedCandidates.map(candidate => {
+            const votes = counts[candidate];
+            const percentage = (votes / totalVotes * 100).toFixed(1);
+            const icon = this.getCandidateIcon(candidate);
+            const isWinner = candidate === winner;
+            return `
+                <div class="vote-bar ${isWinner ? 'winner' : ''}">
+                    <div class="bar-label">
+                        <span>${icon} ${candidate}</span>
+                        <span>${votes} votes (${percentage}%)</span>
+                    </div>
+                    <div class="bar-track">
+                        <div class="bar-fill" style="width: 0%" data-width="${percentage}"></div>
+                        ${isWinner ? '<span class="winner-badge">WINNER!</span>' : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        resultsDiv.innerHTML += barsHtml;
+
+        // Add explanation about vote splitting
+        const hasMajority = winnerVotes >= majorityNeeded;
+
+        // Calculate Fun Food Coalition combined votes
+        const funFoodVotes = counts['Pi Za Pies'] + counts['Pete Zah'];
+        const funFoodPercent = (funFoodVotes / totalVotes * 100).toFixed(1);
+
+        const explanationHtml = hasMajority ? `
+            <div class="round-explanation">
+                <p class="round-note"><strong>${this.getCandidateIcon(winner)} ${winner} wins with a majority!</strong></p>
+                <p class="round-note">With ${winnerVotes} votes (${winnerPercent}%), they have more than 50% support.</p>
+            </div>
+        ` : `
+            <div class="round-explanation wta-warning">
+                <p class="round-note"><strong>⚠️ ${this.getCandidateIcon(winner)} ${winner} wins WITHOUT a majority!</strong></p>
+                <p class="round-note">With only ${winnerVotes} votes (${winnerPercent}%), they won even though <strong>${totalVotes - winnerVotes} voters (${(100 - winnerPercent).toFixed(1)}%) preferred someone else</strong>.</p>
+            </div>
+            <div class="vote-split-analysis">
+                <h4>🍕 The Sliced Campaigns</h4>
+                <p>If <strong>Pi Za Pies</strong> and <strong>Pete Zah</strong> were one candidate, they'd have:</p>
+                <div class="coalition-bar">
+                    <div class="coalition-fill" style="width: ${funFoodPercent}%"></div>
+                    <span class="coalition-label">${funFoodVotes} votes (${funFoodPercent}%)</span>
+                </div>
+                <p class="split-conclusion">That's <strong>${funFoodVotes > winnerVotes ? 'MORE' : 'fewer'}</strong> than ${winner}'s ${winnerVotes} votes! The similar candidates split the "pizza lover" vote, letting ${winner} win with just ${winnerPercent}%.</p>
+                <p class="rcv-note"><em>With Ranked Choice Voting, Pi Za Pies and Pete Zah voters' second choices would count, ensuring the winner has true majority support.</em></p>
+            </div>
+        `;
+
+        resultsDiv.innerHTML += explanationHtml;
+        roundsContainer.appendChild(resultsDiv);
+
+        // Animate bars
+        await this.delay(100);
+        resultsDiv.querySelectorAll('.bar-fill').forEach(bar => {
+            bar.style.width = bar.dataset.width + '%';
+        });
+
+        // Show winner message
+        await this.delay(800);
+        const winnerMessage = document.createElement('div');
+        winnerMessage.className = hasMajority ? 'winner-message' : 'winner-message wta-no-majority';
+        winnerMessage.innerHTML = hasMajority ? `
+            <h3>${this.getCandidateIcon(winner)} ${winner} Wins!</h3>
+            <p>With ${winnerVotes} votes (${winnerPercent}%), ${winner} has a true majority!</p>
+        ` : `
+            <h3>${this.getCandidateIcon(winner)} ${winner} Wins...</h3>
+            <p>But with only ${winnerPercent}% of the vote. Most voters wanted someone else!</p>
+        `;
+        roundsContainer.appendChild(winnerMessage);
+    }
+
     getCandidateIcon(candidate) {
         const icons = {
-            'Pizza Party': '🍕',
-            'Taco Team': '🌮',
-            'Burger Brigade': '🍔',
-            'Sushi Squad': '🍣'
+            'Pi Za Pies': '🍕',
+            'Frank N. Stein': '🧟',
+            'Anita Bath': '🛁',
+            'Crystal Ball': '🔮',
+            'Pete Zah': '🍕'
         };
         return icons[candidate] || '👤';
     }
