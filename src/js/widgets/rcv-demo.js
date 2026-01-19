@@ -1,6 +1,6 @@
 /**
  * Rank Choice Voting Interactive Demo
- * Simulates an RCV election with drag-and-drop ballot ranking
+ * Simulates an RCV election with tap-to-rank ballot
  */
 
 class RCVDemo {
@@ -15,6 +15,9 @@ class RCVDemo {
         // Voting mode: 'rcv' or 'wta' (winner take all)
         this.votingMode = 'rcv';
 
+        // Track user's ranking selections
+        this.userRankings = [];
+
         // Simulated voter preferences (other voters' ballots)
         this.simulatedVoters = this.generateSimulatedVoters();
 
@@ -22,7 +25,7 @@ class RCVDemo {
     }
 
     init() {
-        this.setupDragAndDrop();
+        this.setupTapToRank();
         this.castVoteBtn.addEventListener('click', () => this.runElection());
         this.resetBtn.addEventListener('click', () => this.resetDemo());
 
@@ -74,110 +77,79 @@ class RCVDemo {
         return voters;
     }
 
-    setupDragAndDrop() {
+    setupTapToRank() {
         const items = this.candidateList.querySelectorAll('.candidate-item');
-        let draggedItem = null;
 
+        // Initialize all rank badges as empty
         items.forEach(item => {
-            item.addEventListener('dragstart', (e) => {
-                draggedItem = item;
-                item.classList.add('dragging');
-                e.dataTransfer.effectAllowed = 'move';
-            });
+            item.querySelector('.rank-badge').textContent = '';
+            item.classList.add('unranked');
+            item.removeAttribute('draggable');
 
-            item.addEventListener('dragend', () => {
-                item.classList.remove('dragging');
-                draggedItem = null;
-                this.updateRankBadges();
-            });
-
-            item.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-            });
-
-            item.addEventListener('dragenter', (e) => {
-                e.preventDefault();
-                if (item !== draggedItem) {
-                    item.classList.add('drag-over');
-                }
-            });
-
-            item.addEventListener('dragleave', () => {
-                item.classList.remove('drag-over');
-            });
-
-            item.addEventListener('drop', (e) => {
-                e.preventDefault();
-                item.classList.remove('drag-over');
-
-                if (item !== draggedItem) {
-                    const allItems = [...this.candidateList.querySelectorAll('.candidate-item')];
-                    const draggedIdx = allItems.indexOf(draggedItem);
-                    const targetIdx = allItems.indexOf(item);
-
-                    if (draggedIdx < targetIdx) {
-                        item.parentNode.insertBefore(draggedItem, item.nextSibling);
-                    } else {
-                        item.parentNode.insertBefore(draggedItem, item);
-                    }
-                }
-            });
-
-            // Touch support for mobile
-            item.addEventListener('touchstart', (e) => {
-                draggedItem = item;
-                item.classList.add('dragging');
-            });
-
-            item.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                const touch = e.touches[0];
-                const target = document.elementFromPoint(touch.clientX, touch.clientY);
-                if (target && target.classList.contains('candidate-item') && target !== draggedItem) {
-                    const allItems = [...this.candidateList.querySelectorAll('.candidate-item')];
-                    const draggedIdx = allItems.indexOf(draggedItem);
-                    const targetIdx = allItems.indexOf(target);
-
-                    if (draggedIdx < targetIdx) {
-                        target.parentNode.insertBefore(draggedItem, target.nextSibling);
-                    } else {
-                        target.parentNode.insertBefore(draggedItem, target);
-                    }
-                }
-            });
-
-            item.addEventListener('touchend', () => {
-                item.classList.remove('dragging');
-                draggedItem = null;
-                this.updateRankBadges();
-            });
+            item.addEventListener('click', () => this.handleCandidateClick(item));
         });
     }
 
-    updateRankBadges() {
+    handleCandidateClick(item) {
+        if (item.classList.contains('locked')) return;
+
+        const candidate = item.dataset.candidate;
+        const currentRankIndex = this.userRankings.indexOf(candidate);
+
+        if (currentRankIndex !== -1) {
+            // Already ranked - remove this ranking and all after it
+            this.userRankings = this.userRankings.slice(0, currentRankIndex);
+        } else {
+            // Not ranked yet - add to rankings
+            this.userRankings.push(candidate);
+        }
+
+        this.updateRankDisplay();
+    }
+
+    updateRankDisplay() {
         const items = this.candidateList.querySelectorAll('.candidate-item');
-        items.forEach((item, index) => {
-            item.querySelector('.rank-badge').textContent = index + 1;
+
+        items.forEach(item => {
+            const candidate = item.dataset.candidate;
+            const rankIndex = this.userRankings.indexOf(candidate);
+            const badge = item.querySelector('.rank-badge');
+
+            if (rankIndex !== -1) {
+                badge.textContent = rankIndex + 1;
+                item.classList.remove('unranked');
+                item.classList.add('ranked');
+            } else {
+                badge.textContent = '';
+                item.classList.remove('ranked');
+                item.classList.add('unranked');
+            }
         });
     }
 
     getUserBallot() {
-        const items = this.candidateList.querySelectorAll('.candidate-item');
-        return [...items].map(item => item.dataset.candidate);
+        // If user hasn't ranked all candidates, fill in remaining randomly
+        const allCandidates = ['Pi Za Pies', 'Frank N. Stein', 'Anita Bath', 'Crystal Ball', 'Pete Zah'];
+        const unranked = allCandidates.filter(c => !this.userRankings.includes(c));
+        return [...this.userRankings, ...unranked];
     }
 
     runElection() {
+        // Must rank at least first choice
+        if (this.userRankings.length === 0) {
+            alert('Please tap at least one candidate to rank them!');
+            return;
+        }
+
         const userBallot = this.getUserBallot();
         const allBallots = [...this.simulatedVoters, userBallot];
 
         this.castVoteBtn.style.display = 'none';
         this.resetBtn.style.display = 'inline-block';
 
-        // Disable dragging
+        // Lock candidates
         const items = this.candidateList.querySelectorAll('.candidate-item');
         items.forEach(item => {
-            item.draggable = false;
             item.classList.add('locked');
         });
 
@@ -481,11 +453,15 @@ class RCVDemo {
         // Check if we should switch to WTA mode (when "Winner Take All Demo" button was clicked after RCV)
         const switchToWTA = !switchToRCV && this.votingMode === 'rcv' && this.resetBtn.style.display !== 'none';
 
-        // Re-enable dragging
+        // Reset rankings
+        this.userRankings = [];
+
+        // Re-enable clicking and reset display
         const items = this.candidateList.querySelectorAll('.candidate-item');
         items.forEach(item => {
-            item.draggable = true;
-            item.classList.remove('locked');
+            item.classList.remove('locked', 'ranked');
+            item.classList.add('unranked');
+            item.querySelector('.rank-badge').textContent = '';
         });
 
         // Reset button text and styling
