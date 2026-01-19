@@ -1,0 +1,637 @@
+<!--
+  RCV STORY WIDGET - "Why RCV Matters"
+  Interactive storytelling about Winner-Take-All vs Ranked Choice Voting
+-->
+
+<style>
+  .rcv-story-widget {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    color: #fff;
+  }
+
+  .rcv-story-widget * {
+    box-sizing: border-box;
+  }
+
+  .widget-title {
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #fff;
+  }
+
+  .widget-subtitle {
+    text-align: center;
+    font-size: 1rem;
+    color: #a0aec0;
+    margin-bottom: 2rem;
+  }
+
+  /* Progress Steps */
+  .progress-steps {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .step-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #4a5568;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .step-dot.active {
+    background: #10b981;
+    transform: scale(1.3);
+  }
+
+  .step-dot.completed {
+    background: #10b981;
+  }
+
+  /* Stages Container */
+  .stages-container {
+    position: relative;
+    min-height: 450px;
+  }
+
+  .stage {
+    display: none;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .stage.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Problem Cards */
+  .problem-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .problem-card {
+    background: linear-gradient(145deg, #742a2a 0%, #4a1c1c 100%);
+    border: 2px solid #fc8181;
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.4s ease;
+  }
+
+  .problem-card.reveal {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .problem-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .problem-text {
+    color: #feb2b2;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .problem-text strong {
+    color: #fff;
+  }
+
+  /* Solution Cards */
+  .solution-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .solution-card {
+    background: linear-gradient(145deg, #276749 0%, #1a4731 100%);
+    border: 2px solid #68d391;
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.4s ease;
+  }
+
+  .solution-card.reveal {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .solution-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .solution-text {
+    color: #9ae6b4;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .solution-text strong {
+    color: #fff;
+  }
+
+  /* Section Headers */
+  .section-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-header h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .section-header.problem h3 {
+    color: #fc8181;
+  }
+
+  .section-header.solution h3 {
+    color: #68d391;
+  }
+
+  .section-header p {
+    color: #a0aec0;
+    font-size: 0.95rem;
+  }
+
+  /* Comparison Stage */
+  .comparison-container {
+    padding: 1rem;
+  }
+
+  .comparison-panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .comparison-panel {
+    border-radius: 12px;
+    padding: 1.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.5s ease;
+  }
+
+  .comparison-panel.reveal {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .comparison-panel.wta {
+    background: linear-gradient(145deg, #742a2a 0%, #4a1c1c 100%);
+    border: 2px solid #fc8181;
+  }
+
+  .comparison-panel.rcv {
+    background: linear-gradient(145deg, #276749 0%, #1a4731 100%);
+    border: 2px solid #68d391;
+  }
+
+  .panel-header {
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  .wta .panel-header {
+    color: #feb2b2;
+  }
+
+  .rcv .panel-header {
+    color: #9ae6b4;
+  }
+
+  .panel-icon {
+    font-size: 2.5rem;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  .panel-points {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .panel-points li {
+    padding: 0.5rem 0;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .wta .panel-points li {
+    color: #fecaca;
+  }
+
+  .rcv .panel-points li {
+    color: #c6f6d5;
+  }
+
+  /* Final Message */
+  .final-stage {
+    text-align: center;
+    padding: 1.5rem;
+  }
+
+  .final-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+
+  .final-message {
+    background: linear-gradient(145deg, #276749 0%, #1a4731 100%);
+    border: 2px solid #68d391;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-top: 1.5rem;
+  }
+
+  .final-message h3 {
+    color: #9ae6b4;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .final-message p {
+    color: #c6f6d5;
+    line-height: 1.8;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+
+  .final-message p:last-child {
+    margin-bottom: 0;
+  }
+
+  .final-message strong {
+    color: #fff;
+  }
+
+  .heart-emoji {
+    color: #fc8181;
+  }
+
+  /* CTA Button */
+  .cta-section {
+    text-align: center;
+    margin-top: 1.5rem;
+  }
+
+  .cta-btn {
+    display: inline-block;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+
+  .cta-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+  }
+
+  /* Navigation */
+  .nav-controls {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .nav-btn {
+    padding: 0.75rem 2rem;
+    border: 2px solid #10b981;
+    background: transparent;
+    color: #10b981;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .nav-btn:hover {
+    background: #10b981;
+    color: #1a1a2e;
+  }
+
+  .nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .nav-btn.primary {
+    background: #10b981;
+    color: #1a1a2e;
+  }
+
+  .nav-btn.primary:hover {
+    background: #059669;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .comparison-panels {
+      grid-template-columns: 1fr;
+    }
+
+    .widget-title {
+      font-size: 1.5rem;
+    }
+
+    .rcv-story-widget {
+      padding: 1.5rem;
+    }
+  }
+</style>
+
+<div class="rcv-story-widget">
+  <h2 class="widget-title">Why Ranked Choice Voting?</h2>
+  <p class="widget-subtitle">Understanding the problem with Winner-Take-All elections</p>
+
+  <!-- Progress Indicator -->
+  <div class="progress-steps">
+    <div class="step-dot active" data-step="0"></div>
+    <div class="step-dot" data-step="1"></div>
+    <div class="step-dot" data-step="2"></div>
+    <div class="step-dot" data-step="3"></div>
+  </div>
+
+  <div class="stages-container">
+
+    <!-- Stage 1: The Problem with Winner-Take-All -->
+    <div class="stage active" data-stage="0">
+      <div class="section-header problem">
+        <h3>&#128165; Winner-Take-All is Toxic &#128165;</h3>
+        <p>Here's what's wrong with our current voting system...</p>
+      </div>
+      <div class="problem-grid">
+        <div class="problem-card" data-delay="0">
+          <span class="problem-icon">&#128148;</span>
+          <p class="problem-text">It elects someone <strong>most don't want</strong>, simply because similar awesome candidates split votes. &#128542;</p>
+        </div>
+        <div class="problem-card" data-delay="1">
+          <span class="problem-icon">&#128200;</span>
+          <p class="problem-text">Winners represent the <strong>lowest-minority</strong> in a two party system. &#129324;</p>
+        </div>
+        <div class="problem-card" data-delay="2">
+          <span class="problem-icon">&#128566;</span>
+          <p class="problem-text">The system <strong>discourages leaders</strong> from raising new ideas or challenging their own party, out of fear they'll split/divide support. &#128556;</p>
+        </div>
+        <div class="problem-card" data-delay="3">
+          <span class="problem-icon">&#9762;&#65039;</span>
+          <p class="problem-text">This fuels the <strong>polarized negativity</strong> we see today. &#128545;&#129324;&#128548;</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage 2: Why RCV is Better -->
+    <div class="stage" data-stage="1">
+      <div class="section-header solution">
+        <h3>&#11088; RCV is Stellar &#11088;</h3>
+        <p>Here's why Ranked Choice Voting fixes these problems...</p>
+      </div>
+      <div class="solution-grid">
+        <div class="solution-card" data-delay="0">
+          <span class="solution-icon">&#128230;</span>
+          <p class="solution-text">If your first choice can't win, <strong>your vote isn't trashed</strong>&#8212;it moves to your next preference. &#127881;</p>
+        </div>
+        <div class="solution-card" data-delay="1">
+          <span class="solution-icon">&#128101;</span>
+          <p class="solution-text">Elections reflect <strong>who most actually prefer</strong>, not who squeaked by with the lowest-minority. &#129321;</p>
+        </div>
+        <div class="solution-card" data-delay="2">
+          <span class="solution-icon">&#128161;</span>
+          <p class="solution-text">The system <strong>encourages leaders</strong> to raise new ideas without fear of splitting the vote. &#127775;</p>
+        </div>
+        <div class="solution-card" data-delay="3">
+          <span class="solution-icon">&#129309;</span>
+          <p class="solution-text">It rewards <strong>consensus instead of division</strong>, which is a fairer more collaborative outcome. &#10084;&#65039;</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage 3: Side-by-Side Comparison -->
+    <div class="stage" data-stage="2">
+      <div class="section-header">
+        <h3 style="color: #fff;">&#9878;&#65039; The Difference &#9878;&#65039;</h3>
+        <p>See how these systems compare...</p>
+      </div>
+      <div class="comparison-container">
+        <div class="comparison-panels">
+          <div class="comparison-panel wta" data-delay="0">
+            <div class="panel-icon">&#128078;</div>
+            <div class="panel-header">Winner-Take-All</div>
+            <ul class="panel-points">
+              <li>&#128148; Vote splitting elects unpopular winners</li>
+              <li>&#128465;&#65039; Your vote is wasted if your candidate loses</li>
+              <li>&#129324; Encourages negative campaigning</li>
+              <li>&#128274; Forces two-party dominance</li>
+              <li>&#128100; Winners can win with tiny minorities</li>
+            </ul>
+          </div>
+          <div class="comparison-panel rcv" data-delay="1">
+            <div class="panel-icon">&#128077;</div>
+            <div class="panel-header">Ranked Choice Voting</div>
+            <ul class="panel-points">
+              <li>&#127881; Similar candidates don't split the vote</li>
+              <li>&#128499;&#65039; Your vote always counts for someone</li>
+              <li>&#129309; Rewards coalition-building</li>
+              <li>&#127908; More voices, more choices</li>
+              <li>&#128101; Winners need broad support</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage 4: Call to Action -->
+    <div class="stage" data-stage="3">
+      <div class="final-stage">
+        <div class="final-icon">&#127895;&#65039;&#10024;</div>
+        <div class="final-message">
+          <h3>&#127775; A Better Way to Vote &#127775;</h3>
+          <p>
+            With <strong>Ranked Choice Voting</strong>, elections become about finding the candidate <strong>most people can support</strong>&#8212;not just the one who benefits from a divided opposition. &#127942;
+          </p>
+          <p>
+            It's simple: rank your choices &#49;&#65039;&#8419;&#50;&#65039;&#8419;&#51;&#65039;&#8419;. If your first pick can't win, your vote goes to your next choice. <strong>Your voice is always heard!</strong> &#128227;
+          </p>
+          <p>
+            That's how we build a democracy that works for everyone. <span class="heart-emoji">&#10084;&#65039;&#129309;&#127758;</span>
+          </p>
+        </div>
+        <div class="cta-section">
+          <a href="rcv-demo.html" class="cta-btn">&#127918; Try the Interactive Demo &#8594;</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Navigation -->
+  <div class="nav-controls">
+    <button class="nav-btn" id="prevBtn" onclick="changeStage(-1)" disabled>&#8592; Back</button>
+    <button class="nav-btn primary" id="nextBtn" onclick="changeStage(1)">Next &#8594;</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  let currentStage = 0;
+  const totalStages = 4;
+
+  // Initialize first stage animations
+  setTimeout(() => animateCards(0), 300);
+
+  // Change stage
+  window.changeStage = function(direction) {
+    const newStage = currentStage + direction;
+    if (newStage < 0 || newStage >= totalStages) return;
+
+    // Hide current stage
+    document.querySelector(`.stage[data-stage="${currentStage}"]`).classList.remove('active');
+    document.querySelector(`.step-dot[data-step="${currentStage}"]`).classList.remove('active');
+    document.querySelector(`.step-dot[data-step="${currentStage}"]`).classList.add('completed');
+
+    // Show new stage
+    currentStage = newStage;
+    document.querySelector(`.stage[data-stage="${currentStage}"]`).classList.add('active');
+    document.querySelector(`.step-dot[data-step="${currentStage}"]`).classList.add('active');
+    document.querySelector(`.step-dot[data-step="${currentStage}"]`).classList.remove('completed');
+
+    // Update navigation
+    document.getElementById('prevBtn').disabled = currentStage === 0;
+    document.getElementById('nextBtn').textContent = currentStage === totalStages - 1 ? 'Start Over \u21BB' : 'Next \u2192';
+
+    if (currentStage === totalStages - 1) {
+      document.getElementById('nextBtn').onclick = function() {
+        location.reload();
+      };
+    } else {
+      document.getElementById('nextBtn').onclick = function() {
+        changeStage(1);
+      };
+    }
+
+    // Trigger stage-specific animations
+    setTimeout(() => animateCards(currentStage), 300);
+  };
+
+  function animateCards(stage) {
+    // Animate problem cards
+    if (stage === 0) {
+      const cards = document.querySelectorAll('.problem-card');
+      cards.forEach((card, i) => {
+        card.classList.remove('reveal');
+        setTimeout(() => {
+          card.classList.add('reveal');
+        }, i * 200);
+      });
+    }
+
+    // Animate solution cards
+    if (stage === 1) {
+      const cards = document.querySelectorAll('.solution-card');
+      cards.forEach((card, i) => {
+        card.classList.remove('reveal');
+        setTimeout(() => {
+          card.classList.add('reveal');
+        }, i * 200);
+      });
+    }
+
+    // Animate comparison panels
+    if (stage === 2) {
+      const panels = document.querySelectorAll('.comparison-panel');
+      panels.forEach((panel, i) => {
+        panel.classList.remove('reveal');
+        setTimeout(() => {
+          panel.classList.add('reveal');
+        }, i * 300);
+      });
+    }
+  }
+
+  // Click on progress dots to jump
+  document.querySelectorAll('.step-dot').forEach(dot => {
+    dot.addEventListener('click', function() {
+      const targetStage = parseInt(this.dataset.step);
+      const diff = targetStage - currentStage;
+      if (diff !== 0) {
+        // Update all dots
+        document.querySelectorAll('.step-dot').forEach((d, i) => {
+          d.classList.remove('active', 'completed');
+          if (i < targetStage) d.classList.add('completed');
+          if (i === targetStage) d.classList.add('active');
+        });
+
+        // Update stages
+        document.querySelector(`.stage[data-stage="${currentStage}"]`).classList.remove('active');
+        currentStage = targetStage;
+        document.querySelector(`.stage[data-stage="${currentStage}"]`).classList.add('active');
+
+        // Update nav
+        document.getElementById('prevBtn').disabled = currentStage === 0;
+        document.getElementById('nextBtn').textContent = currentStage === totalStages - 1 ? 'Start Over \u21BB' : 'Next \u2192';
+
+        if (currentStage === totalStages - 1) {
+          document.getElementById('nextBtn').onclick = function() {
+            location.reload();
+          };
+        } else {
+          document.getElementById('nextBtn').onclick = function() {
+            changeStage(1);
+          };
+        }
+
+        // Trigger animations
+        setTimeout(() => animateCards(currentStage), 300);
+      }
+    });
+  });
+})();
+</script>
