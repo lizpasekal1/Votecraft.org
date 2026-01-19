@@ -4,8 +4,8 @@
  */
 
 :root {
-    --rcv-primary: #008BFF;
-    --rcv-primary-dark: #0070CC;
+    --rcv-primary: #4269FF;
+    --rcv-primary-dark: #3254CC;
     --rcv-text: #32373c;
     --rcv-text-light: #595959;
     --rcv-background: #f0f0f0;
@@ -39,40 +39,50 @@ body {
 .voting-mode-toggle {
     display: flex;
     justify-content: center;
-    gap: 0;
+    gap: 8px;
     margin-bottom: 24px;
+    background: var(--rcv-background);
+    padding: 4px;
+    border-radius: 8px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .mode-btn {
-    padding: 12px 24px;
-    font-size: 1rem;
+    flex: 1;
+    padding: 10px 16px;
+    font-size: 0.9rem;
     font-weight: 600;
     font-family: inherit;
-    background: var(--rcv-white);
+    background: transparent;
     color: var(--rcv-text-light);
-    border: 2px solid var(--rcv-border);
+    border: none;
+    border-radius: 6px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s;
 }
 
-.mode-btn:first-child {
-    border-radius: 6px 0 0 6px;
-    border-right: 1px solid var(--rcv-border);
-}
-
-.mode-btn:last-child {
-    border-radius: 0 6px 6px 0;
-    border-left: 1px solid var(--rcv-border);
-}
-
-.mode-btn:hover {
-    background: var(--rcv-background);
+.mode-btn:hover:not(.active) {
+    background: rgba(0, 0, 0, 0.05);
 }
 
 .mode-btn.active {
-    background: var(--rcv-primary);
+    background: #10b981;
     color: white;
-    border-color: var(--rcv-primary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#rcv-mode-btn:hover:not(.active) {
+    background: rgba(16, 185, 129, 0.1);
+}
+
+#wta-mode-btn.active {
+    background: #ef4444;
+}
+
+#wta-mode-btn:hover:not(.active) {
+    background: rgba(239, 68, 68, 0.1);
 }
 
 /* Interactive Demo */
@@ -175,17 +185,19 @@ body {
 }
 
 .results-placeholder {
-    color: var(--rcv-text-light);
+    color: var(--rcv-text);
     text-align: center;
     padding: 60px 20px;
-    background: var(--rcv-background);
-    border-radius: 6px;
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    border-left: 3px solid var(--rcv-primary);
+    border-radius: 0 6px 6px 0;
 }
 
 .election-info {
-    background: var(--rcv-background);
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    border-left: 3px solid var(--rcv-primary);
     padding: 16px 20px;
-    border-radius: 6px;
+    border-radius: 0 6px 6px 0;
     margin-bottom: 24px;
 }
 
@@ -198,6 +210,12 @@ body {
     margin-bottom: 24px;
     padding-bottom: 24px;
     border-bottom: 1px solid var(--rcv-border);
+}
+
+.round-result:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
 }
 
 .round-result h4 {
@@ -242,6 +260,14 @@ body {
     background: #10b981;
 }
 
+.vote-bar.wta-no-majority-winner .bar-fill {
+    background: #ef4444;
+}
+
+.vote-bar.wta-no-majority-winner .winner-badge {
+    background: #ef4444;
+}
+
 .winner-badge,
 .eliminated-badge {
     position: absolute;
@@ -265,11 +291,16 @@ body {
 }
 
 .round-explanation {
-    background: var(--rcv-background);
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
     border-left: 3px solid var(--rcv-primary);
     padding: 12px 16px;
     margin-top: 16px;
     border-radius: 0 6px 6px 0;
+}
+
+.round-explanation.rcv-success {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    border-left-color: #10b981;
 }
 
 .round-note {
@@ -294,15 +325,51 @@ body {
     border-radius: 8px;
     text-align: center;
     animation: fadeIn 0.5s ease-out;
+    margin-top: 24px;
+}
+
+.round-result + .winner-message {
+    margin-top: 0;
+}
+
+.round-result:has(+ .winner-message) {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
 }
 
 .winner-message.wta-no-majority {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white !important;
+    text-align: left;
+    padding: 24px 32px;
+}
+
+.winner-message.wta-no-majority h3,
+.winner-message.wta-no-majority p {
+    color: white !important;
+}
+
+.wta-results-list {
+    list-style-type: disc;
+    padding-left: 24px;
+    margin: 12px 0 0 0;
+    text-align: left;
+}
+
+.wta-results-list li {
+    color: white;
+    margin: 8px 0;
+    line-height: 1.4;
 }
 
 .round-explanation.wta-warning {
-    border-left-color: #f59e0b;
-    background: #fffbeb;
+    border-left-color: #ef4444;
+    background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+}
+
+.round-explanation.wta-warning .round-note {
+    color: #7f1d1d;
 }
 
 /* Vote Split Analysis */
@@ -312,6 +379,7 @@ body {
     border-radius: 8px;
     padding: 20px;
     margin-top: 20px;
+    margin-bottom: 20px;
     text-align: center;
 }
 
@@ -419,6 +487,27 @@ body {
 .btn-secondary:hover {
     background: var(--rcv-primary);
     color: white;
+}
+
+.btn-secondary.rcv-solution-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border-color: #10b981;
+    animation: pulse 2s infinite;
+}
+
+.btn-secondary.rcv-solution-btn:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    border-color: #059669;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+    }
 }
 
 /* Responsive */
