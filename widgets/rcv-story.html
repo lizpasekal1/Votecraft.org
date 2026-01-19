@@ -93,7 +93,7 @@
     border-radius: 12px;
     padding: 1.25rem;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 1rem;
     opacity: 0;
     transform: translateX(-20px);
@@ -106,7 +106,7 @@
   }
 
   .problem-icon {
-    font-size: 1.5rem;
+    font-size: 2rem;
     flex-shrink: 0;
   }
 
@@ -134,7 +134,7 @@
     border-radius: 12px;
     padding: 1.25rem;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 1rem;
     opacity: 0;
     transform: translateX(-20px);
@@ -147,7 +147,7 @@
   }
 
   .solution-icon {
-    font-size: 1.5rem;
+    font-size: 2rem;
     flex-shrink: 0;
   }
 
@@ -307,31 +307,6 @@
     color: #fc8181;
   }
 
-  /* CTA Button */
-  .cta-section {
-    text-align: center;
-    margin-top: 1.5rem;
-  }
-
-  .cta-btn {
-    display: inline-block;
-    padding: 1rem 2rem;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: #fff;
-    font-size: 1.1rem;
-    font-weight: 700;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-decoration: none;
-  }
-
-  .cta-btn:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
-  }
-
   /* Navigation */
   .nav-controls {
     display: flex;
@@ -372,6 +347,139 @@
     background: #059669;
   }
 
+  /* Cycle Diagram */
+  .cycle-container {
+    padding: 1rem;
+  }
+
+  .cycle-diagram {
+    position: relative;
+    width: 100%;
+    max-width: 440px;
+    height: 280px;
+    margin: 0 auto 1.5rem;
+  }
+
+  .cycle-center {
+    display: none;
+  }
+
+  .cycle-node {
+    position: absolute;
+    background: linear-gradient(145deg, #742a2a 0%, #4a1c1c 100%);
+    border: 2px solid #fc8181;
+    border-radius: 10px;
+    padding: 0.5rem 0.85rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #feb2b2;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    opacity: 0;
+    transition: all 0.5s ease;
+  }
+
+  .cycle-node.reveal {
+    opacity: 1;
+  }
+
+  .node-emoji {
+    font-size: 1.4rem;
+    line-height: 1;
+  }
+
+  .node-text {
+    white-space: nowrap;
+  }
+
+  .cycle-node[data-position="top"] {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .cycle-node[data-position="right"] {
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+  }
+
+  .cycle-node[data-position="bottom"] {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .cycle-node[data-position="left"] {
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+  }
+
+  .cycle-arrow {
+    position: absolute;
+    font-size: 1.75rem;
+    color: #fc8181;
+    opacity: 0;
+    transition: all 0.5s ease;
+  }
+
+  .cycle-arrow.reveal {
+    opacity: 1;
+  }
+
+  .cycle-arrow[data-position="top-right"] {
+    top: 22%;
+    right: 18%;
+    transform: rotate(55deg);
+  }
+
+  .cycle-arrow[data-position="right-bottom"] {
+    bottom: 22%;
+    right: 18%;
+    transform: rotate(125deg);
+  }
+
+  .cycle-arrow[data-position="bottom-left"] {
+    bottom: 22%;
+    left: 18%;
+    transform: rotate(235deg);
+  }
+
+  .cycle-arrow[data-position="left-top"] {
+    top: 22%;
+    left: 18%;
+    transform: rotate(305deg);
+  }
+
+  .cycle-explanation {
+    background: linear-gradient(145deg, #2d3748 0%, #1a202c 100%);
+    border: 2px solid #4a5568;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .cycle-explanation p {
+    color: #a0aec0;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+
+  .cycle-explanation p:last-child {
+    margin-bottom: 0;
+  }
+
+  .cycle-highlight {
+    color: #68d391 !important;
+    font-size: 1.1rem;
+  }
+
   /* Responsive */
   @media (max-width: 768px) {
     .comparison-panels {
@@ -384,6 +492,28 @@
 
     .rcv-story-widget {
       padding: 1.5rem;
+    }
+
+    .cycle-diagram {
+      max-width: 300px;
+      height: 240px;
+    }
+
+    .cycle-node {
+      font-size: 0.65rem;
+      padding: 0.4rem 0.6rem;
+    }
+
+    .node-emoji {
+      font-size: 1.1rem;
+    }
+
+    .cycle-arrow {
+      font-size: 1.2rem;
+    }
+
+    .cycle-explanation {
+      padding: 1rem;
     }
   }
 </style>
@@ -398,6 +528,7 @@
     <div class="step-dot" data-step="1"></div>
     <div class="step-dot" data-step="2"></div>
     <div class="step-dot" data-step="3"></div>
+    <div class="step-dot" data-step="4"></div>
   </div>
 
   <div class="stages-container">
@@ -405,25 +536,25 @@
     <!-- Stage 1: The Problem with Winner-Take-All -->
     <div class="stage active" data-stage="0">
       <div class="section-header problem">
-        <h3>&#128165; Winner-Take-All is Toxic &#128165;</h3>
+        <h3>⚠️ Winner-Take-All is Toxic ⚠️</h3>
         <p>Here's what's wrong with our current voting system...</p>
       </div>
       <div class="problem-grid">
         <div class="problem-card" data-delay="0">
-          <span class="problem-icon">&#128148;</span>
-          <p class="problem-text">It elects someone <strong>most don't want</strong>, simply because similar awesome candidates split votes. &#128542;</p>
+          <span class="problem-icon">⚠️</span>
+          <p class="problem-text">It elects someone <strong>most don't want</strong>, simply because similar awesome candidates split votes. 😤</p>
         </div>
         <div class="problem-card" data-delay="1">
-          <span class="problem-icon">&#128200;</span>
-          <p class="problem-text">Winners represent the <strong>lowest-minority</strong> in a two party system. &#129324;</p>
+          <span class="problem-icon">⚠️</span>
+          <p class="problem-text">Winners represent the <strong>minimum winning threshold</strong> in a two party system. 📉</p>
         </div>
         <div class="problem-card" data-delay="2">
-          <span class="problem-icon">&#128566;</span>
-          <p class="problem-text">The system <strong>discourages leaders</strong> from raising new ideas or challenging their own party, out of fear they'll split/divide support. &#128556;</p>
+          <span class="problem-icon">⚠️</span>
+          <p class="problem-text">The system <strong>discourages leaders</strong> from raising new ideas or challenging their own party, out of fear they'll split/divide support. 🤐</p>
         </div>
         <div class="problem-card" data-delay="3">
-          <span class="problem-icon">&#9762;&#65039;</span>
-          <p class="problem-text">This fuels the <strong>polarized negativity</strong> we see today. &#128545;&#129324;&#128548;</p>
+          <span class="problem-icon">⚠️</span>
+          <p class="problem-text">This fuels the <strong>polarized negativity</strong> we see today. 😡</p>
         </div>
       </div>
     </div>
@@ -431,25 +562,25 @@
     <!-- Stage 2: Why RCV is Better -->
     <div class="stage" data-stage="1">
       <div class="section-header solution">
-        <h3>&#11088; RCV is Stellar &#11088;</h3>
+        <h3>⭐ RCV is Better ⭐</h3>
         <p>Here's why Ranked Choice Voting fixes these problems...</p>
       </div>
       <div class="solution-grid">
         <div class="solution-card" data-delay="0">
-          <span class="solution-icon">&#128230;</span>
-          <p class="solution-text">If your first choice can't win, <strong>your vote isn't trashed</strong>&#8212;it moves to your next preference. &#127881;</p>
+          <span class="solution-icon">⭐</span>
+          <p class="solution-text">If your first choice can't win, <strong>your vote isn't trashed</strong>&#8212;it moves to your next preference. 🎉</p>
         </div>
         <div class="solution-card" data-delay="1">
-          <span class="solution-icon">&#128101;</span>
-          <p class="solution-text">Elections reflect <strong>who most actually prefer</strong>, not who squeaked by with the lowest-minority. &#129321;</p>
+          <span class="solution-icon">⭐</span>
+          <p class="solution-text">Elections reflect <strong>who most actually prefer</strong>, not who squeaked by with the lowest-minority. 🥳</p>
         </div>
         <div class="solution-card" data-delay="2">
-          <span class="solution-icon">&#128161;</span>
-          <p class="solution-text">The system <strong>encourages leaders</strong> to raise new ideas without fear of splitting the vote. &#127775;</p>
+          <span class="solution-icon">⭐</span>
+          <p class="solution-text">The system <strong>encourages leaders</strong> to raise new ideas without fear of splitting the vote. 💡</p>
         </div>
         <div class="solution-card" data-delay="3">
-          <span class="solution-icon">&#129309;</span>
-          <p class="solution-text">It rewards <strong>consensus instead of division</strong>, which is a fairer more collaborative outcome. &#10084;&#65039;</p>
+          <span class="solution-icon">⭐</span>
+          <p class="solution-text">It rewards <strong>consensus instead of division</strong>, which is a fairer more collaborative outcome. 🤝</p>
         </div>
       </div>
     </div>
@@ -457,55 +588,77 @@
     <!-- Stage 3: Side-by-Side Comparison -->
     <div class="stage" data-stage="2">
       <div class="section-header">
-        <h3 style="color: #fff;">&#9878;&#65039; The Difference &#9878;&#65039;</h3>
+        <h3 style="color: #fff;">The Difference</h3>
         <p>See how these systems compare...</p>
       </div>
       <div class="comparison-container">
         <div class="comparison-panels">
           <div class="comparison-panel wta" data-delay="0">
-            <div class="panel-icon">&#128078;</div>
+            <div class="panel-icon">⚠️</div>
             <div class="panel-header">Winner-Take-All</div>
             <ul class="panel-points">
-              <li>&#128148; Vote splitting elects unpopular winners</li>
-              <li>&#128465;&#65039; Your vote is wasted if your candidate loses</li>
-              <li>&#129324; Encourages negative campaigning</li>
-              <li>&#128274; Forces two-party dominance</li>
-              <li>&#128100; Winners can win with tiny minorities</li>
+              <li>⚠️ Vote splitting elects unpopular winners</li>
+              <li>⚠️ Your vote is wasted if your candidate loses</li>
+              <li>⚠️ Encourages negative campaigning</li>
+              <li>⚠️ Forces two-party dominance</li>
+              <li>⚠️ Winners can win with tiny minorities</li>
             </ul>
           </div>
           <div class="comparison-panel rcv" data-delay="1">
-            <div class="panel-icon">&#128077;</div>
+            <div class="panel-icon">&#10003;</div>
             <div class="panel-header">Ranked Choice Voting</div>
             <ul class="panel-points">
-              <li>&#127881; Similar candidates don't split the vote</li>
-              <li>&#128499;&#65039; Your vote always counts for someone</li>
-              <li>&#129309; Rewards coalition-building</li>
-              <li>&#127908; More voices, more choices</li>
-              <li>&#128101; Winners need broad support</li>
+              <li>&#10003; Similar candidates don't split the vote</li>
+              <li>&#10003; Your vote always counts for someone</li>
+              <li>&#10003; Rewards coalition-building</li>
+              <li>&#10003; More voices, more choices</li>
+              <li>&#10003; Winners need broad support</li>
             </ul>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Stage 4: Call to Action -->
+    <!-- Stage 4: The Rigged Game Cycle -->
     <div class="stage" data-stage="3">
-      <div class="final-stage">
-        <div class="final-icon">&#127895;&#65039;&#10024;</div>
-        <div class="final-message">
-          <h3>&#127775; A Better Way to Vote &#127775;</h3>
-          <p>
-            With <strong>Ranked Choice Voting</strong>, elections become about finding the candidate <strong>most people can support</strong>&#8212;not just the one who benefits from a divided opposition. &#127942;
-          </p>
-          <p>
-            It's simple: rank your choices &#49;&#65039;&#8419;&#50;&#65039;&#8419;&#51;&#65039;&#8419;. If your first pick can't win, your vote goes to your next choice. <strong>Your voice is always heard!</strong> &#128227;
-          </p>
-          <p>
-            That's how we build a democracy that works for everyone. <span class="heart-emoji">&#10084;&#65039;&#129309;&#127758;</span>
-          </p>
+      <div class="section-header problem">
+        <h3>The Polarization Spiral</h3>
+        <p>Winner-Take-All creates a vicious cycle that keeps us trapped...</p>
+      </div>
+      <div class="cycle-container">
+        <div class="cycle-diagram">
+          <div class="cycle-center"></div>
+          <div class="cycle-node" data-position="top"><span class="node-emoji">⚔️</span><span class="node-text">Two-Party System</span></div>
+          <div class="cycle-node" data-position="right"><span class="node-emoji">😰</span><span class="node-text">Vote Splitting Fears</span></div>
+          <div class="cycle-node" data-position="bottom"><span class="node-emoji">📢</span><span class="node-text">Negative Campaigning</span></div>
+          <div class="cycle-node" data-position="left"><span class="node-emoji">😤</span><span class="node-text">Polarized Winners</span></div>
+          <div class="cycle-arrow" data-position="top-right">➜</div>
+          <div class="cycle-arrow" data-position="right-bottom">➜</div>
+          <div class="cycle-arrow" data-position="bottom-left">➜</div>
+          <div class="cycle-arrow" data-position="left-top">➜</div>
         </div>
-        <div class="cta-section">
-          <a href="rcv-demo.html" class="cta-btn">&#127918; Try the Interactive Demo &#8594;</a>
+        <div class="cycle-explanation">
+          <p>Two-party dominance → voters fear splitting the vote → campaigns go negative to attack opponents → polarized winners get elected → the cycle reinforces itself...</p>
+          <p class="cycle-highlight"><strong>RCV breaks this cycle</strong> by letting you rank your choices without fear!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage 5: Call to Action -->
+    <div class="stage" data-stage="4">
+      <div class="final-stage">
+        <div class="final-icon">&#10003;</div>
+        <div class="final-message">
+          <h3>A Better Way to Vote</h3>
+          <p>
+            With <strong>Ranked Choice Voting</strong>, elections become about finding the candidate <strong>most people can support</strong>&#8212;not just the one who benefits from a divided opposition.
+          </p>
+          <p>
+            It's simple: rank your choices 1, 2, 3. If your first pick can't win, your vote goes to your next choice. <strong>Your voice is always heard!</strong>
+          </p>
+          <p>
+            That's how we build a democracy that works for everyone.
+          </p>
         </div>
       </div>
     </div>
@@ -522,7 +675,7 @@
 <script>
 (function() {
   let currentStage = 0;
-  const totalStages = 4;
+  const totalStages = 5;
 
   // Initialize first stage animations
   setTimeout(() => animateCards(0), 300);
@@ -592,6 +745,31 @@
         setTimeout(() => {
           panel.classList.add('reveal');
         }, i * 300);
+      });
+    }
+
+    // Animate cycle diagram
+    if (stage === 3) {
+      const center = document.querySelector('.cycle-center');
+      const nodes = document.querySelectorAll('.cycle-node');
+      const arrows = document.querySelectorAll('.cycle-arrow');
+
+      // Reset
+      center.classList.remove('reveal');
+      nodes.forEach(n => n.classList.remove('reveal'));
+      arrows.forEach(a => a.classList.remove('reveal'));
+
+      // Animate center first
+      setTimeout(() => center.classList.add('reveal'), 100);
+
+      // Animate nodes one by one
+      nodes.forEach((node, i) => {
+        setTimeout(() => node.classList.add('reveal'), 300 + i * 250);
+      });
+
+      // Animate arrows after nodes
+      arrows.forEach((arrow, i) => {
+        setTimeout(() => arrow.classList.add('reveal'), 1300 + i * 200);
       });
     }
   }
