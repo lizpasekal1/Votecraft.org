@@ -182,7 +182,7 @@ class RCVDemo {
         this.resultsDisplay.innerHTML = `
             <div class="election-info">
                 <p><strong>Total Voters:</strong> ${totalVotes} (including you!)</p>
-                <p><strong>Majority Needed:</strong> ${majorityNeeded} votes for the leader to win</p>
+                <p><strong>Winning =</strong> Majority percent over 50%</p>
             </div>
             <div id="round-display"></div>
             <div id="round-nav"></div>
@@ -272,7 +272,7 @@ class RCVDemo {
                         <span>${votes} votes (${percentage}%)</span>
                     </div>
                     <div class="bar-track">
-                        <div class="bar-fill" style="width: ${percentage}%"></div>
+                        <div class="bar-fill" style="width: 0%" data-width="${percentage}"></div>
                         ${isWinner ? '<span class="winner-badge">WINNER!</span>' : ''}
                         ${isEliminated ? '<span class="eliminated-badge">ELIMINATED</span>' : ''}
                     </div>
@@ -315,6 +315,13 @@ class RCVDemo {
         html += `</div>`;
 
         roundDisplay.innerHTML = html;
+
+        // Animate bars after a brief delay
+        setTimeout(() => {
+            roundDisplay.querySelectorAll('.bar-fill').forEach(bar => {
+                bar.style.width = bar.dataset.width + '%';
+            });
+        }, 100);
 
         // Navigation buttons
         let navHtml = '<div class="round-navigation">';
@@ -373,7 +380,7 @@ class RCVDemo {
         this.resultsDisplay.innerHTML = `
             <div class="election-info">
                 <p><strong>Total Voters:</strong> ${totalVotes} (including you!)</p>
-                <p><strong>Winning Percentage:</strong> Minimum Threshold</p>
+                <p><strong>Winning =</strong> Minimum threshold percent</p>
             </div>
             <div id="rounds-container"></div>
         `;
@@ -416,8 +423,8 @@ class RCVDemo {
             bar.style.width = bar.dataset.width + '%';
         });
 
-        // Show winner message first
-        await this.delay(800);
+        // Wait for bars to finish animating, then show winner message
+        await this.delay(1200);
         const winnerMessage = document.createElement('div');
         winnerMessage.className = hasMajority ? 'winner-message' : 'winner-message wta-no-majority';
         const othersVotes = totalVotes - winnerVotes;
@@ -435,8 +442,9 @@ class RCVDemo {
         `;
         roundsContainer.appendChild(winnerMessage);
 
-        // Then show vote split analysis (only when no majority)
+        // Wait for winner message to be seen, then show vote split analysis
         if (!hasMajority) {
+            await this.delay(1200);
             const funFoodVotes = counts['Pi Za Pies'] + counts['Pete Zah'];
             const funFoodPercent = (funFoodVotes / totalVotes * 100).toFixed(1);
 
@@ -446,7 +454,7 @@ class RCVDemo {
                 <h4>🍕 The Sliced Campaigns</h4>
                 <p><strong>If Pi Za Pies and Pete Zah were one candidate, they'd have:</strong></p>
                 <div class="coalition-bar">
-                    <div class="coalition-fill" style="width: ${funFoodPercent}%"></div>
+                    <div class="coalition-fill" style="width: 0%" data-width="${funFoodPercent}"></div>
                     <span class="coalition-label">${funFoodVotes} votes (${funFoodPercent}%)</span>
                 </div>
                 <ul class="split-points">
@@ -456,6 +464,11 @@ class RCVDemo {
                 </ul>
             `;
             roundsContainer.appendChild(voteSplitDiv);
+
+            // Animate the coalition bar after the section appears
+            await this.delay(300);
+            const coalitionFill = voteSplitDiv.querySelector('.coalition-fill');
+            coalitionFill.style.width = coalitionFill.dataset.width + '%';
         } else {
             const explanationDiv = document.createElement('div');
             explanationDiv.className = 'round-explanation';
