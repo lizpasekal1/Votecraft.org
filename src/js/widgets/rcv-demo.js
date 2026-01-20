@@ -32,12 +32,37 @@ class RCVDemo {
         // Mode toggle buttons
         this.rcvModeBtn.addEventListener('click', () => this.setMode('rcv'));
         this.wtaModeBtn.addEventListener('click', () => this.setMode('wta'));
+
+        // Show initial election info
+        this.updateElectionInfo();
+    }
+
+    updateElectionInfo() {
+        const totalVotes = 100;
+        const winningText = this.votingMode === 'rcv'
+            ? 'Majority percent over 50%'
+            : 'Minimum threshold percent';
+        document.getElementById('election-info-container').innerHTML = `
+            <p><strong>Total Voters:</strong> ${totalVotes} (including you!)</p>
+            <p><strong>Winning =</strong> ${winningText}</p>
+        `;
+    }
+
+    updateBallotInstructions() {
+        const instructionsEl = document.querySelector('.ballot-instructions');
+        if (instructionsEl) {
+            instructionsEl.textContent = this.votingMode === 'rcv'
+                ? 'Tap candidates in order to rank them'
+                : 'Tap a candidate to vote for them';
+        }
     }
 
     setMode(mode) {
         this.votingMode = mode;
         this.rcvModeBtn.classList.toggle('active', mode === 'rcv');
         this.wtaModeBtn.classList.toggle('active', mode === 'wta');
+        this.updateElectionInfo();
+        this.updateBallotInstructions();
         this.resetDemo();
     }
 
@@ -96,12 +121,24 @@ class RCVDemo {
         const candidate = item.dataset.candidate;
         const currentRankIndex = this.userRankings.indexOf(candidate);
 
-        if (currentRankIndex !== -1) {
-            // Already ranked - remove this ranking and all after it
-            this.userRankings = this.userRankings.slice(0, currentRankIndex);
+        if (this.votingMode === 'wta') {
+            // Winner Take All: only one selection allowed
+            if (currentRankIndex !== -1) {
+                // Already selected - deselect
+                this.userRankings = [];
+            } else {
+                // Select this candidate (replacing any previous selection)
+                this.userRankings = [candidate];
+            }
         } else {
-            // Not ranked yet - add to rankings
-            this.userRankings.push(candidate);
+            // RCV: allow ranking multiple candidates
+            if (currentRankIndex !== -1) {
+                // Already ranked - remove this ranking and all after it
+                this.userRankings = this.userRankings.slice(0, currentRankIndex);
+            } else {
+                // Not ranked yet - add to rankings
+                this.userRankings.push(candidate);
+            }
         }
 
         this.updateRankDisplay();
@@ -116,7 +153,8 @@ class RCVDemo {
             const badge = item.querySelector('.rank-badge');
 
             if (rankIndex !== -1) {
-                badge.textContent = rankIndex + 1;
+                // In WTA mode show checkmark, in RCV mode show rank number
+                badge.textContent = this.votingMode === 'wta' ? '✓' : rankIndex + 1;
                 item.classList.remove('unranked');
                 item.classList.add('ranked');
             } else {
@@ -145,7 +183,7 @@ class RCVDemo {
         const allBallots = [...this.simulatedVoters, userBallot];
 
         this.castVoteBtn.style.display = 'none';
-        this.resetBtn.style.display = 'inline-block';
+        this.resetBtn.style.display = 'none';
 
         // Lock candidates
         const items = this.candidateList.querySelectorAll('.candidate-item');
@@ -179,11 +217,13 @@ class RCVDemo {
         this.totalVotes = totalVotes;
         this.majorityNeeded = majorityNeeded;
 
+        // Update election info container
+        document.getElementById('election-info-container').innerHTML = `
+            <p><strong>Total Voters:</strong> ${totalVotes} (including you!)</p>
+            <p><strong>Winning =</strong> Majority percent over 50%</p>
+        `;
+
         this.resultsDisplay.innerHTML = `
-            <div class="election-info">
-                <p><strong>Total Voters:</strong> ${totalVotes} (including you!)</p>
-                <p><strong>Winning =</strong> Majority percent over 50%</p>
-            </div>
             <div id="round-display"></div>
             <div id="round-nav"></div>
         `;
@@ -244,16 +284,15 @@ class RCVDemo {
         return rounds;
     }
 
-    showRound(index) {
+    async showRound(index) {
         const roundDisplay = document.getElementById('round-display');
         const roundNav = document.getElementById('round-nav');
         const roundData = this.rcvRounds[index];
         const isLastRound = index === this.rcvRounds.length - 1;
 
-        // Build round HTML
-        let html = `<div class="round-result">`;
+        // Build vote bars HTML
+        let barsHtml = `<div class="round-result" id="rcv-round-result">`;
 
-        // Vote bars
         roundData.sortedCandidates.forEach(candidate => {
             const votes = roundData.counts[candidate];
             const percentage = (votes / this.totalVotes * 100).toFixed(1);
@@ -265,7 +304,7 @@ class RCVDemo {
             if (isWinner) barClass = 'winner';
             else if (isEliminated) barClass = 'eliminated';
 
-            html += `
+            barsHtml += `
                 <div class="vote-bar ${barClass}">
                     <div class="bar-label">
                         <span>${icon} ${candidate}</span>
@@ -280,50 +319,56 @@ class RCVDemo {
             `;
         });
 
-        // Winner message first if final round
-        if (roundData.isWinner) {
-            html += `
-                <div class="winner-message">
-                    <h3>${this.getCandidateIcon(roundData.leader)} ${roundData.leader} Wins!</h3>
-                    <p>With ${roundData.leaderVotes} votes (${(roundData.leaderVotes / this.totalVotes * 100).toFixed(1)}%), ${roundData.leader} has a majority!</p>
-                </div>
-            `;
-        }
+        barsHtml += `</div>`;
+        roundDisplay.innerHTML = barsHtml;
 
-        // Explanation
+        // Animate bars after a brief delay
+        await this.delay(100);
+        roundDisplay.querySelectorAll('.bar-fill').forEach(bar => {
+            bar.style.width = bar.dataset.width + '%';
+        });
+
+        const roundResult = document.getElementById('rcv-round-result');
+
+        // Wait for bars to finish, then show winner message or explanation
+        await this.delay(1200);
+
         if (roundData.isWinner) {
-            // Winner round - check if it's the final round with pizza coalition
+            // Add winner message
+            const winnerMessage = document.createElement('div');
+            winnerMessage.className = 'winner-message';
+            winnerMessage.innerHTML = `
+                <h3>${this.getCandidateIcon(roundData.leader)} ${roundData.leader} Wins!</h3>
+                <p>With ${roundData.leaderVotes} votes (${(roundData.leaderVotes / this.totalVotes * 100).toFixed(1)}%), ${roundData.leader} has a majority!</p>
+            `;
+            roundResult.appendChild(winnerMessage);
+
+            // Wait then show explanation if it's the final round with pizza coalition
             if (roundData.round === 4) {
-                html += `
-                    <div class="round-explanation rcv-success">
-                        <p class="round-note"><strong>The Pizza Coalition United!</strong></p>
-                        <p class="round-note">Pi Za Pies and Pete Zah had very similar platforms, but with RCV their supporters didn't split the vote. When Pete Zah was eliminated, those 27 votes transferred to Pi Za Pies as their second choice.</p>
-                        <p class="round-note"><em>In Winner Take All, these similar candidates would have split the pizza lover vote, letting Frank N. Stein win with only 30%!</em></p>
-                    </div>
+                await this.delay(1200);
+                const explanation = document.createElement('div');
+                explanation.className = 'round-explanation rcv-success';
+                explanation.innerHTML = `
+                    <p class="round-note"><strong>The Pizza Coalition United!</strong></p>
+                    <p class="round-note">Pi Za Pies and Pete Zah had very similar platforms, but with RCV their supporters didn't split the vote. When Pete Zah was eliminated, those 27 votes transferred to Pi Za Pies as their second choice.</p>
+                    <p class="round-note"><em>In Winner Take All, these similar candidates would have split the pizza lover vote, letting Frank N. Stein win with only 30%!</em></p>
                 `;
+                roundResult.appendChild(explanation);
             }
         } else {
             // Not a winner round - show elimination explanation
-            html += `
-                <div class="round-explanation">
-                    <p class="round-note"><strong>No winner yet!</strong> ${this.getCandidateIcon(roundData.loser)} <strong>${roundData.loser}</strong> is eliminated.</p>
-                    <p class="round-note">Their votes transfer to each voter's next candidate choice.</p>
-                </div>
+            const explanation = document.createElement('div');
+            explanation.className = 'round-explanation';
+            explanation.innerHTML = `
+                <p class="round-note"><strong>No winner yet!</strong> ${this.getCandidateIcon(roundData.loser)} <strong>${roundData.loser}</strong> is eliminated.</p>
+                <p class="round-note">Their votes transfer to each voter's next candidate choice.</p>
             `;
+            roundResult.appendChild(explanation);
         }
 
-        html += `</div>`;
+        // Wait then show navigation buttons
+        await this.delay(600);
 
-        roundDisplay.innerHTML = html;
-
-        // Animate bars after a brief delay
-        setTimeout(() => {
-            roundDisplay.querySelectorAll('.bar-fill').forEach(bar => {
-                bar.style.width = bar.dataset.width + '%';
-            });
-        }, 100);
-
-        // Navigation buttons
         let navHtml = '<div class="round-navigation">';
 
         if (!isLastRound) {
@@ -335,6 +380,8 @@ class RCVDemo {
 
         // Show/hide the "Winner Take All Demo" button based on whether we're at the final round
         if (isLastRound) {
+            // Wait for all animations to complete, then show button
+            await this.delay(800);
             this.resetBtn.style.display = 'inline-block';
         } else {
             this.resetBtn.style.display = 'none';
@@ -377,11 +424,13 @@ class RCVDemo {
         const winnerVotes = counts[winner];
         const winnerPercent = (winnerVotes / totalVotes * 100).toFixed(1);
 
+        // Update election info container
+        document.getElementById('election-info-container').innerHTML = `
+            <p><strong>Total Voters:</strong> ${totalVotes} (including you!)</p>
+            <p><strong>Winning =</strong> Minimum threshold percent</p>
+        `;
+
         this.resultsDisplay.innerHTML = `
-            <div class="election-info">
-                <p><strong>Total Voters:</strong> ${totalVotes} (including you!)</p>
-                <p><strong>Winning =</strong> Minimum threshold percent</p>
-            </div>
             <div id="rounds-container"></div>
         `;
 
@@ -435,7 +484,6 @@ class RCVDemo {
         ` : `
             <h3>${this.getCandidateIcon(winner)} ${winner} Wins!</h3>
             <ul class="wta-results-list">
-                <li>Won WITHOUT majority support!</li>
                 <li>They got ${winnerVotes} votes (${winnerPercent}%) the minimum winning threshold</li>
                 <li>They won even though ${othersVotes} voters (${othersPercent}%)<br>preferred someone else</li>
             </ul>
@@ -479,11 +527,15 @@ class RCVDemo {
             roundsContainer.appendChild(explanationDiv);
         }
 
+        // Wait for animations to complete, then show reset button
+        await this.delay(1200);
+
         // Change reset button text to "RCV Solution" for WTA mode
         if (!hasMajority) {
             this.resetBtn.textContent = '✨ See the RCV Solution';
             this.resetBtn.classList.add('rcv-solution-btn');
         }
+        this.resetBtn.style.display = 'inline-block';
     }
 
     getCandidateIcon(candidate) {
@@ -541,6 +593,9 @@ class RCVDemo {
             this.wtaModeBtn.classList.add('active');
             this.rcvModeBtn.classList.remove('active');
         }
+
+        // Update election info for current mode
+        this.updateElectionInfo();
 
         // Reset results with mode-appropriate placeholder
         const placeholderText = this.votingMode === 'rcv'
