@@ -35,6 +35,15 @@ class RCVDemo {
 
         // Show initial election info
         this.updateElectionInfo();
+
+        // Disable cast vote button until candidates selected
+        this.updateCastVoteButton();
+    }
+
+    updateCastVoteButton() {
+        const hasSelection = this.userRankings.length > 0;
+        this.castVoteBtn.disabled = !hasSelection;
+        this.castVoteBtn.classList.toggle('disabled', !hasSelection);
     }
 
     updateElectionInfo() {
@@ -163,6 +172,9 @@ class RCVDemo {
                 item.classList.add('unranked');
             }
         });
+
+        // Update cast vote button state
+        this.updateCastVoteButton();
     }
 
     getUserBallot() {
@@ -197,10 +209,17 @@ class RCVDemo {
             this.animateWTAElection(allBallots);
         }
 
-        // Scroll results into view on mobile
-        setTimeout(() => {
-            this.resultsDisplay.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
+        // Scroll results into view on mobile only
+        if (window.innerWidth <= 700) {
+            setTimeout(() => {
+                const resultsSection = document.querySelector('.demo-results');
+                if (resultsSection) {
+                    // Send scroll request to parent page (for iframe)
+                    const scrollOffset = resultsSection.offsetTop;
+                    window.parent.postMessage({ type: 'rcv-scroll', scrollTo: scrollOffset }, '*');
+                }
+            }, 100);
+        }
     }
 
     async animateElection(ballots) {
@@ -394,10 +413,16 @@ class RCVDemo {
             nextBtn.addEventListener('click', () => {
                 this.currentRoundIndex++;
                 this.showRound(this.currentRoundIndex);
-                // Scroll results into view on mobile
-                setTimeout(() => {
-                    this.resultsDisplay.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 100);
+                // Scroll results into view on mobile only
+                if (window.innerWidth <= 700) {
+                    setTimeout(() => {
+                        const resultsSection = document.querySelector('.demo-results');
+                        if (resultsSection) {
+                            const scrollOffset = resultsSection.offsetTop;
+                            window.parent.postMessage({ type: 'rcv-scroll', scrollTo: scrollOffset }, '*');
+                        }
+                    }, 100);
+                }
             });
         }
     }
@@ -578,6 +603,9 @@ class RCVDemo {
         this.castVoteBtn.style.display = 'inline-block';
         this.resetBtn.style.display = 'none';
 
+        // Disable cast vote button until candidates selected
+        this.updateCastVoteButton();
+
         // Regenerate simulated voters for variety
         this.simulatedVoters = this.generateSimulatedVoters();
 
@@ -602,6 +630,17 @@ class RCVDemo {
             ? 'Cast your vote to see how RCV works!<br><em>This system rewards broad support instead of vote splitting.</em>'
             : 'Cast your vote to see how Percent Threshold Voting works!<br><em>This is the outdated system most areas still use.</em>';
         this.resultsDisplay.innerHTML = `<p class="results-placeholder">${placeholderText}</p>`;
+
+        // Scroll back to ballot on mobile
+        if (window.innerWidth <= 700) {
+            setTimeout(() => {
+                const ballotSection = document.querySelector('.demo-ballot');
+                if (ballotSection) {
+                    const scrollOffset = ballotSection.offsetTop;
+                    window.parent.postMessage({ type: 'rcv-scroll', scrollTo: scrollOffset }, '*');
+                }
+            }, 100);
+        }
     }
 }
 
