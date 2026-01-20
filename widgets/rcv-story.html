@@ -480,7 +480,7 @@
     font-size: 1.1rem;
   }
 
-  /* Responsive */
+  /* Responsive - Tablet */
   @media (max-width: 768px) {
     .comparison-panels {
       grid-template-columns: 1fr;
@@ -495,25 +495,258 @@
     }
 
     .cycle-diagram {
-      max-width: 300px;
-      height: 240px;
+      max-width: 320px;
+      height: 260px;
     }
 
     .cycle-node {
-      font-size: 0.65rem;
+      font-size: 0.7rem;
       padding: 0.4rem 0.6rem;
     }
 
     .node-emoji {
-      font-size: 1.1rem;
+      font-size: 1.2rem;
     }
 
     .cycle-arrow {
-      font-size: 1.2rem;
+      font-size: 1.3rem;
     }
 
     .cycle-explanation {
       padding: 1rem;
+    }
+  }
+
+  /* Responsive - Mobile (iPhone 16 Pro and similar) */
+  @media (max-width: 430px) {
+    .rcv-story-widget {
+      padding: 1rem;
+      border-radius: 12px;
+    }
+
+    .widget-title {
+      font-size: 1.3rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .widget-subtitle {
+      font-size: 0.85rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .progress-steps {
+      gap: 0.4rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .step-dot {
+      width: 10px;
+      height: 10px;
+    }
+
+    .stages-container {
+      min-height: 380px;
+    }
+
+    .section-header {
+      margin-bottom: 1rem;
+    }
+
+    .section-header h3 {
+      font-size: 1.2rem;
+    }
+
+    .section-header p {
+      font-size: 0.85rem;
+    }
+
+    /* Problem & Solution cards */
+    .problem-grid,
+    .solution-grid {
+      gap: 0.75rem;
+      padding: 0.5rem;
+    }
+
+    .problem-card,
+    .solution-card {
+      padding: 1rem;
+      gap: 0.75rem;
+      border-radius: 10px;
+    }
+
+    .problem-icon,
+    .solution-icon {
+      font-size: 1.5rem;
+    }
+
+    .problem-text,
+    .solution-text {
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    /* Comparison panels */
+    .comparison-container {
+      padding: 0.5rem;
+    }
+
+    .comparison-panels {
+      gap: 1rem;
+    }
+
+    .comparison-panel {
+      padding: 1rem;
+      border-radius: 10px;
+    }
+
+    .panel-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .panel-header {
+      font-size: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .panel-points li {
+      font-size: 0.85rem;
+      padding: 0.4rem 0;
+    }
+
+    /* Cycle diagram - optimized for mobile */
+    .cycle-container {
+      padding: 0.5rem;
+    }
+
+    .cycle-diagram {
+      max-width: 280px;
+      height: 220px;
+      margin-bottom: 1rem;
+    }
+
+    .cycle-node {
+      font-size: 0.65rem;
+      padding: 0.35rem 0.5rem;
+      border-radius: 8px;
+      border-width: 1.5px;
+    }
+
+    .node-emoji {
+      font-size: 1rem;
+    }
+
+    .node-text {
+      white-space: nowrap;
+    }
+
+    .cycle-arrow {
+      font-size: 1.1rem;
+    }
+
+    .cycle-arrow[data-position="top-right"] {
+      top: 20%;
+      right: 14%;
+    }
+
+    .cycle-arrow[data-position="right-bottom"] {
+      bottom: 20%;
+      right: 14%;
+    }
+
+    .cycle-arrow[data-position="bottom-left"] {
+      bottom: 20%;
+      left: 14%;
+    }
+
+    .cycle-arrow[data-position="left-top"] {
+      top: 20%;
+      left: 14%;
+    }
+
+    .cycle-explanation {
+      padding: 0.875rem;
+      border-radius: 10px;
+    }
+
+    .cycle-explanation p {
+      font-size: 0.85rem;
+      line-height: 1.5;
+      margin-bottom: 0.75rem;
+    }
+
+    .cycle-highlight {
+      font-size: 0.95rem !important;
+    }
+
+    /* Final stage */
+    .final-stage {
+      padding: 1rem;
+    }
+
+    .final-icon {
+      font-size: 3rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .final-message {
+      padding: 1.25rem;
+      margin-top: 1rem;
+      border-radius: 10px;
+    }
+
+    .final-message h3 {
+      font-size: 1.2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .final-message p {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 0.75rem;
+    }
+
+    /* Navigation */
+    .nav-controls {
+      margin-top: 1.25rem;
+      padding-top: 1rem;
+      gap: 0.75rem;
+    }
+
+    .nav-btn {
+      padding: 0.65rem 1.5rem;
+      font-size: 0.9rem;
+      border-radius: 6px;
+    }
+  }
+
+  /* Extra small phones */
+  @media (max-width: 375px) {
+    .rcv-story-widget {
+      padding: 0.875rem;
+    }
+
+    .widget-title {
+      font-size: 1.15rem;
+    }
+
+    .cycle-diagram {
+      max-width: 250px;
+      height: 200px;
+    }
+
+    .cycle-node {
+      font-size: 0.6rem;
+      padding: 0.3rem 0.4rem;
+    }
+
+    .node-emoji {
+      font-size: 0.9rem;
+    }
+
+    .problem-text,
+    .solution-text {
+      font-size: 0.85rem;
     }
   }
 </style>
