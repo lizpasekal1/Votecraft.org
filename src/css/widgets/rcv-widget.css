@@ -114,6 +114,10 @@ body {
     margin-bottom: 12px;
 }
 
+.demo-results h3 {
+    margin-bottom: 6px;
+}
+
 .ballot-instructions {
     color: var(--rcv-text-light);
     font-size: 0.9rem;
@@ -219,8 +223,16 @@ body {
 }
 
 .election-info {
-    margin-bottom: 14px;
     text-align: center;
+    /* Match spacing of ballot-instructions to align purple container with candidate list */
+    min-height: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.election-info:not(:empty) {
+    margin-bottom: 6px;
 }
 
 .election-info p {
@@ -320,6 +332,7 @@ body {
     padding: 10px 12px;
     margin-top: 10px;
     border-radius: 0 6px 6px 0;
+    animation: slideDown 0.6s ease-out;
 }
 
 .round-explanation.rcv-success {
@@ -553,6 +566,7 @@ body {
     transition: all 0.2s;
     width: 100%;
     margin-top: 12px;
+    animation: fadeIn 0.5s ease-out;
 }
 
 .btn-secondary:hover {
@@ -599,6 +613,7 @@ body {
     border-radius: 5px;
     cursor: pointer;
     transition: all 0.2s;
+    animation: fadeIn 0.5s ease-out;
 }
 
 .round-nav-btn:hover {
