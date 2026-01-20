@@ -182,7 +182,7 @@ class RCVDemo {
         this.resultsDisplay.innerHTML = `
             <div class="election-info">
                 <p><strong>Total Voters:</strong> ${totalVotes} (including you!)</p>
-                <p><strong>Majority Needed:</strong> ${majorityNeeded} votes</p>
+                <p><strong>Majority Needed:</strong> ${majorityNeeded} votes for the leader to win</p>
             </div>
             <div id="round-display"></div>
             <div id="round-nav"></div>
@@ -304,15 +304,10 @@ class RCVDemo {
             }
         } else {
             // Not a winner round - show elimination explanation
-            const loserPercent = (roundData.loserVotes / this.totalVotes * 100).toFixed(1);
-            const votesShort = this.majorityNeeded - roundData.leaderVotes;
-
             html += `
                 <div class="round-explanation">
-                    <p class="round-note"><strong>No winner yet!</strong></p>
-                    <p class="round-note">The leader has ${roundData.leaderVotes} votes but needs ${this.majorityNeeded} to win (${votesShort} more needed).</p>
-                    <p class="round-note">${this.getCandidateIcon(roundData.loser)} <strong>${roundData.loser}</strong> had the fewest votes (${roundData.loserVotes} votes, ${loserPercent}%) and is eliminated.</p>
-                    <p class="round-note">The ${roundData.loserVotes} voters who ranked ${roundData.loser} first will now have their votes count toward their <em>next choice</em> candidate instead.</p>
+                    <p class="round-note"><strong>No winner yet!</strong> ${this.getCandidateIcon(roundData.loser)} <strong>${roundData.loser}</strong> is eliminated.</p>
+                    <p class="round-note">Their votes transfer to each voter's next candidate choice.</p>
                 </div>
             `;
         }
@@ -378,7 +373,7 @@ class RCVDemo {
         this.resultsDisplay.innerHTML = `
             <div class="election-info">
                 <p><strong>Total Voters:</strong> ${totalVotes} (including you!)</p>
-                <p><strong>Majority Needed:</strong> ${majorityNeeded} votes (50%+1)</p>
+                <p><strong>Winning Percentage:</strong> Minimum Threshold</p>
             </div>
             <div id="rounds-container"></div>
         `;
