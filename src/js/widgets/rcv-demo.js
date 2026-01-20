@@ -158,25 +158,45 @@ class RCVDemo {
         } else {
             this.animateWTAElection(allBallots);
         }
+
+        // Scroll results into view on mobile
+        setTimeout(() => {
+            this.resultsDisplay.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
     }
 
     async animateElection(ballots) {
         const candidates = ['Pi Za Pies', 'Frank N. Stein', 'Anita Bath', 'Crystal Ball', 'Pete Zah'];
-        let activeCandidates = [...candidates];
-        let currentBallots = ballots.map(b => [...b]);
-        let round = 1;
         const totalVotes = ballots.length;
         const majorityNeeded = Math.floor(totalVotes / 2) + 1;
+
+        // Pre-calculate all rounds
+        const rounds = this.calculateAllRounds(ballots, candidates, totalVotes, majorityNeeded);
+
+        // Store rounds data for step-through
+        this.rcvRounds = rounds;
+        this.currentRoundIndex = 0;
+        this.totalVotes = totalVotes;
+        this.majorityNeeded = majorityNeeded;
 
         this.resultsDisplay.innerHTML = `
             <div class="election-info">
                 <p><strong>Total Voters:</strong> ${totalVotes} (including you!)</p>
                 <p><strong>Majority Needed:</strong> ${majorityNeeded} votes</p>
             </div>
-            <div id="rounds-container"></div>
+            <div id="round-display"></div>
+            <div id="round-nav"></div>
         `;
 
-        const roundsContainer = document.getElementById('rounds-container');
+        // Show first round
+        this.showRound(0);
+    }
+
+    calculateAllRounds(ballots, candidates, totalVotes, majorityNeeded) {
+        const rounds = [];
+        let activeCandidates = [...candidates];
+        let currentBallots = ballots.map(b => [...b]);
+        let round = 1;
 
         while (activeCandidates.length > 1) {
             // Count first-choice votes
@@ -184,7 +204,6 @@ class RCVDemo {
             activeCandidates.forEach(c => counts[c] = 0);
 
             currentBallots.forEach(ballot => {
-                // Find first choice among active candidates
                 for (const choice of ballot) {
                     if (activeCandidates.includes(choice)) {
                         counts[choice]++;
@@ -193,121 +212,140 @@ class RCVDemo {
                 }
             });
 
-            // Create round display
-            const roundDiv = document.createElement('div');
-            roundDiv.className = 'round-result';
-            roundDiv.innerHTML = `<h4>Round ${round}</h4>`;
-
             // Sort by votes
-            const sortedCandidates = activeCandidates.sort((a, b) => counts[b] - counts[a]);
-
-            // Check for winner
+            const sortedCandidates = [...activeCandidates].sort((a, b) => counts[b] - counts[a]);
             const leader = sortedCandidates[0];
             const leaderVotes = counts[leader];
-
-            if (leaderVotes >= majorityNeeded) {
-                // We have a winner!
-                const barsHtml = sortedCandidates.map(candidate => {
-                    const votes = counts[candidate];
-                    const percentage = (votes / totalVotes * 100).toFixed(1);
-                    const icon = this.getCandidateIcon(candidate);
-                    const isWinner = candidate === leader;
-                    return `
-                        <div class="vote-bar ${isWinner ? 'winner' : ''}">
-                            <div class="bar-label">
-                                <span>${icon} ${candidate}</span>
-                                <span>${votes} votes (${percentage}%)</span>
-                            </div>
-                            <div class="bar-track">
-                                <div class="bar-fill" style="width: 0%" data-width="${percentage}"></div>
-                                ${isWinner ? '<span class="winner-badge">WINNER!</span>' : ''}
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
-                roundDiv.innerHTML += barsHtml;
-                roundsContainer.appendChild(roundDiv);
-
-                // Animate bars
-                await this.delay(100);
-                roundDiv.querySelectorAll('.bar-fill').forEach(bar => {
-                    bar.style.width = bar.dataset.width + '%';
-                });
-
-                // Add round 4 explanation about vote transfer success
-                if (round === 4) {
-                    const explanationDiv = document.createElement('div');
-                    explanationDiv.className = 'round-explanation rcv-success';
-                    explanationDiv.innerHTML = `
-                        <p class="round-note"><strong>🍕 The Pizza Coalition United!</strong></p>
-                        <p class="round-note">Pi Za Pies and Pete Zah had very similar platforms, but with RCV their supporters didn't split the vote. When Pete Zah was eliminated, those 27 votes transferred to Pi Za Pies as their second choice.</p>
-                        <p class="round-note"><em>In Winner Take All, these similar candidates would have split the pizza lover vote, letting Frank N. Stein win with only 30%!</em></p>
-                    `;
-                    roundDiv.appendChild(explanationDiv);
-                }
-
-                // Show winner message
-                await this.delay(800);
-                const winnerMessage = document.createElement('div');
-                winnerMessage.className = 'winner-message';
-                winnerMessage.innerHTML = `
-                    <h3>${this.getCandidateIcon(leader)} ${leader} Wins!</h3>
-                    <p>With ${leaderVotes} votes (${(leaderVotes / totalVotes * 100).toFixed(1)}%), ${leader} has a majority!</p>
-                `;
-                roundsContainer.appendChild(winnerMessage);
-
-                return;
-            }
-
-            // No winner yet - show round results
             const loser = sortedCandidates[sortedCandidates.length - 1];
 
-            const barsHtml = sortedCandidates.map(candidate => {
-                const votes = counts[candidate];
-                const percentage = (votes / totalVotes * 100).toFixed(1);
-                const icon = this.getCandidateIcon(candidate);
-                const isEliminated = candidate === loser;
-                return `
-                    <div class="vote-bar ${isEliminated ? 'eliminated' : ''}">
-                        <div class="bar-label">
-                            <span>${icon} ${candidate}</span>
-                            <span>${votes} votes (${percentage}%)</span>
-                        </div>
-                        <div class="bar-track">
-                            <div class="bar-fill" style="width: 0%" data-width="${percentage}"></div>
-                            ${isEliminated ? '<span class="eliminated-badge">ELIMINATED</span>' : ''}
-                        </div>
-                    </div>
-                `;
-            }).join('');
+            const roundData = {
+                round,
+                counts: { ...counts },
+                sortedCandidates: [...sortedCandidates],
+                leader,
+                leaderVotes,
+                loser,
+                loserVotes: counts[loser],
+                isWinner: leaderVotes >= majorityNeeded,
+                activeCandidates: [...activeCandidates]
+            };
 
-            roundDiv.innerHTML += barsHtml;
+            rounds.push(roundData);
 
-            const loserVotes = counts[loser];
-            const loserPercent = (loserVotes / totalVotes * 100).toFixed(1);
-            const currentLeaderVotes = counts[sortedCandidates[0]];
-            const votesShort = majorityNeeded - currentLeaderVotes;
+            if (leaderVotes >= majorityNeeded) {
+                break;
+            }
 
-            roundDiv.innerHTML += `
-                <div class="round-explanation">
-                    <p class="round-note"><strong>No winner yet!</strong> The leader has ${currentLeaderVotes} votes but needs ${majorityNeeded} to win (${votesShort} more needed).</p>
-                    <p class="round-note">${this.getCandidateIcon(loser)} <strong>${loser}</strong> had the fewest votes (${loserVotes} votes, ${loserPercent}%) and is eliminated.</p>
-                    <p class="round-note">The ${loserVotes} voters who ranked ${loser} first will now have their votes count toward their <em>next choice</em> candidate instead. Without ${loser}, the rankings will redistribute in round ${round + 1}.</p>
-                </div>
-            `;
-            roundsContainer.appendChild(roundDiv);
-
-            // Animate bars
-            await this.delay(100);
-            roundDiv.querySelectorAll('.bar-fill').forEach(bar => {
-                bar.style.width = bar.dataset.width + '%';
-            });
-
-            // Remove loser from active candidates
-            await this.delay(1200);
+            // Remove loser for next round
             activeCandidates = activeCandidates.filter(c => c !== loser);
             round++;
+        }
+
+        return rounds;
+    }
+
+    showRound(index) {
+        const roundDisplay = document.getElementById('round-display');
+        const roundNav = document.getElementById('round-nav');
+        const roundData = this.rcvRounds[index];
+        const isLastRound = index === this.rcvRounds.length - 1;
+
+        // Build round HTML
+        let html = `<div class="round-result">`;
+
+        // Vote bars
+        roundData.sortedCandidates.forEach(candidate => {
+            const votes = roundData.counts[candidate];
+            const percentage = (votes / this.totalVotes * 100).toFixed(1);
+            const icon = this.getCandidateIcon(candidate);
+            const isWinner = roundData.isWinner && candidate === roundData.leader;
+            const isEliminated = !roundData.isWinner && candidate === roundData.loser;
+
+            let barClass = '';
+            if (isWinner) barClass = 'winner';
+            else if (isEliminated) barClass = 'eliminated';
+
+            html += `
+                <div class="vote-bar ${barClass}">
+                    <div class="bar-label">
+                        <span>${icon} ${candidate}</span>
+                        <span>${votes} votes (${percentage}%)</span>
+                    </div>
+                    <div class="bar-track">
+                        <div class="bar-fill" style="width: ${percentage}%"></div>
+                        ${isWinner ? '<span class="winner-badge">WINNER!</span>' : ''}
+                        ${isEliminated ? '<span class="eliminated-badge">ELIMINATED</span>' : ''}
+                    </div>
+                </div>
+            `;
+        });
+
+        // Winner message first if final round
+        if (roundData.isWinner) {
+            html += `
+                <div class="winner-message">
+                    <h3>${this.getCandidateIcon(roundData.leader)} ${roundData.leader} Wins!</h3>
+                    <p>With ${roundData.leaderVotes} votes (${(roundData.leaderVotes / this.totalVotes * 100).toFixed(1)}%), ${roundData.leader} has a majority!</p>
+                </div>
+            `;
+        }
+
+        // Explanation
+        if (roundData.isWinner) {
+            // Winner round - check if it's the final round with pizza coalition
+            if (roundData.round === 4) {
+                html += `
+                    <div class="round-explanation rcv-success">
+                        <p class="round-note"><strong>The Pizza Coalition United!</strong></p>
+                        <p class="round-note">Pi Za Pies and Pete Zah had very similar platforms, but with RCV their supporters didn't split the vote. When Pete Zah was eliminated, those 27 votes transferred to Pi Za Pies as their second choice.</p>
+                        <p class="round-note"><em>In Winner Take All, these similar candidates would have split the pizza lover vote, letting Frank N. Stein win with only 30%!</em></p>
+                    </div>
+                `;
+            }
+        } else {
+            // Not a winner round - show elimination explanation
+            const loserPercent = (roundData.loserVotes / this.totalVotes * 100).toFixed(1);
+            const votesShort = this.majorityNeeded - roundData.leaderVotes;
+
+            html += `
+                <div class="round-explanation">
+                    <p class="round-note"><strong>No winner yet!</strong></p>
+                    <p class="round-note">The leader has ${roundData.leaderVotes} votes but needs ${this.majorityNeeded} to win (${votesShort} more needed).</p>
+                    <p class="round-note">${this.getCandidateIcon(roundData.loser)} <strong>${roundData.loser}</strong> had the fewest votes (${roundData.loserVotes} votes, ${loserPercent}%) and is eliminated.</p>
+                    <p class="round-note">The ${roundData.loserVotes} voters who ranked ${roundData.loser} first will now have their votes count toward their <em>next choice</em> candidate instead.</p>
+                </div>
+            `;
+        }
+
+        html += `</div>`;
+
+        roundDisplay.innerHTML = html;
+
+        // Navigation buttons
+        let navHtml = '<div class="round-navigation">';
+
+        if (!isLastRound) {
+            navHtml += `<button class="round-nav-btn primary" id="next-round-btn">Next Round &rarr;</button>`;
+        }
+
+        navHtml += '</div>';
+        roundNav.innerHTML = navHtml;
+
+        // Show/hide the "Winner Take All Demo" button based on whether we're at the final round
+        if (isLastRound) {
+            this.resetBtn.style.display = 'inline-block';
+        } else {
+            this.resetBtn.style.display = 'none';
+        }
+
+        // Add event listeners
+        const nextBtn = document.getElementById('next-round-btn');
+
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                this.currentRoundIndex++;
+                this.showRound(this.currentRoundIndex);
+            });
         }
     }
 
@@ -349,7 +387,6 @@ class RCVDemo {
         // Show results
         const resultsDiv = document.createElement('div');
         resultsDiv.className = 'round-result';
-        resultsDiv.innerHTML = `<h4>Final Results</h4>`;
 
         const barsHtml = sortedCandidates.map(candidate => {
             const votes = counts[candidate];
@@ -372,32 +409,6 @@ class RCVDemo {
         }).join('');
 
         resultsDiv.innerHTML += barsHtml;
-
-        // Add explanation about vote splitting
-
-        // Calculate Fun Food Coalition combined votes
-        const funFoodVotes = counts['Pi Za Pies'] + counts['Pete Zah'];
-        const funFoodPercent = (funFoodVotes / totalVotes * 100).toFixed(1);
-
-        const explanationHtml = hasMajority ? `
-            <div class="round-explanation">
-                <p class="round-note"><strong>${this.getCandidateIcon(winner)} ${winner} wins with a majority!</strong></p>
-                <p class="round-note">With ${winnerVotes} votes (${winnerPercent}%), they have more than 50% support.</p>
-            </div>
-        ` : `
-            <div class="vote-split-analysis">
-                <h4>🍕 The Sliced Campaigns</h4>
-                <p>If <strong>Pi Za Pies</strong> and <strong>Pete Zah</strong> were one candidate, they'd have:</p>
-                <div class="coalition-bar">
-                    <div class="coalition-fill" style="width: ${funFoodPercent}%"></div>
-                    <span class="coalition-label">${funFoodVotes} votes (${funFoodPercent}%)</span>
-                </div>
-                <p class="split-conclusion">That's <strong>${funFoodVotes > winnerVotes ? 'MORE' : 'fewer'}</strong> than ${winner}'s ${winnerVotes} votes! The similar candidates split the "pizza lover" vote, letting ${winner} win with just ${winnerPercent}%.</p>
-                <p class="rcv-note"><em>With Ranked Choice Voting, Pi Za Pies and Pete Zah voters' second choices would count, ensuring the winner has true majority support.</em></p>
-            </div>
-        `;
-
-        resultsDiv.innerHTML += explanationHtml;
         roundsContainer.appendChild(resultsDiv);
 
         // Animate bars
@@ -406,7 +417,7 @@ class RCVDemo {
             bar.style.width = bar.dataset.width + '%';
         });
 
-        // Show winner message
+        // Show winner message first
         await this.delay(800);
         const winnerMessage = document.createElement('div');
         winnerMessage.className = hasMajority ? 'winner-message' : 'winner-message wta-no-majority';
@@ -424,6 +435,37 @@ class RCVDemo {
             </ul>
         `;
         roundsContainer.appendChild(winnerMessage);
+
+        // Then show vote split analysis (only when no majority)
+        if (!hasMajority) {
+            const funFoodVotes = counts['Pi Za Pies'] + counts['Pete Zah'];
+            const funFoodPercent = (funFoodVotes / totalVotes * 100).toFixed(1);
+
+            const voteSplitDiv = document.createElement('div');
+            voteSplitDiv.className = 'vote-split-analysis';
+            voteSplitDiv.innerHTML = `
+                <h4>🍕 The Sliced Campaigns</h4>
+                <p><strong>If Pi Za Pies and Pete Zah were one candidate, they'd have:</strong></p>
+                <div class="coalition-bar">
+                    <div class="coalition-fill" style="width: ${funFoodPercent}%"></div>
+                    <span class="coalition-label">${funFoodVotes} votes (${funFoodPercent}%)</span>
+                </div>
+                <ul class="split-points">
+                    <li>That's <strong>${funFoodVotes > winnerVotes ? 'MORE' : 'fewer'}</strong> votes than the winner!</li>
+                    <li>These two similar candidates split the "pizza lover" vote.</li>
+                    <li>Most voters want a Pizza candidate, but their votes got thrown out!</li>
+                </ul>
+            `;
+            roundsContainer.appendChild(voteSplitDiv);
+        } else {
+            const explanationDiv = document.createElement('div');
+            explanationDiv.className = 'round-explanation';
+            explanationDiv.innerHTML = `
+                <p class="round-note"><strong>${this.getCandidateIcon(winner)} ${winner} wins with a majority!</strong></p>
+                <p class="round-note">With ${winnerVotes} votes (${winnerPercent}%), they have more than 50% support.</p>
+            `;
+            roundsContainer.appendChild(explanationDiv);
+        }
 
         // Change reset button text to "RCV Solution" for WTA mode
         if (!hasMajority) {

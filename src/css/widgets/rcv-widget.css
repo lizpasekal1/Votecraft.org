@@ -24,7 +24,7 @@ body {
     color: var(--rcv-text);
     background: transparent;
     margin: 0;
-    padding: 20px;
+    padding: 12px;
     display: flex;
     justify-content: center;
 }
@@ -39,26 +39,26 @@ body {
 .voting-mode-toggle {
     display: flex;
     justify-content: center;
-    gap: 8px;
-    margin-bottom: 24px;
+    gap: 6px;
+    margin-bottom: 16px;
     background: var(--rcv-background);
-    padding: 4px;
-    border-radius: 8px;
-    max-width: 500px;
+    padding: 3px;
+    border-radius: 6px;
+    max-width: 420px;
     margin-left: auto;
     margin-right: auto;
 }
 
 .mode-btn {
     flex: 1;
-    padding: 10px 16px;
-    font-size: 0.9rem;
+    padding: 7px 12px;
+    font-size: 0.85rem;
     font-weight: 600;
     font-family: inherit;
     background: transparent;
     color: var(--rcv-text-light);
     border: none;
-    border-radius: 6px;
+    border-radius: 5px;
     cursor: pointer;
     transition: all 0.3s;
 }
@@ -89,7 +89,7 @@ body {
 .rcv-demo {
     display: grid;
     grid-template-columns: 1fr 1.5fr;
-    gap: 32px;
+    gap: 24px;
     background: transparent;
     padding: 0;
     align-items: stretch;
@@ -103,31 +103,35 @@ body {
 
 .demo-ballot h3,
 .demo-results h3 {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: 600;
     color: var(--rcv-text);
-    margin-bottom: 16px;
+    margin-bottom: 10px;
     text-align: center;
+}
+
+.demo-ballot h3 {
+    margin-bottom: 12px;
 }
 
 .ballot-instructions {
     color: var(--rcv-text-light);
     font-size: 0.9rem;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
 .candidate-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 .candidate-item {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 14px 16px;
+    padding: 12px 14px;
     background: var(--rcv-background);
     border: 2px solid var(--rcv-border);
     border-radius: 6px;
@@ -161,8 +165,8 @@ body {
 }
 
 .rank-badge {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     background: var(--rcv-primary);
     color: white;
     border-radius: 50%;
@@ -170,17 +174,18 @@ body {
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     flex-shrink: 0;
 }
 
 .candidate-icon {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
 }
 
 .candidate-name {
     flex: 1;
     font-weight: 500;
+    font-size: 0.95rem;
     color: var(--rcv-text);
 }
 
@@ -194,7 +199,7 @@ body {
 .results-placeholder {
     color: var(--rcv-text);
     text-align: center;
-    padding: 20px;
+    padding: 16px;
     background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
     border-left: 3px solid var(--rcv-primary);
     border-radius: 0 6px 6px 0;
@@ -203,30 +208,32 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    font-size: 0.9rem;
 }
 
 .results-placeholder::before {
     content: '🗳️';
-    font-size: 2.5rem;
-    margin-bottom: 8px;
+    font-size: 2rem;
+    margin-bottom: 6px;
 }
 
 .election-info {
     background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
     border-left: 3px solid var(--rcv-primary);
-    padding: 16px 20px;
+    padding: 10px 14px;
     border-radius: 0 6px 6px 0;
-    margin-bottom: 24px;
+    margin-bottom: 14px;
 }
 
 .election-info p {
-    margin: 4px 0;
+    margin: 2px 0;
     color: var(--rcv-text);
+    font-size: 0.85rem;
 }
 
 .round-result {
-    margin-bottom: 24px;
-    padding-bottom: 24px;
+    margin-bottom: 14px;
+    padding-bottom: 14px;
     border-bottom: 1px solid var(--rcv-border);
 }
 
@@ -237,28 +244,29 @@ body {
 }
 
 .round-result h4 {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--rcv-primary);
-    margin-bottom: 16px;
+    margin-bottom: 10px;
+    text-align: center;
 }
 
 .vote-bar {
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .bar-label {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     font-size: 0.9rem;
     color: var(--rcv-text);
 }
 
 .bar-track {
-    height: 32px;
+    height: 24px;
     background: var(--rcv-background);
-    border-radius: 6px;
+    border-radius: 5px;
     overflow: hidden;
     position: relative;
 }
@@ -266,7 +274,7 @@ body {
 .bar-fill {
     height: 100%;
     background: var(--rcv-primary);
-    border-radius: 6px;
+    border-radius: 5px;
     transition: width 0.8s ease-out;
 }
 
@@ -289,13 +297,13 @@ body {
 .winner-badge,
 .eliminated-badge {
     position: absolute;
-    right: 8px;
+    right: 6px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 4px;
+    padding: 2px 6px;
+    border-radius: 3px;
 }
 
 .winner-badge {
@@ -311,8 +319,8 @@ body {
 .round-explanation {
     background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
     border-left: 3px solid var(--rcv-primary);
-    padding: 12px 16px;
-    margin-top: 16px;
+    padding: 10px 12px;
+    margin-top: 10px;
     border-radius: 0 6px 6px 0;
 }
 
@@ -324,8 +332,8 @@ body {
 .round-note {
     font-size: 0.9rem;
     color: var(--rcv-text);
-    margin: 8px 0;
-    line-height: 1.5;
+    margin: 5px 0;
+    line-height: 1.4;
 }
 
 .round-note:first-child {
@@ -339,15 +347,15 @@ body {
 .winner-message {
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
-    padding: 32px;
-    border-radius: 8px;
+    padding: 16px 20px;
+    border-radius: 6px;
     text-align: center;
     animation: fadeIn 0.5s ease-out;
-    margin-top: 24px;
+    margin-top: 14px;
 }
 
 .round-result + .winner-message {
-    margin-top: 0;
+    margin-top: 14px;
 }
 
 .round-result:has(+ .winner-message) {
@@ -360,7 +368,7 @@ body {
     background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
     color: white !important;
     text-align: left;
-    padding: 24px 32px;
+    padding: 10px 14px;
 }
 
 .winner-message.wta-no-majority h3,
@@ -370,15 +378,16 @@ body {
 
 .wta-results-list {
     list-style-type: disc;
-    padding-left: 24px;
-    margin: 12px 0 0 0;
+    padding-left: 20px;
+    margin: 4px 0 0 0;
     text-align: left;
 }
 
 .wta-results-list li {
     color: white;
-    margin: 8px 0;
-    line-height: 1.4;
+    margin: 2px 0;
+    line-height: 1.3;
+    font-size: 0.95rem;
 }
 
 .round-explanation.wta-warning {
@@ -394,31 +403,31 @@ body {
 .vote-split-analysis {
     background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
     border: 2px solid #f59e0b;
-    border-radius: 8px;
-    padding: 20px;
-    margin-top: 20px;
-    margin-bottom: 20px;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-top: 10px;
+    margin-bottom: 10px;
     text-align: center;
 }
 
 .vote-split-analysis h4 {
-    font-size: 1.1rem;
+    font-size: 1.3rem;
     color: #92400e;
-    margin-bottom: 12px;
+    margin-bottom: 4px;
 }
 
 .vote-split-analysis p {
     color: #78350f;
-    margin: 8px 0;
-    font-size: 0.95rem;
+    margin: 2px 0 0 0;
+    font-size: 0.9rem;
 }
 
 .coalition-bar {
     background: var(--rcv-white);
-    border-radius: 6px;
-    height: 40px;
+    border-radius: 5px;
+    height: 24px;
     position: relative;
-    margin: 16px 0;
+    margin: 6px 0;
     overflow: hidden;
     border: 2px solid #d97706;
 }
@@ -426,7 +435,7 @@ body {
 .coalition-fill {
     height: 100%;
     background: linear-gradient(90deg, #f97316 0%, #fb923c 100%);
-    border-radius: 4px;
+    border-radius: 3px;
     transition: width 0.8s ease-out;
 }
 
@@ -437,24 +446,44 @@ body {
     transform: translate(-50%, -50%);
     font-weight: 700;
     color: #78350f;
-    font-size: 1rem;
+    font-size: 0.85rem;
     text-shadow: 0 1px 2px rgba(255,255,255,0.8);
 }
 
 .split-conclusion {
     font-weight: 600;
-    font-size: 1rem !important;
+    font-size: 0.85rem !important;
+}
+
+.split-points {
+    list-style-type: disc;
+    padding-left: 20px;
+    margin: 4px 0;
+    text-align: left;
+}
+
+.split-points li {
+    color: #78350f;
+    margin: 2px 0;
+    line-height: 1.3;
+    font-size: 0.95rem;
+    font-weight: normal;
 }
 
 .rcv-note {
-    font-size: 0.85rem !important;
+    font-size: 0.75rem !important;
     color: #92400e !important;
-    margin-top: 12px !important;
+    margin-top: 8px !important;
 }
 
 .winner-message h3 {
-    font-size: 1.75rem;
-    margin-bottom: 8px;
+    font-size: 1.3rem;
+    margin-bottom: 4px;
+    color: white;
+}
+
+.winner-message p {
+    font-size: 0.9rem;
 }
 
 @keyframes fadeIn {
@@ -470,8 +499,8 @@ body {
 
 /* Buttons */
 .btn-primary {
-    padding: 12px 24px;
-    font-size: 1rem;
+    padding: 12px 20px;
+    font-size: 0.95rem;
     font-weight: 600;
     font-family: inherit;
     background: var(--rcv-primary);
@@ -488,44 +517,79 @@ body {
 }
 
 .btn-secondary {
-    padding: 12px 24px;
-    font-size: 1rem;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: inherit;
+    background: linear-gradient(135deg, var(--rcv-primary) 0%, var(--rcv-primary-dark) 100%);
+    color: white;
+    border: 2px solid var(--rcv-primary);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    margin-top: 12px;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, var(--rcv-primary-dark) 0%, #2845a6 100%);
+    color: white;
+}
+
+.btn-secondary.rcv-solution-btn {
+    background: linear-gradient(135deg, var(--rcv-primary) 0%, var(--rcv-primary-dark) 100%);
+    color: white;
+    border-color: var(--rcv-primary);
+}
+
+.btn-secondary.rcv-solution-btn:hover {
+    background: linear-gradient(135deg, var(--rcv-primary-dark) 0%, #2845a6 100%);
+    border-color: var(--rcv-primary-dark);
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(66, 105, 255, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(66, 105, 255, 0);
+    }
+}
+
+/* Round Navigation */
+.round-navigation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 12px;
+}
+
+.round-nav-btn {
+    padding: 8px 16px;
+    font-size: 0.85rem;
     font-weight: 600;
     font-family: inherit;
     background: white;
     color: var(--rcv-primary);
     border: 2px solid var(--rcv-primary);
-    border-radius: 6px;
+    border-radius: 5px;
     cursor: pointer;
     transition: all 0.2s;
-    width: 100%;
-    margin-top: 16px;
 }
 
-.btn-secondary:hover {
+.round-nav-btn:hover {
     background: var(--rcv-primary);
     color: white;
 }
 
-.btn-secondary.rcv-solution-btn {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+.round-nav-btn.primary {
+    background: var(--rcv-primary);
     color: white;
-    border-color: #10b981;
-    animation: pulse 2s infinite;
 }
 
-.btn-secondary.rcv-solution-btn:hover {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
-    border-color: #059669;
-}
-
-@keyframes pulse {
-    0%, 100% {
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
-    }
-    50% {
-        box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
-    }
+.round-nav-btn.primary:hover {
+    background: var(--rcv-primary-dark);
+    border-color: var(--rcv-primary-dark);
 }
 
 /* Responsive */
@@ -567,5 +631,15 @@ body {
         width: 24px;
         height: 24px;
         font-size: 0.8rem;
+    }
+
+    .round-navigation {
+        margin-top: 16px;
+        padding-top: 12px;
+    }
+
+    .round-nav-btn {
+        padding: 8px 14px;
+        font-size: 0.85rem;
     }
 }
