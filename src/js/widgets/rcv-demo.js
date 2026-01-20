@@ -12,7 +12,7 @@ class RCVDemo {
         this.rcvModeBtn = document.getElementById('rcv-mode-btn');
         this.wtaModeBtn = document.getElementById('wta-mode-btn');
 
-        // Voting mode: 'rcv' or 'wta' (winner take all)
+        // Voting mode: 'rcv' or 'wta' (percent threshold)
         this.votingMode = 'rcv';
 
         // Track user's ranking selections
@@ -41,7 +41,7 @@ class RCVDemo {
         const totalVotes = 100;
         const winningText = this.votingMode === 'rcv'
             ? 'Majority percent over 50%'
-            : 'Minimum threshold percent';
+            : 'Minimum percent threshold over others';
         document.getElementById('election-info-container').innerHTML = `
             <p><strong>Total Voters:</strong> ${totalVotes} (including you!)</p>
             <p><strong>Winning =</strong> ${winningText}</p>
@@ -52,8 +52,8 @@ class RCVDemo {
         const instructionsEl = document.querySelector('.ballot-instructions');
         if (instructionsEl) {
             instructionsEl.textContent = this.votingMode === 'rcv'
-                ? 'Tap candidates in order to rank them'
-                : 'Tap a candidate to vote for them';
+                ? 'Tap candidates to rank your votes for them'
+                : 'Tap one candidate to vote';
         }
     }
 
@@ -122,7 +122,7 @@ class RCVDemo {
         const currentRankIndex = this.userRankings.indexOf(candidate);
 
         if (this.votingMode === 'wta') {
-            // Winner Take All: only one selection allowed
+            // Percent Threshold: only one selection allowed
             if (currentRankIndex !== -1) {
                 // Already selected - deselect
                 this.userRankings = [];
@@ -351,7 +351,7 @@ class RCVDemo {
                 explanation.innerHTML = `
                     <p class="round-note"><strong>The Pizza Coalition United!</strong></p>
                     <p class="round-note">Pi Za Pies and Pete Zah had very similar platforms, but with RCV their supporters didn't split the vote. When Pete Zah was eliminated, those 27 votes transferred to Pi Za Pies as their second choice.</p>
-                    <p class="round-note"><em>In Winner Take All, these similar candidates would have split the pizza lover vote, letting Frank N. Stein win with only 30%!</em></p>
+                    <p class="round-note"><em>In Percent Threshold, these similar candidates would have split the pizza lover vote, letting Frank N. Stein win with only 30%!</em></p>
                 `;
                 roundResult.appendChild(explanation);
             }
@@ -378,7 +378,7 @@ class RCVDemo {
         navHtml += '</div>';
         roundNav.innerHTML = navHtml;
 
-        // Show/hide the "Winner Take All Demo" button based on whether we're at the final round
+        // Show/hide the "Percent Threshold Demo" button based on whether we're at the final round
         if (isLastRound) {
             // Wait for all animations to complete, then show button
             await this.delay(800);
@@ -407,7 +407,7 @@ class RCVDemo {
         const totalVotes = ballots.length;
         const majorityNeeded = Math.floor(totalVotes / 2) + 1;
 
-        // Count only first-choice votes (Winner Take All)
+        // Count only first-choice votes (Percent Threshold)
         const counts = {};
         candidates.forEach(c => counts[c] = 0);
 
@@ -484,7 +484,7 @@ class RCVDemo {
         ` : `
             <h3>${this.getCandidateIcon(winner)} ${winner} Wins!</h3>
             <ul class="wta-results-list">
-                <li>They got ${winnerVotes} votes (${winnerPercent}%) the minimum winning threshold</li>
+                <li>They got ${winnerVotes} votes (${winnerPercent}%) a minimum winning percent threshold</li>
                 <li>They won even though ${othersVotes} voters (${othersPercent}%)<br>preferred someone else</li>
             </ul>
         `;
@@ -556,7 +556,7 @@ class RCVDemo {
     resetDemo() {
         // Check if we should switch to RCV mode (when "RCV Solution" button was clicked)
         const switchToRCV = this.resetBtn.classList.contains('rcv-solution-btn');
-        // Check if we should switch to WTA mode (when "Winner Take All Demo" button was clicked after RCV)
+        // Check if we should switch to WTA mode (when "Percent Threshold Demo" button was clicked after RCV)
         const switchToWTA = !switchToRCV && this.votingMode === 'rcv' && this.resetBtn.style.display !== 'none';
 
         // Reset rankings
@@ -571,7 +571,7 @@ class RCVDemo {
         });
 
         // Reset button text and styling
-        this.resetBtn.textContent = 'Winner Take All Demo';
+        this.resetBtn.textContent = 'Percent Threshold Demo';
         this.resetBtn.classList.remove('rcv-solution-btn');
 
         // Reset buttons
@@ -599,8 +599,8 @@ class RCVDemo {
 
         // Reset results with mode-appropriate placeholder
         const placeholderText = this.votingMode === 'rcv'
-            ? 'Cast your vote to see how RCV works!'
-            : 'Cast your vote to see how Winner Take All Voting works!';
+            ? 'Cast your vote to see how RCV works!<br><em>This system rewards broad support instead of vote splitting.</em>'
+            : 'Cast your vote to see how Percent Threshold Voting works!<br><em>This is the outdated system most areas still use.</em>';
         this.resultsDisplay.innerHTML = `<p class="results-placeholder">${placeholderText}</p>`;
     }
 }

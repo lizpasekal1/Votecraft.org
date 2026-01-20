@@ -214,6 +214,7 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 0.9rem;
+    line-height: 1.8;
 }
 
 .results-placeholder::before {
