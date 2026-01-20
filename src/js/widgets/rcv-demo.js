@@ -345,6 +345,10 @@ class RCVDemo {
             nextBtn.addEventListener('click', () => {
                 this.currentRoundIndex++;
                 this.showRound(this.currentRoundIndex);
+                // Scroll results into view on mobile
+                setTimeout(() => {
+                    this.resultsDisplay.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
             });
         }
     }
