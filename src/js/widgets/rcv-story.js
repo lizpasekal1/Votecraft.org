@@ -1,4 +1,4 @@
-(function() {
+document.addEventListener('DOMContentLoaded', function() {
   let currentStage = 0;
   const totalStages = 5;
 
@@ -136,4 +136,4 @@
       }
     });
   });
-})();
+});
