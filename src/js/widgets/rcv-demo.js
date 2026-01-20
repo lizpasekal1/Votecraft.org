@@ -215,7 +215,8 @@ class RCVDemo {
                 const resultsSection = document.querySelector('.demo-results');
                 if (resultsSection) {
                     // Send scroll request to parent page (for iframe)
-                    const scrollOffset = resultsSection.offsetTop;
+                    // Subtract 60px to account for fixed menu on parent page
+                    const scrollOffset = resultsSection.offsetTop - 60;
                     window.parent.postMessage({ type: 'rcv-scroll', scrollTo: scrollOffset }, '*');
                 }
             }, 100);
@@ -358,7 +359,7 @@ class RCVDemo {
             winnerMessage.className = 'winner-message';
             winnerMessage.innerHTML = `
                 <h3>${this.getCandidateIcon(roundData.leader)} ${roundData.leader} Wins!</h3>
-                <p>With ${roundData.leaderVotes} votes (${(roundData.leaderVotes / this.totalVotes * 100).toFixed(1)}%), ${roundData.leader} has a majority!</p>
+                <p>With ${roundData.leaderVotes} votes (${(roundData.leaderVotes / this.totalVotes * 100).toFixed(1)}%), a majority!</p>
             `;
             roundResult.appendChild(winnerMessage);
 
@@ -368,9 +369,7 @@ class RCVDemo {
                 const explanation = document.createElement('div');
                 explanation.className = 'round-explanation rcv-success';
                 explanation.innerHTML = `
-                    <p class="round-note"><strong>The Pizza Coalition United!</strong></p>
-                    <p class="round-note">Pi Za Pies and Pete Zah had very similar platforms, but with RCV their supporters didn't split the vote. When Pete Zah was eliminated, those 27 votes transferred to Pi Za Pies as their second choice.</p>
-                    <p class="round-note"><em>In Percent Threshold, these similar candidates would have split the pizza lover vote, letting Frank N. Stein win with only 30%!</em></p>
+                    <p class="round-note"><strong>The Pizza Coalition United!</strong> When Pete Zah was eliminated, their votes transferred to Pi Za Pies. Under Percent Threshold Voting, those votes would split, letting Frank N. Stein win with just 30%.</p>
                 `;
                 roundResult.appendChild(explanation);
             }
@@ -418,7 +417,8 @@ class RCVDemo {
                     setTimeout(() => {
                         const resultsSection = document.querySelector('.demo-results');
                         if (resultsSection) {
-                            const scrollOffset = resultsSection.offsetTop;
+                            // Subtract 60px to account for fixed menu on parent page
+                            const scrollOffset = resultsSection.offsetTop - 60;
                             window.parent.postMessage({ type: 'rcv-scroll', scrollTo: scrollOffset }, '*');
                         }
                     }, 100);
@@ -631,12 +631,13 @@ class RCVDemo {
             : 'Cast your vote to see how Percent Threshold Voting works!<br><em>This is the outdated system most areas still use.</em>';
         this.resultsDisplay.innerHTML = `<p class="results-placeholder">${placeholderText}</p>`;
 
-        // Scroll back to ballot on mobile
+        // Scroll back to top on mobile (show toggle buttons under menu)
         if (window.innerWidth <= 700) {
             setTimeout(() => {
-                const ballotSection = document.querySelector('.demo-ballot');
-                if (ballotSection) {
-                    const scrollOffset = ballotSection.offsetTop;
+                const toggleButtons = document.querySelector('.voting-mode-toggle');
+                if (toggleButtons) {
+                    // Subtract 60px to account for fixed menu on parent page
+                    const scrollOffset = toggleButtons.offsetTop - 60;
                     window.parent.postMessage({ type: 'rcv-scroll', scrollTo: scrollOffset }, '*');
                 }
             }, 100);

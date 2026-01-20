@@ -667,6 +667,53 @@ body {
         width: 100%;
     }
 
+    /* Compact winner message and sliced campaigns on mobile */
+    .winner-message {
+        padding: 12px 14px;
+        margin-top: 10px;
+    }
+
+    .winner-message h3 {
+        font-size: 1.1rem;
+        margin-bottom: 2px;
+    }
+
+    .winner-message p {
+        font-size: 0.85rem;
+    }
+
+    .wta-results-list {
+        padding-left: 18px;
+        margin: 2px 0 0 0;
+    }
+
+    .wta-results-list li {
+        font-size: 0.85rem;
+        margin: 1px 0;
+        line-height: 1.25;
+    }
+
+    .vote-split-analysis {
+        padding: 10px 12px;
+        margin-top: 10px;
+    }
+
+    .vote-split-analysis h4 {
+        font-size: 0.95rem;
+        margin-bottom: 4px;
+    }
+
+    .vote-split-analysis ul {
+        padding-left: 18px;
+        margin: 2px 0 0 0;
+    }
+
+    .vote-split-analysis li {
+        font-size: 0.85rem;
+        margin: 1px 0;
+        line-height: 1.25;
+    }
+
 }
 
 @media (max-width: 430px) {
