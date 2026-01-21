@@ -18,9 +18,18 @@
             background: transparent;
             margin: 0;
             padding: 8px;
+            display: flex;
+            justify-content: center;
+        }
+        @media (max-width: 430px) {
+            body {
+                padding: 0;
+                width: 100%;
+                box-sizing: border-box;
+            }
         }
     </style>
-    <link rel="stylesheet" href="../css/rcv-story-widget.css?v=1">
+    <link rel="stylesheet" href="../css/rcv-story-widget.css?v=91">
 </head>
 <body>
     <div class="rcv-story-widget">
@@ -30,7 +39,6 @@
             <div class="step-dot" data-step="1"></div>
             <div class="step-dot" data-step="2"></div>
             <div class="step-dot" data-step="3"></div>
-            <div class="step-dot" data-step="4"></div>
         </div>
 
         <div class="stages-container">
@@ -38,25 +46,21 @@
             <!-- Stage 1: The Problem with Winner-Take-All -->
             <div class="stage active" data-stage="0">
                 <div class="section-header problem">
-                    <h3>Percent Threshold Voting is Toxic</h3>
-                    <p>Here's what's wrong with our current voting system...</p>
+                    <h3>Polarized Voting is Toxic</h3>
+                    <p>Here's what's wrong with the current Percent Threshold Voting system...</p>
                 </div>
                 <div class="problem-grid">
                     <div class="problem-card" data-delay="0">
                         <span class="problem-icon">⚠️</span>
-                        <p class="problem-text">It elects someone <strong>most don't want</strong>, simply because similar awesome candidates split votes. 😤</p>
+                        <p class="problem-text">Similar candidates <strong>split votes</strong>, electing someone most don't want. 😤</p>
                     </div>
                     <div class="problem-card" data-delay="1">
                         <span class="problem-icon">⚠️</span>
-                        <p class="problem-text">Winners represent the <strong>minimum winning threshold</strong> in a two party system. 📉</p>
+                        <p class="problem-text">Winners can win with just a <strong>small minority</strong> of support. 📉</p>
                     </div>
                     <div class="problem-card" data-delay="2">
                         <span class="problem-icon">⚠️</span>
-                        <p class="problem-text">The system <strong>discourages leaders</strong> from raising new ideas or challenging their own party, out of fear they'll split/divide support. 🤐</p>
-                    </div>
-                    <div class="problem-card" data-delay="3">
-                        <span class="problem-icon">⚠️</span>
-                        <p class="problem-text">This fuels the <strong>polarized negativity</strong> we see today. 😡</p>
+                        <p class="problem-text"><strong>Discourages new ideas</strong> out of fear of splitting votes. 🤐</p>
                     </div>
                 </div>
             </div>
@@ -70,59 +74,21 @@
                 <div class="solution-grid">
                     <div class="solution-card" data-delay="0">
                         <span class="solution-icon">⭐</span>
-                        <p class="solution-text">If your first choice can't win, <strong>your vote isn't trashed</strong>&#8212;it moves to your next preference. 🎉</p>
+                        <p class="solution-text">Your vote <strong>transfers</strong> to your next choice if your first pick loses. 🎉</p>
                     </div>
                     <div class="solution-card" data-delay="1">
                         <span class="solution-icon">⭐</span>
-                        <p class="solution-text">Elections reflect <strong>who most actually prefer</strong>, not who squeaked by with the lowest-minority. 🥳</p>
+                        <p class="solution-text">Winners reflect <strong>who most people actually prefer</strong>. 🥳</p>
                     </div>
                     <div class="solution-card" data-delay="2">
                         <span class="solution-icon">⭐</span>
-                        <p class="solution-text">The system <strong>encourages leaders</strong> to raise new ideas without fear of splitting the vote. 💡</p>
-                    </div>
-                    <div class="solution-card" data-delay="3">
-                        <span class="solution-icon">⭐</span>
-                        <p class="solution-text">It rewards <strong>consensus instead of division</strong>, which is a fairer more collaborative outcome. 🤝</p>
+                        <p class="solution-text"><strong>Encourages new ideas</strong> without fear of splitting votes. 💡</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Stage 3: Side-by-Side Comparison -->
+            <!-- Stage 3: The Rigged Game Cycle -->
             <div class="stage" data-stage="2">
-                <div class="section-header">
-                    <h3 style="color: #fff;">The Difference</h3>
-                    <p>See how these systems compare...</p>
-                </div>
-                <div class="comparison-container">
-                    <div class="comparison-panels">
-                        <div class="comparison-panel wta" data-delay="0">
-                            <div class="panel-icon">⚠️</div>
-                            <div class="panel-header">Percent Threshold Voting</div>
-                            <ul class="panel-points">
-                                <li>⚠️ Vote splitting elects unpopular winners</li>
-                                <li>⚠️ Your vote is wasted if your candidate loses</li>
-                                <li>⚠️ Encourages negative campaigning</li>
-                                <li>⚠️ Forces two-party dominance</li>
-                                <li>⚠️ Winners can win with tiny minorities</li>
-                            </ul>
-                        </div>
-                        <div class="comparison-panel rcv" data-delay="1">
-                            <div class="panel-icon">&#10003;</div>
-                            <div class="panel-header">Ranked Choice Voting</div>
-                            <ul class="panel-points">
-                                <li>&#10003; Similar candidates don't split the vote</li>
-                                <li>&#10003; Your vote always counts for someone</li>
-                                <li>&#10003; Rewards coalition-building</li>
-                                <li>&#10003; More voices, more choices</li>
-                                <li>&#10003; Winners need broad support</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Stage 4: The Rigged Game Cycle -->
-            <div class="stage" data-stage="3">
                 <div class="section-header problem">
                     <h3>The Polarization Spiral</h3>
                     <p>Percent Threshold Voting creates a vicious cycle that keeps us trapped...</p>
@@ -140,26 +106,28 @@
                         <div class="cycle-arrow" data-position="left-top">➜</div>
                     </div>
                     <div class="cycle-explanation">
-                        <p>Two-party dominance → voters fear splitting the vote → campaigns go negative to attack opponents → polarized winners get elected → the cycle reinforces itself...</p>
                         <p class="cycle-highlight"><strong>RCV breaks this cycle</strong> by letting you rank your choices without fear!</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Stage 5: Call to Action -->
-            <div class="stage" data-stage="4">
+            <!-- Stage 4: Call to Action -->
+            <div class="stage" data-stage="3">
+                <div class="section-header solution">
+                    <h3>The RCV Solution</h3>
+                </div>
                 <div class="final-stage">
-                    <div class="final-icon">&#10003;</div>
+                    <div class="final-icons">
+                        <span class="final-num" data-num="1">1️⃣</span>
+                        <span class="final-num" data-num="2">2️⃣</span>
+                        <span class="final-num" data-num="3">3️⃣</span>
+                    </div>
                     <div class="final-message">
-                        <h3>A Better Way to Vote</h3>
                         <p>
-                            With <strong>Ranked Choice Voting</strong>, elections become about finding the candidate <strong>most people can support</strong>&#8212;not just the one who benefits from a divided opposition.
+                            Rank your choices. If your first pick can't win, your vote transfers to your next choice.
                         </p>
                         <p>
-                            It's simple: rank your choices 1, 2, 3. If your first pick can't win, your vote goes to your next choice. <strong>Your voice is always heard!</strong>
-                        </p>
-                        <p>
-                            That's how we build a democracy that works for everyone.
+                            <strong>Your voice is always heard!</strong>
                         </p>
                     </div>
                 </div>
@@ -174,7 +142,7 @@
         </div>
     </div>
 
-    <script src="../js/rcv-story.js?v=2"></script>
+    <script src="../js/rcv-story.js?v=6"></script>
     <script>
         function sendHeight() {
             // Get height from the widget element
