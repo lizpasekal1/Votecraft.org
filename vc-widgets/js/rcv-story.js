@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
         card.classList.remove('reveal');
         setTimeout(() => {
           card.classList.add('reveal');
-        }, i * 200);
+        }, 100 + i * 200);
       });
     }
 
@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
         card.classList.remove('reveal');
         setTimeout(() => {
           card.classList.add('reveal');
-        }, i * 200);
+        }, 100 + i * 200);
       });
     }
 
