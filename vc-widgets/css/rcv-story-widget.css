@@ -58,8 +58,8 @@
 /* Stages Container */
 .stages-container {
   position: relative;
-  min-height: 450px;
-  height: 450px;
+  min-height: 520px;
+  height: 520px;
 }
 
 .stage {
@@ -71,6 +71,19 @@
   display: block;
 }
 
+.stage[data-stage="0"],
+.stage[data-stage="1"] {
+  height: 100%;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.stage[data-stage="0"].active,
+.stage[data-stage="1"].active {
+  display: flex;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
@@ -79,7 +92,8 @@
 /* Problem Cards */
 .problem-grid {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: 1rem;
   padding: 1rem;
 }
@@ -88,10 +102,15 @@
   background: linear-gradient(145deg, #742a2a 0%, #4a1c1c 100%);
   border: 2px solid #fc8181;
   border-radius: 12px;
-  padding: 1.25rem;
+  padding: 2.75rem 1.4rem;
+  min-height: 220px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  justify-content: center;
+  text-align: center;
+  gap: 0.5rem;
+  flex: 1;
   opacity: 0;
   transform: translateX(-20px);
   transition: all 0.4s ease;
@@ -120,7 +139,8 @@
 /* Solution Cards */
 .solution-grid {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: 1rem;
   padding: 1rem;
 }
@@ -129,10 +149,15 @@
   background: linear-gradient(145deg, #276749 0%, #1a4731 100%);
   border: 2px solid #68d391;
   border-radius: 12px;
-  padding: 1.25rem;
+  padding: 2.75rem 1.4rem;
+  min-height: 220px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  justify-content: center;
+  text-align: center;
+  gap: 0.5rem;
+  flex: 1;
   opacity: 0;
   transform: translateX(-20px);
   transition: all 0.4s ease;
@@ -309,8 +334,11 @@
   background: linear-gradient(145deg, #276749 0%, #1a4731 100%);
   border: 2px solid #68d391;
   border-radius: 12px;
-  padding: 2rem;
+  padding: 1rem;
   margin-top: 1.5rem;
+  max-width: 50%;
+  margin-left: auto;
+  margin-right: auto;
   opacity: 0;
   transform: translateY(20px);
   transition: opacity 0.5s ease, transform 0.5s ease;
@@ -329,8 +357,8 @@
 
 .final-message p {
   color: #c6f6d5;
-  line-height: 1.8;
-  font-size: 1.1rem;
+  line-height: 1.4;
+  font-size: 1.76rem;
   margin-bottom: 1rem;
 }
 
@@ -521,6 +549,21 @@
 
 /* Responsive - Tablet */
 @media (max-width: 700px) {
+  .problem-grid,
+  .solution-grid {
+    flex-direction: column;
+  }
+
+  .problem-card,
+  .solution-card {
+    min-height: auto;
+    padding: 1rem;
+  }
+
+  .final-message {
+    max-width: 100%;
+  }
+
   .comparison-panels {
     grid-template-columns: 1fr;
   }
@@ -603,29 +646,31 @@
   /* Problem & Solution cards */
   .problem-grid,
   .solution-grid {
+    flex-direction: column;
     gap: 0.75rem;
     padding: 0.25rem 0;
   }
 
   .problem-card,
   .solution-card {
-    padding: 0.4rem 0.85rem;
-    gap: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    gap: 0.25rem;
     border-radius: 8px;
     border-width: 1px;
     max-width: 95%;
     margin: 0 auto;
+    min-height: auto;
   }
 
   .problem-icon,
   .solution-icon {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     flex-shrink: 0;
   }
 
   .problem-text,
   .solution-text {
-    font-size: 15px !important;
+    font-size: 14px !important;
     line-height: 1.4;
   }
 
@@ -783,6 +828,7 @@
     padding: 1.25rem;
     margin-top: 0.75rem;
     border-radius: 10px;
+    max-width: 100%;
   }
 
   .final-message h3 {
