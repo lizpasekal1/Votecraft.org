@@ -837,18 +837,21 @@
 
             /* Income buttons grid */
             .income-selector {
-                gap: 4px;
+                gap: 3px;
             }
 
             .income-btn {
-                padding: 6px 3px;
-                font-size: 0.65rem;
+                padding: 10px 2px;
+                font-size: 1rem;
                 border-radius: 4px;
+                border-width: 1.5px;
+                line-height: 1.1;
             }
 
             .income-btn .income-pct,
             .income-btn .income-label {
-                font-size: 0.5rem;
+                font-size: 0.7rem;
+                margin-top: 2px;
             }
 
             /* Cost breakdown */
@@ -970,25 +973,27 @@
         /* Extra small screens */
         @media (max-width: 380px) {
             body {
-                padding: 6px;
+                padding: 2px;
             }
 
             .cost-demo {
-                padding: 12px;
+                padding: 8px;
             }
 
             .widget-header h2 {
                 font-size: 1rem;
             }
 
+            /* Keep large button text on small screens */
             .income-btn {
-                padding: 6px 2px;
-                font-size: 0.65rem;
+                padding: 8px 1px;
+                font-size: 0.95rem;
+                line-height: 1.1;
             }
 
             .income-btn .income-pct,
             .income-btn .income-label {
-                font-size: 0.5rem;
+                font-size: 0.65rem;
             }
 
             .cost-line {
