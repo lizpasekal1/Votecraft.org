@@ -337,6 +337,15 @@ body {
         scroll-margin-top: calc(48px + env(safe-area-inset-top, 0px) + 32vh + 12px);
     }
 
+    /* Compact cards to fit ~2.5 below map */
+    .playlist-card {
+        height: 100px !important;
+    }
+
+    .playlist-card .w-28 {
+        width: 90px !important;
+    }
+
     /* Slightly larger text for readability on high-density display */
     #map-tour-name span {
         font-size: 0.9375rem;
@@ -359,6 +368,15 @@ body {
     /* Ensure map doesn't overlap with safe areas */
     .sticky-map {
         height: min(35vh, 300px);
+    }
+
+    /* Compact cards to fit ~2.5 below map */
+    .playlist-card {
+        height: 100px !important;
+    }
+
+    .playlist-card .w-28 {
+        width: 90px !important;
     }
 
     /* Better spacing for playlist items on mobile */
