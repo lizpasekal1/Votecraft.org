@@ -240,6 +240,17 @@ body {
     color: #333;
 }
 
+@media (max-width: 430px) {
+    .leaflet-popup-content {
+        margin: 8px 12px;
+        font-size: 12px;
+    }
+
+    .leaflet-popup-content-wrapper {
+        border-radius: 8px;
+    }
+}
+
 .leaflet-popup-tip {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     border: 1px solid #e5e7eb;
