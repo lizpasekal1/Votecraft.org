@@ -175,19 +175,11 @@
             </div>
 
             <!-- Content -->
-            <div class="flex-1 flex flex-col p-3 min-w-0 justify-between">
-                <div>
-                    <h3 class="text-white text-sm font-bold mb-0.5 truncate leading-tight">${playlist.name}</h3>
-                    <p class="text-xs mb-1 truncate leading-tight ${selectedPin === playlist.id ? 'text-green-500' : 'text-gray-400'}">
-                        ${playlist.location}
-                    </p>
-                    ${playlist.learnMore ? `
-                        <p class="text-gray-500 text-xs truncate leading-tight flex items-center gap-1">
-                            ${icons.lightbulb}
-                            <span class="truncate">${playlist.learnMore}</span>
-                        </p>
-                    ` : ''}
-                </div>
+            <div class="flex-1 flex flex-col p-3 min-w-0 justify-center">
+                <h3 class="text-white text-base font-bold mb-1 truncate leading-tight">${playlist.name}</h3>
+                <p class="text-sm truncate leading-tight ${selectedPin === playlist.id ? 'text-green-500' : 'text-gray-400'}">
+                    ${playlist.location}
+                </p>
             </div>
 
             <!-- Play Button - Vertically Centered -->
