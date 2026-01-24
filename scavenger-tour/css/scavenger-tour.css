@@ -140,6 +140,17 @@ body {
     background: #6b7280;
 }
 
+/* Sticky map positioning */
+.sticky-map {
+    top: 48px; /* Height of top bar */
+}
+
+/* Top bar base height */
+.top-bar {
+    height: auto;
+    min-height: 48px;
+}
+
 /* Sticky map shadow - creates depth effect for content scrolling under */
 .sticky-map::after {
     content: '';
@@ -169,10 +180,24 @@ body {
     }
 }
 
-/* Safe area padding for notched phones */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
+/* Safe area padding for notched phones and Dynamic Island */
+@supports (padding: env(safe-area-inset-top)) {
+    .top-bar {
+        padding-top: calc(0.5rem + env(safe-area-inset-top));
+    }
+
     .bottom-nav {
         padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+    }
+
+    /* Adjust sticky map position to account for dynamic top bar height */
+    .sticky-map {
+        top: calc(48px + env(safe-area-inset-top));
+    }
+
+    /* Update scroll margin for playlist cards */
+    .playlist-card {
+        scroll-margin-top: calc(48px + env(safe-area-inset-top) + 35vh + 16px);
     }
 }
 
@@ -250,4 +275,94 @@ body {
     font-size: 10px;
     background: rgba(255, 255, 255, 0.8) !important;
     padding: 2px 6px !important;
+}
+
+/* ============================================
+   iPhone 16 Pro Optimizations
+   Screen: 402 x 874 CSS pixels, 3x density
+   ============================================ */
+
+/* Ensure minimum touch target size of 44pt for iOS */
+@media (pointer: coarse) {
+    .bottom-nav button {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 8px;
+    }
+
+    #btn-menu {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .play-button {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .playlist-card {
+        min-height: 72px;
+    }
+}
+
+/* iPhone 16 Pro specific (402px width, taller aspect ratio ~19.5:9) */
+@media screen and (max-width: 430px) and (min-height: 800px) and (-webkit-device-pixel-ratio: 3) {
+    /* Optimize map height for taller display */
+    .sticky-map {
+        height: 32vh !important;
+    }
+
+    /* Better use of vertical space */
+    .playlist-card {
+        scroll-margin-top: calc(48px + env(safe-area-inset-top, 0px) + 32vh + 12px);
+    }
+
+    /* Slightly larger text for readability on high-density display */
+    #map-tour-name span {
+        font-size: 0.9375rem;
+    }
+
+    /* Optimize bottom nav icon size */
+    .bottom-nav svg {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+/* For all tall phones with notch/Dynamic Island */
+@media screen and (max-width: 430px) and (min-height: 750px) {
+    /* Prevent content from being hidden under Dynamic Island */
+    #app {
+        padding-top: env(safe-area-inset-top, 0px);
+    }
+
+    /* Ensure map doesn't overlap with safe areas */
+    .sticky-map {
+        height: min(35vh, 300px);
+    }
+
+    /* Better spacing for playlist items on mobile */
+    #playlist-container {
+        gap: 12px;
+    }
+}
+
+/* Landscape orientation on iPhone 16 Pro */
+@media screen and (max-height: 430px) and (orientation: landscape) {
+    .sticky-map {
+        height: 45vh !important;
+        position: relative;
+        top: 0;
+    }
+
+    .top-bar {
+        padding-top: 0.5rem;
+        padding-left: calc(0.5rem + env(safe-area-inset-left, 0px));
+        padding-right: calc(0.5rem + env(safe-area-inset-right, 0px));
+    }
+
+    .bottom-nav {
+        padding-left: calc(0.5rem + env(safe-area-inset-left, 0px));
+        padding-right: calc(0.5rem + env(safe-area-inset-right, 0px));
+    }
 }
