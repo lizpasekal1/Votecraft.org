@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>VoteCraft Civic Music Tour - Boston</title>
 
     <!-- Fonts -->
@@ -22,7 +22,7 @@
 <body>
     <div id="app" class="max-w-2xl mx-auto bg-black min-h-screen">
         <!-- Top Bar -->
-        <div class="bg-white px-4 py-2 flex items-center justify-between shadow-sm sticky top-0 z-30">
+        <div class="top-bar bg-white px-4 py-2 flex items-center justify-between shadow-sm sticky top-0 z-30">
             <div class="flex items-center gap-2">
                 <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -42,7 +42,7 @@
         </div>
 
         <!-- Map Section -->
-        <div class="relative overflow-hidden sticky top-12 z-20 sticky-map" style="height: 35vh;">
+        <div class="relative overflow-hidden sticky z-20 sticky-map" style="height: 35vh;">
             <div id="map" class="w-full h-full"></div>
             <!-- Tour Name Overlay -->
             <div id="map-tour-name" class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 px-4 py-2" style="z-index: 1000;">
