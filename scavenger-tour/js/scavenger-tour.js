@@ -73,7 +73,10 @@
             const marker = L.marker(playlist.coordinates, {
                 icon: createMarkerIcon(false, themeColor)
             });
-            marker.bindPopup(`<strong>${playlist.name}</strong><br>${playlist.location}`, { closeButton: false });
+            marker.bindPopup(`<strong>${playlist.name}</strong><br>${playlist.location}`, {
+                closeButton: false,
+                autoPanPaddingTopLeft: L.point(10, 20)
+            });
             marker.on('click', () => selectPlaylistFromMap(playlist.id));
             marker.addTo(map);
             markers[playlist.id] = marker;
@@ -575,7 +578,10 @@
             const marker = L.marker(playlist.coordinates, {
                 icon: createMarkerIcon(false, themeColor)
             });
-            marker.bindPopup(`<strong>${playlist.name}</strong><br>${playlist.location}`, { closeButton: false });
+            marker.bindPopup(`<strong>${playlist.name}</strong><br>${playlist.location}`, {
+                closeButton: false,
+                autoPanPaddingTopLeft: L.point(10, 20)
+            });
             marker.on('click', () => selectPlaylistFromMap(playlist.id));
             marker.addTo(map);
             markers[playlist.id] = marker;
