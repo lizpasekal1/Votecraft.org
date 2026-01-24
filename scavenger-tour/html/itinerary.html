@@ -23,6 +23,19 @@
             border-radius: 0.75rem;
             overflow: hidden;
             margin-bottom: 0.75rem;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+            touch-action: none;
+        }
+
+        .itinerary-item.dragging {
+            opacity: 0.5;
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .itinerary-item.drag-over {
+            border: 2px dashed #4269FF;
+            background: rgba(66, 105, 255, 0.1);
         }
 
         .itinerary-item.visited {
@@ -38,12 +51,47 @@
             display: flex;
             align-items: center;
             padding: 1rem;
+            padding-left: 0.5rem;
             cursor: pointer;
             transition: background-color 0.15s ease;
         }
 
         .itinerary-header:hover {
             background: #374151;
+        }
+
+        .drag-handle {
+            width: 32px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            color: #6b7280;
+            flex-shrink: 0;
+            touch-action: none;
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .drag-handle:hover {
+            color: #9ca3af;
+        }
+
+        .stop-number {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-right: 0.75rem;
+            color: white;
         }
 
         .checkbox-container {
@@ -55,7 +103,7 @@
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            margin-right: 1rem;
+            margin-right: 0.75rem;
             transition: all 0.2s ease;
             cursor: pointer;
         }
@@ -120,9 +168,23 @@
             transition: width 0.3s ease;
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 3rem 1.5rem;
+        .drag-hint {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: rgba(66, 105, 255, 0.1);
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(66, 105, 255, 0.3);
+        }
+
+        /* Touch device improvements */
+        @media (pointer: coarse) {
+            .drag-handle {
+                width: 44px;
+                height: 48px;
+            }
         }
     </style>
 </head>
@@ -152,10 +214,18 @@
             </a>
 
             <!-- Tour Name -->
-            <p id="tour-name" class="text-gray-400 text-sm mb-6"></p>
+            <p id="tour-name" class="text-gray-400 text-sm mb-4"></p>
+
+            <!-- Drag Hint -->
+            <div class="drag-hint">
+                <svg class="w-5 h-5" style="color: #4269FF;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16"/>
+                </svg>
+                <span class="text-sm" style="color: #4269FF;">Drag to reorder your walking route</span>
+            </div>
 
             <!-- Progress Section -->
-            <div id="progress-section" class="mb-6 hidden">
+            <div id="progress-section" class="mb-6">
                 <div class="flex items-center justify-between mb-2">
                     <span class="text-white text-sm font-semibold">Progress</span>
                     <span id="progress-text" class="text-gray-400 text-sm">0 of 0 completed</span>
@@ -167,20 +237,6 @@
 
             <!-- Itinerary List -->
             <div id="itinerary-list"></div>
-
-            <!-- Empty State -->
-            <div id="empty-state" class="empty-state hidden">
-                <div class="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center" style="background: rgba(66, 105, 255, 0.2);">
-                    <svg class="w-10 h-10" style="color: #4269FF;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                    </svg>
-                </div>
-                <h2 class="text-white text-xl font-bold mb-2">No stops added yet</h2>
-                <p class="text-gray-400 text-sm mb-6">Explore the tour and add locations to your itinerary</p>
-                <a href="scavenger-tour.html" id="browse-link" class="inline-flex items-center gap-2 text-white font-semibold px-6 py-3 rounded-xl" style="background: #4269FF;">
-                    Browse Tour
-                </a>
-            </div>
         </div>
     </div>
 
@@ -196,9 +252,8 @@
         const urlParams = new URLSearchParams(window.location.search);
         const tourId = urlParams.get('tour') || 'civic-sampler';
 
-        // Update back link and browse link
+        // Update back link
         document.getElementById('back-link').href = `scavenger-tour.html?tour=${tourId}`;
-        document.getElementById('browse-link').href = `scavenger-tour.html?tour=${tourId}`;
 
         // Get tour data
         const tourData = ALL_TOURS[tourId] || PLANETUNE_PLAYLISTS;
@@ -210,8 +265,8 @@
         };
         document.getElementById('tour-name').textContent = tourNames[tourId] || 'Civic Tour';
 
-        // LocalStorage key
-        const STORAGE_KEY = 'votecraft_itinerary';
+        // LocalStorage key (per tour)
+        const STORAGE_KEY = `votecraft_itinerary_${tourId}`;
 
         // Get itinerary from localStorage
         function getItinerary() {
@@ -223,7 +278,12 @@
             } catch (e) {
                 console.error('Error reading itinerary:', e);
             }
-            return { tourId: tourId, stops: [], visited: [] };
+            // Default: all stops in original order
+            return {
+                tourId: tourId,
+                order: tourData.map(loc => loc.id),
+                visited: []
+            };
         }
 
         // Save itinerary to localStorage
@@ -234,6 +294,10 @@
                 console.error('Error saving itinerary:', e);
             }
         }
+
+        // Drag and drop state
+        let draggedItem = null;
+        let draggedIndex = null;
 
         // Toggle visited state
         window.toggleVisited = function(stopId, event) {
@@ -276,36 +340,179 @@
             window.open(url, '_blank');
         };
 
+        // Drag handlers
+        function handleDragStart(e) {
+            draggedItem = this;
+            draggedIndex = parseInt(this.dataset.index);
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', this.dataset.stopId);
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            document.querySelectorAll('.itinerary-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+            draggedItem = null;
+            draggedIndex = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragEnter(e) {
+            this.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.stopPropagation();
+            e.preventDefault();
+
+            this.classList.remove('drag-over');
+
+            if (draggedItem !== this) {
+                const dropIndex = parseInt(this.dataset.index);
+                const itinerary = getItinerary();
+
+                // Reorder array
+                const movedId = itinerary.order.splice(draggedIndex, 1)[0];
+                itinerary.order.splice(dropIndex, 0, movedId);
+
+                saveItinerary(itinerary);
+                renderItinerary();
+            }
+
+            return false;
+        }
+
+        // Touch drag support
+        let touchStartY = 0;
+        let touchCurrentItem = null;
+        let touchClone = null;
+        let touchStartIndex = null;
+
+        function handleTouchStart(e) {
+            const handle = e.target.closest('.drag-handle');
+            if (!handle) return;
+
+            touchCurrentItem = this;
+            touchStartIndex = parseInt(this.dataset.index);
+            touchStartY = e.touches[0].clientY;
+
+            // Create visual clone
+            touchClone = this.cloneNode(true);
+            touchClone.style.position = 'fixed';
+            touchClone.style.zIndex = '1000';
+            touchClone.style.width = this.offsetWidth + 'px';
+            touchClone.style.opacity = '0.9';
+            touchClone.style.pointerEvents = 'none';
+            touchClone.style.transform = 'scale(1.02)';
+            touchClone.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.3)';
+            document.body.appendChild(touchClone);
+
+            this.classList.add('dragging');
+
+            updateTouchClonePosition(e.touches[0].clientY);
+        }
+
+        function handleTouchMove(e) {
+            if (!touchCurrentItem) return;
+            e.preventDefault();
+
+            const touch = e.touches[0];
+            updateTouchClonePosition(touch.clientY);
+
+            // Find item under touch
+            const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            const itemBelow = elemBelow ? elemBelow.closest('.itinerary-item') : null;
+
+            document.querySelectorAll('.itinerary-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+
+            if (itemBelow && itemBelow !== touchCurrentItem) {
+                itemBelow.classList.add('drag-over');
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (!touchCurrentItem) return;
+
+            // Find drop target
+            const touch = e.changedTouches[0];
+            const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            const dropTarget = elemBelow ? elemBelow.closest('.itinerary-item') : null;
+
+            if (dropTarget && dropTarget !== touchCurrentItem) {
+                const dropIndex = parseInt(dropTarget.dataset.index);
+                const itinerary = getItinerary();
+
+                const movedId = itinerary.order.splice(touchStartIndex, 1)[0];
+                itinerary.order.splice(dropIndex, 0, movedId);
+
+                saveItinerary(itinerary);
+                renderItinerary();
+            }
+
+            // Cleanup
+            if (touchClone) {
+                touchClone.remove();
+                touchClone = null;
+            }
+
+            document.querySelectorAll('.itinerary-item').forEach(item => {
+                item.classList.remove('dragging', 'drag-over');
+            });
+
+            touchCurrentItem = null;
+            touchStartIndex = null;
+        }
+
+        function updateTouchClonePosition(y) {
+            if (touchClone) {
+                const rect = touchCurrentItem.getBoundingClientRect();
+                touchClone.style.left = rect.left + 'px';
+                touchClone.style.top = (y - touchClone.offsetHeight / 2) + 'px';
+            }
+        }
+
         // Render itinerary
         function renderItinerary() {
             const itinerary = getItinerary();
             const listContainer = document.getElementById('itinerary-list');
-            const emptyState = document.getElementById('empty-state');
-            const progressSection = document.getElementById('progress-section');
 
-            // Filter stops for current tour
-            const stops = itinerary.stops.filter(stopId => {
-                return tourData.some(location => location.id === stopId);
+            // Use custom order or default to all tour stops
+            let orderedIds = itinerary.order && itinerary.order.length > 0
+                ? itinerary.order
+                : tourData.map(loc => loc.id);
+
+            // Ensure all tour stops are included (in case new ones were added)
+            const allTourIds = tourData.map(loc => loc.id);
+            allTourIds.forEach(id => {
+                if (!orderedIds.includes(id)) {
+                    orderedIds.push(id);
+                }
             });
 
-            if (stops.length === 0) {
-                listContainer.innerHTML = '';
-                emptyState.classList.remove('hidden');
-                progressSection.classList.add('hidden');
-                return;
-            }
-
-            emptyState.classList.add('hidden');
-            progressSection.classList.remove('hidden');
+            // Filter to only valid stops
+            orderedIds = orderedIds.filter(id => tourData.some(loc => loc.id === id));
 
             // Update progress
-            const visitedCount = stops.filter(id => itinerary.visited.includes(id)).length;
-            document.getElementById('progress-text').textContent = `${visitedCount} of ${stops.length} completed`;
-            document.getElementById('progress-bar').style.width = `${(visitedCount / stops.length) * 100}%`;
+            const visitedCount = orderedIds.filter(id => itinerary.visited.includes(id)).length;
+            document.getElementById('progress-text').textContent = `${visitedCount} of ${orderedIds.length} completed`;
+            document.getElementById('progress-bar').style.width = `${(visitedCount / orderedIds.length) * 100}%`;
 
             // Render items
             let html = '';
-            stops.forEach(stopId => {
+            orderedIds.forEach((stopId, index) => {
                 const location = tourData.find(l => l.id === stopId);
                 if (!location) return;
 
@@ -314,8 +521,14 @@
                 const themeColor = theme ? theme.color : '#22c55e';
 
                 html += `
-                <div class="itinerary-item ${isVisited ? 'visited' : ''}" data-stop-id="${stopId}">
-                    <div class="itinerary-header" onclick="toggleAccordion(${stopId})">
+                <div class="itinerary-item ${isVisited ? 'visited' : ''}" data-stop-id="${stopId}" data-index="${index}" draggable="true">
+                    <div class="itinerary-header">
+                        <div class="drag-handle">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16"/>
+                            </svg>
+                        </div>
+                        <div class="stop-number" style="background: ${themeColor};">${index + 1}</div>
                         <div class="checkbox-container ${isVisited ? 'checked' : ''}" onclick="toggleVisited(${stopId}, event)">
                             ${isVisited ? `
                                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
@@ -323,16 +536,11 @@
                                 </svg>
                             ` : ''}
                         </div>
-                        <div class="itinerary-content">
+                        <div class="itinerary-content" onclick="toggleAccordion(${stopId})">
                             <h3 class="item-name text-white font-semibold mb-1">${location.name}</h3>
                             <p class="text-gray-400 text-sm">${location.location}</p>
                         </div>
-                        ${theme ? `
-                            <span class="text-xs font-bold px-2 py-1 rounded-full mr-3" style="background: ${themeColor}20; color: ${themeColor};">
-                                ${theme.name}
-                            </span>
-                        ` : ''}
-                        <svg class="chevron-icon w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <svg class="chevron-icon w-5 h-5 text-gray-400 flex-shrink-0" onclick="toggleAccordion(${stopId})" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                         </svg>
                     </div>
@@ -363,6 +571,22 @@
             });
 
             listContainer.innerHTML = html;
+
+            // Attach drag event listeners
+            document.querySelectorAll('.itinerary-item').forEach(item => {
+                // Mouse drag
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+                item.addEventListener('dragover', handleDragOver);
+                item.addEventListener('dragenter', handleDragEnter);
+                item.addEventListener('dragleave', handleDragLeave);
+                item.addEventListener('drop', handleDrop);
+
+                // Touch drag
+                item.addEventListener('touchstart', handleTouchStart, { passive: false });
+                item.addEventListener('touchmove', handleTouchMove, { passive: false });
+                item.addEventListener('touchend', handleTouchEnd);
+            });
         }
 
         // Initial render
