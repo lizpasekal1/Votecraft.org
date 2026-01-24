@@ -79,6 +79,24 @@ body {
     .playlist-card .w-28 {
         width: 90px;
     }
+    /* Smaller play buttons on mobile */
+    .play-button {
+        width: 28px !important;
+        height: 28px !important;
+    }
+    .play-button svg {
+        width: 14px !important;
+        height: 14px !important;
+    }
+    /* Smaller close button in drawer */
+    .nav-drawer-close {
+        width: 1.75rem;
+        height: 1.75rem;
+    }
+    .nav-drawer-close svg {
+        width: 1rem;
+        height: 1rem;
+    }
 }
 
 .playlist-card:hover {
