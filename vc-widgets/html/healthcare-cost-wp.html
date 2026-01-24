@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthcare Cost by Income - Votecraft</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/healthcare-cost-widget.css?v=17">
+</head>
+<body>
+    <div class="healthcare-widget">
+        <div class="cost-demo">
+            <div class="input-section">
+                <h4>Income Level</h4>
+                <div class="income-selector" id="income-selector">
+                    <button class="income-btn" data-income="0">
+                        $0
+                        <span class="income-pct">Unemployed</span>
+                    </button>
+                    <button class="income-btn" data-income="20000">
+                        $10-30K
+                        <span class="income-pct">22% of US</span>
+                    </button>
+                    <button class="income-btn" data-income="40000">
+                        $30-50K
+                        <span class="income-pct">28% of US</span>
+                    </button>
+                    <button class="income-btn" data-income="75000">
+                        $50-100K
+                        <span class="income-pct">40% of US</span>
+                    </button>
+                    <button class="income-btn" data-income="175000">
+                        $100-250K
+                        <span class="income-pct">8% of US</span>
+                    </button>
+                    <button class="income-btn" data-income="350000">
+                        $250-450K+
+                        <span class="income-pct">2% of US</span>
+                    </button>
+                </div>
+
+                <h4 style="margin-top: 16px;">Employment Type</h4>
+                <div class="income-selector" id="employment-selector">
+                    <button class="income-btn" data-employment="minimum">
+                        Min. Wage
+                        <span class="income-label">Retail/Service</span>
+                    </button>
+                    <button class="income-btn" data-employment="gig">
+                        <span class="btn-text-wrap">Gig/<br>Contract</span>
+                        <span class="income-label">1099 Worker</span>
+                    </button>
+                    <button class="income-btn" data-employment="parttime">
+                        Part-Time
+                        <span class="income-label">No Benefits</span>
+                    </button>
+                    <button class="income-btn" data-employment="fulltime">
+                        Full-Time
+                        <span class="income-label">W-2 + Benefits</span>
+                    </button>
+                    <button class="income-btn" data-employment="laidoff">
+                        Laid-Off
+                        <span class="income-label">COBRA/Market</span>
+                    </button>
+                    <button class="income-btn" data-employment="quit">
+                        Quit Job
+                        <span class="income-label">No Benefits</span>
+                    </button>
+                </div>
+
+                <h4 style="margin-top: 16px;">State Type</h4>
+                <div class="state-selector">
+                    <select id="state-select">
+                        <option value="expansion">Medicaid Expansion State (41 states + DC)</option>
+                        <option value="non-expansion">Non-Expansion State (TX, FL, GA, etc.)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <div class="income-visual">
+                    <div class="cost-comparison-row">
+                        <div class="cost-left-column">
+                            <div class="cost-breakdown-grid" id="cost-breakdown">
+                                <div class="cost-breakdown-header"><span class="full-title">Annual Healthcare Costs</span><span class="short-title">Annual Costs</span></div>
+                            <div class="cost-line hidden-cost" id="employer-row">
+                                <span class="cost-line-label">Employer's Share <span class="hidden-tag">invisible to you</span></span>
+                                <span class="cost-line-amount" id="cost-employer">—</span>
+                            </div>
+                            <div class="cost-line">
+                                <span class="cost-line-label">Premium (paycheck deduction)</span>
+                                <span class="cost-line-amount" id="cost-premium">—</span>
+                                <span class="info-icon-inline">i<span class="tooltip">Average employee contribution for employer-sponsored family coverage. Source: KFF 2024 Employer Health Benefits Survey.</span></span>
+                            </div>
+                            <div class="cost-line">
+                                <span class="cost-line-label">Out-of-Pocket (deductibles, copays)</span>
+                                <span class="cost-line-amount" id="cost-oop">—</span>
+                                <span class="info-icon-inline">i<span class="tooltip">Average out-of-pocket spending including deductibles, copays, and coinsurance. Source: KFF analysis of MEPS data.</span></span>
+                            </div>
+                            <div class="cost-line total">
+                                <span class="cost-line-label">Total Healthcare Cost</span>
+                                <span class="cost-line-amount" id="cost-total">—</span>
+                                <span class="info-icon-inline">i<span class="tooltip">Sum of all healthcare spending: employer contribution + your premium + out-of-pocket costs. This is the TRUE cost of your healthcare.</span></span>
+                            </div>
+                        </div>
+
+                        <div class="income-bar-section">
+                            <div class="income-bar-label">
+                                <span>Income: <strong id="income-amount">—</strong></span>
+                                <span>Healthcare cost: <strong id="healthcare-pct-label">—</strong></span>
+                            </div>
+                            <div class="income-bar">
+                                <div class="income-bar-fill">
+                                    <div class="income-bar-segment employer-share" id="bar-employer-share" style="width: 0%"></div>
+                                    <div class="income-bar-segment your-share" id="bar-your-share" style="width: 0%"></div>
+                                    <div class="income-bar-segment oop-share" id="bar-oop-share" style="width: 0%"></div>
+                                    <div class="income-bar-segment remaining" id="bar-remaining" style="width: 100%"></div>
+                                </div>
+                            </div>
+                            <div class="bar-legend empty" id="bar-legend">
+                                <span class="legend-item"><span class="legend-dot employer-share"></span> Employer's Share</span>
+                                <span class="legend-item"><span class="legend-dot your-share"></span> Your Premium</span>
+                                <span class="legend-item"><span class="legend-dot oop-share"></span> Out-of-Pocket</span>
+                                <span class="legend-item"><span class="legend-dot remaining"></span> Remaining</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="system-comparison">
+                        <div class="system-comparison-header">Coverage %</div>
+                        <div class="income-compare-box current">
+                            <span class="info-icon">i<span class="tooltip">Total healthcare cost (premiums + out-of-pocket + employer share) as a percentage of your income. Data from KFF 2024.</span></span>
+                            <div class="income-compare-label">Current System</div>
+                            <div class="income-compare-pct" id="current-pct">???</div>
+                            <div class="income-compare-detail" id="current-detail"></div>
+                        </div>
+                        <div class="income-compare-box universal">
+                            <span class="info-icon">i<span class="tooltip">Based on an 8% income tax, a common rate in Medicare for All proposals to fund universal coverage.</span></span>
+                            <div class="income-compare-label">Universal Basic Healthcare</div>
+                            <div class="income-compare-pct" id="universal-pct">???</div>
+                            <div class="income-compare-detail" id="universal-detail"></div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+
+                <div class="income-impact regressive results-disabled" id="income-impact">
+                    <strong>Select an income and employment type above to see healthcare cost breakdown.</strong>
+                </div>
+                <button class="reset-demo-btn" id="reset-demo-btn">Test another income</button>
+                <div class="inline-source" style="margin-top: 12px; text-align: center;">
+                    Sources: <a href="https://www.kff.org/health-costs/report/employer-health-benefits-annual-survey/" target="_blank">KFF 2024</a> ·
+                    <a href="https://www.bls.gov/cex/" target="_blank">BLS Consumer Expenditure</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/healthcare-cost.js?v=9"></script>
+    <script>
+        function sendHeight() {
+            const widget = document.querySelector('.healthcare-widget');
+            let height = widget ? widget.offsetHeight : document.body.scrollHeight;
+            height = Math.min(height, 2000);
+            window.parent.postMessage({ type: 'healthcare-cost-resize', height: height }, '*');
+        }
+
+        window.addEventListener('load', sendHeight);
+        window.addEventListener('resize', sendHeight);
+        new MutationObserver(sendHeight).observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true
+        });
+
+        setInterval(sendHeight, 200);
+    </script>
+</body>
+</html>
