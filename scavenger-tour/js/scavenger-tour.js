@@ -113,6 +113,10 @@
 
     // Select playlist (from card click - no scroll)
     function selectPlaylist(id) {
+        // Close all popups first to ensure clean state on mobile
+        map.closePopup();
+        Object.values(markers).forEach(m => m.closePopup());
+
         selectedPin = id;
         updateMarkers();
         updateCardSelection();
@@ -125,12 +129,16 @@
             // Delay popup to ensure it opens after icon update completes (mobile fix)
             setTimeout(() => {
                 markers[id].openPopup();
-            }, 50);
+            }, 100);
         }
     }
 
     // Select playlist from map pin click (with scroll)
     function selectPlaylistFromMap(id) {
+        // Close all popups first to ensure clean state on mobile
+        map.closePopup();
+        Object.values(markers).forEach(m => m.closePopup());
+
         selectedPin = id;
         updateMarkers();
         updateCardSelection();
@@ -143,7 +151,7 @@
             // Delay popup to ensure it opens after icon update completes (mobile fix)
             setTimeout(() => {
                 markers[id].openPopup();
-            }, 50);
+            }, 100);
         }
 
         // Scroll playlist card to right under the map
