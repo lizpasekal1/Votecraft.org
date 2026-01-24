@@ -73,8 +73,7 @@
             const marker = L.marker(playlist.coordinates, {
                 icon: createMarkerIcon(false, themeColor)
             });
-            const themeName = playlist.civicTheme ? playlist.civicTheme.name : '';
-            marker.bindPopup(`<strong>${playlist.name}</strong><br><span style="color:${themeColor};font-weight:600;">${themeName}</span><br>${playlist.location}`);
+            marker.bindPopup(`<strong>${playlist.name}</strong><br>${playlist.location}`);
             marker.on('click', () => selectPlaylistFromMap(playlist.id));
             marker.addTo(map);
             markers[playlist.id] = marker;
@@ -162,7 +161,6 @@
     function generateCardHTML(playlist, suffix = '') {
         const theme = playlist.civicTheme;
         const themeColor = theme ? theme.color : '#22c55e';
-        const themeName = theme ? theme.name : '';
 
         return `
         <div id="playlist-${playlist.id}${suffix}"
@@ -171,14 +169,6 @@
              class="bg-gray-800 rounded-xl overflow-hidden mb-3 shadow-lg flex transition-all h-32 playlist-card cursor-pointer ${selectedPin === playlist.id ? 'ring-2 ring-blue-500' : ''}">
             <!-- Featured Image with Theme Color -->
             <div class="w-28 flex-shrink-0 relative" style="background: linear-gradient(135deg, ${themeColor}33, ${themeColor}66);">
-                <!-- Civic Theme Badge -->
-                ${theme ? `
-                    <div class="absolute top-2 left-2 right-2">
-                        <span class="text-white text-xs font-bold px-2 py-1 rounded-full" style="background: ${themeColor};">
-                            ${themeName}
-                        </span>
-                    </div>
-                ` : ''}
             </div>
 
             <!-- Content -->
@@ -477,8 +467,7 @@
             const marker = L.marker(playlist.coordinates, {
                 icon: createMarkerIcon(false, themeColor)
             });
-            const themeName = playlist.civicTheme ? playlist.civicTheme.name : '';
-            marker.bindPopup(`<strong>${playlist.name}</strong><br><span style="color:${themeColor};font-weight:600;">${themeName}</span><br>${playlist.location}`);
+            marker.bindPopup(`<strong>${playlist.name}</strong><br>${playlist.location}`);
             marker.on('click', () => selectPlaylistFromMap(playlist.id));
             marker.addTo(map);
             markers[playlist.id] = marker;
@@ -626,11 +615,5 @@
 
         // Menu button
         document.getElementById('btn-menu').addEventListener('click', showTourMenu);
-
-        // Bottom nav buttons
-        document.getElementById('btn-profile').addEventListener('click', showProfile);
-        document.getElementById('btn-search').addEventListener('click', function() {
-            alert('Search feature coming soon!');
-        });
     });
 })();
