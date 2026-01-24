@@ -155,9 +155,9 @@ const PlanetTuneApp = () => {
     };
 
     return (
-        <div className="max-w-2xl mx-auto bg-black min-h-screen">
-            {/* Top Bar */}
-            <div className="bg-white px-4 py-2 flex items-center justify-between shadow-sm">
+        <div className="max-w-2xl mx-auto bg-black min-h-screen flex flex-col">
+            {/* Top Bar - Fixed */}
+            <div className="bg-white px-4 py-2 flex items-center justify-between shadow-sm flex-shrink-0 sticky top-0 z-30">
                 <div className="flex items-center gap-2">
                     <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
                         <Icon name="music" size={24} className="text-white" />
@@ -172,8 +172,8 @@ const PlanetTuneApp = () => {
                 </button>
             </div>
 
-            {/* Map Section */}
-            <div className="relative overflow-hidden sticky top-0 z-10 sticky-map" style={{ height: 'calc(40vh - 48px)' }}>
+            {/* Map Section - Fixed below header */}
+            <div className="relative overflow-hidden flex-shrink-0 sticky top-12 z-20 sticky-map" style={{ height: '35vh' }}>
                 <LeafletMap
                     playlists={playlists}
                     selectedPin={selectedPin}
@@ -181,8 +181,8 @@ const PlanetTuneApp = () => {
                 />
             </div>
 
-            {/* Playlist List */}
-            <div className="bg-black px-4 py-6 overflow-y-auto playlist-scroll">
+            {/* Playlist List - Scrolls under map */}
+            <div className="bg-black px-4 py-6 flex-1 pb-24">
                 <h2 className="text-white text-lg font-bold mb-6">New York Playlists</h2>
 
                 {sortedPlaylists.map((playlist) => (
