@@ -122,7 +122,10 @@
         const playlist = playlists.find(p => p.id === id);
         if (playlist && map) {
             map.panTo(playlist.coordinates);
-            markers[id].openPopup();
+            // Delay popup to ensure it opens after icon update completes (mobile fix)
+            setTimeout(() => {
+                markers[id].openPopup();
+            }, 50);
         }
     }
 
@@ -137,7 +140,10 @@
         const playlist = playlists.find(p => p.id === id);
         if (playlist && map) {
             map.panTo(playlist.coordinates);
-            markers[id].openPopup();
+            // Delay popup to ensure it opens after icon update completes (mobile fix)
+            setTimeout(() => {
+                markers[id].openPopup();
+            }, 50);
         }
 
         // Scroll playlist card to right under the map
