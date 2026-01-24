@@ -710,7 +710,7 @@ const ALL_TOURS = {
     'civic-sampler': PLANETUNE_PLAYLISTS,
     'healthcare': HEALTHCARE_TOUR,
     'voting-rights': VOTING_TOUR,
-    'art-in-action': JOURNALISM_TOUR
+    'art-action': JOURNALISM_TOUR
 };
 
 // Current active tour
