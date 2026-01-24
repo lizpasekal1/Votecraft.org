@@ -493,13 +493,7 @@
     window.navigateTo = function(destination) {
         switch(destination) {
             case 'home':
-                closeDrawer();
-                setTimeout(() => {
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                    selectedPin = null;
-                    updateMarkers();
-                    updateCardSelection();
-                }, 200);
+                window.location.href = 'index.html';
                 break;
             case 'location':
                 // Show location picker (placeholder) - keep drawer open
