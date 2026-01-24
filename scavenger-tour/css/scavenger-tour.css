@@ -386,3 +386,149 @@ body {
         padding-right: calc(0.5rem + env(safe-area-inset-right, 0px));
     }
 }
+
+/* ============================================
+   Navigation Drawer Styles
+   ============================================ */
+
+.nav-drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0);
+    z-index: 40;
+    transition: background-color 0.3s ease;
+    pointer-events: none;
+}
+
+.nav-drawer-overlay.open {
+    background: rgba(0, 0, 0, 0.5);
+    pointer-events: auto;
+}
+
+.nav-drawer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 85%;
+    max-width: 320px;
+    background: #111827;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.nav-drawer.open {
+    transform: translateX(0);
+}
+
+.nav-drawer-header {
+    padding: 1.5rem 1rem;
+    padding-top: calc(1.5rem + env(safe-area-inset-top, 0px));
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+    flex-shrink: 0;
+}
+
+.nav-drawer-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.nav-drawer-footer {
+    padding: 1rem;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid #374151;
+    background: #0f172a;
+    flex-shrink: 0;
+}
+
+.nav-drawer-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    margin-bottom: 0.5rem;
+    background: #1f2937;
+    transition: background-color 0.15s ease, transform 0.15s ease;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.nav-drawer-item:hover {
+    background: #374151;
+}
+
+.nav-drawer-item:active {
+    transform: scale(0.98);
+}
+
+.nav-drawer-item.active {
+    background: #1e3a8a;
+    border-color: #3b82f6;
+}
+
+.nav-drawer-item .icon {
+    font-size: 1.75rem;
+    flex-shrink: 0;
+    width: 2.5rem;
+    text-align: center;
+}
+
+.nav-drawer-item .content {
+    flex: 1;
+    min-width: 0;
+}
+
+.nav-drawer-item .title {
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    margin-bottom: 0.25rem;
+}
+
+.nav-drawer-item .description {
+    color: #9ca3af;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+}
+
+.nav-drawer-item .badge {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+
+/* Close button in drawer */
+.nav-drawer-close {
+    position: absolute;
+    top: calc(0.75rem + env(safe-area-inset-top, 0px));
+    right: 0.75rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.nav-drawer-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Prevent body scroll when drawer is open */
+body.drawer-open {
+    overflow: hidden;
+}
