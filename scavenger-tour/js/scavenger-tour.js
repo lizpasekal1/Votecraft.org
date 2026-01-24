@@ -73,7 +73,7 @@
             const marker = L.marker(playlist.coordinates, {
                 icon: createMarkerIcon(false, themeColor)
             });
-            marker.bindPopup(`<strong>${playlist.name}</strong><br>${playlist.location}`);
+            marker.bindPopup(`<strong>${playlist.name}</strong><br>${playlist.location}`, { closeButton: false });
             marker.on('click', () => selectPlaylistFromMap(playlist.id));
             marker.addTo(map);
             markers[playlist.id] = marker;
@@ -491,26 +491,27 @@
 
     // Navigate to menu item
     window.navigateTo = function(destination) {
-        closeDrawer();
-        setTimeout(() => {
-            switch(destination) {
-                case 'home':
-                    // Scroll to top and reset selection
+        switch(destination) {
+            case 'home':
+                closeDrawer();
+                setTimeout(() => {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                     selectedPin = null;
                     updateMarkers();
                     updateCardSelection();
-                    break;
-                case 'location':
-                    // Show location picker (placeholder)
-                    alert('Location selection coming soon! Currently showing: Boston, MA');
-                    break;
-                case 'user':
-                    // Show profile modal
+                }, 200);
+                break;
+            case 'location':
+                // Show location picker (placeholder) - keep drawer open
+                alert('Location selection coming soon! Currently showing: Boston, MA');
+                break;
+            case 'user':
+                closeDrawer();
+                setTimeout(() => {
                     showProfile();
-                    break;
-            }
-        }, 200);
+                }, 200);
+                break;
+        }
     };
 
     // Close navigation drawer
@@ -580,7 +581,7 @@
             const marker = L.marker(playlist.coordinates, {
                 icon: createMarkerIcon(false, themeColor)
             });
-            marker.bindPopup(`<strong>${playlist.name}</strong><br>${playlist.location}`);
+            marker.bindPopup(`<strong>${playlist.name}</strong><br>${playlist.location}`, { closeButton: false });
             marker.on('click', () => selectPlaylistFromMap(playlist.id));
             marker.addTo(map);
             markers[playlist.id] = marker;
