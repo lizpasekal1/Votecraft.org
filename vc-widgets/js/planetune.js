@@ -33,6 +33,96 @@ const Icon = ({ name, className = "", size = 24, strokeWidth = 2, fill = "none" 
     return <span ref={ref} className="inline-flex items-center justify-center" />;
 };
 
+// Leaflet Map Component
+const LeafletMap = ({ playlists, selectedPin, onPinClick }) => {
+    const mapRef = React.useRef(null);
+    const mapInstanceRef = React.useRef(null);
+    const markersRef = React.useRef({});
+
+    // Initialize map
+    React.useEffect(() => {
+        if (!mapRef.current || mapInstanceRef.current) return;
+
+        const config = PLANETUNE_MAP_CONFIG;
+        const map = L.map(mapRef.current, {
+            center: config.center,
+            zoom: config.zoom,
+            minZoom: config.minZoom,
+            maxZoom: config.maxZoom,
+            zoomControl: false
+        });
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Add zoom control to top-left
+        L.control.zoom({ position: 'topleft' }).addTo(map);
+
+        mapInstanceRef.current = map;
+
+        // Add markers for each playlist
+        playlists.forEach(playlist => {
+            const isSelected = selectedPin === playlist.id;
+            const marker = L.marker(playlist.coordinates, {
+                icon: L.divIcon({
+                    className: 'custom-marker',
+                    html: `<div class="marker-pin ${isSelected ? 'selected' : ''}" data-id="${playlist.id}">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="${isSelected ? '#3b82f6' : '#22c55e'}" stroke="white" stroke-width="1.5">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3" fill="white"></circle>
+                        </svg>
+                    </div>`,
+                    iconSize: [36, 36],
+                    iconAnchor: [18, 36],
+                    popupAnchor: [0, -36]
+                })
+            });
+
+            marker.bindPopup(`<strong>${playlist.name}</strong><br>${playlist.location}`);
+            marker.on('click', () => onPinClick(playlist.id));
+            marker.addTo(map);
+            markersRef.current[playlist.id] = marker;
+        });
+
+        return () => {
+            map.remove();
+            mapInstanceRef.current = null;
+        };
+    }, []);
+
+    // Update markers when selection changes
+    React.useEffect(() => {
+        if (!mapInstanceRef.current) return;
+
+        Object.entries(markersRef.current).forEach(([id, marker]) => {
+            const playlist = playlists.find(p => p.id === parseInt(id));
+            const isSelected = selectedPin === parseInt(id);
+
+            marker.setIcon(L.divIcon({
+                className: 'custom-marker',
+                html: `<div class="marker-pin ${isSelected ? 'selected' : ''}" data-id="${id}">
+                    <svg width="${isSelected ? 44 : 36}" height="${isSelected ? 44 : 36}" viewBox="0 0 24 24" fill="${isSelected ? '#3b82f6' : '#22c55e'}" stroke="white" stroke-width="1.5">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3" fill="white"></circle>
+                    </svg>
+                </div>`,
+                iconSize: [isSelected ? 44 : 36, isSelected ? 44 : 36],
+                iconAnchor: [isSelected ? 22 : 18, isSelected ? 44 : 36],
+                popupAnchor: [0, isSelected ? -44 : -36]
+            }));
+
+            if (isSelected) {
+                marker.openPopup();
+                mapInstanceRef.current.panTo(playlist.coordinates);
+            }
+        });
+    }, [selectedPin, playlists]);
+
+    return <div ref={mapRef} className="w-full h-full" />;
+};
+
 const PlanetTuneApp = () => {
     const [selectedPin, setSelectedPin] = React.useState(null);
     const [sortedPlaylists, setSortedPlaylists] = React.useState([]);
@@ -60,7 +150,7 @@ const PlanetTuneApp = () => {
     };
 
     const handleAddressClick = (playlistId) => {
-        // Only highlight the pin, don't reorder
+        // Only highlight the pin, don't reorder but pan to location
         setSelectedPin(playlistId);
     };
 
@@ -83,57 +173,12 @@ const PlanetTuneApp = () => {
             </div>
 
             {/* Map Section */}
-            <div className="relative overflow-hidden bg-yellow-100 sticky top-0 z-10 sticky-map" style={{ height: 'calc(40vh - 48px)' }}>
-                <div className="w-full h-full flex items-center justify-center text-gray-300">
-                    <Icon name="map-pin" size={256} className="opacity-10" />
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-gray-500 text-lg font-medium">New York City Map</span>
-                </div>
-
-                {/* Zoom Controls */}
-                <div className="absolute left-3 top-3 bg-white rounded-lg shadow-lg overflow-hidden z-20">
-                    <button className="px-4 py-3 border-b border-gray-200 hover:bg-gray-50 text-gray-700 font-bold text-lg block w-full">
-                        +
-                    </button>
-                    <button className="px-4 py-3 hover:bg-gray-50 text-gray-700 font-bold text-lg block w-full">
-                        -
-                    </button>
-                </div>
-
-                {/* Map Pins */}
-                <div className="absolute inset-0">
-                    {playlists.map((playlist, idx) => (
-                        <button
-                            key={playlist.id}
-                            onClick={() => handlePinClick(playlist.id)}
-                            className="absolute z-10 map-pin"
-                            style={{
-                                left: `${35 + (idx * 20)}%`,
-                                top: `${35 + (idx * 15)}%`,
-                                transform: 'translate(-50%, -100%)'
-                            }}
-                        >
-                            {/* Callout bubble */}
-                            {selectedPin === playlist.id && (
-                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-white px-3 py-2 rounded-lg shadow-lg whitespace-nowrap callout-bubble">
-                                    <div className="text-xs font-medium text-gray-800">{playlist.location}</div>
-                                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white"></div>
-                                </div>
-                            )}
-                            <Icon
-                                name="map-pin"
-                                size={48}
-                                fill="currentColor"
-                                className={`drop-shadow-xl transition-all ${
-                                    selectedPin === playlist.id
-                                        ? 'text-blue-500 scale-125'
-                                        : 'text-green-500 hover:scale-110'
-                                }`}
-                            />
-                        </button>
-                    ))}
-                </div>
+            <div className="relative overflow-hidden sticky top-0 z-10 sticky-map" style={{ height: 'calc(40vh - 48px)' }}>
+                <LeafletMap
+                    playlists={playlists}
+                    selectedPin={selectedPin}
+                    onPinClick={handlePinClick}
+                />
             </div>
 
             {/* Playlist List */}
