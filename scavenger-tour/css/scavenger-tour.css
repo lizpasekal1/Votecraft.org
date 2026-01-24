@@ -12,7 +12,8 @@
 
 html, body {
     height: 100%;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 body {
@@ -63,12 +64,17 @@ body {
 
 /* Playlist card hover effect */
 .playlist-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    /* Offset for sticky header (48px) + sticky map (35vh) + gap */
+    scroll-margin-top: calc(48px + 35vh + 16px);
 }
 
 .playlist-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    opacity: 0.7;
+}
+
+.playlist-card:active {
+    opacity: 0.5;
 }
 
 /* Play button pulse animation */
