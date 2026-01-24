@@ -10,7 +10,6 @@
     let selectedPin = null;
     let map = null;
     let markers = {};
-    let skipScrollReset = false; // Flag to prevent scroll reset during selection
 
     // DOM Elements
     const playlistContainer = document.getElementById('playlist-container');
@@ -85,12 +84,34 @@
         return ALL_TOURS[currentTourId] || PLANETUNE_PLAYLISTS;
     }
 
+    // Update card selection visually without re-rendering
+    function updateCardSelection() {
+        const cards = playlistContainer.querySelectorAll('.playlist-card');
+        cards.forEach(card => {
+            const cardId = parseInt(card.dataset.playlistId);
+            if (cardId === selectedPin) {
+                card.classList.add('ring-2', 'ring-blue-500');
+                const locationText = card.querySelector('p.text-xs');
+                if (locationText) {
+                    locationText.classList.remove('text-gray-400');
+                    locationText.classList.add('text-green-500');
+                }
+            } else {
+                card.classList.remove('ring-2', 'ring-blue-500');
+                const locationText = card.querySelector('p.text-xs');
+                if (locationText) {
+                    locationText.classList.remove('text-green-500');
+                    locationText.classList.add('text-gray-400');
+                }
+            }
+        });
+    }
+
     // Select playlist (from card click - no scroll)
     function selectPlaylist(id) {
         selectedPin = id;
-        skipScrollReset = true; // Don't reset scroll position
         updateMarkers();
-        renderPlaylists();
+        updateCardSelection();
 
         // Pan map to selected location
         const playlists = getCurrentPlaylists();
@@ -104,9 +125,8 @@
     // Select playlist from map pin click (with scroll)
     function selectPlaylistFromMap(id) {
         selectedPin = id;
-        skipScrollReset = true; // Don't reset scroll position
         updateMarkers();
-        renderPlaylists();
+        updateCardSelection();
 
         // Pan map to selected location
         const playlists = getCurrentPlaylists();
@@ -118,7 +138,7 @@
 
         // Scroll playlist card to right under the map
         setTimeout(() => {
-            const card = document.getElementById(`playlist-${id}`);
+            const card = playlistContainer.querySelector(`[data-playlist-id="${id}"]`);
             if (card) {
                 card.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
@@ -196,79 +216,11 @@
     `;
     }
 
-    // Render playlist cards with infinite scroll
+    // Render playlist cards
     function renderPlaylists() {
         const playlists = getCurrentPlaylists();
-
-        // Create three sets: clone-before, original, clone-after
-        const beforeClones = playlists.map(p => generateCardHTML(p, '-clone-before')).join('');
-        const originalCards = playlists.map(p => generateCardHTML(p, '')).join('');
-        const afterClones = playlists.map(p => generateCardHTML(p, '-clone-after')).join('');
-
-        playlistContainer.innerHTML = beforeClones + originalCards + afterClones;
-
-        // Set up infinite scroll after rendering
-        setupInfiniteScroll();
+        playlistContainer.innerHTML = playlists.map(p => generateCardHTML(p, '')).join('');
     }
-
-    // Calculate height of one set of cards
-    let singleSetHeight = 0;
-
-    // Set up infinite scroll behavior
-    function setupInfiniteScroll() {
-        const playlists = getCurrentPlaylists();
-        if (playlists.length === 0) return;
-
-        // Skip scroll reset if triggered by card/map selection
-        if (skipScrollReset) {
-            skipScrollReset = false;
-            return;
-        }
-
-        // Wait for DOM to update, then calculate heights and scroll to middle set
-        requestAnimationFrame(() => {
-            const firstOriginal = document.getElementById(`playlist-${playlists[0].id}`);
-            const firstCloneAfter = document.getElementById(`playlist-${playlists[0].id}-clone-after`);
-
-            if (firstOriginal && firstCloneAfter) {
-                // Calculate height of one complete set
-                singleSetHeight = firstCloneAfter.offsetTop - firstOriginal.offsetTop;
-
-                // Scroll to the start of the original (middle) set without animation
-                const cardTop = firstOriginal.offsetTop;
-                window.scrollTo(0, cardTop - 200); // Offset for header + map
-            }
-        });
-    }
-
-    // Handle infinite scroll looping
-    function handleInfiniteScroll() {
-        const playlists = getCurrentPlaylists();
-        if (playlists.length === 0 || singleSetHeight === 0) return;
-
-        const firstOriginal = document.getElementById(`playlist-${playlists[0].id}`);
-        const firstCloneAfter = document.getElementById(`playlist-${playlists[0].id}-clone-after`);
-        const firstCloneBefore = document.getElementById(`playlist-${playlists[0].id}-clone-before`);
-
-        if (!firstOriginal || !firstCloneAfter || !firstCloneBefore) return;
-
-        const scrollY = window.scrollY;
-        const originalStart = firstOriginal.offsetTop - 200; // Account for header offset
-        const cloneAfterStart = firstCloneAfter.offsetTop - 200;
-        const cloneBeforeStart = firstCloneBefore.offsetTop - 200;
-
-        // If scrolled into the after-clones section, jump back to original
-        if (scrollY >= cloneAfterStart) {
-            window.scrollTo(0, scrollY - singleSetHeight);
-        }
-        // If scrolled into the before-clones section, jump forward to original
-        else if (scrollY < originalStart) {
-            window.scrollTo(0, scrollY + singleSetHeight);
-        }
-    }
-
-    // Add scroll listener for infinite scroll
-    window.addEventListener('scroll', handleInfiniteScroll, { passive: true });
 
     // Show playlist detail modal
     window.showPlaylistDetail = function(id) {
