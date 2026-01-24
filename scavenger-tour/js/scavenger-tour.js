@@ -375,6 +375,8 @@
 
     // Show navigation drawer
     window.showTourMenu = function() {
+        const currentTour = TOUR_TYPES.find(t => t.id === currentTourId) || TOUR_TYPES[0];
+
         // Create drawer HTML
         modalsContainer.innerHTML = `
             <div class="nav-drawer-overlay" onclick="closeDrawer()"></div>
@@ -395,23 +397,49 @@
                 </div>
 
                 <div class="nav-drawer-content">
-                    <p class="text-gray-400 text-xs uppercase tracking-wider mb-3 px-1">Choose Your Tour</p>
-                    ${TOUR_TYPES.map(tour => `
-                        <div class="nav-drawer-item ${currentTourId === tour.id ? 'active' : ''}"
-                             onclick="selectTourFromDrawer('${tour.id}')"
-                             role="button"
-                             tabindex="0">
-                            <div class="icon">${tour.icon}</div>
-                            <div class="content">
-                                <div class="title">
-                                    ${tour.name}
-                                    ${currentTourId === tour.id ? `<span class="badge" style="background: ${tour.color}; color: white;">Active</span>` : ''}
+                    <!-- Accordion Tour Selector -->
+                    <div class="accordion">
+                        <button class="accordion-trigger" onclick="toggleAccordion()" aria-expanded="false">
+                            <div class="flex items-center gap-3 flex-1">
+                                <span class="text-2xl">${currentTour.icon}</span>
+                                <div class="flex-1 text-left">
+                                    <div class="text-white font-semibold">${currentTour.name}</div>
+                                    <div class="text-gray-400 text-xs">${currentTour.stops} stops</div>
                                 </div>
-                                <div class="description">${tour.description}</div>
-                                <div class="text-gray-500 text-xs mt-1">${tour.stops} stops</div>
                             </div>
+                            <svg class="accordion-chevron w-5 h-5 text-gray-400 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+
+                        <div class="accordion-content">
+                            ${TOUR_TYPES.map(tour => `
+                                <div class="accordion-item ${currentTourId === tour.id ? 'active' : ''}"
+                                     onclick="selectTourFromDrawer('${tour.id}')"
+                                     role="button"
+                                     tabindex="0">
+                                    <span class="text-xl">${tour.icon}</span>
+                                    <div class="flex-1">
+                                        <div class="text-white font-medium text-sm">${tour.name}</div>
+                                        <div class="text-gray-500 text-xs">${tour.description}</div>
+                                    </div>
+                                    ${currentTourId === tour.id ? `
+                                        <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                        </svg>
+                                    ` : ''}
+                                </div>
+                            `).join('')}
                         </div>
-                    `).join('')}
+                    </div>
+
+                    <!-- Additional menu items could go here -->
+                    <div class="mt-6 pt-4 border-t border-gray-700">
+                        <p class="text-gray-500 text-xs px-1 mb-3">About</p>
+                        <div class="text-gray-400 text-sm leading-relaxed">
+                            Explore Boston's Freedom Trail through civic-themed audio tours. Each stop connects historic sites to modern civic issues.
+                        </div>
+                    </div>
                 </div>
 
                 <div class="nav-drawer-footer">
@@ -426,6 +454,16 @@
             document.querySelector('.nav-drawer').classList.add('open');
             document.body.classList.add('drawer-open');
         });
+    };
+
+    // Toggle accordion open/close
+    window.toggleAccordion = function() {
+        const accordion = document.querySelector('.accordion');
+        const trigger = document.querySelector('.accordion-trigger');
+        const isOpen = accordion.classList.contains('open');
+
+        accordion.classList.toggle('open');
+        trigger.setAttribute('aria-expanded', !isOpen);
     };
 
     // Close navigation drawer
