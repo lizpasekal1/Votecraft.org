@@ -365,8 +365,8 @@
             stops: 4
         },
         {
-            id: 'art-in-action',
-            name: 'Art in Action Tour',
+            id: 'art-action',
+            name: 'ART ACTION TOUR',
             description: 'The role of journalism in democracy',
             icon: '🎨',
             color: '#F59E0B',
