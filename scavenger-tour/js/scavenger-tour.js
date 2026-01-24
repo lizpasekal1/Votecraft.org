@@ -365,19 +365,11 @@
             stops: 4
         },
         {
-            id: 'journalism',
-            name: 'Press Freedom Tour',
+            id: 'art-in-action',
+            name: 'Art in Action Tour',
             description: 'The role of journalism in democracy',
-            icon: '📰',
+            icon: '🎨',
             color: '#F59E0B',
-            stops: 4
-        },
-        {
-            id: 'scotus',
-            name: 'Supreme Court Reform Tour',
-            description: 'Understanding the highest court and calls for reform',
-            icon: '⚖️',
-            color: '#EF4444',
             stops: 4
         }
     ];
