@@ -503,8 +503,7 @@
                 window.location.href = 'index.html';
                 break;
             case 'itinerary':
-                // Show itinerary (placeholder) - keep drawer open
-                alert('Itinerary feature coming soon!');
+                window.location.href = `itinerary.html?tour=${currentTourId}`;
                 break;
             case 'user':
                 closeDrawer();
