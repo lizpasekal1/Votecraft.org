@@ -36,7 +36,7 @@ const PLANETUNE_PLAYLISTS = [
         likes: 312,
         civicTheme: CIVIC_THEMES.DEMOCRACY,
         widget: "rcv-demo",
-        image: "https://picsum.photos/seed/faneuil/400/300",
+        image: "https://upload.wikimedia.org/wikipedia/commons/3/35/2017_Faneuil_Hall.jpg",
         description: "Built in 1742 by merchant Peter Faneuil, this hall hosted the debates that sparked a revolution. Samuel Adams, James Otis, and the Sons of Liberty gathered here to protest the Stamp Act and rally colonists toward independence. The phrase 'Cradle of Liberty' was earned here.",
         learnMore: "Frederick Douglass, Susan B. Anthony, and JFK all spoke from this same stage. Massachusetts voters approved RCV for local elections in 2020.",
         soundcloudUrl: "https://soundcloud.com/public-enemy-music/fight-the-power-1"
@@ -193,6 +193,7 @@ const HEALTHCARE_TOUR = [
         likes: 234,
         civicTheme: CIVIC_THEMES.DEMOCRACY,
         widget: "healthcare-compare",
+        image: "https://upload.wikimedia.org/wikipedia/commons/3/35/2017_Faneuil_Hall.jpg",
         description: "The Cradle of Liberty has hosted debates on every major American issue. In 1850, abolitionists and slavery defenders clashed here. Today, healthcare is equally contentious. Should it be a right or a privilege?",
         learnMore: "Americans pay 2-3x more for healthcare than citizens of other wealthy nations, but rank last in health outcomes among developed countries.",
         soundcloudUrl: "https://soundcloud.com/marvingaye/whats-going-on"
@@ -327,6 +328,7 @@ const VOTING_TOUR = [
         likes: 387,
         civicTheme: CIVIC_THEMES.DEMOCRACY,
         widget: "voting-timeline",
+        image: "https://upload.wikimedia.org/wikipedia/commons/3/35/2017_Faneuil_Hall.jpg",
         description: "Frederick Douglass, the formerly enslaved abolitionist, spoke here multiple times demanding citizenship and voting rights for Black Americans. 'What to the Slave is the Fourth of July?' he asked in 1852. Susan B. Anthony also spoke here for women's suffrage.",
         learnMore: "It took 95 years from the Declaration of Independence to the 15th Amendment. Women waited 144 years. The Voting Rights Act wasn't passed until 1965.",
         soundcloudUrl: "https://soundcloud.com/arethafranklin/respect"
@@ -461,6 +463,7 @@ const JOURNALISM_TOUR = [
         likes: 334,
         civicTheme: CIVIC_THEMES.DEMOCRACY,
         widget: "press-freedom",
+        image: "https://upload.wikimedia.org/wikipedia/commons/3/35/2017_Faneuil_Hall.jpg",
         description: "In 1835, a pro-slavery mob dragged abolitionist editor William Lloyd Garrison through Boston's streets with a rope around his neck. His crime? Publishing The Liberator, an anti-slavery newspaper. He survived and published for 30 more years.",
         learnMore: "The US ranks 45th globally in press freedom (2024). Journalists face increasing harassment, legal threats, and violence.",
         soundcloudUrl: "https://soundcloud.com/beyonce/freedom"
@@ -595,6 +598,7 @@ const SCOTUS_TOUR = [
         likes: 334,
         civicTheme: CIVIC_THEMES.DEMOCRACY,
         widget: "court-expansion",
+        image: "https://upload.wikimedia.org/wikipedia/commons/3/35/2017_Faneuil_Hall.jpg",
         description: "The founders debated everything here - including how to structure the courts. The Constitution doesn't specify how many Supreme Court justices there should be. Congress has changed the number seven times, from 5 to 10 to the current 9.",
         learnMore: "FDR tried to expand the Court to 15 justices in 1937. He failed, but the threat may have influenced the Court to uphold New Deal programs.",
         soundcloudUrl: "https://soundcloud.com/brucespringsteen/born-in-the-usa"
