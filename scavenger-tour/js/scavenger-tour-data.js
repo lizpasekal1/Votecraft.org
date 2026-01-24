@@ -36,7 +36,7 @@ const PLANETUNE_PLAYLISTS = [
         likes: 312,
         civicTheme: CIVIC_THEMES.DEMOCRACY,
         widget: "rcv-demo",
-        image: "https://images.unsplash.com/photo-1572128047838-20d2ff74ef27?w=400&h=300&fit=crop",
+        image: "https://source.unsplash.com/400x300/?faneuil-hall,boston,market",
         description: "Built in 1742 by merchant Peter Faneuil, this hall hosted the debates that sparked a revolution. Samuel Adams, James Otis, and the Sons of Liberty gathered here to protest the Stamp Act and rally colonists toward independence. The phrase 'Cradle of Liberty' was earned here.",
         learnMore: "Frederick Douglass, Susan B. Anthony, and JFK all spoke from this same stage. Massachusetts voters approved RCV for local elections in 2020.",
         soundcloudUrl: "https://soundcloud.com/public-enemy-music/fight-the-power-1"
@@ -50,7 +50,7 @@ const PLANETUNE_PLAYLISTS = [
         likes: 289,
         civicTheme: CIVIC_THEMES.HEALTHCARE,
         widget: "healthcare-cost",
-        image: "https://images.unsplash.com/photo-1569982175971-d92b01cf8694?w=400&h=300&fit=crop",
+        image: "https://source.unsplash.com/400x300/?massachusetts-state-house,boston,golden-dome",
         description: "Charles Bulfinch designed this iconic building in 1798. The golden dome (originally wood, then copper by Paul Revere, gilded in 1874) has watched over Massachusetts politics for over 225 years. In 2006, Governor Romney signed the nation's first universal healthcare law here.",
         learnMore: "The 'Sacred Cod' hanging in the House chamber has been there since 1784, symbolizing the fishing industry's importance. MA's healthcare law became the model for the ACA.",
         soundcloudUrl: "https://soundcloud.com/bill-withers-official/lean-on-me-2"
@@ -64,7 +64,7 @@ const PLANETUNE_PLAYLISTS = [
         likes: 356,
         civicTheme: CIVIC_THEMES.VOTING,
         widget: "voter-turnout",
-        image: "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=400&h=300&fit=crop",
+        image: "https://source.unsplash.com/400x300/?old-state-house,boston,historic",
         description: "On March 5, 1770, British soldiers fired into a crowd here, killing five colonists including Crispus Attucks, a Black man who became the first martyr of the Revolution. The cobblestone circle marks where blood was shed for the cause of representation.",
         learnMore: "John Adams defended the British soldiers in court to prove the colonies could provide fair trials. Only 66% of eligible Americans voted in 2020 - the highest in 120 years.",
         soundcloudUrl: "https://soundcloud.com/samcooke/a-change-is-gonna-come"
@@ -78,7 +78,7 @@ const PLANETUNE_PLAYLISTS = [
         likes: 298,
         civicTheme: CIVIC_THEMES.HOUSING,
         widget: "housing-cost",
-        image: "https://images.unsplash.com/photo-1596491022943-4da61f1c7cef?w=400&h=300&fit=crop",
+        image: "https://source.unsplash.com/400x300/?boston-common,park,trees",
         description: "Established in 1634, this is America's oldest public park - common land where anyone could graze cattle. It's been a British Army camp, a public hanging site, and a gathering place for protests. The Common represents land that belongs to everyone.",
         learnMore: "Martin Luther King Jr. spoke here in 1965. Today, Boston's median rent is $3,200/month - requiring an income of $128,000/year to afford.",
         soundcloudUrl: "https://soundcloud.com/tracychapmanofficial/tracy-chapman-fast-car"
@@ -92,7 +92,7 @@ const PLANETUNE_PLAYLISTS = [
         likes: 334,
         civicTheme: CIVIC_THEMES.IMMIGRATION,
         widget: "immigration-data",
-        image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&h=300&fit=crop",
+        image: "https://source.unsplash.com/400x300/?cemetery,historic,gravestones,boston",
         description: "Samuel Adams, Paul Revere, John Hancock, and victims of the Boston Massacre rest here among 2,300 graves. These founders were descendants of immigrants who fled religious persecution in Europe. America has always been shaped by newcomers seeking freedom.",
         learnMore: "Paul Revere's family were French Huguenot refugees. Immigrants or their children founded 45% of Fortune 500 companies.",
         soundcloudUrl: "https://soundcloud.com/brucespringsteen/this-land-is-your-land-live"
@@ -106,7 +106,7 @@ const PLANETUNE_PLAYLISTS = [
         likes: 245,
         civicTheme: CIVIC_THEMES.ECONOMY,
         widget: "wealth-inequality",
-        image: "https://images.unsplash.com/photo-1582461683408-8e3bca6d05d4?w=400&h=300&fit=crop",
+        image: "https://source.unsplash.com/400x300/?city-hall,boston,historic-building",
         description: "This French Second Empire building served as Boston's City Hall from 1865-1969. Benjamin Franklin was born on this street in 1706. The building that once housed democratic power is now luxury offices and a steakhouse - a metaphor for America's economy.",
         learnMore: "The donkey statue outside commemorates the Democratic Party's symbol. The top 1% now own more wealth than the bottom 90% combined.",
         soundcloudUrl: "https://soundcloud.com/dollyparton/9-to-5-10"
@@ -120,7 +120,7 @@ const PLANETUNE_PLAYLISTS = [
         likes: 378,
         civicTheme: CIVIC_THEMES.CLIMATE,
         widget: "climate-impact",
-        image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop",
+        image: "https://source.unsplash.com/400x300/?meeting-house,church,boston,colonial",
         description: "On December 16, 1773, 5,000 colonists packed this church to debate the tea tax. When Governor Hutchinson refused to let tea ships leave, Samuel Adams gave the signal: 'This meeting can do nothing more.' The Boston Tea Party began. Today we face a new crisis.",
         learnMore: "The tea dumped was worth $1.7 million in today's dollars. By 2050, parts of Boston could flood 90+ days per year due to climate change.",
         soundcloudUrl: "https://soundcloud.com/jonimitchell/big-yellow-taxi"
@@ -134,7 +134,7 @@ const PLANETUNE_PLAYLISTS = [
         likes: 212,
         civicTheme: CIVIC_THEMES.EDUCATION,
         widget: "student-debt",
-        image: "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?w=400&h=300&fit=crop",
+        image: "https://source.unsplash.com/400x300/?chapel,church,boston,stone",
         description: "Founded in 1686 as the first Anglican church in Puritan Boston, King's Chapel stands near the site of America's first public school (Boston Latin, 1635). The Puritans believed education was radical - everyone should read scripture. Today, student debt tops $1.7 trillion.",
         learnMore: "Boston Latin School alumni include Samuel Adams, Benjamin Franklin, and John Hancock. Average student debt: $37,000.",
         soundcloudUrl: "https://soundcloud.com/grandmasterflashmusic/the-message-12-single-version"
@@ -148,7 +148,7 @@ const PLANETUNE_PLAYLISTS = [
         likes: 267,
         civicTheme: CIVIC_THEMES.JOURNALISM,
         widget: "media-trust",
-        image: "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=400&h=300&fit=crop",
+        image: "https://source.unsplash.com/400x300/?paul-revere,colonial-house,boston,historic",
         description: "Paul Revere lived here from 1770-1800. His midnight ride spread the news: 'The British are coming!' In an era before mass media, information traveled by horseback. Revere was an early 'influencer' - his engraving of the Boston Massacre shaped public opinion.",
         learnMore: "Revere's engraving was propaganda - it depicted soldiers firing in formation, not the chaotic reality. Only 32% of Americans trust the media today.",
         soundcloudUrl: "https://soundcloud.com/therollingstones/sympathy-for-the-devil"
@@ -162,7 +162,7 @@ const PLANETUNE_PLAYLISTS = [
         likes: 345,
         civicTheme: CIVIC_THEMES.SCOTUS,
         widget: "scotus-approval",
-        image: "https://images.unsplash.com/photo-1555992336-03a23c7b20ee?w=400&h=300&fit=crop",
+        image: "https://source.unsplash.com/400x300/?old-north-church,boston,steeple",
         description: "On April 18, 1775, sexton Robert Newman hung two lanterns in this steeple: 'Two if by sea.' The signal launched the Revolution. This church reminds us that ordinary people, taking courageous action, can change history. The balance of power matters.",
         learnMore: "The church's box pews were originally owned by wealthy families. Supreme Court approval dropped to 40% in 2023 - the lowest ever recorded.",
         soundcloudUrl: "https://soundcloud.com/u2official/sunday-bloody-sunday"
