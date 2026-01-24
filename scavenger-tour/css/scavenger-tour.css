@@ -532,3 +532,74 @@ body {
 body.drawer-open {
     overflow: hidden;
 }
+
+/* ============================================
+   Accordion Styles
+   ============================================ */
+
+.accordion {
+    background: #1f2937;
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.accordion-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.accordion-trigger:hover {
+    background: #374151;
+}
+
+.accordion-chevron {
+    transition: transform 0.2s ease;
+}
+
+.accordion.open .accordion-chevron {
+    transform: rotate(180deg);
+}
+
+.accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    background: #111827;
+}
+
+.accordion.open .accordion-content {
+    max-height: 500px;
+}
+
+.accordion-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    border-bottom: 1px solid #1f2937;
+}
+
+.accordion-item:last-child {
+    border-bottom: none;
+}
+
+.accordion-item:hover {
+    background: #1f2937;
+}
+
+.accordion-item.active {
+    background: rgba(59, 130, 246, 0.15);
+}
+
+.accordion-item.active:hover {
+    background: rgba(59, 130, 246, 0.25);
+}
