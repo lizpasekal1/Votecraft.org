@@ -397,43 +397,70 @@
                 </div>
 
                 <div class="nav-drawer-content">
-                    <!-- Accordion Tour Selector -->
-                    <div class="accordion">
-                        <button class="accordion-trigger" onclick="toggleAccordion()" aria-expanded="false">
-                            <div class="flex items-center gap-3 flex-1">
-                                <span class="text-2xl">${currentTour.icon}</span>
-                                <div class="flex-1 text-left">
-                                    <div class="text-white font-semibold">${currentTour.name}</div>
-                                    <div class="text-gray-400 text-xs">${currentTour.stops} stops</div>
-                                </div>
-                            </div>
-                            <svg class="accordion-chevron w-5 h-5 text-gray-400 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                    <!-- Menu Items -->
+                    <div class="nav-menu-list">
+                        <!-- Home -->
+                        <a href="#" class="nav-menu-item" onclick="navigateTo('home'); return false;">
+                            <svg class="nav-menu-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                             </svg>
-                        </button>
+                            <span>Home</span>
+                        </a>
 
-                        <div class="accordion-content">
-                            ${TOUR_TYPES.map(tour => `
-                                <div class="accordion-item ${currentTourId === tour.id ? 'active' : ''}"
-                                     onclick="selectTourFromDrawer('${tour.id}')"
-                                     role="button"
-                                     tabindex="0">
-                                    <span class="text-xl">${tour.icon}</span>
-                                    <div class="flex-1">
-                                        <div class="text-white font-medium text-sm">${tour.name}</div>
-                                        <div class="text-gray-500 text-xs">${tour.description}</div>
+                        <!-- Tour Type Accordion -->
+                        <div class="accordion">
+                            <button class="accordion-trigger nav-menu-item" onclick="toggleAccordion()" aria-expanded="false">
+                                <svg class="nav-menu-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                                </svg>
+                                <span class="flex-1 text-left">Tour Type</span>
+                                <span class="text-gray-500 text-xs mr-2">${currentTour.name}</span>
+                                <svg class="accordion-chevron w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+
+                            <div class="accordion-content">
+                                ${TOUR_TYPES.map(tour => `
+                                    <div class="accordion-item ${currentTourId === tour.id ? 'active' : ''}"
+                                         onclick="selectTourFromDrawer('${tour.id}')"
+                                         role="button"
+                                         tabindex="0">
+                                        <span class="text-xl">${tour.icon}</span>
+                                        <div class="flex-1">
+                                            <div class="text-white font-medium text-sm">${tour.name}</div>
+                                            <div class="text-gray-500 text-xs">${tour.description}</div>
+                                        </div>
+                                        ${currentTourId === tour.id ? `
+                                            <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                            </svg>
+                                        ` : ''}
                                     </div>
-                                    ${currentTourId === tour.id ? `
-                                        <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                        </svg>
-                                    ` : ''}
-                                </div>
-                            `).join('')}
+                                `).join('')}
+                            </div>
                         </div>
+
+                        <!-- Location -->
+                        <a href="#" class="nav-menu-item" onclick="navigateTo('location'); return false;">
+                            <svg class="nav-menu-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <span>Location</span>
+                            <span class="text-gray-500 text-xs">Boston, MA</span>
+                        </a>
+
+                        <!-- User/Profile -->
+                        <a href="#" class="nav-menu-item" onclick="navigateTo('user'); return false;">
+                            <svg class="nav-menu-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            <span>Account</span>
+                        </a>
                     </div>
 
-                    <!-- Additional menu items could go here -->
+                    <!-- About Section -->
                     <div class="mt-6 pt-4 border-t border-gray-700">
                         <p class="text-gray-500 text-xs px-1 mb-3">About</p>
                         <div class="text-gray-400 text-sm leading-relaxed">
@@ -464,6 +491,30 @@
 
         accordion.classList.toggle('open');
         trigger.setAttribute('aria-expanded', !isOpen);
+    };
+
+    // Navigate to menu item
+    window.navigateTo = function(destination) {
+        closeDrawer();
+        setTimeout(() => {
+            switch(destination) {
+                case 'home':
+                    // Scroll to top and reset selection
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    selectedPin = null;
+                    updateMarkers();
+                    updateCardSelection();
+                    break;
+                case 'location':
+                    // Show location picker (placeholder)
+                    alert('Location selection coming soon! Currently showing: Boston, MA');
+                    break;
+                case 'user':
+                    // Show profile modal
+                    showProfile();
+                    break;
+            }
+        }, 200);
     };
 
     // Close navigation drawer
