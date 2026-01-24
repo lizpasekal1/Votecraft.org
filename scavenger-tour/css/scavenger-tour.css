@@ -67,6 +67,18 @@ body {
     transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
     /* Offset for sticky header (48px) + sticky map (35vh) + gap */
     scroll-margin-top: calc(48px + 35vh + 16px);
+    /* Default height - 128px on desktop, overridden on mobile */
+    height: 128px;
+}
+
+/* Mobile: compact cards to fit ~2.5 below map */
+@media screen and (max-width: 430px) {
+    .playlist-card {
+        height: 100px;
+    }
+    .playlist-card .w-28 {
+        width: 90px;
+    }
 }
 
 .playlist-card:hover {

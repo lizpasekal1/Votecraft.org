@@ -178,7 +178,7 @@
         <div id="playlist-${playlist.id}${suffix}"
              data-playlist-id="${playlist.id}"
              onclick="selectPlaylist(${playlist.id})"
-             class="bg-gray-800 rounded-xl overflow-hidden mb-3 shadow-lg flex transition-all h-32 playlist-card cursor-pointer ${selectedPin === playlist.id ? 'ring-2 ring-blue-500' : ''}">
+             class="bg-gray-800 rounded-xl overflow-hidden mb-3 shadow-lg flex transition-all playlist-card cursor-pointer ${selectedPin === playlist.id ? 'ring-2 ring-blue-500' : ''}">
             <!-- Featured Image -->
             <div class="w-28 flex-shrink-0 relative" style="${imageStyle}">
             </div>
