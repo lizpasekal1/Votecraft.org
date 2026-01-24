@@ -373,42 +373,84 @@
         }
     ];
 
-    // Show tour selection menu
+    // Show navigation drawer
     window.showTourMenu = function() {
+        // Create drawer HTML
         modalsContainer.innerHTML = `
-            <div class="fixed inset-0 bg-black bg-opacity-80 z-50 flex flex-col max-w-2xl mx-auto modal-backdrop" onclick="closeModal()">
-                <div class="bg-gray-900 mt-14 mx-4 rounded-2xl overflow-hidden shadow-2xl modal-content" onclick="event.stopPropagation()">
-                    <div class="px-4 py-4 border-b border-gray-800 flex items-center justify-between">
-                        <h2 class="text-white text-lg font-bold">Choose Your Tour</h2>
-                        <button onclick="closeModal()" class="text-gray-400 hover:text-white p-1">
-                            ${icons.x}
-                        </button>
-                    </div>
-                    <div class="p-4 space-y-3 max-h-96 overflow-y-auto">
-                        ${TOUR_TYPES.map(tour => `
-                            <button onclick="selectTour('${tour.id}')"
-                                    class="w-full text-left p-4 rounded-xl transition-all ${currentTourId === tour.id ? 'bg-gray-700 ring-2' : 'bg-gray-800 hover:bg-gray-700'}"
-                                    style="${currentTourId === tour.id ? `--tw-ring-color: ${tour.color};` : ''}">
-                                <div class="flex items-start gap-4">
-                                    <div class="text-3xl">${tour.icon}</div>
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-2">
-                                            <h3 class="text-white font-bold">${tour.name}</h3>
-                                            ${currentTourId === tour.id ? `<span class="text-xs text-white px-2 py-0.5 rounded-full" style="background: ${tour.color};">Active</span>` : ''}
-                                        </div>
-                                        <p class="text-gray-400 text-sm mt-1">${tour.description}</p>
-                                        <p class="text-gray-500 text-xs mt-1">${tour.stops} stops</p>
-                                    </div>
-                                </div>
-                            </button>
-                        `).join('')}
-                    </div>
-                    <div class="px-4 py-3 bg-gray-800 border-t border-gray-700">
-                        <p class="text-gray-500 text-xs text-center">All tours are ~15 min walks around Government Center</p>
+            <div class="nav-drawer-overlay" onclick="closeDrawer()"></div>
+            <nav class="nav-drawer" role="navigation" aria-label="Tour selection">
+                <div class="nav-drawer-header">
+                    <button class="nav-drawer-close" onclick="closeDrawer()" aria-label="Close menu">
+                        ${icons.x}
+                    </button>
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                            ${icons.music}
+                        </div>
+                        <div>
+                            <div class="text-xl font-bold text-white">VoteCraft</div>
+                            <div class="text-blue-200 text-sm">Civic Music Tours</div>
+                        </div>
                     </div>
                 </div>
-            </div>
+
+                <div class="nav-drawer-content">
+                    <p class="text-gray-400 text-xs uppercase tracking-wider mb-3 px-1">Choose Your Tour</p>
+                    ${TOUR_TYPES.map(tour => `
+                        <div class="nav-drawer-item ${currentTourId === tour.id ? 'active' : ''}"
+                             onclick="selectTourFromDrawer('${tour.id}')"
+                             role="button"
+                             tabindex="0">
+                            <div class="icon">${tour.icon}</div>
+                            <div class="content">
+                                <div class="title">
+                                    ${tour.name}
+                                    ${currentTourId === tour.id ? `<span class="badge" style="background: ${tour.color}; color: white;">Active</span>` : ''}
+                                </div>
+                                <div class="description">${tour.description}</div>
+                                <div class="text-gray-500 text-xs mt-1">${tour.stops} stops</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="nav-drawer-footer">
+                    <p class="text-gray-500 text-xs text-center">All tours are ~15 min walks around Government Center</p>
+                </div>
+            </nav>
         `;
+
+        // Trigger animation after DOM update
+        requestAnimationFrame(() => {
+            document.querySelector('.nav-drawer-overlay').classList.add('open');
+            document.querySelector('.nav-drawer').classList.add('open');
+            document.body.classList.add('drawer-open');
+        });
+    };
+
+    // Close navigation drawer
+    window.closeDrawer = function() {
+        const overlay = document.querySelector('.nav-drawer-overlay');
+        const drawer = document.querySelector('.nav-drawer');
+
+        if (overlay && drawer) {
+            overlay.classList.remove('open');
+            drawer.classList.remove('open');
+            document.body.classList.remove('drawer-open');
+
+            // Remove from DOM after animation
+            setTimeout(() => {
+                modalsContainer.innerHTML = '';
+            }, 300);
+        }
+    };
+
+    // Select tour from drawer
+    window.selectTourFromDrawer = function(tourId) {
+        closeDrawer();
+        setTimeout(() => {
+            selectTour(tourId);
+        }, 150);
     };
 
     // Select a tour
