@@ -446,14 +446,12 @@
                             </div>
                         </div>
 
-                        <!-- Location -->
-                        <a href="#" class="nav-menu-item" onclick="navigateTo('location'); return false;">
+                        <!-- Itinerary -->
+                        <a href="#" class="nav-menu-item" onclick="navigateTo('itinerary'); return false;">
                             <svg class="nav-menu-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                             </svg>
-                            <span>Location</span>
-                            <span class="text-gray-500 text-xs">Boston, MA</span>
+                            <span>Itinerary</span>
                         </a>
 
                         <!-- User/Profile -->
@@ -504,9 +502,9 @@
             case 'home':
                 window.location.href = 'index.html';
                 break;
-            case 'location':
-                // Show location picker (placeholder) - keep drawer open
-                alert('Location selection coming soon! Currently showing: Boston, MA');
+            case 'itinerary':
+                // Show itinerary (placeholder) - keep drawer open
+                alert('Itinerary feature coming soon!');
                 break;
             case 'user':
                 closeDrawer();
