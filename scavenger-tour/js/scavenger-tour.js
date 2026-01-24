@@ -161,14 +161,17 @@
     function generateCardHTML(playlist, suffix = '') {
         const theme = playlist.civicTheme;
         const themeColor = theme ? theme.color : '#22c55e';
+        const imageStyle = playlist.image
+            ? `background-image: url('${playlist.image}'); background-size: cover; background-position: center;`
+            : `background: linear-gradient(135deg, ${themeColor}33, ${themeColor}66);`;
 
         return `
         <div id="playlist-${playlist.id}${suffix}"
              data-playlist-id="${playlist.id}"
              onclick="selectPlaylist(${playlist.id})"
              class="bg-gray-800 rounded-xl overflow-hidden mb-3 shadow-lg flex transition-all h-32 playlist-card cursor-pointer ${selectedPin === playlist.id ? 'ring-2 ring-blue-500' : ''}">
-            <!-- Featured Image with Theme Color -->
-            <div class="w-28 flex-shrink-0 relative" style="background: linear-gradient(135deg, ${themeColor}33, ${themeColor}66);">
+            <!-- Featured Image -->
+            <div class="w-28 flex-shrink-0 relative" style="${imageStyle}">
             </div>
 
             <!-- Content -->
@@ -184,15 +187,6 @@
                             <span class="truncate">${playlist.learnMore}</span>
                         </p>
                     ` : ''}
-                </div>
-
-                <!-- Actions -->
-                <div class="flex items-center gap-3" onclick="event.stopPropagation()">
-                    <button class="flex items-center gap-1 text-white">
-                        ${icons.heart}
-                        <span class="text-xs font-semibold">${playlist.likes}</span>
-                    </button>
-                    <button class="text-white">${icons.share}</button>
                 </div>
             </div>
 
