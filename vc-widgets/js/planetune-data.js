@@ -3,11 +3,20 @@
  * Playlist/location data for the map-based music discovery app
  */
 
+// Map configuration
+const PLANETUNE_MAP_CONFIG = {
+    center: [40.7484, -73.9857], // NYC center (Empire State Building area)
+    zoom: 13,
+    minZoom: 11,
+    maxZoom: 18
+};
+
 const PLANETUNE_PLAYLISTS = [
     {
         id: 1,
         name: "Funky on 45th Diner",
         location: "650 9th Ave, New York, NY",
+        coordinates: [40.7608, -73.9930], // Hell's Kitchen
         creator: "DJ Groove",
         likes: 123,
         hasPlasticSavers: true,
@@ -23,6 +32,7 @@ const PLANETUNE_PLAYLISTS = [
         id: 2,
         name: "SoHo Morning Coffee",
         location: "281 Lafayette St, New York, NY",
+        coordinates: [40.7234, -73.9965], // SoHo
         creator: "Sarah Martinez",
         likes: 89,
         hasPlasticSavers: false,
@@ -38,6 +48,7 @@ const PLANETUNE_PLAYLISTS = [
         id: 3,
         name: "Brooklyn Bridge Sunset",
         location: "Brooklyn Bridge, New York, NY",
+        coordinates: [40.7061, -73.9969], // Brooklyn Bridge
         creator: "Marcus Chen",
         likes: 234,
         hasPlasticSavers: true,
@@ -53,6 +64,7 @@ const PLANETUNE_PLAYLISTS = [
         id: 4,
         name: "Central Park Vibes",
         location: "Central Park West, New York, NY",
+        coordinates: [40.7829, -73.9654], // Central Park
         creator: "Alex Rivers",
         likes: 156,
         hasPlasticSavers: false,
@@ -67,6 +79,7 @@ const PLANETUNE_PLAYLISTS = [
         id: 5,
         name: "Times Square Lights",
         location: "Times Square, New York, NY",
+        coordinates: [40.7580, -73.9855], // Times Square
         creator: "Jordan Lee",
         likes: 312,
         hasPlasticSavers: false,
@@ -81,6 +94,7 @@ const PLANETUNE_PLAYLISTS = [
         id: 6,
         name: "Greenwich Village Jazz",
         location: "Bleecker St, New York, NY",
+        coordinates: [40.7291, -74.0007], // Greenwich Village
         creator: "Maya Stone",
         likes: 198,
         hasPlasticSavers: false,
@@ -95,6 +109,7 @@ const PLANETUNE_PLAYLISTS = [
         id: 7,
         name: "East Village Beats",
         location: "St Marks Pl, New York, NY",
+        coordinates: [40.7295, -73.9877], // East Village
         creator: "Chris Park",
         likes: 145,
         hasPlasticSavers: false,
@@ -109,6 +124,7 @@ const PLANETUNE_PLAYLISTS = [
         id: 8,
         name: "Chelsea Market Tunes",
         location: "75 9th Ave, New York, NY",
+        coordinates: [40.7425, -74.0060], // Chelsea
         creator: "Sam Taylor",
         likes: 201,
         hasPlasticSavers: true,
