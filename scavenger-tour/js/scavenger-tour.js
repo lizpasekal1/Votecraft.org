@@ -426,7 +426,6 @@
                                         <span class="text-xl">${tour.icon}</span>
                                         <div class="flex-1">
                                             <div class="text-white font-medium text-sm">${tour.name}</div>
-                                            <div class="text-gray-500 text-xs">${tour.description}</div>
                                         </div>
                                         ${currentTourId === tour.id ? `
                                             <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
