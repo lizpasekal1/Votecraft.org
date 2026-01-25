@@ -169,7 +169,7 @@ const PLANETUNE_PLAYLISTS = [
     }
 ];
 
-// Healthcare Justice Tour - 20 stops in Longwood Medical Area
+// Healthcare Justice Tour - 15 stops in Longwood Medical Area
 const HEALTHCARE_TOUR = [
     {
         id: 1,
@@ -367,71 +367,6 @@ const HEALTHCARE_TOUR = [
         description: "Art therapy programs at MassArt partner with hospitals throughout the medical area. Creative expression reduces anxiety, manages chronic pain, and helps process trauma. Yet arts programs are first to be cut when budgets tighten.",
         learnMore: "Veterans with PTSD show 30% reduction in symptoms after art therapy. Hospitals are increasingly prescribing creative activities alongside medication.",
         soundcloudUrl: "https://soundcloud.com/coldplay/yellow"
-    },
-    {
-        id: 16,
-        name: "Wentworth Institute",
-        location: "550 Huntington Ave",
-        coordinates: [42.3375, -71.0955],
-        creator: "VoteCraft Boston",
-        likes: 167,
-        civicTheme: CIVIC_THEMES.HOUSING,
-        widget: "life-expectancy",
-        description: "Technical education meets healthcare design. Wentworth students design accessible housing and medical facilities. The built environment shapes health - stairs vs. elevators, walkable streets vs. car dependency, safe housing vs. lead paint.",
-        learnMore: "Lead paint in Boston housing still poisons children. Asthma rates are 3x higher in poor neighborhoods due to pollution and housing conditions.",
-        soundcloudUrl: "https://soundcloud.com/talking-heads/once-in-a-lifetime"
-    },
-    {
-        id: 17,
-        name: "Simmons University Health Sciences",
-        location: "300 The Fenway",
-        coordinates: [42.3398, -71.0988],
-        creator: "VoteCraft Boston",
-        likes: 189,
-        civicTheme: CIVIC_THEMES.JOURNALISM,
-        widget: "healthcare-compare",
-        description: "Simmons trains nurses, physical therapists, and nutritionists - the frontline workers of healthcare. Nursing shortages threaten care quality nationwide. During COVID, these workers were called heroes but often lack hazard pay and mental health support.",
-        learnMore: "The US needs 1.2 million new nurses by 2030. Nurse-to-patient ratios directly correlate with patient survival rates.",
-        soundcloudUrl: "https://soundcloud.com/gloriaganyor/i-will-survive"
-    },
-    {
-        id: 18,
-        name: "Emmanuel College Chapel",
-        location: "400 The Fenway",
-        coordinates: [42.3405, -71.0972],
-        creator: "VoteCraft Boston",
-        likes: 145,
-        civicTheme: CIVIC_THEMES.DEMOCRACY,
-        widget: "mental-health",
-        description: "Founded by the Sisters of Notre Dame in 1919, Emmanuel combines Catholic social teaching with healthcare training. Faith communities have always provided care - hospitals began in monasteries. Today, religious hospitals face ethical tensions over reproductive care.",
-        learnMore: "1 in 6 US hospital beds is in a Catholic facility. These hospitals often restrict contraception, abortion, and some end-of-life care.",
-        soundcloudUrl: "https://soundcloud.com/leonardcohen/hallelujah"
-    },
-    {
-        id: 19,
-        name: "Wheelock Family Theatre",
-        location: "180 The Riverway",
-        coordinates: [42.3412, -71.0945],
-        creator: "VoteCraft Boston",
-        likes: 178,
-        civicTheme: CIVIC_THEMES.CLIMATE,
-        widget: "life-expectancy",
-        description: "Theater for young audiences promotes emotional intelligence and empathy - protective factors for mental health. The Riverway park system that runs past here was designed by Olmsted as a 'green ribbon' connecting neighborhoods to nature and each other.",
-        learnMore: "Children who spend time in nature have lower rates of ADHD and anxiety. Urban green spaces reduce stress hormones measurably within 20 minutes.",
-        soundcloudUrl: "https://soundcloud.com/beatles/here-comes-the-sun"
-    },
-    {
-        id: 20,
-        name: "Museum of Fine Arts",
-        location: "465 Huntington Ave",
-        coordinates: [42.3394, -71.0941],
-        creator: "VoteCraft Boston",
-        likes: 356,
-        civicTheme: CIVIC_THEMES.IMMIGRATION,
-        widget: "mental-health",
-        description: "Art from every culture reminds us that healing transcends borders. The MFA partners with hospitals for 'museum prescriptions' - doctors literally prescribe museum visits. Beauty, contemplation, and human connection are medicine too.",
-        learnMore: "Studies show museum visits reduce inflammation markers and cortisol. Montreal's museum prescription program is now being replicated worldwide.",
-        soundcloudUrl: "https://soundcloud.com/bobmarley/three-little-birds"
     }
 ];
 
