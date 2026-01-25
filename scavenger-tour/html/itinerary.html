@@ -10,7 +10,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Note: No Leaflet needed - using OSRM API directly for directions -->
+    <!-- Leaflet CSS for route maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -218,7 +219,7 @@
         }
 
         .directions-content.open {
-            max-height: 400px;
+            max-height: 600px;
         }
 
         .directions-loading-inline {
@@ -341,6 +342,20 @@
         .leaflet-routing-container {
             display: none;
         }
+
+        /* Route Map Styles */
+        .route-map-container {
+            margin-top: 0.75rem;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            background: #0d1117;
+        }
+
+        .route-map {
+            height: 150px;
+            width: 100%;
+            border-radius: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -404,6 +419,9 @@
 
     <!-- Modals Container -->
     <div id="modals"></div>
+
+    <!-- Leaflet JS for route maps -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
     <!-- Location Data -->
     <script src="../js/scavenger-tour-data.js"></script>
@@ -536,7 +554,7 @@
             // Fetch route from OSRM
             const fromCoords = currentLocation.coordinates;
             const toCoords = nextLocation.coordinates;
-            const url = `https://router.project-osrm.org/route/v1/foot/${fromCoords[1]},${fromCoords[0]};${toCoords[1]},${toCoords[0]}?overview=false&steps=true`;
+            const url = `https://router.project-osrm.org/route/v1/foot/${fromCoords[1]},${fromCoords[0]};${toCoords[1]},${toCoords[0]}?overview=full&steps=true&geometries=polyline`;
 
             fetch(url)
                 .then(response => response.json())
@@ -549,6 +567,13 @@
                     const distance = route.distance;
                     const duration = route.duration;
                     const steps = route.legs[0].steps;
+                    const geometry = route.geometry;
+
+                    // Decode the polyline to get route coordinates
+                    const routeCoords = decodePolyline(geometry);
+
+                    // Get theme color for this stop
+                    const themeColor = currentLocation.civicTheme ? currentLocation.civicTheme.color : '#4269FF';
 
                     // Build instructions HTML
                     const instructionsHtml = steps
@@ -563,6 +588,8 @@
                                 </div>
                             </div>
                         `).join('');
+
+                    const mapContainerId = `route-map-${currentStopId}`;
 
                     directionsContainer.innerHTML = `
                         <div class="route-summary-inline">
@@ -598,7 +625,15 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="route-map-container">
+                            <div id="${mapContainerId}" class="route-map"></div>
+                        </div>
                     `;
+
+                    // Initialize the map after DOM is updated
+                    setTimeout(() => {
+                        initRouteMap(mapContainerId, routeCoords, fromCoords, toCoords, themeColor);
+                    }, 100);
 
                     loadedDirections[currentStopId] = true;
                 })
@@ -666,6 +701,93 @@
             const hours = Math.floor(minutes / 60);
             const mins = minutes % 60;
             return `${hours}h ${mins}m`;
+        }
+
+        // Decode polyline (Google Polyline Algorithm)
+        function decodePolyline(encoded) {
+            const points = [];
+            let index = 0, lat = 0, lng = 0;
+
+            while (index < encoded.length) {
+                let b, shift = 0, result = 0;
+                do {
+                    b = encoded.charCodeAt(index++) - 63;
+                    result |= (b & 0x1f) << shift;
+                    shift += 5;
+                } while (b >= 0x20);
+                const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+                lat += dlat;
+
+                shift = 0;
+                result = 0;
+                do {
+                    b = encoded.charCodeAt(index++) - 63;
+                    result |= (b & 0x1f) << shift;
+                    shift += 5;
+                } while (b >= 0x20);
+                const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+                lng += dlng;
+
+                points.push([lat / 1e5, lng / 1e5]);
+            }
+            return points;
+        }
+
+        // Store map instances
+        const routeMaps = {};
+
+        // Initialize route map
+        function initRouteMap(containerId, routeCoords, fromCoords, toCoords, themeColor) {
+            // Clean up existing map if any
+            if (routeMaps[containerId]) {
+                routeMaps[containerId].remove();
+            }
+
+            const map = L.map(containerId, {
+                zoomControl: false,
+                dragging: false,
+                touchZoom: false,
+                scrollWheelZoom: false,
+                doubleClickZoom: false,
+                boxZoom: false,
+                keyboard: false,
+                attributionControl: false
+            });
+
+            // Add tile layer
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                maxZoom: 19
+            }).addTo(map);
+
+            // Draw route polyline
+            const polyline = L.polyline(routeCoords, {
+                color: themeColor,
+                weight: 4,
+                opacity: 0.9
+            }).addTo(map);
+
+            // Add start marker (green)
+            L.circleMarker([fromCoords[0], fromCoords[1]], {
+                radius: 8,
+                fillColor: '#22c55e',
+                color: '#fff',
+                weight: 2,
+                fillOpacity: 1
+            }).addTo(map);
+
+            // Add end marker (red)
+            L.circleMarker([toCoords[0], toCoords[1]], {
+                radius: 8,
+                fillColor: '#ef4444',
+                color: '#fff',
+                weight: 2,
+                fillOpacity: 1
+            }).addTo(map);
+
+            // Fit bounds to route
+            map.fitBounds(polyline.getBounds(), { padding: [20, 20] });
+
+            routeMaps[containerId] = map;
         }
 
         // Fallback to external maps
