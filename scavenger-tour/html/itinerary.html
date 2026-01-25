@@ -10,9 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <!-- Note: No Leaflet needed - using OSRM API directly for directions -->
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -134,7 +132,7 @@
         }
 
         .itinerary-item.open .itinerary-details {
-            max-height: 300px;
+            max-height: 800px;
         }
 
         .itinerary-item.open .chevron-icon {
@@ -191,63 +189,51 @@
             }
         }
 
-        /* Directions Modal */
-        .directions-modal {
-            position: fixed;
-            inset: 0;
-            z-index: 100;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            flex-direction: column;
+        /* Inline Directions Styles */
+        .directions-section {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #374151;
         }
 
-        .directions-modal-header {
-            background: #1f2937;
-            padding: 1rem;
-            padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+        .directions-header {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            flex-shrink: 0;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
         }
 
-        .directions-map-container {
-            flex: 1;
-            position: relative;
-            min-height: 300px;
+        .directions-header h4 {
+            color: #9ca3af;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        #directions-map {
-            width: 100%;
-            height: 100%;
+        .directions-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
         }
 
-        .directions-info {
-            background: #111827;
-            padding: 1rem;
-            padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
-            flex-shrink: 0;
+        .directions-content.open {
+            max-height: 400px;
         }
 
-        .directions-loading {
-            position: absolute;
-            inset: 0;
+        .directions-loading-inline {
             display: flex;
-            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            background: #111827;
-            z-index: 10;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: #0d1117;
+            border-radius: 0.5rem;
         }
 
-        .directions-loading.hidden {
-            display: none;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #374151;
+        .spinner-small {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #374151;
             border-top-color: #4269FF;
             border-radius: 50%;
             animation: spin 1s linear infinite;
@@ -257,15 +243,13 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Hide default routing machine controls */
-        .leaflet-routing-container {
-            display: none;
-        }
-
-        .route-summary {
+        .route-summary-inline {
             display: flex;
             gap: 1.5rem;
-            margin-bottom: 1rem;
+            padding: 0.75rem 1rem;
+            background: #0d1117;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
         }
 
         .route-stat {
@@ -275,28 +259,30 @@
         }
 
         .route-stat-value {
-            font-size: 1.25rem;
+            font-size: 1.125rem;
             font-weight: 700;
             color: white;
         }
 
         .route-stat-label {
-            font-size: 0.75rem;
-            color: #9ca3af;
+            font-size: 0.6875rem;
+            color: #6b7280;
         }
 
-        .route-instructions {
-            max-height: 150px;
+        .route-instructions-inline {
+            max-height: 200px;
             overflow-y: auto;
-            margin-top: 0.75rem;
+            background: #0d1117;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
         }
 
         .route-step {
             display: flex;
             align-items: flex-start;
             gap: 0.75rem;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid #374151;
+            padding: 0.625rem 0.5rem;
+            border-bottom: 1px solid #1f2937;
         }
 
         .route-step:last-child {
@@ -304,28 +290,56 @@
         }
 
         .route-step-number {
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
             background: #374151;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.75rem;
+            font-size: 0.6875rem;
             font-weight: 600;
             color: white;
             flex-shrink: 0;
         }
 
         .route-step-text {
-            font-size: 0.875rem;
+            font-size: 0.8125rem;
             color: #d1d5db;
+            line-height: 1.4;
         }
 
         .route-step-distance {
-            font-size: 0.75rem;
+            font-size: 0.6875rem;
             color: #6b7280;
-            margin-top: 0.25rem;
+            margin-top: 0.125rem;
+        }
+
+        .next-stop-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.25rem 0.625rem;
+            background: rgba(66, 105, 255, 0.2);
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            color: #93c5fd;
+        }
+
+        .last-stop-message {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: rgba(34, 197, 94, 0.1);
+            border-radius: 0.5rem;
+            color: #86efac;
+            font-size: 0.875rem;
+        }
+
+        /* Hide default routing machine controls */
+        .leaflet-routing-container {
+            display: none;
         }
     </style>
 </head>
@@ -390,10 +404,6 @@
 
     <!-- Modals Container -->
     <div id="modals"></div>
-
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
 
     <!-- Location Data -->
     <script src="../js/scavenger-tour-data.js"></script>
@@ -478,191 +488,170 @@
             }
         };
 
-        // Directions modal state
-        let directionsMap = null;
-        let routingControl = null;
+        // Track loaded directions to avoid re-fetching
+        const loadedDirections = {};
 
-        // Open directions modal with in-app routing
-        window.openDirections = function(destLat, destLng, name) {
-            // Create modal HTML
-            const modalHtml = `
-                <div class="directions-modal" id="directions-modal">
-                    <div class="directions-modal-header">
-                        <div>
-                            <h2 class="text-white font-bold text-lg">Directions</h2>
-                            <p class="text-gray-400 text-sm">${name}</p>
-                        </div>
-                        <button onclick="closeDirectionsModal()" class="p-2 hover:bg-gray-700 rounded-full transition-colors">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="directions-map-container">
-                        <div id="directions-map"></div>
-                        <div class="directions-loading" id="directions-loading">
-                            <div class="spinner"></div>
-                            <p class="text-gray-400 mt-4">Getting your location...</p>
-                        </div>
-                    </div>
-                    <div class="directions-info">
-                        <div class="route-summary" id="route-summary">
+        // Get directions to next stop (inline accordion)
+        window.getDirectionsToNext = function(currentStopId, event) {
+            event.stopPropagation();
+
+            const itinerary = getItinerary();
+            const orderedIds = itinerary.order && itinerary.order.length > 0
+                ? itinerary.order
+                : tourData.map(loc => loc.id);
+
+            const currentIndex = orderedIds.indexOf(currentStopId);
+            const directionsContainer = document.getElementById(`directions-${currentStopId}`);
+
+            // Toggle open/closed
+            if (directionsContainer.classList.contains('open')) {
+                directionsContainer.classList.remove('open');
+                return;
+            }
+
+            directionsContainer.classList.add('open');
+
+            // If already loaded, don't refetch
+            if (loadedDirections[currentStopId]) {
+                return;
+            }
+
+            // Get current and next locations
+            const currentLocation = tourData.find(l => l.id === currentStopId);
+            const nextStopId = orderedIds[currentIndex + 1];
+            const nextLocation = tourData.find(l => l.id === nextStopId);
+
+            if (!nextLocation) {
+                return; // Last stop, no directions needed
+            }
+
+            // Show loading
+            directionsContainer.innerHTML = `
+                <div class="directions-loading-inline">
+                    <div class="spinner-small"></div>
+                    <span class="text-gray-400 text-sm">Calculating route...</span>
+                </div>
+            `;
+
+            // Fetch route from OSRM
+            const fromCoords = currentLocation.coordinates;
+            const toCoords = nextLocation.coordinates;
+            const url = `https://router.project-osrm.org/route/v1/foot/${fromCoords[1]},${fromCoords[0]};${toCoords[1]},${toCoords[0]}?overview=false&steps=true`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code !== 'Ok' || !data.routes || !data.routes[0]) {
+                        throw new Error('Route not found');
+                    }
+
+                    const route = data.routes[0];
+                    const distance = route.distance;
+                    const duration = route.duration;
+                    const steps = route.legs[0].steps;
+
+                    // Build instructions HTML
+                    const instructionsHtml = steps
+                        .filter(step => step.maneuver.type !== 'arrive')
+                        .slice(0, 8)
+                        .map((step, i) => `
+                            <div class="route-step">
+                                <div class="route-step-number">${i + 1}</div>
+                                <div>
+                                    <div class="route-step-text">${formatInstruction(step)}</div>
+                                    <div class="route-step-distance">${formatDistance(step.distance)}</div>
+                                </div>
+                            </div>
+                        `).join('');
+
+                    directionsContainer.innerHTML = `
+                        <div class="route-summary-inline">
                             <div class="route-stat">
-                                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                                 </svg>
                                 <div>
-                                    <div class="route-stat-value" id="route-distance">--</div>
+                                    <div class="route-stat-value">${formatDistance(distance)}</div>
                                     <div class="route-stat-label">Distance</div>
                                 </div>
                             </div>
                             <div class="route-stat">
-                                <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                                 <div>
-                                    <div class="route-stat-value" id="route-time">--</div>
+                                    <div class="route-stat-value">${formatTime(duration)}</div>
                                     <div class="route-stat-label">Walking</div>
                                 </div>
                             </div>
                         </div>
-                        <div class="route-instructions" id="route-instructions"></div>
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('modals').innerHTML = modalHtml;
-            document.body.classList.add('drawer-open');
-
-            // Initialize map centered on destination
-            directionsMap = L.map('directions-map').setView([destLat, destLng], 15);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap'
-            }).addTo(directionsMap);
-
-            // Add destination marker
-            const destMarker = L.marker([destLat, destLng]).addTo(directionsMap);
-            destMarker.bindPopup(`<strong>${name}</strong>`).openPopup();
-
-            // Get user's location
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const userLat = position.coords.latitude;
-                        const userLng = position.coords.longitude;
-
-                        // Hide loading
-                        document.getElementById('directions-loading').classList.add('hidden');
-
-                        // Add user marker
-                        const userMarker = L.circleMarker([userLat, userLng], {
-                            radius: 10,
-                            fillColor: '#4269FF',
-                            color: '#fff',
-                            weight: 3,
-                            opacity: 1,
-                            fillOpacity: 1
-                        }).addTo(directionsMap);
-                        userMarker.bindPopup('You are here');
-
-                        // Create routing
-                        routingControl = L.Routing.control({
-                            waypoints: [
-                                L.latLng(userLat, userLng),
-                                L.latLng(destLat, destLng)
-                            ],
-                            router: L.Routing.osrmv1({
-                                serviceUrl: 'https://router.project-osrm.org/route/v1',
-                                profile: 'foot'
-                            }),
-                            lineOptions: {
-                                styles: [{ color: '#4269FF', weight: 5, opacity: 0.8 }]
-                            },
-                            createMarker: function() { return null; }, // Don't create default markers
-                            addWaypoints: false,
-                            routeWhileDragging: false,
-                            fitSelectedRoutes: true,
-                            showAlternatives: false
-                        }).addTo(directionsMap);
-
-                        // Listen for route found
-                        routingControl.on('routesfound', function(e) {
-                            const route = e.routes[0];
-                            const distance = route.summary.totalDistance;
-                            const time = route.summary.totalTime;
-
-                            // Update summary
-                            document.getElementById('route-distance').textContent = formatDistance(distance);
-                            document.getElementById('route-time').textContent = formatTime(time);
-
-                            // Build instructions
-                            const instructionsHtml = route.instructions.slice(0, 10).map((instr, i) => `
-                                <div class="route-step">
-                                    <div class="route-step-number">${i + 1}</div>
-                                    <div>
-                                        <div class="route-step-text">${instr.text}</div>
-                                        <div class="route-step-distance">${formatDistance(instr.distance)}</div>
-                                    </div>
+                        <div class="route-instructions-inline">
+                            ${instructionsHtml}
+                            <div class="route-step" style="background: rgba(34, 197, 94, 0.1);">
+                                <div class="route-step-number" style="background: #22c55e;">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                    </svg>
                                 </div>
-                            `).join('');
+                                <div>
+                                    <div class="route-step-text" style="color: #86efac;">Arrive at ${nextLocation.name}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
 
-                            document.getElementById('route-instructions').innerHTML = instructionsHtml;
-                        });
-
-                        routingControl.on('routingerror', function(e) {
-                            document.getElementById('route-instructions').innerHTML = `
-                                <p class="text-gray-400 text-sm">Could not calculate route. Try opening in Maps app.</p>
-                                <button onclick="openExternalMaps(${destLat}, ${destLng})" class="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">
-                                    Open in Maps
-                                </button>
-                            `;
-                        });
-                    },
-                    (error) => {
-                        // Location error - show fallback
-                        document.getElementById('directions-loading').innerHTML = `
-                            <svg class="w-12 h-12 text-gray-500 mb-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            </svg>
-                            <p class="text-gray-400 mb-4">Location access required for directions</p>
-                            <button onclick="openExternalMaps(${destLat}, ${destLng})" class="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold">
-                                Open in Maps App
+                    loadedDirections[currentStopId] = true;
+                })
+                .catch(error => {
+                    console.error('Routing error:', error);
+                    directionsContainer.innerHTML = `
+                        <div class="text-gray-400 text-sm p-3">
+                            Could not calculate route.
+                            <button onclick="openExternalMaps(${toCoords[0]}, ${toCoords[1]})" class="text-blue-400 underline ml-1">
+                                Open in Maps
                             </button>
-                        `;
-                    },
-                    { enableHighAccuracy: true, timeout: 10000 }
-                );
-            } else {
-                // No geolocation support
-                document.getElementById('directions-loading').innerHTML = `
-                    <p class="text-gray-400 mb-4">Geolocation not supported</p>
-                    <button onclick="openExternalMaps(${destLat}, ${destLng})" class="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold">
-                        Open in Maps App
-                    </button>
-                `;
-            }
+                        </div>
+                    `;
+                });
         };
 
-        // Close directions modal
-        window.closeDirectionsModal = function() {
-            if (routingControl) {
-                directionsMap.removeControl(routingControl);
-                routingControl = null;
+        // Format OSRM instruction
+        function formatInstruction(step) {
+            const maneuver = step.maneuver;
+            let instruction = '';
+
+            switch (maneuver.type) {
+                case 'depart':
+                    instruction = `Head ${maneuver.modifier || 'straight'}`;
+                    break;
+                case 'turn':
+                    instruction = `Turn ${maneuver.modifier}`;
+                    break;
+                case 'new name':
+                case 'continue':
+                    instruction = `Continue ${maneuver.modifier ? maneuver.modifier : 'straight'}`;
+                    break;
+                case 'end of road':
+                    instruction = `At end of road, turn ${maneuver.modifier}`;
+                    break;
+                default:
+                    instruction = maneuver.modifier ? `${maneuver.type} ${maneuver.modifier}` : maneuver.type;
             }
-            if (directionsMap) {
-                directionsMap.remove();
-                directionsMap = null;
+
+            if (step.name && step.name !== '') {
+                instruction += ` onto ${step.name}`;
             }
-            document.getElementById('modals').innerHTML = '';
-            document.body.classList.remove('drawer-open');
-        };
+
+            return instruction.charAt(0).toUpperCase() + instruction.slice(1);
+        }
 
         // Format distance
         function formatDistance(meters) {
-            if (meters < 1000) {
+            if (meters < 100) {
                 return Math.round(meters) + ' m';
+            }
+            if (meters < 1000) {
+                return Math.round(meters / 10) * 10 + ' m';
             }
             const miles = meters / 1609.34;
             return miles.toFixed(1) + ' mi';
@@ -867,6 +856,9 @@
                 const isVisited = itinerary.visited.includes(stopId);
                 const theme = location.civicTheme;
                 const themeColor = theme ? theme.color : '#22c55e';
+                const isLastStop = index === orderedIds.length - 1;
+                const nextStopId = orderedIds[index + 1];
+                const nextLocation = nextStopId ? tourData.find(l => l.id === nextStopId) : null;
 
                 html += `
                 <div class="itinerary-item ${isVisited ? 'visited' : ''}" data-stop-id="${stopId}" data-index="${index}" draggable="true">
@@ -895,22 +887,44 @@
                     <div class="itinerary-details">
                         <div class="p-4 border-t border-gray-800">
                             <p class="text-gray-300 text-sm mb-4">${location.description.substring(0, 150)}...</p>
-                            <div class="flex gap-3">
-                                <button onclick="openDirections(${location.coordinates[0]}, ${location.coordinates[1]}, '${location.name.replace(/'/g, "\\'")}')"
-                                        class="directions-btn flex-1 text-white text-sm" style="background: ${themeColor};">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    </svg>
-                                    Get Directions
-                                </button>
-                                <a href="location-detail.html?id=${stopId}&tour=${tourId}"
-                                   class="directions-btn text-white text-sm border border-gray-600 hover:bg-gray-700">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                    Details
-                                </a>
+
+                            <!-- View Details Button -->
+                            <a href="location-detail.html?id=${stopId}&tour=${tourId}"
+                               class="directions-btn w-full justify-center text-white text-sm border border-gray-600 hover:bg-gray-700 mb-4">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                View Details & Listen
+                            </a>
+
+                            <!-- Directions Section -->
+                            <div class="directions-section">
+                                ${isLastStop ? `
+                                    <div class="last-stop-message">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        <span>Final stop - you made it!</span>
+                                    </div>
+                                ` : `
+                                    <div class="directions-header">
+                                        <h4>Next Stop</h4>
+                                        <span class="next-stop-badge">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                                            </svg>
+                                            ${nextLocation ? nextLocation.name.substring(0, 25) + (nextLocation.name.length > 25 ? '...' : '') : ''}
+                                        </span>
+                                    </div>
+                                    <button onclick="getDirectionsToNext(${stopId}, event)"
+                                            class="directions-btn w-full justify-center text-white text-sm" style="background: ${themeColor};">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                                        </svg>
+                                        Get Walking Directions
+                                    </button>
+                                    <div id="directions-${stopId}" class="directions-content mt-3"></div>
+                                `}
                             </div>
                         </div>
                     </div>
