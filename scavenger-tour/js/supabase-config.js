@@ -10,8 +10,8 @@ if (typeof window.supabase === 'undefined') {
     console.error('Supabase library not loaded. Make sure to include the Supabase CDN script before this file.');
 }
 
-// Initialize Supabase client
-const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+// Initialize Supabase client (use different name to avoid conflict with CDN global)
+const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 // Auth state management
 const VoteCraftAuth = {
@@ -19,15 +19,15 @@ const VoteCraftAuth = {
 
     // Initialize auth state
     async init() {
-        if (!supabase) {
+        if (!supabaseClient) {
             console.error('Supabase not initialized');
             return null;
         }
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await supabaseClient.auth.getSession();
         this.currentUser = session?.user || null;
 
         // Listen for auth changes
-        supabase.auth.onAuthStateChange((event, session) => {
+        supabaseClient.auth.onAuthStateChange((event, session) => {
             this.currentUser = session?.user || null;
             window.dispatchEvent(new CustomEvent('votecraft-auth-change', {
                 detail: { user: this.currentUser, event }
@@ -39,7 +39,7 @@ const VoteCraftAuth = {
 
     // Sign up with email
     async signUp(email, password, displayName) {
-        const { data, error } = await supabase.auth.signUp({
+        const { data, error } = await supabaseClient.auth.signUp({
             email,
             password,
             options: {
@@ -51,7 +51,7 @@ const VoteCraftAuth = {
 
         // Create user profile
         if (data.user) {
-            await supabase.from('user_profiles').insert({
+            await supabaseClient.from('user_profiles').insert({
                 id: data.user.id,
                 email: email,
                 display_name: displayName
@@ -63,7 +63,7 @@ const VoteCraftAuth = {
 
     // Sign in with email
     async signIn(email, password) {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
             email,
             password
         });
@@ -74,7 +74,7 @@ const VoteCraftAuth = {
 
     // Sign out
     async signOut() {
-        const { error } = await supabase.auth.signOut();
+        const { error } = await supabaseClient.auth.signOut();
         if (error) throw error;
     },
 
@@ -116,7 +116,7 @@ const VoteCraftSync = {
             }
         });
 
-        const { error } = await supabase
+        const { error } = await supabaseClient
             .from('game_progress')
             .upsert({
                 user_id: VoteCraftAuth.currentUser.id,
@@ -135,7 +135,7 @@ const VoteCraftSync = {
     async loadProgress(gameId = CURRENT_GAME_ID) {
         if (!VoteCraftAuth.isSignedIn()) return null;
 
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('game_progress')
             .select('data')
             .eq('user_id', VoteCraftAuth.currentUser.id)
@@ -181,7 +181,7 @@ const VoteCraftSync = {
     async getProfile() {
         if (!VoteCraftAuth.isSignedIn()) return null;
 
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('user_profiles')
             .select('*')
             .eq('id', VoteCraftAuth.currentUser.id)
@@ -195,7 +195,7 @@ const VoteCraftSync = {
     async updateProfile(updates) {
         if (!VoteCraftAuth.isSignedIn()) return null;
 
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('user_profiles')
             .update(updates)
             .eq('id', VoteCraftAuth.currentUser.id)
