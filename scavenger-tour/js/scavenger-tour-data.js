@@ -576,6 +576,7 @@ const ART_TOUR = [
         likes: 356,
         civicTheme: CIVIC_THEMES.ECONOMY,
         widget: "voting-timeline",
+        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Frederick_Douglass_portrait.jpg/800px-Frederick_Douglass_portrait.jpg",
         description: "This vibrant mural depicts Frederick Douglass, who spoke throughout Boston demanding abolition and equal rights. Roxbury's streets feature numerous murals celebrating Black history, from civil rights leaders to local heroes. Public art makes history visible.",
         learnMore: "Douglass escaped slavery and became America's most powerful voice against it. He advised Lincoln, recruited Black soldiers, and fought for women's suffrage.",
         soundcloudUrl: "https://soundcloud.com/kendricklamar/alright"
