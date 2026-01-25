@@ -459,6 +459,66 @@
                             </svg>
                             <span>Account</span>
                         </a>
+
+                        <!-- Settings Accordion -->
+                        <div class="accordion" id="settings-accordion">
+                            <button class="accordion-trigger nav-menu-item" onclick="toggleSettingsAccordion()" aria-expanded="false">
+                                <svg class="nav-menu-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                <span class="flex-1 text-left">Settings</span>
+                                <svg class="accordion-chevron w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+
+                            <div class="accordion-content">
+                                <!-- Notification Preferences -->
+                                <div class="accordion-item settings-item" onclick="toggleSetting('notifications')">
+                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                    </svg>
+                                    <div class="flex-1">
+                                        <div class="text-white font-medium text-sm">Notifications</div>
+                                        <div class="text-gray-500 text-xs">Tour alerts & reminders</div>
+                                    </div>
+                                    <div id="notifications-toggle" class="w-10 h-6 bg-gray-600 rounded-full relative cursor-pointer">
+                                        <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Music Volume -->
+                                <div class="accordion-item settings-item">
+                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                                    </svg>
+                                    <div class="flex-1">
+                                        <div class="text-white font-medium text-sm">Music Volume</div>
+                                        <div class="mt-2">
+                                            <input type="range" id="volume-slider" min="0" max="100" value="80"
+                                                   class="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                                   oninput="updateVolume(this.value)">
+                                        </div>
+                                    </div>
+                                    <span id="volume-value" class="text-gray-400 text-sm ml-2">80%</span>
+                                </div>
+
+                                <!-- Offline Mode -->
+                                <div class="accordion-item settings-item" onclick="toggleOfflineMode()">
+                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                    </svg>
+                                    <div class="flex-1">
+                                        <div class="text-white font-medium text-sm">Offline Mode</div>
+                                        <div class="text-gray-500 text-xs">Download tour data</div>
+                                    </div>
+                                    <div id="offline-toggle" class="w-10 h-6 bg-gray-600 rounded-full relative cursor-pointer">
+                                        <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- About Section -->
@@ -471,7 +531,6 @@
                 </div>
 
                 <div class="nav-drawer-footer">
-                    <p class="text-gray-500 text-xs text-center">All tours are ~15 min walks around Government Center</p>
                 </div>
             </nav>
         `;
@@ -486,12 +545,71 @@
 
     // Toggle accordion open/close
     window.toggleAccordion = function() {
-        const accordion = document.querySelector('.accordion');
-        const trigger = document.querySelector('.accordion-trigger');
+        const accordion = document.querySelector('.accordion:not(#settings-accordion)');
+        const trigger = accordion.querySelector('.accordion-trigger');
         const isOpen = accordion.classList.contains('open');
 
         accordion.classList.toggle('open');
         trigger.setAttribute('aria-expanded', !isOpen);
+    };
+
+    // Toggle settings accordion open/close
+    window.toggleSettingsAccordion = function() {
+        const accordion = document.getElementById('settings-accordion');
+        const trigger = accordion.querySelector('.accordion-trigger');
+        const isOpen = accordion.classList.contains('open');
+
+        accordion.classList.toggle('open');
+        trigger.setAttribute('aria-expanded', !isOpen);
+    };
+
+    // Toggle notification setting
+    window.toggleSetting = function(setting) {
+        const toggle = document.getElementById(`${setting}-toggle`);
+        if (!toggle) return;
+
+        const isOn = toggle.classList.contains('active');
+        const knob = toggle.querySelector('div');
+
+        if (isOn) {
+            toggle.classList.remove('active');
+            toggle.style.background = '#4B5563';
+            knob.style.transform = 'translateX(0)';
+            localStorage.setItem(`votecraft_${setting}`, 'false');
+        } else {
+            toggle.classList.add('active');
+            toggle.style.background = '#3B82F6';
+            knob.style.transform = 'translateX(16px)';
+            localStorage.setItem(`votecraft_${setting}`, 'true');
+        }
+    };
+
+    // Update volume
+    window.updateVolume = function(value) {
+        document.getElementById('volume-value').textContent = value + '%';
+        localStorage.setItem('votecraft_volume', value);
+    };
+
+    // Toggle offline mode
+    window.toggleOfflineMode = function() {
+        const toggle = document.getElementById('offline-toggle');
+        if (!toggle) return;
+
+        const isOn = toggle.classList.contains('active');
+        const knob = toggle.querySelector('div');
+
+        if (isOn) {
+            toggle.classList.remove('active');
+            toggle.style.background = '#4B5563';
+            knob.style.transform = 'translateX(0)';
+            localStorage.setItem('votecraft_offline', 'false');
+        } else {
+            toggle.classList.add('active');
+            toggle.style.background = '#3B82F6';
+            knob.style.transform = 'translateX(16px)';
+            localStorage.setItem('votecraft_offline', 'true');
+            // Could trigger download of tour data here
+        }
     };
 
     // Navigate to menu item
@@ -504,10 +622,7 @@
                 window.location.href = `itinerary.html?tour=${currentTourId}`;
                 break;
             case 'user':
-                closeDrawer();
-                setTimeout(() => {
-                    showProfile();
-                }, 200);
+                window.location.href = `profile.html?tour=${currentTourId}`;
                 break;
         }
     };
@@ -646,16 +761,69 @@
 
     // Show profile modal
     window.showProfile = function() {
+        // Get liked locations from localStorage
+        const likedLocations = JSON.parse(localStorage.getItem('votecraft_likes') || '[]');
+        const savedSongs = JSON.parse(localStorage.getItem('votecraft_saved_songs') || '[]');
+        const favoriteThemes = JSON.parse(localStorage.getItem('votecraft_favorite_themes') || '[]');
+
+        // Get location names for liked items
+        const likedLocationsList = likedLocations.map(item => {
+            const tour = ALL_TOURS[item.tourId];
+            if (tour) {
+                const location = tour.find(l => l.id === item.locationId);
+                if (location) {
+                    return `<div class="flex items-center gap-3 py-2 border-b border-gray-700 last:border-0">
+                        <svg class="w-5 h-5 text-red-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                        <span class="text-white text-sm">${location.name}</span>
+                    </div>`;
+                }
+            }
+            return '';
+        }).filter(Boolean).join('') || '<p class="text-gray-500 text-sm">No liked locations yet</p>';
+
+        // Get saved songs list
+        const savedSongsList = savedSongs.map(song => `
+            <div class="flex items-center gap-3 py-2 border-b border-gray-700 last:border-0">
+                <svg class="w-5 h-5 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+                </svg>
+                <span class="text-white text-sm">${song.name}</span>
+            </div>
+        `).join('') || '<p class="text-gray-500 text-sm">No saved songs yet</p>';
+
+        // Get favorite themes with colors
+        const themeColors = {
+            'Democracy': '#3B82F6',
+            'Voting': '#8B5CF6',
+            'Healthcare': '#10B981',
+            'Education': '#F59E0B',
+            'Economy': '#EF4444',
+            'Housing': '#EC4899',
+            'Climate': '#22C55E',
+            'Journalism': '#6366F1',
+            'Immigration': '#14B8A6',
+            'SCOTUS': '#DC2626'
+        };
+        const favoriteThemesList = favoriteThemes.map(theme => `
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold text-white mr-2 mb-2" style="background: ${themeColors[theme] || '#6B7280'}">
+                ${theme}
+            </span>
+        `).join('') || '<p class="text-gray-500 text-sm">No favorite themes yet</p>';
+
         modalsContainer.innerHTML = `
             <div class="fixed inset-0 bg-gray-900 z-50 flex flex-col max-w-2xl mx-auto">
                 <div class="bg-white px-4 py-2 flex items-center justify-between shadow-sm flex-shrink-0">
                     <div class="flex items-center gap-2">
-                        <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                            ${icons.music}
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background: #4269FF;">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
                         </div>
                         <div class="text-xl font-bold">
-                            <span class="text-green-600">Planetune</span>
-                            <span class="text-blue-500">.up</span>
+                            <span class="text-gray-800">VoteCraft</span>
+                            <span style="color: #4269FF;">Account</span>
                         </div>
                     </div>
                     <button onclick="closeModal()" class="text-gray-600 hover:bg-gray-100 p-2 rounded-full">
@@ -664,48 +832,92 @@
                 </div>
 
                 <div class="flex-1 overflow-y-auto pb-20">
-                    <div class="flex flex-col items-center pt-8 pb-6">
-                        <div class="w-32 h-32 rounded-full bg-gray-700 flex items-center justify-center mb-4">
-                            <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <!-- Profile Basics -->
+                    <div class="flex flex-col items-center pt-8 pb-6 px-4">
+                        <div class="w-24 h-24 rounded-full bg-gray-700 flex items-center justify-center mb-4 border-4 border-blue-500">
+                            <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                             </svg>
                         </div>
-                        <h2 class="text-white text-3xl font-bold mb-2">DJ Groove</h2>
-                        <p class="text-gray-400 text-sm">Profile data from Instagram.</p>
+                        <h2 class="text-white text-2xl font-bold mb-1">Guest User</h2>
+                        <p class="text-gray-400 text-sm mb-4">Sign in to save your progress</p>
+                        <button class="px-6 py-2 rounded-full font-semibold text-white text-sm" style="background: #4269FF;">
+                            Sign In / Create Account
+                        </button>
                     </div>
 
                     <div class="px-4 space-y-4">
+                        <!-- Liked Locations -->
                         <div class="bg-gray-800 rounded-2xl p-5">
-                            <div class="flex items-center gap-3 mb-3">
-                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                            <div class="flex items-center gap-3 mb-4">
+                                <svg class="w-6 h-6 text-red-400" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                                 </svg>
-                                <h3 class="text-white text-lg font-bold">Instagram Account</h3>
+                                <h3 class="text-white text-lg font-bold">Liked Locations</h3>
+                                <span class="ml-auto text-gray-500 text-sm">${likedLocations.length}</span>
                             </div>
-                            <p class="text-gray-400 mb-4 text-sm leading-relaxed">
-                                Link your Instagram to sync your profile and share photos on your playlists.
-                            </p>
-                            <div class="flex items-center gap-2 text-green-500">
-                                <div class="w-5 h-5 rounded-full border-2 border-green-500 flex items-center justify-center">
-                                    <span class="text-xs">&#10003;</span>
-                                </div>
-                                <span class="font-semibold text-sm">Account Linked</span>
+                            <div class="max-h-40 overflow-y-auto">
+                                ${likedLocationsList}
                             </div>
                         </div>
 
+                        <!-- Saved Songs -->
                         <div class="bg-gray-800 rounded-2xl p-5">
-                            <div class="flex items-center gap-3 mb-3">
-                                ${icons.music}
-                                <h3 class="text-white text-lg font-bold">Spotify Account</h3>
+                            <div class="flex items-center gap-3 mb-4">
+                                <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+                                </svg>
+                                <h3 class="text-white text-lg font-bold">Saved Songs</h3>
+                                <span class="ml-auto text-gray-500 text-sm">${savedSongs.length}</span>
                             </div>
-                            <p class="text-gray-400 mb-4 text-sm leading-relaxed">
-                                Link your Spotify to feature your favorite tracks.
-                            </p>
-                            <div class="flex items-center gap-2 text-green-500">
-                                <div class="w-5 h-5 rounded-full border-2 border-green-500 flex items-center justify-center">
-                                    <span class="text-xs">&#10003;</span>
+                            <div class="max-h-40 overflow-y-auto">
+                                ${savedSongsList}
+                            </div>
+                        </div>
+
+                        <!-- Favorite Civic Themes -->
+                        <div class="bg-gray-800 rounded-2xl p-5">
+                            <div class="flex items-center gap-3 mb-4">
+                                <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                </svg>
+                                <h3 class="text-white text-lg font-bold">Favorite Themes</h3>
+                            </div>
+                            <div class="flex flex-wrap">
+                                ${favoriteThemesList}
+                            </div>
+                        </div>
+
+                        <!-- Tour Progress -->
+                        <div class="bg-gray-800 rounded-2xl p-5">
+                            <div class="flex items-center gap-3 mb-4">
+                                <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <h3 class="text-white text-lg font-bold">Tour Progress</h3>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-300 text-sm">Freedom Trail</span>
+                                    <span class="text-gray-500 text-xs">0/10 stops</span>
                                 </div>
-                                <span class="font-semibold text-sm">Account Linked</span>
+                                <div class="w-full bg-gray-700 rounded-full h-2">
+                                    <div class="bg-blue-500 h-2 rounded-full" style="width: 0%"></div>
+                                </div>
+                                <div class="flex items-center justify-between mt-3">
+                                    <span class="text-gray-300 text-sm">Healthcare</span>
+                                    <span class="text-gray-500 text-xs">0/15 stops</span>
+                                </div>
+                                <div class="w-full bg-gray-700 rounded-full h-2">
+                                    <div class="bg-green-500 h-2 rounded-full" style="width: 0%"></div>
+                                </div>
+                                <div class="flex items-center justify-between mt-3">
+                                    <span class="text-gray-300 text-sm">Voting Rights</span>
+                                    <span class="text-gray-500 text-xs">0/20 stops</span>
+                                </div>
+                                <div class="w-full bg-gray-700 rounded-full h-2">
+                                    <div class="bg-purple-500 h-2 rounded-full" style="width: 0%"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
