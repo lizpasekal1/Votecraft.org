@@ -22,8 +22,9 @@
 <body>
     <div id="app" class="max-w-2xl mx-auto bg-black min-h-screen">
         <!-- Top Bar -->
-        <div class="top-bar bg-white px-4 py-2 flex items-center justify-between shadow-sm sticky top-0 z-30">
-            <div class="flex items-center gap-2">
+        <div class="top-bar bg-white px-4 py-2 shadow-sm sticky top-0 z-30 relative">
+            <!-- Centered Logo -->
+            <div class="flex items-center justify-center gap-2 py-1">
                 <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
@@ -34,7 +35,8 @@
                     <span class="text-blue-500">Tour</span>
                 </div>
             </div>
-            <button id="btn-menu" class="p-2 hover:bg-gray-100 rounded-lg">
+            <!-- Menu Button (absolute right) -->
+            <button id="btn-menu" class="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 rounded-lg">
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
                 </svg>

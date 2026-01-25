@@ -19,31 +19,36 @@
 <body>
     <div id="app" class="max-w-2xl mx-auto bg-black min-h-screen">
         <!-- Top Bar -->
-        <div id="header" class="bg-white px-4 py-2 flex items-center justify-between shadow-sm sticky top-0 z-30">
-            <div class="flex items-center gap-2">
-                <div id="header-icon" class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <div id="header" class="bg-white px-4 py-2 shadow-sm sticky top-0 z-30 relative">
+            <!-- Back Button (absolute left) -->
+            <a href="scavenger-tour.html" id="back-link" class="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                </svg>
+                <span class="text-sm font-medium">Back</span>
+            </a>
+            <!-- Centered Logo -->
+            <div class="flex items-center justify-center gap-2 py-1">
+                <div id="header-icon" class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
                     </svg>
                 </div>
-                <div class="text-xl font-bold">
+                <div class="text-lg font-bold">
                     <span class="text-gray-800">VoteCraft</span>
                     <span id="header-accent" class="text-blue-500">Tour</span>
                 </div>
             </div>
         </div>
 
+        <!-- Hero Image -->
+        <div id="hero-image" class="relative w-full h-48 bg-gray-800 overflow-hidden">
+            <img id="hero-img" src="" alt="" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+        </div>
+
         <!-- Main Content -->
         <div class="px-4 pt-4 pb-24">
-            <!-- Back Button -->
-            <a href="scavenger-tour.html" id="back-link" class="inline-flex items-center gap-2 text-white mb-4 px-4 py-2 border border-gray-700 rounded-xl hover:bg-gray-800 transition-colors">
-                <span>&larr;</span>
-                <span class="text-sm">Back to Tour</span>
-            </a>
-
-            <!-- Civic Theme Badge -->
-            <div id="theme-badge" class="mb-4"></div>
-
             <!-- Location Title -->
             <h1 id="location-name" class="text-white text-2xl font-bold leading-tight mb-2">Loading...</h1>
             <p id="location-address" class="text-gray-400 text-sm mb-4"></p>
@@ -72,14 +77,6 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
                 <span>Explore the Data</span>
-            </button>
-
-            <!-- Add to Itinerary Button -->
-            <button id="itinerary-button" onclick="toggleItinerary()" class="w-full text-white font-bold py-4 rounded-xl mb-6 flex items-center justify-center gap-3 border-2 transition-all">
-                <svg id="itinerary-icon" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-                </svg>
-                <span id="itinerary-text">Add to Itinerary</span>
             </button>
 
             <!-- Soundtrack Section -->
@@ -199,13 +196,13 @@
         // Update back link to preserve tour context
         document.getElementById('back-link').href = `scavenger-tour.html?tour=${tourId}`;
 
-        // Theme badge
-        if (theme) {
-            document.getElementById('theme-badge').innerHTML = `
-                <span class="text-white text-sm font-bold px-3 py-1.5 rounded-full" style="background: ${themeColor};">
-                    ${theme.name}
-                </span>
-            `;
+        // Hero image
+        if (location.image) {
+            document.getElementById('hero-img').src = location.image;
+            document.getElementById('hero-img').alt = location.name;
+        } else {
+            // Hide hero section if no image
+            document.getElementById('hero-image').style.display = 'none';
         }
 
         // Location details
@@ -257,76 +254,6 @@
         window.closeWidgetModal = function() {
             document.getElementById('widget-modal').classList.add('hidden');
         };
-
-        // Itinerary functions
-        const STORAGE_KEY = 'votecraft_itinerary';
-
-        function getItinerary() {
-            try {
-                const data = localStorage.getItem(STORAGE_KEY);
-                if (data) {
-                    return JSON.parse(data);
-                }
-            } catch (e) {
-                console.error('Error reading itinerary:', e);
-            }
-            return { tourId: tourId, stops: [], visited: [] };
-        }
-
-        function saveItinerary(itinerary) {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(itinerary));
-            } catch (e) {
-                console.error('Error saving itinerary:', e);
-            }
-        }
-
-        function isInItinerary() {
-            const itinerary = getItinerary();
-            return itinerary.stops.includes(locationId);
-        }
-
-        function updateItineraryButton() {
-            const button = document.getElementById('itinerary-button');
-            const icon = document.getElementById('itinerary-icon');
-            const text = document.getElementById('itinerary-text');
-            const inItinerary = isInItinerary();
-
-            if (inItinerary) {
-                button.style.borderColor = '#22c55e';
-                button.style.background = 'rgba(34, 197, 94, 0.1)';
-                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>';
-                text.textContent = 'Added to Itinerary';
-            } else {
-                button.style.borderColor = themeColor;
-                button.style.background = 'transparent';
-                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>';
-                text.textContent = 'Add to Itinerary';
-            }
-        }
-
-        window.toggleItinerary = function() {
-            const itinerary = getItinerary();
-            const index = itinerary.stops.indexOf(locationId);
-
-            if (index === -1) {
-                itinerary.stops.push(locationId);
-                itinerary.tourId = tourId;
-            } else {
-                itinerary.stops.splice(index, 1);
-                // Also remove from visited if it was checked
-                const visitedIndex = itinerary.visited.indexOf(locationId);
-                if (visitedIndex !== -1) {
-                    itinerary.visited.splice(visitedIndex, 1);
-                }
-            }
-
-            saveItinerary(itinerary);
-            updateItineraryButton();
-        };
-
-        // Initialize itinerary button state
-        updateItineraryButton();
     })();
     </script>
 </body>

@@ -10,6 +10,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -186,13 +190,151 @@
                 height: 48px;
             }
         }
+
+        /* Directions Modal */
+        .directions-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .directions-modal-header {
+            background: #1f2937;
+            padding: 1rem;
+            padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .directions-map-container {
+            flex: 1;
+            position: relative;
+            min-height: 300px;
+        }
+
+        #directions-map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .directions-info {
+            background: #111827;
+            padding: 1rem;
+            padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+            flex-shrink: 0;
+        }
+
+        .directions-loading {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #111827;
+            z-index: 10;
+        }
+
+        .directions-loading.hidden {
+            display: none;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #374151;
+            border-top-color: #4269FF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Hide default routing machine controls */
+        .leaflet-routing-container {
+            display: none;
+        }
+
+        .route-summary {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .route-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .route-stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .route-stat-label {
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+
+        .route-instructions {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 0.75rem;
+        }
+
+        .route-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #374151;
+        }
+
+        .route-step:last-child {
+            border-bottom: none;
+        }
+
+        .route-step-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #374151;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .route-step-text {
+            font-size: 0.875rem;
+            color: #d1d5db;
+        }
+
+        .route-step-distance {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
     </style>
 </head>
 <body>
     <div id="app" class="max-w-2xl mx-auto bg-black min-h-screen">
         <!-- Top Bar -->
-        <div class="top-bar bg-white px-4 py-2 flex items-center justify-between shadow-sm sticky top-0 z-30">
-            <div class="flex items-center gap-2">
+        <div class="top-bar bg-white px-4 py-2 shadow-sm sticky top-0 z-30 relative">
+            <!-- Centered Logo -->
+            <div class="flex items-center justify-center gap-2 py-1">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background: #4269FF;">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
@@ -203,7 +345,8 @@
                     <span style="color: #4269FF;">Itinerary</span>
                 </div>
             </div>
-            <button id="btn-menu" class="p-2 hover:bg-gray-100 rounded-lg">
+            <!-- Menu Button (absolute right) -->
+            <button id="btn-menu" class="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 rounded-lg">
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
                 </svg>
@@ -247,6 +390,10 @@
 
     <!-- Modals Container -->
     <div id="modals"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
 
     <!-- Location Data -->
     <script src="../js/scavenger-tour-data.js"></script>
@@ -331,20 +478,213 @@
             }
         };
 
-        // Open directions
-        window.openDirections = function(lat, lng, name) {
-            // Detect iOS
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        // Directions modal state
+        let directionsMap = null;
+        let routingControl = null;
 
-            let url;
-            if (isIOS) {
-                // Apple Maps with walking directions
-                url = `maps://maps.apple.com/?daddr=${lat},${lng}&dirflg=w`;
+        // Open directions modal with in-app routing
+        window.openDirections = function(destLat, destLng, name) {
+            // Create modal HTML
+            const modalHtml = `
+                <div class="directions-modal" id="directions-modal">
+                    <div class="directions-modal-header">
+                        <div>
+                            <h2 class="text-white font-bold text-lg">Directions</h2>
+                            <p class="text-gray-400 text-sm">${name}</p>
+                        </div>
+                        <button onclick="closeDirectionsModal()" class="p-2 hover:bg-gray-700 rounded-full transition-colors">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="directions-map-container">
+                        <div id="directions-map"></div>
+                        <div class="directions-loading" id="directions-loading">
+                            <div class="spinner"></div>
+                            <p class="text-gray-400 mt-4">Getting your location...</p>
+                        </div>
+                    </div>
+                    <div class="directions-info">
+                        <div class="route-summary" id="route-summary">
+                            <div class="route-stat">
+                                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                                </svg>
+                                <div>
+                                    <div class="route-stat-value" id="route-distance">--</div>
+                                    <div class="route-stat-label">Distance</div>
+                                </div>
+                            </div>
+                            <div class="route-stat">
+                                <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <div>
+                                    <div class="route-stat-value" id="route-time">--</div>
+                                    <div class="route-stat-label">Walking</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="route-instructions" id="route-instructions"></div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modals').innerHTML = modalHtml;
+            document.body.classList.add('drawer-open');
+
+            // Initialize map centered on destination
+            directionsMap = L.map('directions-map').setView([destLat, destLng], 15);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(directionsMap);
+
+            // Add destination marker
+            const destMarker = L.marker([destLat, destLng]).addTo(directionsMap);
+            destMarker.bindPopup(`<strong>${name}</strong>`).openPopup();
+
+            // Get user's location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const userLat = position.coords.latitude;
+                        const userLng = position.coords.longitude;
+
+                        // Hide loading
+                        document.getElementById('directions-loading').classList.add('hidden');
+
+                        // Add user marker
+                        const userMarker = L.circleMarker([userLat, userLng], {
+                            radius: 10,
+                            fillColor: '#4269FF',
+                            color: '#fff',
+                            weight: 3,
+                            opacity: 1,
+                            fillOpacity: 1
+                        }).addTo(directionsMap);
+                        userMarker.bindPopup('You are here');
+
+                        // Create routing
+                        routingControl = L.Routing.control({
+                            waypoints: [
+                                L.latLng(userLat, userLng),
+                                L.latLng(destLat, destLng)
+                            ],
+                            router: L.Routing.osrmv1({
+                                serviceUrl: 'https://router.project-osrm.org/route/v1',
+                                profile: 'foot'
+                            }),
+                            lineOptions: {
+                                styles: [{ color: '#4269FF', weight: 5, opacity: 0.8 }]
+                            },
+                            createMarker: function() { return null; }, // Don't create default markers
+                            addWaypoints: false,
+                            routeWhileDragging: false,
+                            fitSelectedRoutes: true,
+                            showAlternatives: false
+                        }).addTo(directionsMap);
+
+                        // Listen for route found
+                        routingControl.on('routesfound', function(e) {
+                            const route = e.routes[0];
+                            const distance = route.summary.totalDistance;
+                            const time = route.summary.totalTime;
+
+                            // Update summary
+                            document.getElementById('route-distance').textContent = formatDistance(distance);
+                            document.getElementById('route-time').textContent = formatTime(time);
+
+                            // Build instructions
+                            const instructionsHtml = route.instructions.slice(0, 10).map((instr, i) => `
+                                <div class="route-step">
+                                    <div class="route-step-number">${i + 1}</div>
+                                    <div>
+                                        <div class="route-step-text">${instr.text}</div>
+                                        <div class="route-step-distance">${formatDistance(instr.distance)}</div>
+                                    </div>
+                                </div>
+                            `).join('');
+
+                            document.getElementById('route-instructions').innerHTML = instructionsHtml;
+                        });
+
+                        routingControl.on('routingerror', function(e) {
+                            document.getElementById('route-instructions').innerHTML = `
+                                <p class="text-gray-400 text-sm">Could not calculate route. Try opening in Maps app.</p>
+                                <button onclick="openExternalMaps(${destLat}, ${destLng})" class="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">
+                                    Open in Maps
+                                </button>
+                            `;
+                        });
+                    },
+                    (error) => {
+                        // Location error - show fallback
+                        document.getElementById('directions-loading').innerHTML = `
+                            <svg class="w-12 h-12 text-gray-500 mb-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <p class="text-gray-400 mb-4">Location access required for directions</p>
+                            <button onclick="openExternalMaps(${destLat}, ${destLng})" class="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold">
+                                Open in Maps App
+                            </button>
+                        `;
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
             } else {
-                // Google Maps with walking directions
-                url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`;
+                // No geolocation support
+                document.getElementById('directions-loading').innerHTML = `
+                    <p class="text-gray-400 mb-4">Geolocation not supported</p>
+                    <button onclick="openExternalMaps(${destLat}, ${destLng})" class="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold">
+                        Open in Maps App
+                    </button>
+                `;
             }
+        };
 
+        // Close directions modal
+        window.closeDirectionsModal = function() {
+            if (routingControl) {
+                directionsMap.removeControl(routingControl);
+                routingControl = null;
+            }
+            if (directionsMap) {
+                directionsMap.remove();
+                directionsMap = null;
+            }
+            document.getElementById('modals').innerHTML = '';
+            document.body.classList.remove('drawer-open');
+        };
+
+        // Format distance
+        function formatDistance(meters) {
+            if (meters < 1000) {
+                return Math.round(meters) + ' m';
+            }
+            const miles = meters / 1609.34;
+            return miles.toFixed(1) + ' mi';
+        }
+
+        // Format time
+        function formatTime(seconds) {
+            const minutes = Math.round(seconds / 60);
+            if (minutes < 60) {
+                return minutes + ' min';
+            }
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            return `${hours}h ${mins}m`;
+        }
+
+        // Fallback to external maps
+        window.openExternalMaps = function(lat, lng) {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const url = isIOS
+                ? `maps://maps.apple.com/?daddr=${lat},${lng}&dirflg=w`
+                : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`;
             window.open(url, '_blank');
         };
 
@@ -650,16 +990,14 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
                         </button>
-                        <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                        <div class="flex flex-col items-center text-center mb-2">
+                            <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-2">
                                 <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
                                 </svg>
                             </div>
-                            <div>
-                                <h2 class="text-white text-lg font-bold">VoteCraft Tours</h2>
-                                <p class="text-blue-200 text-sm">Boston Civic History</p>
-                            </div>
+                            <div class="text-xl font-bold text-white">VoteCraft</div>
+                            <div class="text-blue-200 text-sm">Civic Music Tours</div>
                         </div>
                     </div>
                     <div class="nav-drawer-content">
