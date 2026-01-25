@@ -23,6 +23,25 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+/* Page transition overlay */
+.page-transition-overlay {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.page-transition-overlay.fade-out {
+    opacity: 0;
+}
+
+.page-transition-overlay.fade-in {
+    opacity: 1;
+}
+
 #root {
     height: 100%;
 }

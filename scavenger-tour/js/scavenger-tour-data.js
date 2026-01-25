@@ -169,7 +169,7 @@ const PLANETUNE_PLAYLISTS = [
     }
 ];
 
-// Healthcare Justice Tour - 10 stops in Longwood Medical Area
+// Healthcare Justice Tour - 20 stops in Longwood Medical Area
 const HEALTHCARE_TOUR = [
     {
         id: 1,
@@ -302,27 +302,145 @@ const HEALTHCARE_TOUR = [
         description: "Art heals. Museums across Boston partner with hospitals for 'art therapy' programs, and research shows viewing art reduces cortisol and anxiety. Gardner built this museum to bring beauty to everyone - admission is free on your birthday.",
         learnMore: "Hospitals now prescribe museum visits for mental health. Studies show 30 minutes in a museum reduces stress hormones as effectively as meditation.",
         soundcloudUrl: "https://soundcloud.com/bobmarley/one-love"
+    },
+    {
+        id: 11,
+        name: "Massachusetts Eye and Ear",
+        location: "243 Charles St",
+        coordinates: [42.3362, -71.1045],
+        creator: "VoteCraft Boston",
+        likes: 245,
+        civicTheme: CIVIC_THEMES.HEALTHCARE,
+        widget: "healthcare-cost",
+        description: "Founded in 1824, this specialty hospital pioneered treatments for hearing loss and blindness. Today it leads research into gene therapy for inherited eye diseases. Access to specialized care remains deeply unequal - rural Americans travel hours for specialists.",
+        learnMore: "1 in 8 Americans has hearing loss. Hearing aids cost $2,000-7,000 and Medicare didn't cover them until 2024. Untreated hearing loss increases dementia risk.",
+        soundcloudUrl: "https://soundcloud.com/stevie-wonder-official/superstition"
+    },
+    {
+        id: 12,
+        name: "Countway Library of Medicine",
+        location: "10 Shattuck St, Longwood",
+        coordinates: [42.3350, -71.1030],
+        creator: "VoteCraft Boston",
+        likes: 178,
+        civicTheme: CIVIC_THEMES.EDUCATION,
+        widget: "healthcare-compare",
+        description: "One of the world's largest medical libraries, Countway holds 650,000 volumes including rare texts documenting the evolution of medical ethics. Here you can trace how medicine moved from bloodletting to evidence-based care - and the harm done along the way.",
+        learnMore: "The Tuskegee syphilis study, Nazi experiments, and forced sterilizations are documented here. Medical ethics emerged from acknowledging past atrocities.",
+        soundcloudUrl: "https://soundcloud.com/lauryn-hill-official/everything-is-everything"
+    },
+    {
+        id: 13,
+        name: "Schepens Eye Research Institute",
+        location: "20 Staniford St, Longwood",
+        coordinates: [42.3368, -71.1055],
+        creator: "VoteCraft Boston",
+        likes: 156,
+        civicTheme: CIVIC_THEMES.VOTING,
+        widget: "life-expectancy",
+        description: "Founded by Dr. Charles Schepens, who invented the binocular indirect ophthalmoscope and worked for the Belgian resistance during WWII. Vision loss affects 12 million Americans over 40 - and those without insurance often go untreated until it's too late.",
+        learnMore: "Diabetic retinopathy is the leading cause of blindness in working-age adults. Regular screening prevents 90% of vision loss, but millions skip it.",
+        soundcloudUrl: "https://soundcloud.com/eagles/hotel-california"
+    },
+    {
+        id: 14,
+        name: "Harvard Dental School",
+        location: "188 Longwood Ave",
+        coordinates: [42.3385, -71.1048],
+        creator: "VoteCraft Boston",
+        likes: 134,
+        civicTheme: CIVIC_THEMES.ECONOMY,
+        widget: "healthcare-cost",
+        description: "Dental care is healthcare, but America treats it separately. 74 million Americans lack dental insurance. Poor dental health causes heart disease, diabetes complications, and chronic pain. The mouth-body divide in medicine costs lives.",
+        learnMore: "1 in 4 adults has untreated cavities. In the ER, dental problems are the #1 reason for visits that could have been prevented with basic care.",
+        soundcloudUrl: "https://soundcloud.com/prince/little-red-corvette"
+    },
+    {
+        id: 15,
+        name: "MassArt & Mental Health",
+        location: "621 Huntington Ave",
+        coordinates: [42.3368, -71.0985],
+        creator: "VoteCraft Boston",
+        likes: 223,
+        civicTheme: CIVIC_THEMES.SCOTUS,
+        widget: "mental-health",
+        description: "Art therapy programs at MassArt partner with hospitals throughout the medical area. Creative expression reduces anxiety, manages chronic pain, and helps process trauma. Yet arts programs are first to be cut when budgets tighten.",
+        learnMore: "Veterans with PTSD show 30% reduction in symptoms after art therapy. Hospitals are increasingly prescribing creative activities alongside medication.",
+        soundcloudUrl: "https://soundcloud.com/coldplay/yellow"
+    },
+    {
+        id: 16,
+        name: "Wentworth Institute",
+        location: "550 Huntington Ave",
+        coordinates: [42.3375, -71.0955],
+        creator: "VoteCraft Boston",
+        likes: 167,
+        civicTheme: CIVIC_THEMES.HOUSING,
+        widget: "life-expectancy",
+        description: "Technical education meets healthcare design. Wentworth students design accessible housing and medical facilities. The built environment shapes health - stairs vs. elevators, walkable streets vs. car dependency, safe housing vs. lead paint.",
+        learnMore: "Lead paint in Boston housing still poisons children. Asthma rates are 3x higher in poor neighborhoods due to pollution and housing conditions.",
+        soundcloudUrl: "https://soundcloud.com/talking-heads/once-in-a-lifetime"
+    },
+    {
+        id: 17,
+        name: "Simmons University Health Sciences",
+        location: "300 The Fenway",
+        coordinates: [42.3398, -71.0988],
+        creator: "VoteCraft Boston",
+        likes: 189,
+        civicTheme: CIVIC_THEMES.JOURNALISM,
+        widget: "healthcare-compare",
+        description: "Simmons trains nurses, physical therapists, and nutritionists - the frontline workers of healthcare. Nursing shortages threaten care quality nationwide. During COVID, these workers were called heroes but often lack hazard pay and mental health support.",
+        learnMore: "The US needs 1.2 million new nurses by 2030. Nurse-to-patient ratios directly correlate with patient survival rates.",
+        soundcloudUrl: "https://soundcloud.com/gloriaganyor/i-will-survive"
+    },
+    {
+        id: 18,
+        name: "Emmanuel College Chapel",
+        location: "400 The Fenway",
+        coordinates: [42.3405, -71.0972],
+        creator: "VoteCraft Boston",
+        likes: 145,
+        civicTheme: CIVIC_THEMES.DEMOCRACY,
+        widget: "mental-health",
+        description: "Founded by the Sisters of Notre Dame in 1919, Emmanuel combines Catholic social teaching with healthcare training. Faith communities have always provided care - hospitals began in monasteries. Today, religious hospitals face ethical tensions over reproductive care.",
+        learnMore: "1 in 6 US hospital beds is in a Catholic facility. These hospitals often restrict contraception, abortion, and some end-of-life care.",
+        soundcloudUrl: "https://soundcloud.com/leonardcohen/hallelujah"
+    },
+    {
+        id: 19,
+        name: "Wheelock Family Theatre",
+        location: "180 The Riverway",
+        coordinates: [42.3412, -71.0945],
+        creator: "VoteCraft Boston",
+        likes: 178,
+        civicTheme: CIVIC_THEMES.CLIMATE,
+        widget: "life-expectancy",
+        description: "Theater for young audiences promotes emotional intelligence and empathy - protective factors for mental health. The Riverway park system that runs past here was designed by Olmsted as a 'green ribbon' connecting neighborhoods to nature and each other.",
+        learnMore: "Children who spend time in nature have lower rates of ADHD and anxiety. Urban green spaces reduce stress hormones measurably within 20 minutes.",
+        soundcloudUrl: "https://soundcloud.com/beatles/here-comes-the-sun"
+    },
+    {
+        id: 20,
+        name: "Museum of Fine Arts",
+        location: "465 Huntington Ave",
+        coordinates: [42.3394, -71.0941],
+        creator: "VoteCraft Boston",
+        likes: 356,
+        civicTheme: CIVIC_THEMES.IMMIGRATION,
+        widget: "mental-health",
+        description: "Art from every culture reminds us that healing transcends borders. The MFA partners with hospitals for 'museum prescriptions' - doctors literally prescribe museum visits. Beauty, contemplation, and human connection are medicine too.",
+        learnMore: "Studies show museum visits reduce inflammation markers and cortisol. Montreal's museum prescription program is now being replicated worldwide.",
+        soundcloudUrl: "https://soundcloud.com/bobmarley/three-little-birds"
     }
 ];
 
-// Voting Rights Tour - 10 stops (multicolored pins showing interconnected issues)
+// Voting Rights Tour - 20 stops along the Freedom Trail (all 10 Freedom Trail stops + 10 voting-specific locations)
 const VOTING_TOUR = [
+    // Freedom Trail Stop 1: Faneuil Hall
     {
         id: 1,
-        name: "Old State House: Taxation & Representation",
-        location: "206 Washington St",
-        coordinates: [42.3588, -71.0578],
-        creator: "VoteCraft Boston",
-        likes: 412,
-        civicTheme: CIVIC_THEMES.VOTING,
-        widget: "voter-turnout",
-        description: "The Boston Massacre began steps from here on March 5, 1770. 'No taxation without representation' became the Revolution's rallying cry. But who could actually vote in 1776? Only white male property owners - about 6% of the population.",
-        learnMore: "Crispus Attucks, a Black man, was the first to die. Black men couldn't vote until 1870; women until 1920; Native Americans until 1924.",
-        soundcloudUrl: "https://soundcloud.com/samcooke/a-change-is-gonna-come"
-    },
-    {
-        id: 2,
-        name: "Faneuil Hall: Frederick Douglass",
+        name: "Faneuil Hall: Cradle of Liberty",
         location: "Faneuil Hall, Congress St",
         coordinates: [42.3600, -71.0569],
         creator: "VoteCraft Boston",
@@ -330,103 +448,190 @@ const VOTING_TOUR = [
         civicTheme: CIVIC_THEMES.DEMOCRACY,
         widget: "voting-timeline",
         image: "https://upload.wikimedia.org/wikipedia/commons/3/35/2017_Faneuil_Hall.jpg",
-        description: "Frederick Douglass, the formerly enslaved abolitionist, spoke here multiple times demanding citizenship and voting rights for Black Americans. 'What to the Slave is the Fourth of July?' he asked in 1852. Susan B. Anthony also spoke here for women's suffrage.",
-        learnMore: "It took 95 years from the Declaration of Independence to the 15th Amendment. Women waited 144 years. The Voting Rights Act wasn't passed until 1965.",
+        description: "Built in 1742, this hall hosted debates that sparked a revolution. Frederick Douglass spoke here demanding voting rights for Black Americans. Susan B. Anthony spoke here for women's suffrage. The 'Cradle of Liberty' has witnessed 280 years of fights for the vote.",
+        learnMore: "It took 95 years from the Declaration to the 15th Amendment. Women waited 144 years. The Voting Rights Act wasn't passed until 1965.",
         soundcloudUrl: "https://soundcloud.com/arethafranklin/respect"
     },
+    // Freedom Trail Stop 2: Massachusetts State House
+    {
+        id: 2,
+        name: "State House: Where Voting Laws Are Made",
+        location: "24 Beacon St (Golden Dome)",
+        coordinates: [42.3587, -71.0637],
+        creator: "VoteCraft Boston",
+        likes: 298,
+        civicTheme: CIVIC_THEMES.VOTING,
+        widget: "voter-suppression",
+        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Massachusetts_State_House_-_Boston%2C_MA_-_DSC04664.JPG/3840px-Massachusetts_State_House_-_Boston%2C_MA_-_DSC04664.JPG",
+        description: "Voting laws are made in state houses. Massachusetts has some of the most accessible voting in the nation - same-day registration, early voting, mail ballots. Other states have passed hundreds of restrictions since 2020.",
+        learnMore: "Since 2010, 25 states have enacted new voting restrictions. Texas closed 750 polling places in primarily Black and Hispanic neighborhoods.",
+        soundcloudUrl: "https://soundcloud.com/bobmarley/get-up-stand-up"
+    },
+    // Freedom Trail Stop 3: Old State House
     {
         id: 3,
-        name: "African Meeting House",
-        location: "8 Smith Court, Beacon Hill",
-        coordinates: [42.3598, -71.0650],
+        name: "Old State House: No Taxation Without Representation",
+        location: "206 Washington St",
+        coordinates: [42.3588, -71.0578],
         creator: "VoteCraft Boston",
-        likes: 356,
-        civicTheme: CIVIC_THEMES.JOURNALISM,
-        widget: "voter-suppression",
-        description: "Built in 1806, this is the oldest Black church building still standing in America. William Lloyd Garrison founded the New England Anti-Slavery Society here in 1832. This was the center of Boston's abolitionist movement and the fight for Black voting rights.",
-        learnMore: "After the 15th Amendment passed in 1870, Southern states used poll taxes, literacy tests, and violence to suppress Black voters for another century.",
-        soundcloudUrl: "https://soundcloud.com/ninasimonefans/mississippi-goddam"
+        likes: 412,
+        civicTheme: CIVIC_THEMES.VOTING,
+        widget: "voter-turnout",
+        image: "https://upload.wikimedia.org/wikipedia/commons/1/19/Old_State_House_Boston_2009f.JPG",
+        description: "The Boston Massacre began steps from here on March 5, 1770. 'No taxation without representation' became the Revolution's rallying cry. But who could actually vote in 1776? Only white male property owners - about 6% of the population.",
+        learnMore: "Crispus Attucks, a Black man, was the first to die. Black men couldn't vote until 1870; women until 1920; Native Americans until 1924.",
+        soundcloudUrl: "https://soundcloud.com/samcooke/a-change-is-gonna-come"
     },
+    // Freedom Trail Stop 4: Boston Common
     {
         id: 4,
+        name: "Boston Common: Protest & Voice",
+        location: "Boston Common, Park St",
+        coordinates: [42.3564, -71.0621],
+        creator: "VoteCraft Boston",
+        likes: 298,
+        civicTheme: CIVIC_THEMES.HOUSING,
+        widget: "voter-turnout",
+        image: "https://upload.wikimedia.org/wikipedia/commons/6/60/Boston_Common_view.jpg",
+        description: "The First Amendment protects assembly - the right to gather and demand change. Martin Luther King Jr. spoke here in 1965. The Vietnam War protests drew 100,000. Black Lives Matter marches filled these paths. Protest is democracy in action.",
+        learnMore: "Youth voter turnout doubled between 2014 and 2018. Gen Z votes at higher rates than previous generations at their age.",
+        soundcloudUrl: "https://soundcloud.com/johnlegend/glory"
+    },
+    // Freedom Trail Stop 5: Granary Burying Ground
+    {
+        id: 5,
         name: "Granary Burying Ground: Founders' Franchise",
-        location: "Tremont St",
+        location: "Tremont St at Park St",
         coordinates: [42.3573, -71.0610],
         creator: "VoteCraft Boston",
         likes: 345,
         civicTheme: CIVIC_THEMES.SCOTUS,
         widget: "rcv-demo",
+        image: "https://upload.wikimedia.org/wikipedia/commons/1/14/Boston_Granary_Burying_Ground_Grabstein_Totenkopf_9441_20190429.jpg",
         description: "Samuel Adams, John Hancock, and Paul Revere lie here - men who risked everything for self-governance. Yet they limited voting to people like themselves. Adams wrote the Massachusetts Constitution requiring property ownership to vote.",
         learnMore: "Today, felony disenfranchisement bars 5.2 million Americans from voting. In Florida, 1 in 5 Black adults cannot vote.",
         soundcloudUrl: "https://soundcloud.com/peteseeger/we-shall-overcome"
     },
-    {
-        id: 5,
-        name: "State House: Modern Voting Laws",
-        location: "24 Beacon St",
-        coordinates: [42.3587, -71.0637],
-        creator: "VoteCraft Boston",
-        likes: 298,
-        civicTheme: CIVIC_THEMES.HEALTHCARE,
-        widget: "voter-suppression",
-        description: "Voting laws are made in state houses. Massachusetts has some of the most accessible voting in the nation - same-day registration, early voting, mail ballots. Other states have passed hundreds of restrictions since 2020.",
-        learnMore: "Since 2010, 25 states have enacted new voting restrictions. Texas closed 750 polling places in primarily Black and Hispanic neighborhoods.",
-        soundcloudUrl: "https://soundcloud.com/bobmarley/get-up-stand-up"
-    },
+    // Freedom Trail Stop 6: Old City Hall
     {
         id: 6,
-        name: "Boston Common: Protest & Voice",
-        location: "Boston Common",
-        coordinates: [42.3550, -71.0656],
-        creator: "VoteCraft Boston",
-        likes: 267,
-        civicTheme: CIVIC_THEMES.CLIMATE,
-        widget: "voter-turnout",
-        description: "The First Amendment protects assembly - the right to gather and demand change. Martin Luther King Jr. spoke here in 1965. The Vietnam War protests drew 100,000. Black Lives Matter marches filled these paths. Protest is democracy in action.",
-        learnMore: "Youth voter turnout doubled between 2014 and 2018. Gen Z votes at higher rates than previous generations at their age.",
-        soundcloudUrl: "https://soundcloud.com/johnlegend/glory"
-    },
-    {
-        id: 7,
-        name: "Old South Meeting House: Tea Party Vote",
-        location: "310 Washington St",
-        coordinates: [42.3567, -71.0585],
-        creator: "VoteCraft Boston",
-        likes: 312,
-        civicTheme: CIVIC_THEMES.ECONOMY,
-        widget: "rcv-demo",
-        description: "On December 16, 1773, colonists voted here on what to do about the tea tax. When legal options failed, they chose direct action. Democracy requires both voting and activism - the ballot and the streets working together.",
-        learnMore: "Ranked Choice Voting lets you rank candidates. If no one gets 50%, last-place candidates are eliminated and votes redistribute until someone wins a majority.",
-        soundcloudUrl: "https://soundcloud.com/publicenemy/fight-the-power"
-    },
-    {
-        id: 8,
-        name: "Park Street Church: Women's Suffrage",
-        location: "Park Street Church",
-        coordinates: [42.3564, -71.0621],
-        creator: "VoteCraft Boston",
-        likes: 234,
-        civicTheme: CIVIC_THEMES.EDUCATION,
-        widget: "voting-timeline",
-        description: "William Lloyd Garrison gave his first major anti-slavery speech here in 1829. The church supported both abolition and women's suffrage - understanding that expanding rights for some opens doors for all. Lucy Stone, a suffragist, attended services here.",
-        learnMore: "Women couldn't vote until 1920. Black women in the South couldn't practically exercise that right until 1965. Progress is never linear.",
-        soundcloudUrl: "https://soundcloud.com/helenreddy/i-am-woman"
-    },
-    {
-        id: 9,
         name: "Old City Hall: Political Machines",
         location: "45 School St",
         coordinates: [42.3580, -71.0594],
         creator: "VoteCraft Boston",
         likes: 189,
-        civicTheme: CIVIC_THEMES.IMMIGRATION,
+        civicTheme: CIVIC_THEMES.ECONOMY,
         widget: "voter-turnout",
+        image: "https://upload.wikimedia.org/wikipedia/commons/4/4a/Old_City_Hall_in_Boston%2C_Massachusetts.jpg",
         description: "James Michael Curley served as mayor from this building four times, once while under federal indictment. Boston's political machines controlled votes through patronage and favors. Machine politics shows both democracy's resilience and its vulnerabilities.",
         learnMore: "Gerrymandering is the modern political machine. In 2018, Wisconsin Republicans won 63% of state seats with only 45% of votes.",
         soundcloudUrl: "https://soundcloud.com/thewho/wont-get-fooled-again"
     },
+    // Freedom Trail Stop 7: Old South Meeting House
+    {
+        id: 7,
+        name: "Old South Meeting House: The Tea Party Vote",
+        location: "310 Washington St",
+        coordinates: [42.3567, -71.0585],
+        creator: "VoteCraft Boston",
+        likes: 312,
+        civicTheme: CIVIC_THEMES.CLIMATE,
+        widget: "rcv-demo",
+        image: "https://upload.wikimedia.org/wikipedia/commons/d/d2/The_Old_South_Meeting_House.jpg",
+        description: "On December 16, 1773, colonists voted here on what to do about the tea tax. When legal options failed, they chose direct action. Democracy requires both voting and activism - the ballot and the streets working together.",
+        learnMore: "Ranked Choice Voting lets you rank candidates. If no one gets 50%, last-place candidates are eliminated until someone wins a majority.",
+        soundcloudUrl: "https://soundcloud.com/publicenemy/fight-the-power"
+    },
+    // Freedom Trail Stop 8: King's Chapel
+    {
+        id: 8,
+        name: "King's Chapel: Separation of Church & State",
+        location: "58 Tremont St",
+        coordinates: [42.3581, -71.0603],
+        creator: "VoteCraft Boston",
+        likes: 212,
+        civicTheme: CIVIC_THEMES.EDUCATION,
+        widget: "voting-timeline",
+        image: "https://upload.wikimedia.org/wikipedia/commons/0/0a/Boston_-_King%27s_Chapel_%2848718908106%29.jpg",
+        description: "Founded in 1686 as the first Anglican church in Puritan Boston, King's Chapel stands near America's first public school (Boston Latin, 1635). Religious freedom and voting rights are intertwined - both require separating political power from any single belief.",
+        learnMore: "17 states had religious requirements for voting at independence. Maryland required belief in the Trinity. Jews couldn't vote in some states until 1828.",
+        soundcloudUrl: "https://soundcloud.com/grandmasterflashmusic/the-message-12-single-version"
+    },
+    // Freedom Trail Stop 9: Paul Revere House
+    {
+        id: 9,
+        name: "Paul Revere House: Spreading the Word",
+        location: "19 North Square",
+        coordinates: [42.3637, -71.0536],
+        creator: "VoteCraft Boston",
+        likes: 267,
+        civicTheme: CIVIC_THEMES.JOURNALISM,
+        widget: "media-trust",
+        image: "https://upload.wikimedia.org/wikipedia/commons/c/cf/Paul_Revere_House%2C_Boston%2C_2023-02-21.jpg",
+        description: "Paul Revere's midnight ride spread the news: 'The British are coming!' In an era before mass media, information traveled by horseback. Today, voting information - and disinformation - spreads instantly. An informed electorate requires a free press.",
+        learnMore: "Revere's engraving of the Boston Massacre was propaganda - he depicted soldiers firing in formation, not the chaotic reality. Media literacy has always mattered.",
+        soundcloudUrl: "https://soundcloud.com/therollingstones/sympathy-for-the-devil"
+    },
+    // Freedom Trail Stop 10: Old North Church
     {
         id: 10,
+        name: "Old North Church: One if by Land",
+        location: "193 Salem St",
+        coordinates: [42.3663, -71.0546],
+        creator: "VoteCraft Boston",
+        likes: 345,
+        civicTheme: CIVIC_THEMES.DEMOCRACY,
+        widget: "voter-turnout",
+        image: "https://upload.wikimedia.org/wikipedia/commons/5/56/Paul_Revere_church_interior%2C_Boston%2C_Mass._2.jpg",
+        description: "On April 18, 1775, sexton Robert Newman hung two lanterns in this steeple: 'Two if by sea.' The signal launched the Revolution. Ordinary people, taking courageous action, can change history. Every vote is a signal that democracy still lives.",
+        learnMore: "The church's box pews were originally owned by wealthy families - only property owners could vote. Universal suffrage took nearly 200 years to achieve.",
+        soundcloudUrl: "https://soundcloud.com/u2official/sunday-bloody-sunday"
+    },
+    // Additional Voting Rights Stop 11
+    {
+        id: 11,
+        name: "African Meeting House",
+        location: "8 Smith Court, Beacon Hill",
+        coordinates: [42.3598, -71.0650],
+        creator: "VoteCraft Boston",
+        likes: 356,
+        civicTheme: CIVIC_THEMES.VOTING,
+        widget: "voter-suppression",
+        description: "Built in 1806, this is the oldest Black church building still standing in America. William Lloyd Garrison founded the New England Anti-Slavery Society here in 1832. This was the center of Boston's abolitionist movement and the fight for Black voting rights.",
+        learnMore: "After the 15th Amendment passed in 1870, Southern states used poll taxes, literacy tests, and violence to suppress Black voters for another century.",
+        soundcloudUrl: "https://soundcloud.com/ninasimonefans/mississippi-goddam"
+    },
+    // Additional Voting Rights Stop 12
+    {
+        id: 12,
+        name: "Robert Gould Shaw Memorial",
+        location: "Beacon St & Park St",
+        coordinates: [42.3576, -71.0635],
+        creator: "VoteCraft Boston",
+        likes: 423,
+        civicTheme: CIVIC_THEMES.IMMIGRATION,
+        widget: "voting-timeline",
+        description: "This bronze relief honors Colonel Shaw and the 54th Massachusetts Infantry - the first Black regiment in the Civil War. These men fought and died for a country that denied them citizenship and voting rights. The 15th Amendment came 5 years after the war ended.",
+        learnMore: "Half the 54th died in their assault on Fort Wagner. Black soldiers were paid less than white soldiers until Congress equalized pay in 1864.",
+        soundcloudUrl: "https://soundcloud.com/samcooke/a-change-is-gonna-come"
+    },
+    // Additional Voting Rights Stop 13
+    {
+        id: 13,
+        name: "Boston Women's Memorial",
+        location: "Commonwealth Ave Mall",
+        coordinates: [42.3523, -71.0774],
+        creator: "VoteCraft Boston",
+        likes: 345,
+        civicTheme: CIVIC_THEMES.EDUCATION,
+        widget: "voting-timeline",
+        description: "This sculpture honors Abigail Adams (who urged 'remember the ladies'), Lucy Stone (suffragist who kept her maiden name), and Phillis Wheatley (first published African American poet). Women's suffrage took 72 years of organized struggle after Seneca Falls.",
+        learnMore: "When Abigail wrote to John Adams about women's rights in 1776, he laughed it off. It took 144 years for women to win the vote nationally.",
+        soundcloudUrl: "https://soundcloud.com/helenreddy/i-am-woman"
+    },
+    // Additional Voting Rights Stop 14
+    {
+        id: 14,
         name: "Government Center: Your Voice",
         location: "City Hall Plaza",
         coordinates: [42.3604, -71.0589],
@@ -434,9 +639,93 @@ const VOTING_TOUR = [
         likes: 256,
         civicTheme: CIVIC_THEMES.HOUSING,
         widget: "voter-turnout",
-        description: "Boston's controversial Brutalist City Hall sits on land once called Scollay Square. This is where democracy happens daily - permits, licenses, marriages, and yes, voter registration. The building is open to all. So is democracy, if we protect it.",
-        learnMore: "In the 2020 election, 159 million Americans voted - the highest turnout in 120 years. Your vote matters.",
+        description: "Boston's Brutalist City Hall sits where democracy happens daily - permits, licenses, marriages, and voter registration. The building is open to all. So is democracy, if we protect it. This is where you register to vote.",
+        learnMore: "In the 2020 election, 159 million Americans voted - the highest turnout in 120 years. Massachusetts had 76% turnout.",
         soundcloudUrl: "https://soundcloud.com/pattismith/people-have-the-power"
+    },
+    // Additional Voting Rights Stop 15
+    {
+        id: 15,
+        name: "Crispus Attucks Monument",
+        location: "Boston Common, Tremont St",
+        coordinates: [42.3558, -71.0618],
+        creator: "VoteCraft Boston",
+        likes: 389,
+        civicTheme: CIVIC_THEMES.JOURNALISM,
+        widget: "voter-suppression",
+        description: "This 1888 monument honors the five victims of the Boston Massacre, with Crispus Attucks prominently featured. Attucks was the first person killed in the American Revolution - a Black man dying for a freedom he did not possess.",
+        learnMore: "For decades, Boston refused to honor Attucks. It took 118 years from his death to erect this monument. History remembers who it chooses to remember.",
+        soundcloudUrl: "https://soundcloud.com/kendricklamar/alright"
+    },
+    // Additional Voting Rights Stop 16
+    {
+        id: 16,
+        name: "Harriet Tubman Square",
+        location: "Columbus Ave, South End",
+        coordinates: [42.3396, -71.0810],
+        creator: "VoteCraft Boston",
+        likes: 412,
+        civicTheme: CIVIC_THEMES.HEALTHCARE,
+        widget: "voter-suppression",
+        description: "The 'Step on Board' sculpture shows Harriet Tubman leading enslaved people to freedom. Boston was a key stop on the Underground Railroad. Tubman said, 'I freed a thousand slaves. I could have freed a thousand more if only they knew they were slaves.'",
+        learnMore: "Tubman made 13 missions and rescued about 70 enslaved people. She later served as a Union spy. She'll appear on the $20 bill - eventually.",
+        soundcloudUrl: "https://soundcloud.com/beyonce/freedom"
+    },
+    // Additional Voting Rights Stop 17
+    {
+        id: 17,
+        name: "Irish Famine Memorial",
+        location: "School St & Washington St",
+        coordinates: [42.3574, -71.0590],
+        creator: "VoteCraft Boston",
+        likes: 267,
+        civicTheme: CIVIC_THEMES.IMMIGRATION,
+        widget: "voter-turnout",
+        description: "These sculptures show starving Irish during the 1845-1852 famine, and prosperous Irish-Americans decades later. Over 100,000 Irish fled to Boston, facing 'No Irish Need Apply' signs. Within generations, they controlled the ballot box and City Hall.",
+        learnMore: "The famine killed 1 million Irish and drove 2 million to emigrate. Today's debates about immigration echo the nativist backlash the Irish faced.",
+        soundcloudUrl: "https://soundcloud.com/u2official/pride-in-the-name-of-love"
+    },
+    // Additional Voting Rights Stop 18
+    {
+        id: 18,
+        name: "The Embrace (MLK Memorial)",
+        location: "Boston Common, near Tremont St",
+        coordinates: [42.3551, -71.0625],
+        creator: "VoteCraft Boston",
+        likes: 456,
+        civicTheme: CIVIC_THEMES.DEMOCRACY,
+        widget: "voter-turnout",
+        description: "This 20-foot bronze depicts Martin Luther King Jr. and Coretta Scott King embracing. MLK spoke on Boston Common in 1965, the same year as the Voting Rights Act. 'The vote is the most powerful instrument ever devised by man for breaking down injustice.'",
+        learnMore: "MLK called Boston his 'second home' - he met Coretta at the New England Conservatory and earned his PhD at Boston University.",
+        soundcloudUrl: "https://soundcloud.com/stevie-wonder-official/happy-birthday"
+    },
+    // Additional Voting Rights Stop 19
+    {
+        id: 19,
+        name: "New England Holocaust Memorial",
+        location: "Congress St, near Faneuil Hall",
+        coordinates: [42.3612, -71.0573],
+        creator: "VoteCraft Boston",
+        likes: 478,
+        civicTheme: CIVIC_THEMES.ECONOMY,
+        widget: "voter-suppression",
+        description: "Six glass towers represent six million Jews killed. The Holocaust began with voting - Hitler was elected, then dismantled democracy. The memorial warns: democracy can be destroyed from within if citizens don't protect it.",
+        learnMore: "The memorial was vandalized twice in 2017. Democracy requires vigilance against hate. The path through the towers quotes survivors.",
+        soundcloudUrl: "https://soundcloud.com/leonardcohen/hallelujah"
+    },
+    // Additional Voting Rights Stop 20
+    {
+        id: 20,
+        name: "Park Street Church: First Amendment",
+        location: "Park Street Church",
+        coordinates: [42.3565, -71.0619],
+        creator: "VoteCraft Boston",
+        likes: 234,
+        civicTheme: CIVIC_THEMES.VOTING,
+        widget: "voting-timeline",
+        description: "William Lloyd Garrison gave his first major anti-slavery speech here in 1829. 'America, it is to thee' was first sung here on July 4, 1831. Free speech, assembly, and petition are the foundation of voting rights - citizens must be able to organize.",
+        learnMore: "Women couldn't vote until 1920. Black women in the South couldn't practically exercise that right until 1965. Progress is never linear.",
+        soundcloudUrl: "https://soundcloud.com/brucespringsteen/born-to-run"
     }
 ];
 

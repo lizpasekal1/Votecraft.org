@@ -20,6 +20,28 @@
     <link rel="stylesheet" href="../css/scavenger-tour.css">
 </head>
 <body>
+    <!-- Page transition overlay -->
+    <div class="page-transition-overlay" id="page-overlay"></div>
+    <script>
+        // Fade out overlay to reveal page
+        requestAnimationFrame(() => {
+            document.getElementById('page-overlay').classList.add('fade-out');
+        });
+
+        // Intercept link clicks for fade transition
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a[href]');
+            if (link && link.href && !link.href.startsWith('javascript:') && !link.target) {
+                e.preventDefault();
+                const overlay = document.getElementById('page-overlay');
+                overlay.classList.remove('fade-out');
+                overlay.classList.add('fade-in');
+                setTimeout(() => {
+                    window.location.href = link.href;
+                }, 300);
+            }
+        });
+    </script>
     <div id="app" class="max-w-2xl mx-auto bg-black min-h-screen">
         <!-- Top Bar -->
         <div class="top-bar bg-white px-4 py-2 shadow-sm sticky top-0 z-30 relative">
