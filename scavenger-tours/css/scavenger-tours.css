@@ -100,12 +100,14 @@ body {
     }
     /* Smaller play buttons on mobile */
     .play-button {
-        width: 28px !important;
-        height: 28px !important;
+        width: 20px !important;
+        height: 20px !important;
+        min-width: 20px !important;
+        min-height: 20px !important;
     }
     .play-button svg {
-        width: 14px !important;
-        height: 14px !important;
+        width: 10px !important;
+        height: 10px !important;
     }
     /* Smaller close button in drawer */
     .nav-drawer-close {
@@ -365,8 +367,8 @@ body {
     }
 
     .play-button {
-        min-width: 44px;
-        min-height: 44px;
+        min-width: 20px;
+        min-height: 20px;
     }
 
     .playlist-card {
