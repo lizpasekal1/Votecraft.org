@@ -14,7 +14,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Custom styles -->
-    <link rel="stylesheet" href="../css/scavenger-tour.css">
+    <link rel="stylesheet" href="./css/scavenger-tours.css">
 </head>
 <body>
     <!-- Page transition overlay -->
@@ -43,7 +43,7 @@
         <!-- Top Bar -->
         <div id="header" class="bg-white px-4 py-2 shadow-sm sticky top-0 z-30 relative">
             <!-- Back Button (absolute left) -->
-            <a href="scavenger-tour.html" id="back-link" class="absolute left-4 top-1/2 -translate-y-1/2 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+            <a href="scavenger-tours.html" id="back-link" class="absolute left-4 top-1/2 -translate-y-1/2 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
                 </svg>
@@ -161,7 +161,7 @@
     </div>
 
     <!-- Location Data -->
-    <script src="../js/scavenger-tour-data.js"></script>
+    <script src="./js/scavenger-tours-data.js"></script>
 
     <!-- Page JavaScript -->
     <script>
@@ -215,7 +215,7 @@
         document.getElementById('header-accent').style.color = themeColor;
 
         // Update back link to preserve tour context
-        document.getElementById('back-link').href = `scavenger-tour.html?tour=${tourId}`;
+        document.getElementById('back-link').href = `scavenger-tours.html?tour=${tourId}`;
 
         // Hero image
         if (location.image) {
