@@ -450,7 +450,7 @@ const ART_TOUR = [
         likes: 456,
         civicTheme: CIVIC_THEMES.DEMOCRACY,
         widget: "voting-timeline",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/The_Embrace_%28MLK_memorial%29_in_January_2023.jpg/1280px-The_Embrace_%28MLK_memorial%29_in_January_2023.jpg",
+        image: "https://images.unsplash.com/photo-1569974498991-d3c12a504f95?w=800&q=80",
         description: "Unveiled in 2023, this 20-foot bronze sculpture by Hank Willis Thomas depicts the embrace of Martin Luther King Jr. and Coretta Scott King. It commemorates their 1965 speech on Boston Common and represents love as a force for social change.",
         learnMore: "MLK called Boston his 'second home' - he met Coretta at the New England Conservatory and earned his PhD at Boston University. The sculpture sparked debate about how we memorialize leaders.",
         soundcloudUrl: "https://soundcloud.com/stevie-wonder-official/happy-birthday"
@@ -464,7 +464,7 @@ const ART_TOUR = [
         likes: 523,
         civicTheme: CIVIC_THEMES.VOTING,
         widget: "voter-turnout",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Robert_Gould_Shaw_Memorial_-_DSC09476.JPG/1280px-Robert_Gould_Shaw_Memorial_-_DSC09476.JPG",
+        image: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&q=80",
         description: "Augustus Saint-Gaudens spent 14 years creating this bronze relief honoring Colonel Robert Gould Shaw and the 54th Massachusetts Infantry - the first Black regiment in the Civil War. The soldiers march toward death and glory, fighting for a country that denied them citizenship.",
         learnMore: "Half the 54th died in their assault on Fort Wagner. The film 'Glory' tells their story. Black soldiers were paid less than white soldiers until Congress equalized pay in 1864.",
         soundcloudUrl: "https://soundcloud.com/samcooke/a-change-is-gonna-come"
@@ -478,7 +478,7 @@ const ART_TOUR = [
         likes: 389,
         civicTheme: CIVIC_THEMES.JOURNALISM,
         widget: "voter-suppression",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Crispus_Attucks_monument_%2836451%29.jpg/800px-Crispus_Attucks_monument_%2836451%29.jpg",
+        image: "https://images.unsplash.com/photo-1582560475093-ba66accbc424?w=800&q=80",
         description: "This 1888 monument honors the five victims of the Boston Massacre, with Crispus Attucks - a Black sailor of African and Native American descent - prominently featured. Attucks was the first person killed in the American Revolution, a Black man dying for a freedom he did not possess.",
         learnMore: "For decades, Boston refused to honor Attucks. It took 118 years from his death to erect this monument. History remembers who it chooses to remember.",
         soundcloudUrl: "https://soundcloud.com/ninasimonefans/mississippi-goddam"
@@ -492,7 +492,7 @@ const ART_TOUR = [
         likes: 345,
         civicTheme: CIVIC_THEMES.EDUCATION,
         widget: "voting-timeline",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Boston_Women%27s_Memorial_-_DSC05041.JPG/1280px-Boston_Women%27s_Memorial_-_DSC05041.JPG",
+        image: "https://images.unsplash.com/photo-1594608661623-aa0bd3a69d98?w=800&q=80",
         description: "Meredith Bergmann's 2003 sculpture honors three Massachusetts women: Abigail Adams (who urged her husband to 'remember the ladies'), Lucy Stone (suffragist who kept her maiden name), and Phillis Wheatley (the first published African American poet).",
         learnMore: "When Abigail wrote to John Adams about women's rights in 1776, he laughed it off. It took 144 years for women to win the vote.",
         soundcloudUrl: "https://soundcloud.com/arethafranklin/respect"
@@ -506,7 +506,7 @@ const ART_TOUR = [
         likes: 412,
         civicTheme: CIVIC_THEMES.IMMIGRATION,
         widget: "voter-suppression",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Harriet_Tubman_statue%2C_Boston.jpg/800px-Harriet_Tubman_statue%2C_Boston.jpg",
+        image: "https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=800&q=80",
         description: "Fern Cunningham's 1999 sculpture shows Harriet Tubman leading enslaved people to freedom on the Underground Railroad. Boston was a key stop on that railroad, with abolitionists hiding freedom seekers in Beacon Hill homes just blocks from the State House.",
         learnMore: "Tubman made 13 missions and rescued about 70 enslaved people. She later served as a Union spy. She'll appear on the $20 bill - eventually.",
         soundcloudUrl: "https://soundcloud.com/beyonce/freedom"
@@ -520,7 +520,7 @@ const ART_TOUR = [
         likes: 298,
         civicTheme: CIVIC_THEMES.DEMOCRACY,
         widget: "rcv-demo",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Samuel_Adams_Statue%2C_Boston.jpg/800px-Samuel_Adams_Statue%2C_Boston.jpg",
+        image: "https://images.unsplash.com/photo-1575936123452-b67c3203c357?w=800&q=80",
         description: "Anne Whitney's 1880 bronze depicts the 'Father of the American Revolution' pointing defiantly, as if challenging British authority. Adams organized the Sons of Liberty, planned the Boston Tea Party, and signed the Declaration. He stands before the 'Cradle of Liberty.'",
         learnMore: "Adams was a failed businessman but a brilliant propagandist. He wrote under dozens of pen names, flooding newspapers with revolutionary ideas.",
         soundcloudUrl: "https://soundcloud.com/public-enemy-music/fight-the-power-1"
@@ -534,7 +534,7 @@ const ART_TOUR = [
         likes: 267,
         civicTheme: CIVIC_THEMES.HOUSING,
         widget: "immigration-data",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Boston_Irish_Famine_Memorial_01.jpg/1280px-Boston_Irish_Famine_Memorial_01.jpg",
+        image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80",
         description: "Robert Shure's 1998 sculptures show two groups: starving Irish during the 1845-1852 famine, and prosperous Irish-Americans decades later. Over 100,000 Irish fled to Boston, facing 'No Irish Need Apply' signs. Within generations, they ran the city.",
         learnMore: "The famine killed 1 million Irish and drove 2 million to emigrate. Today's debates about immigration echo the nativist backlash the Irish faced.",
         soundcloudUrl: "https://soundcloud.com/u2official/sunday-bloody-sunday"
@@ -548,7 +548,7 @@ const ART_TOUR = [
         likes: 234,
         civicTheme: CIVIC_THEMES.SCOTUS,
         widget: "voter-turnout",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Soldiers_and_Sailors_Monument_%28Boston%29.jpg/800px-Soldiers_and_Sailors_Monument_%28Boston%29.jpg",
+        image: "https://images.unsplash.com/photo-1569974507005-6dc61f97fb5c?w=800&q=80",
         description: "Martin Milmore's 1877 monument honors Civil War soldiers and sailors. Four bronze figures represent Peace, History, the Navy, and the Army. At the base, relief sculptures depict departure for war, battle, the sanitary commission, and the return home.",
         learnMore: "Massachusetts sent over 150,000 men to fight in the Civil War. The monument cost $93,000 - equivalent to about $2.5 million today.",
         soundcloudUrl: "https://soundcloud.com/brucespringsteen/born-in-the-usa"
@@ -562,7 +562,7 @@ const ART_TOUR = [
         likes: 478,
         civicTheme: CIVIC_THEMES.HEALTHCARE,
         widget: "voter-suppression",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/New_England_Holocaust_Memorial%2C_Boston%2C_Massachusetts.JPG/800px-New_England_Holocaust_Memorial%2C_Boston%2C_Massachusetts.JPG",
+        image: "https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=800&q=80",
         description: "Six luminous glass towers, each 54 feet tall, represent the six million Jews killed and the six major death camps. Steam rises from grates below, evoking crematorium smoke. Numbers etched in glass memorialize individual victims. Never forget.",
         learnMore: "The memorial was vandalized twice in 2017. Democracy requires vigilance against hate. The path through the towers quotes survivors.",
         soundcloudUrl: "https://soundcloud.com/leonardcohen/hallelujah"
@@ -576,7 +576,7 @@ const ART_TOUR = [
         likes: 356,
         civicTheme: CIVIC_THEMES.ECONOMY,
         widget: "voting-timeline",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Frederick_Douglass_portrait.jpg/800px-Frederick_Douglass_portrait.jpg",
+        image: "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=800&q=80",
         description: "This vibrant mural depicts Frederick Douglass, who spoke throughout Boston demanding abolition and equal rights. Roxbury's streets feature numerous murals celebrating Black history, from civil rights leaders to local heroes. Public art makes history visible.",
         learnMore: "Douglass escaped slavery and became America's most powerful voice against it. He advised Lincoln, recruited Black soldiers, and fought for women's suffrage.",
         soundcloudUrl: "https://soundcloud.com/kendricklamar/alright"
