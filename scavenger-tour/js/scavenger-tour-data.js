@@ -450,7 +450,7 @@ const ART_TOUR = [
         likes: 456,
         civicTheme: CIVIC_THEMES.DEMOCRACY,
         widget: "voting-timeline",
-        image: "https://images.unsplash.com/photo-1569974498991-d3c12a504f95?w=800&q=80",
+        image: "https://upload.wikimedia.org/wikipedia/en/5/5a/The_Embrace%2C_a_sculpture_in_Boston_Common_in_Boston.jpg",
         description: "Unveiled in 2023, this 20-foot bronze sculpture by Hank Willis Thomas depicts the embrace of Martin Luther King Jr. and Coretta Scott King. It commemorates their 1965 speech on Boston Common and represents love as a force for social change.",
         learnMore: "MLK called Boston his 'second home' - he met Coretta at the New England Conservatory and earned his PhD at Boston University. The sculpture sparked debate about how we memorialize leaders.",
         soundcloudUrl: "https://soundcloud.com/stevie-wonder-official/happy-birthday"
@@ -464,7 +464,7 @@ const ART_TOUR = [
         likes: 523,
         civicTheme: CIVIC_THEMES.VOTING,
         widget: "voter-turnout",
-        image: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&q=80",
+        image: "https://upload.wikimedia.org/wikipedia/commons/7/77/Robert_Gould_Shaw_Memorial_-_detail.jpg",
         description: "Augustus Saint-Gaudens spent 14 years creating this bronze relief honoring Colonel Robert Gould Shaw and the 54th Massachusetts Infantry - the first Black regiment in the Civil War. The soldiers march toward death and glory, fighting for a country that denied them citizenship.",
         learnMore: "Half the 54th died in their assault on Fort Wagner. The film 'Glory' tells their story. Black soldiers were paid less than white soldiers until Congress equalized pay in 1864.",
         soundcloudUrl: "https://soundcloud.com/samcooke/a-change-is-gonna-come"
