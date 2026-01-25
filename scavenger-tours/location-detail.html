@@ -14,7 +14,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Custom styles -->
-    <link rel="stylesheet" href="./css/scavenger-tours.css">
+    <link rel="stylesheet" href="./css/scavenger-tours.css?v=12">
 </head>
 <body>
     <!-- Page transition overlay -->
@@ -41,23 +41,23 @@
     </script>
     <div id="app" class="max-w-2xl mx-auto bg-black min-h-screen">
         <!-- Top Bar -->
-        <div id="header" class="bg-white px-4 py-2 shadow-sm sticky top-0 z-30 relative">
+        <div id="header" class="top-bar bg-white px-4 py-2 shadow-sm sticky top-0 z-30 relative">
             <!-- Back Button (absolute left) -->
-            <a href="scavenger-tours.html" id="back-link" class="absolute left-4 top-1/2 -translate-y-1/2 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+            <a href="scavenger-tours.html" id="back-link" class="btn-back absolute left-4 top-1/2 -translate-y-1/2 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
                 </svg>
             </a>
             <!-- Centered Logo -->
             <div class="flex items-center justify-center gap-2 py-1">
-                <div id="header-icon" class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <div id="header-icon" class="logo-icon w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
                     </svg>
                 </div>
-                <div class="text-lg font-bold">
+                <div class="logo-text text-xl font-bold">
                     <span class="text-gray-800">VoteCraft</span>
-                    <span id="header-accent" class="text-blue-500">Tour</span>
+                    <span id="header-accent" class="text-blue-500">Tours</span>
                 </div>
             </div>
         </div>
@@ -101,21 +101,181 @@
             </button>
 
             <!-- Soundtrack Section -->
-            <div class="bg-gray-900 rounded-xl p-4">
-                <h2 class="text-white text-lg font-bold mb-3">Soundtrack</h2>
+            <div class="song-ballot rounded-xl p-4">
+                <h2 class="text-white text-lg font-bold mb-2 text-center">
+                    RCV the Tune
+                    <span class="rcv-info-icon" onclick="toggleRcvInfo(event)">i</span>
+                    <div id="rcv-info-popup" class="rcv-info-popup">
+                        Ranked Choice Voting lets you rank candidates. If no one gets over 50%, the lowest candidate is eliminated and votes transfer to next choices until someone does. This helps ensure the winner has majority support rather than winning with a small split vote.
+                    </div>
+                </h2>
+                <p class="ballot-instructions text-gray-400 text-sm mb-4 text-center">Tap ? to rank choice vote on these songs as the feature for this location</p>
 
-                <!-- SoundCloud Embed Player -->
-                <div id="soundcloud-embed" class="rounded-lg overflow-hidden">
-                    <iframe id="soundcloud-player"
-                            width="100%"
-                            height="166"
-                            scrolling="no"
-                            frameborder="no"
-                            allow="autoplay"
-                            class="rounded-lg">
-                    </iframe>
-                </div>
+                <!-- Songs List -->
+                <div id="songs-container" class="song-list"></div>
+
+                <!-- Submit Button -->
+                <button id="submit-votes-btn" class="w-full mt-4 py-3 rounded-xl font-bold text-white transition-all" disabled style="background: #374151; opacity: 0.5; cursor: not-allowed;">
+                    Submit Votes
+                </button>
+                <p id="submit-message" class="text-center text-gray-400 text-sm mt-3" style="display: none;">
+                    Results will display at the end of your tour
+                </p>
             </div>
+
+            <style>
+                .song-ballot {
+                    background: #111827;
+                    border: 1px solid #374151;
+                }
+                @media (max-width: 768px) {
+                    .song-ballot {
+                        background: transparent;
+                        border: none;
+                    }
+                }
+                .ballot-instructions {
+                    color: #9ca3af;
+                }
+                .song-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                }
+                .song-item {
+                    background: #1f2937;
+                    border: 2px solid #374151;
+                    border-radius: 8px;
+                    padding: 12px;
+                    transition: all 0.2s;
+                    cursor: pointer;
+                }
+                .song-item:hover:not(.voted) {
+                    border-color: #6b7280;
+                    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.05);
+                }
+                .song-item.voted {
+                    background: rgba(59, 130, 246, 0.08);
+                }
+                .vote-btn {
+                    width: 32px;
+                    height: 32px;
+                    min-width: 32px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 700;
+                    font-size: 0.9rem;
+                    flex-shrink: 0;
+                    border: none;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .vote-btn:hover {
+                    transform: scale(1.1);
+                }
+                .vote-btn:active {
+                    transform: scale(0.95);
+                }
+                .song-title {
+                    font-weight: 600;
+                    font-size: 0.9rem;
+                    color: white;
+                }
+                .song-artist {
+                    font-weight: 400;
+                    font-size: 0.8rem;
+                    color: #9ca3af;
+                }
+                .song-artist::before {
+                    content: ' - ';
+                }
+                @media (max-width: 768px) {
+                    .song-artist {
+                        display: block;
+                        line-height: 1.2;
+                        margin-top: 2px;
+                    }
+                    .song-artist::before {
+                        content: '';
+                    }
+                    .song-title {
+                        line-height: 1.2;
+                    }
+                }
+                .song-player {
+                    border-radius: 6px;
+                    overflow: hidden;
+                    height: 80px;
+                }
+                .song-player iframe {
+                    margin-top: -20px;
+                }
+                .song-reason {
+                    font-size: 0.75rem;
+                    color: #9ca3af;
+                    font-style: italic;
+                    line-height: 1.4;
+                }
+                .vote-count-badge {
+                    font-size: 0.65rem;
+                    padding: 2px 6px;
+                    border-radius: 10px;
+                    font-weight: 600;
+                }
+                #submit-votes-btn:not(:disabled):hover {
+                    opacity: 0.9;
+                }
+                .rcv-info-icon {
+                    cursor: pointer;
+                    color: white;
+                    background: #6b7280;
+                    border-radius: 50%;
+                    width: 18px;
+                    height: 18px;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    vertical-align: middle;
+                    position: relative;
+                    margin-left: 6px;
+                    margin-bottom: 2px;
+                    font-size: 13px;
+                    font-weight: 700;
+                    font-style: italic;
+                    font-family: Georgia, serif;
+                }
+                .rcv-info-icon:hover {
+                    background: #9ca3af;
+                }
+                .rcv-info-popup {
+                    display: none;
+                    position: absolute;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    top: 100%;
+                    margin-top: 8px;
+                    background: white;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 8px;
+                    padding: 12px;
+                    font-size: 0.85rem;
+                    font-weight: 400;
+                    color: black;
+                    width: 280px;
+                    max-width: 90vw;
+                    z-index: 10;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    line-height: 1.5;
+                }
+                .rcv-info-popup.show {
+                    display: block;
+                }
+                h2 {
+                    position: relative;
+                }
+            </style>
 
             <!-- Social Actions -->
             <div class="mt-6 flex items-center justify-center gap-6">
@@ -161,7 +321,7 @@
     </div>
 
     <!-- Location Data -->
-    <script src="./js/scavenger-tours-data.js"></script>
+    <script src="./js/scavenger-tours-data.js?v=5"></script>
 
     <!-- Page JavaScript -->
     <script>
@@ -252,15 +412,211 @@
         // Likes
         document.getElementById('like-count').textContent = location.likes;
 
-        // SoundCloud embed player
-        if (location.soundcloudUrl) {
-            const encodedUrl = encodeURIComponent(location.soundcloudUrl);
-            const embedColor = themeColor.replace('#', '');
-            const embedUrl = `https://w.soundcloud.com/player/?url=${encodedUrl}&color=%23${embedColor}&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=true`;
-            document.getElementById('soundcloud-player').src = embedUrl;
-        } else {
-            document.getElementById('soundcloud-embed').style.display = 'none';
+        // Get songs array (support both new array format and legacy single song)
+        let songs = [];
+        if (location.songs && location.songs.length > 0) {
+            songs = location.songs;
+        } else if (location.soundcloudUrl) {
+            // Legacy format - create single song from old fields
+            songs = [{
+                title: extractSongTitle(location.soundcloudUrl),
+                url: location.soundcloudUrl,
+                reason: location.songReason || ''
+            }];
         }
+
+        // Helper to extract song title from SoundCloud URL
+        function extractSongTitle(url) {
+            if (!url) return 'Unknown Song';
+            const parts = url.split('/');
+            const slug = parts[parts.length - 1];
+            // Convert slug to title case
+            return slug.replace(/-/g, ' ').replace(/\d+$/, '').trim()
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
+
+        // Ranking storage key
+        const RANKINGS_KEY = `votecraft_song_rankings_${tourId}_${locationId}`;
+
+        // Get user's rankings (array of song indices in rank order)
+        function getUserRankings() {
+            try {
+                const data = localStorage.getItem(RANKINGS_KEY);
+                return data ? JSON.parse(data) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        // Get the rank of a specific song (1, 2, 3) or null if unranked
+        function getSongRank(songIndex) {
+            const rankings = getUserRankings();
+            const position = rankings.indexOf(songIndex);
+            return position >= 0 ? position + 1 : null;
+        }
+
+        function toggleRanking(songIndex) {
+            let rankings = getUserRankings();
+            const existingPosition = rankings.indexOf(songIndex);
+
+            if (existingPosition >= 0) {
+                // Already ranked - remove it and shift others down
+                rankings.splice(existingPosition, 1);
+            } else {
+                // Not ranked - add to next available position
+                if (rankings.length < songs.length) {
+                    rankings.push(songIndex);
+                }
+            }
+
+            localStorage.setItem(RANKINGS_KEY, JSON.stringify(rankings));
+            renderSongs();
+        }
+
+        // Render songs with ranking
+        function renderSongs() {
+            const container = document.getElementById('songs-container');
+            const rankings = getUserRankings();
+            const embedColor = themeColor.replace('#', '');
+
+            if (songs.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm text-center">No songs available</p>';
+                return;
+            }
+
+            // Extract artist name from SoundCloud URL
+            function getArtistFromUrl(url) {
+                try {
+                    const match = url.match(/soundcloud\.com\/([^\/]+)/);
+                    if (match && match[1]) {
+                        return match[1]
+                            .replace(/-/g, ' ')
+                            .replace(/official|music$/gi, '')
+                            .trim()
+                            .split(' ')
+                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                            .join(' ');
+                    }
+                } catch (e) {}
+                return '';
+            }
+
+            let html = '';
+            songs.forEach((song, index) => {
+                const rank = getSongRank(index);
+                const isRanked = rank !== null;
+                const encodedUrl = encodeURIComponent(song.url);
+                const embedUrl = `https://w.soundcloud.com/player/?url=${encodedUrl}&color=%23${embedColor}&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&show_artwork=true&visual=true`;
+                const artist = getArtistFromUrl(song.url);
+
+                html += `
+                <div class="song-item ${isRanked ? 'voted' : ''}" data-index="${index}" onclick="rankSong(${index})" style="${isRanked ? `border-color: ${themeColor};` : ''}">
+                    <!-- SoundCloud Player -->
+                    <div class="song-player mb-2" onclick="event.stopPropagation()">
+                        <iframe width="100%" height="100" scrolling="no" frameborder="no" allow="autoplay"
+                                src="${embedUrl}"></iframe>
+                    </div>
+                    <!-- Title and Rank below player -->
+                    <div class="flex items-center gap-3">
+                        <!-- Rank Badge -->
+                        <div class="vote-btn"
+                             style="background: ${isRanked ? themeColor : '#374151'}; color: ${isRanked ? 'white' : '#9ca3af'};">
+                            ${isRanked ? rank : '?'}
+                        </div>
+                        <!-- Song Title and Artist -->
+                        <div class="flex-1">
+                            <span class="song-title">${song.title}</span>
+                            ${artist ? `<span class="song-artist">${artist}</span>` : ''}
+                        </div>
+                    </div>
+                    <!-- Song Reason -->
+                    ${song.reason ? `<p class="song-reason mt-2">${song.reason}</p>` : ''}
+                </div>
+                `;
+            });
+
+            container.innerHTML = html;
+
+            // Update submit button visibility and styling
+            updateSubmitButton(rankings);
+        }
+
+        // Enable/disable submit button based on rankings
+        function updateSubmitButton(rankings) {
+            const submitBtn = document.getElementById('submit-votes-btn');
+            if (rankings.length > 0) {
+                submitBtn.disabled = false;
+                submitBtn.style.background = themeColor;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.style.background = '#374151';
+                submitBtn.style.opacity = '0.5';
+                submitBtn.style.cursor = 'not-allowed';
+            }
+        }
+
+        // Track if votes have been submitted
+        let votesSubmitted = false;
+
+        // Handle submit votes
+        function submitVotes() {
+            const submitBtn = document.getElementById('submit-votes-btn');
+            const submitMsg = document.getElementById('submit-message');
+
+            if (votesSubmitted) {
+                // User tapped again - reset to original state
+                votesSubmitted = false;
+                submitBtn.textContent = 'Submit Votes';
+                submitBtn.style.background = themeColor;
+                submitMsg.style.display = 'none';
+                return;
+            }
+
+            const rankings = getUserRankings();
+            if (rankings.length === 0) return;
+
+            // Get the ranked songs in order
+            const rankedSongs = rankings.map((songIndex, i) => ({
+                rank: i + 1,
+                song: songs[songIndex]
+            }));
+
+            // Show confirmation - stays green until tapped again
+            votesSubmitted = true;
+            submitBtn.textContent = 'Votes Submitted!';
+            submitBtn.style.background = '#22c55e';
+            submitMsg.style.display = 'block';
+        }
+
+        // Attach submit button handler
+        document.getElementById('submit-votes-btn').addEventListener('click', submitVotes);
+
+        // Global rank function
+        window.rankSong = function(index) {
+            toggleRanking(index);
+        };
+
+        // Toggle RCV info popup
+        window.toggleRcvInfo = function(event) {
+            event.stopPropagation();
+            const popup = document.getElementById('rcv-info-popup');
+            popup.classList.toggle('show');
+        };
+
+        // Close popup when clicking outside
+        document.addEventListener('click', function(e) {
+            const popup = document.getElementById('rcv-info-popup');
+            if (popup && !e.target.closest('.rcv-info-icon')) {
+                popup.classList.remove('show');
+            }
+        });
+
+        // Initial render
+        renderSongs();
 
         // Update page title
         document.title = `${location.name} - VoteCraft Tour`;
