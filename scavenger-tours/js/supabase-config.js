@@ -210,4 +210,4 @@ const VoteCraftSync = {
 // Export for use in other files
 window.VoteCraftAuth = VoteCraftAuth;
 window.VoteCraftSync = VoteCraftSync;
-window.supabaseClient = supabase;
+window.supabaseClient = supabaseClient;
