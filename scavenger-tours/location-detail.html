@@ -106,7 +106,15 @@
                     RCV the Tune
                     <span class="rcv-info-icon" onclick="toggleRcvInfo(event)">i</span>
                     <div id="rcv-info-popup" class="rcv-info-popup">
-                        Ranked Choice Voting lets you rank candidates. If no one gets over 50%, the lowest candidate is eliminated and votes transfer to next choices until someone does. This helps ensure the winner has majority support rather than winning with a small split vote.
+                        <div class="rcv-popup-title">We support<br>Ranked Choice Voting!</div>
+                        <div class="rcv-popup-tagline">This song voting demos the process.</div>
+                        <ul class="rcv-popup-list">
+                            <li>RCV allows you to rank candidates in order of preference</li>
+                            <li>If no one gets over 50%, the lowest candidate is eliminated</li>
+                            <li>Votes transfer to each voter's next choice</li>
+                            <li>The process repeats until a majority winner is found</li>
+                            <li>RCV avoids split-vote outcomes</li>
+                        </ul>
                     </div>
                 </h2>
                 <p class="ballot-instructions text-gray-400 text-sm mb-4 text-center">Tap ? to rank choice vote on these songs as the feature for this location</p>
@@ -230,7 +238,7 @@
                 .rcv-info-icon {
                     cursor: pointer;
                     color: white;
-                    background: #6b7280;
+                    background: #8b5cf6;
                     border-radius: 50%;
                     width: 18px;
                     height: 18px;
@@ -247,7 +255,7 @@
                     font-family: Georgia, serif;
                 }
                 .rcv-info-icon:hover {
-                    background: #9ca3af;
+                    background: #a78bfa;
                 }
                 .rcv-info-popup {
                     display: none;
@@ -255,7 +263,7 @@
                     left: 50%;
                     transform: translateX(-50%);
                     top: 100%;
-                    margin-top: 8px;
+                    margin-top: 12px;
                     background: white;
                     border: 1px solid #e5e7eb;
                     border-radius: 8px;
@@ -269,8 +277,67 @@
                     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
                     line-height: 1.5;
                 }
+                .rcv-info-popup::before {
+                    content: '';
+                    position: absolute;
+                    top: -8px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    border-left: 8px solid transparent;
+                    border-right: 8px solid transparent;
+                    border-bottom: 8px solid white;
+                }
+                .rcv-info-popup::after {
+                    content: '';
+                    position: absolute;
+                    top: -9px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    border-left: 9px solid transparent;
+                    border-right: 9px solid transparent;
+                    border-bottom: 9px solid #e5e7eb;
+                    z-index: -1;
+                }
                 .rcv-info-popup.show {
                     display: block;
+                }
+                .rcv-popup-title {
+                    font-weight: 700;
+                    font-size: 0.95rem;
+                    color: #1f2937;
+                    margin-bottom: 4px;
+                }
+                .rcv-popup-tagline {
+                    font-size: 0.8rem;
+                    color: #6b7280;
+                    margin-bottom: 10px;
+                    font-style: italic;
+                }
+                .rcv-popup-list {
+                    margin: 0;
+                    padding: 0;
+                    list-style: none;
+                    text-align: left;
+                }
+                .rcv-popup-list li {
+                    position: relative;
+                    padding-left: 16px;
+                    margin-bottom: 6px;
+                    font-size: 0.8rem;
+                    color: #374151;
+                    line-height: 1.4;
+                }
+                .rcv-popup-list li:last-child {
+                    margin-bottom: 0;
+                }
+                .rcv-popup-list li::before {
+                    content: '•';
+                    position: absolute;
+                    left: 0;
+                    color: #3b82f6;
+                    font-weight: bold;
+                    font-size: 1.4rem;
+                    line-height: 1;
                 }
                 h2 {
                     position: relative;
