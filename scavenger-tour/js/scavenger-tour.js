@@ -392,14 +392,12 @@
                     <button class="nav-drawer-close" onclick="closeDrawer()" aria-label="Close menu">
                         ${icons.x}
                     </button>
-                    <div class="flex items-center gap-3 mb-2">
-                        <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <div class="flex flex-col items-center text-center mb-2">
+                        <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-2">
                             ${icons.music}
                         </div>
-                        <div>
-                            <div class="text-xl font-bold text-white">VoteCraft</div>
-                            <div class="text-blue-200 text-sm">Civic Music Tours</div>
-                        </div>
+                        <div class="text-xl font-bold text-white">VoteCraft</div>
+                        <div class="text-blue-200 text-sm">Civic Music Tours</div>
                     </div>
                 </div>
 
