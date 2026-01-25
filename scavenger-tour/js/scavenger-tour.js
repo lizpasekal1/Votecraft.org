@@ -558,11 +558,34 @@
         }
 
         // Update map overlay
-        const mapTourName = document.getElementById('map-tour-name');
-        if (mapTourName) {
-            mapTourName.querySelector('span').textContent = tour.name;
-        }
+        updateMapTourName(tourId, tour.name);
     };
+
+    // Helper to update the map tour name overlay
+    function updateMapTourName(tourId, tourName) {
+        const mapTourName = document.getElementById('map-tour-name');
+        if (!mapTourName) return;
+
+        // Format the name: remove "TOUR", convert to title case, add "Itinerary"
+        let displayName = tourName
+            .replace(/\s*TOUR\s*/gi, ' ')
+            .trim()
+            .toLowerCase()
+            .replace(/\b\w/g, c => c.toUpperCase());
+
+        // All tour titles get white rounded outline and link to itinerary
+        mapTourName.innerHTML = `
+            <div class="flex justify-center">
+                <a href="itinerary.html?tour=${tourId}"
+                   class="inline-flex items-center gap-2 text-white text-xl font-bold border-2 border-white rounded-lg px-4 py-2 hover:bg-white/20 transition-colors">
+                    ${displayName} Itinerary
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+        `;
+    }
 
     // Reload map markers for current tour
     function reloadMap() {
@@ -718,10 +741,7 @@
                 if (headerTitle) {
                     headerTitle.textContent = tour.name;
                 }
-                const mapTourName = document.getElementById('map-tour-name');
-                if (mapTourName) {
-                    mapTourName.querySelector('span').textContent = tour.name;
-                }
+                updateMapTourName(tourParam, tour.name);
             }
         }
 

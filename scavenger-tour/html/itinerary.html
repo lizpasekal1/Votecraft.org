@@ -377,6 +377,12 @@
     <div id="app" class="max-w-2xl mx-auto bg-black min-h-screen">
         <!-- Top Bar -->
         <div class="top-bar bg-white px-4 py-2 shadow-sm sticky top-0 z-30 relative">
+            <!-- Back Button (absolute left) -->
+            <a href="scavenger-tour.html" id="back-link" class="absolute left-4 top-1/2 -translate-y-1/2 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
             <!-- Centered Logo -->
             <div class="flex items-center justify-center gap-2 py-1">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background: #4269FF;">
@@ -399,12 +405,6 @@
 
         <!-- Main Content -->
         <div class="px-4 pt-4 pb-24">
-            <!-- Back Button -->
-            <a href="scavenger-tour.html" id="back-link" class="inline-flex items-center gap-2 text-white mb-4 px-4 py-2 border border-gray-700 rounded-xl hover:bg-gray-800 transition-colors">
-                <span>&larr;</span>
-                <span class="text-sm">Back to Tour</span>
-            </a>
-
             <!-- Tour Name -->
             <p id="tour-name" class="text-gray-400 text-sm mb-4"></p>
 
