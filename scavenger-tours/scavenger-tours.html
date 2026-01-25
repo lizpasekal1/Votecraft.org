@@ -17,7 +17,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Custom styles -->
-    <link rel="stylesheet" href="./css/scavenger-tours.css">
+    <link rel="stylesheet" href="./css/scavenger-tours.css?v=12">
 </head>
 <body>
     <!-- Page transition overlay -->
@@ -47,18 +47,18 @@
         <div class="top-bar bg-white px-4 py-2 shadow-sm sticky top-0 z-30 relative">
             <!-- Centered Logo -->
             <div class="flex items-center justify-center gap-2 py-1">
-                <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                <div class="logo-icon w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
                     </svg>
                 </div>
-                <div class="text-xl font-bold">
+                <div class="logo-text text-xl font-bold">
                     <span class="text-gray-800">VoteCraft</span>
-                    <span class="text-blue-500">Tour</span>
+                    <span class="text-blue-500">Tours</span>
                 </div>
             </div>
             <!-- Menu Button (absolute right) -->
-            <button id="btn-menu" class="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 rounded-lg">
+            <button id="btn-menu" class="btn-menu absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 rounded-lg">
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
                 </svg>
@@ -66,11 +66,12 @@
         </div>
 
         <!-- Map Section -->
-        <div class="relative overflow-hidden sticky z-20 sticky-map" style="height: 35vh;">
+        <div class="relative overflow-hidden sticky z-20 sticky-map" style="height: 32vh;">
             <div id="map" class="w-full h-full"></div>
             <!-- Tour Name Overlay -->
-            <div id="map-tour-name" class="absolute bottom-0 left-0 right-0 px-4 py-3" style="z-index: 1000; background-color: rgba(66, 105, 255, 0.75);">
-                <span class="text-white text-xl font-bold">Freedom Trail Sampler</span>
+            <div id="map-tour-name" class="absolute bottom-0 left-0 right-0 px-3 py-2" style="z-index: 1000; background-color: rgba(66, 105, 255, 0.75);">
+                <a href="itinerary.html?tour=civic-sampler"
+                   class="block text-center text-white text-base font-bold border-2 border-white rounded-lg px-4 py-1.5 mx-2 hover:bg-white/20 transition-colors">Freedom Trail Itinerary&nbsp;›</a>
             </div>
         </div>
 
@@ -88,9 +89,9 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
     <!-- Location Data -->
-    <script src="./js/scavenger-tours-data.js"></script>
+    <script src="./js/scavenger-tours-data.js?v=5"></script>
 
     <!-- App JavaScript -->
-    <script src="./js/scavenger-tours.js"></script>
+    <script src="./js/scavenger-tours.js?v=14"></script>
 </body>
 </html>

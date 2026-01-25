@@ -90,20 +90,52 @@ body {
     height: 128px;
 }
 
-/* Mobile: compact cards to fit ~2.5 below map */
+/* Mobile: compact cards to fit 4+ below map */
 @media screen and (max-width: 430px) {
     .playlist-card {
-        height: 100px;
+        height: 52px;
+        margin-bottom: 0.5rem !important;
     }
     .playlist-card .w-28 {
-        width: 90px;
+        width: 52px;
     }
-    /* Smaller play buttons on mobile */
+    .playlist-card h3 {
+        font-size: 0.8125rem !important;
+        line-height: 1.2 !important;
+        margin-bottom: 0.125rem !important;
+    }
+    .playlist-card p {
+        font-size: 0.6875rem !important;
+        line-height: 1.2 !important;
+    }
+    .playlist-card .p-3 {
+        padding: 0.25rem 0.5rem !important;
+    }
+    .playlist-card .pr-3 {
+        padding-right: 0.25rem !important;
+    }
+    /* Smaller arrow buttons on mobile */
+    .playlist-card .w-8 {
+        width: 24px !important;
+        height: 24px !important;
+    }
+    .playlist-card .w-8 svg {
+        width: 12px !important;
+        height: 12px !important;
+    }
+    .playlist-card .ml-2 {
+        margin-left: 0.375rem !important;
+    }
+    /* Smaller play buttons on mobile - circle half size, arrow same */
     .play-button {
-        width: 20px !important;
-        height: 20px !important;
-        min-width: 20px !important;
-        min-height: 20px !important;
+        width: 16px !important;
+        height: 16px !important;
+        min-width: 16px !important;
+        min-height: 16px !important;
+    }
+    .play-button svg {
+        width: 10px !important;
+        height: 10px !important;
     }
     .play-button svg {
         width: 10px !important;
@@ -118,18 +150,36 @@ body {
         width: 1rem;
         height: 1rem;
     }
+    /* Reduce map overlay text size */
+    #map-tour-name {
+        padding: 0.375rem 0.75rem !important;
+    }
+    #map-tour-name span,
+    #map-tour-name a {
+        font-size: 0.875rem !important;
+        white-space: nowrap !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+    }
+    /* Reduce playlist container padding */
+    #playlist-container {
+        padding: 0 !important;
+    }
 }
 
-.playlist-card:hover {
+.playlist-card:hover:not(.ring-2) {
     opacity: 0.7;
 }
 
-.playlist-card:active {
+.playlist-card:active:not(.ring-2) {
     opacity: 0.5;
 }
 
 /* Play button pulse animation */
 .play-button {
+    width: 36px;
+    height: 36px;
     transition: transform 0.15s ease, background-color 0.15s ease;
 }
 
@@ -194,12 +244,102 @@ body {
 /* Sticky map positioning */
 .sticky-map {
     top: 48px; /* Height of top bar */
+    height: 35vh; /* Default height, overridden on mobile */
+    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                top 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                position 0s;
+}
+
+/* Fullscreen map mode */
+.sticky-map.map-fullscreen {
+    position: fixed !important;
+    top: 48px !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: calc(100vh - 48px) !important;
+    z-index: 9999 !important;
+    max-width: none !important;
+    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sticky-map.map-fullscreen #map-tour-name {
+    position: fixed !important;
+    bottom: env(safe-area-inset-bottom, 0px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 10000 !important;
+}
+
+/* Keep top bar visible in fullscreen map */
+body:has(.sticky-map.map-fullscreen) .top-bar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 10001 !important;
+}
+
+/* Fullscreen button styling */
+.leaflet-fullscreen-btn {
+    background: white !important;
+}
+
+.leaflet-fullscreen-btn svg {
+    color: #333;
+}
+
+/* Keep Leaflet controls fixed in place during fullscreen */
+.sticky-map.map-fullscreen .leaflet-control-container .leaflet-top.leaflet-left {
+    position: fixed !important;
+    top: 58px !important;
+    left: 10px !important;
+    z-index: 10002 !important;
 }
 
 /* Top bar base height */
 .top-bar {
     height: auto;
     min-height: 48px;
+}
+
+/* Mobile top bar optimizations */
+@media screen and (max-width: 430px) {
+    .top-bar {
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+        min-height: 44px;
+    }
+
+    /* Smaller logo icon */
+    .top-bar .logo-icon {
+        width: 32px !important;
+        height: 32px !important;
+    }
+
+    .top-bar .logo-icon svg {
+        width: 18px !important;
+        height: 18px !important;
+    }
+
+    /* Smaller logo text */
+    .top-bar .logo-text {
+        font-size: 1rem !important;
+    }
+
+    /* Menu button closer to edge */
+    .top-bar .btn-menu {
+        right: 0.5rem !important;
+        padding: 0.375rem !important;
+    }
+
+    /* Back button closer to edge */
+    .top-bar .btn-back {
+        left: 0.5rem !important;
+        padding: 0.375rem !important;
+    }
 }
 
 /* Sticky map shadow - creates depth effect for content scrolling under */
@@ -385,21 +525,16 @@ body {
 
     /* Better use of vertical space */
     .playlist-card {
-        scroll-margin-top: calc(48px + env(safe-area-inset-top, 0px) + 32vh + 12px);
+        scroll-margin-top: calc(48px + env(safe-area-inset-top, 0px) + 28vh + 12px);
     }
 
-    /* Compact cards to fit ~2.5 below map */
+    /* Compact cards to fit 4+ below map */
     .playlist-card {
-        height: 100px !important;
+        height: 52px !important;
     }
 
     .playlist-card .w-28 {
-        width: 90px !important;
-    }
-
-    /* Slightly larger text for readability on high-density display */
-    #map-tour-name span {
-        font-size: 0.9375rem;
+        width: 52px !important;
     }
 
     /* Optimize bottom nav icon size */
@@ -418,21 +553,21 @@ body {
 
     /* Ensure map doesn't overlap with safe areas */
     .sticky-map {
-        height: min(35vh, 300px);
+        height: min(32vh, 260px) !important;
     }
 
-    /* Compact cards to fit ~2.5 below map */
+    /* Compact cards to fit 4+ below map */
     .playlist-card {
-        height: 100px !important;
+        height: 52px !important;
     }
 
     .playlist-card .w-28 {
-        width: 90px !important;
+        width: 52px !important;
     }
 
     /* Better spacing for playlist items on mobile */
     #playlist-container {
-        gap: 12px;
+        gap: 4px;
     }
 }
 

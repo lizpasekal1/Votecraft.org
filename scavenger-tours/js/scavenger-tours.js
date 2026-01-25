@@ -31,8 +31,8 @@
 
     // Create marker icon with civic theme color
     function createMarkerIcon(isSelected, themeColor) {
-        const size = isSelected ? 44 : 36;
-        const color = isSelected ? '#3b82f6' : (themeColor || '#22c55e');
+        const size = 36; // Fixed size, no expansion when selected
+        const color = themeColor || '#22c55e';
         return L.divIcon({
             className: 'custom-marker',
             html: `<div class="marker-pin ${isSelected ? 'selected' : ''}">
@@ -66,6 +66,26 @@
 
         L.control.zoom({ position: 'topleft' }).addTo(map);
 
+        // Add fullscreen control
+        const FullscreenControl = L.Control.extend({
+            options: { position: 'topleft' },
+            onAdd: function() {
+                const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+                const button = L.DomUtil.create('a', 'leaflet-fullscreen-btn', container);
+                button.href = '#';
+                button.title = 'Toggle fullscreen';
+                button.innerHTML = '<svg style="width:16px;height:16px;" fill="none" stroke="#333" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>';
+                button.style.cssText = 'display:flex;align-items:center;justify-content:center;width:30px;height:30px;background:white;cursor:pointer;';
+                L.DomEvent.on(button, 'click', function(e) {
+                    L.DomEvent.preventDefault(e);
+                    L.DomEvent.stopPropagation(e);
+                    toggleMapFullscreen();
+                });
+                return container;
+            }
+        });
+        new FullscreenControl().addTo(map);
+
         // Add markers with civic theme colors
         const playlists = getCurrentPlaylists();
         playlists.forEach(playlist => {
@@ -73,7 +93,7 @@
             const marker = L.marker(playlist.coordinates, {
                 icon: createMarkerIcon(false, themeColor)
             });
-            marker.bindPopup(`<strong>${playlist.name}</strong><br>${playlist.location}`, {
+            marker.bindPopup(`<strong>${playlist.name}</strong>`, {
                 closeButton: false,
                 autoPanPaddingTopLeft: L.point(10, 20)
             });
@@ -192,20 +212,22 @@
             </div>
 
             <!-- Content -->
-            <div class="flex-1 flex flex-col p-3 min-w-0 justify-center">
-                <h3 class="text-white text-base font-bold mb-1 truncate leading-tight">${playlist.name}</h3>
-                <p class="text-sm truncate leading-tight ${selectedPin === playlist.id ? 'text-green-500' : 'text-gray-400'}">
-                    ${playlist.location}
-                </p>
-            </div>
-
-            <!-- Play Button - Vertically Centered -->
-            <div class="flex items-center pr-3" onclick="event.stopPropagation()">
-                <button onclick="openLocationDetail(${playlist.id})"
-                        class="w-9 h-9 rounded-full flex items-center justify-center hover:opacity-80 transition-all shadow-lg play-button"
-                        style="background: ${themeColor};">
-                    ${icons.play}
-                </button>
+            <div class="flex-1 flex items-center p-3 min-w-0">
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-white text-base font-bold mb-1 truncate leading-tight">${playlist.name}</h3>
+                    <p class="text-sm truncate leading-tight ${selectedPin === playlist.id ? 'text-green-500' : 'text-gray-400'}">
+                        ${playlist.location}
+                    </p>
+                </div>
+                <!-- Arrow button -->
+                <a href="location-detail.html?id=${playlist.id}&tour=${currentTourId}"
+                   onclick="event.stopPropagation()"
+                   class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ml-2 transition-colors"
+                   style="background-color: ${themeColor};">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
             </div>
         </div>
     `;
@@ -681,24 +703,18 @@
         const mapTourName = document.getElementById('map-tour-name');
         if (!mapTourName) return;
 
-        // Format the name: remove "TOUR", convert to title case, add "Itinerary"
+        // Format the name: remove "TOUR" and "Sampler", convert to title case, add "Itinerary"
         let displayName = tourName
             .replace(/\s*TOUR\s*/gi, ' ')
+            .replace(/\s*Sampler\s*/gi, ' ')
             .trim()
             .toLowerCase()
             .replace(/\b\w/g, c => c.toUpperCase());
 
         // All tour titles get white rounded outline and link to itinerary
         mapTourName.innerHTML = `
-            <div class="flex justify-center">
-                <a href="itinerary.html?tour=${tourId}"
-                   class="inline-flex items-center gap-2 text-white text-xl font-bold border-2 border-white rounded-lg px-4 py-2 hover:bg-white/20 transition-colors">
-                    ${displayName} Itinerary
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </a>
-            </div>
+            <a href="itinerary.html?tour=${tourId}"
+               class="block text-center text-white text-base font-bold border-2 border-white rounded-lg px-4 py-1.5 mx-2 hover:bg-white/20 transition-colors">${displayName} Itinerary&nbsp;›</a>
         `;
     }
 
@@ -717,7 +733,7 @@
             const marker = L.marker(playlist.coordinates, {
                 icon: createMarkerIcon(false, themeColor)
             });
-            marker.bindPopup(`<strong>${playlist.name}</strong><br>${playlist.location}`, {
+            marker.bindPopup(`<strong>${playlist.name}</strong>`, {
                 closeButton: false,
                 autoPanPaddingTopLeft: L.point(10, 20)
             });
@@ -962,5 +978,32 @@
 
         // Menu button
         document.getElementById('btn-menu').addEventListener('click', showTourMenu);
+
+        // Fullscreen toggle for map
+        window.toggleMapFullscreen = function() {
+            const mapContainer = document.querySelector('.sticky-map');
+            const isFullscreen = mapContainer.classList.contains('map-fullscreen');
+
+            if (isFullscreen) {
+                // Exit fullscreen
+                mapContainer.classList.remove('map-fullscreen');
+                document.body.style.overflow = '';
+            } else {
+                // Enter fullscreen
+                mapContainer.classList.add('map-fullscreen');
+                document.body.style.overflow = 'hidden';
+            }
+
+            // Continuously invalidate map size during animation for smooth reveal
+            const startTime = Date.now();
+            const animationDuration = 400;
+            const animate = () => {
+                map.invalidateSize();
+                if (Date.now() - startTime < animationDuration) {
+                    requestAnimationFrame(animate);
+                }
+            };
+            requestAnimationFrame(animate);
+        };
     });
 })();
