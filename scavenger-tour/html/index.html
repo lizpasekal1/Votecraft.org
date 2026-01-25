@@ -76,9 +76,44 @@
                 padding-bottom: env(safe-area-inset-bottom);
             }
         }
+
+        /* Page transition overlay */
+        .page-transition-overlay {
+            position: fixed;
+            inset: 0;
+            background: #0f172a;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+        .page-transition-overlay.fade-out {
+            opacity: 0;
+        }
     </style>
 </head>
 <body class="safe-area-top safe-area-bottom">
+    <!-- Page transition overlay -->
+    <div class="page-transition-overlay" id="page-overlay"></div>
+    <script>
+        // Fade out overlay to reveal page
+        requestAnimationFrame(() => {
+            document.getElementById('page-overlay').classList.add('fade-out');
+        });
+
+        // Intercept link clicks for fade transition
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a[href]');
+            if (link && link.href && !link.href.startsWith('javascript:') && !link.target) {
+                e.preventDefault();
+                const overlay = document.getElementById('page-overlay');
+                overlay.classList.remove('fade-out');
+                setTimeout(() => {
+                    window.location.href = link.href;
+                }, 300);
+            }
+        });
+    </script>
     <div class="max-w-2xl mx-auto min-h-screen flex flex-col items-center justify-center px-6 py-12">
 
         <!-- Logo -->
@@ -104,7 +139,7 @@
         </p>
 
         <!-- Start Button -->
-        <a href="scavenger-tour.html" class="fade-in-delay-2">
+        <a href="tour-select.html" class="fade-in-delay-2">
             <button class="btn-primary text-white font-bold text-xl px-16 py-4 rounded-full">
                 Start
             </button>
