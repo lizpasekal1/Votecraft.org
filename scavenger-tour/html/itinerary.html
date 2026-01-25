@@ -219,7 +219,7 @@
         }
 
         .directions-content.open {
-            max-height: 600px;
+            max-height: 700px;
         }
 
         .directions-loading-inline {
@@ -348,13 +348,28 @@
             margin-top: 0.75rem;
             border-radius: 0.5rem;
             overflow: hidden;
-            background: #0d1117;
+            background: #f5f5f5;
         }
 
         .route-map {
-            height: 150px;
+            height: 200px;
             width: 100%;
             border-radius: 0.5rem;
+        }
+
+        /* Compact zoom controls for route maps */
+        .route-map .leaflet-control-zoom {
+            margin: 8px !important;
+            border-radius: 6px !important;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
+        }
+
+        .route-map .leaflet-control-zoom a {
+            width: 28px !important;
+            height: 28px !important;
+            line-height: 28px !important;
+            font-size: 14px !important;
         }
     </style>
 </head>
@@ -744,26 +759,31 @@
             }
 
             const map = L.map(containerId, {
-                zoomControl: false,
-                dragging: false,
-                touchZoom: false,
-                scrollWheelZoom: false,
-                doubleClickZoom: false,
+                zoomControl: true,
+                dragging: true,
+                touchZoom: true,
+                scrollWheelZoom: true,
+                doubleClickZoom: true,
                 boxZoom: false,
                 keyboard: false,
                 attributionControl: false
             });
 
-            // Add tile layer
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            // Add tile layer - using Voyager for better street name visibility
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                 maxZoom: 19
             }).addTo(map);
 
-            // Draw route polyline
+            // Draw route polyline with shadow for visibility
+            L.polyline(routeCoords, {
+                color: '#000',
+                weight: 7,
+                opacity: 0.3
+            }).addTo(map);
             const polyline = L.polyline(routeCoords, {
                 color: themeColor,
-                weight: 4,
-                opacity: 0.9
+                weight: 5,
+                opacity: 1
             }).addTo(map);
 
             // Add start marker (green)
