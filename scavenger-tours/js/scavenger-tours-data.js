@@ -40,9 +40,9 @@ const CIVIC_SAMPLER_TOUR = [
         description: "Built in 1742 by merchant Peter Faneuil, this hall hosted the debates that sparked a revolution. Samuel Adams, James Otis, and the Sons of Liberty gathered here to protest the Stamp Act and rally colonists toward independence. The phrase 'Cradle of Liberty' was earned here.",
         learnMore: "Frederick Douglass, Susan B. Anthony, and JFK all spoke from this same stage. The grasshopper weathervane on the roof, made by Shem Drowne in 1742, has been a Boston landmark for nearly 300 years.",
         songs: [
-            { title: "We Shall Overcome", url: "https://soundcloud.com/joan-baez/we-shall-overcome-5", reason: "The anthem of the civil rights movement, echoing the spirit of peaceful protest that filled these halls." },
-            { title: "Won't Back Down", url: "https://soundcloud.com/popetcetera/i-wont-back-down-tom-petty", reason: "A defiant declaration of standing firm in the face of opposition." },
-            { title: "Fanfare for the Common Man", url: "https://soundcloud.com/naborchestra/fanfare-for-the-common-man", reason: "Aaron Copland's majestic brass fanfare celebrating ordinary citizens who build democracy." }
+            { title: "We Shall Overcome", url: "https://www.youtube.com/watch?v=QhnPVP23rzo", reason: "The anthem of the civil rights movement, echoing the spirit of peaceful protest that filled these halls." },
+            { title: "Won't Back Down", url: "https://www.youtube.com/watch?v=nvlTJrNJ5lA", reason: "A defiant declaration of standing firm in the face of opposition." },
+            { title: "Fanfare for the Common Man", url: "https://www.youtube.com/watch?v=cr6CnG5dmvM", reason: "Aaron Copland's majestic brass fanfare celebrating ordinary citizens who build democracy." }
         ]
     },
     {
@@ -58,9 +58,9 @@ const CIVIC_SAMPLER_TOUR = [
         description: "Charles Bulfinch designed this iconic building in 1798. The golden dome was originally wood shingles, then covered in copper by Paul Revere's company, and finally gilded with 23-karat gold leaf in 1874. It has watched over Massachusetts politics for over 225 years.",
         learnMore: "The 'Sacred Cod' wooden carving has hung in the House chamber since 1784, symbolizing the fishing industry's importance to the colony. In 1933, Harvard students 'codnapped' it as a prank.",
         songs: [
-            { title: "Lean on Me", url: "https://soundcloud.com/bill-withers-official/lean-on-me-2", reason: "A timeless call for community support that embodies the spirit of universal healthcare." },
-            { title: "Heal the World", url: "https://soundcloud.com/shivoypandita/michael-jackson-heal-the-world-acoustic-cover", reason: "A plea for compassion and taking care of one another." },
-            { title: "What a Wonderful World", url: "https://soundcloud.com/louisarmstrongofficial/what-a-wonderful-world", reason: "Louis Armstrong's jazz standard celebrating the beauty of life and human connection." }
+            { title: "Lean on Me", url: "https://www.youtube.com/watch?v=fOZ-MySzAac", reason: "A timeless call for community support that embodies the spirit of universal healthcare." },
+            { title: "Heal the World", url: "https://www.youtube.com/watch?v=BWf-eARnf6U", reason: "A plea for compassion and taking care of one another." },
+            { title: "What a Wonderful World", url: "https://www.youtube.com/watch?v=A3yCcXgbKrE", reason: "Louis Armstrong's jazz standard celebrating the beauty of life and human connection." }
         ]
     },
     {
@@ -76,9 +76,9 @@ const CIVIC_SAMPLER_TOUR = [
         description: "On March 5, 1770, British soldiers fired into a crowd here, killing five colonists including Crispus Attucks, a Black man who became the first martyr of the Revolution. The cobblestone circle marks where blood was shed for the cause of representation.",
         learnMore: "John Adams defended the British soldiers in court to prove the colonies could provide fair trials. The Declaration of Independence was read from the balcony on July 18, 1776.",
         songs: [
-            { title: "A Change Is Gonna Come", url: "https://soundcloud.com/samcooke/a-change-is-gonna-come", reason: "A civil rights anthem about the ongoing struggle for equal representation." },
-            { title: "Respect", url: "https://soundcloud.com/arethafranklin/respect", reason: "A demand for dignity and recognition that became a civil rights anthem." },
-            { title: "Strange Fruit", url: "https://soundcloud.com/billie-holiday-official/strange-fruit", reason: "Billie Holiday's haunting jazz protest against racial violence and injustice." }
+            { title: "A Change Is Gonna Come", url: "https://www.youtube.com/watch?v=wEBlaMOmKV4", reason: "A civil rights anthem about the ongoing struggle for equal representation." },
+            { title: "Respect", url: "https://www.youtube.com/watch?v=6FOUqQt3Kg0", reason: "A demand for dignity and recognition that became a civil rights anthem." },
+            { title: "Strange Fruit", url: "https://www.youtube.com/watch?v=Web007rzSOI", reason: "Billie Holiday's haunting jazz protest against racial violence and injustice." }
         ]
     },
     {
@@ -94,9 +94,9 @@ const CIVIC_SAMPLER_TOUR = [
         description: "Established in 1634, this is America's oldest public park - common land where anyone could graze cattle. It's been a British Army camp, a public hanging site, and a gathering place for protests. The Common represents land that belongs to everyone.",
         learnMore: "Martin Luther King Jr. spoke here in 1965 to 22,000 people. During the Revolution, British troops camped here, and the Common was used as a staging ground for the march to Lexington.",
         songs: [
-            { title: "Fast Car", url: "https://soundcloud.com/tracychapmanofficial/tracy-chapman-fast-car", reason: "An urgent plea for escape from poverty that resonates with today's housing crisis." },
-            { title: "Allentown", url: "https://soundcloud.com/billyjoel/allentown", reason: "A portrait of working-class struggle in a changing economy." },
-            { title: "Rhapsody in Blue", url: "https://soundcloud.com/george-gershwin-official/rhapsody-in-blue", reason: "Gershwin's jazz-classical fusion capturing the energy and struggle of urban American life." }
+            { title: "Fast Car", url: "https://www.youtube.com/watch?v=DwrHwZyFN7M", reason: "An urgent plea for escape from poverty that resonates with today's housing crisis." },
+            { title: "Allentown", url: "https://www.youtube.com/watch?v=BHnJp0oyOxs", reason: "A portrait of working-class struggle in a changing economy." },
+            { title: "Rhapsody in Blue", url: "https://www.youtube.com/watch?v=ynEOo28lsbc", reason: "Gershwin's jazz-classical fusion capturing the energy and struggle of urban American life." }
         ]
     },
     {
@@ -112,9 +112,9 @@ const CIVIC_SAMPLER_TOUR = [
         description: "Samuel Adams, Paul Revere, John Hancock, and victims of the Boston Massacre rest here among 2,300 graves. These founders were descendants of immigrants who fled religious persecution in Europe. America has always been shaped by newcomers seeking freedom.",
         learnMore: "Paul Revere's family were French Huguenot refugees (originally named Rivoire). Benjamin Franklin's parents and the parents of John Hancock are also buried here.",
         songs: [
-            { title: "This Land Is Your Land", url: "https://soundcloud.com/brucespringsteen/this-land-is-your-land-live", reason: "A folk anthem reminding us that America was built by immigrants seeking freedom." },
-            { title: "American Tune", url: "https://soundcloud.com/paulsimon/american-tune", reason: "Paul Simon's gentle reflection on the immigrant experience and American identity." },
-            { title: "New World Symphony", url: "https://soundcloud.com/antonindvorak/symphony-no-9-new-world", reason: "Dvořák's symphony celebrating America, written by a Czech immigrant inspired by spirituals." }
+            { title: "This Land Is Your Land", url: "https://www.youtube.com/watch?v=wxiMrvDbq3s", reason: "A folk anthem reminding us that America was built by immigrants seeking freedom." },
+            { title: "American Tune", url: "https://www.youtube.com/watch?v=sFBfMmHJOHo", reason: "Paul Simon's gentle reflection on the immigrant experience and American identity." },
+            { title: "New World Symphony", url: "https://www.youtube.com/watch?v=ETNoPqYAIPI", reason: "Dvořák's symphony celebrating America, written by a Czech immigrant inspired by spirituals." }
         ]
     },
     {
@@ -130,9 +130,9 @@ const CIVIC_SAMPLER_TOUR = [
         description: "This French Second Empire building served as Boston's City Hall from 1865-1969. Benjamin Franklin was born on Milk Street nearby in 1706, and a statue of him stands in the courtyard. The bronze donkey outside has been rubbed shiny by visitors for good luck.",
         learnMore: "The donkey and elephant statues outside commemorate the first use of these party symbols. A sidewalk mosaic marks the site of Boston Latin School where Franklin was a student.",
         songs: [
-            { title: "9 to 5", url: "https://soundcloud.com/dollyparton/9-to-5-10", reason: "A working-class anthem highlighting economic inequality and the struggle of everyday workers." },
-            { title: "Money", url: "https://soundcloud.com/gisselgarciaband/money-pink-floyd-cover", reason: "A satirical take on greed and the corrupting power of wealth." },
-            { title: "Take Five", url: "https://soundcloud.com/davebrubeck/take-five", reason: "Dave Brubeck's cool jazz classic - sophistication meets the working rhythm of American life." }
+            { title: "9 to 5", url: "https://www.youtube.com/watch?v=UbxUSsFXYo4", reason: "A working-class anthem highlighting economic inequality and the struggle of everyday workers." },
+            { title: "Money", url: "https://www.youtube.com/watch?v=-0kcet4aPpQ", reason: "A satirical take on greed and the corrupting power of wealth." },
+            { title: "Take Five", url: "https://www.youtube.com/watch?v=vmDDOFXSgAs", reason: "Dave Brubeck's cool jazz classic - sophistication meets the working rhythm of American life." }
         ]
     },
     {
@@ -148,9 +148,9 @@ const CIVIC_SAMPLER_TOUR = [
         description: "On December 16, 1773, 5,000 colonists packed this church to debate the tea tax. When Governor Hutchinson refused to let the tea ships leave, Samuel Adams gave the signal: 'This meeting can do nothing more.' That night, the Boston Tea Party began.",
         learnMore: "The tea dumped was worth over $1.7 million in today's dollars. British troops nearly demolished the building during occupation, using it as a riding school.",
         songs: [
-            { title: "Big Yellow Taxi", url: "https://soundcloud.com/jonimitchell/big-yellow-taxi", reason: "An environmental classic warning about losing paradise before it's too late." },
-            { title: "Mercy Mercy Me", url: "https://soundcloud.com/marvingaye/mercy-mercy-me-the-ecology", reason: "Marvin Gaye's soulful plea for environmental awareness." },
-            { title: "The Four Seasons - Spring", url: "https://soundcloud.com/antoniovivaldi/the-four-seasons-spring", reason: "Vivaldi's celebration of nature's cycles - a reminder of what we stand to lose." }
+            { title: "Big Yellow Taxi", url: "https://www.youtube.com/watch?v=94bdMSCdw20", reason: "An environmental classic warning about losing paradise before it's too late." },
+            { title: "Mercy Mercy Me", url: "https://www.youtube.com/watch?v=U5lxiA7wWnQ", reason: "Marvin Gaye's soulful plea for environmental awareness." },
+            { title: "The Four Seasons - Spring", url: "https://www.youtube.com/watch?v=6LAPFM3dgag", reason: "Vivaldi's celebration of nature's cycles - a reminder of what we stand to lose." }
         ]
     },
     {
@@ -166,9 +166,9 @@ const CIVIC_SAMPLER_TOUR = [
         description: "Founded in 1686 as the first Anglican church in Puritan Boston, King's Chapel was built on a corner of the town burying ground because no colonist would sell land for a Church of England. The current granite building dates to 1754.",
         learnMore: "The adjacent King's Chapel Burying Ground (1630) is Boston's oldest cemetery. Notable burials include Mary Chilton, the first woman to step off the Mayflower, and William Dawes, who rode with Paul Revere.",
         songs: [
-            { title: "The Message", url: "https://soundcloud.com/grandmasterflashmusic/the-message-12-single-version", reason: "Groundbreaking social commentary on how student debt traps a generation." },
-            { title: "Another Brick in the Wall", url: "https://soundcloud.com/pinkfloydofficial/another-brick-in-the-wall-pt-2", reason: "Pink Floyd's critique of rigid education systems." },
-            { title: "Clair de Lune", url: "https://soundcloud.com/claudedebussy/clair-de-lune", reason: "Debussy's dreamy piano piece - the beauty of classical education and contemplation." }
+            { title: "The Message", url: "https://www.youtube.com/watch?v=gYMkEMCHtJ4", reason: "Groundbreaking social commentary on how student debt traps a generation." },
+            { title: "Another Brick in the Wall", url: "https://www.youtube.com/watch?v=YR5ApYxkU-U", reason: "Pink Floyd's critique of rigid education systems." },
+            { title: "Clair de Lune", url: "https://www.youtube.com/watch?v=CvFH_6DNRCY", reason: "Debussy's dreamy piano piece - the beauty of classical education and contemplation." }
         ]
     },
     {
@@ -184,9 +184,9 @@ const CIVIC_SAMPLER_TOUR = [
         description: "Paul Revere lived here from 1770-1800. His midnight ride spread the news: 'The British are coming!' In an era before mass media, information traveled by horseback. Revere was an early 'influencer' - his engraving of the Boston Massacre shaped public opinion.",
         learnMore: "Revere's engraving of the Boston Massacre was propaganda - it depicted soldiers firing in formation, not the chaotic reality. This is the oldest remaining structure in downtown Boston (c. 1680).",
         songs: [
-            { title: "The Sound of Silence", url: "https://soundcloud.com/simon-garfunkel-official/the-sound-of-silence-album-1", reason: "A haunting meditation on communication and how people fail to truly connect." },
-            { title: "Dirty Laundry", url: "https://soundcloud.com/donhenley/dirty-laundry", reason: "Don Henley's critique of sensationalist media." },
-            { title: "So What", url: "https://soundcloud.com/milesdavissonymusic/so-what-album-version-1", reason: "Miles Davis' cool jazz masterpiece - questioning everything with sophistication." }
+            { title: "The Sound of Silence", url: "https://www.youtube.com/watch?v=4fWyzwo1xg0", reason: "A haunting meditation on communication and how people fail to truly connect." },
+            { title: "Dirty Laundry", url: "https://www.youtube.com/watch?v=YHimia_Fxzs", reason: "Don Henley's critique of sensationalist media." },
+            { title: "So What", url: "https://www.youtube.com/watch?v=zqNTltOGh5c", reason: "Miles Davis' cool jazz masterpiece - questioning everything with sophistication." }
         ]
     },
     {
@@ -202,9 +202,9 @@ const CIVIC_SAMPLER_TOUR = [
         description: "On April 18, 1775, sexton Robert Newman hung two lanterns in this steeple: 'Two if by sea.' The signal launched the Revolution. This church reminds us that ordinary people, taking courageous action, can change history. The balance of power matters.",
         learnMore: "Built in 1723, this is Boston's oldest surviving church building. The steeple, rebuilt after hurricanes in 1804 and 1954, holds eight bells cast in 1744 - the oldest church bells in North America.",
         songs: [
-            { title: "Blowin' in the Wind", url: "https://soundcloud.com/bobdylan/blowin-in-the-wind", reason: "Dylan's timeless questions about peace, freedom, and how long change takes." },
-            { title: "The Times They Are A-Changin", url: "https://soundcloud.com/bobdylan/the-times-they-are-a-changin", reason: "Dylan's timeless call for leaders to heed the winds of change." },
-            { title: "A Love Supreme", url: "https://soundcloud.com/johncoltrane/a-love-supreme", reason: "Coltrane's spiritual jazz meditation on justice, faith, and transcendence." }
+            { title: "Blowin' in the Wind", url: "https://www.youtube.com/watch?v=vWwgrjjIMXA", reason: "Dylan's timeless questions about peace, freedom, and how long change takes." },
+            { title: "The Times They Are A-Changin", url: "https://www.youtube.com/watch?v=90WD_ats6eE", reason: "Dylan's timeless call for leaders to heed the winds of change." },
+            { title: "A Love Supreme", url: "https://www.youtube.com/watch?v=ll3CMgiUPuU", reason: "Coltrane's spiritual jazz meditation on justice, faith, and transcendence." }
         ]
     }
 ];
