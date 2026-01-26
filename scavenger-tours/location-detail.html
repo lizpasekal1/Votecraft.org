@@ -667,6 +667,7 @@
                         <div class="song-player mb-2 mt-3">
                             <iframe id="player-${index}" width="100%" height="${embed.height}" scrolling="no" frameborder="no" allow="autoplay; encrypted-media"
                                     src="${embed.embedUrl}" ${embed.type === 'youtube' ? 'allowfullscreen' : ''}></iframe>
+                            ${embed.type === 'youtube' ? '<p class="tap-to-play-hint text-gray-500 text-xs text-center mt-1" style="display:none;">Tap the video to play</p>' : ''}
                         </div>
                         <!-- Song Reason -->
                         ${song.reason ? `<p class="song-reason">${song.reason}</p>` : ''}
@@ -755,6 +756,9 @@
         // Track currently playing song
         let currentlyPlaying = null;
 
+        // Detect if on mobile/iOS
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
         // Helper to send commands to SoundCloud iframe
         function soundcloudCommand(iframe, command) {
             if (iframe && iframe.contentWindow) {
@@ -765,8 +769,23 @@
         // Helper to control YouTube by reloading iframe with/without autoplay
         function youtubeControl(iframe, videoId, shouldPlay) {
             if (iframe && videoId) {
-                const baseUrl = `https://www.youtube.com/embed/${videoId}?rel=0&enablejsapi=1`;
-                iframe.src = shouldPlay ? `${baseUrl}&autoplay=1` : baseUrl;
+                const baseUrl = `https://www.youtube.com/embed/${videoId}?rel=0&enablejsapi=1&playsinline=1`;
+                // On mobile, don't use autoplay - it won't work anyway
+                if (isMobile) {
+                    iframe.src = baseUrl;
+                } else {
+                    iframe.src = shouldPlay ? `${baseUrl}&autoplay=1` : baseUrl;
+                }
+            }
+        }
+
+        // Show tap hint for YouTube on mobile
+        function showTapHint(songItem) {
+            const hint = songItem.querySelector('.tap-to-play-hint');
+            if (hint && isMobile) {
+                hint.style.display = 'block';
+                // Hide after 3 seconds
+                setTimeout(() => { hint.style.display = 'none'; }, 3000);
             }
         }
 
@@ -808,6 +827,7 @@
                     setTimeout(() => {
                         if (songInfo.type === 'youtube') {
                             youtubeControl(iframe, songInfo.videoId, true);
+                            showTapHint(songItem);
                         } else {
                             soundcloudCommand(iframe, 'play');
                         }
@@ -816,6 +836,7 @@
                     // Already expanded, play immediately
                     if (songInfo.type === 'youtube') {
                         youtubeControl(iframe, songInfo.videoId, true);
+                        showTapHint(songItem);
                     } else {
                         soundcloudCommand(iframe, 'play');
                     }
