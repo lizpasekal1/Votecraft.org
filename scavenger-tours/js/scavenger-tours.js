@@ -50,8 +50,15 @@
     // Initialize map
     function initMap() {
         const config = VOTECRAFT_MAP_CONFIG;
+
+        // Use Fenway/Longwood center for healthcare tour
+        let mapCenter = config.center;
+        if (currentTourId === 'healthcare') {
+            mapCenter = [42.3380, -71.0990]; // Fenway/Longwood Medical Area
+        }
+
         map = L.map(mapElement, {
-            center: config.center,
+            center: mapCenter,
             zoom: config.zoom,
             minZoom: config.minZoom,
             maxZoom: config.maxZoom,
