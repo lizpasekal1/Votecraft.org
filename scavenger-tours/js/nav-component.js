@@ -138,11 +138,23 @@
                             </div>
                         </div>
 
-                        <!-- Settings -->
-                        <a href="profile.html?tour=${currentTourId}&tab=settings" class="nav-menu-item">
-                            ${navIcons.settings}
-                            <span>Settings</span>
-                        </a>
+                        <!-- Settings Accordion -->
+                        <div class="accordion" id="settings-accordion">
+                            <button class="accordion-trigger nav-menu-item" onclick="toggleNavAccordion('settings-accordion')" aria-expanded="false">
+                                ${navIcons.settings}
+                                <span class="flex-1 text-left">Settings</span>
+                                ${navIcons.chevron}
+                            </button>
+
+                            <div class="accordion-content">
+                                <div class="accordion-item" style="justify-content: space-between;">
+                                    <span class="text-white text-sm">Offline Mode</span>
+                                    <div id="offline-toggle" class="w-10 h-6 bg-gray-600 rounded-full relative cursor-pointer" onclick="toggleOfflineMode()">
+                                        <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Emporium -->
                         <a href="https://votecraft.org/emporium/" class="nav-menu-item">
@@ -162,6 +174,16 @@
             document.querySelector('.nav-drawer-overlay').classList.add('open');
             document.querySelector('.nav-drawer').classList.add('open');
             document.body.classList.add('drawer-open');
+
+            // Initialize offline toggle state
+            const offlineMode = localStorage.getItem('votecraft_offline_mode') === 'true';
+            const toggle = document.getElementById('offline-toggle');
+            if (toggle && offlineMode) {
+                toggle.classList.add('active');
+                toggle.style.backgroundColor = '#3B82F6';
+                const dot = toggle.querySelector('div');
+                if (dot) dot.style.transform = 'translateX(16px)';
+            }
         });
     };
 
@@ -198,6 +220,22 @@
         setTimeout(() => {
             window.location.href = `scavenger-tours.html?tour=${tourId}`;
         }, 300);
+    };
+
+    // Toggle offline mode
+    window.toggleOfflineMode = function() {
+        const toggle = document.getElementById('offline-toggle');
+        if (!toggle) return;
+
+        const isOn = toggle.classList.toggle('active');
+        const dot = toggle.querySelector('div');
+        if (dot) {
+            dot.style.transform = isOn ? 'translateX(16px)' : 'translateX(0)';
+        }
+        toggle.style.backgroundColor = isOn ? '#3B82F6' : '#4B5563';
+
+        // Save preference
+        localStorage.setItem('votecraft_offline_mode', isOn ? 'true' : 'false');
     };
 
     // Auto-attach to menu button if it exists
