@@ -1035,20 +1035,20 @@ const ART_TOUR = [
     },
     {
         id: 11,
-        name: "What Lifts You Wings Mural",
-        location: "The Lenox Hotel, Boylston & Exeter St",
-        coordinates: [42.3491, -71.0766],
+        name: "Boston Heart and Wings Mural",
+        location: "65 Causeway St, near TD Garden",
+        coordinates: [42.3662, -71.0622],
         creator: "VoteCraft Boston",
         likes: 534,
         civicTheme: CIVIC_THEMES.HEALTHCARE,
         widget: "life-expectancy",
-        image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&q=80",
-        description: "Artist Kelsey Montague painted these giant blue and yellow wings on The Lenox Hotel, steps from the Boston Marathon finish line. Part of her #WhatLiftsYou series, visitors pose with the wings behind them. The interactive mural celebrates resilience, aspiration, and the spirit of Boston Strong.",
-        learnMore: "Montague's wings have appeared in cities worldwide, each asking 'What lifts you?' Near the marathon finish, runners and survivors pose with wings representing triumph over adversity.",
+        image: "https://lh3.googleusercontent.com/gps-cs-s/AHVAweqtpI5lAyYpwG8SHuQo4NFBjsv31L8PSDdt1ekpWF3iHu3s2H7PIJ_oj5IRcQQ3P8NqR6j2Jd7E_JAz61i-ygednbQD9xzfL_SuS2drtiadcihYCzYDNm0a4Re4jWj_Y7QuCjjl=s680-w680-h510-rw",
+        description: "This vibrant mural near TD Garden features a red anatomical heart with colorful wings spreading outward. The heart with wings is a universal symbol of love, courage, and freedom - the soaring spirit that art can inspire. Visitors pose here to share their own 'winged hearts' on social media.",
+        learnMore: "Street art transforms urban spaces into galleries accessible to everyone. This mural near the sports arena reminds thousands daily that art belongs in public spaces, not just museums.",
         songs: [
-            { title: "Fly", url: "https://www.youtube.com/watch?v=I_izvAbhExY", reason: "Maddie & Tae's inspiring modern anthem about spreading your wings and rising up." },
-            { title: "Roar", url: "https://www.youtube.com/watch?v=CevxZvSJLk8", reason: "Katy Perry's empowering anthem of rising above adversity." },
-            { title: "Fight Song", url: "https://www.youtube.com/watch?v=xo1VInw-SKc", reason: "Rachel Platten's 2015 anthem about taking back your life and being stronger." }
+            { title: "Fly", url: "https://www.youtube.com/watch?v=I_izvAbhExY", reason: "Maddie & Tae's inspiring anthem about spreading your wings and rising up." },
+            { title: "Unbreak My Heart", url: "https://www.youtube.com/watch?v=p2Rch6WvPJE", reason: "Toni Braxton's powerful ballad about hearts that heal and soar again." },
+            { title: "Wings", url: "https://www.youtube.com/watch?v=cMPfG0To2OM", reason: "Little Mix's empowering song about finding the strength to fly." }
         ]
     }
 ];
