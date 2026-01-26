@@ -4,7 +4,7 @@
  */
 
 // Map configuration - centered on Freedom Trail / Government Center area
-const PLANETUNE_MAP_CONFIG = {
+const VOTECRAFT_MAP_CONFIG = {
     center: [42.3580, -71.0600], // Government Center / Park Street area
     zoom: 16,
     minZoom: 3,
@@ -26,7 +26,7 @@ const CIVIC_THEMES = {
 };
 
 // Freedom Trail Civic Sampler - 10 stops covering all themes
-const PLANETUNE_PLAYLISTS = [
+const CIVIC_SAMPLER_TOUR = [
     {
         id: 1,
         name: "Faneuil Hall: Cradle of Liberty",
@@ -38,11 +38,11 @@ const PLANETUNE_PLAYLISTS = [
         widget: "rcv-demo",
         image: "https://upload.wikimedia.org/wikipedia/commons/3/35/2017_Faneuil_Hall.jpg",
         description: "Built in 1742 by merchant Peter Faneuil, this hall hosted the debates that sparked a revolution. Samuel Adams, James Otis, and the Sons of Liberty gathered here to protest the Stamp Act and rally colonists toward independence. The phrase 'Cradle of Liberty' was earned here.",
-        learnMore: "Frederick Douglass, Susan B. Anthony, and JFK all spoke from this same stage. Massachusetts voters approved RCV for local elections in 2020.",
+        learnMore: "Frederick Douglass, Susan B. Anthony, and JFK all spoke from this same stage. The grasshopper weathervane on the roof, made by Shem Drowne in 1742, has been a Boston landmark for nearly 300 years.",
         songs: [
-            { title: "Fight the Power", url: "https://soundcloud.com/public-enemy-music/fight-the-power-1", reason: "A revolutionary anthem that captures the spirit of resistance against tyranny." },
+            { title: "We Shall Overcome", url: "https://soundcloud.com/peteseeger/we-shall-overcome", reason: "The anthem of the civil rights movement, echoing the spirit of peaceful protest that filled these halls." },
             { title: "Won't Back Down", url: "https://soundcloud.com/tompettyandtheheartbreakers/i-won-t-back-down-1", reason: "A defiant declaration of standing firm in the face of opposition." },
-            { title: "Revolution", url: "https://soundcloud.com/beatles-songs/revolution-1-remastered-2009", reason: "The Beatles' call to question authority while seeking change." }
+            { title: "Fanfare for the Common Man", url: "https://soundcloud.com/naborchestra/fanfare-for-the-common-man", reason: "Aaron Copland's majestic brass fanfare celebrating ordinary citizens who build democracy." }
         ]
     },
     {
@@ -55,12 +55,12 @@ const PLANETUNE_PLAYLISTS = [
         civicTheme: CIVIC_THEMES.HEALTHCARE,
         widget: "healthcare-cost",
         image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Massachusetts_State_House_-_Boston%2C_MA_-_DSC04664.JPG/3840px-Massachusetts_State_House_-_Boston%2C_MA_-_DSC04664.JPG",
-        description: "Charles Bulfinch designed this iconic building in 1798. The golden dome (originally wood, then copper by Paul Revere, gilded in 1874) has watched over Massachusetts politics for over 225 years. In 2006, Governor Romney signed the nation's first universal healthcare law here.",
-        learnMore: "The 'Sacred Cod' hanging in the House chamber has been there since 1784, symbolizing the fishing industry's importance. MA's healthcare law became the model for the ACA.",
+        description: "Charles Bulfinch designed this iconic building in 1798. The golden dome was originally wood shingles, then covered in copper by Paul Revere's company, and finally gilded with 23-karat gold leaf in 1874. It has watched over Massachusetts politics for over 225 years.",
+        learnMore: "The 'Sacred Cod' wooden carving has hung in the House chamber since 1784, symbolizing the fishing industry's importance to the colony. In 1933, Harvard students 'codnapped' it as a prank.",
         songs: [
             { title: "Lean on Me", url: "https://soundcloud.com/bill-withers-official/lean-on-me-2", reason: "A timeless call for community support that embodies the spirit of universal healthcare." },
             { title: "Heal the World", url: "https://soundcloud.com/michaeljackson/heal-the-world", reason: "A plea for compassion and taking care of one another." },
-            { title: "People Get Ready", url: "https://soundcloud.com/curtismayfield/people-get-ready", reason: "A gospel-soul anthem about hope and coming together." }
+            { title: "What a Wonderful World", url: "https://soundcloud.com/louisarmstrongofficial/what-a-wonderful-world", reason: "Louis Armstrong's jazz standard celebrating the beauty of life and human connection." }
         ]
     },
     {
@@ -74,11 +74,11 @@ const PLANETUNE_PLAYLISTS = [
         widget: "voter-turnout",
         image: "https://upload.wikimedia.org/wikipedia/commons/1/19/Old_State_House_Boston_2009f.JPG",
         description: "On March 5, 1770, British soldiers fired into a crowd here, killing five colonists including Crispus Attucks, a Black man who became the first martyr of the Revolution. The cobblestone circle marks where blood was shed for the cause of representation.",
-        learnMore: "John Adams defended the British soldiers in court to prove the colonies could provide fair trials. Only 66% of eligible Americans voted in 2020 - the highest in 120 years.",
+        learnMore: "John Adams defended the British soldiers in court to prove the colonies could provide fair trials. The Declaration of Independence was read from the balcony on July 18, 1776.",
         songs: [
             { title: "A Change Is Gonna Come", url: "https://soundcloud.com/samcooke/a-change-is-gonna-come", reason: "A civil rights anthem about the ongoing struggle for equal representation." },
             { title: "Respect", url: "https://soundcloud.com/arethafranklin/respect", reason: "A demand for dignity and recognition that became a civil rights anthem." },
-            { title: "Glory", url: "https://soundcloud.com/johnlegend/glory", reason: "An Oscar-winning tribute to the ongoing fight for justice and equality." }
+            { title: "Strange Fruit", url: "https://soundcloud.com/billie-holiday-official/strange-fruit", reason: "Billie Holiday's haunting jazz protest against racial violence and injustice." }
         ]
     },
     {
@@ -92,11 +92,11 @@ const PLANETUNE_PLAYLISTS = [
         widget: "housing-cost",
         image: "https://upload.wikimedia.org/wikipedia/commons/6/60/Boston_Common_view.jpg",
         description: "Established in 1634, this is America's oldest public park - common land where anyone could graze cattle. It's been a British Army camp, a public hanging site, and a gathering place for protests. The Common represents land that belongs to everyone.",
-        learnMore: "Martin Luther King Jr. spoke here in 1965. Today, Boston's median rent is $3,200/month - requiring an income of $128,000/year to afford.",
+        learnMore: "Martin Luther King Jr. spoke here in 1965 to 22,000 people. During the Revolution, British troops camped here, and the Common was used as a staging ground for the march to Lexington.",
         songs: [
             { title: "Fast Car", url: "https://soundcloud.com/tracychapmanofficial/tracy-chapman-fast-car", reason: "An urgent plea for escape from poverty that resonates with today's housing crisis." },
             { title: "Allentown", url: "https://soundcloud.com/billyjoel/allentown", reason: "A portrait of working-class struggle in a changing economy." },
-            { title: "Streets of Philadelphia", url: "https://soundcloud.com/brucespringsteen/streets-of-philadelphia", reason: "A haunting look at urban displacement and those left behind." }
+            { title: "Rhapsody in Blue", url: "https://soundcloud.com/george-gershwin-official/rhapsody-in-blue", reason: "Gershwin's jazz-classical fusion capturing the energy and struggle of urban American life." }
         ]
     },
     {
@@ -110,11 +110,11 @@ const PLANETUNE_PLAYLISTS = [
         widget: "immigration-data",
         image: "https://upload.wikimedia.org/wikipedia/commons/1/14/Boston_Granary_Burying_Ground_Grabstein_Totenkopf_9441_20190429.jpg",
         description: "Samuel Adams, Paul Revere, John Hancock, and victims of the Boston Massacre rest here among 2,300 graves. These founders were descendants of immigrants who fled religious persecution in Europe. America has always been shaped by newcomers seeking freedom.",
-        learnMore: "Paul Revere's family were French Huguenot refugees. Immigrants or their children founded 45% of Fortune 500 companies.",
+        learnMore: "Paul Revere's family were French Huguenot refugees (originally named Rivoire). Benjamin Franklin's parents and the parents of John Hancock are also buried here.",
         songs: [
             { title: "This Land Is Your Land", url: "https://soundcloud.com/brucespringsteen/this-land-is-your-land-live", reason: "A folk anthem reminding us that America was built by immigrants seeking freedom." },
-            { title: "Immigrant Song", url: "https://soundcloud.com/likiuliki/led-zeppelin-immigrant-song", reason: "A thunderous ode to journeys across oceans to new lands." },
-            { title: "American Land", url: "https://soundcloud.com/brucespringsteen/american-land", reason: "A celebration of the immigrant dream and America's promise." }
+            { title: "American Tune", url: "https://soundcloud.com/paulsimon/american-tune", reason: "Paul Simon's gentle reflection on the immigrant experience and American identity." },
+            { title: "New World Symphony", url: "https://soundcloud.com/antonindvorak/symphony-no-9-new-world", reason: "Dvořák's symphony celebrating America, written by a Czech immigrant inspired by spirituals." }
         ]
     },
     {
@@ -127,12 +127,12 @@ const PLANETUNE_PLAYLISTS = [
         civicTheme: CIVIC_THEMES.ECONOMY,
         widget: "wealth-inequality",
         image: "https://upload.wikimedia.org/wikipedia/commons/4/4a/Old_City_Hall_in_Boston%2C_Massachusetts.jpg",
-        description: "This French Second Empire building served as Boston's City Hall from 1865-1969. Benjamin Franklin was born on this street in 1706. The building that once housed democratic power is now luxury offices and a steakhouse - a metaphor for America's economy.",
-        learnMore: "The donkey statue outside commemorates the Democratic Party's symbol. The top 1% now own more wealth than the bottom 90% combined.",
+        description: "This French Second Empire building served as Boston's City Hall from 1865-1969. Benjamin Franklin was born on Milk Street nearby in 1706, and a statue of him stands in the courtyard. The bronze donkey outside has been rubbed shiny by visitors for good luck.",
+        learnMore: "The donkey and elephant statues outside commemorate the first use of these party symbols. A sidewalk mosaic marks the site of Boston Latin School where Franklin was a student.",
         songs: [
             { title: "9 to 5", url: "https://soundcloud.com/dollyparton/9-to-5-10", reason: "A working-class anthem highlighting economic inequality and the struggle of everyday workers." },
             { title: "Money", url: "https://soundcloud.com/pinkfloydofficial/money", reason: "A satirical take on greed and the corrupting power of wealth." },
-            { title: "Talkin Bout a Revolution", url: "https://soundcloud.com/tracychapmanofficial/talkin-bout-a-revolution", reason: "A quiet call for economic justice from those who have the least." }
+            { title: "Take Five", url: "https://soundcloud.com/davebrubeck/take-five", reason: "Dave Brubeck's cool jazz classic - sophistication meets the working rhythm of American life." }
         ]
     },
     {
@@ -145,12 +145,12 @@ const PLANETUNE_PLAYLISTS = [
         civicTheme: CIVIC_THEMES.CLIMATE,
         widget: "climate-impact",
         image: "https://upload.wikimedia.org/wikipedia/commons/d/d2/The_Old_South_Meeting_House.jpg",
-        description: "On December 16, 1773, 5,000 colonists packed this church to debate the tea tax. When Governor Hutchinson refused to let tea ships leave, Samuel Adams gave the signal: 'This meeting can do nothing more.' The Boston Tea Party began. Today we face a new crisis.",
-        learnMore: "The tea dumped was worth $1.7 million in today's dollars. By 2050, parts of Boston could flood 90+ days per year due to climate change.",
+        description: "On December 16, 1773, 5,000 colonists packed this church to debate the tea tax. When Governor Hutchinson refused to let the tea ships leave, Samuel Adams gave the signal: 'This meeting can do nothing more.' That night, the Boston Tea Party began.",
+        learnMore: "The tea dumped was worth over $1.7 million in today's dollars. British troops nearly demolished the building during occupation, using it as a riding school.",
         songs: [
             { title: "Big Yellow Taxi", url: "https://soundcloud.com/jonimitchell/big-yellow-taxi", reason: "An environmental classic warning about losing paradise before it's too late." },
             { title: "Mercy Mercy Me", url: "https://soundcloud.com/marvingaye/mercy-mercy-me-the-ecology", reason: "Marvin Gaye's soulful plea for environmental awareness." },
-            { title: "Earth Song", url: "https://soundcloud.com/michaeljackson/earth-song", reason: "A powerful cry for environmental justice and healing." }
+            { title: "The Four Seasons - Spring", url: "https://soundcloud.com/antoniovivaldi/the-four-seasons-spring", reason: "Vivaldi's celebration of nature's cycles - a reminder of what we stand to lose." }
         ]
     },
     {
@@ -163,12 +163,12 @@ const PLANETUNE_PLAYLISTS = [
         civicTheme: CIVIC_THEMES.EDUCATION,
         widget: "student-debt",
         image: "https://upload.wikimedia.org/wikipedia/commons/0/0a/Boston_-_King%27s_Chapel_%2848718908106%29.jpg",
-        description: "Founded in 1686 as the first Anglican church in Puritan Boston, King's Chapel stands near the site of America's first public school (Boston Latin, 1635). The Puritans believed education was radical - everyone should read scripture. Today, student debt tops $1.7 trillion.",
-        learnMore: "Boston Latin School alumni include Samuel Adams, Benjamin Franklin, and John Hancock. Average student debt: $37,000.",
+        description: "Founded in 1686 as the first Anglican church in Puritan Boston, King's Chapel was built on a corner of the town burying ground because no colonist would sell land for a Church of England. The current granite building dates to 1754.",
+        learnMore: "The adjacent King's Chapel Burying Ground (1630) is Boston's oldest cemetery. Notable burials include Mary Chilton, the first woman to step off the Mayflower, and William Dawes, who rode with Paul Revere.",
         songs: [
             { title: "The Message", url: "https://soundcloud.com/grandmasterflashmusic/the-message-12-single-version", reason: "Groundbreaking social commentary on how student debt traps a generation." },
             { title: "Another Brick in the Wall", url: "https://soundcloud.com/pinkfloydofficial/another-brick-in-the-wall-pt-2", reason: "Pink Floyd's critique of rigid education systems." },
-            { title: "Changes", url: "https://soundcloud.com/2pac/changes", reason: "Tupac's reflection on education as a path to breaking cycles." }
+            { title: "Clair de Lune", url: "https://soundcloud.com/claudedebussy/clair-de-lune", reason: "Debussy's dreamy piano piece - the beauty of classical education and contemplation." }
         ]
     },
     {
@@ -182,11 +182,11 @@ const PLANETUNE_PLAYLISTS = [
         widget: "media-trust",
         image: "https://upload.wikimedia.org/wikipedia/commons/c/cf/Paul_Revere_House%2C_Boston%2C_2023-02-21.jpg",
         description: "Paul Revere lived here from 1770-1800. His midnight ride spread the news: 'The British are coming!' In an era before mass media, information traveled by horseback. Revere was an early 'influencer' - his engraving of the Boston Massacre shaped public opinion.",
-        learnMore: "Revere's engraving was propaganda - it depicted soldiers firing in formation, not the chaotic reality. Only 32% of Americans trust the media today.",
+        learnMore: "Revere's engraving of the Boston Massacre was propaganda - it depicted soldiers firing in formation, not the chaotic reality. This is the oldest remaining structure in downtown Boston (c. 1680).",
         songs: [
-            { title: "Sympathy for the Devil", url: "https://soundcloud.com/therollingstones/sympathy-for-the-devil", reason: "An exploration of manipulation and how information shapes public opinion." },
+            { title: "The Sound of Silence", url: "https://soundcloud.com/simonandgarfunkel/the-sound-of-silence", reason: "A haunting meditation on communication and how people fail to truly connect." },
             { title: "Dirty Laundry", url: "https://soundcloud.com/donhenley/dirty-laundry", reason: "Don Henley's critique of sensationalist media." },
-            { title: "Radio Ga Ga", url: "https://soundcloud.com/queen-official/radio-ga-ga-remastered-2011", reason: "Queen's ode to media's power and its decline." }
+            { title: "So What", url: "https://soundcloud.com/milesdavis/so-what", reason: "Miles Davis' cool jazz masterpiece - questioning everything with sophistication." }
         ]
     },
     {
@@ -200,11 +200,11 @@ const PLANETUNE_PLAYLISTS = [
         widget: "scotus-approval",
         image: "https://upload.wikimedia.org/wikipedia/commons/5/56/Paul_Revere_church_interior%2C_Boston%2C_Mass._2.jpg",
         description: "On April 18, 1775, sexton Robert Newman hung two lanterns in this steeple: 'Two if by sea.' The signal launched the Revolution. This church reminds us that ordinary people, taking courageous action, can change history. The balance of power matters.",
-        learnMore: "The church's box pews were originally owned by wealthy families. Supreme Court approval dropped to 40% in 2023 - the lowest ever recorded.",
+        learnMore: "Built in 1723, this is Boston's oldest surviving church building. The steeple, rebuilt after hurricanes in 1804 and 1954, holds eight bells cast in 1744 - the oldest church bells in North America.",
         songs: [
-            { title: "Sunday Bloody Sunday", url: "https://soundcloud.com/u2official/sunday-bloody-sunday", reason: "A protest against injustice and abuse of power by those in authority." },
-            { title: "Killing in the Name", url: "https://soundcloud.com/raborak/rage-against-the-machine-killing-in-the-name", reason: "Rage Against the Machine's explosive critique of institutional power." },
-            { title: "The Times They Are A-Changin", url: "https://soundcloud.com/bobdylan/the-times-they-are-a-changin", reason: "Dylan's timeless call for leaders to heed the winds of change." }
+            { title: "Blowin' in the Wind", url: "https://soundcloud.com/bobdylan/blowin-in-the-wind", reason: "Dylan's timeless questions about peace, freedom, and how long change takes." },
+            { title: "The Times They Are A-Changin", url: "https://soundcloud.com/bobdylan/the-times-they-are-a-changin", reason: "Dylan's timeless call for leaders to heed the winds of change." },
+            { title: "A Love Supreme", url: "https://soundcloud.com/johncoltrane/a-love-supreme", reason: "Coltrane's spiritual jazz meditation on justice, faith, and transcendence." }
         ]
     }
 ];
@@ -1045,7 +1045,7 @@ const SCOTUS_TOUR = [
 
 // Update tour types with new stop counts
 const ALL_TOURS = {
-    'civic-sampler': PLANETUNE_PLAYLISTS,
+    'civic-sampler': CIVIC_SAMPLER_TOUR,
     'healthcare': HEALTHCARE_TOUR,
     'voting-rights': VOTING_TOUR,
     'art-action': ART_TOUR
