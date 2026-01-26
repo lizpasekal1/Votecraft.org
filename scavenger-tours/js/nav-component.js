@@ -59,6 +59,9 @@
         </svg>`,
         check: `<svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+        </svg>`,
+        shop: `<svg class="nav-menu-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
         </svg>`
     };
 
@@ -129,6 +132,12 @@
                         <a href="profile.html?tour=${currentTourId}" class="nav-menu-item">
                             ${navIcons.user}
                             <span>Account</span>
+                        </a>
+
+                        <!-- Emporium -->
+                        <a href="https://votecraft.org/emporium/" class="nav-menu-item">
+                            ${navIcons.shop}
+                            <span>Emporium</span>
                         </a>
                     </div>
                 </div>
