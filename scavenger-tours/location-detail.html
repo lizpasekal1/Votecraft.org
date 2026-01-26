@@ -610,6 +610,7 @@
                 if (youtubeMatch) {
                     return {
                         type: 'youtube',
+                        videoId: youtubeMatch[1],
                         embedUrl: `https://www.youtube.com/embed/${youtubeMatch[1]}?rel=0&enablejsapi=1&origin=${window.location.origin}`,
                         height: 200
                     };
@@ -618,13 +619,14 @@
                 const encodedUrl = encodeURIComponent(url);
                 return {
                     type: 'soundcloud',
+                    videoId: null,
                     embedUrl: `https://w.soundcloud.com/player/?url=${encodedUrl}&color=%23${embedColor}&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&show_artwork=true&visual=true`,
                     height: 166
                 };
             }
 
-            // Store song types for play/pause control
-            const songTypes = {};
+            // Store song info globally for play/pause control
+            window.songData = {};
 
             let html = '';
             songs.forEach((song, index) => {
@@ -632,8 +634,8 @@
                 const isRanked = rank !== null;
                 const embed = getEmbedInfo(song.url);
                 const artist = getArtistFromUrl(song.url);
-                // Store type for play/pause control
-                songTypes[index] = embed.type;
+                // Store song info globally for play/pause control
+                window.songData[index] = { type: embed.type, videoId: embed.videoId };
 
                 html += `
                 <div class="song-item" data-index="${index}">
@@ -753,17 +755,6 @@
         // Track currently playing song
         let currentlyPlaying = null;
 
-        // Helper to send commands to YouTube iframe
-        function youtubeCommand(iframe, command) {
-            if (iframe && iframe.contentWindow) {
-                iframe.contentWindow.postMessage(JSON.stringify({
-                    event: 'command',
-                    func: command,
-                    args: []
-                }), '*');
-            }
-        }
-
         // Helper to send commands to SoundCloud iframe
         function soundcloudCommand(iframe, command) {
             if (iframe && iframe.contentWindow) {
@@ -771,16 +762,24 @@
             }
         }
 
+        // Helper to control YouTube by reloading iframe with/without autoplay
+        function youtubeControl(iframe, videoId, shouldPlay) {
+            if (iframe && videoId) {
+                const baseUrl = `https://www.youtube.com/embed/${videoId}?rel=0&enablejsapi=1`;
+                iframe.src = shouldPlay ? `${baseUrl}&autoplay=1` : baseUrl;
+            }
+        }
+
         // Play/pause song toggle
         window.playSong = function(index) {
             const songItem = document.querySelector(`.song-item[data-index="${index}"]`);
             const iframe = document.getElementById(`player-${index}`);
-            const type = songTypes[index] || 'soundcloud';
+            const songInfo = window.songData[index] || { type: 'soundcloud', videoId: null };
 
             if (currentlyPlaying === index) {
                 // Currently playing this song - pause it
-                if (type === 'youtube') {
-                    youtubeCommand(iframe, 'pauseVideo');
+                if (songInfo.type === 'youtube') {
+                    youtubeControl(iframe, songInfo.videoId, false);
                 } else {
                     soundcloudCommand(iframe, 'pause');
                 }
@@ -791,9 +790,9 @@
                 if (currentlyPlaying !== null) {
                     const prevIframe = document.getElementById(`player-${currentlyPlaying}`);
                     const prevItem = document.querySelector(`.song-item[data-index="${currentlyPlaying}"]`);
-                    const prevType = songTypes[currentlyPlaying] || 'soundcloud';
-                    if (prevType === 'youtube') {
-                        youtubeCommand(prevIframe, 'pauseVideo');
+                    const prevInfo = window.songData[currentlyPlaying] || { type: 'soundcloud', videoId: null };
+                    if (prevInfo.type === 'youtube') {
+                        youtubeControl(prevIframe, prevInfo.videoId, false);
                     } else {
                         soundcloudCommand(prevIframe, 'pause');
                     }
@@ -807,16 +806,16 @@
                     songItem.classList.add('expanded');
                     // Wait for expansion animation, then play
                     setTimeout(() => {
-                        if (type === 'youtube') {
-                            youtubeCommand(iframe, 'playVideo');
+                        if (songInfo.type === 'youtube') {
+                            youtubeControl(iframe, songInfo.videoId, true);
                         } else {
                             soundcloudCommand(iframe, 'play');
                         }
                     }, 350);
                 } else {
                     // Already expanded, play immediately
-                    if (type === 'youtube') {
-                        youtubeCommand(iframe, 'playVideo');
+                    if (songInfo.type === 'youtube') {
+                        youtubeControl(iframe, songInfo.videoId, true);
                     } else {
                         soundcloudCommand(iframe, 'play');
                     }
@@ -842,9 +841,9 @@
                                 if (currentlyPlaying !== null && currentlyPlaying !== idx) {
                                     const prevIframe = document.getElementById(`player-${currentlyPlaying}`);
                                     const prevItem = document.querySelector(`.song-item[data-index="${currentlyPlaying}"]`);
-                                    const prevType = songTypes[currentlyPlaying] || 'soundcloud';
-                                    if (prevType === 'youtube') {
-                                        youtubeCommand(prevIframe, 'pauseVideo');
+                                    const prevInfo = window.songData[currentlyPlaying] || { type: 'soundcloud', videoId: null };
+                                    if (prevInfo.type === 'youtube') {
+                                        youtubeControl(prevIframe, prevInfo.videoId, false);
                                     } else {
                                         soundcloudCommand(prevIframe, 'pause');
                                     }
