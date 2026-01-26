@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="screen-orientation" content="landscape">
+  <title>Power Plays - Rules</title>
+  <link rel="stylesheet" href="../css/rules.css">
+</head>
+<body>
+
+<div class="rules-container" id="rulesContainer">
+
+  <!-- Card 1: Title -->
+  <section class="rule-card">
+    <div class="card-content title-card">
+      <h1>POWER PLAYS</h1>
+      <p class="tagline">A card game of color, strategy & political power</p>
+      <p>2–6 Players</p>
+      <p class="start-hint">Swipe to learn the rules →</p>
+    </div>
+  </section>
+
+  <!-- Card 2: Overview -->
+  <section class="rule-card">
+    <div class="card-content">
+      <h2>Overview</h2>
+      <p>Match cards by <strong>color</strong> or <strong>symbol</strong> to empty your hand.</p>
+      <p>Use power cards, lobby for influence, and vote to shift momentum.</p>
+      <div class="highlight-box">
+        <strong>Goal:</strong> Be the first player to play all your cards.
+      </div>
+    </div>
+  </section>
+
+  <!-- Card 3: Card Colors -->
+  <section class="rule-card">
+    <div class="card-content">
+      <h2>Card Colors (Power Systems)</h2>
+      <div class="color-grid">
+        <div class="color-card blue">
+          <span class="title">🔵 BLUE</span>
+          <span class="desc">Legislative — Voting, group effects</span>
+        </div>
+        <div class="color-card yellow">
+          <span class="title">🟡 YELLOW</span>
+          <span class="desc">Executive — Speed, skips, reversals</span>
+        </div>
+        <div class="color-card red">
+          <span class="title">🔴 RED</span>
+          <span class="desc">Judicial — Blocking, canceling</span>
+        </div>
+        <div class="color-card green">
+          <span class="title">🟢 GREEN</span>
+          <span class="desc">Federal Reserve — Trading, discards</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Card 4: Setup -->
+  <section class="rule-card">
+    <div class="card-content">
+      <h2>Setup</h2>
+      <ol>
+        <li>Shuffle the main deck</li>
+        <li>Deal <strong>7 cards</strong> to each player</li>
+        <li>Place remaining cards as the <strong>Draw Pile</strong></li>
+        <li>Flip top card to start the <strong>Play Pile</strong></li>
+        <li>Each player draws 1 secret <strong>Lobbying Card</strong></li>
+      </ol>
+      <div class="color-grid" style="margin-top: 15px;">
+        <div class="color-card black">
+          <span class="title">BILL</span>
+          <span class="desc">Legislative-focused</span>
+        </div>
+        <div class="color-card black">
+          <span class="title">COURT CASE</span>
+          <span class="desc">Judicial-focused</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Card 5: On Your Turn -->
+  <section class="rule-card">
+    <div class="card-content">
+      <h2>On Your Turn</h2>
+      <div class="two-col">
+        <div>
+          <h3>1. Play a Card</h3>
+          <p>Match the top card by:</p>
+          <ul>
+            <li><strong>Color</strong>, OR</li>
+            <li><strong>Symbol</strong></li>
+          </ul>
+          <p>Action cards resolve immediately.</p>
+        </div>
+        <div>
+          <h3>2. Draw</h3>
+          <p>Can't play? Draw one card.</p>
+          <ul>
+            <li>If playable, you may play it</li>
+            <li>Otherwise, turn ends</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Card 6: Action Cards -->
+  <section class="rule-card">
+    <div class="card-content">
+      <h2>Action Cards</h2>
+      <div class="action-list">
+        <div class="action-item">
+          <span class="name">Skip</span>
+          <span>Next player loses their turn</span>
+        </div>
+        <div class="action-item">
+          <span class="name">Reverse</span>
+          <span>Change play direction</span>
+        </div>
+        <div class="action-item">
+          <span class="name">Draw 2</span>
+          <span>Target draws two cards</span>
+        </div>
+        <div class="action-item">
+          <span class="name">Swap Hands</span>
+          <span>Trade hands with another player</span>
+        </div>
+        <div class="action-item">
+          <span class="name">Block</span>
+          <span>Cancel the last action</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Card 7: Vote Card -->
+  <section class="rule-card">
+    <div class="card-content">
+      <h2>Vote Card (Wild)</h2>
+      <ol>
+        <li>Acts as a <strong>Wild</strong> — choose the active color</li>
+        <li>All players vote with a card of that color</li>
+        <li>Highest number wins (actions = 0)</li>
+        <li>Reveal votes simultaneously</li>
+      </ol>
+      <div class="highlight-box">
+        <strong>Tie?</strong> Player with fewer cards wins. Still tied? No one wins.
+      </div>
+    </div>
+  </section>
+
+  <!-- Card 8: Vote Rewards -->
+  <section class="rule-card">
+    <div class="card-content">
+      <h2>Vote Rewards</h2>
+      <p>Win a vote? Gain another Lobby Card matching yours:</p>
+      <div class="color-grid">
+        <div class="color-card black">
+          <span class="title">Have BILL?</span>
+          <span class="desc">+1 Bill Lobby Card</span>
+        </div>
+        <div class="color-card black">
+          <span class="title">Have COURT CASE?</span>
+          <span class="desc">+1 Court Case Card</span>
+        </div>
+      </div>
+      <div class="highlight-box success">
+        This represents <strong>successful lobbying</strong>.
+      </div>
+    </div>
+  </section>
+
+  <!-- Card 9: Using Lobby Cards -->
+  <section class="rule-card">
+    <div class="card-content">
+      <h2>Using Lobbying Cards</h2>
+      <p>Reveal your Lobby Card when you play a matching color:</p>
+      <div class="action-list">
+        <div class="action-item">
+          <span class="name" style="color: #2196F3;">Play BLUE</span>
+          <span>→ Reveal Bill Lobby Card</span>
+        </div>
+        <div class="action-item">
+          <span class="name" style="color: #f44336;">Play RED</span>
+          <span>→ Reveal Court Case Card</span>
+        </div>
+      </div>
+      <div class="highlight-box">
+        Apply the bonus, then discard the Lobby Card.
+      </div>
+    </div>
+  </section>
+
+  <!-- Card 10: Calling Power -->
+  <section class="rule-card">
+    <div class="card-content">
+      <h2>Calling "POWER!"</h2>
+      <p style="font-size: 1.2em; text-align: center; margin: 20px 0;">
+        When you have <strong>ONE CARD LEFT</strong>...
+      </p>
+      <p style="font-size: 2em; text-align: center; color: #ffd700; margin: 15px 0;">
+        Say "POWER!"
+      </p>
+      <div class="highlight-box warning">
+        <strong>Caught?</strong> If another player catches you before your next turn, draw 2 cards.
+      </div>
+    </div>
+  </section>
+
+  <!-- Card 11: Winning -->
+  <section class="rule-card">
+    <div class="card-content">
+      <h2>Winning the Game</h2>
+      <p style="font-size: 1.3em; text-align: center; margin: 20px 0;">
+        First player to play their <strong>final card</strong> wins!
+      </p>
+      <div class="highlight-box">
+        <strong>Optional:</strong> Play multiple rounds. Reset Lobby Cards each round.
+      </div>
+    </div>
+  </section>
+
+  <!-- Card 12: What It Teaches -->
+  <section class="rule-card">
+    <div class="card-content">
+      <h2>What This Teaches</h2>
+      <ul style="list-style: none; padding: 0; font-size: 1.1em;">
+        <li>⚖️ Collective vs individual power</li>
+        <li>⏱️ Timing matters</li>
+        <li>💰 Influence can be built and spent</li>
+        <li>📜 Rules can be shaped, not just followed</li>
+        <li>🤫 Quiet strategy beats loud moves</li>
+      </ul>
+      <p style="text-align: center; margin-top: 20px; color: #ffd700;">
+        Now you're ready to play!
+      </p>
+    </div>
+  </section>
+
+</div>
+
+<!-- Navigation Dots -->
+<div class="nav-dots" id="navDots"></div>
+
+<!-- Swipe Hint -->
+<div class="swipe-hint">
+  <span>Swipe</span>
+  <span>→</span>
+</div>
+
+<script>
+  const container = document.getElementById('rulesContainer');
+  const cards = document.querySelectorAll('.rule-card');
+  const navDots = document.getElementById('navDots');
+
+  // Create navigation dots
+  cards.forEach((_, index) => {
+    const dot = document.createElement('div');
+    dot.className = 'nav-dot' + (index === 0 ? ' active' : '');
+    dot.addEventListener('click', () => {
+      cards[index].scrollIntoView({ behavior: 'smooth', inline: 'start' });
+    });
+    navDots.appendChild(dot);
+  });
+
+  // Update active dot on scroll
+  const dots = document.querySelectorAll('.nav-dot');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const index = Array.from(cards).indexOf(entry.target);
+        dots.forEach((dot, i) => {
+          dot.classList.toggle('active', i === index);
+        });
+      }
+    });
+  }, {
+    root: container,
+    threshold: 0.5
+  });
+
+  cards.forEach(card => observer.observe(card));
+
+  // Hide swipe hint after first swipe
+  container.addEventListener('scroll', () => {
+    document.querySelector('.swipe-hint').style.display = 'none';
+  }, { once: true });
+</script>
+
+</body>
+</html>
