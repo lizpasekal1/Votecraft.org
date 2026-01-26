@@ -406,6 +406,24 @@ const HEALTHCARE_TOUR = [
             { title: "Fix You", url: "https://www.youtube.com/watch?v=k4V3Mo61fJM", reason: "Coldplay's tender promise of healing and comfort." },
             { title: "Let It Be", url: "https://www.youtube.com/watch?v=QDYfEBY9NM4", reason: "The Beatles' soothing message of acceptance and peace." }
         ]
+    },
+    {
+        id: 12,
+        name: "Grouping of Works from Fountain",
+        location: "401 Park, Fenway",
+        coordinates: [42.3436, -71.1025],
+        creator: "VoteCraft Boston",
+        likes: 312,
+        civicTheme: CIVIC_THEMES.DEMOCRACY,
+        widget: "mental-health",
+        image: "https://goodmantaft.com/wp-content/uploads/2019/06/grouping-of-works-from-fountain-nicole-eisenberg-goodmantaft-5-1920x1080.jpg",
+        description: "Nicole Eisenman's first permanent public sculpture in the US features three bronze figures of indeterminate gender lounging around a shallow wading pool. Water spurts from their bodies in whimsical ways. The artist insisted visitors can wade in - public art meant to be touched and experienced.",
+        learnMore: "Based on Eisenman's 2017 'Sketch for a Fountain' for Germany's Skulptur Projekte Münster, which was vandalized in what organizers called 'fascist violence.' The Boston version was cast in durable bronze. The oversized hands and feet honor physical labor and those who work with their hands.",
+        songs: [
+            { title: "Splish Splash", url: "https://www.youtube.com/watch?v=Pr-Vfnd7Yno", reason: "Bobby Darin's playful ode to bathing and water fun." },
+            { title: "Under Pressure", url: "https://www.youtube.com/watch?v=a01QQZyl-_I", reason: "Queen & Bowie's meditation on human connection under stress - like water under pressure." },
+            { title: "Lovely Day", url: "https://www.youtube.com/watch?v=bEeaS6fuUoA", reason: "Bill Withers' sunny optimism perfect for lounging by a fountain." }
+        ]
     }
 ];
 
@@ -981,24 +999,6 @@ const ART_TOUR = [
             { title: "Fly", url: "https://www.youtube.com/watch?v=I_izvAbhExY", reason: "Maddie & Tae's inspiring anthem about spreading your wings and rising up." },
             { title: "Unbreak My Heart", url: "https://www.youtube.com/watch?v=p2Rch6WvPJE", reason: "Toni Braxton's powerful ballad about hearts that heal and soar again." },
             { title: "Wings", url: "https://www.youtube.com/watch?v=cMPfG0To2OM", reason: "Little Mix's empowering song about finding the strength to fly." }
-        ]
-    },
-    {
-        id: 12,
-        name: "Grouping of Works from Fountain",
-        location: "401 Park, Fenway",
-        coordinates: [42.3436, -71.1025],
-        creator: "VoteCraft Boston",
-        likes: 312,
-        civicTheme: CIVIC_THEMES.DEMOCRACY,
-        widget: "voter-turnout",
-        image: "https://goodmantaft.com/wp-content/uploads/2019/06/grouping-of-works-from-fountain-nicole-eisenberg-goodmantaft-5-1920x1080.jpg",
-        description: "Nicole Eisenman's first permanent public sculpture in the US features three bronze figures of indeterminate gender lounging around a shallow wading pool. Water spurts from their bodies in whimsical ways. The artist insisted visitors can wade in - public art meant to be touched and experienced.",
-        learnMore: "Based on Eisenman's 2017 'Sketch for a Fountain' for Germany's Skulptur Projekte Münster, which was vandalized in what organizers called 'fascist violence.' The Boston version was cast in durable bronze. The oversized hands and feet honor physical labor and those who work with their hands.",
-        songs: [
-            { title: "Splish Splash", url: "https://www.youtube.com/watch?v=Pr-Vfnd7Yno", reason: "Bobby Darin's playful ode to bathing and water fun." },
-            { title: "Under Pressure", url: "https://www.youtube.com/watch?v=a01QQZyl-_I", reason: "Queen & Bowie's meditation on human connection under stress - like water under pressure." },
-            { title: "Lovely Day", url: "https://www.youtube.com/watch?v=bEeaS6fuUoA", reason: "Bill Withers' sunny optimism perfect for lounging by a fountain." }
         ]
     }
 ];
