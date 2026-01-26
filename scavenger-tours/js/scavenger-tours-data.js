@@ -327,6 +327,7 @@ const HEALTHCARE_TOUR = [
         likes: 189,
         civicTheme: CIVIC_THEMES.HOUSING,
         widget: "life-expectancy",
+        image: "https://www.boston.gov/sites/default/files/img/2016/b/backbay-fens_1.jpg",
         description: "America's oldest community garden, the Victory Gardens have fed Bostonians since WWII. Green space is healthcare - studies show access to parks reduces stress, heart disease, and mental illness. But park access is unequal across neighborhoods.",
         learnMore: "Low-income neighborhoods have 4x less park space than wealthy areas. 'Nature deficit disorder' contributes to childhood obesity and anxiety.",
         songs: [
