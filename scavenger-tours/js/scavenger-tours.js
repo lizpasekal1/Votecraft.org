@@ -536,13 +536,6 @@
                         </div>
                     </div>
 
-                    <!-- About Section -->
-                    <div class="mt-6 pt-4 border-t border-gray-700">
-                        <p class="text-gray-500 text-xs px-1 mb-3">About</p>
-                        <div class="text-gray-400 text-sm leading-relaxed">
-                            Explore Boston's Freedom Trail through civic-themed audio tours. Each stop connects historic sites to modern civic issues.
-                        </div>
-                    </div>
                 </div>
 
                 <div class="nav-drawer-footer">
