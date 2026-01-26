@@ -61,6 +61,12 @@
                     <span style="color: #4269FF;">Account</span>
                 </div>
             </div>
+            <!-- Menu Button (absolute right) -->
+            <button id="btn-menu" class="btn-menu absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 rounded-lg">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
         </div>
 
         <!-- Main Content -->
@@ -235,6 +241,9 @@
         </div>
     </div>
 
+    <!-- Modals Container -->
+    <div id="modals"></div>
+
     <!-- Location Data -->
     <script src="./js/scavenger-tours-data.js?v=8"></script>
 
@@ -243,6 +252,9 @@
 
     <!-- Supabase Config -->
     <script src="./js/supabase-config.js?v=20260125"></script>
+
+    <!-- Shared Nav Component -->
+    <script src="./js/nav-component.js?v=1"></script>
 
     <!-- Page JavaScript -->
     <script>
