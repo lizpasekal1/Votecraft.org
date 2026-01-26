@@ -434,23 +434,23 @@
                 <div class="absolute inset-0 bg-black/50"></div>
 
                 <!-- Welcome container - same template for all tours -->
-                <div class="relative z-10 mx-4 px-8 py-10 rounded-2xl text-center max-w-md w-full"
+                <div class="relative z-10 mx-4 px-6 py-6 sm:px-8 sm:py-10 rounded-2xl text-center max-w-md w-full"
                      style="background: ${themeColor}dd;">
                     <!-- Tour icon -->
-                    <div class="text-5xl mb-4">${tour.icon}</div>
+                    <div class="text-4xl sm:text-5xl mb-3">${tour.icon}</div>
 
                     <!-- Tour name -->
-                    <h2 class="text-white text-3xl font-bold mb-3">${tour.name}</h2>
+                    <h2 class="text-white text-2xl sm:text-3xl font-bold mb-2">${tour.name}</h2>
 
                     <!-- Tour description -->
-                    <p class="text-white/80 text-sm mb-2">${tour.description}</p>
+                    <p class="text-white/80 text-sm mb-1">${tour.description}</p>
 
                     <!-- Stop count -->
-                    <p class="text-white/60 text-xs mb-6">${tour.stops} stops to explore</p>
+                    <p class="text-white/60 text-xs mb-4 sm:mb-6">${tour.stops} stops to explore</p>
 
                     <!-- Start button -->
                     <button onclick="startTour('${tourId}')"
-                            class="bg-white font-bold px-8 py-3 rounded-full text-lg hover:bg-gray-100 transition-colors shadow-lg"
+                            class="bg-white font-bold px-6 py-2.5 sm:px-8 sm:py-3 rounded-full text-base sm:text-lg hover:bg-gray-100 transition-colors shadow-lg"
                             style="color: ${themeColor};">
                         Start Tour
                     </button>
