@@ -81,7 +81,19 @@
             <p id="location-address" class="text-gray-400 text-sm mb-4"></p>
 
             <!-- Description -->
-            <p id="location-description" class="text-gray-300 text-sm leading-relaxed mb-4"></p>
+            <p id="location-description" class="text-gray-300 text-sm leading-relaxed mb-2">
+                <span id="description-text"></span>
+            </p>
+
+            <!-- Read More Link -->
+            <p id="read-more-link" class="text-blue-400 cursor-pointer hover:text-blue-300 text-sm font-medium hidden mb-2" onclick="toggleDescriptionMore()">READ MORE ›</p>
+
+            <!-- Description More (accordion) -->
+            <div id="description-more-container" class="overflow-hidden transition-all duration-300 ease-in-out" style="max-height: 0;">
+                <p id="description-more-text" class="text-gray-300 text-sm leading-relaxed mb-4"></p>
+            </div>
+
+            <div id="description-spacer" class="mb-2"></div>
 
             <!-- Learn More Fact -->
             <div id="learn-more-section" class="bg-gray-900 border-l-4 rounded-r-lg p-4 mb-4 hidden">
@@ -427,7 +439,7 @@
     </div>
 
     <!-- Location Data -->
-    <script src="./js/scavenger-tours-data.js?v=37"></script>
+    <script src="./js/scavenger-tours-data.js?v=38"></script>
 
     <!-- Shared Nav Component -->
     <script src="./js/nav-component.js?v=8"></script>
@@ -498,7 +510,29 @@
         // Location details
         document.getElementById('location-name').textContent = location.name;
         document.getElementById('location-address').textContent = location.location;
-        document.getElementById('location-description').textContent = location.description;
+        document.getElementById('description-text').textContent = location.description;
+
+        // Description "Read More" accordion
+        if (location.descriptionMore) {
+            document.getElementById('read-more-link').classList.remove('hidden');
+            document.getElementById('description-more-text').textContent = location.descriptionMore;
+        }
+
+        // Toggle description more accordion
+        let descriptionExpanded = false;
+        window.toggleDescriptionMore = function() {
+            const container = document.getElementById('description-more-container');
+            const link = document.getElementById('read-more-link');
+            descriptionExpanded = !descriptionExpanded;
+
+            if (descriptionExpanded) {
+                container.style.maxHeight = container.scrollHeight + 'px';
+                link.textContent = 'READ LESS ‹';
+            } else {
+                container.style.maxHeight = '0';
+                link.textContent = 'READ MORE ›';
+            }
+        };
 
         // Learn more section
         if (location.learnMore) {

@@ -38,6 +38,7 @@ const CIVIC_SAMPLER_TOUR = [
         widget: "rcv-demo",
         image: "https://upload.wikimedia.org/wikipedia/commons/3/35/2017_Faneuil_Hall.jpg",
         description: "Built in 1742 by merchant Peter Faneuil, this hall hosted the debates that sparked a revolution. Samuel Adams, James Otis, and the Sons of Liberty gathered here to protest the Stamp Act and rally colonists toward independence. The phrase 'Cradle of Liberty' was earned here.",
+        descriptionMore: "The hall's Great Hall on the second floor has witnessed some of the most consequential moments in American history. Abolitionists, suffragists, and labor organizers all used this space to advance their causes. The building was doubled in size by Charles Bulfinch in 1805 but retained its original character as a marketplace on the ground floor and meeting hall above.",
         learnMore: "Frederick Douglass, Susan B. Anthony, and JFK all spoke from this same stage. The grasshopper weathervane on the roof, made by Shem Drowne in 1742, has been a Boston landmark for nearly 300 years.",
         songs: [
             { title: "We Shall Overcome", url: "https://www.youtube.com/watch?v=QhnPVP23rzo", reason: "The anthem of the civil rights movement, echoing the spirit of peaceful protest that filled these halls." },
@@ -56,6 +57,7 @@ const CIVIC_SAMPLER_TOUR = [
         widget: "healthcare-cost",
         image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Massachusetts_State_House_-_Boston%2C_MA_-_DSC04664.JPG/3840px-Massachusetts_State_House_-_Boston%2C_MA_-_DSC04664.JPG",
         description: "Charles Bulfinch designed this iconic building in 1798. The golden dome was originally wood shingles, then covered in copper by Paul Revere's company, and finally gilded with 23-karat gold leaf in 1874. It has watched over Massachusetts politics for over 225 years.",
+        descriptionMore: "Massachusetts was the first state to mandate health insurance coverage in 2006, a model that influenced the Affordable Care Act. The State House remains the center of healthcare policy debates, from prescription drug pricing to mental health parity. Laws passed here directly affect millions of residents' access to care.",
         learnMore: "The 'Sacred Cod' wooden carving has hung in the House chamber since 1784, symbolizing the fishing industry's importance to the colony. In 1933, Harvard students 'codnapped' it as a prank.",
         songs: [
             { title: "Lean on Me", url: "https://www.youtube.com/watch?v=fOZ-MySzAac", reason: "A timeless call for community support that embodies the spirit of universal healthcare." },
@@ -74,6 +76,7 @@ const CIVIC_SAMPLER_TOUR = [
         widget: "voter-turnout",
         image: "https://upload.wikimedia.org/wikipedia/commons/1/19/Old_State_House_Boston_2009f.JPG",
         description: "On March 5, 1770, British soldiers fired into a crowd here, killing five colonists including Crispus Attucks, a Black man who became the first martyr of the Revolution. The cobblestone circle marks where blood was shed for the cause of representation.",
+        descriptionMore: "The Old State House served as the seat of British colonial government and later became Massachusetts' first State House until 1798. Today it operates as a museum where you can stand in the same Council Chamber where royal governors met and revolutionary leaders debated independence. The building barely survived demolition in 1881 when Chicago offered to move it.",
         learnMore: "John Adams defended the British soldiers in court to prove the colonies could provide fair trials. The Declaration of Independence was read from the balcony on July 18, 1776.",
         songs: [
             { title: "A Change Is Gonna Come", url: "https://www.youtube.com/watch?v=wEBlaMOmKV4", reason: "A civil rights anthem about the ongoing struggle for equal representation." },
@@ -92,6 +95,7 @@ const CIVIC_SAMPLER_TOUR = [
         widget: "housing-cost",
         image: "https://upload.wikimedia.org/wikipedia/commons/6/60/Boston_Common_view.jpg",
         description: "Established in 1634, this is America's oldest public park - common land where anyone could graze cattle. It's been a British Army camp, a public hanging site, and a gathering place for protests. The Common represents land that belongs to everyone.",
+        descriptionMore: "The concept of 'common land' - public space accessible to all regardless of wealth - was radical in colonial times and remains vital today. The Common hosted public executions until 1817, and the Great Elm (until 1876) witnessed both hangings and public celebrations. Today, the Public Garden adjacent to the Common was America's first public botanical garden.",
         learnMore: "Martin Luther King Jr. spoke here in 1965 to 22,000 people. During the Revolution, British troops camped here, and the Common was used as a staging ground for the march to Lexington.",
         songs: [
             { title: "Fast Car", url: "https://www.youtube.com/watch?v=DwrHwZyFN7M", reason: "An urgent plea for escape from poverty that resonates with today's housing crisis." },
@@ -110,6 +114,7 @@ const CIVIC_SAMPLER_TOUR = [
         widget: "immigration-data",
         image: "https://upload.wikimedia.org/wikipedia/commons/1/14/Boston_Granary_Burying_Ground_Grabstein_Totenkopf_9441_20190429.jpg",
         description: "Samuel Adams, Paul Revere, John Hancock, and victims of the Boston Massacre rest here among 2,300 graves. These founders were descendants of immigrants who fled religious persecution in Europe. America has always been shaped by newcomers seeking freedom.",
+        descriptionMore: "Walking through these centuries-old graves reveals the waves of immigration that built Boston - Puritans fleeing England, Huguenots escaping France, and later Irish, Italian, and Jewish families seeking opportunity. The ornate slate gravestones with their winged skulls and weeping willows tell stories of colonial life, death, and the hopes immigrants carried across the Atlantic.",
         learnMore: "Paul Revere's family were French Huguenot refugees (originally named Rivoire). Benjamin Franklin's parents and the parents of John Hancock are also buried here.",
         songs: [
             { title: "This Land Is Your Land", url: "https://www.youtube.com/watch?v=wxiMrvDbq3s", reason: "A folk anthem reminding us that America was built by immigrants seeking freedom." },
@@ -128,6 +133,7 @@ const CIVIC_SAMPLER_TOUR = [
         widget: "wealth-inequality",
         image: "https://upload.wikimedia.org/wikipedia/commons/4/4a/Old_City_Hall_in_Boston%2C_Massachusetts.jpg",
         description: "This French Second Empire building served as Boston's City Hall from 1865-1969. Benjamin Franklin was born on Milk Street nearby in 1706, and a statue of him stands in the courtyard. The bronze donkey outside has been rubbed shiny by visitors for good luck.",
+        descriptionMore: "Franklin rose from poverty to become one of America's wealthiest men through hard work, publishing, and shrewd investment. His rags-to-riches story embodies the American Dream, yet today economic mobility has declined significantly. The building now houses a steakhouse and offices, but its granite facade still exudes the civic pride of post-Civil War Boston.",
         learnMore: "The donkey and elephant statues outside commemorate the first use of these party symbols. A sidewalk mosaic marks the site of Boston Latin School where Franklin was a student.",
         songs: [
             { title: "9 to 5", url: "https://www.youtube.com/watch?v=UbxUSsFXYo4", reason: "A working-class anthem highlighting economic inequality and the struggle of everyday workers." },
@@ -146,6 +152,7 @@ const CIVIC_SAMPLER_TOUR = [
         widget: "climate-impact",
         image: "https://upload.wikimedia.org/wikipedia/commons/d/d2/The_Old_South_Meeting_House.jpg",
         description: "On December 16, 1773, 5,000 colonists packed this church to debate the tea tax. When Governor Hutchinson refused to let the tea ships leave, Samuel Adams gave the signal: 'This meeting can do nothing more.' That night, the Boston Tea Party began.",
+        descriptionMore: "The connection between that historic protest and today's climate crisis is direct: the Boston Tea Party was about corporate power and unfair taxation, while modern climate action often confronts fossil fuel companies and their political influence. The building survived near-demolition in 1876 when preservationists launched one of America's first historic preservation campaigns.",
         learnMore: "The tea dumped was worth over $1.7 million in today's dollars. British troops nearly demolished the building during occupation, using it as a riding school.",
         songs: [
             { title: "Big Yellow Taxi", url: "https://www.youtube.com/watch?v=94bdMSCdw20", reason: "An environmental classic warning about losing paradise before it's too late." },
@@ -164,6 +171,7 @@ const CIVIC_SAMPLER_TOUR = [
         widget: "student-debt",
         image: "https://upload.wikimedia.org/wikipedia/commons/0/0a/Boston_-_King%27s_Chapel_%2848718908106%29.jpg",
         description: "Founded in 1686 as the first Anglican church in Puritan Boston, King's Chapel was built on a corner of the town burying ground because no colonist would sell land for a Church of England. The current granite building dates to 1754.",
+        descriptionMore: "The tension between religious freedom and established religion played out on this very corner. King's Chapel became Unitarian after the Revolution, rejecting the Trinity - a theological shift that mirrored the political rejection of royal authority. Education and religion were intertwined: Boston Latin School, founded in 1635 across the street, was America's first public school.",
         learnMore: "The adjacent King's Chapel Burying Ground (1630) is Boston's oldest cemetery. Notable burials include Mary Chilton, the first woman to step off the Mayflower, and William Dawes, who rode with Paul Revere.",
         songs: [
             { title: "The Message", url: "https://www.youtube.com/watch?v=gYMkEMCHtJ4", reason: "Groundbreaking social commentary on how student debt traps a generation." },
@@ -182,6 +190,7 @@ const CIVIC_SAMPLER_TOUR = [
         widget: "media-trust",
         image: "https://upload.wikimedia.org/wikipedia/commons/c/cf/Paul_Revere_House%2C_Boston%2C_2023-02-21.jpg",
         description: "Paul Revere lived here from 1770-1800. His midnight ride spread the news: 'The British are coming!' In an era before mass media, information traveled by horseback. Revere was an early 'influencer' - his engraving of the Boston Massacre shaped public opinion.",
+        descriptionMore: "Revere's story reminds us that information has always been power, and those who control it shape history. His engraving of the Massacre was published within weeks and distributed throughout the colonies. Today, as we navigate an era of social media and misinformation, the question of who controls the narrative remains just as vital to democracy.",
         learnMore: "Revere's engraving of the Boston Massacre was propaganda - it depicted soldiers firing in formation, not the chaotic reality. This is the oldest remaining structure in downtown Boston (c. 1680).",
         songs: [
             { title: "The Sound of Silence", url: "https://www.youtube.com/watch?v=4fWyzwo1xg0", reason: "A haunting meditation on communication and how people fail to truly connect." },
@@ -200,6 +209,7 @@ const CIVIC_SAMPLER_TOUR = [
         widget: "scotus-approval",
         image: "https://upload.wikimedia.org/wikipedia/commons/5/56/Paul_Revere_church_interior%2C_Boston%2C_Mass._2.jpg",
         description: "On April 18, 1775, sexton Robert Newman hung two lanterns in this steeple: 'Two if by sea.' The signal launched the Revolution. This church reminds us that ordinary people, taking courageous action, can change history. The balance of power matters.",
+        descriptionMore: "The Supreme Court's role in American life connects directly to this revolutionary history. The founders who gathered in churches like this one debated how to balance power - between branches, between federal and state government, between majority rule and minority rights. That debate continues in every Supreme Court decision today.",
         learnMore: "Built in 1723, this is Boston's oldest surviving church building. The steeple, rebuilt after hurricanes in 1804 and 1954, holds eight bells cast in 1744 - the oldest church bells in North America.",
         songs: [
             { title: "Blowin' in the Wind", url: "https://www.youtube.com/watch?v=vWwgrjjIMXA", reason: "Dylan's timeless questions about peace, freedom, and how long change takes." },
@@ -222,6 +232,7 @@ const HEALTHCARE_TOUR = [
         widget: "healthcare-cost",
         image: "https://hms.harvard.edu/sites/default/files/teaser-images/750GordonHall_2550%5B4%5D.jpg",
         description: "Founded in 1782, Harvard Medical School trains the doctors who shape American medicine. Its iconic marble quadrangle represents both medical excellence and a history of exclusion - the first Black graduate wasn't until 1850, women not until 1945.",
+        descriptionMore: "The five marble buildings surrounding the quad were completed in 1906, designed in neoclassical style to project authority and permanence. Today, HMS is working to address its historical exclusions through diversity initiatives and scholarship programs. The question of who gets to become a doctor - and who can afford treatment - remains central to healthcare justice.",
         learnMore: "Medical school costs average $250,000. The US has fewer doctors per capita than most developed nations, contributing to healthcare access gaps.",
         songs: [
             { title: "Lean on Me", url: "https://www.youtube.com/watch?v=fOZ-MySzAac", reason: "A timeless message of mutual support - being there when someone needs you." },
@@ -240,6 +251,7 @@ const HEALTHCARE_TOUR = [
         civicTheme: CIVIC_THEMES.HEALTHCARE,
         widget: "healthcare-compare",
         description: "One of America's top hospitals, Brigham pioneered organ transplantation and performs groundbreaking research. But even here, studies show Black patients receive different care than white patients for the same conditions - a crisis the hospital is working to address.",
+        descriptionMore: "The hospital was formed in 1980 from the merger of Peter Bent Brigham Hospital and several women's hospitals. It performed the world's first successful human organ transplant in 1954. Today, Brigham researchers are at the forefront of understanding and eliminating racial bias in clinical algorithms and treatment decisions.",
         learnMore: "Black women are 3x more likely to die from pregnancy complications than white women, even at top hospitals. Racism in medicine is a public health crisis.",
         songs: [
             { title: "What's Going On", url: "https://www.youtube.com/watch?v=H-kA3LoLFdA", reason: "A plea for understanding and equality that speaks to persistent racial disparities." },
@@ -258,6 +270,7 @@ const HEALTHCARE_TOUR = [
         widget: "life-expectancy",
         image: "https://media-cldnry.s-nbcnews.com/image/upload/t_fit-1500w,f_auto,q_auto:best/rockcms/2022-08/220816-one-time-use-boston-children-hospital-se-221p-5584be.jpg",
         description: "America's first pediatric hospital, founded in 1869 to serve children regardless of ability to pay. Today it leads in pediatric research and treatment, but 4 million American children still lack health insurance.",
+        descriptionMore: "The founding mission of 'serving all children regardless of ability to pay' was radical in 1869 and remains aspirational today. Boston Children's has pioneered treatments for congenital heart defects, childhood cancers, and genetic disorders. Its researchers developed the first polio vaccine trial site and continue to lead in gene therapy research.",
         learnMore: "Child poverty rates in the US are among the highest in developed nations. Children in poverty are 2x more likely to have chronic health conditions.",
         songs: [
             { title: "Heal the World", url: "https://www.youtube.com/watch?v=BWf-eARnf6U", reason: "A call to heal the world and make it better for future generations." },
@@ -276,6 +289,7 @@ const HEALTHCARE_TOUR = [
         civicTheme: CIVIC_THEMES.HEALTHCARE,
         widget: "healthcare-cost",
         description: "A world leader in cancer research and treatment, Dana-Farber has pioneered immunotherapy and targeted treatments. But cancer drugs can cost $10,000+ per month - forcing patients to choose between treatment and financial ruin.",
+        descriptionMore: "Founded in 1947 by Sidney Farber, who achieved the first remission in childhood leukemia, Dana-Farber has transformed cancer from a death sentence into a manageable chronic illness for many. The institute's Jimmy Fund, launched with the Boston Red Sox, has raised billions for research. Yet access to these breakthroughs remains deeply unequal.",
         learnMore: "42% of cancer patients deplete their life savings within 2 years of diagnosis. 'Financial toxicity' is now recognized as a side effect of cancer treatment.",
         songs: [
             { title: "Everybody Hurts", url: "https://www.youtube.com/watch?v=5rOiW_xY-kc", reason: "A compassionate message of perseverance for those facing life's hardest battles." },
