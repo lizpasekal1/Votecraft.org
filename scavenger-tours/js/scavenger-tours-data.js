@@ -78,7 +78,7 @@ const CIVIC_SAMPLER_TOUR = [
         songs: [
             { title: "A Change Is Gonna Come", url: "https://www.youtube.com/watch?v=wEBlaMOmKV4", reason: "A civil rights anthem about the ongoing struggle for equal representation." },
             { title: "Respect", url: "https://www.youtube.com/watch?v=6FOUqQt3Kg0", reason: "A demand for dignity and recognition that became a civil rights anthem." },
-            { title: "Strange Fruit", url: "https://www.youtube.com/watch?v=Web007rzSOI", reason: "Billie Holiday's haunting jazz protest against racial violence and injustice." }
+            { title: "God Bless the Child", url: "https://www.youtube.com/watch?v=Z86pXzjAKHU", reason: "Billie Holiday's tender jazz standard about self-reliance and resilience." }
         ]
     },
     {
@@ -283,32 +283,34 @@ const HEALTHCARE_TOUR = [
     },
     {
         id: 5,
-        name: "Joslin Diabetes Center",
-        location: "1 Joslin Pl, Longwood",
-        coordinates: [42.3365, -71.1065],
+        name: "AIDS Memorial in the Fens",
+        location: "The Fens, near Park Drive",
+        coordinates: [42.3415, -71.0955],
         creator: "VoteCraft Boston",
         likes: 267,
         civicTheme: CIVIC_THEMES.ECONOMY,
         widget: "healthcare-compare",
-        description: "The world's largest diabetes research and treatment center, Joslin has led the fight against this epidemic since 1898. Diabetes affects 37 million Americans - and insulin, discovered 100 years ago, still costs Americans 10x what Canadians pay.",
-        learnMore: "1 in 4 diabetics ration insulin due to cost. The same vial costs $30 in Canada and $300 in the US. Insulin's inventors sold the patent for $1.",
+        image: "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&q=80",
+        description: "This quiet memorial honors those lost to the AIDS epidemic. In the 1980s, the government's slow response to AIDS cost thousands of lives. The LGBTQ+ community organized, demanded research funding, and changed how we respond to public health crises.",
+        learnMore: "ACT UP's activism forced faster FDA drug approvals. Today's rapid COVID vaccine development built on systems created by AIDS activists demanding 'Drugs Into Bodies.'",
         songs: [
-            { title: "9 to 5", url: "https://www.youtube.com/watch?v=UbxUSsFXYo4", reason: "A working-class anthem for those who work hard but still can't afford life-saving medicine." },
-            { title: "Money", url: "https://www.youtube.com/watch?v=cpbbuaIA3Ds", reason: "A commentary on how profit drives healthcare costs." },
-            { title: "Allentown", url: "https://www.youtube.com/watch?v=BHnJp0oyOxs", reason: "Billy Joel's portrait of working families struggling to get by." }
+            { title: "That's What Friends Are For", url: "https://www.youtube.com/watch?v=HyTpu6BmE88", reason: "The 1985 charity single that raised millions for AIDS research and showed the power of celebrity activism." },
+            { title: "I'll Be There", url: "https://www.youtube.com/watch?v=mAzLENBOqoE", reason: "The Jackson 5's promise of support that resonates with those who cared for loved ones." },
+            { title: "You've Got a Friend", url: "https://www.youtube.com/watch?v=6ZHdxYf0cWs", reason: "Carole King's tender message of unconditional support." }
         ]
     },
     {
         id: 6,
-        name: "Harvard School of Public Health",
-        location: "677 Huntington Ave",
-        coordinates: [42.3355, -71.1012],
+        name: "Roxbury Health Equity Mural",
+        location: "Dudley Square, Roxbury",
+        coordinates: [42.3295, -71.0845],
         creator: "VoteCraft Boston",
         likes: 234,
         civicTheme: CIVIC_THEMES.CLIMATE,
         widget: "life-expectancy",
-        description: "Public health saved more lives than all medical treatments combined - through vaccines, clean water, and sanitation. This school trains leaders who fight epidemics, but also studies how zip code predicts health more than genetic code.",
-        learnMore: "Life expectancy varies by 30 years between Boston neighborhoods. Public health is about addressing the social conditions that make people sick.",
+        image: "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=800&q=80",
+        description: "This vibrant mural celebrates community health workers who bridge gaps between hospitals and neighborhoods. In Roxbury, life expectancy is 10 years shorter than in Back Bay just 2 miles away. Public art makes these disparities visible.",
+        learnMore: "Zip code predicts health more than genetic code. Community health workers - often from the neighborhoods they serve - are proven to improve health outcomes and reduce costs.",
         songs: [
             { title: "Stayin' Alive", url: "https://www.youtube.com/watch?v=fNFzfwLM72c", reason: "A disco anthem celebrating survival against all odds - also used to teach CPR rhythm." },
             { title: "I Will Survive", url: "https://www.youtube.com/watch?v=ARt9HV9T0w8", reason: "Gloria Gaynor's anthem of resilience and survival." },
@@ -317,19 +319,20 @@ const HEALTHCARE_TOUR = [
     },
     {
         id: 7,
-        name: "Beth Israel Deaconess",
-        location: "330 Brookline Ave",
-        coordinates: [42.3390, -71.1030],
+        name: "Healthcare Heroes Memorial Garden",
+        location: "South End, near Boston Medical Center",
+        coordinates: [42.3345, -71.0720],
         creator: "VoteCraft Boston",
         likes: 298,
         civicTheme: CIVIC_THEMES.IMMIGRATION,
         widget: "healthcare-cost",
-        description: "Born from the merger of two hospitals - one founded by Jewish immigrants in 1916, another by Protestant deaconesses in 1896. Both served communities facing discrimination. Today, immigrant healthcare workers make up 17% of the US healthcare workforce.",
-        learnMore: "29% of US physicians are immigrants. During COVID, immigrant healthcare workers were essential - yet many faced deportation threats.",
+        image: "https://images.unsplash.com/photo-1585435557343-3b348c3c6f5d?w=800&q=80",
+        description: "This memorial garden honors immigrant healthcare workers who risked their lives during the COVID-19 pandemic. Bronze sculptures depict nurses, doctors, and essential workers from around the world. Today, 29% of US physicians are immigrants.",
+        learnMore: "During COVID, immigrant healthcare workers were essential - yet many faced deportation threats. Community gardens like this one provide healing space for workers and patients alike.",
         songs: [
-            { title: "New York, New York", url: "https://www.youtube.com/watch?v=le1QF3uoQNg", reason: "An immigrant success story honoring the essential workers who care for us." },
-            { title: "This Land Is Your Land", url: "https://www.youtube.com/watch?v=wxiMrvDbq3s", reason: "A folk anthem reminding us that immigrants built this nation." },
-            { title: "America", url: "https://www.youtube.com/watch?v=YhSKk-cvblc", reason: "From West Side Story - celebrating the immigrant experience." }
+            { title: "Hero", url: "https://www.youtube.com/watch?v=0IA3ZvCkRkQ", reason: "Mariah Carey's tribute to everyday heroes who save lives." },
+            { title: "Lean on Me", url: "https://www.youtube.com/watch?v=fOZ-MySzAac", reason: "Bill Withers' call for mutual support among healthcare workers." },
+            { title: "We Are the World", url: "https://www.youtube.com/watch?v=M9BNoNFKCBI", reason: "A global anthem of unity celebrating international cooperation in healthcare." }
         ]
     },
     {
@@ -385,70 +388,74 @@ const HEALTHCARE_TOUR = [
     },
     {
         id: 11,
-        name: "Massachusetts Eye and Ear",
-        location: "243 Charles St",
-        coordinates: [42.3362, -71.1045],
+        name: "Perkins School Tactile Garden",
+        location: "Watertown, Perkins School for the Blind",
+        coordinates: [42.3650, -71.1850],
         creator: "VoteCraft Boston",
         likes: 245,
         civicTheme: CIVIC_THEMES.HEALTHCARE,
         widget: "healthcare-cost",
-        description: "Founded in 1824, this specialty hospital pioneered treatments for hearing loss and blindness. Today it leads research into gene therapy for inherited eye diseases. Access to specialized care remains deeply unequal - rural Americans travel hours for specialists.",
-        learnMore: "1 in 8 Americans has hearing loss. Hearing aids cost $2,000-7,000 and Medicare didn't cover them until 2024. Untreated hearing loss increases dementia risk.",
+        image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80",
+        description: "The Perkins School for the Blind features a sensory garden designed for those with visual impairments. Textured sculptures, fragrant plants, and sound installations create an accessible healing space. Helen Keller learned here, proving barriers can be overcome.",
+        learnMore: "1 in 8 Americans has hearing loss, and millions live with visual impairments. Sensory gardens and accessible art demonstrate that healthcare includes designing spaces for all abilities.",
         songs: [
-            { title: "Superstition", url: "https://www.youtube.com/watch?v=0CFuCYNx-1g", reason: "Music that transcends physical limitations - celebrating what we can do, not what we can't." },
-            { title: "I Can See Clearly Now", url: "https://www.youtube.com/watch?v=FscIgtDJFXg", reason: "An optimistic anthem about gaining clarity and vision." },
-            { title: "Signed, Sealed, Delivered", url: "https://www.youtube.com/watch?v=pUj9frKY46E", reason: "Stevie Wonder's joyful celebration of commitment and care." }
+            { title: "Superstition", url: "https://www.youtube.com/watch?v=0CFuCYNx-1g", reason: "Stevie Wonder proving that blindness is no barrier to genius and joy." },
+            { title: "I Can See Clearly Now", url: "https://www.youtube.com/watch?v=FscIgtDJFXg", reason: "An anthem about clarity that transcends physical sight." },
+            { title: "What a Wonderful World", url: "https://www.youtube.com/watch?v=A3yCcXgbKrE", reason: "Louis Armstrong's reminder that the world can be experienced through all senses." }
         ]
     },
     {
         id: 12,
-        name: "Countway Library of Medicine",
-        location: "10 Shattuck St, Longwood",
-        coordinates: [42.3350, -71.1030],
+        name: "Dr. Rebecca Lee Crumpler Memorial",
+        location: "Beacon Hill, near Charles St",
+        coordinates: [42.3560, -71.0700],
         creator: "VoteCraft Boston",
         likes: 178,
         civicTheme: CIVIC_THEMES.EDUCATION,
         widget: "healthcare-compare",
-        description: "One of the world's largest medical libraries, Countway holds 650,000 volumes including rare texts documenting the evolution of medical ethics. Here you can trace how medicine moved from bloodletting to evidence-based care - and the harm done along the way.",
-        learnMore: "The Tuskegee syphilis study, Nazi experiments, and forced sterilizations are documented here. Medical ethics emerged from acknowledging past atrocities.",
+        image: "https://images.unsplash.com/photo-1584982751601-97dcc096659c?w=800&q=80",
+        description: "This bronze sculpture honors Dr. Rebecca Lee Crumpler, the first Black woman to earn a medical degree in the United States, graduating from Boston's New England Female Medical College in 1864. She dedicated her career to serving freed slaves and the poor.",
+        learnMore: "Dr. Crumpler wrote 'A Book of Medical Discourses' in 1883, one of the first medical texts by an African American. Today, only 5% of US physicians are Black - a disparity rooted in centuries of exclusion.",
         songs: [
-            { title: "Everything Is Everything", url: "https://www.youtube.com/watch?v=i3_dOWYHS7I", reason: "A philosophical reflection on how everything changes - including how we heal." },
-            { title: "Changes", url: "https://www.youtube.com/watch?v=pl3vxEudif8", reason: "David Bowie's meditation on transformation and evolution." },
-            { title: "The Times They Are A-Changin'", url: "https://www.youtube.com/watch?v=90WD_ats6eE", reason: "Bob Dylan's call for progress and adaptation." }
+            { title: "Respect", url: "https://www.youtube.com/watch?v=6FOUqQt3Kg0", reason: "Aretha Franklin's anthem for the dignity and recognition denied to pioneers like Dr. Crumpler." },
+            { title: "Lovely Day", url: "https://www.youtube.com/watch?v=bEeaS6fuUoA", reason: "Bill Withers' optimism reflecting the hope Crumpler brought to her patients." },
+            { title: "A Change Is Gonna Come", url: "https://www.youtube.com/watch?v=wEBlaMOmKV4", reason: "Sam Cooke's anthem about the long arc toward equality in medicine." }
         ]
     },
     {
         id: 13,
-        name: "Schepens Eye Research Institute",
-        location: "20 Staniford St, Longwood",
-        coordinates: [42.3368, -71.1055],
+        name: "Mental Health Awareness Mural",
+        location: "Jamaica Plain, Centre Street",
+        coordinates: [42.3125, -71.1150],
         creator: "VoteCraft Boston",
         likes: 156,
         civicTheme: CIVIC_THEMES.VOTING,
         widget: "life-expectancy",
-        description: "Founded by Dr. Charles Schepens, who invented the binocular indirect ophthalmoscope and worked for the Belgian resistance during WWII. Vision loss affects 12 million Americans over 40 - and those without insurance often go untreated until it's too late.",
-        learnMore: "Diabetic retinopathy is the leading cause of blindness in working-age adults. Regular screening prevents 90% of vision loss, but millions skip it.",
+        image: "https://images.unsplash.com/photo-1499781350541-7783f6c6a0c8?w=800&q=80",
+        description: "This colorful community mural breaks the stigma around mental health. Depicting figures emerging from darkness into light, it reminds viewers that mental health is health. One in five Americans experiences mental illness each year.",
+        learnMore: "Suicide is the second leading cause of death for ages 10-34. Yet mental healthcare remains underfunded - only 43% of adults with mental illness receive treatment.",
         songs: [
-            { title: "Hotel California", url: "https://www.youtube.com/watch?v=BciS5krYL80", reason: "A haunting song about being trapped - and the importance of early intervention." },
-            { title: "I Can See Clearly Now", url: "https://www.youtube.com/watch?v=FscIgtDJFXg", reason: "Johnny Nash's hopeful anthem about restored vision and clarity." },
-            { title: "Open Your Eyes", url: "https://www.youtube.com/watch?v=7PBYGu4Az8s", reason: "Snow Patrol's invitation to see the world anew." }
+            { title: "Bridge Over Troubled Water", url: "https://www.youtube.com/watch?v=4G-YQA_bsOU", reason: "Simon & Garfunkel's promise of support through dark times." },
+            { title: "Here Comes the Sun", url: "https://www.youtube.com/watch?v=KQetemT1sWc", reason: "The Beatles' hopeful message that brighter days are coming." },
+            { title: "Three Little Birds", url: "https://www.youtube.com/watch?v=zaGUr6wzyT8", reason: "Bob Marley's reassuring reminder that every little thing is gonna be alright." }
         ]
     },
     {
         id: 14,
-        name: "Harvard Dental School",
-        location: "188 Longwood Ave",
-        coordinates: [42.3385, -71.1048],
+        name: "Nurses Memorial Sculpture",
+        location: "Massachusetts General Hospital grounds",
+        coordinates: [42.3630, -71.0685],
         creator: "VoteCraft Boston",
         likes: 134,
         civicTheme: CIVIC_THEMES.ECONOMY,
         widget: "healthcare-cost",
-        description: "Dental care is healthcare, but America treats it separately. 74 million Americans lack dental insurance. Poor dental health causes heart disease, diabetes complications, and chronic pain. The mouth-body divide in medicine costs lives.",
-        learnMore: "1 in 4 adults has untreated cavities. In the ER, dental problems are the #1 reason for visits that could have been prevented with basic care.",
+        image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=800&q=80",
+        description: "This bronze sculpture honors the nurses who form the backbone of healthcare. Depicting a nurse comforting a patient, it stands near America's oldest hospital. There are 4.2 million nurses in the US - the largest healthcare profession - yet nursing shortages persist.",
+        learnMore: "The average nurse-to-patient ratio has worsened over decades. Studies show each additional patient per nurse increases mortality risk by 7%. Safe staffing saves lives.",
         songs: [
-            { title: "Little Red Corvette", url: "https://www.youtube.com/watch?v=v0KpfrJE4zw", reason: "An energetic song about taking chances - and the gambles people take when they can't afford care." },
-            { title: "Money Money Money", url: "https://www.youtube.com/watch?v=ETxmCCsMoD0", reason: "ABBA's commentary on how money determines access." },
-            { title: "Hard Times", url: "https://www.youtube.com/watch?v=AEB6ibtdPZc", reason: "Paramore's upbeat take on struggling through difficult financial times." }
+            { title: "Lean on Me", url: "https://www.youtube.com/watch?v=fOZ-MySzAac", reason: "Bill Withers' anthem of support, embodying the nurse-patient relationship." },
+            { title: "You've Got a Friend", url: "https://www.youtube.com/watch?v=6ZHdxYf0cWs", reason: "Carole King's tender promise of care when you need it most." },
+            { title: "Hero", url: "https://www.youtube.com/watch?v=0IA3ZvCkRkQ", reason: "Mariah Carey's tribute to everyday healthcare heroes." }
         ]
     },
     {
@@ -506,7 +513,7 @@ const VOTING_TOUR = [
         learnMore: "Since 2010, 25 states have enacted new voting restrictions. Texas closed 750 polling places in primarily Black and Hispanic neighborhoods.",
         songs: [
             { title: "Get Up, Stand Up", url: "https://www.youtube.com/watch?v=F6iEnUBSYJA", reason: "A call to stand up for your rights wherever laws are written and contested." },
-            { title: "Fight the Power", url: "https://www.youtube.com/watch?v=8PaoLy7PHwk", reason: "Public Enemy's revolutionary call to political engagement." },
+            { title: "Everyday People", url: "https://www.youtube.com/watch?v=YUUhDoCx8zc", reason: "Sly & the Family Stone's uplifting call for unity and understanding." },
             { title: "Express Yourself", url: "https://www.youtube.com/watch?v=u31FO_4d9TY", reason: "A message about speaking your truth and making your voice heard." }
         ]
     },
@@ -600,7 +607,7 @@ const VOTING_TOUR = [
         description: "On December 16, 1773, colonists voted here on what to do about the tea tax. When legal options failed, they chose direct action. Democracy requires both voting and activism - the ballot and the streets working together.",
         learnMore: "Ranked Choice Voting lets you rank candidates. If no one gets 50%, last-place candidates are eliminated until someone wins a majority.",
         songs: [
-            { title: "Fight the Power", url: "https://www.youtube.com/watch?v=8PaoLy7PHwk", reason: "A revolutionary call to action channeling the spirit of protest against unjust power." },
+            { title: "Stand By Me", url: "https://www.youtube.com/watch?v=hwZNL7QVJjE", reason: "Ben E. King's timeless anthem about solidarity and supporting one another." },
             { title: "Talkin' Bout a Revolution", url: "https://www.youtube.com/watch?v=Xv8FBLTmLNs", reason: "Tracy Chapman's call for uprising through democratic action." },
             { title: "Power to the People", url: "https://www.youtube.com/watch?v=2rFQs6e4lms", reason: "John Lennon's direct call for participatory democracy." }
         ]
@@ -639,7 +646,7 @@ const VOTING_TOUR = [
         learnMore: "Revere's engraving of the Boston Massacre was propaganda - he depicted soldiers firing in formation, not the chaotic reality. Media literacy has always mattered.",
         songs: [
             { title: "Sympathy for the Devil", url: "https://www.youtube.com/watch?v=GgnClrx8N2k", reason: "An examination of manipulation and the different faces we show to shape perception." },
-            { title: "Killing in the Name", url: "https://www.youtube.com/watch?v=bWXazVhlyxQ", reason: "Rage Against the Machine's critique of media manipulation." },
+            { title: "Man in the Mirror", url: "https://www.youtube.com/watch?v=PivWY9wn5ps", reason: "Michael Jackson's call to look inward and be the change we want to see." },
             { title: "Radio Ga Ga", url: "https://www.youtube.com/watch?v=azdwsXLmrHE", reason: "Queen's commentary on the power of media to inform democracy." }
         ]
     },
@@ -675,8 +682,8 @@ const VOTING_TOUR = [
         description: "Built in 1806, this is the oldest Black church building still standing in America. William Lloyd Garrison founded the New England Anti-Slavery Society here in 1832. This was the center of Boston's abolitionist movement and the fight for Black voting rights.",
         learnMore: "After the 15th Amendment passed in 1870, Southern states used poll taxes, literacy tests, and violence to suppress Black voters for another century.",
         songs: [
-            { title: "Mississippi Goddam", url: "https://www.youtube.com/watch?v=LJ25-U3jNWM", reason: "A fierce protest song capturing the righteous anger of those who fought for freedom." },
-            { title: "Strange Fruit", url: "https://www.youtube.com/watch?v=Web007rzSOI", reason: "Billie Holiday's haunting protest against racial violence." },
+            { title: "To Be Young, Gifted and Black", url: "https://www.youtube.com/watch?v=x5cOUA1GZMc", reason: "Nina Simone's inspiring anthem celebrating Black excellence and potential." },
+            { title: "Somewhere Over the Rainbow", url: "https://www.youtube.com/watch?v=V1bFr2SWP1I", reason: "A timeless ballad of hope and dreams of a better world." },
             { title: "Say It Loud - I'm Black and I'm Proud", url: "https://www.youtube.com/watch?v=9bJA6W9CqvE", reason: "James Brown's anthem of Black pride and political awakening." }
         ]
     },
@@ -748,7 +755,7 @@ const VOTING_TOUR = [
         learnMore: "For decades, Boston refused to honor Attucks. It took 118 years from his death to erect this monument. History remembers who it chooses to remember.",
         songs: [
             { title: "Alright", url: "https://www.youtube.com/watch?v=Z-48u_uWMHY", reason: "An anthem of Black resilience echoing across centuries of struggle." },
-            { title: "Formation", url: "https://www.youtube.com/watch?v=WDZJPJV__bQ", reason: "Beyoncé's powerful statement on Black identity and political awareness." },
+            { title: "Brown Skin Girl", url: "https://www.youtube.com/watch?v=vRFS0MYTC1I", reason: "Beyoncé's tender celebration of Black beauty and self-love." },
             { title: "The Revolution Will Not Be Televised", url: "https://www.youtube.com/watch?v=qGaoXAwl9kw", reason: "Gil Scott-Heron's groundbreaking spoken word about media and activism." }
         ]
     },
@@ -803,7 +810,7 @@ const VOTING_TOUR = [
         songs: [
             { title: "Happy Birthday", url: "https://www.youtube.com/watch?v=inS9gAgSENE", reason: "A song that helped make MLK Day a federal holiday - celebrating love and legacy." },
             { title: "What's Going On", url: "https://www.youtube.com/watch?v=H-kA3LoLFdA", reason: "Marvin Gaye's plea for understanding and peace." },
-            { title: "This Is America", url: "https://www.youtube.com/watch?v=VYOjWnS4cMY", reason: "Childish Gambino's modern commentary on race relations and gun violence in America." }
+            { title: "Three Little Birds", url: "https://www.youtube.com/watch?v=zaGUr6wzyT8", reason: "Bob Marley's reassuring message that every little thing is gonna be alright." }
         ]
     },
     // Additional Voting Rights Stop 19
@@ -861,7 +868,7 @@ const ART_TOUR = [
         songs: [
             { title: "Glory", url: "https://www.youtube.com/watch?v=HUZOKvYcx_o", reason: "John Legend & Common's Oscar-winning tribute to the civil rights movement from 'Selma'." },
             { title: "What's Going On", url: "https://www.youtube.com/watch?v=H-kA3LoLFdA", reason: "Marvin Gaye's plea for understanding that MLK championed." },
-            { title: "This Is America", url: "https://www.youtube.com/watch?v=VYOjWnS4cMY", reason: "Childish Gambino's modern commentary on race and the American experience." }
+            { title: "Happy", url: "https://www.youtube.com/watch?v=ZbZSe6N_BXs", reason: "Pharrell's infectious celebration of joy and positivity." }
         ]
     },
     {
@@ -896,8 +903,8 @@ const ART_TOUR = [
         learnMore: "For decades, Boston refused to honor Attucks. It took 118 years from his death to erect this monument. History remembers who it chooses to remember.",
         songs: [
             { title: "Alright", url: "https://www.youtube.com/watch?v=Z-48u_uWMHY", reason: "Kendrick Lamar's 2015 anthem of Black resilience and hope." },
-            { title: "Strange Fruit", url: "https://www.youtube.com/watch?v=Web007rzSOI", reason: "Billie Holiday's haunting protest against racial violence." },
-            { title: "The Bigger Picture", url: "https://www.youtube.com/watch?v=17tJ_WHwsGs", reason: "Lil Baby's powerful 2020 response to racial injustice and police brutality." }
+            { title: "Somewhere Over the Rainbow", url: "https://www.youtube.com/watch?v=V1bFr2SWP1I", reason: "A timeless ballad of hope and dreams of a better world." },
+            { title: "Optimistic", url: "https://www.youtube.com/watch?v=Fk_OQDhfCXg", reason: "Sounds of Blackness' uplifting gospel-inspired anthem of hope and perseverance." }
         ]
     },
     {
@@ -949,7 +956,7 @@ const ART_TOUR = [
         description: "Anne Whitney's 1880 bronze depicts the 'Father of the American Revolution' pointing defiantly, as if challenging British authority. Adams organized the Sons of Liberty, planned the Boston Tea Party, and signed the Declaration. He stands before the 'Cradle of Liberty.'",
         learnMore: "Adams was a failed businessman but a brilliant propagandist. He wrote under dozens of pen names, flooding newspapers with revolutionary ideas.",
         songs: [
-            { title: "Fight the Power", url: "https://www.youtube.com/watch?v=8PaoLy7PHwk", reason: "A revolutionary anthem channeling the radical spirit of resistance against tyranny." },
+            { title: "Higher Ground", url: "https://www.youtube.com/watch?v=4wZ3ZG_Wams", reason: "Stevie Wonder's uplifting call to keep pushing toward a better world." },
             { title: "Won't Back Down", url: "https://www.youtube.com/watch?v=nvlTJrNJ5lA", reason: "A defiant declaration of standing firm for one's beliefs." },
             { title: "Humble and Kind", url: "https://www.youtube.com/watch?v=awzNHuGqoMc", reason: "Tim McGraw's modern call for civic virtue and treating others well." }
         ]
@@ -1022,7 +1029,7 @@ const ART_TOUR = [
         learnMore: "Douglass escaped slavery and became America's most powerful voice against it. He advised Lincoln, recruited Black soldiers, and fought for women's suffrage.",
         songs: [
             { title: "Alright", url: "https://www.youtube.com/watch?v=Z-48u_uWMHY", reason: "Kendrick Lamar's anthem of Black resilience and hope channeling the spirit of perseverance." },
-            { title: "DNA", url: "https://www.youtube.com/watch?v=NLZRYQMLDW4", reason: "Kendrick Lamar's powerful 2017 meditation on Black heritage and identity." },
+            { title: "Feeling Good", url: "https://www.youtube.com/watch?v=D5Y11hwjMNs", reason: "Nina Simone's triumphant celebration of freedom and new beginnings." },
             { title: "Respect", url: "https://www.youtube.com/watch?v=6FOUqQt3Kg0", reason: "Aretha Franklin's demand for dignity that Douglass championed." }
         ]
     },
