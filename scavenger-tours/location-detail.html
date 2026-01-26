@@ -430,7 +430,7 @@
     <script src="./js/scavenger-tours-data.js?v=37"></script>
 
     <!-- Shared Nav Component -->
-    <script src="./js/nav-component.js?v=5"></script>
+    <script src="./js/nav-component.js?v=6"></script>
 
     <!-- Page JavaScript -->
     <script>
@@ -786,9 +786,30 @@
                 if (!isMobile) {
                     iframe.src = `https://www.youtube.com/embed/${videoId}?rel=0&enablejsapi=1&playsinline=1&autoplay=1`;
                 }
+                // Apply saved volume after a short delay for player to load
+                setTimeout(() => applyVolumeToIframe(iframe, 'youtube'), 500);
             } else {
                 // Pause using postMessage (works on both mobile and desktop)
                 youtubeCommand(iframe, 'pauseVideo');
+            }
+        }
+
+        // Helper to apply saved volume to an iframe
+        function applyVolumeToIframe(iframe, type) {
+            if (!iframe || !iframe.contentWindow) return;
+            const volume = parseInt(localStorage.getItem('votecraft_volume') || '80');
+
+            if (type === 'youtube') {
+                iframe.contentWindow.postMessage(JSON.stringify({
+                    event: 'command',
+                    func: 'setVolume',
+                    args: [volume]
+                }), '*');
+            } else if (type === 'soundcloud') {
+                iframe.contentWindow.postMessage(JSON.stringify({
+                    method: 'setVolume',
+                    value: volume
+                }), '*');
             }
         }
 
@@ -834,6 +855,7 @@
                             youtubeControl(iframe, songInfo.videoId, true);
                         } else {
                             soundcloudCommand(iframe, 'play');
+                            applyVolumeToIframe(iframe, 'soundcloud');
                         }
                     }, 350);
                 } else {
@@ -842,6 +864,7 @@
                         youtubeControl(iframe, songInfo.videoId, true);
                     } else {
                         soundcloudCommand(iframe, 'play');
+                        applyVolumeToIframe(iframe, 'soundcloud');
                     }
                 }
                 songItem.classList.add('playing');
