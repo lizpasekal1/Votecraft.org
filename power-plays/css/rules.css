@@ -331,3 +331,97 @@ li {
     max-height: 80%;
   }
 }
+
+/* Back button */
+.back-btn {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  text-decoration: none;
+  z-index: 200;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
+}
+
+@media (max-height: 450px) {
+  .back-btn {
+    top: 10px;
+    left: 10px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+  }
+}
+
+/* iPhone 16 Pro landscape (~393px height) */
+@media (max-height: 420px) {
+  .back-btn {
+    top: 8px;
+    left: 8px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+  }
+
+  .card-content {
+    padding: 12px 20px;
+    max-height: 90%;
+  }
+
+  h2 {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+  }
+
+  p {
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+  }
+
+  .color-grid {
+    gap: 6px;
+    margin: 8px 0;
+  }
+
+  .color-card {
+    padding: 6px 8px;
+  }
+
+  .color-card .title {
+    font-size: 0.85rem;
+  }
+
+  .color-card .desc {
+    font-size: 0.7rem;
+  }
+
+  .action-item {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+
+  .highlight-box {
+    padding: 8px 12px;
+    margin: 8px 0;
+    font-size: 0.8rem;
+  }
+
+  .nav-dots {
+    bottom: 10px;
+  }
+
+  .nav-dot {
+    width: 8px;
+    height: 8px;
+  }
+}
