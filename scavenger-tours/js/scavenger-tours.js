@@ -375,7 +375,7 @@
         `;
     };
 
-    // Tour types available
+    // Tour types available - consolidated data for all tour templates
     const TOUR_TYPES = [
         {
             id: 'civic-sampler',
@@ -383,7 +383,8 @@
             description: 'Experience all civic themes across Boston landmarks',
             icon: '🗽',
             color: '#3B82F6',
-            stops: 8
+            stops: 10,
+            welcomeImage: 'https://upload.wikimedia.org/wikipedia/commons/3/35/2017_Faneuil_Hall.jpg'
         },
         {
             id: 'healthcare',
@@ -391,7 +392,8 @@
             description: 'Explore the healthcare system through music and data',
             icon: '🏥',
             color: '#10B981',
-            stops: 4
+            stops: 15,
+            welcomeImage: 'https://upload.wikimedia.org/wikipedia/commons/f/f5/Brigham_and_Women%E2%80%99s_Hospital_%2854954429093%29.jpg'
         },
         {
             id: 'voting-rights',
@@ -399,47 +401,60 @@
             description: 'From the Revolution to today - the fight for every vote',
             icon: '🗳️',
             color: '#8B5CF6',
-            stops: 4
+            stops: 20,
+            welcomeImage: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Massachusetts_State_House_-_Boston%2C_MA_-_DSC04664.JPG/3840px-Massachusetts_State_House_-_Boston%2C_MA_-_DSC04664.JPG'
         },
         {
             id: 'art-action',
-            name: 'ART ACTION TOUR',
-            description: 'The role of journalism in democracy',
+            name: 'Art Action Tour',
+            description: 'Discover civic murals and public art with a message',
             icon: '🎨',
             color: '#F59E0B',
-            stops: 4
+            stops: 11,
+            welcomeImage: 'https://upload.wikimedia.org/wikipedia/commons/6/60/Boston_Common_view.jpg'
         }
     ];
 
     // Navigation is handled by nav-component.js
 
-    // Tour welcome background images
-    const TOUR_IMAGES = {
-        'civic-sampler': 'https://upload.wikimedia.org/wikipedia/commons/3/35/2017_Faneuil_Hall.jpg',
-        'healthcare': 'https://upload.wikimedia.org/wikipedia/commons/f/f5/Brigham_and_Women%E2%80%99s_Hospital_%2854954429093%29.jpg',
-        'voting-rights': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Massachusetts_State_House_-_Boston%2C_MA_-_DSC04664.JPG/3840px-Massachusetts_State_House_-_Boston%2C_MA_-_DSC04664.JPG',
-        'art-action': 'https://upload.wikimedia.org/wikipedia/commons/6/60/Boston_Common_view.jpg'
-    };
-
-    // Show tour welcome screen
+    /**
+     * Tour Welcome Screen Template
+     * Displays a full-screen welcome page when entering a tour
+     * Same structure for all tours, populated with tour-specific data
+     */
     function showTourWelcome(tourId, tour) {
-        const backgroundImage = TOUR_IMAGES[tourId] || TOUR_IMAGES['civic-sampler'];
+        // Use tour's welcome image or fall back to Freedom Trail
+        const backgroundImage = tour.welcomeImage || TOUR_TYPES[0].welcomeImage;
+        const themeColor = tour.color || '#3B82F6';
 
         modalsContainer.innerHTML = `
             <div id="tour-welcome-screen" class="fixed inset-0 z-50 flex items-center justify-center"
                  style="background-image: url('${backgroundImage}'); background-size: cover; background-position: center;">
                 <!-- Dark overlay for readability -->
-                <div class="absolute inset-0 bg-black/40"></div>
+                <div class="absolute inset-0 bg-black/50"></div>
 
-                <!-- Welcome container -->
+                <!-- Welcome container - same template for all tours -->
                 <div class="relative z-10 mx-4 px-8 py-10 rounded-2xl text-center max-w-md w-full"
-                     style="background: rgba(66, 105, 255, 0.85);">
+                     style="background: ${themeColor}dd;">
+                    <!-- Tour icon -->
                     <div class="text-5xl mb-4">${tour.icon}</div>
-                    <h1 class="text-white text-2xl font-bold mb-2">Welcome to the</h1>
-                    <h2 class="text-white text-3xl font-bold mb-4">${tour.name}</h2>
-                    <p class="text-white/90 text-sm mb-6">${tour.description}</p>
+
+                    <!-- Welcome heading -->
+                    <h1 class="text-white text-xl font-medium mb-1 opacity-90">Welcome to the</h1>
+
+                    <!-- Tour name -->
+                    <h2 class="text-white text-2xl font-bold mb-3">${tour.name}</h2>
+
+                    <!-- Tour description -->
+                    <p class="text-white/80 text-sm mb-2">${tour.description}</p>
+
+                    <!-- Stop count -->
+                    <p class="text-white/60 text-xs mb-6">${tour.stops} stops to explore</p>
+
+                    <!-- Start button -->
                     <button onclick="startTour('${tourId}')"
-                            class="bg-white text-blue-600 font-bold px-8 py-3 rounded-full text-lg hover:bg-gray-100 transition-colors">
+                            class="bg-white font-bold px-8 py-3 rounded-full text-lg hover:bg-gray-100 transition-colors shadow-lg"
+                            style="color: ${themeColor};">
                         Start Tour
                     </button>
                 </div>
