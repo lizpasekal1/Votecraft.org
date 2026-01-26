@@ -22,11 +22,18 @@
     <style>
         /* Itinerary-specific styles */
         .itinerary-item {
+            display: flex;
+            align-items: stretch;
+            margin-bottom: 0.75rem;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+        }
+
+        .itinerary-card {
             background: #1f2937;
             border-radius: 0.75rem;
             overflow: hidden;
-            margin-bottom: 0.75rem;
-            transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+            flex: 1;
+            max-width: calc(100% - 36px);
         }
 
         .itinerary-item.dragging {
@@ -53,7 +60,7 @@
             display: flex;
             align-items: center;
             padding: 1rem;
-            padding-left: 0.5rem;
+            padding-left: 0;
             cursor: pointer;
             transition: background-color 0.15s ease;
         }
@@ -62,27 +69,11 @@
             background: #374151;
         }
 
-        .left-controls {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            flex-shrink: 0;
-            margin-right: 0.5rem;
-            gap: 0.25rem;
-            background: #4269FF;
-            padding: 0.5rem 0.375rem;
-            border-radius: 0.5rem;
-        }
-
         .drag-handle {
-            width: 28px;
-            height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: grab;
-            color: white;
             flex-shrink: 0;
             touch-action: none;
         }
@@ -91,18 +82,11 @@
             cursor: grabbing;
         }
 
-        .drag-handle:hover {
-            color: rgba(255, 255, 255, 0.8);
-        }
-
         .stop-number {
-            width: 24px;
-            height: 24px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.75rem;
             font-weight: 700;
             flex-shrink: 0;
             color: white;
@@ -119,16 +103,17 @@
         }
 
         .checkbox-container {
-            width: 22px;
-            height: 22px;
+            width: 18px;
+            height: 18px;
             border: 2px solid #22c55e;
-            border-radius: 5px;
+            border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
             transition: all 0.2s ease;
             cursor: pointer;
+            margin-bottom: 0.5rem;
         }
 
         .checkbox-container:hover {
@@ -202,31 +187,7 @@
         /* Mobile optimizations */
         @media (max-width: 430px) {
             .itinerary-header {
-                padding: 0.625rem 0.5rem;
-            }
-
-            .left-controls {
-                gap: 0.25rem;
-                margin-right: 0.5rem;
-                padding: 0.25rem;
-                cursor: grab;
-                touch-action: none;
-            }
-
-            .stop-number {
-                width: 22px;
-                height: 22px;
-                font-size: 0.6875rem;
-            }
-
-            .drag-handle {
-                height: 20px;
-                width: 28px;
-            }
-
-            .drag-handle svg {
-                width: 18px;
-                height: 18px;
+                padding: 0.625rem 0.5rem 0.625rem 0;
             }
 
             .right-controls {
@@ -235,8 +196,9 @@
             }
 
             .checkbox-container {
-                width: 20px;
-                height: 20px;
+                width: 16px;
+                height: 16px;
+                margin-bottom: 0.375rem;
             }
 
             .itinerary-content h3 {
@@ -450,6 +412,198 @@
             line-height: 28px !important;
             font-size: 14px !important;
         }
+
+        /* Remove from itinerary button */
+        .remove-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            margin-top: 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            color: #ef4444;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .remove-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .remove-radio {
+            width: 14px;
+            height: 14px;
+            border: 2px solid #ef4444;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .remove-radio-inner {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: transparent;
+        }
+
+        .remove-btn:hover .remove-radio-inner {
+            background: #ef4444;
+        }
+
+        /* Removed section */
+        .removed-section {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px dashed #374151;
+        }
+
+        .removed-section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .removed-section-header h3 {
+            color: #9ca3af;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .removed-item {
+            background: #1f2937;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.6;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .removed-item-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .removed-item h4 {
+            color: #9ca3af;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: line-through;
+        }
+
+        .removed-item p {
+            color: #6b7280;
+            font-size: 0.75rem;
+        }
+
+        .restore-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            color: #22c55e;
+            border: 1px solid #22c55e;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .restore-btn:hover {
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        /* Thumbnail image - edge-to-edge on left side */
+        .itinerary-thumbnail-wrapper {
+            flex-shrink: 0;
+            align-self: stretch;
+            margin: -1rem;
+            margin-right: 0.75rem;
+        }
+
+        .itinerary-thumbnail {
+            width: 60px;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 0.75rem 0 0 0.75rem;
+        }
+
+        /* Drag signifier - outside container on left */
+        .drag-signifier {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            flex-shrink: 0;
+            gap: 0.125rem;
+            padding: 1rem 0.5rem 0 0;
+            width: 36px;
+        }
+
+        .drag-signifier .stop-number {
+            width: 20px;
+            height: 20px;
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+
+        .drag-signifier .drag-handle {
+            width: 20px;
+            height: 16px;
+            color: #6b7280;
+        }
+
+        .drag-signifier .drag-handle svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        @media (max-width: 430px) {
+            .itinerary-thumbnail {
+                width: 50px;
+            }
+
+            .itinerary-thumbnail-wrapper {
+                margin: -0.625rem;
+                margin-right: 0.5rem;
+            }
+
+            .itinerary-card {
+                max-width: calc(100% - 32px);
+            }
+
+            .drag-signifier {
+                padding: 0.625rem 0.375rem 0 0;
+                width: 32px;
+            }
+
+            .drag-signifier .stop-number {
+                width: 18px;
+                height: 18px;
+                font-size: 0.6875rem;
+            }
+
+            .drag-signifier .drag-handle {
+                width: 18px;
+                height: 14px;
+            }
+
+            .drag-signifier .drag-handle svg {
+                width: 14px;
+                height: 14px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -537,7 +691,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
     <!-- Location Data -->
-    <script src="./js/scavenger-tours-data.js?v=5"></script>
+    <script src="./js/scavenger-tours-data.js?v=6"></script>
 
     <!-- Page JavaScript -->
     <script>
@@ -552,7 +706,7 @@
         document.getElementById('back-link').href = `scavenger-tours.html?tour=${tourId}`;
 
         // Get tour data
-        const tourData = ALL_TOURS[tourId] || PLANETUNE_PLAYLISTS;
+        const tourData = ALL_TOURS[tourId] || CIVIC_SAMPLER_TOUR;
 
         // LocalStorage key (per tour)
         const STORAGE_KEY = `votecraft_itinerary_${tourId}`;
@@ -571,7 +725,8 @@
             return {
                 tourId: tourId,
                 order: tourData.map(loc => loc.id),
-                visited: []
+                visited: [],
+                removed: []
             };
         }
 
@@ -618,6 +773,55 @@
                 // Toggle the clicked item
                 item.classList.toggle('open');
             }
+        };
+
+        // Remove from itinerary
+        window.removeFromItinerary = function(stopId, event) {
+            event.stopPropagation();
+            const itinerary = getItinerary();
+
+            // Remove from order
+            const orderIndex = itinerary.order.indexOf(stopId);
+            if (orderIndex > -1) {
+                itinerary.order.splice(orderIndex, 1);
+            }
+
+            // Remove from visited if present
+            const visitedIndex = itinerary.visited.indexOf(stopId);
+            if (visitedIndex > -1) {
+                itinerary.visited.splice(visitedIndex, 1);
+            }
+
+            // Add to removed if not already there
+            if (!itinerary.removed) {
+                itinerary.removed = [];
+            }
+            if (!itinerary.removed.includes(stopId)) {
+                itinerary.removed.push(stopId);
+            }
+
+            saveItinerary(itinerary);
+            renderItinerary();
+        };
+
+        // Restore to itinerary
+        window.restoreToItinerary = function(stopId, event) {
+            event.stopPropagation();
+            const itinerary = getItinerary();
+
+            // Remove from removed array
+            const removedIndex = itinerary.removed.indexOf(stopId);
+            if (removedIndex > -1) {
+                itinerary.removed.splice(removedIndex, 1);
+            }
+
+            // Add back to order at the end
+            if (!itinerary.order.includes(stopId)) {
+                itinerary.order.push(stopId);
+            }
+
+            saveItinerary(itinerary);
+            renderItinerary();
         };
 
         // Track loaded directions to avoid re-fetching
@@ -978,7 +1182,7 @@
         let touchStartIndex = null;
 
         function handleTouchStart(e) {
-            const handle = e.target.closest('.drag-handle') || e.target.closest('.left-controls');
+            const handle = e.target.closest('.drag-handle') || e.target.closest('.drag-signifier');
             if (!handle) return;
 
             touchCurrentItem = this;
@@ -1080,8 +1284,9 @@
                 }
             });
 
-            // Filter to only valid stops
-            orderedIds = orderedIds.filter(id => tourData.some(loc => loc.id === id));
+            // Filter to only valid stops that aren't removed
+            const removedSet = new Set(itinerary.removed || []);
+            orderedIds = orderedIds.filter(id => tourData.some(loc => loc.id === id) && !removedSet.has(id));
 
             // Update progress
             const visitedCount = orderedIds.filter(id => itinerary.visited.includes(id)).length;
@@ -1103,16 +1308,20 @@
 
                 html += `
                 <div class="itinerary-item ${isVisited ? 'visited' : ''}" data-stop-id="${stopId}" data-index="${index}" draggable="true">
-                    <div class="itinerary-header">
-                        <div class="left-controls">
-                            <div class="stop-number">${index + 1}</div>
-                            <div class="drag-handle">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16"/>
-                                </svg>
-                            </div>
+                    <div class="drag-signifier">
+                        <div class="stop-number">${index + 1}</div>
+                        <div class="drag-handle">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16"/>
+                            </svg>
                         </div>
-                        <div class="itinerary-content" onclick="toggleAccordion(${stopId})">
+                    </div>
+                    <div class="itinerary-card">
+                        <div class="itinerary-header">
+                            <div class="itinerary-thumbnail-wrapper">
+                                <img src="${location.image}" alt="${location.name}" class="itinerary-thumbnail" referrerpolicy="no-referrer" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2256%22 height=%2256%22><rect fill=%22%23374151%22 width=%2256%22 height=%2256%22/></svg>'">
+                            </div>
+                            <div class="itinerary-content" onclick="toggleAccordion(${stopId})">
                             <h3 class="item-name text-white font-semibold mb-1">${location.name}</h3>
                             <p class="text-gray-400 text-sm">${location.location}</p>
                         </div>
@@ -1131,7 +1340,7 @@
                     </div>
                     <div class="itinerary-details">
                         <div class="p-4 border-t border-gray-800">
-                            <p class="text-gray-300 text-sm mb-4">${location.description.substring(0, 150)}...</p>
+                            <p class="text-gray-300 text-sm mb-4">${location.description.split(/(?<=[.!?])\s/)[0]}</p>
 
                             <!-- Directions Section -->
                             <div class="directions-section" style="margin-top: 0; padding-top: 0; border-top: none;">
@@ -1143,21 +1352,9 @@
                                         <span>Final stop - you made it!</span>
                                     </div>
                                 ` : `
-                                    <div class="directions-header">
-                                        <h4>Next</h4>
-                                        <span class="next-stop-badge">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                                            </svg>
-                                            <span class="next-stop-name">${nextLocation ? nextLocation.name : ''}</span>
-                                        </span>
-                                    </div>
                                     <button onclick="getDirectionsToNext(${stopId}, event)"
                                             class="directions-btn w-full justify-center text-white text-sm" style="background: #22c55e;">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                                        </svg>
-                                        Get Walking Directions
+                                        Directions to Next Location
                                     </button>
                                     <div id="directions-${stopId}" class="directions-content mt-3"></div>
                                 `}
@@ -1165,17 +1362,57 @@
 
                             <!-- View Details Button -->
                             <a href="location-detail.html?id=${stopId}&tour=${tourId}"
-                               class="directions-btn w-full justify-center text-white text-sm border border-gray-600 hover:bg-gray-700 mt-4">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                Location details
+                               class="directions-btn w-full justify-center text-white text-sm border border-gray-600 hover:bg-gray-700 mt-1">
+                                Location Activities
                             </a>
+
+                            <!-- Remove from Itinerary Button -->
+                            <button onclick="removeFromItinerary(${stopId}, event)" class="remove-btn">
+                                <span class="remove-radio"><span class="remove-radio-inner"></span></span>
+                                Remove from itinerary
+                            </button>
                         </div>
+                    </div>
                     </div>
                 </div>
                 `;
             });
+
+            // Render removed items section
+            const removedIds = itinerary.removed || [];
+            if (removedIds.length > 0) {
+                html += `
+                <div class="removed-section">
+                    <div class="removed-section-header">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        <h3>Removed from itinerary</h3>
+                    </div>
+                `;
+
+                removedIds.forEach(stopId => {
+                    const location = tourData.find(l => l.id === stopId);
+                    if (!location) return;
+
+                    html += `
+                    <div class="removed-item">
+                        <div class="removed-item-content">
+                            <h4>${location.name}</h4>
+                            <p>${location.location}</p>
+                        </div>
+                        <button onclick="restoreToItinerary(${stopId}, event)" class="restore-btn">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Restore
+                        </button>
+                    </div>
+                    `;
+                });
+
+                html += `</div>`;
+            }
 
             listContainer.innerHTML = html;
 

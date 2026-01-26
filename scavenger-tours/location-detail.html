@@ -92,13 +92,6 @@
                 </div>
             </div>
 
-            <!-- Explore the Data Button -->
-            <button id="widget-button" class="w-full text-white font-bold py-4 rounded-xl mb-4 flex items-center justify-center gap-3 hover:opacity-90 transition-all hidden">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                </svg>
-                <span>Explore the Data</span>
-            </button>
 
             <!-- Soundtrack Section -->
             <div class="song-ballot rounded-xl p-4">
@@ -127,20 +120,25 @@
                     Submit Votes
                 </button>
                 <p id="submit-message" class="text-center text-gray-400 text-sm mt-3" style="display: none;">
-                    Results will display at the end of your tour
+                    Results display at your tour's end
                 </p>
             </div>
 
+            <!-- Back to Map Button (outside RCV container) -->
+            <a id="back-to-map-btn" href="itinerary.html" class="w-full mt-4 py-3 rounded-xl font-bold text-white text-center block transition-all" style="display: none; background: #3b82f6;">
+                Back to Map
+            </a>
+
             <style>
                 .song-ballot {
-                    background: #111827;
-                    border: 1px solid #374151;
+                    background: white;
+                    border: 1px solid #e5e7eb;
                 }
-                @media (max-width: 768px) {
-                    .song-ballot {
-                        background: transparent;
-                        border: none;
-                    }
+                .song-ballot h2 {
+                    color: #1f2937;
+                }
+                .song-ballot .ballot-instructions {
+                    color: #6b7280;
                 }
                 .ballot-instructions {
                     color: #9ca3af;
@@ -154,16 +152,44 @@
                     background: #1f2937;
                     border: 2px solid #374151;
                     border-radius: 8px;
-                    padding: 12px;
+                    padding: 8px 12px;
                     transition: all 0.2s;
                     cursor: pointer;
                 }
-                .song-item:hover:not(.voted) {
+                .song-item:hover {
                     border-color: #6b7280;
                     box-shadow: 0 2px 8px rgba(255, 255, 255, 0.05);
                 }
-                .song-item.voted {
-                    background: rgba(59, 130, 246, 0.08);
+                .song-play-btn {
+                    width: 32px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #9ca3af;
+                    transition: all 0.3s ease;
+                    flex-shrink: 0;
+                    cursor: pointer;
+                }
+                .song-play-btn:hover {
+                    color: white;
+                }
+                .song-play-btn .pause-icon {
+                    display: none;
+                }
+                .song-item.playing .song-play-btn .play-icon {
+                    display: none;
+                }
+                .song-item.playing .song-play-btn .pause-icon {
+                    display: block;
+                }
+                .song-content {
+                    max-height: 0;
+                    overflow: hidden;
+                    transition: max-height 0.3s ease;
+                }
+                .song-item.expanded .song-content {
+                    max-height: 280px;
                 }
                 .vote-btn {
                     width: 32px;
@@ -188,37 +214,42 @@
                 }
                 .song-title {
                     font-weight: 600;
-                    font-size: 0.9rem;
+                    font-size: 0.85rem;
                     color: white;
+                    line-height: 1.2;
                 }
                 .song-artist {
                     font-weight: 400;
-                    font-size: 0.8rem;
+                    font-size: 0.75rem;
                     color: #9ca3af;
+                    line-height: 1.2;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
                 .song-artist::before {
                     content: ' - ';
                 }
+                .song-item .flex-1 {
+                    min-width: 0;
+                    min-height: 44px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                }
                 @media (max-width: 768px) {
                     .song-artist {
-                        display: block;
-                        line-height: 1.2;
+                        display: -webkit-box;
                         margin-top: 2px;
                     }
                     .song-artist::before {
                         content: '';
                     }
-                    .song-title {
-                        line-height: 1.2;
-                    }
                 }
                 .song-player {
                     border-radius: 6px;
                     overflow: hidden;
-                    height: 80px;
-                }
-                .song-player iframe {
-                    margin-top: -20px;
+                    height: 166px;
                 }
                 .song-reason {
                     font-size: 0.75rem;
@@ -426,7 +457,7 @@
         };
 
         // Find the location data
-        const tourData = ALL_TOURS[tourId] || PLANETUNE_PLAYLISTS;
+        const tourData = ALL_TOURS[tourId] || CIVIC_SAMPLER_TOUR;
         const location = tourData.find(p => p.id === locationId);
 
         if (!location) {
@@ -466,15 +497,6 @@
             document.getElementById('learn-more-text').textContent = location.learnMore;
         }
 
-        // Widget button
-        if (location.widget) {
-            const widgetButton = document.getElementById('widget-button');
-            widgetButton.classList.remove('hidden');
-            widgetButton.style.background = themeColor;
-            widgetButton.onclick = function() {
-                showWidgetModal(location.widget);
-            };
-        }
 
         // Likes
         document.getElementById('like-count').textContent = location.likes;
@@ -579,17 +601,12 @@
                 const artist = getArtistFromUrl(song.url);
 
                 html += `
-                <div class="song-item ${isRanked ? 'voted' : ''}" data-index="${index}" onclick="rankSong(${index})" style="${isRanked ? `border-color: ${themeColor};` : ''}">
-                    <!-- SoundCloud Player -->
-                    <div class="song-player mb-2" onclick="event.stopPropagation()">
-                        <iframe width="100%" height="100" scrolling="no" frameborder="no" allow="autoplay"
-                                src="${embedUrl}"></iframe>
-                    </div>
-                    <!-- Title and Rank below player -->
-                    <div class="flex items-center gap-3">
+                <div class="song-item" data-index="${index}">
+                    <!-- Title and Rank -->
+                    <div class="flex items-center gap-3" onclick="toggleSongExpand(${index})">
                         <!-- Rank Badge -->
-                        <div class="vote-btn"
-                             style="background: ${isRanked ? themeColor : '#374151'}; color: ${isRanked ? 'white' : '#9ca3af'};">
+                        <div class="vote-btn" onclick="rankSong(${index}); event.stopPropagation();"
+                             style="background: ${isRanked ? themeColor : 'white'}; color: ${isRanked ? 'white' : themeColor}; border: 2px solid ${themeColor};">
                             ${isRanked ? rank : '?'}
                         </div>
                         <!-- Song Title and Artist -->
@@ -597,9 +614,26 @@
                             <span class="song-title">${song.title}</span>
                             ${artist ? `<span class="song-artist">${artist}</span>` : ''}
                         </div>
+                        <!-- Play/Pause Icon -->
+                        <div class="song-play-btn" onclick="playSong(${index}); event.stopPropagation();">
+                            <svg class="play-icon w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                            <svg class="pause-icon w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                            </svg>
+                        </div>
                     </div>
-                    <!-- Song Reason -->
-                    ${song.reason ? `<p class="song-reason mt-2">${song.reason}</p>` : ''}
+                    <!-- Collapsible Content -->
+                    <div class="song-content">
+                        <!-- SoundCloud Player -->
+                        <div class="song-player mb-2 mt-3">
+                            <iframe id="sc-player-${index}" width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay"
+                                    src="${embedUrl}"></iframe>
+                        </div>
+                        <!-- Song Reason -->
+                        ${song.reason ? `<p class="song-reason">${song.reason}</p>` : ''}
+                    </div>
                 </div>
                 `;
             });
@@ -633,6 +667,7 @@
         function submitVotes() {
             const submitBtn = document.getElementById('submit-votes-btn');
             const submitMsg = document.getElementById('submit-message');
+            const backToMapBtn = document.getElementById('back-to-map-btn');
 
             if (votesSubmitted) {
                 // User tapped again - reset to original state
@@ -640,6 +675,7 @@
                 submitBtn.textContent = 'Submit Votes';
                 submitBtn.style.background = themeColor;
                 submitMsg.style.display = 'none';
+                backToMapBtn.style.display = 'none';
                 return;
             }
 
@@ -657,6 +693,10 @@
             submitBtn.textContent = 'Votes Submitted!';
             submitBtn.style.background = '#22c55e';
             submitMsg.style.display = 'block';
+
+            // Show back to map button
+            backToMapBtn.href = `itinerary.html?tour=${tourId}`;
+            backToMapBtn.style.display = 'block';
         }
 
         // Attach submit button handler
@@ -666,6 +706,111 @@
         window.rankSong = function(index) {
             toggleRanking(index);
         };
+
+        // Toggle song expand/collapse
+        window.toggleSongExpand = function(index) {
+            const songItem = document.querySelector(`.song-item[data-index="${index}"]`);
+            if (songItem) {
+                songItem.classList.toggle('expanded');
+            }
+        };
+
+        // Track currently playing song
+        let currentlyPlaying = null;
+
+        // Play/pause song toggle
+        window.playSong = function(index) {
+            const songItem = document.querySelector(`.song-item[data-index="${index}"]`);
+            const iframe = document.getElementById(`sc-player-${index}`);
+
+            if (currentlyPlaying === index) {
+                // Currently playing this song - pause it
+                if (iframe) {
+                    iframe.contentWindow.postMessage('{"method":"pause"}', '*');
+                }
+                songItem.classList.remove('playing');
+                currentlyPlaying = null;
+            } else {
+                // Stop any other playing song first
+                if (currentlyPlaying !== null) {
+                    const prevIframe = document.getElementById(`sc-player-${currentlyPlaying}`);
+                    const prevItem = document.querySelector(`.song-item[data-index="${currentlyPlaying}"]`);
+                    if (prevIframe) {
+                        prevIframe.contentWindow.postMessage('{"method":"pause"}', '*');
+                    }
+                    if (prevItem) {
+                        prevItem.classList.remove('playing');
+                    }
+                }
+
+                // Expand if not already expanded
+                if (!songItem.classList.contains('expanded')) {
+                    songItem.classList.add('expanded');
+                    // Wait for expansion animation, then play
+                    setTimeout(() => {
+                        if (iframe) {
+                            iframe.contentWindow.postMessage('{"method":"play"}', '*');
+                        }
+                    }, 350);
+                } else {
+                    // Already expanded, play immediately
+                    if (iframe) {
+                        iframe.contentWindow.postMessage('{"method":"play"}', '*');
+                    }
+                }
+                songItem.classList.add('playing');
+                currentlyPlaying = index;
+            }
+        };
+
+        // Listen for SoundCloud widget events (when user clicks directly on widget)
+        window.addEventListener('message', function(event) {
+            // Check if it's a SoundCloud widget message
+            if (event.origin.includes('soundcloud.com')) {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.method === 'play') {
+                        // Find which iframe sent this message
+                        const iframes = document.querySelectorAll('[id^="sc-player-"]');
+                        iframes.forEach((iframe, idx) => {
+                            if (iframe.contentWindow === event.source) {
+                                // This iframe started playing - pause all others
+                                if (currentlyPlaying !== null && currentlyPlaying !== idx) {
+                                    const prevIframe = document.getElementById(`sc-player-${currentlyPlaying}`);
+                                    const prevItem = document.querySelector(`.song-item[data-index="${currentlyPlaying}"]`);
+                                    if (prevIframe) {
+                                        prevIframe.contentWindow.postMessage('{"method":"pause"}', '*');
+                                    }
+                                    if (prevItem) {
+                                        prevItem.classList.remove('playing');
+                                    }
+                                }
+                                // Update current playing state
+                                const songItem = document.querySelector(`.song-item[data-index="${idx}"]`);
+                                if (songItem) {
+                                    songItem.classList.add('playing');
+                                }
+                                currentlyPlaying = idx;
+                            }
+                        });
+                    } else if (data.method === 'pause' || data.method === 'finish') {
+                        // Find which iframe paused/finished
+                        const iframes = document.querySelectorAll('[id^="sc-player-"]');
+                        iframes.forEach((iframe, idx) => {
+                            if (iframe.contentWindow === event.source && currentlyPlaying === idx) {
+                                const songItem = document.querySelector(`.song-item[data-index="${idx}"]`);
+                                if (songItem) {
+                                    songItem.classList.remove('playing');
+                                }
+                                currentlyPlaying = null;
+                            }
+                        });
+                    }
+                } catch (e) {
+                    // Not a JSON message, ignore
+                }
+            }
+        });
 
         // Toggle RCV info popup
         window.toggleRcvInfo = function(event) {

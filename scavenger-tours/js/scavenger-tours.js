@@ -49,7 +49,7 @@
 
     // Initialize map
     function initMap() {
-        const config = PLANETUNE_MAP_CONFIG;
+        const config = VOTECRAFT_MAP_CONFIG;
         map = L.map(mapElement, {
             center: config.center,
             zoom: config.zoom,
@@ -105,7 +105,7 @@
 
     // Get current tour playlists (defined early for initMap)
     function getCurrentPlaylists() {
-        return ALL_TOURS[currentTourId] || PLANETUNE_PLAYLISTS;
+        return ALL_TOURS[currentTourId] || CIVIC_SAMPLER_TOUR;
     }
 
     // Update card selection visually without re-rendering
