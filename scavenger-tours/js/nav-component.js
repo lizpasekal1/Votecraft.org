@@ -148,6 +148,18 @@
 
                             <div class="accordion-content">
                                 <div class="accordion-item" style="justify-content: space-between;">
+                                    <span class="text-white text-sm">Volume</span>
+                                    <input type="range" id="volume-slider" min="0" max="100" value="80"
+                                           class="w-24 h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                           onchange="setVolume(this.value)" oninput="setVolume(this.value)">
+                                </div>
+                                <div class="accordion-item" style="justify-content: space-between;">
+                                    <span class="text-white text-sm">Notifications</span>
+                                    <div id="notifications-toggle" class="w-10 h-6 bg-gray-600 rounded-full relative cursor-pointer" onclick="toggleNotifications()">
+                                        <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item" style="justify-content: space-between;">
                                     <span class="text-white text-sm">Offline Mode</span>
                                     <div id="offline-toggle" class="w-10 h-6 bg-gray-600 rounded-full relative cursor-pointer" onclick="toggleOfflineMode()">
                                         <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></div>
@@ -174,6 +186,23 @@
             document.querySelector('.nav-drawer-overlay').classList.add('open');
             document.querySelector('.nav-drawer').classList.add('open');
             document.body.classList.add('drawer-open');
+
+            // Initialize volume slider
+            const savedVolume = localStorage.getItem('votecraft_volume') || '80';
+            const volumeSlider = document.getElementById('volume-slider');
+            if (volumeSlider) {
+                volumeSlider.value = savedVolume;
+            }
+
+            // Initialize notifications toggle state
+            const notificationsOn = localStorage.getItem('votecraft_notifications') !== 'false';
+            const notifToggle = document.getElementById('notifications-toggle');
+            if (notifToggle && notificationsOn) {
+                notifToggle.classList.add('active');
+                notifToggle.style.backgroundColor = '#3B82F6';
+                const dot = notifToggle.querySelector('div');
+                if (dot) dot.style.transform = 'translateX(16px)';
+            }
 
             // Initialize offline toggle state
             const offlineMode = localStorage.getItem('votecraft_offline_mode') === 'true';
@@ -220,6 +249,32 @@
         setTimeout(() => {
             window.location.href = `scavenger-tours.html?tour=${tourId}`;
         }, 300);
+    };
+
+    // Set volume
+    window.setVolume = function(value) {
+        localStorage.setItem('votecraft_volume', value);
+        // Apply volume to any playing audio
+        const audioElements = document.querySelectorAll('audio');
+        audioElements.forEach(audio => {
+            audio.volume = value / 100;
+        });
+    };
+
+    // Toggle notifications
+    window.toggleNotifications = function() {
+        const toggle = document.getElementById('notifications-toggle');
+        if (!toggle) return;
+
+        const isOn = toggle.classList.toggle('active');
+        const dot = toggle.querySelector('div');
+        if (dot) {
+            dot.style.transform = isOn ? 'translateX(16px)' : 'translateX(0)';
+        }
+        toggle.style.backgroundColor = isOn ? '#3B82F6' : '#4B5563';
+
+        // Save preference
+        localStorage.setItem('votecraft_notifications', isOn ? 'true' : 'false');
     };
 
     // Toggle offline mode
