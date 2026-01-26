@@ -603,12 +603,31 @@
                 return '';
             }
 
+            // Helper to detect URL type and create embed
+            function getEmbedInfo(url) {
+                // YouTube URL patterns
+                const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+                if (youtubeMatch) {
+                    return {
+                        type: 'youtube',
+                        embedUrl: `https://www.youtube.com/embed/${youtubeMatch[1]}?rel=0`,
+                        height: 200
+                    };
+                }
+                // SoundCloud URL
+                const encodedUrl = encodeURIComponent(url);
+                return {
+                    type: 'soundcloud',
+                    embedUrl: `https://w.soundcloud.com/player/?url=${encodedUrl}&color=%23${embedColor}&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&show_artwork=true&visual=true`,
+                    height: 166
+                };
+            }
+
             let html = '';
             songs.forEach((song, index) => {
                 const rank = getSongRank(index);
                 const isRanked = rank !== null;
-                const encodedUrl = encodeURIComponent(song.url);
-                const embedUrl = `https://w.soundcloud.com/player/?url=${encodedUrl}&color=%23${embedColor}&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&show_artwork=true&visual=true`;
+                const embed = getEmbedInfo(song.url);
                 const artist = getArtistFromUrl(song.url);
 
                 html += `
@@ -637,10 +656,10 @@
                     </div>
                     <!-- Collapsible Content -->
                     <div class="song-content">
-                        <!-- SoundCloud Player -->
+                        <!-- Music Player -->
                         <div class="song-player mb-2 mt-3">
-                            <iframe id="sc-player-${index}" width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay"
-                                    src="${embedUrl}"></iframe>
+                            <iframe id="player-${index}" width="100%" height="${embed.height}" scrolling="no" frameborder="no" allow="autoplay; encrypted-media"
+                                    src="${embed.embedUrl}" ${embed.type === 'youtube' ? 'allowfullscreen' : ''}></iframe>
                         </div>
                         <!-- Song Reason -->
                         ${song.reason ? `<p class="song-reason">${song.reason}</p>` : ''}
