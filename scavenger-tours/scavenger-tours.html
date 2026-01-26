@@ -23,10 +23,16 @@
     <!-- Page transition overlay -->
     <div class="page-transition-overlay" id="page-overlay"></div>
     <script>
-        // Fade out overlay to reveal page
-        requestAnimationFrame(() => {
-            document.getElementById('page-overlay').classList.add('fade-out');
-        });
+        // Check if we're showing welcome screen - if so, don't fade out yet
+        const showingWelcome = new URLSearchParams(window.location.search).get('welcome') === '1';
+
+        if (!showingWelcome) {
+            // Normal page load - fade out overlay to reveal page
+            requestAnimationFrame(() => {
+                document.getElementById('page-overlay').classList.add('fade-out');
+            });
+        }
+        // If showing welcome, the JS will handle the transition
 
         // Intercept link clicks for fade transition
         document.addEventListener('click', function(e) {
@@ -95,6 +101,6 @@
     <script src="./js/nav-component.js?v=7"></script>
 
     <!-- App JavaScript -->
-    <script src="./js/scavenger-tours.js?v=26"></script>
+    <script src="./js/scavenger-tours.js?v=32"></script>
 </body>
 </html>

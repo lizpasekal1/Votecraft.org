@@ -393,7 +393,7 @@
             icon: '🏥',
             color: '#10B981',
             stops: 15,
-            welcomeImage: 'https://upload.wikimedia.org/wikipedia/commons/f/f5/Brigham_and_Women%E2%80%99s_Hospital_%2854954429093%29.jpg'
+            welcomeImage: 'https://people.com/thmb/4Mbkfr8gOlEfjLmJqAnUePhbXR8=/4000x0/filters:no_upscale():max_bytes(150000):strip_icc():focal(999x0:1001x2)/harvard-medical-school-building-110125-1a765614b8eb4557983d33c0d1ab012b.jpg'
         },
         {
             id: 'voting-rights',
@@ -421,30 +421,37 @@
      * Tour Welcome Screen Template
      * Displays a full-screen welcome page when entering a tour
      * Same structure for all tours, populated with tour-specific data
+     * @param {string} tourId - The tour identifier
+     * @param {object} tour - The tour data object
+     * @param {boolean} instant - If true, show at full opacity immediately (for page transitions)
      */
-    function showTourWelcome(tourId, tour) {
+    function showTourWelcome(tourId, tour, instant = false) {
         // Use tour's welcome image or fall back to Freedom Trail
         const backgroundImage = tour.welcomeImage || TOUR_TYPES[0].welcomeImage;
         const themeColor = tour.color || '#3B82F6';
+        const initialOpacity = instant ? '1' : '0';
 
         modalsContainer.innerHTML = `
             <div id="tour-welcome-screen" class="fixed inset-0 z-50 flex items-center justify-center"
-                 style="background-image: url('${backgroundImage}'); background-size: cover; background-position: center; opacity: 0; transition: opacity 0.4s ease-in;">
+                 style="background-image: url('${backgroundImage}'); background-size: cover; background-position: center; opacity: ${initialOpacity}; transition: opacity 0.4s ease-in;">
                 <!-- Dark overlay for readability -->
                 <div class="absolute inset-0 bg-black/50"></div>
 
                 <!-- Welcome container - same template for all tours -->
-                <div class="relative z-10 mx-4 px-6 py-6 sm:px-8 sm:py-8 rounded-2xl text-center max-w-md w-full"
+                <div class="relative z-10 mx-4 px-5 py-5 sm:px-6 sm:py-6 rounded-xl text-center max-w-xs w-full"
                      style="background: ${themeColor}dd;">
                     <!-- Tour icon -->
-                    <div class="text-4xl sm:text-5xl mb-3">${tour.icon}</div>
+                    <div class="text-3xl sm:text-4xl mb-2">${tour.icon}</div>
+
+                    <!-- Welcome text -->
+                    <p class="text-white/80 text-sm sm:text-base font-bold mb-1">Welcome to the</p>
 
                     <!-- Tour name -->
-                    <h2 class="text-white text-2xl sm:text-3xl font-bold mb-4 sm:mb-5">${tour.name}</h2>
+                    <h2 class="text-white text-xl sm:text-2xl font-bold mb-3 sm:mb-4">${tour.name}</h2>
 
                     <!-- Start button -->
                     <button onclick="startTour('${tourId}')"
-                            class="bg-white font-bold px-6 py-2.5 sm:px-8 sm:py-3 rounded-full text-base sm:text-lg hover:bg-gray-100 transition-colors shadow-lg"
+                            class="bg-white font-bold px-5 py-2 sm:px-6 sm:py-2.5 rounded-full text-sm sm:text-base hover:bg-gray-100 transition-colors shadow-lg"
                             style="color: ${themeColor};">
                         Start Tour
                     </button>
@@ -452,11 +459,13 @@
             </div>
         `;
 
-        // Fade in the welcome screen
-        requestAnimationFrame(() => {
-            const screen = document.getElementById('tour-welcome-screen');
-            if (screen) screen.style.opacity = '1';
-        });
+        // If not instant, fade in the welcome screen
+        if (!instant) {
+            requestAnimationFrame(() => {
+                const screen = document.getElementById('tour-welcome-screen');
+                if (screen) screen.style.opacity = '1';
+            });
+        }
     }
 
     // Start tour after welcome screen
@@ -794,10 +803,17 @@
                     newUrl.searchParams.delete('welcome');
                     window.history.replaceState({}, '', newUrl);
 
-                    // Show welcome screen after a brief delay for page to render
-                    setTimeout(() => {
-                        showTourWelcome(tourParam, tour);
-                    }, 100);
+                    // Show welcome screen instantly (already at full opacity)
+                    // then fade out page overlay to reveal it
+                    showTourWelcome(tourParam, tour, true);
+
+                    // Fade out page overlay to reveal welcome screen
+                    requestAnimationFrame(() => {
+                        const pageOverlay = document.getElementById('page-overlay');
+                        if (pageOverlay) {
+                            pageOverlay.classList.add('fade-out');
+                        }
+                    });
                 }
             }
         }
