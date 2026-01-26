@@ -418,6 +418,7 @@ const HEALTHCARE_TOUR = [
         likes: 445,
         civicTheme: CIVIC_THEMES.EDUCATION,
         widget: "mental-health",
+        image: "https://upload.wikimedia.org/wikipedia/commons/0/06/Museum_of_Fine_Arts%2C_Boston_%2854954248311%29.jpg",
         description: "One of America's great encyclopedic museums, the MFA partners with local hospitals on 'museum prescriptions' for mental health. Research shows that viewing art reduces cortisol, anxiety, and depression. The museum's free admission programs ensure art therapy is accessible to all.",
         learnMore: "Studies show 30 minutes in a museum reduces stress as effectively as medication. The MFA's community programs bring art to patients in hospitals and nursing homes who cannot visit in person.",
         songs: [
