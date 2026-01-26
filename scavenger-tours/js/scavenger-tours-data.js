@@ -234,6 +234,7 @@ const HEALTHCARE_TOUR = [
         name: "Brigham and Women's Hospital",
         location: "75 Francis St, Longwood",
         coordinates: [42.3358, -71.1070],
+        image: "https://www.brighamresearchcci.org/wp-content/uploads/2019/02/BWH-BTM.jpg",
         creator: "VoteCraft Boston",
         likes: 378,
         civicTheme: CIVIC_THEMES.HEALTHCARE,
@@ -255,7 +256,7 @@ const HEALTHCARE_TOUR = [
         likes: 456,
         civicTheme: CIVIC_THEMES.VOTING,
         widget: "life-expectancy",
-        image: "https://upload.wikimedia.org/wikipedia/commons/0/09/Boston_Children%27s_Hospital.jpg",
+        image: "https://media-cldnry.s-nbcnews.com/image/upload/t_fit-1500w,f_auto,q_auto:best/rockcms/2022-08/220816-one-time-use-boston-children-hospital-se-221p-5584be.jpg",
         description: "America's first pediatric hospital, founded in 1869 to serve children regardless of ability to pay. Today it leads in pediatric research and treatment, but 4 million American children still lack health insurance.",
         learnMore: "Child poverty rates in the US are among the highest in developed nations. Children in poverty are 2x more likely to have chronic health conditions.",
         songs: [
