@@ -610,7 +610,7 @@
                 if (youtubeMatch) {
                     return {
                         type: 'youtube',
-                        embedUrl: `https://www.youtube.com/embed/${youtubeMatch[1]}?rel=0`,
+                        embedUrl: `https://www.youtube.com/embed/${youtubeMatch[1]}?rel=0&enablejsapi=1&origin=${window.location.origin}`,
                         height: 200
                     };
                 }
@@ -623,12 +623,17 @@
                 };
             }
 
+            // Store song types for play/pause control
+            const songTypes = {};
+
             let html = '';
             songs.forEach((song, index) => {
                 const rank = getSongRank(index);
                 const isRanked = rank !== null;
                 const embed = getEmbedInfo(song.url);
                 const artist = getArtistFromUrl(song.url);
+                // Store type for play/pause control
+                songTypes[index] = embed.type;
 
                 html += `
                 <div class="song-item" data-index="${index}">
@@ -748,25 +753,49 @@
         // Track currently playing song
         let currentlyPlaying = null;
 
+        // Helper to send commands to YouTube iframe
+        function youtubeCommand(iframe, command) {
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage(JSON.stringify({
+                    event: 'command',
+                    func: command,
+                    args: []
+                }), '*');
+            }
+        }
+
+        // Helper to send commands to SoundCloud iframe
+        function soundcloudCommand(iframe, command) {
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage(`{"method":"${command}"}`, '*');
+            }
+        }
+
         // Play/pause song toggle
         window.playSong = function(index) {
             const songItem = document.querySelector(`.song-item[data-index="${index}"]`);
-            const iframe = document.getElementById(`sc-player-${index}`);
+            const iframe = document.getElementById(`player-${index}`);
+            const type = songTypes[index] || 'soundcloud';
 
             if (currentlyPlaying === index) {
                 // Currently playing this song - pause it
-                if (iframe) {
-                    iframe.contentWindow.postMessage('{"method":"pause"}', '*');
+                if (type === 'youtube') {
+                    youtubeCommand(iframe, 'pauseVideo');
+                } else {
+                    soundcloudCommand(iframe, 'pause');
                 }
                 songItem.classList.remove('playing');
                 currentlyPlaying = null;
             } else {
                 // Stop any other playing song first
                 if (currentlyPlaying !== null) {
-                    const prevIframe = document.getElementById(`sc-player-${currentlyPlaying}`);
+                    const prevIframe = document.getElementById(`player-${currentlyPlaying}`);
                     const prevItem = document.querySelector(`.song-item[data-index="${currentlyPlaying}"]`);
-                    if (prevIframe) {
-                        prevIframe.contentWindow.postMessage('{"method":"pause"}', '*');
+                    const prevType = songTypes[currentlyPlaying] || 'soundcloud';
+                    if (prevType === 'youtube') {
+                        youtubeCommand(prevIframe, 'pauseVideo');
+                    } else {
+                        soundcloudCommand(prevIframe, 'pause');
                     }
                     if (prevItem) {
                         prevItem.classList.remove('playing');
@@ -778,14 +807,18 @@
                     songItem.classList.add('expanded');
                     // Wait for expansion animation, then play
                     setTimeout(() => {
-                        if (iframe) {
-                            iframe.contentWindow.postMessage('{"method":"play"}', '*');
+                        if (type === 'youtube') {
+                            youtubeCommand(iframe, 'playVideo');
+                        } else {
+                            soundcloudCommand(iframe, 'play');
                         }
                     }, 350);
                 } else {
                     // Already expanded, play immediately
-                    if (iframe) {
-                        iframe.contentWindow.postMessage('{"method":"play"}', '*');
+                    if (type === 'youtube') {
+                        youtubeCommand(iframe, 'playVideo');
+                    } else {
+                        soundcloudCommand(iframe, 'play');
                     }
                 }
                 songItem.classList.add('playing');
@@ -796,20 +829,24 @@
         // Listen for SoundCloud widget events (when user clicks directly on widget)
         window.addEventListener('message', function(event) {
             // Check if it's a SoundCloud widget message
-            if (event.origin.includes('soundcloud.com')) {
+            if (event.origin && event.origin.includes('soundcloud.com')) {
                 try {
                     const data = JSON.parse(event.data);
                     if (data.method === 'play') {
                         // Find which iframe sent this message
-                        const iframes = document.querySelectorAll('[id^="sc-player-"]');
-                        iframes.forEach((iframe, idx) => {
+                        const iframes = document.querySelectorAll('[id^="player-"]');
+                        iframes.forEach((iframe) => {
+                            const idx = parseInt(iframe.id.replace('player-', ''));
                             if (iframe.contentWindow === event.source) {
                                 // This iframe started playing - pause all others
                                 if (currentlyPlaying !== null && currentlyPlaying !== idx) {
-                                    const prevIframe = document.getElementById(`sc-player-${currentlyPlaying}`);
+                                    const prevIframe = document.getElementById(`player-${currentlyPlaying}`);
                                     const prevItem = document.querySelector(`.song-item[data-index="${currentlyPlaying}"]`);
-                                    if (prevIframe) {
-                                        prevIframe.contentWindow.postMessage('{"method":"pause"}', '*');
+                                    const prevType = songTypes[currentlyPlaying] || 'soundcloud';
+                                    if (prevType === 'youtube') {
+                                        youtubeCommand(prevIframe, 'pauseVideo');
+                                    } else {
+                                        soundcloudCommand(prevIframe, 'pause');
                                     }
                                     if (prevItem) {
                                         prevItem.classList.remove('playing');
@@ -825,8 +862,9 @@
                         });
                     } else if (data.method === 'pause' || data.method === 'finish') {
                         // Find which iframe paused/finished
-                        const iframes = document.querySelectorAll('[id^="sc-player-"]');
-                        iframes.forEach((iframe, idx) => {
+                        const iframes = document.querySelectorAll('[id^="player-"]');
+                        iframes.forEach((iframe) => {
+                            const idx = parseInt(iframe.id.replace('player-', ''));
                             if (iframe.contentWindow === event.source && currentlyPlaying === idx) {
                                 const songItem = document.querySelector(`.song-item[data-index="${idx}"]`);
                                 if (songItem) {
