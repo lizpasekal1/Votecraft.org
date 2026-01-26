@@ -362,6 +362,7 @@ const HEALTHCARE_TOUR = [
         likes: 223,
         civicTheme: CIVIC_THEMES.SCOTUS,
         widget: "mental-health",
+        image: "https://e9jn6jeo54q.exactdn.com/app/uploads/2025/10/MAAMArtonthePlazaJuly2025_AmyFink-431-of-484.jpg?strip=all&w=1920",
         description: "Art therapy programs at MassArt partner with hospitals throughout the medical area. Creative expression reduces anxiety, manages chronic pain, and helps process trauma. Yet arts programs are first to be cut when budgets tighten.",
         learnMore: "Veterans with PTSD show 30% reduction in symptoms after art therapy. Hospitals are increasingly prescribing creative activities alongside medication.",
         songs: [
