@@ -344,7 +344,7 @@ const HEALTHCARE_TOUR = [
         likes: 178,
         civicTheme: CIVIC_THEMES.EDUCATION,
         widget: "healthcare-compare",
-        image: "https://images.unsplash.com/photo-1584982751601-97dcc096659c?w=800&q=80",
+        image: "https://npr.brightspotcdn.com/dims4/default/53e84c0/2147483647/strip/true/crop/1760x920+0+0/resize/1760x920!/format/webp/quality/90/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2F66%2F13%2Fc77b2cc04f2a80ac817ad1b424a6%2Frebecca-crumpler-1760x920-web.png",
         description: "This bronze sculpture honors Dr. Rebecca Lee Crumpler, the first Black woman to earn a medical degree in the United States, graduating from Boston's New England Female Medical College in 1864. She dedicated her career to serving freed slaves and the poor.",
         learnMore: "Dr. Crumpler wrote 'A Book of Medical Discourses' in 1883, one of the first medical texts by an African American. Today, only 5% of US physicians are Black - a disparity rooted in centuries of exclusion.",
         songs: [
