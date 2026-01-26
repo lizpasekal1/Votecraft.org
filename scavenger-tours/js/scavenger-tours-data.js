@@ -40,8 +40,8 @@ const CIVIC_SAMPLER_TOUR = [
         description: "Built in 1742 by merchant Peter Faneuil, this hall hosted the debates that sparked a revolution. Samuel Adams, James Otis, and the Sons of Liberty gathered here to protest the Stamp Act and rally colonists toward independence. The phrase 'Cradle of Liberty' was earned here.",
         learnMore: "Frederick Douglass, Susan B. Anthony, and JFK all spoke from this same stage. The grasshopper weathervane on the roof, made by Shem Drowne in 1742, has been a Boston landmark for nearly 300 years.",
         songs: [
-            { title: "We Shall Overcome", url: "https://soundcloud.com/peteseeger/we-shall-overcome", reason: "The anthem of the civil rights movement, echoing the spirit of peaceful protest that filled these halls." },
-            { title: "Won't Back Down", url: "https://soundcloud.com/tompettyandtheheartbreakers/i-won-t-back-down-1", reason: "A defiant declaration of standing firm in the face of opposition." },
+            { title: "We Shall Overcome", url: "https://soundcloud.com/joan-baez/we-shall-overcome-5", reason: "The anthem of the civil rights movement, echoing the spirit of peaceful protest that filled these halls." },
+            { title: "Won't Back Down", url: "https://soundcloud.com/popetcetera/i-wont-back-down-tom-petty", reason: "A defiant declaration of standing firm in the face of opposition." },
             { title: "Fanfare for the Common Man", url: "https://soundcloud.com/naborchestra/fanfare-for-the-common-man", reason: "Aaron Copland's majestic brass fanfare celebrating ordinary citizens who build democracy." }
         ]
     },
@@ -59,7 +59,7 @@ const CIVIC_SAMPLER_TOUR = [
         learnMore: "The 'Sacred Cod' wooden carving has hung in the House chamber since 1784, symbolizing the fishing industry's importance to the colony. In 1933, Harvard students 'codnapped' it as a prank.",
         songs: [
             { title: "Lean on Me", url: "https://soundcloud.com/bill-withers-official/lean-on-me-2", reason: "A timeless call for community support that embodies the spirit of universal healthcare." },
-            { title: "Heal the World", url: "https://soundcloud.com/michaeljackson/heal-the-world", reason: "A plea for compassion and taking care of one another." },
+            { title: "Heal the World", url: "https://soundcloud.com/shivoypandita/michael-jackson-heal-the-world-acoustic-cover", reason: "A plea for compassion and taking care of one another." },
             { title: "What a Wonderful World", url: "https://soundcloud.com/louisarmstrongofficial/what-a-wonderful-world", reason: "Louis Armstrong's jazz standard celebrating the beauty of life and human connection." }
         ]
     },
@@ -131,7 +131,7 @@ const CIVIC_SAMPLER_TOUR = [
         learnMore: "The donkey and elephant statues outside commemorate the first use of these party symbols. A sidewalk mosaic marks the site of Boston Latin School where Franklin was a student.",
         songs: [
             { title: "9 to 5", url: "https://soundcloud.com/dollyparton/9-to-5-10", reason: "A working-class anthem highlighting economic inequality and the struggle of everyday workers." },
-            { title: "Money", url: "https://soundcloud.com/pinkfloydofficial/money", reason: "A satirical take on greed and the corrupting power of wealth." },
+            { title: "Money", url: "https://soundcloud.com/gisselgarciaband/money-pink-floyd-cover", reason: "A satirical take on greed and the corrupting power of wealth." },
             { title: "Take Five", url: "https://soundcloud.com/davebrubeck/take-five", reason: "Dave Brubeck's cool jazz classic - sophistication meets the working rhythm of American life." }
         ]
     },
@@ -184,9 +184,9 @@ const CIVIC_SAMPLER_TOUR = [
         description: "Paul Revere lived here from 1770-1800. His midnight ride spread the news: 'The British are coming!' In an era before mass media, information traveled by horseback. Revere was an early 'influencer' - his engraving of the Boston Massacre shaped public opinion.",
         learnMore: "Revere's engraving of the Boston Massacre was propaganda - it depicted soldiers firing in formation, not the chaotic reality. This is the oldest remaining structure in downtown Boston (c. 1680).",
         songs: [
-            { title: "The Sound of Silence", url: "https://soundcloud.com/simonandgarfunkel/the-sound-of-silence", reason: "A haunting meditation on communication and how people fail to truly connect." },
+            { title: "The Sound of Silence", url: "https://soundcloud.com/simon-garfunkel-official/the-sound-of-silence-album-1", reason: "A haunting meditation on communication and how people fail to truly connect." },
             { title: "Dirty Laundry", url: "https://soundcloud.com/donhenley/dirty-laundry", reason: "Don Henley's critique of sensationalist media." },
-            { title: "So What", url: "https://soundcloud.com/milesdavis/so-what", reason: "Miles Davis' cool jazz masterpiece - questioning everything with sophistication." }
+            { title: "So What", url: "https://soundcloud.com/milesdavissonymusic/so-what-album-version-1", reason: "Miles Davis' cool jazz masterpiece - questioning everything with sophistication." }
         ]
     },
     {
@@ -223,8 +223,11 @@ const HEALTHCARE_TOUR = [
         image: "https://upload.wikimedia.org/wikipedia/commons/b/b5/Harvard_Medical_School_HDR.jpg",
         description: "Founded in 1782, Harvard Medical School trains the doctors who shape American medicine. Its iconic marble quadrangle represents both medical excellence and a history of exclusion - the first Black graduate wasn't until 1850, women not until 1945.",
         learnMore: "Medical school costs average $250,000. The US has fewer doctors per capita than most developed nations, contributing to healthcare access gaps.",
-        soundcloudUrl: "https://soundcloud.com/bill-withers-official/lean-on-me-2",
-        songReason: "A timeless message of mutual support - being there when someone needs you."
+        songs: [
+            { title: "Lean on Me", url: "https://soundcloud.com/bill-withers-official/lean-on-me-2", reason: "A timeless message of mutual support - being there when someone needs you." },
+            { title: "Waiting on the World to Change", url: "https://soundcloud.com/johnmayer/waiting-on-the-world-to-change", reason: "A reflection on the systemic changes needed in healthcare access." },
+            { title: "What a Wonderful World", url: "https://soundcloud.com/louisarmstrongofficial/what-a-wonderful-world", reason: "Louis Armstrong's hopeful vision of a world where healing is possible." }
+        ]
     },
     {
         id: 2,
@@ -237,8 +240,11 @@ const HEALTHCARE_TOUR = [
         widget: "healthcare-compare",
         description: "One of America's top hospitals, Brigham pioneered organ transplantation and performs groundbreaking research. But even here, studies show Black patients receive different care than white patients for the same conditions - a crisis the hospital is working to address.",
         learnMore: "Black women are 3x more likely to die from pregnancy complications than white women, even at top hospitals. Racism in medicine is a public health crisis.",
-        soundcloudUrl: "https://soundcloud.com/marvingaye/whats-going-on",
-        songReason: "A plea for understanding and equality that speaks to persistent racial disparities."
+        songs: [
+            { title: "What's Going On", url: "https://soundcloud.com/marvingaye/whats-going-on", reason: "A plea for understanding and equality that speaks to persistent racial disparities." },
+            { title: "A Change Is Gonna Come", url: "https://soundcloud.com/samcooke/a-change-is-gonna-come", reason: "A civil rights anthem about the hope for equality in healthcare." },
+            { title: "People Get Ready", url: "https://soundcloud.com/curtismayfield/people-get-ready", reason: "Curtis Mayfield's call for justice and preparation for change." }
+        ]
     },
     {
         id: 3,
@@ -252,8 +258,11 @@ const HEALTHCARE_TOUR = [
         image: "https://upload.wikimedia.org/wikipedia/commons/0/09/Boston_Children%27s_Hospital.jpg",
         description: "America's first pediatric hospital, founded in 1869 to serve children regardless of ability to pay. Today it leads in pediatric research and treatment, but 4 million American children still lack health insurance.",
         learnMore: "Child poverty rates in the US are among the highest in developed nations. Children in poverty are 2x more likely to have chronic health conditions.",
-        soundcloudUrl: "https://soundcloud.com/michaeljackson/heal-the-world",
-        songReason: "A call to heal the world and make it better for future generations."
+        songs: [
+            { title: "Heal the World", url: "https://soundcloud.com/shivoypandita/michael-jackson-heal-the-world-acoustic-cover", reason: "A call to heal the world and make it better for future generations." },
+            { title: "Greatest Love of All", url: "https://soundcloud.com/whitneyhouston/greatest-love-of-all", reason: "Whitney Houston's anthem about children being our future." },
+            { title: "Imagine", url: "https://soundcloud.com/johnlennon/imagine", reason: "A vision of a world where every child has access to care." }
+        ]
     },
     {
         id: 4,
@@ -266,8 +275,11 @@ const HEALTHCARE_TOUR = [
         widget: "healthcare-cost",
         description: "A world leader in cancer research and treatment, Dana-Farber has pioneered immunotherapy and targeted treatments. But cancer drugs can cost $10,000+ per month - forcing patients to choose between treatment and financial ruin.",
         learnMore: "42% of cancer patients deplete their life savings within 2 years of diagnosis. 'Financial toxicity' is now recognized as a side effect of cancer treatment.",
-        soundcloudUrl: "https://soundcloud.com/rem-official/everybody-hurts",
-        songReason: "A compassionate message of perseverance for those facing life's hardest battles."
+        songs: [
+            { title: "Everybody Hurts", url: "https://soundcloud.com/rem-official/everybody-hurts", reason: "A compassionate message of perseverance for those facing life's hardest battles." },
+            { title: "Fight Song", url: "https://soundcloud.com/rachelplatten/fight-song", reason: "An anthem of strength and determination for cancer fighters." },
+            { title: "Brave", url: "https://soundcloud.com/sarabareilles/brave", reason: "Sara Bareilles' empowering call to courage in the face of adversity." }
+        ]
     },
     {
         id: 5,
@@ -280,8 +292,11 @@ const HEALTHCARE_TOUR = [
         widget: "healthcare-compare",
         description: "The world's largest diabetes research and treatment center, Joslin has led the fight against this epidemic since 1898. Diabetes affects 37 million Americans - and insulin, discovered 100 years ago, still costs Americans 10x what Canadians pay.",
         learnMore: "1 in 4 diabetics ration insulin due to cost. The same vial costs $30 in Canada and $300 in the US. Insulin's inventors sold the patent for $1.",
-        soundcloudUrl: "https://soundcloud.com/dollyparton/9-to-5-10",
-        songReason: "A working-class anthem for those who work hard but still can't afford life-saving medicine."
+        songs: [
+            { title: "9 to 5", url: "https://soundcloud.com/dollyparton/9-to-5-10", reason: "A working-class anthem for those who work hard but still can't afford life-saving medicine." },
+            { title: "Money", url: "https://soundcloud.com/gisselgarciaband/money-pink-floyd-cover", reason: "A commentary on how profit drives healthcare costs." },
+            { title: "Allentown", url: "https://soundcloud.com/billyjoel/allentown", reason: "Billy Joel's portrait of working families struggling to get by." }
+        ]
     },
     {
         id: 6,
@@ -294,8 +309,11 @@ const HEALTHCARE_TOUR = [
         widget: "life-expectancy",
         description: "Public health saved more lives than all medical treatments combined - through vaccines, clean water, and sanitation. This school trains leaders who fight epidemics, but also studies how zip code predicts health more than genetic code.",
         learnMore: "Life expectancy varies by 30 years between Boston neighborhoods. Public health is about addressing the social conditions that make people sick.",
-        soundcloudUrl: "https://soundcloud.com/beegees/stayin-alive",
-        songReason: "A disco anthem celebrating survival against all odds - also used to teach CPR rhythm."
+        songs: [
+            { title: "Stayin' Alive", url: "https://soundcloud.com/beegees/stayin-alive", reason: "A disco anthem celebrating survival against all odds - also used to teach CPR rhythm." },
+            { title: "I Will Survive", url: "https://soundcloud.com/gloriaganyor/i-will-survive", reason: "Gloria Gaynor's anthem of resilience and survival." },
+            { title: "Lovely Day", url: "https://soundcloud.com/bill-withers-official/lovely-day", reason: "Bill Withers' optimistic celebration of each new day of life." }
+        ]
     },
     {
         id: 7,
@@ -308,8 +326,11 @@ const HEALTHCARE_TOUR = [
         widget: "healthcare-cost",
         description: "Born from the merger of two hospitals - one founded by Jewish immigrants in 1916, another by Protestant deaconesses in 1896. Both served communities facing discrimination. Today, immigrant healthcare workers make up 17% of the US healthcare workforce.",
         learnMore: "29% of US physicians are immigrants. During COVID, immigrant healthcare workers were essential - yet many faced deportation threats.",
-        soundcloudUrl: "https://soundcloud.com/franksinatra/new-york-new-york",
-        songReason: "An immigrant success story honoring the essential workers who care for us."
+        songs: [
+            { title: "New York, New York", url: "https://soundcloud.com/franksinatra/new-york-new-york", reason: "An immigrant success story honoring the essential workers who care for us." },
+            { title: "This Land Is Your Land", url: "https://soundcloud.com/brucespringsteen/this-land-is-your-land-live", reason: "A folk anthem reminding us that immigrants built this nation." },
+            { title: "America", url: "https://soundcloud.com/naborchestra/west-side-story-america", reason: "From West Side Story - celebrating the immigrant experience." }
+        ]
     },
     {
         id: 8,
@@ -322,8 +343,11 @@ const HEALTHCARE_TOUR = [
         widget: "mental-health",
         description: "Founded in 1971, Fenway Health pioneered LGBTQ+ healthcare when mainstream medicine pathologized queer identities. It led HIV/AIDS treatment when the government ignored the epidemic. Community health centers now serve 30 million Americans.",
         learnMore: "LGBTQ+ youth are 4x more likely to attempt suicide. Fenway's model - affirming care, community-driven - saves lives and has spread nationwide.",
-        soundcloudUrl: "https://soundcloud.com/gloriaganyor/i-will-survive",
-        songReason: "A disco anthem of resilience that became an LGBTQ+ empowerment hymn."
+        songs: [
+            { title: "I Will Survive", url: "https://soundcloud.com/gloriaganyor/i-will-survive", reason: "A disco anthem of resilience that became an LGBTQ+ empowerment hymn." },
+            { title: "Born This Way", url: "https://soundcloud.com/ladygaga/born-this-way", reason: "Lady Gaga's anthem celebrating LGBTQ+ identity and self-acceptance." },
+            { title: "True Colors", url: "https://soundcloud.com/cyndilauper/true-colors", reason: "Cyndi Lauper's tender message of acceptance and visibility." }
+        ]
     },
     {
         id: 9,
@@ -336,8 +360,11 @@ const HEALTHCARE_TOUR = [
         widget: "life-expectancy",
         description: "America's oldest community garden, the Victory Gardens have fed Bostonians since WWII. Green space is healthcare - studies show access to parks reduces stress, heart disease, and mental illness. But park access is unequal across neighborhoods.",
         learnMore: "Low-income neighborhoods have 4x less park space than wealthy areas. 'Nature deficit disorder' contributes to childhood obesity and anxiety.",
-        soundcloudUrl: "https://soundcloud.com/jonimitchell/big-yellow-taxi",
-        songReason: "An environmental warning about preserving the green spaces that keep us healthy."
+        songs: [
+            { title: "Big Yellow Taxi", url: "https://soundcloud.com/jonimitchell/big-yellow-taxi", reason: "An environmental warning about preserving the green spaces that keep us healthy." },
+            { title: "What a Wonderful World", url: "https://soundcloud.com/louisarmstrongofficial/what-a-wonderful-world", reason: "Louis Armstrong's appreciation for nature's beauty." },
+            { title: "Here Comes the Sun", url: "https://soundcloud.com/thebeatles/here-comes-the-sun", reason: "The Beatles' celebration of sunshine and outdoor healing." }
+        ]
     },
     {
         id: 10,
@@ -350,8 +377,11 @@ const HEALTHCARE_TOUR = [
         widget: "mental-health",
         description: "Art heals. Museums across Boston partner with hospitals for 'art therapy' programs, and research shows viewing art reduces cortisol and anxiety. Gardner built this museum to bring beauty to everyone - admission is free on your birthday.",
         learnMore: "Hospitals now prescribe museum visits for mental health. Studies show 30 minutes in a museum reduces stress hormones as effectively as meditation.",
-        soundcloudUrl: "https://soundcloud.com/bobmarley/one-love",
-        songReason: "A message of unity and healing through human connection."
+        songs: [
+            { title: "One Love", url: "https://soundcloud.com/bobmarley/one-love", reason: "A message of unity and healing through human connection." },
+            { title: "Hallelujah", url: "https://soundcloud.com/leonardcohen/hallelujah", reason: "Leonard Cohen's spiritual meditation on beauty and brokenness." },
+            { title: "Bridge Over Troubled Water", url: "https://soundcloud.com/simonandgarfunkel/bridge-over-troubled-water", reason: "A soothing promise of support through difficult times." }
+        ]
     },
     {
         id: 11,
@@ -364,8 +394,11 @@ const HEALTHCARE_TOUR = [
         widget: "healthcare-cost",
         description: "Founded in 1824, this specialty hospital pioneered treatments for hearing loss and blindness. Today it leads research into gene therapy for inherited eye diseases. Access to specialized care remains deeply unequal - rural Americans travel hours for specialists.",
         learnMore: "1 in 8 Americans has hearing loss. Hearing aids cost $2,000-7,000 and Medicare didn't cover them until 2024. Untreated hearing loss increases dementia risk.",
-        soundcloudUrl: "https://soundcloud.com/stevie-wonder-official/superstition",
-        songReason: "Music that transcends physical limitations - celebrating what we can do, not what we can't."
+        songs: [
+            { title: "Superstition", url: "https://soundcloud.com/stevie-wonder-official/superstition", reason: "Music that transcends physical limitations - celebrating what we can do, not what we can't." },
+            { title: "I Can See Clearly Now", url: "https://soundcloud.com/johnnynash/i-can-see-clearly-now", reason: "An optimistic anthem about gaining clarity and vision." },
+            { title: "Signed, Sealed, Delivered", url: "https://soundcloud.com/stevie-wonder-official/signed-sealed-delivered", reason: "Stevie Wonder's joyful celebration of commitment and care." }
+        ]
     },
     {
         id: 12,
@@ -378,8 +411,11 @@ const HEALTHCARE_TOUR = [
         widget: "healthcare-compare",
         description: "One of the world's largest medical libraries, Countway holds 650,000 volumes including rare texts documenting the evolution of medical ethics. Here you can trace how medicine moved from bloodletting to evidence-based care - and the harm done along the way.",
         learnMore: "The Tuskegee syphilis study, Nazi experiments, and forced sterilizations are documented here. Medical ethics emerged from acknowledging past atrocities.",
-        soundcloudUrl: "https://soundcloud.com/lauryn-hill-official/everything-is-everything",
-        songReason: "A philosophical reflection on how everything changes - including how we heal."
+        songs: [
+            { title: "Everything Is Everything", url: "https://soundcloud.com/lauryn-hill-official/everything-is-everything", reason: "A philosophical reflection on how everything changes - including how we heal." },
+            { title: "Changes", url: "https://soundcloud.com/davidbowie/changes", reason: "David Bowie's meditation on transformation and evolution." },
+            { title: "The Times They Are A-Changin'", url: "https://soundcloud.com/bobdylan/the-times-they-are-a-changin", reason: "Bob Dylan's call for progress and adaptation." }
+        ]
     },
     {
         id: 13,
@@ -392,8 +428,11 @@ const HEALTHCARE_TOUR = [
         widget: "life-expectancy",
         description: "Founded by Dr. Charles Schepens, who invented the binocular indirect ophthalmoscope and worked for the Belgian resistance during WWII. Vision loss affects 12 million Americans over 40 - and those without insurance often go untreated until it's too late.",
         learnMore: "Diabetic retinopathy is the leading cause of blindness in working-age adults. Regular screening prevents 90% of vision loss, but millions skip it.",
-        soundcloudUrl: "https://soundcloud.com/eagles/hotel-california",
-        songReason: "A haunting song about being trapped - and the importance of early intervention."
+        songs: [
+            { title: "Hotel California", url: "https://soundcloud.com/eagles/hotel-california", reason: "A haunting song about being trapped - and the importance of early intervention." },
+            { title: "I Can See Clearly Now", url: "https://soundcloud.com/johnnynash/i-can-see-clearly-now", reason: "Johnny Nash's hopeful anthem about restored vision and clarity." },
+            { title: "Open Your Eyes", url: "https://soundcloud.com/snow-patrol/open-your-eyes", reason: "Snow Patrol's invitation to see the world anew." }
+        ]
     },
     {
         id: 14,
@@ -406,8 +445,11 @@ const HEALTHCARE_TOUR = [
         widget: "healthcare-cost",
         description: "Dental care is healthcare, but America treats it separately. 74 million Americans lack dental insurance. Poor dental health causes heart disease, diabetes complications, and chronic pain. The mouth-body divide in medicine costs lives.",
         learnMore: "1 in 4 adults has untreated cavities. In the ER, dental problems are the #1 reason for visits that could have been prevented with basic care.",
-        soundcloudUrl: "https://soundcloud.com/prince/little-red-corvette",
-        songReason: "An energetic song about taking chances - and the gambles people take when they can't afford care."
+        songs: [
+            { title: "Little Red Corvette", url: "https://soundcloud.com/prince/little-red-corvette", reason: "An energetic song about taking chances - and the gambles people take when they can't afford care." },
+            { title: "Money Money Money", url: "https://soundcloud.com/abba/money-money-money", reason: "ABBA's commentary on how money determines access." },
+            { title: "Hard Times", url: "https://soundcloud.com/paramore/hard-times", reason: "Paramore's upbeat take on struggling through difficult financial times." }
+        ]
     },
     {
         id: 15,
@@ -420,8 +462,11 @@ const HEALTHCARE_TOUR = [
         widget: "mental-health",
         description: "Art therapy programs at MassArt partner with hospitals throughout the medical area. Creative expression reduces anxiety, manages chronic pain, and helps process trauma. Yet arts programs are first to be cut when budgets tighten.",
         learnMore: "Veterans with PTSD show 30% reduction in symptoms after art therapy. Hospitals are increasingly prescribing creative activities alongside medication.",
-        soundcloudUrl: "https://soundcloud.com/coldplay/yellow",
-        songReason: "A tender song about seeing someone's inner light and the healing power of creativity."
+        songs: [
+            { title: "Yellow", url: "https://soundcloud.com/coldplay/yellow", reason: "A tender song about seeing someone's inner light and the healing power of creativity." },
+            { title: "Unwritten", url: "https://soundcloud.com/natashabedingfield/unwritten", reason: "A song about creative potential and new beginnings." },
+            { title: "Lean on Me", url: "https://soundcloud.com/bill-withers-official/lean-on-me-2", reason: "Bill Withers' call for mutual support in mental health." }
+        ]
     }
 ];
 
@@ -440,8 +485,11 @@ const VOTING_TOUR = [
         image: "https://upload.wikimedia.org/wikipedia/commons/3/35/2017_Faneuil_Hall.jpg",
         description: "Built in 1742, this hall hosted debates that sparked a revolution. Frederick Douglass spoke here demanding voting rights for Black Americans. Susan B. Anthony spoke here for women's suffrage. The 'Cradle of Liberty' has witnessed 280 years of fights for the vote.",
         learnMore: "It took 95 years from the Declaration to the 15th Amendment. Women waited 144 years. The Voting Rights Act wasn't passed until 1965.",
-        soundcloudUrl: "https://soundcloud.com/arethafranklin/respect",
-        songReason: "A civil rights anthem demanding R-E-S-P-E-C-T for every citizen's voice."
+        songs: [
+            { title: "Respect", url: "https://soundcloud.com/arethafranklin/respect", reason: "A civil rights anthem demanding R-E-S-P-E-C-T for every citizen's voice." },
+            { title: "We Shall Overcome", url: "https://soundcloud.com/joan-baez/we-shall-overcome-5", reason: "The anthem of the civil rights movement and voting rights struggles." },
+            { title: "This Land Is Your Land", url: "https://soundcloud.com/brucespringsteen/this-land-is-your-land-live", reason: "A folk anthem reminding us this land belongs to everyone who participates in democracy." }
+        ]
     },
     // Freedom Trail Stop 2: Massachusetts State House
     {
@@ -456,8 +504,11 @@ const VOTING_TOUR = [
         image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Massachusetts_State_House_-_Boston%2C_MA_-_DSC04664.JPG/3840px-Massachusetts_State_House_-_Boston%2C_MA_-_DSC04664.JPG",
         description: "Voting laws are made in state houses. Massachusetts has some of the most accessible voting in the nation - same-day registration, early voting, mail ballots. Other states have passed hundreds of restrictions since 2020.",
         learnMore: "Since 2010, 25 states have enacted new voting restrictions. Texas closed 750 polling places in primarily Black and Hispanic neighborhoods.",
-        soundcloudUrl: "https://soundcloud.com/bobmarley/get-up-stand-up",
-        songReason: "A call to stand up for your rights wherever laws are written and contested."
+        songs: [
+            { title: "Get Up, Stand Up", url: "https://soundcloud.com/bobmarley/get-up-stand-up", reason: "A call to stand up for your rights wherever laws are written and contested." },
+            { title: "Fight the Power", url: "https://soundcloud.com/publicenemy/fight-the-power", reason: "Public Enemy's revolutionary call to political engagement." },
+            { title: "Express Yourself", url: "https://soundcloud.com/nwa/express-yourself", reason: "A message about speaking your truth and making your voice heard." }
+        ]
     },
     // Freedom Trail Stop 3: Old State House
     {
@@ -472,8 +523,11 @@ const VOTING_TOUR = [
         image: "https://upload.wikimedia.org/wikipedia/commons/1/19/Old_State_House_Boston_2009f.JPG",
         description: "The Boston Massacre began steps from here on March 5, 1770. 'No taxation without representation' became the Revolution's rallying cry. But who could actually vote in 1776? Only white male property owners - about 6% of the population.",
         learnMore: "Crispus Attucks, a Black man, was the first to die. Black men couldn't vote until 1870; women until 1920; Native Americans until 1924.",
-        soundcloudUrl: "https://soundcloud.com/samcooke/a-change-is-gonna-come",
-        songReason: "A hopeful civil rights anthem about the long wait for true equality."
+        songs: [
+            { title: "A Change Is Gonna Come", url: "https://soundcloud.com/samcooke/a-change-is-gonna-come", reason: "A hopeful civil rights anthem about the long wait for true equality." },
+            { title: "People Get Ready", url: "https://soundcloud.com/curtismayfield/people-get-ready", reason: "Curtis Mayfield's call for preparation and hope for change." },
+            { title: "What's Going On", url: "https://soundcloud.com/marvingaye/whats-going-on", reason: "Marvin Gaye's plea for understanding in turbulent times." }
+        ]
     },
     // Freedom Trail Stop 4: Boston Common
     {
@@ -488,8 +542,11 @@ const VOTING_TOUR = [
         image: "https://upload.wikimedia.org/wikipedia/commons/6/60/Boston_Common_view.jpg",
         description: "The First Amendment protects assembly - the right to gather and demand change. Martin Luther King Jr. spoke here in 1965. The Vietnam War protests drew 100,000. Black Lives Matter marches filled these paths. Protest is democracy in action.",
         learnMore: "Youth voter turnout doubled between 2014 and 2018. Gen Z votes at higher rates than previous generations at their age.",
-        soundcloudUrl: "https://soundcloud.com/johnlegend/glory",
-        songReason: "An Oscar-winning civil rights anthem connecting past struggles to the ongoing fight for voting rights."
+        songs: [
+            { title: "Glory", url: "https://soundcloud.com/johnlegend/glory", reason: "An Oscar-winning civil rights anthem connecting past struggles to the ongoing fight for voting rights." },
+            { title: "We're Not Gonna Take It", url: "https://soundcloud.com/twistedsister/were-not-gonna-take-it", reason: "A defiant anthem of protest and standing up for your rights." },
+            { title: "Blowin' in the Wind", url: "https://soundcloud.com/bobdylan/blowin-in-the-wind", reason: "Bob Dylan's timeless questions about freedom and justice." }
+        ]
     },
     // Freedom Trail Stop 5: Granary Burying Ground
     {
@@ -504,8 +561,11 @@ const VOTING_TOUR = [
         image: "https://upload.wikimedia.org/wikipedia/commons/1/14/Boston_Granary_Burying_Ground_Grabstein_Totenkopf_9441_20190429.jpg",
         description: "Samuel Adams, John Hancock, and Paul Revere lie here - men who risked everything for self-governance. Yet they limited voting to people like themselves. Adams wrote the Massachusetts Constitution requiring property ownership to vote.",
         learnMore: "Today, felony disenfranchisement bars 5.2 million Americans from voting. In Florida, 1 in 5 Black adults cannot vote.",
-        soundcloudUrl: "https://soundcloud.com/peteseeger/we-shall-overcome",
-        songReason: "A civil rights anthem that united generations of activists - a struggle not yet won."
+        songs: [
+            { title: "We Shall Overcome", url: "https://soundcloud.com/joan-baez/we-shall-overcome-5", reason: "A civil rights anthem that united generations of activists - a struggle not yet won." },
+            { title: "Revolution", url: "https://soundcloud.com/thebeatles/revolution", reason: "The Beatles' reflection on the nature of political change." },
+            { title: "Fortunate Son", url: "https://soundcloud.com/creedenceclearwaterrevival/fortunate-son", reason: "CCR's commentary on inequality and who bears the burden of democracy." }
+        ]
     },
     // Freedom Trail Stop 6: Old City Hall
     {
@@ -520,8 +580,11 @@ const VOTING_TOUR = [
         image: "https://upload.wikimedia.org/wikipedia/commons/4/4a/Old_City_Hall_in_Boston%2C_Massachusetts.jpg",
         description: "James Michael Curley served as mayor from this building four times, once while under federal indictment. Boston's political machines controlled votes through patronage and favors. Machine politics shows both democracy's resilience and its vulnerabilities.",
         learnMore: "Gerrymandering is the modern political machine. In 2018, Wisconsin Republicans won 63% of state seats with only 45% of votes.",
-        soundcloudUrl: "https://soundcloud.com/thewho/wont-get-fooled-again",
-        songReason: "A skeptical anthem about political power and the promise of change."
+        songs: [
+            { title: "Won't Get Fooled Again", url: "https://soundcloud.com/thewho/wont-get-fooled-again", reason: "A skeptical anthem about political power and the promise of change." },
+            { title: "For What It's Worth", url: "https://soundcloud.com/buffalospringfield/for-what-its-worth", reason: "Buffalo Springfield's warning about political tensions." },
+            { title: "The Sound of Silence", url: "https://soundcloud.com/simon-garfunkel-official/the-sound-of-silence-album-1", reason: "A meditation on communication and civic engagement." }
+        ]
     },
     // Freedom Trail Stop 7: Old South Meeting House
     {
@@ -536,8 +599,11 @@ const VOTING_TOUR = [
         image: "https://upload.wikimedia.org/wikipedia/commons/d/d2/The_Old_South_Meeting_House.jpg",
         description: "On December 16, 1773, colonists voted here on what to do about the tea tax. When legal options failed, they chose direct action. Democracy requires both voting and activism - the ballot and the streets working together.",
         learnMore: "Ranked Choice Voting lets you rank candidates. If no one gets 50%, last-place candidates are eliminated until someone wins a majority.",
-        soundcloudUrl: "https://soundcloud.com/publicenemy/fight-the-power",
-        songReason: "A revolutionary call to action channeling the spirit of protest against unjust power."
+        songs: [
+            { title: "Fight the Power", url: "https://soundcloud.com/publicenemy/fight-the-power", reason: "A revolutionary call to action channeling the spirit of protest against unjust power." },
+            { title: "Talkin' Bout a Revolution", url: "https://soundcloud.com/tracychapmanofficial/talkin-bout-a-revolution", reason: "Tracy Chapman's call for uprising through democratic action." },
+            { title: "Power to the People", url: "https://soundcloud.com/johnlennon/power-to-the-people", reason: "John Lennon's direct call for participatory democracy." }
+        ]
     },
     // Freedom Trail Stop 8: King's Chapel
     {
@@ -552,8 +618,11 @@ const VOTING_TOUR = [
         image: "https://upload.wikimedia.org/wikipedia/commons/0/0a/Boston_-_King%27s_Chapel_%2848718908106%29.jpg",
         description: "Founded in 1686 as the first Anglican church in Puritan Boston, King's Chapel stands near America's first public school (Boston Latin, 1635). Religious freedom and voting rights are intertwined - both require separating political power from any single belief.",
         learnMore: "17 states had religious requirements for voting at independence. Maryland required belief in the Trinity. Jews couldn't vote in some states until 1828.",
-        soundcloudUrl: "https://soundcloud.com/grandmasterflashmusic/the-message-12-single-version",
-        songReason: "Groundbreaking social commentary - the message matters for everyone."
+        songs: [
+            { title: "The Message", url: "https://soundcloud.com/grandmasterflashmusic/the-message-12-single-version", reason: "Groundbreaking social commentary - the message matters for everyone." },
+            { title: "Imagine", url: "https://soundcloud.com/johnlennon/imagine", reason: "John Lennon's vision of a united world without division." },
+            { title: "One Love", url: "https://soundcloud.com/bobmarley/one-love", reason: "Bob Marley's call for unity across all boundaries." }
+        ]
     },
     // Freedom Trail Stop 9: Paul Revere House
     {
@@ -568,8 +637,11 @@ const VOTING_TOUR = [
         image: "https://upload.wikimedia.org/wikipedia/commons/c/cf/Paul_Revere_House%2C_Boston%2C_2023-02-21.jpg",
         description: "Paul Revere's midnight ride spread the news: 'The British are coming!' In an era before mass media, information traveled by horseback. Today, voting information - and disinformation - spreads instantly. An informed electorate requires a free press.",
         learnMore: "Revere's engraving of the Boston Massacre was propaganda - he depicted soldiers firing in formation, not the chaotic reality. Media literacy has always mattered.",
-        soundcloudUrl: "https://soundcloud.com/therollingstones/sympathy-for-the-devil",
-        songReason: "An examination of manipulation and the different faces we show to shape perception."
+        songs: [
+            { title: "Sympathy for the Devil", url: "https://soundcloud.com/therollingstones/sympathy-for-the-devil", reason: "An examination of manipulation and the different faces we show to shape perception." },
+            { title: "Killing in the Name", url: "https://soundcloud.com/rageagainstthemachine/killing-in-the-name", reason: "Rage Against the Machine's critique of media manipulation." },
+            { title: "Radio Ga Ga", url: "https://soundcloud.com/queen/radio-ga-ga", reason: "Queen's commentary on the power of media to inform democracy." }
+        ]
     },
     // Freedom Trail Stop 10: Old North Church
     {
@@ -584,8 +656,11 @@ const VOTING_TOUR = [
         image: "https://upload.wikimedia.org/wikipedia/commons/5/56/Paul_Revere_church_interior%2C_Boston%2C_Mass._2.jpg",
         description: "On April 18, 1775, sexton Robert Newman hung two lanterns in this steeple: 'Two if by sea.' The signal launched the Revolution. Ordinary people, taking courageous action, can change history. Every vote is a signal that democracy still lives.",
         learnMore: "The church's box pews were originally owned by wealthy families - only property owners could vote. Universal suffrage took nearly 200 years to achieve.",
-        soundcloudUrl: "https://soundcloud.com/u2official/sunday-bloody-sunday",
-        songReason: "A protest song about violence and injustice that demands we never forget."
+        songs: [
+            { title: "Sunday Bloody Sunday", url: "https://soundcloud.com/u2/sunday-bloody-sunday-live", reason: "A protest song about violence and injustice that demands we never forget." },
+            { title: "Where Is the Love?", url: "https://soundcloud.com/blackeyedpeas/where-is-the-love", reason: "Black Eyed Peas' reflection on the state of democracy and society." },
+            { title: "Born to Run", url: "https://soundcloud.com/brucespringsteen/born-to-run", reason: "Springsteen's anthem of hope and the promise of freedom." }
+        ]
     },
     // Additional Voting Rights Stop 11
     {
@@ -599,8 +674,11 @@ const VOTING_TOUR = [
         widget: "voter-suppression",
         description: "Built in 1806, this is the oldest Black church building still standing in America. William Lloyd Garrison founded the New England Anti-Slavery Society here in 1832. This was the center of Boston's abolitionist movement and the fight for Black voting rights.",
         learnMore: "After the 15th Amendment passed in 1870, Southern states used poll taxes, literacy tests, and violence to suppress Black voters for another century.",
-        soundcloudUrl: "https://soundcloud.com/ninasimonefans/mississippi-goddam",
-        songReason: "A fierce protest song capturing the righteous anger of those who fought for freedom."
+        songs: [
+            { title: "Mississippi Goddam", url: "https://soundcloud.com/ninasimonefans/mississippi-goddam", reason: "A fierce protest song capturing the righteous anger of those who fought for freedom." },
+            { title: "Strange Fruit", url: "https://soundcloud.com/billie-holiday-official/strange-fruit", reason: "Billie Holiday's haunting protest against racial violence." },
+            { title: "Say It Loud - I'm Black and I'm Proud", url: "https://soundcloud.com/jamesbrown/say-it-loud", reason: "James Brown's anthem of Black pride and political awakening." }
+        ]
     },
     // Additional Voting Rights Stop 12
     {
@@ -614,8 +692,11 @@ const VOTING_TOUR = [
         widget: "voting-timeline",
         description: "This bronze relief honors Colonel Shaw and the 54th Massachusetts Infantry - the first Black regiment in the Civil War. These men fought and died for a country that denied them citizenship and voting rights. The 15th Amendment came 5 years after the war ended.",
         learnMore: "Half the 54th died in their assault on Fort Wagner. Black soldiers were paid less than white soldiers until Congress equalized pay in 1864.",
-        soundcloudUrl: "https://soundcloud.com/samcooke/a-change-is-gonna-come",
-        songReason: "A civil rights anthem honoring those who fought and died for a freedom they never lived to see."
+        songs: [
+            { title: "A Change Is Gonna Come", url: "https://soundcloud.com/samcooke/a-change-is-gonna-come", reason: "A civil rights anthem honoring those who fought and died for a freedom they never lived to see." },
+            { title: "Lift Every Voice and Sing", url: "https://soundcloud.com/raycharles/lift-every-voice-and-sing", reason: "The Black National Anthem - a song of hope and perseverance." },
+            { title: "Redemption Song", url: "https://soundcloud.com/bobmarley/redemption-song", reason: "Bob Marley's meditation on freedom and emancipation." }
+        ]
     },
     // Additional Voting Rights Stop 13
     {
@@ -629,8 +710,11 @@ const VOTING_TOUR = [
         widget: "voting-timeline",
         description: "This sculpture honors Abigail Adams (who urged 'remember the ladies'), Lucy Stone (suffragist who kept her maiden name), and Phillis Wheatley (first published African American poet). Women's suffrage took 72 years of organized struggle after Seneca Falls.",
         learnMore: "When Abigail wrote to John Adams about women's rights in 1776, he laughed it off. It took 144 years for women to win the vote nationally.",
-        soundcloudUrl: "https://soundcloud.com/helenreddy/i-am-woman",
-        songReason: "A feminist anthem capturing the perseverance of those who fought for decades for equality."
+        songs: [
+            { title: "I Am Woman", url: "https://soundcloud.com/helenreddy/i-am-woman", reason: "A feminist anthem capturing the perseverance of those who fought for decades for equality." },
+            { title: "Sisters Are Doin' It for Themselves", url: "https://soundcloud.com/arethafranklin/sisters-are-doin-it-for-themselves", reason: "A celebration of women's independence and political power." },
+            { title: "Run the World (Girls)", url: "https://soundcloud.com/beyonce/run-the-world-girls", reason: "Beyoncé's anthem of female empowerment and leadership." }
+        ]
     },
     // Additional Voting Rights Stop 14
     {
@@ -644,8 +728,11 @@ const VOTING_TOUR = [
         widget: "voter-turnout",
         description: "Boston's Brutalist City Hall sits where democracy happens daily - permits, licenses, marriages, and voter registration. The building is open to all. So is democracy, if we protect it. This is where you register to vote.",
         learnMore: "In the 2020 election, 159 million Americans voted - the highest turnout in 120 years. Massachusetts had 76% turnout.",
-        soundcloudUrl: "https://soundcloud.com/pattismith/people-have-the-power",
-        songReason: "A rallying cry reminding us that power lives in the people who show up."
+        songs: [
+            { title: "People Have the Power", url: "https://soundcloud.com/pattismith/people-have-the-power", reason: "A rallying cry reminding us that power lives in the people who show up." },
+            { title: "Waiting on the World to Change", url: "https://soundcloud.com/johnmayer/waiting-on-the-world-to-change", reason: "John Mayer's call for civic participation." },
+            { title: "Land of Confusion", url: "https://soundcloud.com/genesis/land-of-confusion", reason: "Genesis' commentary on political chaos and citizen responsibility." }
+        ]
     },
     // Additional Voting Rights Stop 15
     {
@@ -659,8 +746,11 @@ const VOTING_TOUR = [
         widget: "voter-suppression",
         description: "This 1888 monument honors the five victims of the Boston Massacre, with Crispus Attucks prominently featured. Attucks was the first person killed in the American Revolution - a Black man dying for a freedom he did not possess.",
         learnMore: "For decades, Boston refused to honor Attucks. It took 118 years from his death to erect this monument. History remembers who it chooses to remember.",
-        soundcloudUrl: "https://soundcloud.com/kendricklamar/alright",
-        songReason: "An anthem of Black resilience echoing across centuries of struggle."
+        songs: [
+            { title: "Alright", url: "https://soundcloud.com/livingforce/alright-kendrick-lamar", reason: "An anthem of Black resilience echoing across centuries of struggle." },
+            { title: "Formation", url: "https://soundcloud.com/beyonce/formation", reason: "Beyoncé's powerful statement on Black identity and political awareness." },
+            { title: "The Revolution Will Not Be Televised", url: "https://soundcloud.com/gil-scott-heron/the-revolution-will-not-be-televised", reason: "Gil Scott-Heron's groundbreaking spoken word about media and activism." }
+        ]
     },
     // Additional Voting Rights Stop 16
     {
@@ -674,8 +764,11 @@ const VOTING_TOUR = [
         widget: "voter-suppression",
         description: "The 'Step on Board' sculpture shows Harriet Tubman leading enslaved people to freedom. Boston was a key stop on the Underground Railroad. Tubman said, 'I freed a thousand slaves. I could have freed a thousand more if only they knew they were slaves.'",
         learnMore: "Tubman made 13 missions and rescued about 70 enslaved people. She later served as a Union spy. She'll appear on the $20 bill - eventually.",
-        soundcloudUrl: "https://soundcloud.com/beyonce/freedom",
-        songReason: "A powerful anthem of fearless pursuit of freedom for oneself and others."
+        songs: [
+            { title: "Freedom", url: "https://soundcloud.com/beyonce/freedom-homecoming-live", reason: "A powerful anthem of fearless pursuit of freedom for oneself and others." },
+            { title: "Glory", url: "https://soundcloud.com/johnlegend/glory", reason: "John Legend's tribute to the civil rights movement." },
+            { title: "Lean on Me", url: "https://soundcloud.com/bill-withers-official/lean-on-me-2", reason: "Bill Withers' message of community support on the path to freedom." }
+        ]
     },
     // Additional Voting Rights Stop 17
     {
@@ -689,8 +782,11 @@ const VOTING_TOUR = [
         widget: "voter-turnout",
         description: "These sculptures show starving Irish during the 1845-1852 famine, and prosperous Irish-Americans decades later. Over 100,000 Irish fled to Boston, facing 'No Irish Need Apply' signs. Within generations, they controlled the ballot box and City Hall.",
         learnMore: "The famine killed 1 million Irish and drove 2 million to emigrate. Today's debates about immigration echo the nativist backlash the Irish faced.",
-        soundcloudUrl: "https://soundcloud.com/u2official/pride-in-the-name-of-love",
-        songReason: "A tribute to the journey from persecution to political power through perseverance."
+        songs: [
+            { title: "Pride (In the Name of Love)", url: "https://soundcloud.com/u2/pride-in-the-name-of-love-remastered-2017", reason: "A tribute to the journey from persecution to political power through perseverance." },
+            { title: "This Land Is Your Land", url: "https://soundcloud.com/brucespringsteen/this-land-is-your-land-live", reason: "A folk anthem about immigrants finding their place in America." },
+            { title: "American Tune", url: "https://soundcloud.com/paulsimon/american-tune", reason: "Paul Simon's gentle reflection on the immigrant American experience." }
+        ]
     },
     // Additional Voting Rights Stop 18
     {
@@ -704,8 +800,11 @@ const VOTING_TOUR = [
         widget: "voter-turnout",
         description: "This 20-foot bronze depicts Martin Luther King Jr. and Coretta Scott King embracing. MLK spoke on Boston Common in 1965, the same year as the Voting Rights Act. 'The vote is the most powerful instrument ever devised by man for breaking down injustice.'",
         learnMore: "MLK called Boston his 'second home' - he met Coretta at the New England Conservatory and earned his PhD at Boston University.",
-        soundcloudUrl: "https://soundcloud.com/stevie-wonder-official/happy-birthday",
-        songReason: "A song that helped make MLK Day a federal holiday - celebrating love and legacy."
+        songs: [
+            { title: "Happy Birthday", url: "https://soundcloud.com/stevie-wonder-official/happy-birthday", reason: "A song that helped make MLK Day a federal holiday - celebrating love and legacy." },
+            { title: "What's Going On", url: "https://soundcloud.com/marvingaye/whats-going-on", reason: "Marvin Gaye's plea for understanding and peace." },
+            { title: "Respect", url: "https://soundcloud.com/arethafranklin/respect", reason: "Aretha Franklin's demand for dignity that MLK championed." }
+        ]
     },
     // Additional Voting Rights Stop 19
     {
@@ -719,8 +818,11 @@ const VOTING_TOUR = [
         widget: "voter-suppression",
         description: "Six glass towers represent six million Jews killed. The Holocaust began with voting - Hitler was elected, then dismantled democracy. The memorial warns: democracy can be destroyed from within if citizens don't protect it.",
         learnMore: "The memorial was vandalized twice in 2017. Democracy requires vigilance against hate. The path through the towers quotes survivors.",
-        soundcloudUrl: "https://soundcloud.com/leonardcohen/hallelujah",
-        songReason: "A spiritual meditation on brokenness and praise - finding beauty in sorrow."
+        songs: [
+            { title: "Hallelujah", url: "https://soundcloud.com/leonardcohen/hallelujah", reason: "A spiritual meditation on brokenness and praise - finding beauty in sorrow." },
+            { title: "Imagine", url: "https://soundcloud.com/johnlennon/imagine", reason: "John Lennon's vision of a world without division or hate." },
+            { title: "Bridge Over Troubled Water", url: "https://soundcloud.com/simonandgarfunkel/bridge-over-troubled-water", reason: "A promise of comfort through the darkest times." }
+        ]
     },
     // Additional Voting Rights Stop 20
     {
@@ -734,8 +836,11 @@ const VOTING_TOUR = [
         widget: "voting-timeline",
         description: "William Lloyd Garrison gave his first major anti-slavery speech here in 1829. 'America, it is to thee' was first sung here on July 4, 1831. Free speech, assembly, and petition are the foundation of voting rights - citizens must be able to organize.",
         learnMore: "Women couldn't vote until 1920. Black women in the South couldn't practically exercise that right until 1965. Progress is never linear.",
-        soundcloudUrl: "https://soundcloud.com/brucespringsteen/born-to-run",
-        songReason: "An urgent anthem of escape and hope - the American dream in motion."
+        songs: [
+            { title: "Born to Run", url: "https://soundcloud.com/brucespringsteen/born-to-run", reason: "An urgent anthem of escape and hope - the American dream in motion." },
+            { title: "We Shall Overcome", url: "https://soundcloud.com/joan-baez/we-shall-overcome-5", reason: "The civil rights anthem connecting speech to action." },
+            { title: "American Pie", url: "https://soundcloud.com/donmclean/american-pie", reason: "Don McLean's epic reflection on American history and democracy." }
+        ]
     }
 ];
 
@@ -753,8 +858,11 @@ const ART_TOUR = [
         image: "https://upload.wikimedia.org/wikipedia/en/5/5a/The_Embrace%2C_a_sculpture_in_Boston_Common_in_Boston.jpg",
         description: "Unveiled in 2023, this 20-foot bronze sculpture by Hank Willis Thomas depicts the embrace of Martin Luther King Jr. and Coretta Scott King. It commemorates their 1965 speech on Boston Common and represents love as a force for social change.",
         learnMore: "MLK called Boston his 'second home' - he met Coretta at the New England Conservatory and earned his PhD at Boston University. The sculpture sparked debate about how we memorialize leaders.",
-        soundcloudUrl: "https://soundcloud.com/stevie-wonder-official/happy-birthday",
-        songReason: "A song that campaigned for years to honor a leader - celebrating love as a force for change."
+        songs: [
+            { title: "Happy Birthday", url: "https://soundcloud.com/stevie-wonder-official/happy-birthday", reason: "A song that campaigned for years to honor a leader - celebrating love as a force for change." },
+            { title: "What's Going On", url: "https://soundcloud.com/marvingaye/whats-going-on", reason: "Marvin Gaye's plea for understanding that MLK championed." },
+            { title: "Imagine", url: "https://soundcloud.com/johnlennon/imagine", reason: "John Lennon's vision of peace that mirrors King's dream." }
+        ]
     },
     {
         id: 2,
@@ -768,8 +876,11 @@ const ART_TOUR = [
         image: "https://upload.wikimedia.org/wikipedia/commons/7/77/Robert_Gould_Shaw_Memorial_-_detail.jpg",
         description: "Augustus Saint-Gaudens spent 14 years creating this bronze relief honoring Colonel Robert Gould Shaw and the 54th Massachusetts Infantry - the first Black regiment in the Civil War. The soldiers march toward death and glory, fighting for a country that denied them citizenship.",
         learnMore: "Half the 54th died in their assault on Fort Wagner. The film 'Glory' tells their story. Black soldiers were paid less than white soldiers until Congress equalized pay in 1864.",
-        soundcloudUrl: "https://soundcloud.com/samcooke/a-change-is-gonna-come",
-        songReason: "A civil rights anthem about the sacrifice of those who fought for a country that denied them equality."
+        songs: [
+            { title: "A Change Is Gonna Come", url: "https://soundcloud.com/samcooke/a-change-is-gonna-come", reason: "A civil rights anthem about the sacrifice of those who fought for a country that denied them equality." },
+            { title: "Glory", url: "https://soundcloud.com/johnlegend/glory", reason: "John Legend's tribute from the film 'Selma' honoring sacrifice for freedom." },
+            { title: "Lift Every Voice and Sing", url: "https://soundcloud.com/raycharles/lift-every-voice-and-sing", reason: "The Black National Anthem honoring the struggle for equality." }
+        ]
     },
     {
         id: 3,
@@ -783,8 +894,11 @@ const ART_TOUR = [
         image: "https://upload.wikimedia.org/wikipedia/commons/8/89/Boston_Massacre_Memorial_-_IMG_9560.JPG",
         description: "This 1888 monument honors the five victims of the Boston Massacre, with Crispus Attucks - a Black sailor of African and Native American descent - prominently featured. Attucks was the first person killed in the American Revolution, a Black man dying for a freedom he did not possess.",
         learnMore: "For decades, Boston refused to honor Attucks. It took 118 years from his death to erect this monument. History remembers who it chooses to remember.",
-        soundcloudUrl: "https://soundcloud.com/ninasimonefans/mississippi-goddam",
-        songReason: "A fierce protest song channeling centuries of rage at injustice and violence."
+        songs: [
+            { title: "Mississippi Goddam", url: "https://soundcloud.com/ninasimonefans/mississippi-goddam", reason: "A fierce protest song channeling centuries of rage at injustice and violence." },
+            { title: "Strange Fruit", url: "https://soundcloud.com/billie-holiday-official/strange-fruit", reason: "Billie Holiday's haunting protest against racial violence." },
+            { title: "Alright", url: "https://soundcloud.com/livingforce/alright-kendrick-lamar", reason: "Kendrick Lamar's anthem of Black resilience across generations." }
+        ]
     },
     {
         id: 4,
@@ -798,8 +912,11 @@ const ART_TOUR = [
         image: "https://www.boston.gov/sites/default/files/styles/800_embedded_ckeditor/public/img/library/photos/2023/10/women-big.jpg?itok=cdHTlwFv",
         description: "Meredith Bergmann's 2003 sculpture honors three Massachusetts women: Abigail Adams (who urged her husband to 'remember the ladies'), Lucy Stone (suffragist who kept her maiden name), and Phillis Wheatley (the first published African American poet).",
         learnMore: "When Abigail wrote to John Adams about women's rights in 1776, he laughed it off. It took 144 years for women to win the vote.",
-        soundcloudUrl: "https://soundcloud.com/arethafranklin/respect",
-        songReason: "A demand for respect honoring generations of women who fought for recognition."
+        songs: [
+            { title: "Respect", url: "https://soundcloud.com/arethafranklin/respect", reason: "A demand for respect honoring generations of women who fought for recognition." },
+            { title: "I Am Woman", url: "https://soundcloud.com/helenreddy/i-am-woman", reason: "Helen Reddy's feminist anthem of perseverance." },
+            { title: "Sisters Are Doin' It for Themselves", url: "https://soundcloud.com/arethafranklin/sisters-are-doin-it-for-themselves", reason: "A celebration of women's independence and achievement." }
+        ]
     },
     {
         id: 5,
@@ -813,8 +930,11 @@ const ART_TOUR = [
         image: "https://upload.wikimedia.org/wikipedia/commons/8/81/Harriet_Tubman_Memorial_Boston.jpg",
         description: "Fern Cunningham's 1999 sculpture shows Harriet Tubman leading enslaved people to freedom on the Underground Railroad. Boston was a key stop on that railroad, with abolitionists hiding freedom seekers in Beacon Hill homes just blocks from the State House.",
         learnMore: "Tubman made 13 missions and rescued about 70 enslaved people. She later served as a Union spy. She'll appear on the $20 bill - eventually.",
-        soundcloudUrl: "https://soundcloud.com/beyonce/freedom",
-        songReason: "A powerful anthem embodying fearless leadership on the path to freedom."
+        songs: [
+            { title: "Freedom", url: "https://soundcloud.com/beyonce/freedom-homecoming-live", reason: "A powerful anthem embodying fearless leadership on the path to freedom." },
+            { title: "Redemption Song", url: "https://soundcloud.com/bobmarley/redemption-song", reason: "Bob Marley's meditation on freedom and emancipation." },
+            { title: "Oh Freedom", url: "https://soundcloud.com/odetta/oh-freedom", reason: "A traditional spiritual that accompanied the freedom movement." }
+        ]
     },
     {
         id: 6,
@@ -828,8 +948,11 @@ const ART_TOUR = [
         image: "https://images.unsplash.com/photo-1575936123452-b67c3203c357?w=800&q=80",
         description: "Anne Whitney's 1880 bronze depicts the 'Father of the American Revolution' pointing defiantly, as if challenging British authority. Adams organized the Sons of Liberty, planned the Boston Tea Party, and signed the Declaration. He stands before the 'Cradle of Liberty.'",
         learnMore: "Adams was a failed businessman but a brilliant propagandist. He wrote under dozens of pen names, flooding newspapers with revolutionary ideas.",
-        soundcloudUrl: "https://soundcloud.com/public-enemy-music/fight-the-power-1",
-        songReason: "A revolutionary anthem channeling the radical spirit of resistance against tyranny."
+        songs: [
+            { title: "Fight the Power", url: "https://soundcloud.com/publicenemy/fight-the-power", reason: "A revolutionary anthem channeling the radical spirit of resistance against tyranny." },
+            { title: "Won't Back Down", url: "https://soundcloud.com/popetcetera/i-wont-back-down-tom-petty", reason: "A defiant declaration of standing firm for one's beliefs." },
+            { title: "Revolution", url: "https://soundcloud.com/thebeatles/revolution", reason: "The Beatles' reflection on radical change and protest." }
+        ]
     },
     {
         id: 7,
@@ -843,8 +966,11 @@ const ART_TOUR = [
         image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80",
         description: "Robert Shure's 1998 sculptures show two groups: starving Irish during the 1845-1852 famine, and prosperous Irish-Americans decades later. Over 100,000 Irish fled to Boston, facing 'No Irish Need Apply' signs. Within generations, they ran the city.",
         learnMore: "The famine killed 1 million Irish and drove 2 million to emigrate. Today's debates about immigration echo the nativist backlash the Irish faced.",
-        soundcloudUrl: "https://soundcloud.com/u2official/sunday-bloody-sunday",
-        songReason: "A protest song connecting legacies of suffering to ongoing struggles for justice."
+        songs: [
+            { title: "Sunday Bloody Sunday", url: "https://soundcloud.com/u2/sunday-bloody-sunday-live", reason: "A protest song connecting legacies of suffering to ongoing struggles for justice." },
+            { title: "The Fields of Athenry", url: "https://soundcloud.com/dubliners/the-fields-of-athenry", reason: "A haunting ballad about the Irish famine and transportation." },
+            { title: "American Tune", url: "https://soundcloud.com/paulsimon/american-tune", reason: "Paul Simon's reflection on the immigrant journey to America." }
+        ]
     },
     {
         id: 8,
@@ -858,8 +984,11 @@ const ART_TOUR = [
         image: "https://images.unsplash.com/photo-1569974507005-6dc61f97fb5c?w=800&q=80",
         description: "Martin Milmore's 1877 monument honors Civil War soldiers and sailors. Four bronze figures represent Peace, History, the Navy, and the Army. At the base, relief sculptures depict departure for war, battle, the sanitary commission, and the return home.",
         learnMore: "Massachusetts sent over 150,000 men to fight in the Civil War. The monument cost $93,000 - equivalent to about $2.5 million today.",
-        soundcloudUrl: "https://soundcloud.com/brucespringsteen/born-in-the-usa",
-        songReason: "A complex portrait of soldiers and the sacrifices made in the name of country."
+        songs: [
+            { title: "Born in the U.S.A.", url: "https://soundcloud.com/brucespringsteen/born-in-the-usa", reason: "A complex portrait of soldiers and the sacrifices made in the name of country." },
+            { title: "Fortunate Son", url: "https://soundcloud.com/creedenceclearwaterrevival/fortunate-son", reason: "CCR's commentary on who serves and who is spared." },
+            { title: "The Battle Hymn of the Republic", url: "https://soundcloud.com/classicalmusic/battle-hymn-of-the-republic", reason: "The Civil War anthem that inspired soldiers to fight for union and freedom." }
+        ]
     },
     {
         id: 9,
@@ -873,8 +1002,11 @@ const ART_TOUR = [
         image: "https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=800&q=80",
         description: "Six luminous glass towers, each 54 feet tall, represent the six million Jews killed and the six major death camps. Steam rises from grates below, evoking crematorium smoke. Numbers etched in glass memorialize individual victims. Never forget.",
         learnMore: "The memorial was vandalized twice in 2017. Democracy requires vigilance against hate. The path through the towers quotes survivors.",
-        soundcloudUrl: "https://soundcloud.com/leonardcohen/hallelujah",
-        songReason: "A meditation on broken faith and transcendence - finding light in darkness."
+        songs: [
+            { title: "Hallelujah", url: "https://soundcloud.com/leonardcohen/hallelujah", reason: "A meditation on broken faith and transcendence - finding light in darkness." },
+            { title: "Imagine", url: "https://soundcloud.com/johnlennon/imagine", reason: "John Lennon's vision of a world without division or hate." },
+            { title: "Bridge Over Troubled Water", url: "https://soundcloud.com/simonandgarfunkel/bridge-over-troubled-water", reason: "A promise of comfort and support through the darkest times." }
+        ]
     },
     {
         id: 10,
@@ -888,8 +1020,11 @@ const ART_TOUR = [
         image: "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=800&q=80",
         description: "This vibrant mural depicts Frederick Douglass, who spoke throughout Boston demanding abolition and equal rights. Roxbury's streets feature numerous murals celebrating Black history, from civil rights leaders to local heroes. Public art makes history visible.",
         learnMore: "Douglass escaped slavery and became America's most powerful voice against it. He advised Lincoln, recruited Black soldiers, and fought for women's suffrage.",
-        soundcloudUrl: "https://soundcloud.com/kendricklamar/alright",
-        songReason: "An anthem of Black resilience and hope channeling the spirit of perseverance."
+        songs: [
+            { title: "Alright", url: "https://soundcloud.com/livingforce/alright-kendrick-lamar", reason: "An anthem of Black resilience and hope channeling the spirit of perseverance." },
+            { title: "A Change Is Gonna Come", url: "https://soundcloud.com/samcooke/a-change-is-gonna-come", reason: "Sam Cooke's hopeful anthem that inspired Douglass' spirit." },
+            { title: "Respect", url: "https://soundcloud.com/arethafranklin/respect", reason: "Aretha Franklin's demand for dignity that Douglass championed." }
+        ]
     },
     {
         id: 11,
@@ -903,143 +1038,11 @@ const ART_TOUR = [
         image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&q=80",
         description: "Artist Kelsey Montague painted these giant blue and yellow wings on The Lenox Hotel, steps from the Boston Marathon finish line. Part of her #WhatLiftsYou series, visitors pose with the wings behind them. The interactive mural celebrates resilience, aspiration, and the spirit of Boston Strong.",
         learnMore: "Montague's wings have appeared in cities worldwide, each asking 'What lifts you?' Near the marathon finish, runners and survivors pose with wings representing triumph over adversity.",
-        soundcloudUrl: "https://soundcloud.com/beyonce/freedom",
-        songReason: "An anthem of liberation and triumph celebrating resilience and aspiration."
-    }
-];
-
-// Supreme Court Reform Tour - 10 stops (multicolored pins showing interconnected issues)
-const SCOTUS_TOUR = [
-    {
-        id: 1,
-        name: "Old City Hall: Halls of Justice",
-        location: "45 School St",
-        coordinates: [42.3580, -71.0594],
-        creator: "VoteCraft Boston",
-        likes: 356,
-        civicTheme: CIVIC_THEMES.SCOTUS,
-        widget: "scotus-approval",
-        description: "Boston's courts upheld the Fugitive Slave Act in the 1850s, forcing the return of escaped slaves. Judge Lemuel Shaw, Herman Melville's father-in-law, was among those who enforced unjust laws. Courts reflect their times - and can perpetuate injustice.",
-        learnMore: "Supreme Court approval dropped to 40% in 2023 - the lowest ever recorded. Trust in judicial institutions is declining.",
-        soundcloudUrl: "https://soundcloud.com/metallica/and-justice-for-all"
-    },
-    {
-        id: 2,
-        name: "Faneuil Hall: Constitutional Debates",
-        location: "Faneuil Hall, Congress St",
-        coordinates: [42.3600, -71.0569],
-        creator: "VoteCraft Boston",
-        likes: 334,
-        civicTheme: CIVIC_THEMES.DEMOCRACY,
-        widget: "court-expansion",
-        image: "https://upload.wikimedia.org/wikipedia/commons/3/35/2017_Faneuil_Hall.jpg",
-        description: "The founders debated everything here - including how to structure the courts. The Constitution doesn't specify how many Supreme Court justices there should be. Congress has changed the number seven times, from 5 to 10 to the current 9.",
-        learnMore: "FDR tried to expand the Court to 15 justices in 1937. He failed, but the threat may have influenced the Court to uphold New Deal programs.",
-        soundcloudUrl: "https://soundcloud.com/brucespringsteen/born-in-the-usa"
-    },
-    {
-        id: 3,
-        name: "State House: Judicial Selection",
-        location: "24 Beacon St",
-        coordinates: [42.3587, -71.0637],
-        creator: "VoteCraft Boston",
-        likes: 298,
-        civicTheme: CIVIC_THEMES.VOTING,
-        widget: "judicial-terms",
-        description: "Federal judges serve for life; Massachusetts judges face mandatory retirement at 70. State judicial selection varies: elections, appointments, commissions. Each method has tradeoffs between independence and accountability.",
-        learnMore: "The average Supreme Court justice now serves 26 years - up from 15 in 1970. Longer terms mean fewer opportunities to shape the Court.",
-        soundcloudUrl: "https://soundcloud.com/davidbowie/changes"
-    },
-    {
-        id: 4,
-        name: "Old State House: Rule of Law",
-        location: "206 Washington St",
-        coordinates: [42.3588, -71.0578],
-        creator: "VoteCraft Boston",
-        likes: 389,
-        civicTheme: CIVIC_THEMES.JOURNALISM,
-        widget: "ethics-reform",
-        description: "The Declaration of Independence was read from this balcony. It accused King George of obstructing justice and making judges dependent on his will. The founders feared concentrated judicial power - yet created lifetime appointments.",
-        learnMore: "SCOTUS has no binding ethics code - the only federal court without one. Justices have received millions in undisclosed gifts.",
-        soundcloudUrl: "https://soundcloud.com/bobdylan/the-times-they-are-a-changin"
-    },
-    {
-        id: 5,
-        name: "Granary: Founders on Courts",
-        location: "Tremont St",
-        coordinates: [42.3573, -71.0610],
-        creator: "VoteCraft Boston",
-        likes: 267,
-        civicTheme: CIVIC_THEMES.IMMIGRATION,
-        widget: "court-expansion",
-        description: "John Adams, buried here, championed an independent judiciary. He wrote the Massachusetts Constitution's 'rule of law' clause. Adams defended British soldiers after the Boston Massacre, proving even unpopular defendants deserve justice.",
-        learnMore: "Adams said, 'Facts are stubborn things.' He believed in rule of law even when politically costly. Six accused soldiers were acquitted.",
-        soundcloudUrl: "https://soundcloud.com/buffalospringfield/for-what-its-worth"
-    },
-    {
-        id: 6,
-        name: "Boston Massacre Site: Justice Tested",
-        location: "State St & Congress St",
-        coordinates: [42.3589, -71.0574],
-        creator: "VoteCraft Boston",
-        likes: 312,
-        civicTheme: CIVIC_THEMES.ECONOMY,
-        widget: "scotus-approval",
-        description: "The circle of cobblestones marks where Crispus Attucks and four others died. John Adams' defense of the soldiers proved the colonies could provide fair trials. 'Counsel ought to be the last thing that an accused person should want,' he said.",
-        learnMore: "Public opinion demanded conviction; Adams secured acquittals. Independence of the judiciary means ruling against popular sentiment when justice requires.",
-        soundcloudUrl: "https://soundcloud.com/rageagainstthemachine/killing-in-the-name"
-    },
-    {
-        id: 7,
-        name: "Old South Meeting House: Judicial Review",
-        location: "310 Washington St",
-        coordinates: [42.3567, -71.0585],
-        creator: "VoteCraft Boston",
-        likes: 234,
-        civicTheme: CIVIC_THEMES.HEALTHCARE,
-        widget: "judicial-terms",
-        description: "Colonial courts had limited power over Parliament. After independence, Marbury v. Madison (1803) established judicial review - courts can strike down laws as unconstitutional. This power isn't in the Constitution; the Court claimed it.",
-        learnMore: "Judicial review makes the Supreme Court extraordinarily powerful. No other democracy gives courts such unchecked authority over legislation.",
-        soundcloudUrl: "https://soundcloud.com/johnlennon/power-to-the-people"
-    },
-    {
-        id: 8,
-        name: "African Meeting House: Dred Scott's Shadow",
-        location: "8 Smith Court",
-        coordinates: [42.3598, -71.0650],
-        creator: "VoteCraft Boston",
-        likes: 287,
-        civicTheme: CIVIC_THEMES.HOUSING,
-        widget: "ethics-reform",
-        description: "In 1857, the Supreme Court's Dred Scott decision declared Black people could never be citizens. Boston's abolitionists gathered here in outrage. The decision is considered the worst in Court history - proof that the Court can be catastrophically wrong.",
-        learnMore: "Dred Scott accelerated the Civil War. Other reviled decisions: Plessy v. Ferguson (segregation), Korematsu (Japanese internment), Citizens United (unlimited money in politics).",
-        soundcloudUrl: "https://soundcloud.com/ninasimonefans/mississippi-goddam"
-    },
-    {
-        id: 9,
-        name: "Park Street Church: Moral Authority",
-        location: "Park Street Church",
-        coordinates: [42.3564, -71.0621],
-        creator: "VoteCraft Boston",
-        likes: 198,
-        civicTheme: CIVIC_THEMES.EDUCATION,
-        widget: "scotus-approval",
-        description: "Churches and courts both claim moral authority. When the Supreme Court ruled against prayer in schools (1962) and for abortion rights (1973), religious conservatives began a decades-long campaign to reshape the judiciary.",
-        learnMore: "The Federalist Society, founded in 1982, has successfully placed conservative judges throughout the federal judiciary.",
-        soundcloudUrl: "https://soundcloud.com/rem-official/losing-my-religion"
-    },
-    {
-        id: 10,
-        name: "Government Center: We the People",
-        location: "City Hall Plaza",
-        coordinates: [42.3604, -71.0589],
-        creator: "VoteCraft Boston",
-        likes: 245,
-        civicTheme: CIVIC_THEMES.CLIMATE,
-        widget: "court-expansion",
-        description: "Democracy requires that power flows from the people. The Supreme Court, with lifetime appointments and no elections, seems to contradict this. Reformers propose term limits, expansion, or rotation. The debate over judicial power continues.",
-        learnMore: "Proposals include: 18-year terms, adding 4 justices, rotating appeals court judges to SCOTUS, or requiring supermajority votes to overturn laws.",
-        soundcloudUrl: "https://soundcloud.com/youngbloods/get-together"
+        songs: [
+            { title: "Freedom", url: "https://soundcloud.com/beyonce/freedom-homecoming-live", reason: "An anthem of liberation and triumph celebrating resilience and aspiration." },
+            { title: "Roar", url: "https://soundcloud.com/katyperry/roar", reason: "Katy Perry's empowering anthem of rising above adversity." },
+            { title: "Stronger", url: "https://soundcloud.com/kellyClarkson/stronger", reason: "Kelly Clarkson's message that what doesn't kill you makes you stronger." }
+        ]
     }
 ];
 
