@@ -12,25 +12,29 @@
             id: 'civic-sampler',
             name: 'Freedom Trail Sampler',
             icon: '🗽',
-            color: '#3B82F6'
+            color: '#22C55E',
+            bgColor: 'rgba(34, 197, 94, 0.15)'
         },
         {
             id: 'healthcare',
             name: 'Healthcare Justice Tour',
             icon: '🏥',
-            color: '#10B981'
+            color: '#3B82F6',
+            bgColor: 'rgba(59, 130, 246, 0.15)'
         },
         {
             id: 'voting-rights',
             name: 'Voting Rights Tour',
             icon: '🗳️',
-            color: '#8B5CF6'
+            color: '#8B5CF6',
+            bgColor: 'rgba(139, 92, 246, 0.15)'
         },
         {
             id: 'art-action',
             name: 'ART ACTION TOUR',
             icon: '🎨',
-            color: '#F59E0B'
+            color: '#F59E0B',
+            bgColor: 'rgba(245, 158, 11, 0.15)'
         }
     ];
 
@@ -127,7 +131,8 @@
                                     <div class="accordion-item ${currentTourId === tour.id ? 'active' : ''}"
                                          onclick="selectTourFromNav('${tour.id}')"
                                          role="button"
-                                         tabindex="0">
+                                         tabindex="0"
+                                         style="background: ${tour.bgColor}; border-left: 3px solid ${tour.color};">
                                         <span class="text-xl">${tour.icon}</span>
                                         <div class="flex-1">
                                             <div class="text-white font-medium text-sm">${tour.name}</div>
