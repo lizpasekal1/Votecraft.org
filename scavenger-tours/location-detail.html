@@ -799,13 +799,14 @@
             const songInfo = window.songData[index] || { type: 'soundcloud', videoId: null };
 
             if (currentlyPlaying === index) {
-                // Currently playing this song - pause it
+                // Currently playing this song - pause it and collapse
                 if (songInfo.type === 'youtube') {
                     youtubeControl(iframe, songInfo.videoId, false);
                 } else {
                     soundcloudCommand(iframe, 'pause');
                 }
                 songItem.classList.remove('playing');
+                songItem.classList.remove('expanded');
                 currentlyPlaying = null;
             } else {
                 // Stop any other playing song first
@@ -820,6 +821,7 @@
                     }
                     if (prevItem) {
                         prevItem.classList.remove('playing');
+                        prevItem.classList.remove('expanded');
                     }
                 }
 
