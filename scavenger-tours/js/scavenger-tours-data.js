@@ -285,24 +285,6 @@ const HEALTHCARE_TOUR = [
     },
     {
         id: 5,
-        name: "AIDS Memorial in the Fens",
-        location: "The Fens, near Park Drive",
-        coordinates: [42.3415, -71.0955],
-        creator: "VoteCraft Boston",
-        likes: 267,
-        civicTheme: CIVIC_THEMES.ECONOMY,
-        widget: "healthcare-compare",
-        image: "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&q=80",
-        description: "This quiet memorial honors those lost to the AIDS epidemic. In the 1980s, the government's slow response to AIDS cost thousands of lives. The LGBTQ+ community organized, demanded research funding, and changed how we respond to public health crises.",
-        learnMore: "ACT UP's activism forced faster FDA drug approvals. Today's rapid COVID vaccine development built on systems created by AIDS activists demanding 'Drugs Into Bodies.'",
-        songs: [
-            { title: "That's What Friends Are For", url: "https://www.youtube.com/watch?v=HyTpu6BmE88", reason: "The 1985 charity single that raised millions for AIDS research and showed the power of celebrity activism." },
-            { title: "I'll Be There", url: "https://www.youtube.com/watch?v=mAzLENBOqoE", reason: "The Jackson 5's promise of support that resonates with those who cared for loved ones." },
-            { title: "You've Got a Friend", url: "https://www.youtube.com/watch?v=6ZHdxYf0cWs", reason: "Carole King's tender message of unconditional support." }
-        ]
-    },
-    {
-        id: 6,
         name: "Roxbury Health Equity Mural",
         location: "Dudley Square, Roxbury",
         coordinates: [42.3295, -71.0845],
@@ -320,7 +302,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 7,
+        id: 6,
         name: "Healthcare Heroes Memorial Garden",
         location: "South End, near Boston Medical Center",
         coordinates: [42.3345, -71.0720],
@@ -338,7 +320,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 8,
+        id: 7,
         name: "Fenway Community Health",
         location: "1340 Boylston St, Fenway",
         coordinates: [42.3435, -71.0970],
@@ -355,7 +337,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 9,
+        id: 8,
         name: "The Fens & Victory Gardens",
         location: "The Fenway, near Agassiz Rd",
         coordinates: [42.3420, -71.0960],
@@ -372,7 +354,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 10,
+        id: 9,
         name: "Isabella Stewart Gardner Museum",
         location: "25 Evans Way",
         coordinates: [42.3384, -71.0990],
@@ -389,7 +371,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 11,
+        id: 10,
         name: "Perkins School Tactile Garden",
         location: "Watertown, Perkins School for the Blind",
         coordinates: [42.3650, -71.1850],
@@ -407,7 +389,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 12,
+        id: 11,
         name: "Dr. Rebecca Lee Crumpler Memorial",
         location: "Beacon Hill, near Charles St",
         coordinates: [42.3560, -71.0700],
@@ -425,7 +407,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 13,
+        id: 12,
         name: "Mental Health Awareness Mural",
         location: "Jamaica Plain, Centre Street",
         coordinates: [42.3125, -71.1150],
@@ -443,7 +425,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 14,
+        id: 13,
         name: "Nurses Memorial Sculpture",
         location: "Massachusetts General Hospital grounds",
         coordinates: [42.3630, -71.0685],
@@ -461,7 +443,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 15,
+        id: 14,
         name: "MassArt & Mental Health",
         location: "621 Huntington Ave",
         coordinates: [42.3368, -71.0985],
