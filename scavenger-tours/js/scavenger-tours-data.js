@@ -440,6 +440,24 @@ const HEALTHCARE_TOUR = [
             { title: "Unwritten", url: "https://www.youtube.com/watch?v=b7k0a5hYnSI", reason: "A song about creative potential and new beginnings." },
             { title: "Lean on Me", url: "https://www.youtube.com/watch?v=fOZ-MySzAac", reason: "Bill Withers' call for mutual support in mental health." }
         ]
+    },
+    {
+        id: 14,
+        name: "Vietnam Veterans Memorial",
+        location: "100 Park Dr, Boston",
+        coordinates: [42.3442, -71.0962],
+        creator: "VoteCraft Boston",
+        likes: 198,
+        civicTheme: CIVIC_THEMES.DEMOCRACY,
+        widget: "veteran-health",
+        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Massachusetts_Vietnam_Veterans_Memorial_-_IMG_7503.JPG/1280px-Massachusetts_Vietnam_Veterans_Memorial_-_IMG_7503.JPG",
+        description: "This poignant memorial honors Massachusetts veterans of the Vietnam War. Beyond remembrance, it reminds us of the healthcare crisis facing veterans. Over 500,000 Vietnam veterans still suffer from PTSD, and veteran suicide rates remain tragically high.",
+        learnMore: "Veterans face unique health challenges: Agent Orange exposure, traumatic brain injuries, and PTSD affect millions. Yet VA healthcare funding has struggled to meet demand, with some veterans waiting months for mental health appointments.",
+        songs: [
+            { title: "Born in the U.S.A.", url: "https://www.youtube.com/watch?v=EPhWR4d3FJQ", reason: "Bruce Springsteen's powerful reflection on the Vietnam veteran experience." },
+            { title: "Fortunate Son", url: "https://www.youtube.com/watch?v=ec0XKhAHR5I", reason: "CCR's protest anthem questioning who bears the burden of war." },
+            { title: "Blowin' in the Wind", url: "https://www.youtube.com/watch?v=vWwgrjjIMXA", reason: "Bob Dylan's timeless questions about peace, war, and human cost." }
+        ]
     }
 ];
 
