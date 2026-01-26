@@ -413,8 +413,42 @@
 
     // Navigation is handled by nav-component.js
 
-    // Select a tour
-    window.selectTour = function(tourId) {
+    // Tour welcome background images
+    const TOUR_IMAGES = {
+        'civic-sampler': 'https://upload.wikimedia.org/wikipedia/commons/3/35/2017_Faneuil_Hall.jpg',
+        'healthcare': 'https://upload.wikimedia.org/wikipedia/commons/f/f5/Brigham_and_Women%E2%80%99s_Hospital_%2854954429093%29.jpg',
+        'voting-rights': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Massachusetts_State_House_-_Boston%2C_MA_-_DSC04664.JPG/3840px-Massachusetts_State_House_-_Boston%2C_MA_-_DSC04664.JPG',
+        'art-action': 'https://upload.wikimedia.org/wikipedia/commons/6/60/Boston_Common_view.jpg'
+    };
+
+    // Show tour welcome screen
+    function showTourWelcome(tourId, tour) {
+        const backgroundImage = TOUR_IMAGES[tourId] || TOUR_IMAGES['civic-sampler'];
+
+        modalsContainer.innerHTML = `
+            <div id="tour-welcome-screen" class="fixed inset-0 z-50 flex items-center justify-center"
+                 style="background-image: url('${backgroundImage}'); background-size: cover; background-position: center;">
+                <!-- Dark overlay for readability -->
+                <div class="absolute inset-0 bg-black/40"></div>
+
+                <!-- Welcome container -->
+                <div class="relative z-10 mx-4 px-8 py-10 rounded-2xl text-center max-w-md w-full"
+                     style="background: rgba(66, 105, 255, 0.85);">
+                    <div class="text-5xl mb-4">${tour.icon}</div>
+                    <h1 class="text-white text-2xl font-bold mb-2">Welcome to the</h1>
+                    <h2 class="text-white text-3xl font-bold mb-4">${tour.name}</h2>
+                    <p class="text-white/90 text-sm mb-6">${tour.description}</p>
+                    <button onclick="startTour('${tourId}')"
+                            class="bg-white text-blue-600 font-bold px-8 py-3 rounded-full text-lg hover:bg-gray-100 transition-colors">
+                        Start Tour
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    // Start tour after welcome screen
+    window.startTour = function(tourId) {
         const tour = TOUR_TYPES.find(t => t.id === tourId);
         if (!tour) return;
 
@@ -422,8 +456,10 @@
         currentTourId = tourId;
         selectedPin = null;
 
-        // Update UI
+        // Close welcome screen
         closeModal();
+
+        // Update UI
         reloadMap();
         renderPlaylists();
 
@@ -435,6 +471,18 @@
 
         // Update map overlay
         updateMapTourName(tourId, tour.name);
+    };
+
+    // Select a tour (shows welcome screen first)
+    window.selectTour = function(tourId) {
+        const tour = TOUR_TYPES.find(t => t.id === tourId);
+        if (!tour) return;
+
+        // Close any existing modal (like the tour picker)
+        closeModal();
+
+        // Show welcome screen
+        showTourWelcome(tourId, tour);
     };
 
     // Helper to update the map tour name overlay
@@ -697,9 +745,11 @@
 
     // Initialize
     document.addEventListener('DOMContentLoaded', function() {
-        // Check for tour parameter in URL (for returning from detail page)
+        // Check for tour parameter in URL
         const urlParams = new URLSearchParams(window.location.search);
         const tourParam = urlParams.get('tour');
+        const showWelcome = urlParams.get('welcome') === '1';
+
         if (tourParam && ALL_TOURS[tourParam]) {
             currentTourId = tourParam;
             const tour = TOUR_TYPES.find(t => t.id === tourParam);
@@ -709,6 +759,19 @@
                     headerTitle.textContent = tour.name;
                 }
                 updateMapTourName(tourParam, tour.name);
+
+                // Show welcome screen if coming from tour selection
+                if (showWelcome) {
+                    // Remove welcome param from URL without reloading
+                    const newUrl = new URL(window.location);
+                    newUrl.searchParams.delete('welcome');
+                    window.history.replaceState({}, '', newUrl);
+
+                    // Show welcome screen after a brief delay for page to render
+                    setTimeout(() => {
+                        showTourWelcome(tourParam, tour);
+                    }, 100);
+                }
             }
         }
 
