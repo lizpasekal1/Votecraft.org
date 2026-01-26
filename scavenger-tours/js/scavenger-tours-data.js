@@ -270,6 +270,7 @@ const HEALTHCARE_TOUR = [
         name: "Dana-Farber Cancer Institute",
         location: "450 Brookline Ave",
         coordinates: [42.3380, -71.1080],
+        image: "https://www.myaccesshope.org/hs-fs/hubfs/Dana-Farber-architecture-1920.jpg",
         creator: "VoteCraft Boston",
         likes: 389,
         civicTheme: CIVIC_THEMES.HEALTHCARE,
