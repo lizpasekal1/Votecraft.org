@@ -355,24 +355,6 @@ const HEALTHCARE_TOUR = [
     },
     {
         id: 9,
-        name: "Nurses Memorial Sculpture",
-        location: "Massachusetts General Hospital grounds",
-        coordinates: [42.3630, -71.0685],
-        creator: "VoteCraft Boston",
-        likes: 134,
-        civicTheme: CIVIC_THEMES.ECONOMY,
-        widget: "healthcare-cost",
-        image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=800&q=80",
-        description: "This bronze sculpture honors the nurses who form the backbone of healthcare. Depicting a nurse comforting a patient, it stands near America's oldest hospital. There are 4.2 million nurses in the US - the largest healthcare profession - yet nursing shortages persist.",
-        learnMore: "The average nurse-to-patient ratio has worsened over decades. Studies show each additional patient per nurse increases mortality risk by 7%. Safe staffing saves lives.",
-        songs: [
-            { title: "Lean on Me", url: "https://www.youtube.com/watch?v=fOZ-MySzAac", reason: "Bill Withers' anthem of support, embodying the nurse-patient relationship." },
-            { title: "You've Got a Friend", url: "https://www.youtube.com/watch?v=6ZHdxYf0cWs", reason: "Carole King's tender promise of care when you need it most." },
-            { title: "Hero", url: "https://www.youtube.com/watch?v=0IA3ZvCkRkQ", reason: "Mariah Carey's tribute to everyday healthcare heroes." }
-        ]
-    },
-    {
-        id: 10,
         name: "MassArt & Mental Health",
         location: "621 Huntington Ave",
         coordinates: [42.3368, -71.0985],
@@ -389,7 +371,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 11,
+        id: 10,
         name: "Vietnam Veterans Memorial",
         location: "100 Park Dr, Boston",
         coordinates: [42.3442, -71.0962],
@@ -407,7 +389,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 12,
+        id: 11,
         name: "Ether Monument",
         location: "Boston Public Garden",
         coordinates: [42.3540, -71.0695],
