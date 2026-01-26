@@ -14,7 +14,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Custom styles -->
-    <link rel="stylesheet" href="./css/scavenger-tours.css?v=27">
+    <link rel="stylesheet" href="./css/scavenger-tours.css?v=28">
 </head>
 <body>
     <!-- Page transition overlay -->
@@ -603,9 +603,9 @@
             if (btn) {
                 const isSaved = isSongSaved(songUrl);
                 btn.innerHTML = isSaved
-                    ? `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
-                    : `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`;
-                btn.style.color = isSaved ? themeColor : '#9ca3af';
+                    ? `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
+                    : `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`;
+                btn.style.color = isSaved ? themeColor : '#6b7280';
             }
         }
 
@@ -780,30 +780,30 @@
                         </div>
                         <!-- Song Reason with Save Button -->
                         ${song.reason ? `
-                        <div class="flex items-start gap-2 mt-2">
-                            <button class="save-song-btn p-1 transition-colors flex-shrink-0" data-index="${index}"
-                                    style="color: ${songIsSaved ? themeColor : '#9ca3af'};"
+                        <div class="flex items-start gap-3 mt-2">
+                            <p class="song-reason flex-1">${song.reason}</p>
+                            <button class="save-song-btn p-2 transition-all flex-shrink-0 rounded-lg hover:bg-gray-700/50" data-index="${index}"
+                                    style="color: ${songIsSaved ? themeColor : '#6b7280'};"
                                     onclick="toggleSaveSong(${index}); event.stopPropagation();"
                                     title="${songIsSaved ? 'Remove from saved' : 'Save song'}">
                                 ${songIsSaved
-                                    ? `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
-                                    : `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
+                                    ? `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
+                                    : `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
                                 }
                             </button>
-                            <p class="song-reason flex-1">${song.reason}</p>
                         </div>
                         ` : `
-                        <div class="flex items-center gap-2 mt-2">
-                            <button class="save-song-btn p-1 transition-colors" data-index="${index}"
-                                    style="color: ${songIsSaved ? themeColor : '#9ca3af'};"
+                        <div class="flex items-center justify-end gap-2 mt-2">
+                            <span class="text-gray-400 text-sm">Save this song</span>
+                            <button class="save-song-btn p-2 transition-all rounded-lg hover:bg-gray-700/50" data-index="${index}"
+                                    style="color: ${songIsSaved ? themeColor : '#6b7280'};"
                                     onclick="toggleSaveSong(${index}); event.stopPropagation();"
                                     title="${songIsSaved ? 'Remove from saved' : 'Save song'}">
                                 ${songIsSaved
-                                    ? `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
-                                    : `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
+                                    ? `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
+                                    : `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
                                 }
                             </button>
-                            <span class="text-gray-400 text-sm">Save this song</span>
                         </div>
                         `}
                     </div>
