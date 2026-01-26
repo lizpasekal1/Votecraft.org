@@ -285,24 +285,6 @@ const HEALTHCARE_TOUR = [
     },
     {
         id: 5,
-        name: "Roxbury Health Equity Mural",
-        location: "Dudley Square, Roxbury",
-        coordinates: [42.3295, -71.0845],
-        creator: "VoteCraft Boston",
-        likes: 234,
-        civicTheme: CIVIC_THEMES.CLIMATE,
-        widget: "life-expectancy",
-        image: "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=800&q=80",
-        description: "This vibrant mural celebrates community health workers who bridge gaps between hospitals and neighborhoods. In Roxbury, life expectancy is 10 years shorter than in Back Bay just 2 miles away. Public art makes these disparities visible.",
-        learnMore: "Zip code predicts health more than genetic code. Community health workers - often from the neighborhoods they serve - are proven to improve health outcomes and reduce costs.",
-        songs: [
-            { title: "Stayin' Alive", url: "https://www.youtube.com/watch?v=fNFzfwLM72c", reason: "A disco anthem celebrating survival against all odds - also used to teach CPR rhythm." },
-            { title: "I Will Survive", url: "https://www.youtube.com/watch?v=ARt9HV9T0w8", reason: "Gloria Gaynor's anthem of resilience and survival." },
-            { title: "Lovely Day", url: "https://www.youtube.com/watch?v=bEeaS6fuUoA", reason: "Bill Withers' optimistic celebration of each new day of life." }
-        ]
-    },
-    {
-        id: 6,
         name: "Healthcare Heroes Memorial Garden",
         location: "South End, near Boston Medical Center",
         coordinates: [42.3345, -71.0720],
@@ -320,7 +302,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 7,
+        id: 6,
         name: "Fenway Community Health",
         location: "1340 Boylston St, Fenway",
         coordinates: [42.3435, -71.0970],
@@ -337,7 +319,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 8,
+        id: 7,
         name: "The Fens & Victory Gardens",
         location: "The Fenway, near Agassiz Rd",
         coordinates: [42.3420, -71.0960],
@@ -354,7 +336,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 9,
+        id: 8,
         name: "Isabella Stewart Gardner Museum",
         location: "25 Evans Way",
         coordinates: [42.3384, -71.0990],
@@ -371,7 +353,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 10,
+        id: 9,
         name: "Dr. Rebecca Lee Crumpler Memorial",
         location: "Beacon Hill, near Charles St",
         coordinates: [42.3560, -71.0700],
@@ -389,7 +371,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 11,
+        id: 10,
         name: "Mental Health Awareness Mural",
         location: "Jamaica Plain, Centre Street",
         coordinates: [42.3125, -71.1150],
@@ -407,7 +389,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 12,
+        id: 11,
         name: "Nurses Memorial Sculpture",
         location: "Massachusetts General Hospital grounds",
         coordinates: [42.3630, -71.0685],
@@ -425,7 +407,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 13,
+        id: 12,
         name: "MassArt & Mental Health",
         location: "621 Huntington Ave",
         coordinates: [42.3368, -71.0985],
@@ -442,7 +424,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 14,
+        id: 13,
         name: "Vietnam Veterans Memorial",
         location: "100 Park Dr, Boston",
         coordinates: [42.3442, -71.0962],
@@ -450,7 +432,7 @@ const HEALTHCARE_TOUR = [
         likes: 198,
         civicTheme: CIVIC_THEMES.DEMOCRACY,
         widget: "veteran-health",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Massachusetts_Vietnam_Veterans_Memorial_-_IMG_7503.JPG/1280px-Massachusetts_Vietnam_Veterans_Memorial_-_IMG_7503.JPG",
+        image: "https://storage.googleapis.com/clio-images/large_3758_x800-war-memorial-vietnam-fenway-16x9.jpg.pagespeed.ic.GkjQAsufO0.jpg",
         description: "This poignant memorial honors Massachusetts veterans of the Vietnam War. Beyond remembrance, it reminds us of the healthcare crisis facing veterans. Over 500,000 Vietnam veterans still suffer from PTSD, and veteran suicide rates remain tragically high.",
         learnMore: "Veterans face unique health challenges: Agent Orange exposure, traumatic brain injuries, and PTSD affect millions. Yet VA healthcare funding has struggled to meet demand, with some veterans waiting months for mental health appointments.",
         songs: [
