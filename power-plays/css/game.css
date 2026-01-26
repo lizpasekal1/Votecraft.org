@@ -106,16 +106,20 @@ body {
 
 .option-group {
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
 }
 
 .option-group label {
     font-size: 0.9rem;
     color: var(--text-gold);
+    white-space: nowrap;
 }
 
 .option-group select {
+    flex: 1;
     padding: 10px 15px;
     border-radius: 8px;
     border: 2px solid rgba(255, 255, 255, 0.2);
