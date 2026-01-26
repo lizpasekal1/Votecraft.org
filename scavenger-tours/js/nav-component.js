@@ -168,11 +168,24 @@
                             </div>
                         </div>
 
-                        <!-- Emporium -->
-                        <a href="https://votecraft.org/emporium/" class="nav-menu-item">
-                            ${navIcons.shop}
-                            <span>Emporium</span>
-                        </a>
+                        <!-- Emporium Accordion -->
+                        <div class="accordion" id="emporium-accordion">
+                            <button class="accordion-trigger nav-menu-item" onclick="toggleNavAccordion('emporium-accordion')" aria-expanded="false">
+                                ${navIcons.shop}
+                                <span class="flex-1 text-left">Emporium</span>
+                                ${navIcons.chevron}
+                            </button>
+
+                            <div class="accordion-content">
+                                <div class="accordion-item" style="flex-direction: column; align-items: stretch; gap: 12px;">
+                                    <span class="text-gray-300 text-sm text-center">Are you sure you want to</span>
+                                    <a href="https://votecraft.org/emporium/"
+                                       class="block text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                                        Exit the tour
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
