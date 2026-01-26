@@ -263,9 +263,9 @@
     // Select tour from nav
     window.selectTourFromNav = function(tourId) {
         closeDrawer();
-        // Navigate to map page with new tour
+        // Navigate to map page with new tour and show welcome screen
         setTimeout(() => {
-            window.location.href = `scavenger-tours.html?tour=${tourId}`;
+            window.location.href = `scavenger-tours.html?tour=${tourId}&welcome=1`;
         }, 300);
     };
 
