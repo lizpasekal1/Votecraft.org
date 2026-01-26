@@ -14,7 +14,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Custom styles -->
-    <link rel="stylesheet" href="./css/scavenger-tours.css?v=29">
+    <link rel="stylesheet" href="./css/scavenger-tours.css?v=30">
 </head>
 <body>
     <!-- Page transition overlay -->
@@ -525,6 +525,13 @@
             }];
         }
 
+        // Make data globally accessible for onclick handlers
+        window.vcSongs = songs;
+        window.vcTourId = tourId;
+        window.vcLocationId = locationId;
+        window.vcLocationName = location.name;
+        window.vcThemeColor = themeColor;
+
         // Helper to extract song title from SoundCloud URL
         function extractSongTitle(url) {
             if (!url) return 'Unknown Song';
@@ -574,7 +581,12 @@
         }
 
         function toggleSaveSong(index) {
-            const song = songs[index];
+            // Use global window variables for reliable access
+            const song = window.vcSongs[index];
+            if (!song) {
+                console.error('Song not found at index:', index);
+                return;
+            }
             const artist = getArtistFromUrl(song.url);
             const saved = getSavedSongs();
             const existingIndex = saved.findIndex(s => s.url === song.url);
@@ -588,9 +600,9 @@
                     title: song.title,
                     artist: artist || '',
                     url: song.url,
-                    tourId: tourId,
-                    locationId: locationId,
-                    locationName: location.name
+                    tourId: window.vcTourId,
+                    locationId: window.vcLocationId,
+                    locationName: window.vcLocationName
                 });
             }
 
@@ -602,10 +614,11 @@
             const btn = document.querySelector(`.save-song-btn[data-index="${index}"]`);
             if (btn) {
                 const isSaved = isSongSaved(songUrl);
+                const color = window.vcThemeColor || '#3B82F6';
                 btn.innerHTML = isSaved
                     ? `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
                     : `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`;
-                btn.style.color = isSaved ? themeColor : '#6b7280';
+                btn.style.color = isSaved ? color : '#6b7280';
             }
         }
 
