@@ -372,24 +372,6 @@ const HEALTHCARE_TOUR = [
     },
     {
         id: 10,
-        name: "Perkins School Tactile Garden",
-        location: "Watertown, Perkins School for the Blind",
-        coordinates: [42.3650, -71.1850],
-        creator: "VoteCraft Boston",
-        likes: 245,
-        civicTheme: CIVIC_THEMES.HEALTHCARE,
-        widget: "healthcare-cost",
-        image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80",
-        description: "The Perkins School for the Blind features a sensory garden designed for those with visual impairments. Textured sculptures, fragrant plants, and sound installations create an accessible healing space. Helen Keller learned here, proving barriers can be overcome.",
-        learnMore: "1 in 8 Americans has hearing loss, and millions live with visual impairments. Sensory gardens and accessible art demonstrate that healthcare includes designing spaces for all abilities.",
-        songs: [
-            { title: "Superstition", url: "https://www.youtube.com/watch?v=0CFuCYNx-1g", reason: "Stevie Wonder proving that blindness is no barrier to genius and joy." },
-            { title: "I Can See Clearly Now", url: "https://www.youtube.com/watch?v=FscIgtDJFXg", reason: "An anthem about clarity that transcends physical sight." },
-            { title: "What a Wonderful World", url: "https://www.youtube.com/watch?v=A3yCcXgbKrE", reason: "Louis Armstrong's reminder that the world can be experienced through all senses." }
-        ]
-    },
-    {
-        id: 11,
         name: "Dr. Rebecca Lee Crumpler Memorial",
         location: "Beacon Hill, near Charles St",
         coordinates: [42.3560, -71.0700],
@@ -407,7 +389,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 12,
+        id: 11,
         name: "Mental Health Awareness Mural",
         location: "Jamaica Plain, Centre Street",
         coordinates: [42.3125, -71.1150],
@@ -425,7 +407,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 13,
+        id: 12,
         name: "Nurses Memorial Sculpture",
         location: "Massachusetts General Hospital grounds",
         coordinates: [42.3630, -71.0685],
@@ -443,7 +425,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 14,
+        id: 13,
         name: "MassArt & Mental Health",
         location: "621 Huntington Ave",
         coordinates: [42.3368, -71.0985],
