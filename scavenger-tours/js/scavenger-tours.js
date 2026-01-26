@@ -429,7 +429,7 @@
 
         modalsContainer.innerHTML = `
             <div id="tour-welcome-screen" class="fixed inset-0 z-50 flex items-center justify-center"
-                 style="background-image: url('${backgroundImage}'); background-size: cover; background-position: center;">
+                 style="background-image: url('${backgroundImage}'); background-size: cover; background-position: center; opacity: 0; transition: opacity 0.4s ease-in;">
                 <!-- Dark overlay for readability -->
                 <div class="absolute inset-0 bg-black/50"></div>
 
@@ -457,6 +457,12 @@
                 </div>
             </div>
         `;
+
+        // Fade in the welcome screen
+        requestAnimationFrame(() => {
+            const screen = document.getElementById('tour-welcome-screen');
+            if (screen) screen.style.opacity = '1';
+        });
     }
 
     // Start tour after welcome screen
@@ -468,21 +474,36 @@
         currentTourId = tourId;
         selectedPin = null;
 
-        // Close welcome screen
-        closeModal();
+        // Fade out welcome screen
+        const welcomeScreen = document.getElementById('tour-welcome-screen');
+        if (welcomeScreen) {
+            welcomeScreen.style.transition = 'opacity 0.4s ease-out';
+            welcomeScreen.style.opacity = '0';
 
-        // Update UI
-        reloadMap();
-        renderPlaylists();
+            // Wait for fade to complete, then close and update UI
+            setTimeout(() => {
+                closeModal();
 
-        // Update header title
-        const headerTitle = document.getElementById('tour-title');
-        if (headerTitle) {
-            headerTitle.textContent = tour.name;
+                // Update UI
+                reloadMap();
+                renderPlaylists();
+
+                // Update header title
+                const headerTitle = document.getElementById('tour-title');
+                if (headerTitle) {
+                    headerTitle.textContent = tour.name;
+                }
+
+                // Update map overlay
+                updateMapTourName(tourId, tour.name);
+            }, 400);
+        } else {
+            // Fallback if no welcome screen
+            closeModal();
+            reloadMap();
+            renderPlaylists();
+            updateMapTourName(tourId, tour.name);
         }
-
-        // Update map overlay
-        updateMapTourName(tourId, tour.name);
     };
 
     // Select a tour (shows welcome screen first)
