@@ -285,23 +285,6 @@ const HEALTHCARE_TOUR = [
     },
     {
         id: 5,
-        name: "Fenway Community Health",
-        location: "1340 Boylston St, Fenway",
-        coordinates: [42.3435, -71.0970],
-        creator: "VoteCraft Boston",
-        likes: 312,
-        civicTheme: CIVIC_THEMES.DEMOCRACY,
-        widget: "mental-health",
-        description: "Founded in 1971, Fenway Health pioneered LGBTQ+ healthcare when mainstream medicine pathologized queer identities. It led HIV/AIDS treatment when the government ignored the epidemic. Community health centers now serve 30 million Americans.",
-        learnMore: "LGBTQ+ youth are 4x more likely to attempt suicide. Fenway's model - affirming care, community-driven - saves lives and has spread nationwide.",
-        songs: [
-            { title: "I Will Survive", url: "https://www.youtube.com/watch?v=ARt9HV9T0w8", reason: "A disco anthem of resilience that became an LGBTQ+ empowerment hymn." },
-            { title: "Born This Way", url: "https://www.youtube.com/watch?v=wV1FrqwZyKw", reason: "Lady Gaga's anthem celebrating LGBTQ+ identity and self-acceptance." },
-            { title: "True Colors", url: "https://www.youtube.com/watch?v=LPn0KFlbqX8", reason: "Cyndi Lauper's tender message of acceptance and visibility." }
-        ]
-    },
-    {
-        id: 6,
         name: "The Fens & Victory Gardens",
         location: "The Fenway, near Agassiz Rd",
         coordinates: [42.3420, -71.0960],
@@ -319,7 +302,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 7,
+        id: 6,
         name: "Isabella Stewart Gardner Museum",
         location: "25 Evans Way",
         coordinates: [42.3384, -71.0990],
@@ -337,7 +320,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 8,
+        id: 7,
         name: "Dr. Rebecca Lee Crumpler Memorial",
         location: "Beacon Hill, near Charles St",
         coordinates: [42.3560, -71.0700],
@@ -355,7 +338,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 9,
+        id: 8,
         name: "MassArt & Mental Health",
         location: "621 Huntington Ave",
         coordinates: [42.3368, -71.0985],
@@ -373,7 +356,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 10,
+        id: 9,
         name: "Vietnam Veterans Memorial",
         location: "100 Park Dr, Boston",
         coordinates: [42.3442, -71.0962],
@@ -391,7 +374,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 11,
+        id: 10,
         name: "Ether Monument",
         location: "Boston Public Garden",
         coordinates: [42.3540, -71.0695],
@@ -409,7 +392,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 12,
+        id: 11,
         name: "Grouping of Works from Fountain",
         location: "401 Park, Fenway",
         coordinates: [42.3436, -71.1025],
