@@ -14,7 +14,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Custom styles -->
-    <link rel="stylesheet" href="./css/scavenger-tours.css?v=26">
+    <link rel="stylesheet" href="./css/scavenger-tours.css?v=27">
 </head>
 <body>
     <!-- Page transition overlay -->
@@ -761,16 +761,6 @@
                             <span class="song-title">${song.title}</span>
                             ${artist ? `<span class="song-artist">${artist}</span>` : ''}
                         </div>
-                        <!-- Save Song Button -->
-                        <button class="save-song-btn p-1 transition-colors" data-index="${index}"
-                                style="color: ${songIsSaved ? themeColor : '#9ca3af'};"
-                                onclick="toggleSaveSong(${index}); event.stopPropagation();"
-                                title="${songIsSaved ? 'Remove from saved' : 'Save song'}">
-                            ${songIsSaved
-                                ? `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
-                                : `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
-                            }
-                        </button>
                         <!-- Play/Pause Icon -->
                         <div class="song-play-btn" style="color: ${themeColor};" onclick="playSong(${index}); event.stopPropagation();">
                             <svg class="play-icon w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -788,8 +778,34 @@
                             <iframe id="player-${index}" width="100%" height="${embed.height}" scrolling="no" frameborder="no" allow="autoplay; encrypted-media"
                                     src="${embed.embedUrl}" ${embed.type === 'youtube' ? 'allowfullscreen' : ''}></iframe>
                         </div>
-                        <!-- Song Reason -->
-                        ${song.reason ? `<p class="song-reason">${song.reason}</p>` : ''}
+                        <!-- Song Reason with Save Button -->
+                        ${song.reason ? `
+                        <div class="flex items-start gap-2 mt-2">
+                            <button class="save-song-btn p-1 transition-colors flex-shrink-0" data-index="${index}"
+                                    style="color: ${songIsSaved ? themeColor : '#9ca3af'};"
+                                    onclick="toggleSaveSong(${index}); event.stopPropagation();"
+                                    title="${songIsSaved ? 'Remove from saved' : 'Save song'}">
+                                ${songIsSaved
+                                    ? `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
+                                    : `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
+                                }
+                            </button>
+                            <p class="song-reason flex-1">${song.reason}</p>
+                        </div>
+                        ` : `
+                        <div class="flex items-center gap-2 mt-2">
+                            <button class="save-song-btn p-1 transition-colors" data-index="${index}"
+                                    style="color: ${songIsSaved ? themeColor : '#9ca3af'};"
+                                    onclick="toggleSaveSong(${index}); event.stopPropagation();"
+                                    title="${songIsSaved ? 'Remove from saved' : 'Save song'}">
+                                ${songIsSaved
+                                    ? `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
+                                    : `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
+                                }
+                            </button>
+                            <span class="text-gray-400 text-sm">Save this song</span>
+                        </div>
+                        `}
                     </div>
                 </div>
                 `;
