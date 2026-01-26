@@ -14,7 +14,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Custom styles -->
-    <link rel="stylesheet" href="./css/scavenger-tours.css?v=12">
+    <link rel="stylesheet" href="./css/scavenger-tours.css?v=14">
 
 </head>
 <body>
@@ -236,7 +236,7 @@
     </div>
 
     <!-- Location Data -->
-    <script src="./js/scavenger-tours-data.js?v=7"></script>
+    <script src="./js/scavenger-tours-data.js?v=8"></script>
 
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -254,7 +254,7 @@
         const tourId = urlParams.get('tour') || 'civic-sampler';
 
         // Update back link
-        document.getElementById('back-link').href = `index.html?tour=${tourId}`;
+        document.getElementById('back-link').href = `scavenger-tours.html?tour=${tourId}`;
 
         // Auth modal functions
         window.showAuthModal = function(mode) {
