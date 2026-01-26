@@ -439,11 +439,8 @@
                     <!-- Tour icon -->
                     <div class="text-5xl mb-4">${tour.icon}</div>
 
-                    <!-- Welcome heading -->
-                    <h1 class="text-white text-xl font-medium mb-1 opacity-90">Welcome to the</h1>
-
                     <!-- Tour name -->
-                    <h2 class="text-white text-2xl font-bold mb-3">${tour.name}</h2>
+                    <h2 class="text-white text-3xl font-bold mb-3">${tour.name}</h2>
 
                     <!-- Tour description -->
                     <p class="text-white/80 text-sm mb-2">${tour.description}</p>
