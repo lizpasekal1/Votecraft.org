@@ -6,38 +6,6 @@
 (function() {
     'use strict';
 
-    // Tour types available
-    const NAV_TOUR_TYPES = [
-        {
-            id: 'civic-sampler',
-            name: 'Freedom Trail Sampler',
-            icon: '🗽',
-            color: '#22C55E',
-            bgColor: 'rgba(34, 197, 94, 0.15)'
-        },
-        {
-            id: 'healthcare',
-            name: 'Healthcare Justice Tour',
-            icon: '🏥',
-            color: '#3B82F6',
-            bgColor: 'rgba(59, 130, 246, 0.15)'
-        },
-        {
-            id: 'voting-rights',
-            name: 'Voting Rights Tour',
-            icon: '🗳️',
-            color: '#8B5CF6',
-            bgColor: 'rgba(139, 92, 246, 0.15)'
-        },
-        {
-            id: 'art-action',
-            name: 'ART ACTION TOUR',
-            icon: '🎨',
-            color: '#F59E0B',
-            bgColor: 'rgba(245, 158, 11, 0.15)'
-        }
-    ];
-
     // Get current tour from URL or default
     function getCurrentTourId() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -70,6 +38,9 @@
         settings: `<svg class="nav-menu-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>`,
+        switch: `<svg class="nav-menu-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
         </svg>`
     };
 
@@ -118,30 +89,11 @@
                             <span>Account</span>
                         </a>
 
-                        <!-- Switch Tour Accordion -->
-                        <div class="accordion" id="tour-accordion">
-                            <button class="accordion-trigger nav-menu-item" onclick="toggleNavAccordion('tour-accordion')" aria-expanded="false">
-                                ${navIcons.map}
-                                <span class="flex-1 text-left">Switch Tour</span>
-                                ${navIcons.chevron}
-                            </button>
-
-                            <div class="accordion-content">
-                                ${NAV_TOUR_TYPES.map(tour => `
-                                    <div class="accordion-item ${currentTourId === tour.id ? 'active' : ''}"
-                                         onclick="selectTourFromNav('${tour.id}')"
-                                         role="button"
-                                         tabindex="0"
-                                         style="background: ${tour.bgColor}; border-left: 3px solid ${tour.color};">
-                                        <span class="text-xl">${tour.icon}</span>
-                                        <div class="flex-1">
-                                            <div class="text-white font-medium text-sm">${tour.name}</div>
-                                        </div>
-                                        ${currentTourId === tour.id ? navIcons.check : ''}
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
+                        <!-- Switch Tour -->
+                        <a href="tour-select.html" class="nav-menu-item">
+                            ${navIcons.switch}
+                            <span>Switch Tour</span>
+                        </a>
 
                         <!-- Settings Accordion -->
                         <div class="accordion" id="settings-accordion">
