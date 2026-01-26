@@ -629,11 +629,12 @@ body:has(.sticky-map.map-fullscreen) .top-bar {
     transform: translateX(0);
 }
 
-.nav-drawer-header {
-    padding: 1.5rem 1rem;
-    padding-top: calc(1.5rem + env(safe-area-inset-top, 0px));
-    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+.nav-drawer-top {
+    padding: 1rem;
+    padding-top: calc(1rem + env(safe-area-inset-top, 0px));
     flex-shrink: 0;
+    display: flex;
+    justify-content: flex-end;
 }
 
 .nav-drawer-content {
@@ -712,15 +713,12 @@ body:has(.sticky-map.map-fullscreen) .top-bar {
 
 /* Close button in drawer */
 .nav-drawer-close {
-    position: absolute;
-    top: calc(0.75rem + env(safe-area-inset-top, 0px));
-    right: 0.75rem;
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
     border: none;
-    color: #fff;
+    color: #9ca3af;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -729,7 +727,8 @@ body:has(.sticky-map.map-fullscreen) .top-bar {
 }
 
 .nav-drawer-close:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
 }
 
 /* Prevent body scroll when drawer is open */
