@@ -1,0 +1,692 @@
+/* Power Plays - Card Styles */
+
+/* Card base */
+.card {
+    width: var(--card-width, 60px);
+    height: var(--card-height, 90px);
+    border-radius: var(--card-radius, 8px);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Arial Black', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: 900;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.4),
+        inset 0 0 0 2px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    user-select: none;
+    cursor: pointer;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+/* UNO-style white oval for colored cards */
+.card-blue::before,
+.card-yellow::before,
+.card-red::before,
+.card-green::before {
+    content: '';
+    position: absolute;
+    width: 85%;
+    height: 120%;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 50%;
+    transform: rotate(-15deg);
+    z-index: 0;
+    box-shadow:
+        0 0 0 3px currentColor,
+        inset 0 0 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Card colors - UNO style */
+.card-blue {
+    background: #0956BF;
+    border: 3px solid #073d8a;
+}
+.card-blue::before {
+    box-shadow: 0 0 0 4px #0956BF;
+}
+
+.card-yellow {
+    background: #F9C80E;
+    border: 3px solid #c9a00b;
+}
+.card-yellow::before {
+    box-shadow: 0 0 0 4px #F9C80E;
+}
+.card-yellow .card-center,
+.card-yellow .card-corner {
+    color: #F9C80E;
+    text-shadow:
+        2px 2px 0 rgba(0, 0, 0, 0.2),
+        -1px -1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.card-red {
+    background: #D72735;
+    border: 3px solid #a11d28;
+}
+.card-red::before {
+    box-shadow: 0 0 0 4px #D72735;
+}
+
+.card-green {
+    background: #379711;
+    border: 3px solid #2a730d;
+}
+.card-green::before {
+    box-shadow: 0 0 0 4px #379711;
+}
+
+/* Card text colors on white oval */
+.card-blue .card-center { color: #0956BF; }
+.card-red .card-center { color: #D72735; }
+.card-green .card-center { color: #379711; }
+
+.card-blue .card-center,
+.card-red .card-center,
+.card-green .card-center {
+    text-shadow:
+        2px 2px 0 rgba(0, 0, 0, 0.15),
+        -1px -1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.card-wild {
+    background: #1a1a2e;
+    border: 3px solid #333;
+}
+
+/* Wild card - UNO-style curved color sections */
+.card-wild::before {
+    content: '';
+    position: absolute;
+    width: 85%;
+    height: 120%;
+    background: conic-gradient(
+        from -45deg,
+        #D72735 0deg,
+        #D72735 90deg,
+        #0956BF 90deg,
+        #0956BF 180deg,
+        #379711 180deg,
+        #379711 270deg,
+        #F9C80E 270deg,
+        #F9C80E 360deg
+    );
+    border-radius: 50%;
+    transform: rotate(-15deg);
+    z-index: 0;
+    box-shadow: 0 0 0 4px white, 0 0 0 6px #1a1a2e;
+}
+
+/* Vote card styling - UNO wild card look */
+.card-vote {
+    position: relative;
+    background: #000;
+    border-color: #000;
+}
+
+.card-vote .card-center {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0px;
+    text-transform: uppercase;
+    font-style: italic;
+    z-index: 1;
+    display: flex;
+    gap: 0px;
+}
+
+/* Individual letter colors for VOTE */
+.card-vote .vote-letter {
+    font-weight: 900;
+    -webkit-text-stroke: 1px #000;
+    text-shadow:
+        1px 1px 0 #000,
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000;
+}
+
+.card-vote .vote-letter-v { color: #D72735; }
+.card-vote .vote-letter-o { color: #0956BF; }
+.card-vote .vote-letter-t { color: #F9C80E; }
+.card-vote .vote-letter-e { color: #379711; }
+
+/* Corner icons for vote card */
+.card-vote .vote-corner {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: conic-gradient(
+        from -45deg,
+        #D72735 0deg,
+        #D72735 90deg,
+        #0956BF 90deg,
+        #0956BF 180deg,
+        #379711 180deg,
+        #379711 270deg,
+        #F9C80E 270deg,
+        #F9C80E 360deg
+    );
+    box-shadow: 0 0 0 2px white;
+    z-index: 1;
+}
+
+.card-vote .vote-corner-top {
+    top: 4px;
+    left: 4px;
+}
+
+.card-vote .vote-corner-bottom {
+    bottom: 4px;
+    right: 4px;
+}
+
+.card-wild .card-center {
+    z-index: 1;
+    position: relative;
+}
+
+/* Wild card subtle glow animation */
+@keyframes wildGlow {
+    0%, 100% {
+        box-shadow:
+            0 2px 8px rgba(0, 0, 0, 0.4),
+            0 0 10px rgba(255, 215, 0, 0.2);
+    }
+    50% {
+        box-shadow:
+            0 2px 8px rgba(0, 0, 0, 0.4),
+            0 0 20px rgba(255, 215, 0, 0.4);
+    }
+}
+
+.card-wild {
+    animation: wildGlow 2s ease-in-out infinite;
+}
+
+/* Card back - UNO style */
+.card-back {
+    background: #1a1a2e;
+    border: 3px solid #ffd700;
+}
+
+.card-back::before {
+    content: '';
+    position: absolute;
+    width: 80%;
+    height: 110%;
+    background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%);
+    border-radius: 50%;
+    transform: rotate(-15deg);
+    border: 3px solid #ffd700;
+}
+
+.card-back::after {
+    content: 'PP';
+    position: absolute;
+    font-size: 16px;
+    font-weight: 900;
+    font-style: italic;
+    color: #ffd700;
+    z-index: 1;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Card content */
+.card-center {
+    font-size: 32px;
+    z-index: 1;
+    font-weight: 900;
+    font-style: italic;
+    letter-spacing: -1px;
+}
+
+/* Hide corner numbers on colored cards */
+.card-corner {
+    display: none;
+}
+
+/* Card theme label at bottom - part of card design */
+.card-theme {
+    position: absolute;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Futura', 'Futura Bold', 'Century Gothic', 'Arial Black', sans-serif;
+    font-size: 6px;
+    font-weight: 700;
+    font-style: normal !important;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: rgba(0, 0, 0, 0.85);
+    text-shadow: none;
+    -webkit-text-stroke: 0.3px rgba(0, 0, 0, 0.5);
+    z-index: 1;
+    white-space: nowrap;
+    line-height: 1;
+    pointer-events: none;
+}
+
+/* Card icon in top-left corner */
+.card-icon {
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    width: 25px;
+    height: 25px;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.card-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Color the icons to match their branch */
+.card-blue .card-icon svg { fill: #0956BF; }
+.card-yellow .card-icon svg { fill: #F9C80E; }
+.card-red .card-icon svg { fill: #D72735; }
+.card-green .card-icon svg { fill: #379711; }
+
+/* Action card styling */
+.card-action .card-center {
+    font-size: 24px;
+    font-style: normal;
+}
+
+.card-skip .card-center {
+    font-size: 36px;
+}
+
+.card-reverse .card-center {
+    font-size: 32px;
+}
+
+.card-draw2 .card-center {
+    font-size: 22px;
+    font-weight: 900;
+}
+
+.card-swap .card-center {
+    font-size: 28px;
+}
+
+.card-block .card-center {
+    font-size: 26px;
+}
+
+/* Playable card glow */
+.card.playable,
+.card-wrapper.playable .card {
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.6);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.8);
+    }
+}
+
+/* Selected card */
+.card-wrapper.selected .card {
+    transform: translateY(-15px) scale(1.05);
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+}
+
+/* Card wrapper for hand */
+.card-wrapper {
+    display: inline-block;
+    margin: 0 -15px;
+    transition: transform 0.2s ease, margin 0.2s ease;
+}
+
+.card-wrapper:hover {
+    transform: translateY(-10px);
+    z-index: 10;
+    margin: 0 5px;
+}
+
+.card-wrapper:first-child {
+    margin-left: 0;
+}
+
+.card-wrapper:last-child {
+    margin-right: 0;
+}
+
+/* Opponent cards (card backs in a row) */
+.opponent-cards {
+    display: flex;
+    justify-content: center;
+    gap: -10px;
+}
+
+.opponent-cards .card {
+    width: 30px;
+    height: 45px;
+    font-size: 10px;
+    margin: 0 -8px;
+    border-width: 2px;
+}
+
+/* Hide oval on small opponent card backs */
+.opponent-cards .card-back::before {
+    width: 70%;
+    height: 90%;
+}
+
+.opponent-cards .card-back::after {
+    font-size: 8px;
+}
+
+.card-overflow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 45px;
+    font-size: 12px;
+    color: #ffd700;
+    font-weight: bold;
+}
+
+/* Draw pile styling */
+.draw-pile-card {
+    cursor: pointer;
+}
+
+.draw-pile-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
+/* Override ::after for draw pile to show count */
+.draw-pile-card.card-back::after {
+    content: none;
+}
+
+.pile-count {
+    font-size: 14px;
+    font-weight: 900;
+    color: #ffd700;
+    z-index: 2;
+    position: relative;
+}
+
+/* Empty pile */
+.empty-pile {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+}
+
+/* Vote card options */
+.vote-card-option {
+    display: inline-block;
+    margin: 5px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.vote-card-option:hover {
+    transform: scale(1.1);
+}
+
+/* Card animations */
+.card-play-animation {
+    animation: playCard 0.3s ease-out;
+}
+
+@keyframes playCard {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.card-draw-animation {
+    animation: drawCard 0.3s ease-out;
+}
+
+@keyframes drawCard {
+    0% {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Flying card animation for opponent plays */
+.flying-card {
+    position: fixed;
+    z-index: 1000;
+    pointer-events: none;
+    transform-origin: center center;
+}
+
+.flying-card.animate {
+    animation: flyToDiscard 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes flyToDiscard {
+    0% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+    30% {
+        opacity: 1;
+        transform: scale(1.15) rotate(-5deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+/* Player's card flying animation */
+.flying-card.player-card-fly {
+    animation: playerCardFly 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes playerCardFly {
+    0% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+    40% {
+        opacity: 1;
+        transform: scale(1.2) rotate(-8deg) translateY(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+/* Card flip animation when revealing */
+.flying-card.flipping {
+    animation: flipAndFly 0.6s ease-out forwards;
+    transform-style: preserve-3d;
+}
+
+@keyframes flipAndFly {
+    0% {
+        opacity: 1;
+        transform: scale(0.5) rotateY(180deg);
+    }
+    40% {
+        transform: scale(0.8) rotateY(90deg);
+    }
+    60% {
+        transform: scale(1) rotateY(0deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotateY(0deg);
+    }
+}
+
+/* Play pile card landing effect */
+.play-pile-landing {
+    animation: cardLand 0.3s ease-out;
+}
+
+@keyframes cardLand {
+    0% {
+        transform: scale(1.2);
+        box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+}
+
+/* Responsive card sizes */
+@media (max-height: 500px) {
+    :root {
+        --card-width: 50px;
+        --card-height: 75px;
+    }
+
+    .card {
+        border-width: 2px;
+    }
+
+    .card-center {
+        font-size: 24px;
+    }
+
+    .card-action .card-center {
+        font-size: 18px;
+    }
+
+    .card-skip .card-center {
+        font-size: 26px;
+    }
+
+    .card-vote .card-center {
+        font-size: 8px;
+    }
+
+    .card-vote .vote-corner {
+        width: 10px;
+        height: 10px;
+    }
+
+    .card-vote .vote-corner-top {
+        top: 3px;
+        left: 3px;
+    }
+
+    .card-vote .vote-corner-bottom {
+        bottom: 3px;
+        right: 3px;
+    }
+
+    .card-theme {
+        font-size: 4px;
+        bottom: 3px;
+    }
+
+    .card-icon {
+        width: 18px;
+        height: 18px;
+        top: 2px;
+        left: 3px;
+    }
+
+    .card-back::after {
+        font-size: 12px;
+    }
+}
+
+@media (min-width: 768px) and (min-height: 500px) {
+    :root {
+        --card-width: 70px;
+        --card-height: 105px;
+    }
+
+    .card-center {
+        font-size: 38px;
+    }
+
+    .card-action .card-center {
+        font-size: 28px;
+    }
+
+    .card-skip .card-center {
+        font-size: 42px;
+    }
+
+    .card-theme {
+        font-size: 7px;
+        bottom: 8px;
+    }
+
+    .card-icon {
+        width: 32px;
+        height: 32px;
+        top: 4px;
+        left: 6px;
+    }
+
+    .opponent-cards .card {
+        width: 40px;
+        height: 60px;
+    }
+
+    .opponent-cards .card::before {
+        display: none;
+    }
+
+    /* Hide theme and icon on small opponent cards */
+    .opponent-cards .card .card-theme,
+    .opponent-cards .card .card-icon {
+        display: none;
+    }
+
+    .card-vote .card-center {
+        font-size: 14px;
+        letter-spacing: 1px;
+    }
+
+    .card-vote .vote-corner {
+        width: 18px;
+        height: 18px;
+    }
+
+    .card-vote .vote-corner-top {
+        top: 6px;
+        left: 6px;
+    }
+
+    .card-vote .vote-corner-bottom {
+        bottom: 6px;
+        right: 6px;
+    }
+
+    .card-back::after {
+        font-size: 20px;
+    }
+}

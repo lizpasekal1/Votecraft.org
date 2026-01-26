@@ -1,0 +1,696 @@
+/* Power Plays - Game Styles */
+/* Mobile-first, landscape-optimized */
+
+:root {
+    /* Card dimensions */
+    --card-width: 60px;
+    --card-height: 90px;
+    --card-radius: 8px;
+
+    /* Colors */
+    --bg-primary: #1a1a2e;
+    --bg-secondary: #16213e;
+    --bg-accent: #0f3460;
+    --text-primary: #ffffff;
+    --text-gold: #ffd700;
+    --text-cyan: #00d4ff;
+
+    /* Card colors */
+    --color-blue: #2196F3;
+    --color-yellow: #FFC107;
+    --color-red: #f44336;
+    --color-green: #4CAF50;
+
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-accent) 100%);
+    color: var(--text-primary);
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ==================== START SCREEN ==================== */
+#start-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    height: 100dvh;
+    padding: var(--spacing-lg);
+    text-align: center;
+}
+
+.game-title {
+    font-size: clamp(2rem, 8vw, 4rem);
+    background: linear-gradient(135deg, var(--text-gold), var(--color-red), var(--text-cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: var(--spacing-lg);
+}
+
+.game-subtitle {
+    font-size: clamp(0.9rem, 3vw, 1.2rem);
+    opacity: 0.8;
+    margin-bottom: var(--spacing-lg);
+}
+
+.start-options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    width: 100%;
+    max-width: 300px;
+}
+
+.option-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.option-group label {
+    font-size: 0.9rem;
+    color: var(--text-gold);
+}
+
+.option-group select {
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.option-group select option {
+    background: var(--bg-primary);
+}
+
+.start-btn {
+    margin-top: var(--spacing-md);
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--text-gold), #ff9800);
+    color: var(--bg-primary);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.start-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+/* ==================== GAME SCREEN ==================== */
+#game-screen {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+}
+
+/* Header */
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(0, 0, 0, 0.3);
+    flex-shrink: 0;
+}
+
+.header-title {
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--text-gold);
+}
+
+#current-player {
+    font-size: 0.9rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+#current-player.your-turn {
+    background: var(--text-gold);
+    color: var(--bg-primary);
+    animation: pulse 1.5s infinite;
+}
+
+/* Game Board */
+#game-board {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-sm);
+    overflow: hidden;
+}
+
+/* Opponent Area */
+#opponent-area {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.opponent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    min-width: 100px;
+}
+
+.opponent.active {
+    background: rgba(255, 215, 0, 0.1);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.opponent-name {
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.opponent-name.current-turn {
+    color: var(--text-gold);
+}
+
+.opponent-count {
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+.power-badge {
+    background: var(--text-gold);
+    color: var(--bg-primary);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    animation: pulse 1s infinite;
+}
+
+.challenge-btn {
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    border: none;
+    border-radius: 15px;
+    background: var(--color-red);
+    color: white;
+    cursor: pointer;
+    margin-top: 4px;
+}
+
+/* Center Area */
+#center-area {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-md);
+}
+
+#draw-pile,
+#play-pile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.center-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.active-color {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.active-color.color-blue { background: var(--color-blue); }
+.active-color.color-yellow { background: var(--color-yellow); color: var(--bg-primary); }
+.active-color.color-red { background: var(--color-red); }
+.active-color.color-green { background: var(--color-green); }
+
+#direction-indicator {
+    font-size: 1.5rem;
+    opacity: 0.7;
+}
+
+/* Player Area */
+#player-area {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+}
+
+#player-hand {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    min-height: 100px;
+    overflow-x: auto;
+    padding: var(--spacing-sm) 0;
+    -webkit-overflow-scrolling: touch;
+}
+
+.player-controls {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-sm);
+}
+
+.control-btn {
+    padding: 8px 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.control-btn:hover {
+    transform: scale(1.05);
+}
+
+#power-button {
+    background: var(--text-gold);
+    color: var(--bg-primary);
+    animation: pulse 1s infinite;
+}
+
+#end-turn-button {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+/* Message Display */
+#message-display {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 15px 30px;
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid var(--text-gold);
+    border-radius: 12px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--text-gold);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+}
+
+#message-display.show {
+    opacity: 1;
+}
+
+/* ==================== MODALS ==================== */
+#modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.modal {
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-accent));
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: var(--spacing-lg);
+    max-width: 90%;
+    max-height: 80%;
+    overflow-y: auto;
+    text-align: center;
+}
+
+.modal-title {
+    font-size: 1.3rem;
+    color: var(--text-gold);
+    margin-bottom: var(--spacing-md);
+}
+
+/* Color Picker */
+.color-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+}
+
+.color-btn {
+    padding: 20px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.color-btn:hover {
+    transform: scale(1.05);
+}
+
+.color-btn[data-color="blue"] { background: var(--color-blue); }
+.color-btn[data-color="yellow"] { background: var(--color-yellow); color: var(--bg-primary); }
+.color-btn[data-color="red"] { background: var(--color-red); }
+.color-btn[data-color="green"] { background: var(--color-green); }
+
+/* Target Picker */
+.target-options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
+.target-btn {
+    padding: 12px 24px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.target-btn:hover {
+    background: var(--text-gold);
+    color: var(--bg-primary);
+}
+
+/* Vote Modal */
+.vote-options {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+}
+
+.vote-pass-btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+/* Pass & Play Modal */
+#pass-play-modal {
+    min-width: 250px;
+}
+
+.pass-play-name {
+    font-size: 1.5rem;
+    color: var(--text-gold);
+    margin: var(--spacing-md) 0;
+}
+
+#pass-play-ready {
+    padding: 15px 40px;
+    border: none;
+    border-radius: 12px;
+    background: var(--text-gold);
+    color: var(--bg-primary);
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: var(--spacing-md);
+}
+
+/* Game Over Modal */
+.winner-name {
+    font-size: 2rem;
+    color: var(--text-gold);
+    margin: var(--spacing-md) 0;
+}
+
+#play-again-btn {
+    padding: 15px 40px;
+    border: none;
+    border-radius: 12px;
+    background: var(--text-gold);
+    color: var(--bg-primary);
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: var(--spacing-md);
+}
+
+/* ==================== LANDSCAPE ORIENTATION ==================== */
+@media screen and (orientation: portrait) {
+    body::before {
+        content: '📱 Rotate for best experience';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: var(--color-red);
+        color: white;
+        text-align: center;
+        padding: 8px;
+        font-size: 12px;
+        z-index: 2000;
+    }
+
+    #game-board {
+        padding-top: 30px;
+    }
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-height: 400px) {
+    .game-header {
+        padding: 4px var(--spacing-sm);
+    }
+
+    #opponent-area {
+        padding: 2px;
+        gap: var(--spacing-sm);
+    }
+
+    .opponent {
+        padding: 4px;
+        min-width: 80px;
+    }
+
+    #center-area {
+        padding: var(--spacing-sm);
+        gap: var(--spacing-md);
+    }
+
+    #player-hand {
+        min-height: 80px;
+    }
+
+    .player-controls {
+        margin-top: 4px;
+    }
+}
+
+@media (min-width: 768px) {
+    #opponent-area {
+        gap: var(--spacing-lg);
+    }
+
+    .opponent {
+        min-width: 120px;
+    }
+
+    #center-area {
+        gap: 60px;
+    }
+}
+
+/* ==================== LOBBY CARD STYLES ==================== */
+
+/* Lobby Card Picker Modal */
+.lobby-options {
+    display: flex;
+    gap: var(--spacing-lg);
+    justify-content: center;
+    margin-top: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.lobby-card-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--spacing-md);
+    min-width: 140px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+    border: 3px solid #333;
+    border-radius: 16px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.05);
+}
+
+.lobby-card-btn:hover {
+    transform: scale(1.05);
+    border-color: var(--text-gold);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+}
+
+.lobby-card-btn[data-lobby="bill"] {
+    border-color: #333;
+}
+
+.lobby-card-btn[data-lobby="bill"]:hover {
+    border-color: var(--color-blue);
+    box-shadow: 0 0 20px rgba(33, 150, 243, 0.5);
+}
+
+.lobby-card-btn[data-lobby="court_case"] {
+    border-color: #333;
+}
+
+.lobby-card-btn[data-lobby="court_case"]:hover {
+    border-color: var(--color-red);
+    box-shadow: 0 0 20px rgba(244, 67, 54, 0.5);
+}
+
+.lobby-icon {
+    font-size: 2.5rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.lobby-name {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--text-gold);
+}
+
+.lobby-type {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    margin-bottom: var(--spacing-sm);
+}
+
+.lobby-desc {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    margin-bottom: var(--spacing-xs);
+}
+
+.lobby-bonus {
+    font-size: 0.75rem;
+    color: var(--text-cyan);
+}
+
+.modal-subtitle {
+    font-size: 0.9rem;
+    opacity: 0.7;
+    margin-bottom: var(--spacing-md);
+}
+
+/* Lobby Activation Modal */
+.lobby-activate-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    margin-top: var(--spacing-lg);
+}
+
+.lobby-yes-btn,
+.lobby-no-btn {
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.lobby-yes-btn {
+    background: var(--text-gold);
+    color: var(--bg-primary);
+}
+
+.lobby-no-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.lobby-yes-btn:hover,
+.lobby-no-btn:hover {
+    transform: scale(1.05);
+}
+
+#lobby-activate-modal .lobby-description {
+    font-size: 1rem;
+    margin: var(--spacing-md) 0;
+}
+
+#lobby-activate-modal .lobby-bonus {
+    font-size: 1rem;
+    color: var(--text-gold);
+}
+
+/* Lobby Card Indicator (on opponent cards) */
+.lobby-indicator {
+    font-size: 1rem;
+    margin-top: var(--spacing-xs);
+    padding: 2px 8px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+}

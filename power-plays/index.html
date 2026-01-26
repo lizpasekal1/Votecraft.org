@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="screen-orientation" content="landscape">
+    <meta name="theme-color" content="#1a1a2e">
+    <title>Power Plays - Card Game</title>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/game.css">
+    <link rel="stylesheet" href="css/cards.css">
+</head>
+<body>
+
+    <!-- Start Screen -->
+    <div id="start-screen">
+        <h1 class="game-title">POWER PLAYS</h1>
+        <p class="game-subtitle">A card game of color, strategy & political power</p>
+
+        <div class="start-options">
+            <div class="option-group">
+                <label for="player-count">Players</label>
+                <select id="player-count">
+                    <option value="2">2 Players</option>
+                    <option value="3">3 Players</option>
+                    <option value="4" selected>4 Players</option>
+                </select>
+            </div>
+
+            <div class="option-group">
+                <label for="game-mode">Mode</label>
+                <select id="game-mode">
+                    <option value="single" selected>vs Computer</option>
+                    <option value="local">Pass & Play</option>
+                </select>
+            </div>
+
+            <div class="option-group">
+                <label for="difficulty">Difficulty</label>
+                <select id="difficulty">
+                    <option value="easy">Easy</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </div>
+
+            <button id="start-button" class="start-btn">Play</button>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="hidden">
+        <!-- Header -->
+        <header class="game-header">
+            <span class="header-title">POWER PLAYS</span>
+            <span id="current-player">Player 1's Turn</span>
+        </header>
+
+        <!-- Game Board -->
+        <main id="game-board">
+            <!-- Opponent Area (top) -->
+            <section id="opponent-area">
+                <!-- Opponents will be rendered here -->
+            </section>
+
+            <!-- Center Area (play/draw piles) -->
+            <section id="center-area">
+                <div id="draw-pile">
+                    <div class="card card-back draw-pile-card">
+                        <span class="pile-count">52</span>
+                    </div>
+                </div>
+
+                <div class="center-info">
+                    <div id="play-pile">
+                        <!-- Top card will be rendered here -->
+                    </div>
+                    <div id="active-color" class="active-color color-blue">BLUE</div>
+                    <div id="direction-indicator">→</div>
+                </div>
+            </section>
+
+            <!-- Player Area (bottom) -->
+            <section id="player-area">
+                <div id="player-hand">
+                    <!-- Player's cards will be rendered here -->
+                </div>
+                <div class="player-controls">
+                    <button id="power-button" class="control-btn hidden">POWER!</button>
+                    <button id="end-turn-button" class="control-btn hidden">End Turn</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Message Display -->
+    <div id="message-display"></div>
+
+    <!-- Modal Overlay -->
+    <div id="modal-overlay" class="hidden">
+
+        <!-- Color Picker Modal -->
+        <div id="color-picker-modal" class="modal hidden">
+            <h2 class="modal-title">Choose a Color</h2>
+            <div class="color-options">
+                <button class="color-btn" data-color="blue">🔵 Blue<br><small>Legislative</small></button>
+                <button class="color-btn" data-color="yellow">🟡 Yellow<br><small>Executive</small></button>
+                <button class="color-btn" data-color="red">🔴 Red<br><small>Judicial</small></button>
+                <button class="color-btn" data-color="green">🟢 Green<br><small>Fed Reserve</small></button>
+            </div>
+        </div>
+
+        <!-- Target Picker Modal -->
+        <div id="target-picker-modal" class="modal hidden">
+            <h2 class="modal-title">Choose a Player</h2>
+            <div class="target-options">
+                <!-- Target options will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Vote Modal -->
+        <div id="vote-modal" class="modal hidden">
+            <h2 class="modal-title">Vote!</h2>
+            <div class="vote-options">
+                <!-- Vote options will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Pass & Play Modal -->
+        <div id="pass-play-modal" class="modal hidden">
+            <h2 class="modal-title">Pass the device to:</h2>
+            <div class="pass-play-name">Player 2</div>
+            <p>Don't look at their cards!</p>
+            <button id="pass-play-ready">I'm Ready</button>
+        </div>
+
+        <!-- Game Over Modal -->
+        <div id="game-over-modal" class="modal hidden">
+            <h2 class="modal-title">🎉 Game Over!</h2>
+            <div class="winner-name">Player 1</div>
+            <p>wins the game!</p>
+            <button id="play-again-btn">Play Again</button>
+        </div>
+
+        <!-- Lobby Card Picker Modal -->
+        <div id="lobby-picker-modal" class="modal hidden">
+            <h2 class="modal-title">Choose Your Secret Lobby Card</h2>
+            <p class="modal-subtitle">This card stays hidden until you choose to reveal it</p>
+            <div class="lobby-options">
+                <button class="lobby-card-btn" data-lobby="bill">
+                    <div class="lobby-icon">📜</div>
+                    <div class="lobby-name">Bill</div>
+                    <div class="lobby-type">Legislative</div>
+                    <div class="lobby-desc">Activate when playing BLUE</div>
+                    <div class="lobby-bonus">Bonus: Draw 1 card</div>
+                </button>
+                <button class="lobby-card-btn" data-lobby="court_case">
+                    <div class="lobby-icon">⚖️</div>
+                    <div class="lobby-name">Court Case</div>
+                    <div class="lobby-type">Judicial</div>
+                    <div class="lobby-desc">Activate when playing RED</div>
+                    <div class="lobby-bonus">Bonus: Opponent discards 1</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Lobby Activation Modal -->
+        <div id="lobby-activate-modal" class="modal hidden">
+            <h2 class="modal-title">Activate Lobby Card?</h2>
+            <p class="lobby-description"></p>
+            <p class="lobby-bonus"></p>
+            <div class="lobby-activate-buttons">
+                <button class="lobby-yes-btn">Yes, Reveal!</button>
+                <button class="lobby-no-btn">No, Keep Hidden</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts (load in order due to dependencies) -->
+    <script src="js/constants.js"></script>
+    <script src="js/deck.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/actions.js"></script>
+    <script src="js/vote.js"></script>
+    <script src="js/ai.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
+
+</body>
+</html>
