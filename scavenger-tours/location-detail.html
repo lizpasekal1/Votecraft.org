@@ -14,7 +14,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Custom styles -->
-    <link rel="stylesheet" href="./css/scavenger-tours.css?v=28">
+    <link rel="stylesheet" href="./css/scavenger-tours.css?v=29">
 </head>
 <body>
     <!-- Page transition overlay -->
@@ -784,7 +784,7 @@
                             <p class="song-reason flex-1">${song.reason}</p>
                             <button class="save-song-btn p-2 transition-all flex-shrink-0 rounded-lg hover:bg-gray-700/50" data-index="${index}"
                                     style="color: ${songIsSaved ? themeColor : '#6b7280'};"
-                                    onclick="toggleSaveSong(${index}); event.stopPropagation();"
+                                    onclick="window.toggleSaveSong(${index}); event.stopPropagation();"
                                     title="${songIsSaved ? 'Remove from saved' : 'Save song'}">
                                 ${songIsSaved
                                     ? `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
@@ -797,7 +797,7 @@
                             <span class="text-gray-400 text-sm">Save this song</span>
                             <button class="save-song-btn p-2 transition-all rounded-lg hover:bg-gray-700/50" data-index="${index}"
                                     style="color: ${songIsSaved ? themeColor : '#6b7280'};"
-                                    onclick="toggleSaveSong(${index}); event.stopPropagation();"
+                                    onclick="window.toggleSaveSong(${index}); event.stopPropagation();"
                                     title="${songIsSaved ? 'Remove from saved' : 'Save song'}">
                                 ${songIsSaved
                                     ? `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
