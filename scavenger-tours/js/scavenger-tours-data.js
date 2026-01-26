@@ -220,7 +220,7 @@ const HEALTHCARE_TOUR = [
         likes: 423,
         civicTheme: CIVIC_THEMES.EDUCATION,
         widget: "healthcare-cost",
-        image: "https://upload.wikimedia.org/wikipedia/commons/b/b5/Harvard_Medical_School_HDR.jpg",
+        image: "https://hms.harvard.edu/sites/default/files/teaser-images/750GordonHall_2550%5B4%5D.jpg",
         description: "Founded in 1782, Harvard Medical School trains the doctors who shape American medicine. Its iconic marble quadrangle represents both medical excellence and a history of exclusion - the first Black graduate wasn't until 1850, women not until 1945.",
         learnMore: "Medical school costs average $250,000. The US has fewer doctors per capita than most developed nations, contributing to healthcare access gaps.",
         songs: [
