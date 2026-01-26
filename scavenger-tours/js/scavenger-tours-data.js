@@ -327,6 +327,7 @@ const HEALTHCARE_TOUR = [
         likes: 267,
         civicTheme: CIVIC_THEMES.EDUCATION,
         widget: "mental-health",
+        image: "https://www.gardnermuseum.org/sites/default/files/styles/portrait_large/public/images/slides/1908/Story_About_Construction_02.jpg",
         description: "Art heals. Museums across Boston partner with hospitals for 'art therapy' programs, and research shows viewing art reduces cortisol and anxiety. Gardner built this museum to bring beauty to everyone - admission is free on your birthday.",
         learnMore: "Hospitals now prescribe museum visits for mental health. Studies show 30 minutes in a museum reduces stress hormones as effectively as meditation.",
         songs: [
