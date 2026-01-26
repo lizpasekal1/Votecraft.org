@@ -14,7 +14,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Custom styles -->
-    <link rel="stylesheet" href="./css/scavenger-tours.css?v=30">
+    <link rel="stylesheet" href="./css/scavenger-tours.css?v=31">
 </head>
 <body>
     <!-- Page transition overlay -->
@@ -579,6 +579,8 @@
             const saved = getSavedSongs();
             return saved.some(s => s.url === songUrl);
         }
+        window.getSavedSongs = getSavedSongs;
+        window.isSongSaved = isSongSaved;
 
         function toggleSaveSong(index) {
             // Use global window variables for reliable access
@@ -587,8 +589,8 @@
                 console.error('Song not found at index:', index);
                 return;
             }
-            const artist = getArtistFromUrl(song.url);
-            const saved = getSavedSongs();
+            const artist = window.getArtistFromUrl(song.url);
+            const saved = window.getSavedSongs();
             const existingIndex = saved.findIndex(s => s.url === song.url);
 
             if (existingIndex >= 0) {
@@ -607,13 +609,13 @@
             }
 
             localStorage.setItem(SAVED_SONGS_KEY, JSON.stringify(saved));
-            updateSaveButton(index, song.url);
+            window.updateSaveButton(index, song.url);
         }
 
         function updateSaveButton(index, songUrl) {
             const btn = document.querySelector(`.save-song-btn[data-index="${index}"]`);
             if (btn) {
-                const isSaved = isSongSaved(songUrl);
+                const isSaved = window.isSongSaved(songUrl);
                 const color = window.vcThemeColor || '#3B82F6';
                 btn.innerHTML = isSaved
                     ? `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
@@ -623,6 +625,7 @@
         }
 
         window.toggleSaveSong = toggleSaveSong;
+        window.updateSaveButton = updateSaveButton;
 
         // ===== LIKE LOCATION FUNCTIONALITY =====
         const LIKES_KEY = 'votecraft_likes';
@@ -724,6 +727,7 @@
                 } catch (e) {}
                 return '';
             }
+            window.getArtistFromUrl = getArtistFromUrl;
 
             // Helper to detect URL type and create embed
             function getEmbedInfo(url) {
