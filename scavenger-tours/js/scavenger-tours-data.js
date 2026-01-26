@@ -440,6 +440,24 @@ const HEALTHCARE_TOUR = [
             { title: "Fortunate Son", url: "https://www.youtube.com/watch?v=ec0XKhAHR5I", reason: "CCR's protest anthem questioning who bears the burden of war." },
             { title: "Blowin' in the Wind", url: "https://www.youtube.com/watch?v=vWwgrjjIMXA", reason: "Bob Dylan's timeless questions about peace, war, and human cost." }
         ]
+    },
+    {
+        id: 14,
+        name: "Ether Monument",
+        location: "Boston Public Garden",
+        coordinates: [42.3540, -71.0695],
+        creator: "VoteCraft Boston",
+        likes: 167,
+        civicTheme: CIVIC_THEMES.HEALTHCARE,
+        widget: "healthcare-cost",
+        image: "https://upload.wikimedia.org/wikipedia/commons/6/66/Ether_Monument_Overview.JPG",
+        description: "This 1868 monument commemorates the first public demonstration of surgical anesthesia at Massachusetts General Hospital in 1846. Before ether, surgery meant unimaginable pain. This Boston breakthrough transformed medicine forever, making modern surgery possible.",
+        learnMore: "Dr. William Morton demonstrated ether anesthesia in the 'Ether Dome' at MGH. The discovery ended centuries of surgical agony, yet patent disputes left Morton penniless. Medical breakthroughs don't always reward their creators.",
+        songs: [
+            { title: "Comfortably Numb", url: "https://www.youtube.com/watch?v=_FrOQC-zEog", reason: "Pink Floyd's meditation on numbness and relief from pain." },
+            { title: "Fix You", url: "https://www.youtube.com/watch?v=k4V3Mo61fJM", reason: "Coldplay's tender promise of healing and comfort." },
+            { title: "Let It Be", url: "https://www.youtube.com/watch?v=QDYfEBY9NM4", reason: "The Beatles' soothing message of acceptance and peace." }
+        ]
     }
 ];
 
