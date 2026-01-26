@@ -14,7 +14,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Custom styles -->
-    <link rel="stylesheet" href="./css/scavenger-tours.css?v=25">
+    <link rel="stylesheet" href="./css/scavenger-tours.css?v=26">
 
 </head>
 <body>
@@ -472,29 +472,76 @@
             }).filter(Boolean).join('');
         }
 
-        // Load saved songs
+        // Load saved songs with accordion
         function loadSavedSongs() {
             const savedSongs = JSON.parse(localStorage.getItem('votecraft_saved_songs') || '[]');
             const container = document.getElementById('saved-songs');
             document.getElementById('songs-count').textContent = savedSongs.length;
 
             if (savedSongs.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-sm">No saved songs yet. Songs from tours you like will appear here.</p>';
+                container.innerHTML = '<p class="text-gray-500 text-sm">No saved songs yet. Tap the bookmark icon on any song to save it here.</p>';
                 return;
             }
 
-            container.innerHTML = savedSongs.map(song => `
-                <div class="flex items-center gap-3 py-3 border-b border-gray-700 last:border-0">
-                    <svg class="w-5 h-5 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
-                    </svg>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-white text-sm font-medium truncate">${song.name}</p>
-                        <p class="text-gray-500 text-xs truncate">${song.artist || ''}</p>
+            container.innerHTML = savedSongs.map((song, index) => {
+                const embedUrl = getYouTubeEmbedUrl(song.url);
+                return `
+                <div class="saved-song-accordion border-b border-gray-700 last:border-0" data-index="${index}">
+                    <div class="flex items-center gap-3 py-3 cursor-pointer hover:bg-gray-700/50 -mx-2 px-2 rounded transition-colors" onclick="toggleSavedSong(${index})">
+                        <svg class="w-5 h-5 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                        </svg>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-white text-sm font-medium truncate">${song.title || song.name || 'Unknown Song'}</p>
+                            <p class="text-gray-500 text-xs truncate">${song.locationName ? 'from ' + song.locationName : (song.artist || '')}</p>
+                        </div>
+                        <svg class="w-4 h-4 text-gray-400 transition-transform saved-song-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
+                    <div class="saved-song-content hidden pb-3">
+                        ${embedUrl ? `
+                        <div class="rounded-lg overflow-hidden mb-2">
+                            <iframe width="100%" height="200" src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                        ` : ''}
+                        <div class="flex items-center justify-between">
+                            <a href="location-detail.html?id=${song.locationId}&tour=${song.tourId}" class="text-blue-400 text-xs hover:underline">View location</a>
+                            <button onclick="removeSavedSong(${index}); event.stopPropagation();" class="text-red-400 text-xs hover:underline">Remove</button>
+                        </div>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
+
+        // Helper to get YouTube embed URL
+        function getYouTubeEmbedUrl(url) {
+            if (!url) return null;
+            const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+            if (match) {
+                return `https://www.youtube.com/embed/${match[1]}?rel=0`;
+            }
+            return null;
+        }
+
+        // Toggle saved song accordion
+        window.toggleSavedSong = function(index) {
+            const accordion = document.querySelector(`.saved-song-accordion[data-index="${index}"]`);
+            const content = accordion.querySelector('.saved-song-content');
+            const chevron = accordion.querySelector('.saved-song-chevron');
+
+            content.classList.toggle('hidden');
+            chevron.style.transform = content.classList.contains('hidden') ? '' : 'rotate(180deg)';
+        };
+
+        // Remove saved song
+        window.removeSavedSong = function(index) {
+            const savedSongs = JSON.parse(localStorage.getItem('votecraft_saved_songs') || '[]');
+            savedSongs.splice(index, 1);
+            localStorage.setItem('votecraft_saved_songs', JSON.stringify(savedSongs));
+            loadSavedSongs();
+        };
 
         // Load favorite themes
         function loadFavoriteThemes() {
@@ -513,7 +560,7 @@
             `).join('');
         }
 
-        // Load tour progress
+        // Load tour progress (clickable links to tours)
         function loadTourProgress() {
             const container = document.getElementById('tour-progress');
             const itineraryData = {};
@@ -528,15 +575,20 @@
                 const visited = itineraryData[tid] || 0;
                 const percent = Math.round((visited / info.total) * 100);
                 return `
-                    <div class="mb-4 last:mb-0">
+                    <a href="scavenger-tours.html?tour=${tid}" class="block mb-4 last:mb-0 hover:bg-gray-700/50 -mx-2 px-2 py-2 rounded transition-colors group">
                         <div class="flex items-center justify-between mb-2">
-                            <span class="text-gray-300 text-sm font-medium">${info.name}</span>
-                            <span class="text-gray-500 text-xs">${visited}/${info.total} stops</span>
+                            <span class="text-gray-300 text-sm font-medium group-hover:text-white transition-colors">${info.name}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-gray-500 text-xs">${visited}/${info.total} stops</span>
+                                <svg class="w-4 h-4 text-gray-500 group-hover:text-white transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </div>
                         </div>
                         <div class="w-full bg-gray-700 rounded-full h-2">
                             <div class="h-2 rounded-full transition-all" style="width: ${percent}%; background: ${info.color}"></div>
                         </div>
-                    </div>
+                    </a>
                 `;
             }).join('');
         }

@@ -14,7 +14,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Custom styles -->
-    <link rel="stylesheet" href="./css/scavenger-tours.css?v=25">
+    <link rel="stylesheet" href="./css/scavenger-tours.css?v=26">
 </head>
 <body>
     <!-- Page transition overlay -->
@@ -382,11 +382,11 @@
 
             <!-- Social Actions -->
             <div class="mt-6 flex items-center justify-center gap-6">
-                <button id="like-button" class="flex items-center gap-2 text-white hover:text-red-400 transition-colors">
+                <button id="like-button" onclick="toggleLikeLocation()" class="flex items-center gap-2 text-white hover:text-red-400 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                     </svg>
-                    <span id="like-count" class="font-semibold">0</span>
+                    <span id="like-count" class="font-semibold">Like</span>
                 </button>
                 <button class="flex items-center gap-2 text-white hover:text-blue-400 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -557,6 +557,115 @@
             return position >= 0 ? position + 1 : null;
         }
 
+        // ===== SAVE SONG FUNCTIONALITY =====
+        const SAVED_SONGS_KEY = 'votecraft_saved_songs';
+
+        function getSavedSongs() {
+            try {
+                return JSON.parse(localStorage.getItem(SAVED_SONGS_KEY) || '[]');
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function isSongSaved(songUrl) {
+            const saved = getSavedSongs();
+            return saved.some(s => s.url === songUrl);
+        }
+
+        function toggleSaveSong(index) {
+            const song = songs[index];
+            const artist = getArtistFromUrl(song.url);
+            const saved = getSavedSongs();
+            const existingIndex = saved.findIndex(s => s.url === song.url);
+
+            if (existingIndex >= 0) {
+                // Remove from saved
+                saved.splice(existingIndex, 1);
+            } else {
+                // Add to saved
+                saved.push({
+                    title: song.title,
+                    artist: artist || '',
+                    url: song.url,
+                    tourId: tourId,
+                    locationId: locationId,
+                    locationName: location.name
+                });
+            }
+
+            localStorage.setItem(SAVED_SONGS_KEY, JSON.stringify(saved));
+            updateSaveButton(index, song.url);
+        }
+
+        function updateSaveButton(index, songUrl) {
+            const btn = document.querySelector(`.save-song-btn[data-index="${index}"]`);
+            if (btn) {
+                const isSaved = isSongSaved(songUrl);
+                btn.innerHTML = isSaved
+                    ? `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
+                    : `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`;
+                btn.style.color = isSaved ? themeColor : '#9ca3af';
+            }
+        }
+
+        window.toggleSaveSong = toggleSaveSong;
+
+        // ===== LIKE LOCATION FUNCTIONALITY =====
+        const LIKES_KEY = 'votecraft_likes';
+
+        function getLikedLocations() {
+            try {
+                return JSON.parse(localStorage.getItem(LIKES_KEY) || '[]');
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function isLocationLiked() {
+            const liked = getLikedLocations();
+            return liked.some(l => l.tourId === tourId && l.locationId === locationId);
+        }
+
+        function toggleLikeLocation() {
+            const liked = getLikedLocations();
+            const existingIndex = liked.findIndex(l => l.tourId === tourId && l.locationId === locationId);
+
+            if (existingIndex >= 0) {
+                // Remove from liked
+                liked.splice(existingIndex, 1);
+            } else {
+                // Add to liked
+                liked.push({
+                    tourId: tourId,
+                    locationId: locationId,
+                    locationName: location.name,
+                    likedAt: new Date().toISOString()
+                });
+            }
+
+            localStorage.setItem(LIKES_KEY, JSON.stringify(liked));
+            updateLikeButton();
+        }
+
+        function updateLikeButton() {
+            const btn = document.getElementById('like-button');
+            const isLiked = isLocationLiked();
+            const heartSvg = btn.querySelector('svg');
+
+            if (isLiked) {
+                heartSvg.setAttribute('fill', 'currentColor');
+                btn.classList.add('text-red-400');
+                btn.classList.remove('text-white');
+            } else {
+                heartSvg.setAttribute('fill', 'none');
+                btn.classList.remove('text-red-400');
+                btn.classList.add('text-white');
+            }
+        }
+
+        window.toggleLikeLocation = toggleLikeLocation;
+
         function toggleRanking(songIndex) {
             let rankings = getUserRankings();
             const existingPosition = rankings.indexOf(songIndex);
@@ -634,6 +743,7 @@
                 const isRanked = rank !== null;
                 const embed = getEmbedInfo(song.url);
                 const artist = getArtistFromUrl(song.url);
+                const songIsSaved = isSongSaved(song.url);
                 // Store song info globally for play/pause control
                 window.songData[index] = { type: embed.type, videoId: embed.videoId };
 
@@ -651,6 +761,16 @@
                             <span class="song-title">${song.title}</span>
                             ${artist ? `<span class="song-artist">${artist}</span>` : ''}
                         </div>
+                        <!-- Save Song Button -->
+                        <button class="save-song-btn p-1 transition-colors" data-index="${index}"
+                                style="color: ${songIsSaved ? themeColor : '#9ca3af'};"
+                                onclick="toggleSaveSong(${index}); event.stopPropagation();"
+                                title="${songIsSaved ? 'Remove from saved' : 'Save song'}">
+                            ${songIsSaved
+                                ? `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
+                                : `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
+                            }
+                        </button>
                         <!-- Play/Pause Icon -->
                         <div class="song-play-btn" style="color: ${themeColor};" onclick="playSong(${index}); event.stopPropagation();">
                             <svg class="play-icon w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -943,6 +1063,9 @@
 
         // Initial render
         renderSongs();
+
+        // Initialize like button state
+        updateLikeButton();
 
         // Update page title
         document.title = `${location.name} - VoteCraft Tour`;
