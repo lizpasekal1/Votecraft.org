@@ -234,7 +234,7 @@ const HEALTHCARE_TOUR = [
         name: "Brigham and Women's Hospital",
         location: "75 Francis St, Longwood",
         coordinates: [42.3358, -71.1070],
-        image: "https://www.brighamresearchcci.org/wp-content/uploads/2019/02/BWH-BTM.jpg",
+        image: "https://upload.wikimedia.org/wikipedia/commons/f/f5/Brigham_and_Women%E2%80%99s_Hospital_%2854954429093%29.jpg",
         creator: "VoteCraft Boston",
         likes: 378,
         civicTheme: CIVIC_THEMES.HEALTHCARE,
