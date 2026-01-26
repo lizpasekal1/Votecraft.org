@@ -272,10 +272,32 @@
     // Set volume
     window.setVolume = function(value) {
         localStorage.setItem('votecraft_volume', value);
-        // Apply volume to any playing audio
+
+        // Apply volume to any HTML audio elements
         const audioElements = document.querySelectorAll('audio');
         audioElements.forEach(audio => {
             audio.volume = value / 100;
+        });
+
+        // Apply volume to YouTube iframes via postMessage API
+        const iframes = document.querySelectorAll('iframe');
+        iframes.forEach(iframe => {
+            const src = iframe.src || '';
+
+            if (src.includes('youtube.com')) {
+                // YouTube IFrame API - setVolume expects 0-100
+                iframe.contentWindow.postMessage(JSON.stringify({
+                    event: 'command',
+                    func: 'setVolume',
+                    args: [parseInt(value)]
+                }), '*');
+            } else if (src.includes('soundcloud.com')) {
+                // SoundCloud Widget API - setVolume expects 0-100
+                iframe.contentWindow.postMessage(JSON.stringify({
+                    method: 'setVolume',
+                    value: parseInt(value)
+                }), '*');
+            }
         });
     };
 
