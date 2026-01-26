@@ -129,6 +129,75 @@ body {
     box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
 }
 
+/* Start screen - mobile landscape */
+@media (max-height: 450px) {
+    #start-screen {
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: var(--spacing-lg);
+        padding: var(--spacing-sm);
+    }
+
+    .game-title {
+        font-size: clamp(1.2rem, 4vw, 2rem);
+        margin-bottom: 0;
+    }
+
+    .game-subtitle {
+        font-size: 0.8rem;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .start-options {
+        max-width: 200px;
+        gap: var(--spacing-sm);
+    }
+
+    .option-group select {
+        padding: 6px 10px;
+        font-size: 0.85rem;
+    }
+
+    .start-btn {
+        padding: 10px 25px;
+        font-size: 1rem;
+        margin-top: var(--spacing-sm);
+    }
+}
+
+@media (max-height: 400px) {
+    #start-screen {
+        gap: var(--spacing-md);
+    }
+
+    .game-title {
+        font-size: 1.2rem;
+    }
+
+    .game-subtitle {
+        display: none;
+    }
+
+    .start-options {
+        gap: 4px;
+    }
+
+    .option-group label {
+        font-size: 0.75rem;
+    }
+
+    .option-group select {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+
+    .start-btn {
+        padding: 8px 20px;
+        font-size: 0.9rem;
+    }
+}
+
 /* ==================== GAME SCREEN ==================== */
 #game-screen {
     display: flex;
@@ -537,84 +606,176 @@ body {
     }
 }
 
-/* ==================== RESPONSIVE - Mobile Landscape ==================== */
-@media (max-height: 500px) {
+/* ==================== RESPONSIVE - Mobile Landscape (iPhone etc) ==================== */
+@media (max-height: 450px) {
     .game-header {
         padding: 2px var(--spacing-sm);
+        min-height: 24px;
     }
 
     .header-title {
-        font-size: 0.85rem;
+        font-size: 0.75rem;
     }
 
     #current-player {
-        font-size: 0.75rem;
-        padding: 2px 8px;
+        font-size: 0.7rem;
+        padding: 2px 6px;
     }
 
     #game-board {
         padding: 2px;
+        gap: 2px;
     }
 
     #opponent-area {
-        padding: 2px;
-        gap: var(--spacing-sm);
+        padding: 2px 4px;
+        gap: 8px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
     }
 
     .opponent {
-        padding: 4px 8px;
-        min-width: 70px;
-        border-radius: 8px;
+        padding: 3px 6px;
+        min-width: auto;
+        border-radius: 6px;
+        flex-shrink: 0;
     }
 
     .opponent-name {
-        font-size: 0.7rem;
-    }
-
-    .opponent-count {
         font-size: 0.65rem;
     }
 
+    .opponent-count {
+        font-size: 0.6rem;
+    }
+
     #center-area {
-        padding: 4px;
-        gap: var(--spacing-md);
+        padding: 2px;
+        gap: 12px;
         flex: 1;
         min-height: 0;
     }
 
+    .center-info {
+        gap: 2px;
+    }
+
     #player-area {
-        padding: 4px var(--spacing-sm);
+        padding: 2px var(--spacing-sm);
     }
 
     #player-hand {
-        min-height: 60px;
+        min-height: 55px;
+        max-height: 70px;
         padding: 2px 0;
     }
 
     .player-controls {
         margin-top: 2px;
-        gap: var(--spacing-sm);
+        gap: 6px;
     }
 
     .control-btn {
-        padding: 4px 12px;
-        font-size: 0.75rem;
-    }
-
-    .active-color {
         padding: 3px 10px;
         font-size: 0.7rem;
     }
 
+    .active-color {
+        padding: 2px 8px;
+        font-size: 0.65rem;
+    }
+
     #direction-indicator {
+        font-size: 0.9rem;
+    }
+
+    /* Modals for small screens */
+    .modal {
+        padding: var(--spacing-sm);
+        max-height: 90%;
+    }
+
+    .modal-title {
         font-size: 1rem;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .color-options {
+        gap: var(--spacing-sm);
+    }
+
+    .color-btn {
+        padding: 12px;
+        font-size: 0.85rem;
+    }
+
+    .lobby-options {
+        gap: var(--spacing-sm);
+    }
+
+    .lobby-card-btn {
+        padding: var(--spacing-sm);
+        min-width: 110px;
+    }
+
+    .lobby-icon {
+        font-size: 1.5rem;
+    }
+
+    .lobby-name {
+        font-size: 0.9rem;
     }
 }
 
-/* Extra compact for very short screens */
-@media (max-height: 380px) {
+/* iPhone 16 Pro and similar (393px height in landscape) */
+@media (max-height: 420px) {
     .game-header {
         padding: 1px var(--spacing-xs);
+        min-height: 20px;
+    }
+
+    .header-title {
+        font-size: 0.7rem;
+    }
+
+    #opponent-area {
+        padding: 1px 2px;
+        gap: 6px;
+    }
+
+    .opponent {
+        padding: 2px 5px;
+        gap: 1px;
+    }
+
+    .opponent-name {
+        font-size: 0.6rem;
+    }
+
+    .opponent-count {
+        display: none;
+    }
+
+    #center-area {
+        padding: 2px;
+        gap: 10px;
+    }
+
+    #player-hand {
+        min-height: 50px;
+        max-height: 65px;
+    }
+
+    .control-btn {
+        padding: 2px 8px;
+        font-size: 0.65rem;
+    }
+}
+
+/* Extra compact for very short screens (older iPhones) */
+@media (max-height: 360px) {
+    .game-header {
+        display: none;
     }
 
     #opponent-area {
@@ -623,31 +784,26 @@ body {
     }
 
     .opponent {
-        padding: 2px 6px;
-        min-width: 60px;
-        gap: 1px;
-    }
-
-    .opponent-name {
-        font-size: 0.65rem;
+        padding: 2px 4px;
     }
 
     .opponent-cards {
-        transform: scale(0.85);
+        transform: scale(0.8);
         transform-origin: center;
     }
 
     #center-area {
         padding: 2px;
-        gap: var(--spacing-sm);
+        gap: 8px;
     }
 
     #player-hand {
-        min-height: 50px;
+        min-height: 45px;
+        max-height: 55px;
     }
 
-    .center-info {
-        gap: 2px;
+    .player-controls {
+        display: none;
     }
 }
 

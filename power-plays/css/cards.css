@@ -563,10 +563,10 @@
 }
 
 /* Responsive card sizes - Mobile landscape */
-@media (max-height: 500px) {
+@media (max-height: 450px) {
     :root {
-        --card-width: 45px;
-        --card-height: 68px;
+        --card-width: 40px;
+        --card-height: 60px;
     }
 
     .card {
@@ -574,24 +574,24 @@
     }
 
     .card-center {
-        font-size: 22px;
+        font-size: 20px;
     }
 
     .card-action .card-center {
-        font-size: 16px;
+        font-size: 14px;
     }
 
     .card-skip .card-center {
-        font-size: 22px;
+        font-size: 20px;
     }
 
     .card-vote .card-center {
-        font-size: 7px;
+        font-size: 6px;
     }
 
     .card-vote .vote-corner {
-        width: 8px;
-        height: 8px;
+        width: 7px;
+        height: 7px;
     }
 
     .card-vote .vote-corner-top {
@@ -605,41 +605,50 @@
     }
 
     .card-theme {
-        font-size: 4px;
+        font-size: 3px;
         bottom: 2px;
     }
 
     .card-icon {
-        width: 14px;
-        height: 14px;
+        width: 12px;
+        height: 12px;
         top: 1px;
         left: 2px;
     }
 
     .card-back::after {
-        font-size: 10px;
+        font-size: 9px;
     }
 
     .card-wrapper {
-        margin: 0 -12px;
+        margin: 0 -10px;
+    }
+
+    .card-wrapper:hover {
+        transform: translateY(-5px);
+        margin: 0 2px;
     }
 
     .opponent-cards .card {
-        width: 22px;
-        height: 33px;
-        margin: 0 -6px;
+        width: 18px;
+        height: 27px;
+        margin: 0 -5px;
     }
 
     .opponent-cards .card-back::after {
-        font-size: 6px;
+        font-size: 5px;
+    }
+
+    .opponent-cards .card-back::before {
+        display: none;
     }
 }
 
-/* Extra small - very short landscape screens */
-@media (max-height: 380px) {
+/* iPhone 16 Pro landscape (~393px height) */
+@media (max-height: 420px) {
     :root {
-        --card-width: 38px;
-        --card-height: 57px;
+        --card-width: 36px;
+        --card-height: 54px;
     }
 
     .card-center {
@@ -647,7 +656,7 @@
     }
 
     .card-action .card-center {
-        font-size: 14px;
+        font-size: 12px;
     }
 
     .card-skip .card-center {
@@ -655,12 +664,12 @@
     }
 
     .card-vote .card-center {
-        font-size: 6px;
+        font-size: 5px;
     }
 
     .card-vote .vote-corner {
-        width: 6px;
-        height: 6px;
+        width: 5px;
+        height: 5px;
         box-shadow: 0 0 0 1px white;
     }
 
@@ -674,13 +683,61 @@
     }
 
     .card-wrapper {
-        margin: 0 -10px;
+        margin: 0 -9px;
     }
 
     .opponent-cards .card {
-        width: 18px;
-        height: 27px;
-        margin: 0 -5px;
+        width: 16px;
+        height: 24px;
+        margin: 0 -4px;
+    }
+
+    .opponent-cards .card-back::after {
+        display: none;
+    }
+}
+
+/* Extra small - very short landscape screens */
+@media (max-height: 360px) {
+    :root {
+        --card-width: 32px;
+        --card-height: 48px;
+    }
+
+    .card-center {
+        font-size: 16px;
+    }
+
+    .card-action .card-center {
+        font-size: 11px;
+    }
+
+    .card-skip .card-center {
+        font-size: 16px;
+    }
+
+    .card-vote .card-center {
+        font-size: 4px;
+    }
+
+    .card-vote .vote-corner {
+        width: 4px;
+        height: 4px;
+    }
+
+    .card-icon {
+        width: 8px;
+        height: 8px;
+    }
+
+    .card-wrapper {
+        margin: 0 -8px;
+    }
+
+    .opponent-cards .card {
+        width: 14px;
+        height: 21px;
+        margin: 0 -3px;
     }
 }
 
