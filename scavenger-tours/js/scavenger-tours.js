@@ -434,19 +434,13 @@
                 <div class="absolute inset-0 bg-black/50"></div>
 
                 <!-- Welcome container - same template for all tours -->
-                <div class="relative z-10 mx-4 px-6 py-6 sm:px-8 sm:py-10 rounded-2xl text-center max-w-md w-full"
+                <div class="relative z-10 mx-4 px-6 py-6 sm:px-8 sm:py-8 rounded-2xl text-center max-w-md w-full"
                      style="background: ${themeColor}dd;">
                     <!-- Tour icon -->
                     <div class="text-4xl sm:text-5xl mb-3">${tour.icon}</div>
 
                     <!-- Tour name -->
-                    <h2 class="text-white text-2xl sm:text-3xl font-bold mb-2">${tour.name}</h2>
-
-                    <!-- Tour description -->
-                    <p class="text-white/80 text-sm mb-1">${tour.description}</p>
-
-                    <!-- Stop count -->
-                    <p class="text-white/60 text-xs mb-4 sm:mb-6">${tour.stops} stops to explore</p>
+                    <h2 class="text-white text-2xl sm:text-3xl font-bold mb-4 sm:mb-5">${tour.name}</h2>
 
                     <!-- Start button -->
                     <button onclick="startTour('${tourId}')"
