@@ -285,24 +285,6 @@ const HEALTHCARE_TOUR = [
     },
     {
         id: 5,
-        name: "Healthcare Heroes Memorial Garden",
-        location: "South End, near Boston Medical Center",
-        coordinates: [42.3345, -71.0720],
-        creator: "VoteCraft Boston",
-        likes: 298,
-        civicTheme: CIVIC_THEMES.IMMIGRATION,
-        widget: "healthcare-cost",
-        image: "https://images.unsplash.com/photo-1585435557343-3b348c3c6f5d?w=800&q=80",
-        description: "This memorial garden honors immigrant healthcare workers who risked their lives during the COVID-19 pandemic. Bronze sculptures depict nurses, doctors, and essential workers from around the world. Today, 29% of US physicians are immigrants.",
-        learnMore: "During COVID, immigrant healthcare workers were essential - yet many faced deportation threats. Community gardens like this one provide healing space for workers and patients alike.",
-        songs: [
-            { title: "Hero", url: "https://www.youtube.com/watch?v=0IA3ZvCkRkQ", reason: "Mariah Carey's tribute to everyday heroes who save lives." },
-            { title: "Lean on Me", url: "https://www.youtube.com/watch?v=fOZ-MySzAac", reason: "Bill Withers' call for mutual support among healthcare workers." },
-            { title: "We Are the World", url: "https://www.youtube.com/watch?v=M9BNoNFKCBI", reason: "A global anthem of unity celebrating international cooperation in healthcare." }
-        ]
-    },
-    {
-        id: 6,
         name: "Fenway Community Health",
         location: "1340 Boylston St, Fenway",
         coordinates: [42.3435, -71.0970],
@@ -319,7 +301,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 7,
+        id: 6,
         name: "The Fens & Victory Gardens",
         location: "The Fenway, near Agassiz Rd",
         coordinates: [42.3420, -71.0960],
@@ -337,7 +319,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 8,
+        id: 7,
         name: "Isabella Stewart Gardner Museum",
         location: "25 Evans Way",
         coordinates: [42.3384, -71.0990],
@@ -354,7 +336,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 9,
+        id: 8,
         name: "Dr. Rebecca Lee Crumpler Memorial",
         location: "Beacon Hill, near Charles St",
         coordinates: [42.3560, -71.0700],
@@ -372,25 +354,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 10,
-        name: "Mental Health Awareness Mural",
-        location: "Jamaica Plain, Centre Street",
-        coordinates: [42.3125, -71.1150],
-        creator: "VoteCraft Boston",
-        likes: 156,
-        civicTheme: CIVIC_THEMES.VOTING,
-        widget: "life-expectancy",
-        image: "https://images.unsplash.com/photo-1499781350541-7783f6c6a0c8?w=800&q=80",
-        description: "This colorful community mural breaks the stigma around mental health. Depicting figures emerging from darkness into light, it reminds viewers that mental health is health. One in five Americans experiences mental illness each year.",
-        learnMore: "Suicide is the second leading cause of death for ages 10-34. Yet mental healthcare remains underfunded - only 43% of adults with mental illness receive treatment.",
-        songs: [
-            { title: "Bridge Over Troubled Water", url: "https://www.youtube.com/watch?v=4G-YQA_bsOU", reason: "Simon & Garfunkel's promise of support through dark times." },
-            { title: "Here Comes the Sun", url: "https://www.youtube.com/watch?v=KQetemT1sWc", reason: "The Beatles' hopeful message that brighter days are coming." },
-            { title: "Three Little Birds", url: "https://www.youtube.com/watch?v=zaGUr6wzyT8", reason: "Bob Marley's reassuring reminder that every little thing is gonna be alright." }
-        ]
-    },
-    {
-        id: 11,
+        id: 9,
         name: "Nurses Memorial Sculpture",
         location: "Massachusetts General Hospital grounds",
         coordinates: [42.3630, -71.0685],
@@ -408,7 +372,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 12,
+        id: 10,
         name: "MassArt & Mental Health",
         location: "621 Huntington Ave",
         coordinates: [42.3368, -71.0985],
@@ -425,7 +389,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 13,
+        id: 11,
         name: "Vietnam Veterans Memorial",
         location: "100 Park Dr, Boston",
         coordinates: [42.3442, -71.0962],
@@ -443,7 +407,7 @@ const HEALTHCARE_TOUR = [
         ]
     },
     {
-        id: 14,
+        id: 12,
         name: "Ether Monument",
         location: "Boston Public Garden",
         coordinates: [42.3540, -71.0695],
