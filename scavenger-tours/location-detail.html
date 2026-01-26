@@ -765,16 +765,30 @@
             }
         }
 
-        // Helper to control YouTube by reloading iframe with/without autoplay
+        // Helper to send YouTube postMessage commands
+        function youtubeCommand(iframe, command) {
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage(JSON.stringify({
+                    event: 'command',
+                    func: command,
+                    args: []
+                }), '*');
+            }
+        }
+
+        // Helper to control YouTube playback
         function youtubeControl(iframe, videoId, shouldPlay) {
-            if (iframe && videoId) {
-                const baseUrl = `https://www.youtube.com/embed/${videoId}?rel=0&enablejsapi=1&playsinline=1`;
-                // On mobile, don't use autoplay - it won't work anyway
-                if (isMobile) {
-                    iframe.src = baseUrl;
-                } else {
-                    iframe.src = shouldPlay ? `${baseUrl}&autoplay=1` : baseUrl;
+            if (!iframe || !videoId) return;
+
+            if (shouldPlay) {
+                // On mobile, autoplay won't work - user must tap video
+                // On desktop, reload with autoplay
+                if (!isMobile) {
+                    iframe.src = `https://www.youtube.com/embed/${videoId}?rel=0&enablejsapi=1&playsinline=1&autoplay=1`;
                 }
+            } else {
+                // Pause using postMessage (works on both mobile and desktop)
+                youtubeCommand(iframe, 'pauseVideo');
             }
         }
 
