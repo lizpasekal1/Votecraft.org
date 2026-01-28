@@ -312,6 +312,7 @@ class UIManager {
 
         return `
             <div class="card ${colorClass} ${playableClass} ${typeClass}" data-card-id="${card.id}">
+                ${card.color ? '<div class="card-oval"></div>' : ''}
                 ${card.color ? `<div class="card-icon">${branchIcon}</div>` : ''}
                 <div class="card-center">${symbol}</div>
                 ${card.color ? `<div class="card-theme">${branchName}</div>` : ''}
