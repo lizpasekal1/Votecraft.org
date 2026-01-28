@@ -562,15 +562,145 @@
     }
 }
 
-/* Responsive card sizes - Mobile landscape */
-@media (max-height: 450px) {
+/* Responsive card sizes - Mobile portrait */
+@media (max-width: 430px) {
     :root {
-        --card-width: 40px;
-        --card-height: 60px;
+        --card-width: 50px;
+        --card-height: 75px;
     }
 
     .card {
         border-width: 2px;
+    }
+
+    .card-center {
+        font-size: 26px;
+    }
+
+    .card-action .card-center {
+        font-size: 18px;
+    }
+
+    .card-skip .card-center {
+        font-size: 26px;
+    }
+
+    .card-vote .card-center {
+        font-size: 7px;
+    }
+
+    .card-vote .vote-corner {
+        width: 8px;
+        height: 8px;
+    }
+
+    .card-vote .vote-corner-top {
+        top: 3px;
+        left: 3px;
+    }
+
+    .card-vote .vote-corner-bottom {
+        bottom: 3px;
+        right: 3px;
+    }
+
+    .card-theme {
+        font-size: 4px;
+        bottom: 3px;
+    }
+
+    .card-icon {
+        width: 14px;
+        height: 14px;
+        top: 2px;
+        left: 3px;
+    }
+
+    .card-back::after {
+        font-size: 10px;
+    }
+
+    .card-wrapper {
+        margin: 0 -12px;
+    }
+
+    .card-wrapper:hover {
+        transform: translateY(-8px);
+        margin: 0 2px;
+    }
+
+    .opponent-cards .card {
+        width: 22px;
+        height: 33px;
+        margin: 0 -6px;
+    }
+
+    .opponent-cards .card-back::after {
+        font-size: 6px;
+    }
+
+    .opponent-cards .card-back::before {
+        display: none;
+    }
+}
+
+/* Smaller phones (375px width - iPhone SE) */
+@media (max-width: 375px) {
+    :root {
+        --card-width: 45px;
+        --card-height: 68px;
+    }
+
+    .card-center {
+        font-size: 22px;
+    }
+
+    .card-action .card-center {
+        font-size: 16px;
+    }
+
+    .card-skip .card-center {
+        font-size: 22px;
+    }
+
+    .card-vote .card-center {
+        font-size: 6px;
+    }
+
+    .card-vote .vote-corner {
+        width: 6px;
+        height: 6px;
+    }
+
+    .card-theme {
+        display: none;
+    }
+
+    .card-icon {
+        width: 12px;
+        height: 12px;
+    }
+
+    .card-wrapper {
+        margin: 0 -10px;
+    }
+
+    .opponent-cards .card {
+        width: 18px;
+        height: 27px;
+        margin: 0 -5px;
+    }
+
+    .opponent-cards .card-back::after {
+        display: none;
+    }
+}
+
+/* Very small phones (320px width) */
+@media (max-width: 320px) {
+    :root {
+        --card-width: 40px;
+        --card-height: 60px;
     }
 
     .card-center {
@@ -586,95 +716,12 @@
     }
 
     .card-vote .card-center {
-        font-size: 6px;
-    }
-
-    .card-vote .vote-corner {
-        width: 7px;
-        height: 7px;
-    }
-
-    .card-vote .vote-corner-top {
-        top: 2px;
-        left: 2px;
-    }
-
-    .card-vote .vote-corner-bottom {
-        bottom: 2px;
-        right: 2px;
-    }
-
-    .card-theme {
-        font-size: 3px;
-        bottom: 2px;
-    }
-
-    .card-icon {
-        width: 12px;
-        height: 12px;
-        top: 1px;
-        left: 2px;
-    }
-
-    .card-back::after {
-        font-size: 9px;
-    }
-
-    .card-wrapper {
-        margin: 0 -10px;
-    }
-
-    .card-wrapper:hover {
-        transform: translateY(-5px);
-        margin: 0 2px;
-    }
-
-    .opponent-cards .card {
-        width: 18px;
-        height: 27px;
-        margin: 0 -5px;
-    }
-
-    .opponent-cards .card-back::after {
-        font-size: 5px;
-    }
-
-    .opponent-cards .card-back::before {
-        display: none;
-    }
-}
-
-/* iPhone 16 Pro landscape (~393px height) */
-@media (max-height: 420px) {
-    :root {
-        --card-width: 36px;
-        --card-height: 54px;
-    }
-
-    .card-center {
-        font-size: 18px;
-    }
-
-    .card-action .card-center {
-        font-size: 12px;
-    }
-
-    .card-skip .card-center {
-        font-size: 18px;
-    }
-
-    .card-vote .card-center {
         font-size: 5px;
     }
 
     .card-vote .vote-corner {
         width: 5px;
         height: 5px;
-        box-shadow: 0 0 0 1px white;
-    }
-
-    .card-theme {
-        display: none;
     }
 
     .card-icon {
@@ -683,61 +730,13 @@
     }
 
     .card-wrapper {
-        margin: 0 -9px;
+        margin: 0 -8px;
     }
 
     .opponent-cards .card {
         width: 16px;
         height: 24px;
         margin: 0 -4px;
-    }
-
-    .opponent-cards .card-back::after {
-        display: none;
-    }
-}
-
-/* Extra small - very short landscape screens */
-@media (max-height: 360px) {
-    :root {
-        --card-width: 32px;
-        --card-height: 48px;
-    }
-
-    .card-center {
-        font-size: 16px;
-    }
-
-    .card-action .card-center {
-        font-size: 11px;
-    }
-
-    .card-skip .card-center {
-        font-size: 16px;
-    }
-
-    .card-vote .card-center {
-        font-size: 4px;
-    }
-
-    .card-vote .vote-corner {
-        width: 4px;
-        height: 4px;
-    }
-
-    .card-icon {
-        width: 8px;
-        height: 8px;
-    }
-
-    .card-wrapper {
-        margin: 0 -8px;
-    }
-
-    .opponent-cards .card {
-        width: 14px;
-        height: 21px;
-        margin: 0 -3px;
     }
 }
 

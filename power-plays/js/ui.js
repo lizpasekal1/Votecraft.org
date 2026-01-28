@@ -40,7 +40,10 @@ class UIManager {
 
             // Game board
             gameBoard: document.getElementById('game-board'),
-            opponentArea: document.getElementById('opponent-area'),
+            opponentTop: document.getElementById('opponent-top'),
+            opponentLeft: document.getElementById('opponent-left'),
+            opponentRight: document.getElementById('opponent-right'),
+            gameMiddle: document.getElementById('game-middle'),
             centerArea: document.getElementById('center-area'),
             playerArea: document.getElementById('player-area'),
 
@@ -154,47 +157,83 @@ class UIManager {
     }
 
     /**
-     * Render opponent hands
+     * Render opponent hands - positions based on player count
+     * 2 players: opponent at top
+     * 3 players: P2 on left, P3 at top
+     * 4 players: P2 on left, P3 at top, P4 on right
      */
     renderOpponents() {
         const state = this.game.state;
         const currentPlayer = state.getCurrentPlayer();
-        const opponents = state.players.filter(p => p.index !== 0); // Show all except player 0
+        const opponents = state.players.filter(p => p.index !== 0);
+        const playerCount = state.players.length;
 
-        this.elements.opponentArea.innerHTML = '';
+        // Clear all opponent areas
+        this.elements.opponentTop.innerHTML = '';
+        this.elements.opponentLeft.innerHTML = '';
+        this.elements.opponentRight.innerHTML = '';
 
         opponents.forEach(opponent => {
-            const opponentEl = document.createElement('div');
-            opponentEl.className = `opponent ${state.currentPlayerIndex === opponent.index ? 'active' : ''}`;
-            opponentEl.dataset.playerIndex = opponent.index;
+            const opponentEl = this.createOpponentElement(opponent, currentPlayer);
 
-            const isCurrent = state.currentPlayerIndex === opponent.index;
-
-            const lobbyIndicator = this.renderLobbyIndicator(opponent);
-
-            opponentEl.innerHTML = `
-                <div class="opponent-name ${isCurrent ? 'current-turn' : ''}">${opponent.name}</div>
-                <div class="opponent-cards">
-                    ${this.renderCardBacks(opponent.handSize())}
-                </div>
-                <div class="opponent-count">${opponent.handSize()} cards</div>
-                ${lobbyIndicator}
-                ${opponent.hasCalledPower && opponent.handSize() === 1 ? '<div class="power-badge">POWER!</div>' : ''}
-            `;
-
-            // Challenge button for Power!
-            if (opponent.canBeCaughtForPower() && currentPlayer.isHuman) {
-                const challengeBtn = document.createElement('button');
-                challengeBtn.className = 'challenge-btn';
-                challengeBtn.textContent = 'Catch!';
-                challengeBtn.addEventListener('click', () => {
-                    this.game.challengePower(0, opponent.index);
-                });
-                opponentEl.appendChild(challengeBtn);
+            // Position based on player count and opponent index
+            if (playerCount === 2) {
+                // 2 players: opponent at top
+                this.elements.opponentTop.appendChild(opponentEl);
+            } else if (playerCount === 3) {
+                // 3 players: P2 (index 1) on left, P3 (index 2) at top
+                if (opponent.index === 1) {
+                    this.elements.opponentLeft.appendChild(opponentEl);
+                } else {
+                    this.elements.opponentTop.appendChild(opponentEl);
+                }
+            } else if (playerCount === 4) {
+                // 4 players: P2 left, P3 top, P4 right
+                if (opponent.index === 1) {
+                    this.elements.opponentLeft.appendChild(opponentEl);
+                } else if (opponent.index === 2) {
+                    this.elements.opponentTop.appendChild(opponentEl);
+                } else {
+                    this.elements.opponentRight.appendChild(opponentEl);
+                }
             }
-
-            this.elements.opponentArea.appendChild(opponentEl);
         });
+    }
+
+    /**
+     * Create opponent element
+     */
+    createOpponentElement(opponent, currentPlayer) {
+        const state = this.game.state;
+        const opponentEl = document.createElement('div');
+        opponentEl.className = `opponent ${state.currentPlayerIndex === opponent.index ? 'active' : ''}`;
+        opponentEl.dataset.playerIndex = opponent.index;
+
+        const isCurrent = state.currentPlayerIndex === opponent.index;
+        const lobbyIndicator = this.renderLobbyIndicator(opponent);
+
+        opponentEl.innerHTML = `
+            <div class="opponent-name ${isCurrent ? 'current-turn' : ''}">${opponent.name}</div>
+            <div class="opponent-cards">
+                ${this.renderCardBacks(opponent.handSize())}
+            </div>
+            <div class="opponent-count">${opponent.handSize()} cards</div>
+            ${lobbyIndicator}
+            ${opponent.hasCalledPower && opponent.handSize() === 1 ? '<div class="power-badge">POWER!</div>' : ''}
+        `;
+
+        // Challenge button for Power!
+        if (opponent.canBeCaughtForPower() && currentPlayer.isHuman) {
+            const challengeBtn = document.createElement('button');
+            challengeBtn.className = 'challenge-btn';
+            challengeBtn.textContent = 'Catch!';
+            challengeBtn.addEventListener('click', () => {
+                this.game.challengePower(0, opponent.index);
+            });
+            opponentEl.appendChild(challengeBtn);
+        }
+
+        return opponentEl;
     }
 
     /**
