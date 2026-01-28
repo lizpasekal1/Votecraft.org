@@ -325,7 +325,6 @@ body {
     flex-direction: column;
     padding: var(--spacing-sm);
     overflow: hidden;
-    position: relative;
 }
 
 /* Opponent Area */
@@ -351,27 +350,6 @@ body {
 .opponent.active {
     background: rgba(255, 215, 0, 0.1);
     box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
-}
-
-/* Angled opponent positions for 3-4 player games */
-.opponent.position-left {
-    position: absolute;
-    left: 8px;
-    top: 20%;
-    transform: rotate(-35deg);
-    z-index: 10;
-}
-
-.opponent.position-right {
-    position: absolute;
-    right: 8px;
-    top: 20%;
-    transform: rotate(35deg);
-    z-index: 10;
-}
-
-.opponent.position-top {
-    /* Stays in normal flow at top */
 }
 
 .opponent-name {
