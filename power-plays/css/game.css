@@ -357,7 +357,7 @@ body {
 .opponent.position-left {
     position: absolute;
     left: 10px;
-    top: 12%;
+    top: 20%;
     transform: rotate(-30deg);
     z-index: 10;
 }
@@ -365,7 +365,7 @@ body {
 .opponent.position-right {
     position: absolute;
     right: 10px;
-    top: 12%;
+    top: 20%;
     transform: rotate(30deg);
     z-index: 10;
 }
