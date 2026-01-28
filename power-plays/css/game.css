@@ -464,13 +464,13 @@ body {
     -webkit-overflow-scrolling: touch;
 }
 
-/* Player cards 10% larger than CPU cards */
+/* Player cards 15% larger than CPU cards */
 #player-hand .card {
-    transform: scale(1.1);
+    transform: scale(1.15);
 }
 
 #player-hand .card-wrapper:hover .card {
-    transform: scale(1.1) translateY(-10px);
+    transform: scale(1.15) translateY(-10px);
 }
 
 .player-controls {
