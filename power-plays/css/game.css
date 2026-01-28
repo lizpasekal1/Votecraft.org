@@ -460,7 +460,8 @@ body {
     align-items: flex-end;
     min-height: 100px;
     overflow-x: auto;
-    padding: var(--spacing-sm) 0;
+    overflow-y: visible;
+    padding: 20px 0 var(--spacing-sm) 0;
     -webkit-overflow-scrolling: touch;
 }
 
