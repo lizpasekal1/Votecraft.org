@@ -352,6 +352,19 @@ body {
     box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
 }
 
+/* Angled opponent positions for 3-4 player games */
+.opponent.position-left {
+    transform: rotate(-25deg);
+}
+
+.opponent.position-right {
+    transform: rotate(25deg);
+}
+
+.opponent.position-top {
+    transform: rotate(0deg);
+}
+
 .opponent-name {
     font-size: 0.85rem;
     font-weight: bold;
