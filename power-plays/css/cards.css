@@ -265,11 +265,14 @@
     font-size: 7px;
     font-weight: 900;
     text-transform: uppercase;
-    color: #000 !important;
-    background: yellow;
+    color: #000;
+    background: rgba(255, 255, 255, 0.9);
     z-index: 100;
     line-height: 1;
     pointer-events: none;
+    padding: 1px 0;
+    -webkit-transform: translateZ(1px);
+    transform: translateZ(1px);
 }
 
 /* Card icon in top-left corner */
@@ -348,22 +351,14 @@
 /* Card wrapper for hand */
 .card-wrapper {
     display: inline-block;
-    margin: 0 -15px;
+    margin: 0 2px;
     transition: transform 0.2s ease, margin 0.2s ease;
 }
 
 .card-wrapper:hover {
     transform: translateY(-10px);
     z-index: 10;
-    margin: 0 5px;
-}
-
-.card-wrapper:first-child {
-    margin-left: 0;
-}
-
-.card-wrapper:last-child {
-    margin-right: 0;
+    margin: 0 6px;
 }
 
 /* Opponent cards (card backs in a row) */
@@ -576,12 +571,20 @@
 /* Responsive card sizes - Mobile portrait */
 @media (max-width: 430px) and (orientation: portrait) {
     :root {
-        --card-width: 80px;
-        --card-height: 120px;
+        --card-width: 88px;
+        --card-height: 132px;
     }
 
     .card {
         border-width: 2px;
+        /* Use overflow hidden to clip the oval, theme labels work with translateZ */
+        overflow: hidden;
+    }
+
+    .card-oval {
+        /* Reduce oval size so it doesn't extend beyond card when clipped */
+        height: 100%;
+        width: 80%;
     }
 
     .card-center {
@@ -616,8 +619,11 @@
     }
 
     .card-theme {
-        font-size: 8px;
-        bottom: 5px;
+        font-size: 9px;
+        bottom: 3px;
+        padding: 2px 4px;
+        -webkit-transform: translateZ(2px);
+        transform: translateZ(2px);
     }
 
     .card-icon {
@@ -633,12 +639,11 @@
     }
 
     .card-wrapper {
-        margin: 0 -14px;
+        margin: 0 !important;
     }
 
     .card-wrapper:hover {
         transform: translateY(-10px);
-        margin: 0 2px;
     }
 
     .opponent-cards .card {
@@ -664,6 +669,15 @@
         --card-height: 78px;
     }
 
+    .card {
+        overflow: hidden;
+    }
+
+    .card-oval {
+        height: 100%;
+        width: 80%;
+    }
+
     .card-center {
         font-size: 26px;
     }
@@ -687,7 +701,8 @@
 
     .card-theme {
         font-size: 6px;
-        bottom: 4px;
+        bottom: 2px;
+        padding: 1px 2px;
     }
 
     .card-icon {
@@ -717,6 +732,15 @@
         --card-height: 69px;
     }
 
+    .card {
+        overflow: hidden;
+    }
+
+    .card-oval {
+        height: 100%;
+        width: 80%;
+    }
+
     .card-center {
         font-size: 22px;
     }
@@ -736,6 +760,12 @@
     .card-vote .vote-corner {
         width: 6px;
         height: 6px;
+    }
+
+    .card-theme {
+        font-size: 5px;
+        bottom: 2px;
+        padding: 1px 2px;
     }
 
     .card-icon {
