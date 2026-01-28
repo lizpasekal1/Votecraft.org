@@ -563,7 +563,7 @@
 }
 
 /* Responsive card sizes - Mobile portrait */
-@media (max-width: 430px) {
+@media (max-width: 430px) and (orientation: portrait) {
     :root {
         --card-width: 58px;
         --card-height: 87px;
@@ -645,7 +645,7 @@
 }
 
 /* Smaller phones (375px width - iPhone SE) */
-@media (max-width: 375px) {
+@media (max-width: 375px) and (orientation: portrait) {
     :root {
         --card-width: 52px;
         --card-height: 78px;
@@ -697,7 +697,7 @@
 }
 
 /* Very small phones (320px width) */
-@media (max-width: 320px) {
+@media (max-width: 320px) and (orientation: portrait) {
     :root {
         --card-width: 46px;
         --card-height: 69px;
