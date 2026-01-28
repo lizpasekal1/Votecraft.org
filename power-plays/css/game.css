@@ -946,7 +946,7 @@ body {
     }
 
     #center-area {
-        flex-direction: column;
+        flex-direction: row;
         gap: var(--spacing-sm);
         padding: var(--spacing-sm);
     }
