@@ -2,8 +2,8 @@
 
 /* Card base */
 .card {
-    width: var(--card-width, 60px);
-    height: var(--card-height, 90px);
+    width: var(--card-width, 70px);
+    height: var(--card-height, 105px);
     border-radius: var(--card-radius, 8px);
     position: relative;
     display: flex;
@@ -565,12 +565,90 @@
 /* Responsive card sizes - Mobile portrait */
 @media (max-width: 430px) {
     :root {
-        --card-width: 50px;
-        --card-height: 75px;
+        --card-width: 58px;
+        --card-height: 87px;
     }
 
     .card {
         border-width: 2px;
+    }
+
+    .card-center {
+        font-size: 30px;
+    }
+
+    .card-action .card-center {
+        font-size: 20px;
+    }
+
+    .card-skip .card-center {
+        font-size: 30px;
+    }
+
+    .card-vote .card-center {
+        font-size: 8px;
+    }
+
+    .card-vote .vote-corner {
+        width: 9px;
+        height: 9px;
+    }
+
+    .card-vote .vote-corner-top {
+        top: 3px;
+        left: 3px;
+    }
+
+    .card-vote .vote-corner-bottom {
+        bottom: 3px;
+        right: 3px;
+    }
+
+    .card-theme {
+        font-size: 5px;
+        bottom: 4px;
+    }
+
+    .card-icon {
+        width: 16px;
+        height: 16px;
+        top: 2px;
+        left: 3px;
+    }
+
+    .card-back::after {
+        font-size: 12px;
+    }
+
+    .card-wrapper {
+        margin: 0 -14px;
+    }
+
+    .card-wrapper:hover {
+        transform: translateY(-10px);
+        margin: 0 2px;
+    }
+
+    .opponent-cards .card {
+        width: 24px;
+        height: 36px;
+        margin: 0 -6px;
+    }
+
+    .opponent-cards .card-back::after {
+        font-size: 7px;
+    }
+
+    .opponent-cards .card-back::before {
+        display: none;
+    }
+}
+
+/* Smaller phones (375px width - iPhone SE) */
+@media (max-width: 375px) {
+    :root {
+        --card-width: 52px;
+        --card-height: 78px;
     }
 
     .card-center {
@@ -590,65 +668,39 @@
     }
 
     .card-vote .vote-corner {
-        width: 8px;
-        height: 8px;
-    }
-
-    .card-vote .vote-corner-top {
-        top: 3px;
-        left: 3px;
-    }
-
-    .card-vote .vote-corner-bottom {
-        bottom: 3px;
-        right: 3px;
+        width: 7px;
+        height: 7px;
     }
 
     .card-theme {
-        font-size: 4px;
-        bottom: 3px;
+        display: none;
     }
 
     .card-icon {
         width: 14px;
         height: 14px;
-        top: 2px;
-        left: 3px;
-    }
-
-    .card-back::after {
-        font-size: 10px;
     }
 
     .card-wrapper {
         margin: 0 -12px;
     }
 
-    .card-wrapper:hover {
-        transform: translateY(-8px);
-        margin: 0 2px;
-    }
-
     .opponent-cards .card {
-        width: 22px;
-        height: 33px;
-        margin: 0 -6px;
+        width: 20px;
+        height: 30px;
+        margin: 0 -5px;
     }
 
     .opponent-cards .card-back::after {
-        font-size: 6px;
-    }
-
-    .opponent-cards .card-back::before {
         display: none;
     }
 }
 
-/* Smaller phones (375px width - iPhone SE) */
-@media (max-width: 375px) {
+/* Very small phones (320px width) */
+@media (max-width: 320px) {
     :root {
-        --card-width: 45px;
-        --card-height: 68px;
+        --card-width: 46px;
+        --card-height: 69px;
     }
 
     .card-center {
@@ -672,10 +724,6 @@
         height: 6px;
     }
 
-    .card-theme {
-        display: none;
-    }
-
     .card-icon {
         width: 12px;
         height: 12px;
@@ -688,54 +736,6 @@
     .opponent-cards .card {
         width: 18px;
         height: 27px;
-        margin: 0 -5px;
-    }
-
-    .opponent-cards .card-back::after {
-        display: none;
-    }
-}
-
-/* Very small phones (320px width) */
-@media (max-width: 320px) {
-    :root {
-        --card-width: 40px;
-        --card-height: 60px;
-    }
-
-    .card-center {
-        font-size: 20px;
-    }
-
-    .card-action .card-center {
-        font-size: 14px;
-    }
-
-    .card-skip .card-center {
-        font-size: 20px;
-    }
-
-    .card-vote .card-center {
-        font-size: 5px;
-    }
-
-    .card-vote .vote-corner {
-        width: 5px;
-        height: 5px;
-    }
-
-    .card-icon {
-        width: 10px;
-        height: 10px;
-    }
-
-    .card-wrapper {
-        margin: 0 -8px;
-    }
-
-    .opponent-cards .card {
-        width: 16px;
-        height: 24px;
         margin: 0 -4px;
     }
 }
