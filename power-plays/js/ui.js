@@ -155,17 +155,30 @@ class UIManager {
 
     /**
      * Render opponent hands
+     * Positions: 2P = top, 3P = left/top, 4P = left/top/right
      */
     renderOpponents() {
         const state = this.game.state;
         const currentPlayer = state.getCurrentPlayer();
-        const opponents = state.players.filter(p => p.index !== 0); // Show all except player 0
+        const opponents = state.players.filter(p => p.index !== 0);
+        const playerCount = state.players.length;
 
         this.elements.opponentArea.innerHTML = '';
+        this.elements.opponentArea.dataset.playerCount = playerCount;
 
         opponents.forEach(opponent => {
+            // Determine position class based on player count
+            let positionClass = '';
+            if (playerCount === 3) {
+                positionClass = opponent.index === 1 ? 'position-left' : 'position-top';
+            } else if (playerCount === 4) {
+                if (opponent.index === 1) positionClass = 'position-left';
+                else if (opponent.index === 2) positionClass = 'position-top';
+                else positionClass = 'position-right';
+            }
+
             const opponentEl = document.createElement('div');
-            opponentEl.className = `opponent ${state.currentPlayerIndex === opponent.index ? 'active' : ''}`;
+            opponentEl.className = `opponent ${positionClass} ${state.currentPlayerIndex === opponent.index ? 'active' : ''}`;
             opponentEl.dataset.playerIndex = opponent.index;
 
             const isCurrent = state.currentPlayerIndex === opponent.index;
