@@ -580,8 +580,8 @@
 /* Responsive card sizes - Mobile portrait */
 @media (max-width: 430px) and (orientation: portrait) {
     :root {
-        --card-width: 80px;
-        --card-height: 120px;
+        --card-width: 84px;
+        --card-height: 126px;
     }
 
     .card {
