@@ -633,6 +633,7 @@
         width: 24px;
         height: 36px;
         margin: 0 -6px;
+        border-radius: 4px;
     }
 
     .opponent-cards .card-back::after {
