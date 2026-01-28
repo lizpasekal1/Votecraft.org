@@ -248,6 +248,8 @@
     font-weight: 900;
     font-style: italic;
     letter-spacing: -1px;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
 }
 
 /* Hide corner numbers on colored cards */
@@ -578,8 +580,8 @@
 /* Responsive card sizes - Mobile portrait */
 @media (max-width: 430px) and (orientation: portrait) {
     :root {
-        --card-width: 61px;
-        --card-height: 92px;
+        --card-width: 75px;
+        --card-height: 112px;
     }
 
     .card {
@@ -590,6 +592,8 @@
         font-size: 36px;
         z-index: 2;
         position: relative;
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
     }
 
     .card-action .card-center {
