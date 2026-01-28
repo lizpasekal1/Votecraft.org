@@ -265,7 +265,8 @@
     font-size: 7px;
     font-weight: 900;
     text-transform: uppercase;
-    color: #000;
+    color: #000 !important;
+    background: yellow;
     z-index: 100;
     line-height: 1;
     pointer-events: none;
