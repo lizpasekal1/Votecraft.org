@@ -21,6 +21,8 @@
     cursor: pointer;
     overflow: hidden;
     isolation: isolate;
+    -webkit-transform-style: flat;
+    transform-style: flat;
 }
 
 /* UNO-style white oval for colored cards */
@@ -586,6 +588,8 @@
 
     .card-center {
         font-size: 36px;
+        z-index: 2;
+        position: relative;
     }
 
     .card-action .card-center {
