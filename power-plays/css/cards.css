@@ -377,19 +377,19 @@
     width: 30px;
     height: 45px;
     font-size: 10px;
-    margin: 0 -10px;
+    margin: 0 -14px;
     border-width: 2px;
     transform-origin: bottom center;
 }
 
 /* Fan out effect for opponent cards */
-.opponent-cards .card:nth-child(1) { transform: rotate(-9deg); }
-.opponent-cards .card:nth-child(2) { transform: rotate(-6deg); }
-.opponent-cards .card:nth-child(3) { transform: rotate(-3deg); }
+.opponent-cards .card:nth-child(1) { transform: rotate(-15deg); }
+.opponent-cards .card:nth-child(2) { transform: rotate(-10deg); }
+.opponent-cards .card:nth-child(3) { transform: rotate(-5deg); }
 .opponent-cards .card:nth-child(4) { transform: rotate(0deg); }
-.opponent-cards .card:nth-child(5) { transform: rotate(3deg); }
-.opponent-cards .card:nth-child(6) { transform: rotate(6deg); }
-.opponent-cards .card:nth-child(7) { transform: rotate(9deg); }
+.opponent-cards .card:nth-child(5) { transform: rotate(5deg); }
+.opponent-cards .card:nth-child(6) { transform: rotate(10deg); }
+.opponent-cards .card:nth-child(7) { transform: rotate(15deg); }
 
 /* Hide oval on small opponent card backs */
 .opponent-cards .card-back::before {
