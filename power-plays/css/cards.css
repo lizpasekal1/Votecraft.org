@@ -130,7 +130,7 @@
 }
 
 .card-vote .card-center {
-    font-size: 11px;
+    font-size: 9px;
     font-weight: 900;
     letter-spacing: 0px;
     text-transform: uppercase;
@@ -587,12 +587,12 @@
     }
 
     .card-vote .card-center {
-        font-size: 10px;
+        font-size: 12px;
     }
 
     .card-vote .vote-corner {
-        width: 9px;
-        height: 9px;
+        width: 10px;
+        height: 10px;
     }
 
     .card-vote .vote-corner-top {
