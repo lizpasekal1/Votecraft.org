@@ -25,22 +25,30 @@
     transform-style: flat;
 }
 
-/* UNO-style white oval for colored cards */
-.card-blue::before,
-.card-yellow::before,
-.card-red::before,
-.card-green::before {
-    content: '';
+/* UNO-style white oval for colored cards - using real DOM element for iOS Safari compatibility */
+.card-oval {
     position: absolute;
     width: 85%;
     height: 120%;
     background: rgba(255, 255, 255, 0.95);
     border-radius: 50%;
     transform: rotate(-15deg);
-    z-index: 0;
-    box-shadow:
-        0 0 0 3px currentColor,
-        inset 0 0 15px rgba(0, 0, 0, 0.1);
+    inset: 0;
+    margin: auto;
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.1);
+}
+
+.card-blue .card-oval { box-shadow: 0 0 0 4px #0956BF, inset 0 0 15px rgba(0, 0, 0, 0.1); }
+.card-yellow .card-oval { box-shadow: 0 0 0 4px #F9C80E, inset 0 0 15px rgba(0, 0, 0, 0.1); }
+.card-red .card-oval { box-shadow: 0 0 0 4px #D72735, inset 0 0 15px rgba(0, 0, 0, 0.1); }
+.card-green .card-oval { box-shadow: 0 0 0 4px #379711, inset 0 0 15px rgba(0, 0, 0, 0.1); }
+
+/* Remove old ::before pseudo-element */
+.card-blue::before,
+.card-yellow::before,
+.card-red::before,
+.card-green::before {
+    display: none;
 }
 
 /* Card colors - UNO style */
@@ -48,16 +56,10 @@
     background: #0956BF;
     border: 3px solid #073d8a;
 }
-.card-blue::before {
-    box-shadow: 0 0 0 4px #0956BF;
-}
 
 .card-yellow {
     background: #F9C80E;
     border: 3px solid #c9a00b;
-}
-.card-yellow::before {
-    box-shadow: 0 0 0 4px #F9C80E;
 }
 .card-yellow .card-center,
 .card-yellow .card-corner {
@@ -71,16 +73,10 @@
     background: #D72735;
     border: 3px solid #a11d28;
 }
-.card-red::before {
-    box-shadow: 0 0 0 4px #D72735;
-}
 
 .card-green {
     background: #379711;
     border: 3px solid #2a730d;
-}
-.card-green::before {
-    box-shadow: 0 0 0 4px #379711;
 }
 
 /* Card text colors on white oval */
