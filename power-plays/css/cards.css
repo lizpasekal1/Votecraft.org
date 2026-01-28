@@ -2,8 +2,8 @@
 
 /* Card base */
 .card {
-    width: var(--card-width, 70px);
-    height: var(--card-height, 105px);
+    width: var(--card-width, 74px);
+    height: var(--card-height, 110px);
     border-radius: var(--card-radius, 8px);
     position: relative;
     display: flex;
@@ -762,8 +762,8 @@
 
 @media (min-width: 768px) and (min-height: 500px) {
     :root {
-        --card-width: 70px;
-        --card-height: 105px;
+        --card-width: 74px;
+        --card-height: 110px;
     }
 
     .card-center {
