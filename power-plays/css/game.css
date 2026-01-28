@@ -352,6 +352,15 @@ body {
     box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
 }
 
+/* Angled positions for side players */
+.opponent.position-left {
+    transform: rotate(-30deg);
+}
+
+.opponent.position-right {
+    transform: rotate(30deg);
+}
+
 .opponent-name {
     font-size: 0.85rem;
     font-weight: bold;
