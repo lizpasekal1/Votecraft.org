@@ -13,9 +13,28 @@ class PowerPlaysGame {
         this.voteManager = new VoteManager(this);
         this.ai = new AIController(this);
         this.ui = null; // Set after DOM ready
+        this.isPaused = false;
 
         // Event listeners
         this.listeners = {};
+    }
+
+    /**
+     * Toggle pause state
+     */
+    togglePause() {
+        this.isPaused = !this.isPaused;
+        this.emit('pauseToggled', { isPaused: this.isPaused });
+
+        // If unpausing and it's an AI turn, resume AI
+        if (!this.isPaused) {
+            const player = this.state.getCurrentPlayer();
+            if (player && !player.isHuman && !this.state.gameOver) {
+                this.ai.takeTurn(player.index);
+            }
+        }
+
+        return this.isPaused;
     }
 
     /**
@@ -156,8 +175,8 @@ class PowerPlaysGame {
         // Render the game state
         this.ui.render();
 
-        // If AI player, let AI take turn
-        if (!player.isHuman) {
+        // If AI player, let AI take turn (unless paused)
+        if (!player.isHuman && !this.isPaused) {
             await this.ai.takeTurn(player.index);
         }
         // Human players interact via UI

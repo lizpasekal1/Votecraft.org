@@ -58,6 +58,7 @@ class UIManager {
             // Status
             currentPlayerDisplay: document.getElementById('current-player'),
             messageDisplay: document.getElementById('message-display'),
+            pauseButton: document.getElementById('pause-btn'),
 
             // Modals
             modalOverlay: document.getElementById('modal-overlay'),
@@ -86,6 +87,9 @@ class UIManager {
 
         // End turn button
         this.elements.endTurnButton?.addEventListener('click', () => this.handleEndTurnClick());
+
+        // Pause button
+        this.elements.pauseButton?.addEventListener('click', () => this.handlePauseClick());
 
         // Color picker buttons
         document.querySelectorAll('.color-btn').forEach(btn => {
@@ -435,6 +439,19 @@ class UIManager {
     }
 
     /**
+     * Handle pause button click
+     */
+    handlePauseClick() {
+        const isPaused = this.game.togglePause();
+        const btn = this.elements.pauseButton;
+        if (btn) {
+            btn.textContent = isPaused ? '▶' : '⏸';
+            btn.classList.toggle('paused', isPaused);
+            btn.title = isPaused ? 'Resume Game' : 'Pause Game';
+        }
+    }
+
+    /**
      * Handle keyboard shortcuts
      */
     handleKeyPress(e) {
@@ -443,6 +460,9 @@ class UIManager {
         }
         if (e.key === 'd' || e.key === 'D') {
             this.handleDrawClick();
+        }
+        if (e.key === 'Escape') {
+            this.handlePauseClick();
         }
     }
 

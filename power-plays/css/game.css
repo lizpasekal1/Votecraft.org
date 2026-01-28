@@ -305,6 +305,27 @@ body {
     color: var(--text-gold);
 }
 
+.pause-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 215, 0, 0.5);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-gold);
+}
+
+.pause-btn:hover {
+    background: rgba(255, 215, 0, 0.2);
+    border-color: var(--text-gold);
+}
+
+.pause-btn.paused {
+    background: rgba(255, 215, 0, 0.3);
+    animation: pulse 1s infinite;
+}
+
 #current-player {
     font-size: 0.9rem;
     padding: 4px 12px;
