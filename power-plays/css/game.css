@@ -325,6 +325,7 @@ body {
     flex-direction: column;
     padding: var(--spacing-sm);
     overflow: hidden;
+    position: relative;
 }
 
 /* Opponent Area */
@@ -354,11 +355,19 @@ body {
 
 /* Angled positions for side players */
 .opponent.position-left {
+    position: absolute;
+    left: 10px;
+    top: 20%;
     transform: rotate(-30deg);
+    z-index: 10;
 }
 
 .opponent.position-right {
+    position: absolute;
+    right: 10px;
+    top: 20%;
     transform: rotate(30deg);
+    z-index: 10;
 }
 
 .opponent-name {
