@@ -178,95 +178,106 @@ body {
     border-color: rgba(255, 255, 255, 0.5);
 }
 
-/* Start screen - mobile portrait */
-@media (max-width: 430px) {
+/* Start screen - mobile landscape */
+@media (max-height: 450px) {
     #start-screen {
-        padding: var(--spacing-md);
-        gap: var(--spacing-sm);
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: var(--spacing-lg);
+        padding: var(--spacing-sm);
     }
 
     .beta-badge {
-        font-size: 0.7rem;
-        padding: 3px 12px;
+        position: absolute;
+        top: var(--spacing-sm);
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.6rem;
+        padding: 2px 10px;
+        margin-bottom: 0;
     }
 
     .votecraft-logo {
-        height: 35px;
+        position: absolute;
+        top: calc(var(--spacing-sm) + 20px);
+        left: 50%;
+        transform: translateX(-50%);
+        height: 28px;
+        margin-bottom: 0;
     }
 
     .game-title {
-        font-size: clamp(1.5rem, 8vw, 2.5rem);
-    }
-
-    .game-subtitle {
-        font-size: 0.85rem;
-    }
-
-    .start-options {
-        width: 100%;
-        max-width: 280px;
-    }
-
-    .option-group select {
-        padding: 8px 12px;
-        font-size: 0.9rem;
-    }
-
-    .start-btn {
-        padding: 12px 30px;
-        font-size: 1.1rem;
-    }
-
-    .rules-btn {
-        padding: 8px 20px;
-        font-size: 0.9rem;
-    }
-}
-
-@media (max-width: 375px) {
-    .game-title {
-        font-size: 1.8rem;
+        font-size: clamp(1.2rem, 4vw, 2rem);
+        margin-bottom: 0;
     }
 
     .game-subtitle {
         font-size: 0.8rem;
+        margin-bottom: var(--spacing-sm);
     }
 
     .start-options {
+        max-width: 200px;
         gap: var(--spacing-sm);
-    }
-
-    .option-group label {
-        font-size: 0.8rem;
     }
 
     .option-group select {
         padding: 6px 10px;
         font-size: 0.85rem;
     }
+
+    .start-btn {
+        padding: 10px 25px;
+        font-size: 1rem;
+        margin-top: var(--spacing-sm);
+    }
+
+    .rules-btn {
+        padding: 6px 16px;
+        font-size: 0.85rem;
+    }
 }
 
-@media (max-width: 320px) {
+@media (max-height: 400px) {
+    #start-screen {
+        gap: var(--spacing-md);
+    }
+
     .votecraft-logo {
-        height: 28px;
+        height: 22px;
+        top: calc(var(--spacing-sm) + 16px);
     }
 
     .game-title {
-        font-size: 1.5rem;
+        font-size: 1.2rem;
     }
 
     .game-subtitle {
         display: none;
     }
 
+    .start-options {
+        gap: 4px;
+    }
+
+    .option-group label {
+        font-size: 0.75rem;
+    }
+
+    .option-group select {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+
     .start-btn {
-        padding: 10px 24px;
-        font-size: 1rem;
+        padding: 8px 20px;
+        font-size: 0.9rem;
     }
 
     .rules-btn {
-        padding: 6px 16px;
-        font-size: 0.85rem;
+        padding: 4px 12px;
+        font-size: 0.8rem;
     }
 }
 
@@ -316,67 +327,13 @@ body {
     overflow: hidden;
 }
 
-/* Top Opponent Area */
-#opponent-top {
+/* Opponent Area */
+#opponent-area {
     display: flex;
     justify-content: center;
-    gap: var(--spacing-md);
+    gap: var(--spacing-lg);
     padding: var(--spacing-sm);
-    min-height: 60px;
-}
-
-/* Middle Row (left opponent, center, right opponent) */
-#game-middle {
-    flex: 1;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    overflow: hidden;
-}
-
-/* Side Opponent Areas */
-#opponent-left,
-#opponent-right {
-    width: 70px;
-    min-width: 70px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: var(--spacing-xs);
-}
-
-/* Hide empty side areas */
-#opponent-left:empty,
-#opponent-right:empty {
-    width: 0;
-    min-width: 0;
-    padding: 0;
-}
-
-#opponent-left .opponent {
-    transform: rotate(90deg);
-    transform-origin: center center;
-    white-space: nowrap;
-}
-
-#opponent-right .opponent {
-    transform: rotate(-90deg);
-    transform-origin: center center;
-    white-space: nowrap;
-}
-
-/* Side opponents use compact layout */
-#opponent-left .opponent,
-#opponent-right .opponent {
-    min-width: auto;
-    padding: var(--spacing-xs);
-    gap: 2px;
-}
-
-#opponent-left .opponent-cards,
-#opponent-right .opponent-cards {
-    transform: scale(0.8);
+    flex-wrap: wrap;
 }
 
 .opponent {
@@ -434,11 +391,10 @@ body {
 #center-area {
     flex: 1;
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-sm);
+    gap: var(--spacing-lg);
+    padding: var(--spacing-md);
 }
 
 #draw-pile,
@@ -689,114 +645,11 @@ body {
     margin-top: var(--spacing-md);
 }
 
-/* ==================== RESPONSIVE - Mobile Portrait (iPhone etc) ==================== */
-
-/* iPhone 16 Pro and similar (430px width) */
-@media (max-width: 430px) {
+/* ==================== RESPONSIVE - Mobile (iPhone etc) ==================== */
+@media (max-height: 450px) {
     .game-header {
-        padding: var(--spacing-xs) var(--spacing-sm);
-    }
-
-    .header-title {
-        font-size: 0.85rem;
-    }
-
-    #current-player {
-        font-size: 0.75rem;
-        padding: 3px 8px;
-    }
-
-    #game-board {
-        padding: var(--spacing-xs);
-    }
-
-    #opponent-top {
-        min-height: 50px;
-        padding: var(--spacing-xs);
-    }
-
-    #opponent-left,
-    #opponent-right {
-        width: 55px;
-        min-width: 55px;
-    }
-
-    .opponent {
-        padding: var(--spacing-xs);
-        min-width: 80px;
-        border-radius: 8px;
-    }
-
-    .opponent-name {
-        font-size: 0.75rem;
-    }
-
-    .opponent-count {
-        font-size: 0.65rem;
-    }
-
-    #center-area {
-        padding: var(--spacing-xs);
-        gap: var(--spacing-sm);
-    }
-
-    .center-info {
-        gap: var(--spacing-xs);
-    }
-
-    .active-color {
-        padding: 4px 12px;
-        font-size: 0.75rem;
-    }
-
-    #direction-indicator {
-        font-size: 1rem;
-    }
-
-    #player-area {
-        padding: var(--spacing-xs) var(--spacing-sm);
-    }
-
-    #player-hand {
-        min-height: 80px;
-        padding: var(--spacing-xs) 0;
-    }
-
-    .player-controls {
-        margin-top: var(--spacing-xs);
-        gap: var(--spacing-sm);
-    }
-
-    .control-btn {
-        padding: 6px 14px;
-        font-size: 0.8rem;
-    }
-
-    /* Modals for mobile */
-    .modal {
-        padding: var(--spacing-md);
-        max-height: 85%;
-        max-width: 95%;
-    }
-
-    .modal-title {
-        font-size: 1.1rem;
-    }
-
-    .color-options {
-        gap: var(--spacing-sm);
-    }
-
-    .color-btn {
-        padding: 14px;
-        font-size: 0.9rem;
-    }
-}
-
-/* Smaller phones (375px width - iPhone SE, etc) */
-@media (max-width: 375px) {
-    .game-header {
-        padding: 2px var(--spacing-xs);
+        padding: 2px var(--spacing-sm);
+        min-height: 24px;
     }
 
     .header-title {
@@ -808,15 +661,23 @@ body {
         padding: 2px 6px;
     }
 
-    #opponent-left,
-    #opponent-right {
-        width: 45px;
-        min-width: 45px;
+    #game-board {
+        padding: 2px;
+        gap: 2px;
+    }
+
+    #opponent-area {
+        padding: 2px 4px;
+        gap: 8px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
     }
 
     .opponent {
-        padding: 4px;
-        min-width: 70px;
+        padding: 3px 6px;
+        min-width: auto;
+        border-radius: 6px;
+        flex-shrink: 0;
     }
 
     .opponent-name {
@@ -827,32 +688,103 @@ body {
         font-size: 0.6rem;
     }
 
+    #center-area {
+        padding: 2px;
+        gap: 12px;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .center-info {
+        gap: 2px;
+    }
+
+    #player-area {
+        padding: 2px var(--spacing-sm);
+    }
+
     #player-hand {
-        min-height: 70px;
+        min-height: 55px;
+        max-height: 70px;
+        padding: 2px 0;
+    }
+
+    .player-controls {
+        margin-top: 2px;
+        gap: 6px;
     }
 
     .control-btn {
-        padding: 4px 10px;
-        font-size: 0.75rem;
-    }
-
-    .active-color {
         padding: 3px 10px;
         font-size: 0.7rem;
     }
+
+    .active-color {
+        padding: 2px 8px;
+        font-size: 0.65rem;
+    }
+
+    #direction-indicator {
+        font-size: 0.9rem;
+    }
+
+    /* Modals for small screens */
+    .modal {
+        padding: var(--spacing-sm);
+        max-height: 90%;
+    }
+
+    .modal-title {
+        font-size: 1rem;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .color-options {
+        gap: var(--spacing-sm);
+    }
+
+    .color-btn {
+        padding: 12px;
+        font-size: 0.85rem;
+    }
+
+    .lobby-options {
+        gap: var(--spacing-sm);
+    }
+
+    .lobby-card-btn {
+        padding: var(--spacing-sm);
+        min-width: 110px;
+    }
+
+    .lobby-icon {
+        font-size: 1.5rem;
+    }
+
+    .lobby-name {
+        font-size: 0.9rem;
+    }
 }
 
-/* Very small phones (320px width) */
-@media (max-width: 320px) {
-    #opponent-left,
-    #opponent-right {
-        width: 40px;
-        min-width: 40px;
+/* iPhone 16 Pro and similar (393px height in landscape) */
+@media (max-height: 420px) {
+    .game-header {
+        padding: 1px var(--spacing-xs);
+        min-height: 20px;
+    }
+
+    .header-title {
+        font-size: 0.7rem;
+    }
+
+    #opponent-area {
+        padding: 1px 2px;
+        gap: 6px;
     }
 
     .opponent {
-        padding: 3px;
-        min-width: 60px;
+        padding: 2px 5px;
+        gap: 1px;
     }
 
     .opponent-name {
@@ -863,26 +795,60 @@ body {
         display: none;
     }
 
+    #center-area {
+        padding: 2px;
+        gap: 10px;
+    }
+
     #player-hand {
-        min-height: 60px;
+        min-height: 50px;
+        max-height: 65px;
     }
 
     .control-btn {
-        padding: 3px 8px;
-        font-size: 0.7rem;
+        padding: 2px 8px;
+        font-size: 0.65rem;
     }
 }
 
-/* Tablet and larger screens */
-@media (min-width: 768px) {
-    #opponent-top {
-        gap: var(--spacing-lg);
+/* Extra compact for very short screens (older iPhones) */
+@media (max-height: 360px) {
+    .game-header {
+        display: none;
     }
 
-    #opponent-left,
-    #opponent-right {
-        width: 100px;
-        min-width: 100px;
+    #opponent-area {
+        padding: 1px;
+        gap: 4px;
+    }
+
+    .opponent {
+        padding: 2px 4px;
+    }
+
+    .opponent-cards {
+        transform: scale(0.8);
+        transform-origin: center;
+    }
+
+    #center-area {
+        padding: 2px;
+        gap: 8px;
+    }
+
+    #player-hand {
+        min-height: 45px;
+        max-height: 55px;
+    }
+
+    .player-controls {
+        display: none;
+    }
+}
+
+@media (min-width: 768px) {
+    #opponent-area {
+        gap: var(--spacing-lg);
     }
 
     .opponent {
@@ -890,7 +856,7 @@ body {
     }
 
     #center-area {
-        gap: var(--spacing-lg);
+        gap: 60px;
     }
 }
 

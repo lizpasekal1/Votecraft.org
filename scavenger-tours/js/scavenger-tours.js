@@ -432,7 +432,7 @@
         const initialOpacity = instant ? '1' : '0';
 
         modalsContainer.innerHTML = `
-            <div id="tour-welcome-screen" class="fixed inset-0 z-50 flex items-center justify-center"
+            <div id="tour-welcome-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center"
                  style="background-image: url('${backgroundImage}'); background-size: cover; background-position: center; opacity: ${initialOpacity}; transition: opacity 0.4s ease-in;">
                 <!-- Dark overlay for readability -->
                 <div class="absolute inset-0 bg-black/50"></div>
@@ -456,6 +456,9 @@
                         Start Tour
                     </button>
                 </div>
+
+                <!-- VoteCraft Logo - positioned at bottom for mobile -->
+                <img src="./images/vote-craft-logo_white.png" alt="VoteCraft" class="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 w-32 sm:w-40 opacity-90" style="max-width: 40%;">
             </div>
         `;
 
