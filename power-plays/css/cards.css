@@ -579,23 +579,25 @@
 /* Responsive card sizes - Mobile portrait */
 @media (max-width: 430px) and (orientation: portrait) {
     :root {
-        --card-width: 75px;
-        --card-height: 112px;
+        --card-width: 85px;
+        --card-height: 127px;
     }
 
     .card {
         border-width: 2px;
+        overflow: visible;
+    }
+
+    .card-oval {
+        z-index: 0;
     }
 
     .card-center {
-        font-size: 36px;
+        font-size: 40px;
         z-index: 100;
         position: relative;
         -webkit-transform: translateZ(1px);
         transform: translateZ(1px);
-        background: rgba(255, 255, 255, 0.95);
-        padding: 2px 6px;
-        border-radius: 4px;
     }
 
     .card-action .card-center {
@@ -626,22 +628,23 @@
     }
 
     .card-theme {
-        font-size: 6px;
-        bottom: 4px;
+        font-size: 7px;
+        bottom: 6px;
         z-index: 100;
         position: absolute;
+        left: 50%;
         -webkit-transform: translateX(-50%) translateZ(1px);
         transform: translateX(-50%) translateZ(1px);
-        background: rgba(255, 255, 255, 0.9);
-        padding: 1px 3px;
-        border-radius: 2px;
+        color: #000;
+        font-weight: 900;
     }
 
     .card-icon {
-        width: 16px;
-        height: 16px;
-        top: 2px;
-        left: 3px;
+        width: 18px;
+        height: 18px;
+        top: 3px;
+        left: 4px;
+        z-index: 100;
     }
 
     .card-back::after {
