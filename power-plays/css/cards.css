@@ -586,10 +586,13 @@
 
     .card-center {
         font-size: 36px;
-        z-index: 2;
+        z-index: 100;
         position: relative;
-        -webkit-transform: translateZ(0);
-        transform: translateZ(0);
+        -webkit-transform: translateZ(1px);
+        transform: translateZ(1px);
+        background: rgba(255, 255, 255, 0.95);
+        padding: 2px 6px;
+        border-radius: 4px;
     }
 
     .card-action .card-center {
