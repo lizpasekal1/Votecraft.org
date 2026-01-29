@@ -355,10 +355,17 @@
     transition: transform 0.2s ease, margin 0.2s ease;
 }
 
-.card-wrapper:hover {
+.my-turn .card-wrapper:hover {
     transform: translateY(-10px);
     z-index: 10;
     margin: 0 6px;
+}
+
+@media (hover: none) {
+    .my-turn .card-wrapper:hover {
+        transform: none;
+        margin: 0 2px;
+    }
 }
 
 /* Opponent cards (card backs in a row) */
@@ -600,7 +607,16 @@
     }
 
     .card-vote .card-center {
-        font-size: 14px;
+        font-size: 18px !important;
+        font-weight: 900 !important;
+        letter-spacing: 1px !important;
+    }
+
+    .card-vote .vote-letter {
+        font-size: 18px !important;
+        font-weight: 900 !important;
+        -webkit-text-stroke: 1px #000;
+        text-shadow: none;
     }
 
     .card-vote .vote-corner {
@@ -627,9 +643,9 @@
     }
 
     .card-icon {
-        width: 20px;
-        height: 20px;
-        top: 3px;
+        width: 34px;
+        height: 34px;
+        top: 1px;
         left: 4px;
         z-index: 100;
     }

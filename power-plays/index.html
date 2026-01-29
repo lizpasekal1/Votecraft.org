@@ -10,17 +10,16 @@
     <title>Power Plays - Card Game</title>
 
     <!-- Styles -->
-    <link rel="stylesheet" href="css/game.css?v=36">
-    <link rel="stylesheet" href="css/cards.css?v=36">
+    <link rel="stylesheet" href="css/game.css?v=61">
+    <link rel="stylesheet" href="css/cards.css?v=59">
 </head>
 <body>
 
     <!-- Start Screen -->
     <div id="start-screen">
-        <div class="beta-badge">BETA</div>
-        <img src="../Images/vote-craft-logo_white.png" alt="Votecraft" class="votecraft-logo">
-        <h1 class="game-title">POWER PLAYS</h1>
-        <p class="game-subtitle">A card game of color, strategy & political power</p>
+        <img src="Images /vote-craft-logo_white.png" alt="Votecraft" class="votecraft-logo">
+        <h1 class="game-title">POWER<br>PLAYS</h1>
+        <p class="game-subtitle">Lobby. Vote. Game the system.</p>
 
         <div class="start-options">
             <div class="option-group">
@@ -60,7 +59,6 @@
         <header class="game-header">
             <span class="header-title">POWER PLAYS</span>
             <button id="pause-btn" class="pause-btn" title="Pause/Resume Game">⏸</button>
-            <span id="current-player">Player 1's Turn</span>
         </header>
 
         <!-- Game Board -->
@@ -94,7 +92,10 @@
                 </div>
                 <div class="player-controls">
                     <button id="power-button" class="control-btn hidden">POWER!</button>
-                    <button id="end-turn-button" class="control-btn hidden">End Turn</button>
+                    <div id="turn-box" class="turn-box">
+                        <span id="turn-text">Player 1's Turn</span>
+                        <button id="skip-btn" class="skip-btn hidden">SKIP ME</button>
+                    </div>
                 </div>
             </section>
         </main>
@@ -192,8 +193,8 @@
     <script src="js/actions.js?v=33"></script>
     <script src="js/vote.js?v=33"></script>
     <script src="js/ai.js?v=33"></script>
-    <script src="js/ui.js?v=33"></script>
-    <script src="js/game.js?v=33"></script>
+    <script src="js/ui.js?v=36"></script>
+    <script src="js/game.js?v=35"></script>
 
 </body>
 </html>

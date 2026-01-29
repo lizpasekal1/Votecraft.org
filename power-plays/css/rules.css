@@ -17,24 +17,10 @@ body {
   color: #fff;
   min-height: 100vh;
   min-height: 100dvh;
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
-/* Force landscape orientation hint */
-@media screen and (orientation: portrait) {
-  body::before {
-    content: '📱 Rotate your phone for best experience';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    background: #e94560;
-    color: white;
-    text-align: center;
-    padding: 8px;
-    font-size: 14px;
-    z-index: 1000;
-  }
-}
 
 /* Main container - horizontal scroll */
 .rules-container {
@@ -303,32 +289,125 @@ li {
   gap: 20px;
 }
 
-@media (max-height: 400px) {
+/* Portrait / vertical orientation — iPhone 16 Pro is ~402px wide */
+@media screen and (orientation: portrait) {
+  .rules-container {
+    padding-top: 0;
+  }
+
+  .rule-card {
+    padding: 40px 12px 30px;
+  }
+
   .card-content {
-    padding: 15px 25px;
+    max-width: 100%;
+    max-height: 92%;
+    padding: 20px 18px;
+    border-radius: 16px;
   }
 
   h2 {
+    font-size: 1.15rem;
     margin-bottom: 10px;
+  }
+
+  h3 {
+    font-size: 0.95rem;
+    margin: 8px 0 5px;
+  }
+
+  p {
+    font-size: 0.88rem;
+    line-height: 1.45;
+    margin-bottom: 8px;
+  }
+
+  ul, ol {
+    font-size: 0.85rem;
+    line-height: 1.45;
+    padding-left: 18px;
+    margin-bottom: 8px;
+  }
+
+  li {
+    margin-bottom: 4px;
+  }
+
+  /* Stack two-column layout in portrait */
+  .two-col {
+    grid-template-columns: 1fr;
+    gap: 10px;
   }
 
   .color-grid {
     gap: 8px;
+    margin: 10px 0;
   }
 
   .color-card {
-    padding: 8px 10px;
-  }
-}
-
-/* Portrait fallback */
-@media screen and (orientation: portrait) {
-  .rules-container {
-    padding-top: 35px;
+    padding: 10px 12px;
   }
 
-  .card-content {
-    max-height: 80%;
+  .color-card .title {
+    font-size: 0.9rem;
+  }
+
+  .color-card .desc {
+    font-size: 0.78rem;
+  }
+
+  .action-list {
+    gap: 6px;
+  }
+
+  .action-item {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+
+  .highlight-box {
+    padding: 10px 12px;
+    margin: 10px 0;
+    font-size: 0.85rem;
+  }
+
+  .title-card h1 {
+    font-size: clamp(2rem, 10vw, 3rem);
+    margin-bottom: 15px;
+  }
+
+  .title-card .tagline {
+    font-size: 0.95rem;
+    margin-bottom: 18px;
+  }
+
+  .back-btn {
+    top: max(10px, env(safe-area-inset-top, 10px));
+    left: 10px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+
+  .nav-dots {
+    bottom: max(10px, env(safe-area-inset-bottom, 10px));
+  }
+
+  .swipe-hint {
+    bottom: max(35px, calc(env(safe-area-inset-bottom, 10px) + 25px));
+  }
+
+  /* Override inline font-sizes for portrait */
+  .card-content p[style*="font-size"] {
+    font-size: 1rem !important;
+    margin: 12px 0 !important;
+  }
+
+  .card-content ul[style*="font-size"] {
+    font-size: 0.9rem !important;
+  }
+
+  .card-content p[style*="margin-top"] {
+    margin-top: 14px !important;
   }
 }
 
@@ -368,60 +447,238 @@ li {
 @media (max-height: 420px) {
   .back-btn {
     top: 8px;
-    left: 8px;
+    left: max(8px, env(safe-area-inset-left, 8px));
     padding: 4px 10px;
     font-size: 0.75rem;
   }
 
-  .card-content {
-    padding: 12px 20px;
-    max-height: 90%;
+  .rule-card {
+    padding: 10px 25px;
   }
 
-  h2 {
-    font-size: 1.1rem;
+  .card-content {
+    padding: 10px 18px;
+    max-height: 88%;
+    border-radius: 14px;
+  }
+
+  h1 {
+    font-size: 1.8rem;
     margin-bottom: 8px;
   }
 
-  p {
-    font-size: 0.85rem;
+  h2 {
+    font-size: 1rem;
     margin-bottom: 6px;
   }
 
+  h3 {
+    font-size: 0.9rem;
+    margin: 6px 0 4px;
+  }
+
+  p {
+    font-size: 0.82rem;
+    line-height: 1.35;
+    margin-bottom: 4px;
+  }
+
+  ul, ol {
+    font-size: 0.8rem;
+    line-height: 1.35;
+    padding-left: 16px;
+    margin-bottom: 6px;
+  }
+
+  li {
+    margin-bottom: 2px;
+  }
+
   .color-grid {
-    gap: 6px;
-    margin: 8px 0;
+    gap: 5px;
+    margin: 6px 0;
   }
 
   .color-card {
-    padding: 6px 8px;
+    padding: 5px 8px;
+    border-radius: 8px;
   }
 
   .color-card .title {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+    margin-bottom: 2px;
   }
 
   .color-card .desc {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
+  }
+
+  .action-list {
+    gap: 4px;
+    margin: 6px 0;
   }
 
   .action-item {
-    padding: 6px 10px;
-    font-size: 0.8rem;
+    padding: 5px 10px;
+    font-size: 0.78rem;
+    border-radius: 7px;
   }
 
   .highlight-box {
-    padding: 8px 12px;
-    margin: 8px 0;
-    font-size: 0.8rem;
+    padding: 6px 10px;
+    margin: 6px 0;
+    font-size: 0.78rem;
+    border-radius: 0 7px 7px 0;
+  }
+
+  .two-col {
+    gap: 12px;
+  }
+
+  .title-card h1 {
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+  }
+
+  .title-card .tagline {
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+  }
+
+  .title-card .start-hint {
+    font-size: 0.85rem;
   }
 
   .nav-dots {
-    bottom: 10px;
+    bottom: max(6px, env(safe-area-inset-bottom, 6px));
   }
 
   .nav-dot {
     width: 8px;
     height: 8px;
+    gap: 6px;
+  }
+
+  .swipe-hint {
+    bottom: max(28px, calc(env(safe-area-inset-bottom, 6px) + 22px));
+    right: max(12px, env(safe-area-inset-right, 12px));
+    font-size: 11px;
+  }
+
+  /* Override inline font-sizes on cards 10-12 */
+  .card-content p[style*="font-size"] {
+    font-size: 0.9rem !important;
+    margin: 8px 0 !important;
+  }
+
+  .card-content ul[style*="font-size"] {
+    font-size: 0.82rem !important;
+  }
+
+  .card-content p[style*="margin-top"] {
+    margin-top: 10px !important;
+  }
+}
+
+/* Tighter squeeze for iPhone 16 Pro exact landscape (~393px) */
+@media (max-height: 400px) {
+  .rule-card {
+    padding: 6px 20px;
+  }
+
+  .card-content {
+    padding: 8px 14px;
+    max-height: 90%;
+    border-radius: 12px;
+    border-width: 1px;
+  }
+
+  h2 {
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+  }
+
+  h3 {
+    font-size: 0.85rem;
+    margin: 4px 0 3px;
+  }
+
+  p {
+    font-size: 0.78rem;
+    line-height: 1.3;
+    margin-bottom: 3px;
+  }
+
+  ul, ol {
+    font-size: 0.76rem;
+    line-height: 1.3;
+    padding-left: 14px;
+    margin-bottom: 4px;
+  }
+
+  li {
+    margin-bottom: 1px;
+  }
+
+  .color-grid {
+    gap: 4px;
+    margin: 4px 0;
+  }
+
+  .color-card {
+    padding: 4px 6px;
+  }
+
+  .color-card .title {
+    font-size: 0.76rem;
+    margin-bottom: 1px;
+  }
+
+  .color-card .desc {
+    font-size: 0.65rem;
+  }
+
+  .action-list {
+    gap: 3px;
+    margin: 4px 0;
+  }
+
+  .action-item {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+  }
+
+  .highlight-box {
+    padding: 5px 8px;
+    margin: 4px 0;
+    font-size: 0.75rem;
+  }
+
+  .two-col {
+    gap: 8px;
+  }
+
+  .title-card h1 {
+    font-size: 2rem;
+    margin-bottom: 6px;
+  }
+
+  .title-card .tagline {
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+  }
+
+  /* Override inline font-sizes on cards 10-12 */
+  .card-content p[style*="font-size"] {
+    font-size: 0.82rem !important;
+    margin: 5px 0 !important;
+  }
+
+  .card-content ul[style*="font-size"] {
+    font-size: 0.78rem !important;
+  }
+
+  .card-content p[style*="margin-top"] {
+    margin-top: 6px !important;
   }
 }
