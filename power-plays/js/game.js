@@ -124,6 +124,38 @@ class PowerPlaysGame {
 
         // Set remaining deck as draw pile
         this.state.drawPile = this.deck.getAll();
+
+        // Ensure human player (index 0) has at least one vote card
+        const humanPlayer = this.state.players[0];
+        const hasVoteCard = humanPlayer.hand.some(card => card.type === CARD_TYPES.VOTE);
+
+        if (!hasVoteCard) {
+            // Find a vote card in the draw pile
+            const voteCardIndex = this.state.drawPile.findIndex(card => card.type === CARD_TYPES.VOTE);
+
+            if (voteCardIndex !== -1) {
+                // Swap: take vote card from draw pile, put a non-vote card back
+                const voteCard = this.state.drawPile.splice(voteCardIndex, 1)[0];
+                const nonVoteCard = humanPlayer.hand.find(card => card.type !== CARD_TYPES.VOTE);
+
+                if (nonVoteCard) {
+                    // Remove non-vote card from hand and add to draw pile
+                    humanPlayer.removeCard(nonVoteCard);
+                    this.state.drawPile.push(nonVoteCard);
+
+                    // Add vote card to hand
+                    humanPlayer.addCards([voteCard]);
+                    humanPlayer.sortHand();
+
+                    // Shuffle draw pile so the swapped card isn't predictably on top
+                    for (let i = this.state.drawPile.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [this.state.drawPile[i], this.state.drawPile[j]] =
+                            [this.state.drawPile[j], this.state.drawPile[i]];
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -212,6 +244,12 @@ class PowerPlaysGame {
 
         // Add to play pile after animation
         state.playCard(card);
+
+        // Pause on vote cards so players can see them
+        if (card.type === CARD_TYPES.VOTE) {
+            this.ui.render(); // Show the vote card on the pile
+            await new Promise(resolve => setTimeout(resolve, 1500)); // 1.5 second pause
+        }
 
         // Resolve card effects
         const result = await this.actionResolver.resolve(card, player, targetInfo);

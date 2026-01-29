@@ -53,10 +53,10 @@ class UIManager {
             // Player hand
             playerHand: document.getElementById('player-hand'),
             powerButton: document.getElementById('power-button'),
-            endTurnButton: document.getElementById('end-turn-button'),
+            turnText: document.getElementById('turn-text'),
+            skipBtn: document.getElementById('skip-btn'),
 
             // Status
-            currentPlayerDisplay: document.getElementById('current-player'),
             messageDisplay: document.getElementById('message-display'),
             pauseButton: document.getElementById('pause-btn'),
 
@@ -85,8 +85,8 @@ class UIManager {
         // Power button
         this.elements.powerButton?.addEventListener('click', () => this.handlePowerClick());
 
-        // End turn button
-        this.elements.endTurnButton?.addEventListener('click', () => this.handleEndTurnClick());
+        // Skip button
+        this.elements.skipBtn?.addEventListener('click', () => this.handleEndTurnClick());
 
         // Pause button
         this.elements.pauseButton?.addEventListener('click', () => this.handlePauseClick());
@@ -263,6 +263,7 @@ class UIManager {
         const topCard = state.getTopCard();
 
         this.elements.playerHand.innerHTML = '';
+        this.elements.playerHand.classList.toggle('my-turn', isMyTurn);
 
         player.hand.forEach((card, index) => {
             const isPlayable = isMyTurn && card.canPlayOn(topCard, state.activeColor);
@@ -330,9 +331,13 @@ class UIManager {
     renderStatus() {
         const state = this.game.state;
         const currentPlayer = state.getCurrentPlayer();
+        const isMyTurn = state.currentPlayerIndex === 0;
 
-        this.elements.currentPlayerDisplay.textContent = `${currentPlayer.name}'s Turn`;
-        this.elements.currentPlayerDisplay.className = state.currentPlayerIndex === 0 ? 'your-turn' : '';
+        // Update the turn text
+        this.elements.turnText.textContent = `${currentPlayer.name}'s Turn`;
+
+        // Show skip button only on player's turn
+        this.elements.skipBtn.classList.toggle('hidden', !isMyTurn);
     }
 
     /**
@@ -364,8 +369,7 @@ class UIManager {
         const showPower = isMyTurn && player.handSize() === 1 && !player.hasCalledPower;
         this.elements.powerButton.classList.toggle('hidden', !showPower);
 
-        // End turn button (shown after drawing if can't play)
-        this.elements.endTurnButton.classList.toggle('hidden', !isMyTurn);
+        // End turn button is always visible (shows whose turn it is)
     }
 
     /**

@@ -70,15 +70,14 @@ body {
 }
 
 .beta-badge {
-    background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
-    color: white;
+    background: none;
+    color: rgba(255, 255, 255, 0.5);
     padding: 4px 16px;
-    border-radius: 20px;
     font-size: 0.8rem;
     font-weight: bold;
     letter-spacing: 2px;
     margin-bottom: var(--spacing-sm);
-    box-shadow: 0 2px 10px rgba(255, 107, 107, 0.4);
+    box-shadow: none;
 }
 
 .votecraft-logo {
@@ -94,7 +93,7 @@ body {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-xs);
 }
 
 .game-subtitle {
@@ -142,8 +141,8 @@ body {
 
 .start-btn {
     margin-top: var(--spacing-md);
-    padding: 15px 40px;
-    font-size: 1.2rem;
+    padding: 10px 40px;
+    font-size: 1rem;
     font-weight: bold;
     border: none;
     border-radius: 12px;
@@ -314,6 +313,7 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
     color: var(--text-gold);
+    margin-left: auto;
 }
 
 .pause-btn:hover {
@@ -377,7 +377,7 @@ body {
 /* Angled positions for side players */
 .opponent.position-left {
     position: absolute;
-    left: 10px;
+    left: 80px;
     top: 20%;
     transform: rotate(-30deg);
     z-index: 10;
@@ -385,7 +385,7 @@ body {
 
 .opponent.position-right {
     position: absolute;
-    right: 10px;
+    right: 80px;
     top: 20%;
     transform: rotate(30deg);
     z-index: 10;
@@ -523,9 +523,38 @@ body {
     animation: pulse 1s infinite;
 }
 
-#end-turn-button {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
+.turn-box {
+    background: #F9C80E;
+    color: #000;
+    font-weight: bold;
+    padding: 10px 24px;
+    font-size: 1rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-width: 200px;
+}
+
+#turn-text {
+    font-weight: bold;
+}
+
+.skip-btn {
+    background: #000;
+    color: #F9C80E;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.skip-btn:hover {
+    background: #333;
 }
 
 /* Message Display */
@@ -928,21 +957,41 @@ body {
     }
 
     .game-title {
-        font-size: 2rem;
+        font-size: 18vw;
+        line-height: 0.95;
     }
 
     .game-subtitle {
-        font-size: 0.85rem;
+        font-size: 3.2vw;
     }
 
     .start-options {
-        width: 100%;
-        max-width: 300px;
+        width: 70%;
+        max-width: 260px;
+    }
+
+    .option-group {
+        justify-content: space-between;
+    }
+
+    .option-group label {
+        flex: 0 0 70px;
+    }
+
+    .option-group select {
+        flex: 1;
+        min-width: 0;
     }
 
     /* Game screen adjustments */
     .game-header {
         padding: var(--spacing-xs) var(--spacing-sm);
+    }
+
+    #current-player {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+        white-space: nowrap;
     }
 
     #game-board {
@@ -960,6 +1009,16 @@ body {
         min-width: 70px;
     }
 
+    .opponent.position-left {
+        top: 18%;
+        left: 10px;
+    }
+
+    .opponent.position-right {
+        top: 18%;
+        right: 10px;
+    }
+
     .opponent-name {
         font-size: 0.7rem;
     }
@@ -972,6 +1031,7 @@ body {
         flex-direction: row;
         gap: var(--spacing-sm);
         padding: var(--spacing-sm);
+        margin-top: 15px;
     }
 
     .center-info {
