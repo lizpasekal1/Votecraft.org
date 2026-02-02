@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#8B2635">
+    <link rel="manifest" href="/manifest.json">
+    <title>Globe View - Joke Master</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/styles.css">
+    <link rel="stylesheet" href="../styles/globe.css">
+    <link rel="stylesheet" href="../styles/icons.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://d3js.org/topojson.v3.min.js"></script>
+    <style>
+        body {
+            opacity: 0;
+            animation: fadeIn 2s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-content">
+            <div class="game-header">
+                <div class="header-banner">
+                    <div class="header-main">
+                        <div class="header-money" id="headerMoney">£0 FUNDING</div>
+                        <div class="header-laugh-energy" id="headerLaughEnergy">😂 3/10</div>
+                        <div class="header-collected" id="headerCollected">0 collected</div>
+                    </div>
+                    <div class="header-title">JOKE MASTER</div>
+                    <button class="sound-toggle" id="soundToggle" aria-label="Toggle sound">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px">
+                            <path d="M560-131v-82q90-26 145-100t55-168q0-94-55-168T560-749v-82q124 28 202 125.5T840-481q0 127-78 224.5T560-131ZM120-360v-240h160l200-200v640L280-360H120Zm440 40v-322q47 22 73.5 66t26.5 96q0 51-26.5 94.5T560-320ZM400-606l-86 86H200v80h114l86 86v-252ZM300-480Z"/>
+                        </svg>
+                    </button>
+                    <button class="test-map-btn" id="testMapBtn" aria-label="Test Map" onclick="window.location.href='test-map.html'">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px">
+                            <path d="m600-120-240-84-186 72q-20 8-37-4.5T120-170v-560q0-13 7.5-23t20.5-15l212-72 240 84 186-72q20-8 37 4.5t17 33.5v560q0 13-7.5 23T812-192l-212 72Zm-40-98v-468l-160-56v468l160 56Zm80 0 120-40v-474l-120 46v468Zm-440-10 120-46v-468l-120 40v474Zm440-458v468-468Zm-320-56v468-468Z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="globe-container">
+                <svg id="globe"></svg>
+            </div>
+        </div>
+
+        <div class="action-icons">
+            <div class="action-icon" onclick="window.location.href='goal.html'">
+                <div class="icon-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960">
+                        <path d="M160-120q-33 0-56.5-23.5T80-200v-440q0-33 23.5-56.5T160-720h160v-80q0-33 23.5-56.5T400-880h160q33 0 56.5 23.5T640-800v80h160q33 0 56.5 23.5T880-640v440q0 33-23.5 56.5T800-120H160Zm240-600h160v-80H400v80Zm400 360H600v80H360v-80H160v160h640v-160Zm-360 0h80v-80h-80v80Zm-280-80h200v-80h240v80h200v-200H160v200Zm320 40Z"/>
+                    </svg>
+                </div>
+                <div class="icon-label">GOAL</div>
+            </div>
+            <div class="action-icon" onclick="window.location.href='contacts.html'">
+                <div class="icon-circle">👤</div>
+                <div class="icon-label">CONTACTS</div>
+            </div>
+            <div class="action-icon active">
+                <div class="icon-circle">🌍</div>
+                <div class="icon-label">GLOBE</div>
+            </div>
+            <div class="action-icon" onclick="window.location.href='your-jokes.html'">
+                <div class="icon-circle">🎭</div>
+                <div class="icon-label">JOKES</div>
+            </div>
+            <div class="action-icon" onclick="window.location.href='bank.html'">
+                <div class="icon-circle">£</div>
+                <div class="icon-label">BANK</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Story Intro Overlay with Multi-Phase Content -->
+    <div class="story-intro-overlay visible" id="storyIntroOverlay">
+        <div class="story-intro-popup phase-1" id="storyPopup">
+            <button class="popup-back-btn" id="popupBackBtn" style="display: none;">←</button>
+            <!-- Phase 1: Welcome -->
+            <div class="popup-phase active" id="phase1">
+                <div class="story-intro-title">Welcome to Earth,<br>Good for you!</div>
+                <div class="story-intro-subtitle">Sounds like you've got some great ideas to<br>make improvements, eh?</div>
+                <button class="story-intro-btn" id="welcomeBtn">Yes I do</button>
+            </div>
+
+            <!-- Phase 2: Goal Selection -->
+            <div class="popup-phase" id="phase2">
+                <div class="story-intro-text">What's the big idea?</div>
+                <div class="goal-categories">
+                    <div class="goal-category-label">Community Life</div>
+                    <div class="goal-category-label">Systems of Power</div>
+                </div>
+                <div class="goal-buttons">
+                    <button class="goal-option-btn" data-goal="eco-wellness" data-details="Affordable housing developed to integrate community wellness, green spaces, and sustainable energy.">
+                        <span class="goal-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M480-100q-79 0-148-30t-120.5-81.5Q160-263 130-332t-30-148q0-79 30-148t81.5-120.5Q263-800 332-830t148-30v-100l160 160-160 160v-100q-108 0-184 76t-76 184q0 66 30.5 122.5T332-266q16-28 47.5-47.5T452-338q-3-21-8-42t-12-39q-11 9-24 14t-28 5q-33 0-56.5-23.5T300-480v-40q0-17-5.5-32T280-580q50-1 89 9 34 9 62 29.5t29 61.5q0 9-1.5 16.5T453-448q-13-10-26-18t-27-14q17 13 39 40t41 64q20-49 50-96.5t70-87.5q-23 16-44 34t-41 38q-7-11-11-24.5t-4-27.5q0-42 29-71t71-29h40q23 0 38-6t25-14q11-9 17-20 4 67-7 120-9 45-34 82.5T600-440q-15 0-28.5-4T547-455q-7 19-16 50.5T517-337q38 7 67 26t44 45q51-35 81.5-91T740-480h120q0 79-30 148t-81.5 120.5Q697-160 628-130t-148 30Z"/></svg></span>
+                        <span class="goal-text">Eco-wellness<br>housing</span>
+                    </button>
+                    <button class="goal-option-btn" data-goal="democracy" data-details="A civic platform for ranked-choice voting, anti-corruption reforms, and fair redistricting.">
+                        <span class="goal-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M200-280v-280h80v280h-80Zm240 0v-280h80v280h-80ZM80-120v-80h800v80H80Zm600-160v-280h80v280h-80ZM80-640v-80l400-200 400 200v80H80Zm178-80h444-444Zm0 0h444L480-830 258-720Z"/></svg></span>
+                        <span class="goal-text">Democracy<br>upgrade</span>
+                    </button>
+                    <button class="goal-option-btn" data-goal="gaming-gym" data-details="Fitness centers that blend fun physical exercise-machines and immersive community gaming.">
+                        <span class="goal-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M360-120v-200q-62-5-121.5-14T120-360l20-80q83 23 168 31.5t172 8.5q86 0 171-8.5T820-440l20 80q-60 17-119.5 26T600-320v200H360Zm120-320q-34 0-57-23t-23-57q0-33 23-56.5t57-23.5q33 0 56.5 23.5T560-520q0 34-23.5 57T480-440ZM180-560q-26 0-43-17t-17-43q0-25 17-42.5t43-17.5q25 0 42.5 17.5T240-620q0 26-17.5 43T180-560Zm600 0q-26 0-43-17t-17-43q0-25 17-42.5t43-17.5q25 0 42.5 17.5T840-620q0 26-17.5 43T780-560ZM290-710q-26 0-43-17t-17-43q0-25 17-42.5t43-17.5q25 0 42.5 17.5T350-770q0 26-17.5 43T290-710Zm380 0q-26 0-43-17t-17-43q0-25 17-42.5t43-17.5q25 0 42.5 17.5T730-770q0 26-17.5 43T670-710Zm-190-50q-26 0-43-17t-17-43q0-25 17-42.5t43-17.5q25 0 42.5 17.5T540-820q0 26-17.5 43T480-760Z"/></svg></span>
+                        <span class="goal-text">Gaming gym<br>centers</span>
+                    </button>
+                    <button class="goal-option-btn" data-goal="healthcare" data-details="A platform for basic medical support for all citizens including preventive and mental health services.">
+                        <span class="goal-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M420-340h120v-100h100v-120H540v-100H420v100H320v120h100v100Zm60 260q-139-35-229.5-159.5T160-516v-244l320-120 320 120v244q0 152-90.5 276.5T480-80Zm0-84q104-33 172-132t68-220v-189l-240-90-240 90v189q0 121 68 220t172 132Zm0-316Z"/></svg></span>
+                        <span class="goal-text">Universal basic<br>Healthcare</span>
+                    </button>
+                </div>
+                <div class="goal-description-container">
+                    <div class="goal-description-text" id="goalDetailsText"></div>
+                </div>
+            </div>
+
+            <!-- Phase 3: Money Selection -->
+            <div class="popup-phase" id="phase3">
+                <div class="story-intro-text">START AS</div>
+                <div class="goal-buttons">
+                    <button class="goal-option-btn" data-money="low-income" data-details="Oh you will be so poor...">
+                        <span class="goal-text">Low-<br>income</span>
+                    </button>
+                    <button class="goal-option-btn" data-money="bootstrapped" data-details="Middle class, but maybe just the right life experience to get it done?">
+                        <span class="goal-text">Bootstrapped<br>Idealist</span>
+                    </button>
+                    <button class="goal-option-btn" data-money="family" data-details="Trust fund babies always finish first, right? Right?!">
+                        <span class="goal-text">Backed by<br>Family Money</span>
+                    </button>
+                    <button class="goal-option-btn locked" data-money="wealthy" data-details="Would be nice... but only .1% can unlock this one.">
+                        <span class="goal-text">Quietly<br>Wealthy</span>
+                    </button>
+                </div>
+                <div class="goal-description-container">
+                    <div class="goal-description-text" id="moneyDetailsText"></div>
+                </div>
+            </div>
+
+            <!-- Phase 4: Rain Introduction -->
+            <div class="popup-phase" id="phase4">
+                <div class="story-intro-paragraph">For the time being, we'll call you Rain!<br>Learn it up–and good luck!</div>
+                <button class="story-intro-btn" id="rainIntroBtn">Thanks I'll need it!</button>
+            </div>
+
+            <!-- Phase 5: NYC Intro -->
+            <div class="popup-phase" id="phase5">
+                <div class="story-intro-title">Your adventure<br class="mobile-break"> begins in New York City</div>
+                <button class="story-intro-btn" id="nycContinueBtn">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+    <!-- Firebase config and database helper -->
+    <script src="../scripts/firebase-config.js"></script>
+    <script src="../scripts/database.js"></script>
+
+    <!-- Game data and templates -->
+    <script src="../scripts/data.js"></script>
+    <script src="../scripts/templates.js"></script>
+
+    <script src="../scripts/game.js"></script>
+    <script src="../scripts/globe.js"></script>
+    <script src="../scripts/icons.js"></script>
+    <script src="../scripts/sound-toggle.js"></script>
+
+    <script>
+        // Background music element
+        let backgroundMusic = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add fade-in animation to body
+            document.body.classList.add('page-fade-in');
+
+            initializeFirebase();
+
+            // Create and setup background music
+            backgroundMusic = new Audio('../assets/audio/background-music.mp3');
+            backgroundMusic.loop = true;
+
+            // Set initial volume based on sound state
+            const soundState = window.getSoundState ? window.getSoundState() : 'on';
+            backgroundMusic.volume = window.getVolumeForState ? window.getVolumeForState(soundState) : 1.0;
+
+            // Listen for sound toggle events to update volume
+            window.addEventListener('soundToggle', (event) => {
+                if (backgroundMusic) {
+                    backgroundMusic.volume = event.detail.volume;
+
+                    // If volume is 0 (off state), pause the music
+                    if (event.detail.volume === 0) {
+                        backgroundMusic.pause();
+                    } else if (backgroundMusic.paused && event.detail.state !== 'off') {
+                        // Resume if it was paused and we're not in off state
+                        backgroundMusic.play().catch(e => console.log('Music play prevented:', e));
+                    }
+                }
+            });
+
+            // Phase management
+            let selectedGoal = null;
+            let currentPhase = 1;
+            const backBtn = document.getElementById('popupBackBtn');
+
+            // Helper function to transition between phases
+            function transitionToPhase(nextPhaseNum) {
+                const currentPhaseEl = document.getElementById(`phase${currentPhase}`);
+                const nextPhaseEl = document.getElementById(`phase${nextPhaseNum}`);
+                const popup = document.getElementById('storyPopup');
+
+                // Add transitioning class for scale effect
+                popup.classList.add('transitioning');
+
+                // Update phase class for size/shape
+                popup.classList.remove('phase-1', 'phase-2', 'phase-3', 'phase-4', 'phase-5');
+                popup.classList.add(`phase-${nextPhaseNum}`);
+
+                // Fade out current phase
+                currentPhaseEl.style.opacity = '0';
+                setTimeout(() => {
+                    currentPhaseEl.classList.remove('active');
+                    // Fade in next phase
+                    nextPhaseEl.classList.add('active');
+                    setTimeout(() => {
+                        nextPhaseEl.style.opacity = '1';
+                        // Remove transitioning class after animation
+                        setTimeout(() => {
+                            popup.classList.remove('transitioning');
+                        }, 300);
+                    }, 50);
+                }, 400);
+
+                currentPhase = nextPhaseNum;
+
+                // Show/hide back button (hide on phases 1, 2, and 5)
+                if (nextPhaseNum === 1 || nextPhaseNum === 2 || nextPhaseNum === 5) {
+                    backBtn.style.display = 'none';
+                } else {
+                    backBtn.style.display = 'block';
+                }
+            }
+
+            // Back button functionality
+            backBtn.addEventListener('click', function() {
+                if (currentPhase > 1) {
+                    transitionToPhase(currentPhase - 1);
+                }
+            });
+
+            // Phase 1: Welcome - "Yes I do" button
+            document.getElementById('welcomeBtn').addEventListener('click', function() {
+                // Music temporarily disabled
+                // if (backgroundMusic) {
+                //     const soundState = window.getSoundState ? window.getSoundState() : 'on';
+                //     const baseVolume = window.getVolumeForState ? window.getVolumeForState(soundState) : 1.0;
+                //     backgroundMusic.volume = baseVolume * 0.2; // Set to 20% of current volume
+
+                //     // Only play if not in 'off' state
+                //     if (soundState !== 'off') {
+                //         backgroundMusic.play().catch(e => console.log('Music play prevented:', e));
+                //     }
+                // }
+
+                transitionToPhase(2);
+            });
+
+            // Phase 2: Goal Selection - Handle goal button clicks
+            const goalButtons = document.querySelectorAll('#phase2 .goal-option-btn');
+            const goalDetailsText = document.getElementById('goalDetailsText');
+
+            let tappedGoalButton = null;
+
+            goalButtons.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    // On mobile (touch devices), first tap shows description, second tap selects
+                    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+                    if (isTouchDevice) {
+                        // Check if this button already has the check mark (second tap)
+                        const hasCheckMark = this.querySelector('.check-mark-indicator');
+
+                        if (hasCheckMark) {
+                            // Second tap - proceed to next phase
+                            transitionToPhase(3);
+                            return;
+                        }
+
+                        // First tap - show description and add check mark
+                        // Remove check marks from other buttons
+                        goalButtons.forEach(b => {
+                            const existingMark = b.querySelector('.check-mark-indicator');
+                            if (existingMark) {
+                                existingMark.remove();
+                            }
+                        });
+
+                        // Add check mark to this button
+                        const checkMark = document.createElement('div');
+                        checkMark.className = 'check-mark-indicator';
+                        this.appendChild(checkMark);
+
+                        // Show description
+                        const details = this.dataset.details;
+                        if (details) {
+                            goalDetailsText.textContent = details;
+                            goalDetailsText.classList.add('visible');
+                        }
+
+                        tappedGoalButton = this;
+                        return;
+                    }
+
+                    // Desktop behavior - direct selection
+                    if (this.classList.contains('selected')) {
+                        this.classList.remove('selected');
+                        selectedGoal = null;
+                        goalDetailsText.classList.remove('visible');
+                    } else {
+                        goalButtons.forEach(b => b.classList.remove('selected'));
+                        this.classList.add('selected');
+                        selectedGoal = this.dataset.goal;
+                        transitionToPhase(3);
+                    }
+                });
+
+                // Hover handlers for details (only when no goal is selected) - desktop only
+                btn.addEventListener('mouseenter', function() {
+                    if (!selectedGoal) {
+                        const details = this.dataset.details;
+                        if (details) {
+                            goalDetailsText.textContent = details;
+                            goalDetailsText.classList.add('visible');
+                        }
+                    }
+                });
+
+                btn.addEventListener('mouseleave', function() {
+                    if (!selectedGoal) {
+                        goalDetailsText.classList.remove('visible');
+                    }
+                });
+            });
+
+            // Phase 3: Money Selection - Handle money button clicks
+            const moneyButtons = document.querySelectorAll('#phase3 .goal-option-btn');
+            const moneyDetailsText = document.getElementById('moneyDetailsText');
+
+            let tappedMoneyButton = null;
+
+            moneyButtons.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    // Check if button is locked
+                    const isLocked = this.classList.contains('locked');
+
+                    // On mobile (touch devices), first tap shows description, second tap selects
+                    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+                    if (isTouchDevice) {
+                        // For locked buttons, show description with laugh emoji but don't allow selection
+                        if (isLocked) {
+                            // Show description
+                            const details = this.dataset.details;
+                            if (details) {
+                                moneyDetailsText.textContent = details;
+                                moneyDetailsText.classList.add('visible');
+                            }
+                            // Add laugh emoji indicator instead of check mark
+                            moneyButtons.forEach(b => {
+                                const existingMark = b.querySelector('.check-mark-indicator');
+                                const existingLaugh = b.querySelector('.locked-indicator');
+                                if (existingMark) existingMark.remove();
+                                if (existingLaugh) existingLaugh.remove();
+                            });
+                            const laughIndicator = document.createElement('div');
+                            laughIndicator.className = 'locked-indicator';
+                            laughIndicator.textContent = '😂';
+                            this.appendChild(laughIndicator);
+                            // Fade background after slight delay
+                            const btn = this;
+                            setTimeout(() => {
+                                btn.classList.add('locked-faded');
+                            }, 300);
+                            return;
+                        }
+
+                        // Check if this button already has the check mark (second tap)
+                        const hasCheckMark = this.querySelector('.check-mark-indicator');
+
+                        if (hasCheckMark) {
+                            // Second tap - proceed to Phase 4
+                            transitionToPhase(4);
+                            return;
+                        }
+
+                        // First tap - show description and add check mark
+                        // Remove check marks and laugh indicators from other buttons
+                        moneyButtons.forEach(b => {
+                            const existingMark = b.querySelector('.check-mark-indicator');
+                            const existingLaugh = b.querySelector('.locked-indicator');
+                            if (existingMark) existingMark.remove();
+                            if (existingLaugh) existingLaugh.remove();
+                        });
+
+                        // Add check mark to this button
+                        const checkMark = document.createElement('div');
+                        checkMark.className = 'check-mark-indicator';
+                        this.appendChild(checkMark);
+
+                        // Show description
+                        const details = this.dataset.details;
+                        if (details) {
+                            moneyDetailsText.textContent = details;
+                            moneyDetailsText.classList.add('visible');
+                        }
+
+                        tappedMoneyButton = this;
+                        return;
+                    }
+
+                    // Desktop behavior - direct selection
+                    if (isLocked) {
+                        // Show description but don't allow selection
+                        const details = this.dataset.details;
+                        if (details) {
+                            moneyDetailsText.textContent = details;
+                            moneyDetailsText.classList.add('visible');
+                        }
+                        return;
+                    }
+                    moneyButtons.forEach(b => b.classList.remove('selected'));
+                    this.classList.add('selected');
+                    transitionToPhase(4);
+                });
+
+                // Hover handlers for details - desktop only
+                btn.addEventListener('mouseenter', function() {
+                    const details = this.dataset.details;
+                    if (details) {
+                        moneyDetailsText.textContent = details;
+                        moneyDetailsText.classList.add('visible');
+                    }
+                });
+
+                btn.addEventListener('mouseleave', function() {
+                    moneyDetailsText.classList.remove('visible');
+                });
+            });
+
+            // Phase 4: Rain Introduction - Continue button
+            document.getElementById('rainIntroBtn').addEventListener('click', function() {
+                transitionToPhase(5);
+            });
+
+            // Phase 5: NYC Intro - Start Game button
+            document.getElementById('nycContinueBtn').addEventListener('click', function() {
+                startGame();
+            });
+
+            // Start game function
+            function startGame() {
+                // Fade out entire overlay
+                const overlay = document.getElementById('storyIntroOverlay');
+                overlay.classList.remove('visible');
+
+                // After popup fades out, rotate and zoom globe to New York
+                setTimeout(() => {
+                    if (typeof rotateToNewYork === 'function') {
+                        rotateToNewYork(() => {
+                            // After rotation and zoom complete, navigate to city map
+                            window.location.href = 'city.html?city=New-York';
+                        });
+                    } else {
+                        // Fallback if function not available
+                        window.location.href = 'city.html?city=New-York';
+                    }
+                }, 2000); // Wait for popup fade-out
+            }
+        });
+    </script>
+</body>
+</html>

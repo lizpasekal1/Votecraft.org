@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Integration Example - JokeMaster</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #6b2c3e;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #8b3c4e;
+        }
+        .output {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Firebase Integration Test</h1>
+        <p>Use this page to test your Firebase setup before integrating into the main game.</p>
+
+        <div id="status"></div>
+
+        <h2>Step 1: Initialize Firebase</h2>
+        <button onclick="testInitialize()">Test Firebase Connection</button>
+
+        <h2>Step 2: Get User ID</h2>
+        <button onclick="testGetUserId()">Get/Create User ID</button>
+
+        <h2>Step 3: Save Data</h2>
+        <button onclick="testSaveData()">Save Test Game State</button>
+
+        <h2>Step 4: Load Data</h2>
+        <button onclick="testLoadData()">Load Game State</button>
+
+        <h2>Step 5: Save Joke Vote</h2>
+        <button onclick="testSaveVote()">Save Test Vote</button>
+
+        <h2>Step 6: Load Votes</h2>
+        <button onclick="testLoadVotes()">Load All Votes</button>
+
+        <h2>Step 7: Sync LocalStorage</h2>
+        <button onclick="testSyncLocalStorage()">Sync LocalStorage to Firestore</button>
+
+        <div class="output" id="output">Output will appear here...</div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+    <!-- Your Firebase config and database helper -->
+    <script src="src/scripts/firebase-config.js"></script>
+    <script src="src/scripts/database.js"></script>
+
+    <script>
+        const output = document.getElementById('output');
+        const statusDiv = document.getElementById('status');
+
+        function log(message, isError = false) {
+            const timestamp = new Date().toLocaleTimeString();
+            output.textContent += `[${timestamp}] ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+
+            if (isError) {
+                console.error(message);
+            } else {
+                console.log(message);
+            }
+        }
+
+        function showStatus(message, isError = false) {
+            statusDiv.className = isError ? 'status error' : 'status success';
+            statusDiv.textContent = message;
+        }
+
+        async function testInitialize() {
+            log('Testing Firebase initialization...');
+            try {
+                const success = initializeFirebase();
+                if (success) {
+                    log('✓ Firebase initialized successfully!');
+                    showStatus('✓ Firebase connected successfully!');
+                } else {
+                    log('✗ Firebase initialization failed', true);
+                    showStatus('✗ Firebase initialization failed - check console', true);
+                }
+            } catch (error) {
+                log(`✗ Error: ${error.message}`, true);
+                showStatus(`✗ Error: ${error.message}`, true);
+            }
+        }
+
+        async function testGetUserId() {
+            log('Getting/creating user ID...');
+            try {
+                const userId = await getOrCreateUserId();
+                log(`✓ User ID: ${userId}`);
+                showStatus(`✓ User ID obtained: ${userId}`);
+                return userId;
+            } catch (error) {
+                log(`✗ Error: ${error.message}`, true);
+                showStatus(`✗ Error: ${error.message}`, true);
+            }
+        }
+
+        async function testSaveData() {
+            log('Saving test game state...');
+            try {
+                const userId = await getOrCreateUserId();
+                const testGameState = {
+                    funding: 15000,
+                    completedCharacters: ['Marcus Chen', 'Raj Patel', 'Dr. Sarah Williams'],
+                    usedCards: ['joke-1', 'joke-3', 'joke-5'],
+                    selectedProject: 'eco-wellness-housing'
+                };
+
+                const success = await saveGameState(userId, testGameState);
+                if (success) {
+                    log('✓ Game state saved successfully!');
+                    log(`  Data: ${JSON.stringify(testGameState, null, 2)}`);
+                    showStatus('✓ Test data saved to Firestore!');
+                } else {
+                    log('✗ Failed to save game state', true);
+                    showStatus('✗ Failed to save data', true);
+                }
+            } catch (error) {
+                log(`✗ Error: ${error.message}`, true);
+                showStatus(`✗ Error: ${error.message}`, true);
+            }
+        }
+
+        async function testLoadData() {
+            log('Loading game state from Firestore...');
+            try {
+                const userId = await getOrCreateUserId();
+                const gameState = await loadGameState(userId);
+
+                if (gameState) {
+                    log('✓ Game state loaded successfully!');
+                    log(`  Data: ${JSON.stringify(gameState, null, 2)}`);
+                    showStatus('✓ Data loaded from Firestore!');
+                } else {
+                    log('⚠ No saved game state found');
+                    showStatus('⚠ No saved data found - try saving first');
+                }
+            } catch (error) {
+                log(`✗ Error: ${error.message}`, true);
+                showStatus(`✗ Error: ${error.message}`, true);
+            }
+        }
+
+        async function testSaveVote() {
+            log('Saving test joke vote...');
+            try {
+                const userId = await getOrCreateUserId();
+                const success = await saveJokeVote(userId, 'joke-1', 1);
+
+                if (success) {
+                    log('✓ Joke vote saved successfully!');
+                    log(`  Vote: joke-1 = upvoted (1)`);
+                    showStatus('✓ Vote saved to Firestore!');
+                } else {
+                    log('✗ Failed to save joke vote', true);
+                    showStatus('✗ Failed to save vote', true);
+                }
+            } catch (error) {
+                log(`✗ Error: ${error.message}`, true);
+                showStatus(`✗ Error: ${error.message}`, true);
+            }
+        }
+
+        async function testLoadVotes() {
+            log('Loading joke votes from Firestore...');
+            try {
+                const userId = await getOrCreateUserId();
+                const votes = await loadJokeVotes(userId);
+
+                log('✓ Joke votes loaded successfully!');
+                log(`  Votes: ${JSON.stringify(votes, null, 2)}`);
+                showStatus(`✓ Loaded ${Object.keys(votes).length} vote(s)!`);
+            } catch (error) {
+                log(`✗ Error: ${error.message}`, true);
+                showStatus(`✗ Error: ${error.message}`, true);
+            }
+        }
+
+        async function testSyncLocalStorage() {
+            log('Syncing localStorage to Firestore...');
+            try {
+                // First, create some test localStorage data
+                const testGameState = {
+                    funding: 5000,
+                    completedCharacters: ['Marcus Chen'],
+                    selectedProject: 'democracy-upgrade'
+                };
+                localStorage.setItem('jokeMasterGameState', JSON.stringify(testGameState));
+
+                const testVotes = {
+                    'joke-1': 1,
+                    'joke-2': 0,
+                    'joke-3': 1
+                };
+                localStorage.setItem('jokeVotes', JSON.stringify(testVotes));
+
+                log('  Created test localStorage data');
+
+                // Now sync to Firestore
+                const success = await syncLocalStorageToFirestore();
+
+                if (success) {
+                    log('✓ LocalStorage synced to Firestore successfully!');
+                    showStatus('✓ Data migrated to Firestore!');
+                } else {
+                    log('✗ Failed to sync localStorage', true);
+                    showStatus('✗ Failed to sync data', true);
+                }
+            } catch (error) {
+                log(`✗ Error: ${error.message}`, true);
+                showStatus(`✗ Error: ${error.message}`, true);
+            }
+        }
+
+        // Auto-initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Page loaded. Click "Test Firebase Connection" to begin.');
+            testInitialize();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#8B2635">
+    <link rel="manifest" href="/manifest.json">
+    <title>Your Comedy Arsenal - Joke Master</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/styles.css">
+    <link rel="stylesheet" href="../styles/bank.css">
+    <link rel="stylesheet" href="../styles/icons.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-content">
+            <header class="game-header">
+                <div class="header-banner">
+                    <div class="header-main">
+                        <div class="header-money" id="headerMoney">£0 FUNDING</div>
+                        <div class="header-laugh-energy" id="headerLaughEnergy">😂 3/10</div>
+                        <div class="header-collected" id="headerCollected">0 collected</div>
+                    </div>
+                    <div class="header-title">JOKE MASTER</div>
+                </div>
+            </header>
+
+            <main class="bank-page">
+                <h1 class="bank-title">Your Comedy Arsenal</h1>
+
+                <!-- Laugh Energy Section -->
+                <section class="arsenal-section energy-section">
+                    <div class="section-header">
+                        <h2 class="section-title">😂 Laugh Energy</h2>
+                        <div class="energy-meter">
+                            <div class="energy-bar">
+                                <div class="energy-fill" id="energyFill"></div>
+                            </div>
+                            <span class="energy-text" id="energyText">3 / 10</span>
+                        </div>
+                    </div>
+                    <p class="section-description">
+                        Renewable goodwill gained when your jokes land well. Spend it to boost effectiveness, enable risky options, or recruit comedians.
+                    </p>
+                    <div class="energy-tips">
+                        <div class="tip-item">💡 Gain 1-2 energy when jokes connect with your audience</div>
+                        <div class="tip-item">⚡ Use energy strategically to maximize impact</div>
+                        <div class="tip-item">🎯 Maximum capacity: 10 energy</div>
+                    </div>
+                </section>
+
+                <!-- Comedians Section -->
+                <section class="arsenal-section comedians-section">
+                    <div class="section-header">
+                        <h2 class="section-title">🎤 Your Comedians</h2>
+                        <span class="comedian-count" id="comedianCount">0 / 3 recruited</span>
+                    </div>
+                    <p class="section-description">
+                        Recruit comedians to gain passive bonuses. Each comedian specializes in different comedy styles.
+                    </p>
+                    <div class="comedians-grid" id="comediansGrid">
+                        <!-- Comedians will be dynamically loaded here -->
+                    </div>
+                </section>
+
+                <!-- Artifacts Section -->
+                <section class="arsenal-section artifacts-section">
+                    <div class="section-header">
+                        <h2 class="section-title">🎭 Comedic Artifacts</h2>
+                        <span class="artifact-count" id="artifactCount">0 / 6 collected</span>
+                    </div>
+                    <p class="section-description">
+                        Discover lighthearted props that enhance your comedy. Find them in cities around the world.
+                    </p>
+                    <div class="artifacts-grid" id="artifactsGrid">
+                        <!-- Artifacts will be dynamically loaded here -->
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <div class="action-icons">
+            <div class="action-icon" onclick="window.location.href='goal.html'">
+                <div class="icon-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960">
+                        <path d="M160-120q-33 0-56.5-23.5T80-200v-440q0-33 23.5-56.5T160-720h160v-80q0-33 23.5-56.5T400-880h160q33 0 56.5 23.5T640-800v80h160q33 0 56.5 23.5T880-640v440q0 33-23.5 56.5T800-120H160Zm240-600h160v-80H400v80Zm400 360H600v80H360v-80H160v160h640v-160Zm-360 0h80v-80h-80v80Zm-280-80h200v-80h240v80h200v-200H160v200Zm320 40Z"/>
+                    </svg>
+                </div>
+                <div class="icon-label">GOAL</div>
+            </div>
+            <div class="action-icon" onclick="window.location.href='contacts.html'">
+                <div class="icon-circle">👤</div>
+                <div class="icon-label">CONTACTS</div>
+            </div>
+            <div class="action-icon" onclick="window.location.href='globe.html'">
+                <div class="icon-circle">🌍</div>
+                <div class="icon-label">GLOBE</div>
+            </div>
+            <div class="action-icon" onclick="window.location.href='your-jokes.html'">
+                <div class="icon-circle">🎭</div>
+                <div class="icon-label">JOKES</div>
+            </div>
+            <div class="action-icon active">
+                <div class="icon-circle">£</div>
+                <div class="icon-label">BANK</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comedian Recruitment Modal -->
+    <div class="modal-overlay" id="comedianModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeComedianModal()">✕</button>
+            <div class="modal-body" id="comedianModalBody">
+                <!-- Comedian details will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+    <!-- Firebase config and database helper -->
+    <script src="../scripts/firebase-config.js"></script>
+    <script src="../scripts/database.js"></script>
+
+    <!-- Game data and templates -->
+    <script src="../scripts/data.js"></script>
+    <script src="../scripts/templates.js"></script>
+
+    <script src="../scripts/game.js"></script>
+    <script src="../scripts/bank.js"></script>
+    <script src="../scripts/icons.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add fade-in animation to body
+            document.body.classList.add('page-fade-in');
+
+            initializeFirebase();
+        });
+    </script>
+</body>
+</html>
