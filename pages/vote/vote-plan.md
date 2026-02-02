@@ -1,4 +1,4 @@
-# Empower Democracy — Massachusetts Elections
+# Vote — Massachusetts Elections
 
 ## Overview
 
