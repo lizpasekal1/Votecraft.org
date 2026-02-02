@@ -1099,7 +1099,7 @@ function loadCharacter(characterName = null) {
         </div>
     ` : '';
 
-    const characterImage = character.name.replace(/\s+/g, '-');
+    const characterImage = character.name.replace(/\./g, '').replace(/\s+/g, '-').toLowerCase();
     const cacheBuster = Date.now();
 
     const html = `
