@@ -414,7 +414,7 @@ body.city-page .overworld-container {
     max-width: min(95vw, 768px);
     margin-left: auto;
     margin-right: auto;
-    background: url('../../assets/images/jokemaster-map.png') center/cover no-repeat;
+    background: url('../../assets/images/maps/jokemaster-map.png') center/cover no-repeat;
     padding: 20px;
     border-radius: 8px;
     position: relative;
