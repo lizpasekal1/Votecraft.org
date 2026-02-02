@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#8B2635">
+    <link rel="manifest" href="/manifest.json">
+    <title>Test Map - Joke Master</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/test-map.css">
+    <link rel="stylesheet" href="../styles/icons.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body class="city-page">
+    <!-- Test Control Panel -->
+    <div class="test-control-panel" id="testControlPanel">
+        <div class="panel-header" onclick="toggleControlPanel()">
+            <div class="panel-title">Movement Mode</div>
+            <div class="panel-chevron" id="panelChevron">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="20" height="20">
+                    <path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z" fill="currentColor"/>
+                </svg>
+            </div>
+        </div>
+        <div class="panel-content" id="panelContent">
+            <button class="mode-btn active" data-mode="normal" onclick="setMovementMode('normal')">Normal</button>
+            <button class="mode-btn" data-mode="tutorial" onclick="setMovementMode('tutorial')">Tutorial</button>
+            <button class="mode-btn" data-mode="adjacent" onclick="setMovementMode('adjacent')">Adjacent Trace</button>
+            <button class="mode-btn" data-mode="tap-path" onclick="setMovementMode('tap-path')">Tap Path</button>
+            <button class="mode-btn" data-mode="scatter" onclick="setMovementMode('scatter')">Scatter Select</button>
+            <button class="reset-btn" onclick="resetWordSelection()">Reset</button>
+            <div class="current-word" id="currentWordDisplay">Word: <span id="wordLetters">---</span></div>
+            <div class="target-word" id="targetWordDisplay">Target: <span id="targetWord">JOKE</span></div>
+        </div>
+    </div>
+
+    <div class="game-container">
+        <div class="game-content">
+            <div class="game-header">
+                <div class="header-banner">
+                    <div class="header-main">
+                        <div class="header-money" id="headerMoney">£0 FUNDING</div>
+                        <div class="header-laugh-energy" id="headerLaughEnergy">😂 3/10</div>
+                        <div class="header-collected" id="headerCollected">0 collected</div>
+                    </div>
+                    <div class="header-title">JOKE MASTER</div>
+                    <button class="sound-toggle" id="soundToggle" aria-label="Toggle sound">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px">
+                            <path d="M560-131v-82q90-26 145-100t55-168q0-94-55-168T560-749v-82q124 28 202 125.5T840-481q0 127-78 224.5T560-131ZM120-360v-240h160l200-200v640L280-360H120Zm440 40v-322q47 22 73.5 66t26.5 96q0 51-26.5 94.5T560-320ZM400-606l-86 86H200v80h114l86 86v-252ZM300-480Z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="conversation-area" id="conversationArea">
+                <!-- Flat map will be loaded here -->
+            </div>
+        </div>
+
+        <div class="action-icons" id="actionIcons">
+            <div class="action-icon" onclick="window.location.href='goal.html'">
+                <div class="icon-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960">
+                        <path d="M160-120q-33 0-56.5-23.5T80-200v-440q0-33 23.5-56.5T160-720h160v-80q0-33 23.5-56.5T400-880h160q33 0 56.5 23.5T640-800v80h160q33 0 56.5 23.5T880-640v440q0 33-23.5 56.5T800-120H160Zm240-600h160v-80H400v80Zm400 360H600v80H360v-80H160v160h640v-160Zm-360 0h80v-80h-80v80Zm-280-80h200v-80h240v80h200v-200H160v200Zm320 40Z"/>
+                    </svg>
+                </div>
+                <div class="icon-label">GOAL</div>
+            </div>
+            <div class="action-icon" onclick="window.location.href='contacts.html'">
+                <div class="icon-circle">👤</div>
+                <div class="icon-label">CONTACTS</div>
+            </div>
+            <div class="action-icon" onclick="window.location.href='globe.html'">
+                <div class="icon-circle">🌍</div>
+                <div class="icon-label">GLOBE</div>
+            </div>
+            <div class="action-icon" onclick="window.location.href='your-jokes.html'">
+                <div class="icon-circle">🎭</div>
+                <div class="icon-label">JOKES</div>
+            </div>
+            <div class="action-icon" onclick="window.location.href='bank.html'">
+                <div class="icon-circle">£</div>
+                <div class="icon-label">BANK</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+    <!-- Firebase config and database helper -->
+    <script src="../scripts/firebase-config.js"></script>
+    <script src="../scripts/database.js"></script>
+
+    <script src="../scripts/icons.js"></script>
+    <script src="../scripts/sound-toggle.js"></script>
+    <script src="../scripts/d3-buildings.js"></script>
+    <script src="../scripts/tile-grid.js"></script>
+
+    <script>
+        // ========================================
+        // WORD SEARCH MOVEMENT SYSTEM
+        // ========================================
+
+        // Movement mode state
+        window.wordSearchState = {
+            mode: 'normal',  // 'normal', 'adjacent', 'tap-path', 'scatter'
+            currentWord: [],
+            selectedTiles: [],
+            targetWords: ['JOKE', 'LAUGH', 'FUN', 'HA', 'LOL', 'WIT', 'PUN', 'GAG'],
+            letterGrid: null,  // Will be populated with strategic letters
+            isDragging: false,
+            startPosition: null,
+            tileGrid: null    // TileGrid component instance for Normal mode
+        };
+
+        // Toggle control panel accordion (mobile only)
+        function toggleControlPanel() {
+            const panel = document.getElementById('testControlPanel');
+            const content = document.getElementById('panelContent');
+            const chevron = document.getElementById('panelChevron');
+
+            // Only toggle on mobile
+            if (window.innerWidth <= 768) {
+                panel.classList.toggle('collapsed');
+            }
+        }
+
+        // Set movement mode
+        function setMovementMode(mode) {
+            wordSearchState.mode = mode;
+
+            // Update button states
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.mode === mode) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Generate new letter layout for this mode
+            generateLetterGrid(mode);
+
+            // Re-render the map with new letters
+            if (mode === 'normal') {
+                // Use TileGrid component system for Normal mode
+                renderOverworldWithTileGrid();
+            } else if (typeof renderOverworld === 'function') {
+                // Use game.js renderOverworld for other modes
+                renderOverworld();
+                setupTileDataAttributes();
+            }
+
+            // Reset selection
+            wordSearchState.currentWord = [];
+            wordSearchState.selectedTiles = [];
+            wordSearchState.isDragging = false;
+            document.getElementById('wordLetters').textContent = '---';
+
+            // Update target word display based on mode
+            const targetDisplay = document.getElementById('targetWord');
+            const targetRow = document.getElementById('targetWordDisplay');
+            if (mode === 'normal') {
+                targetDisplay.textContent = '---';
+                targetRow.style.display = 'none';
+            } else if (mode === 'tutorial') {
+                targetDisplay.textContent = '---';
+                targetRow.style.display = 'none';
+                // Enable tutorial mode
+                if (typeof gameState !== 'undefined') {
+                    gameState.tutorialStep = 1;
+                    gameState.hasStartedWalking = true;
+                }
+                // Trigger the same animation sequence as Normal mode
+                setTimeout(() => animateMapAndBuildings(), 100);
+            } else if (mode === 'scatter') {
+                targetDisplay.textContent = 'LAUGH';
+                targetRow.style.display = 'block';
+            } else {
+                targetDisplay.textContent = 'JOKE';
+                targetRow.style.display = 'block';
+            }
+
+            // Disable tutorial for non-tutorial modes
+            if (mode !== 'tutorial' && typeof gameState !== 'undefined') {
+                gameState.tutorialStep = 99;
+            }
+
+            // Hide all location callouts/popups for non-tutorial modes
+            if (mode !== 'tutorial') {
+                const callouts = document.querySelectorAll('.location-callout');
+                callouts.forEach(callout => {
+                    callout.classList.remove('visible', 'tutorial-highlight');
+                    callout.remove();
+                });
+            }
+
+            // Trigger map and building animations for normal mode
+            if (mode === 'normal') {
+                setTimeout(() => animateMapAndBuildings(), 100);
+            }
+
+            console.log('Movement mode set to:', mode);
+        }
+
+        // Animate map bounce-in, then buildings, tiles, Rain, and callout
+        function animateMapAndBuildings() {
+            const mapContainer = document.querySelector('.map-container');
+            if (!mapContainer) return;
+
+            // Hide buildings first
+            const buildings = document.querySelectorAll('.d3-building-container');
+            buildings.forEach(building => {
+                building.classList.remove('bounce-in');
+                building.classList.add('animate-in');
+            });
+
+            // Hide tiles (dots with letters)
+            const tiles = document.querySelectorAll('.map-tile.walkable');
+            tiles.forEach(tile => {
+                tile.classList.remove('pop-in');
+                tile.classList.add('animate-in');
+            });
+
+            // Hide Rain (player)
+            const player = document.querySelector('.map-tile.player');
+            if (player) {
+                player.classList.remove('zoom-in');
+                player.classList.add('animate-in');
+            }
+
+            // Start map animation
+            mapContainer.classList.remove('bounce-in');
+            mapContainer.classList.add('animate-in');
+
+            // Small delay then trigger map bounce
+            requestAnimationFrame(() => {
+                mapContainer.classList.remove('animate-in');
+                mapContainer.classList.add('bounce-in');
+            });
+
+            // After map animation completes (700ms), trigger building and tile animations
+            setTimeout(() => {
+                animateBuildingsSequentially();
+                animateTilesRandomly();
+
+                // Calculate when buildings and tiles finish
+                const buildingCount = buildings.length;
+                const buildingDuration = buildingCount * 150 + 600; // stagger + animation
+                const tileDuration = 800; // total tile animation time
+
+                // After buildings/tiles done, animate Rain
+                const longerDuration = Math.max(buildingDuration, tileDuration);
+                setTimeout(() => {
+                    animateRainIn();
+                }, longerDuration);
+            }, 700);
+        }
+
+        // Animate Rain zooming in
+        function animateRainIn() {
+            const player = document.querySelector('.map-tile.player');
+            if (player) {
+                player.classList.remove('animate-in');
+                player.classList.add('zoom-in');
+
+                // After Rain zoom animation (500ms), resume pulse and show callout
+                setTimeout(() => {
+                    // Switch from zoom-in to zoom-complete to resume pulse animation
+                    player.classList.remove('zoom-in');
+                    player.classList.add('zoom-complete');
+
+                    showCalloutWithAnimation();
+                }, 500);
+            }
+        }
+
+        // Show Rain's callout with fade-in animation (same style as tutorial callout)
+        function showCalloutWithAnimation() {
+            // Find the existing Rain callout from game.js (in the map-grid)
+            const rainCallout = document.getElementById('rainCallout');
+            if (rainCallout) {
+                // Update the text content
+                const calloutContent = rainCallout.querySelector('.callout-content');
+                if (calloutContent) {
+                    calloutContent.textContent = 'Tap a dot space to move Rain on the map.';
+                }
+
+                // Show the callout with animation
+                rainCallout.style.display = '';
+                rainCallout.classList.remove('visible');
+
+                // Trigger fade-in animation
+                requestAnimationFrame(() => {
+                    rainCallout.classList.add('visible', 'animate-fade-in');
+                });
+            }
+        }
+
+        // Animate buildings bouncing in one after another
+        function animateBuildingsSequentially() {
+            const buildings = document.querySelectorAll('.d3-building-container');
+            const delay = 150; // ms between each building
+
+            // Then trigger bounce animation with staggered delays
+            buildings.forEach((building, index) => {
+                setTimeout(() => {
+                    building.classList.remove('animate-in');
+                    building.classList.add('bounce-in');
+                }, index * delay);
+            });
+        }
+
+        // Animate tiles appearing in random order
+        function animateTilesRandomly() {
+            const tiles = Array.from(document.querySelectorAll('.map-tile.walkable'));
+            const totalDuration = 800; // Total time for all tiles to appear (ms)
+
+            // Shuffle the tiles array for random order
+            for (let i = tiles.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+            }
+
+            // Calculate delay between each tile
+            const delayPerTile = totalDuration / tiles.length;
+
+            // Trigger pop animation with staggered random delays
+            tiles.forEach((tile, index) => {
+                setTimeout(() => {
+                    tile.classList.remove('animate-in');
+                    tile.classList.add('pop-in');
+                }, index * delayPerTile);
+            });
+        }
+
+        // Reset word selection
+        function resetWordSelection() {
+            wordSearchState.currentWord = [];
+            wordSearchState.selectedTiles = [];
+            wordSearchState.isDragging = false;
+
+            // Clear visual highlights
+            document.querySelectorAll('.map-tile.selected').forEach(tile => {
+                tile.classList.remove('selected');
+            });
+
+            // Update display
+            document.getElementById('wordLetters').textContent = '---';
+
+            // Reset Rain to start position if needed
+            if (wordSearchState.startPosition && typeof gameState !== 'undefined') {
+                gameState.playerPosition = { ...wordSearchState.startPosition };
+                if (typeof renderOverworld === 'function') {
+                    renderOverworld();
+                }
+            }
+        }
+
+        // Add letter to current word
+        function addLetterToWord(x, y, letter) {
+            // Check if tile already selected
+            const alreadySelected = wordSearchState.selectedTiles.some(
+                tile => tile.x === x && tile.y === y
+            );
+
+            if (!alreadySelected) {
+                wordSearchState.selectedTiles.push({ x, y, letter });
+                wordSearchState.currentWord.push(letter);
+
+                // Update display
+                document.getElementById('wordLetters').textContent =
+                    wordSearchState.currentWord.join('') || '---';
+
+                // Highlight tile
+                const tile = document.querySelector(`[data-x="${x}"][data-y="${y}"]`);
+                if (tile) {
+                    tile.classList.add('selected');
+                }
+
+                // Check if valid word
+                checkForValidWord();
+            }
+        }
+
+        // Check if current letters form a valid word
+        function checkForValidWord() {
+            const currentWordStr = wordSearchState.currentWord.join('');
+
+            if (wordSearchState.targetWords.includes(currentWordStr)) {
+                console.log('Valid word found:', currentWordStr);
+
+                // Success animation
+                document.getElementById('wordLetters').classList.add('valid-word');
+                setTimeout(() => {
+                    document.getElementById('wordLetters').classList.remove('valid-word');
+                }, 1000);
+
+                // In a full implementation, this would unlock movement
+                alert(`Word found: ${currentWordStr}! Movement unlocked.`);
+
+                // Reset for next word
+                setTimeout(() => resetWordSelection(), 1500);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        // Generate strategic letter grid based on mode
+        function generateLetterGrid(mode = 'normal') {
+            const grid = [];
+
+            // Start with random letters
+            for (let y = 0; y < 6; y++) {
+                grid[y] = [];
+                for (let x = 0; x < 6; x++) {
+                    grid[y][x] = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+                }
+            }
+
+            if (mode === 'normal') {
+                // NORMAL MODE: Just random letters, no special placement
+                // Letters are purely decorative
+            }
+            else if (mode === 'adjacent' || mode === 'tap-path') {
+                // ADJACENT/TAP-PATH MODE: Letters placed in connected paths
+                // JOKE placed horizontally near Rain's starting position (2,2)
+                // Rain starts at (2,2), so place JOKE adjacent: starting at (1,1) going right
+                grid[1][1] = 'J';
+                grid[1][2] = 'O';
+                grid[1][3] = 'K';
+                grid[1][4] = 'E';
+
+                // Also place FUN vertically from (3,2) going down
+                grid[2][3] = 'F';
+                grid[3][3] = 'U';
+                grid[4][3] = 'N';
+
+                // Place HA adjacent at bottom
+                grid[3][1] = 'H';
+                grid[3][2] = 'A';
+
+                // Place LOL diagonally
+                grid[4][0] = 'L';
+                grid[4][1] = 'O';
+                grid[4][2] = 'L';
+            }
+            else if (mode === 'scatter') {
+                // SCATTER MODE: Letters spread across the board (not adjacent)
+                // Player must find and tap letters anywhere to spell LAUGH
+
+                // L in top-left area
+                grid[0][0] = 'L';
+
+                // A in top-right area
+                grid[0][5] = 'A';
+
+                // U in middle-left
+                grid[2][0] = 'U';
+
+                // G in middle-right
+                grid[3][5] = 'G';
+
+                // H in bottom-center
+                grid[5][3] = 'H';
+
+                // Add some decoy letters that could form wrong words
+                grid[1][2] = 'J';
+                grid[1][3] = 'O';
+                grid[2][4] = 'K';
+                grid[3][1] = 'E';
+                grid[4][4] = 'F';
+                grid[5][1] = 'N';
+            }
+
+            wordSearchState.letterGrid = grid;
+
+            // CRITICAL: Also populate gameState.tileLetters so game.js uses our letters
+            if (typeof gameState !== 'undefined') {
+                gameState.tileLetters = {};
+                for (let y = 0; y < 6; y++) {
+                    for (let x = 0; x < 6; x++) {
+                        const tileKey = `${x},${y}`;
+                        gameState.tileLetters[tileKey] = grid[y][x];
+                    }
+                }
+            }
+
+            return grid;
+        }
+
+        // ========================================
+        // TILEGRID-BASED RENDERING (Normal Mode)
+        // ========================================
+
+        /**
+         * Initialize and render using TileGrid component system
+         * Used for Normal mode - component-based rendering
+         */
+        function initializeTileGrid() {
+            // Create TileGrid instance if not exists
+            if (!wordSearchState.tileGrid) {
+                wordSearchState.tileGrid = new TileGrid(6, 6);
+            }
+
+            const grid = wordSearchState.tileGrid;
+
+            // Set player position from gameState
+            if (typeof gameState !== 'undefined') {
+                grid.setPlayerPosition(gameState.playerPosition.x, gameState.playerPosition.y);
+            }
+
+            // Create letter overrides from letterGrid
+            const letterOverrides = {};
+            if (wordSearchState.letterGrid) {
+                for (let y = 0; y < 6; y++) {
+                    for (let x = 0; x < 6; x++) {
+                        letterOverrides[`${x},${y}`] = wordSearchState.letterGrid[y][x];
+                    }
+                }
+            }
+
+            // Populate grid from mapLayout and characters
+            if (typeof mapLayout !== 'undefined' && typeof characters !== 'undefined') {
+                grid.populateFromLayout(mapLayout, characters, letterOverrides);
+            }
+
+            // Set up click handlers
+            grid.onTileClick = handleTileGridDotClick;
+            grid.onBuildingClick = handleTileGridBuildingClick;
+
+            return grid;
+        }
+
+        /**
+         * Handle dot tile click from TileGrid
+         */
+        function handleTileGridDotClick(x, y, letter, event) {
+            console.log(`Dot clicked: (${x}, ${y}) - Letter: ${letter}`);
+
+            // In Normal mode, move player to this tile
+            if (wordSearchState.mode === 'normal' && typeof handleTileClick === 'function') {
+                handleTileClick(x, y, false);
+            }
+        }
+
+        /**
+         * Handle building tile click from TileGrid
+         */
+        function handleTileGridBuildingClick(x, y, characterName, event) {
+            console.log(`Building clicked: (${x}, ${y}) - Character: ${characterName}`);
+
+            // Navigate to character or trigger encounter
+            if (typeof handleTileClick === 'function') {
+                handleTileClick(x, y, true);
+            }
+        }
+
+        /**
+         * Render overworld using TileGrid component system
+         * Alternative to game.js renderOverworld() for Normal mode
+         */
+        function renderOverworldWithTileGrid() {
+            const grid = initializeTileGrid();
+
+            // Generate the tile grid HTML
+            const mapHTML = renderTileGrid(grid);
+
+            const html = `
+                <div class="overworld-container">
+                    <div class="map-title">NEW YORK</div>
+
+                    <div class="map-container">
+                        <div class="compass-rose"></div>
+                        <div class="map-grid" id="tileGridContainer">
+                            ${mapHTML}
+                            <!-- Callout for Rain -->
+                            <div class="callout-template rain-callout" id="rainCallout" style="display: none;">
+                                <div class="callout-arrow arrow-bottom pos-center"></div>
+                                <div class="callout-content">
+                                    Tap a dot space to move Rain on the map.
+                                </div>
+                            </div>
+
+                            <!-- Location callout (hidden by default) -->
+                            <div class="callout-template location-callout" id="locationCallout" style="display: none;">
+                                <div class="callout-arrow" id="locationCalloutArrow"></div>
+                                <div class="callout-content" id="locationCalloutContent"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('conversationArea').innerHTML = html;
+
+            // Initialize after DOM is ready
+            requestAnimationFrame(() => {
+                const container = document.getElementById('tileGridContainer');
+
+                // Set up click handlers
+                if (container) {
+                    setupTileClickHandlers(grid, container);
+                }
+
+                // Render D3 buildings
+                initializeBuildings(grid);
+
+                // Position callouts
+                requestAnimationFrame(() => {
+                    if (typeof positionRainCallout === 'function') {
+                        positionRainCallout();
+                    }
+                    if (typeof addCharacterCalloutListeners === 'function') {
+                        addCharacterCalloutListeners();
+                    }
+                });
+            });
+
+            // Initialize Material Design icons
+            if (typeof initMaterialIcons === 'function') {
+                initMaterialIcons();
+            }
+        }
+
+        /**
+         * Update just the player position in the TileGrid
+         * Called when player moves (avoids full re-render)
+         */
+        function updatePlayerPositionInGrid(newX, newY) {
+            if (wordSearchState.tileGrid) {
+                wordSearchState.tileGrid.setPlayerPosition(newX, newY);
+                // For now, trigger full re-render (optimization can come later)
+                renderOverworldWithTileGrid();
+            }
+        }
+
+        // Setup data attributes on tiles after render
+        function setupTileDataAttributes() {
+            const tiles = document.querySelectorAll('.map-tile.walkable');
+            tiles.forEach(tile => {
+                // Extract position from onclick handler
+                const onclick = tile.getAttribute('onclick');
+                if (onclick) {
+                    const match = onclick.match(/handleTileClick\((\d+),\s*(\d+)/);
+                    if (match) {
+                        const x = parseInt(match[1]);
+                        const y = parseInt(match[2]);
+                        tile.dataset.x = x;
+                        tile.dataset.y = y;
+                        tile.dataset.letter = wordSearchState.letterGrid[y][x];
+
+                        // Add click listener for word modes
+                        tile.addEventListener('click', handleWordModeTileClick);
+                    }
+                }
+            });
+        }
+
+        // Handle tile clicks based on current mode
+        function handleWordModeTileClick(event) {
+            const mode = wordSearchState.mode;
+
+            // Normal mode - let game.js handle it
+            if (mode === 'normal') {
+                return;
+            }
+
+            // Stop the default game.js handler for word modes
+            event.stopPropagation();
+
+            const tile = event.currentTarget;
+            const x = parseInt(tile.dataset.x);
+            const y = parseInt(tile.dataset.y);
+            const letter = tile.dataset.letter;
+
+            if (mode === 'scatter') {
+                // Scatter mode: tap any tile to add letter
+                addLetterToWord(x, y, letter);
+            }
+            else if (mode === 'tap-path') {
+                // Tap-path mode: must be adjacent to last selected tile
+                if (wordSearchState.selectedTiles.length === 0) {
+                    // First tile - must be adjacent to Rain
+                    const rainX = gameState.playerPosition.x;
+                    const rainY = gameState.playerPosition.y;
+                    const isAdjacent = Math.abs(x - rainX) <= 1 && Math.abs(y - rainY) <= 1 && !(x === rainX && y === rainY);
+
+                    if (isAdjacent) {
+                        addLetterToWord(x, y, letter);
+                    } else {
+                        console.log('Must start adjacent to Rain');
+                    }
+                } else {
+                    // Subsequent tiles - must be adjacent to last selected
+                    const lastTile = wordSearchState.selectedTiles[wordSearchState.selectedTiles.length - 1];
+                    const isAdjacent = Math.abs(x - lastTile.x) <= 1 && Math.abs(y - lastTile.y) <= 1;
+
+                    if (isAdjacent) {
+                        addLetterToWord(x, y, letter);
+                    } else {
+                        console.log('Must select adjacent tiles');
+                    }
+                }
+            }
+            else if (mode === 'adjacent') {
+                // Adjacent trace mode: similar to tap-path but with drag support
+                // For now, same as tap-path (drag will be added later)
+                if (wordSearchState.selectedTiles.length === 0) {
+                    const rainX = gameState.playerPosition.x;
+                    const rainY = gameState.playerPosition.y;
+                    const isAdjacent = Math.abs(x - rainX) <= 1 && Math.abs(y - rainY) <= 1 && !(x === rainX && y === rainY);
+
+                    if (isAdjacent) {
+                        addLetterToWord(x, y, letter);
+                    }
+                } else {
+                    const lastTile = wordSearchState.selectedTiles[wordSearchState.selectedTiles.length - 1];
+                    const isAdjacent = Math.abs(x - lastTile.x) <= 1 && Math.abs(y - lastTile.y) <= 1;
+
+                    if (isAdjacent) {
+                        addLetterToWord(x, y, letter);
+                    }
+                }
+            }
+        }
+
+        // Flag to prevent game.js from auto-loading character conversations
+        window.forceCityMap = true;
+
+        // Get city name from URL parameter
+        function getCityFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const cityParam = urlParams.get('city');
+
+            if (cityParam) {
+                // Convert URL format (New-York) back to city name (New York)
+                return cityParam.replace(/-/g, ' ');
+            }
+            return 'New York'; // Default to New York
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Fix for mobile viewport height (Safari address bar issue)
+            function setViewportHeight() {
+                const vh = window.innerHeight * 0.01;
+                document.documentElement.style.setProperty('--vh', `${vh}px`);
+            }
+            setViewportHeight();
+            window.addEventListener('resize', setViewportHeight);
+            window.addEventListener('orientationchange', () => {
+                setTimeout(setViewportHeight, 100);
+            });
+
+            // Add fade-in animation to body
+            document.body.classList.add('page-fade-in');
+
+            // Get city name and update page title
+            const cityName = getCityFromURL();
+            document.title = `${cityName} - Joke Master`;
+
+            // Initialize Firebase first
+            await initializeFirebase();
+
+            // Load game.js dynamically after Firebase is ready
+            const gameScript = document.createElement('script');
+            gameScript.src = '../scripts/game.js';
+            gameScript.onload = function() {
+                // Force game state to overworld mode
+                if (typeof gameState !== 'undefined') {
+                    gameState.mode = 'overworld';
+                    // Enable tutorial step 1 so Lab callout can show after animation
+                    gameState.tutorialStep = 1;
+                    gameState.hasStartedWalking = true;
+                    // Set player to center position if they haven't started walking yet
+                    if (!gameState.hasStartedWalking) {
+                        gameState.playerPosition = { x: 2, y: 2 };
+                    }
+                    // Store start position for reset
+                    wordSearchState.startPosition = { ...gameState.playerPosition };
+                }
+
+                // Generate the letter grid before rendering (default to 'normal' mode)
+                generateLetterGrid('normal');
+
+                // Use TileGrid component system for Normal mode (default)
+                renderOverworldWithTileGrid();
+
+                // Trigger initial map and building animations (Normal mode is default)
+                setTimeout(() => animateMapAndBuildings(), 100);
+            };
+            document.body.appendChild(gameScript);
+        });
+    </script>
+</body>
+</html>

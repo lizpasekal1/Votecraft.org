@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#8B2635">
+    <link rel="manifest" href="/manifest.json">
+    <title>New York - Joke Master</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/styles.css">
+    <link rel="stylesheet" href="../styles/icons.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body class="city-page">
+    <div class="game-container">
+        <div class="game-content">
+            <div class="game-header">
+                <div class="header-banner">
+                    <div class="header-main">
+                        <div class="header-money" id="headerMoney">£0 FUNDING</div>
+                        <div class="header-laugh-energy" id="headerLaughEnergy">😂 3/10</div>
+                        <div class="header-collected" id="headerCollected">0 collected</div>
+                    </div>
+                    <div class="header-title">JOKE MASTER</div>
+                    <button class="sound-toggle" id="soundToggle" aria-label="Toggle sound">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px">
+                            <path d="M560-131v-82q90-26 145-100t55-168q0-94-55-168T560-749v-82q124 28 202 125.5T840-481q0 127-78 224.5T560-131ZM120-360v-240h160l200-200v640L280-360H120Zm440 40v-322q47 22 73.5 66t26.5 96q0 51-26.5 94.5T560-320ZM400-606l-86 86H200v80h114l86 86v-252ZM300-480Z"/>
+                        </svg>
+                    </button>
+                    <button class="test-map-btn" id="testMapBtn" aria-label="Test Map" onclick="window.location.href='test-map.html'">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px">
+                            <path d="m600-120-240-84-186 72q-20 8-37-4.5T120-170v-560q0-13 7.5-23t20.5-15l212-72 240 84 186-72q20-8 37 4.5t17 33.5v560q0 13-7.5 23T812-192l-212 72Zm-40-98v-468l-160-56v468l160 56Zm80 0 120-40v-474l-120 46v468Zm-440-10 120-46v-468l-120 40v474Zm440-458v468-468Zm-320-56v468-468Z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="conversation-area" id="conversationArea">
+                <!-- Flat map will be loaded here -->
+            </div>
+        </div>
+
+        <div class="action-icons" id="actionIcons">
+            <div class="action-icon" onclick="window.location.href='goal.html'">
+                <div class="icon-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960">
+                        <path d="M160-120q-33 0-56.5-23.5T80-200v-440q0-33 23.5-56.5T160-720h160v-80q0-33 23.5-56.5T400-880h160q33 0 56.5 23.5T640-800v80h160q33 0 56.5 23.5T880-640v440q0 33-23.5 56.5T800-120H160Zm240-600h160v-80H400v80Zm400 360H600v80H360v-80H160v160h640v-160Zm-360 0h80v-80h-80v80Zm-280-80h200v-80h240v80h200v-200H160v200Zm320 40Z"/>
+                    </svg>
+                </div>
+                <div class="icon-label">GOAL</div>
+            </div>
+            <div class="action-icon" onclick="window.location.href='contacts.html'">
+                <div class="icon-circle">👤</div>
+                <div class="icon-label">CONTACTS</div>
+            </div>
+            <div class="action-icon" onclick="window.location.href='globe.html'">
+                <div class="icon-circle">🌍</div>
+                <div class="icon-label">GLOBE</div>
+            </div>
+            <div class="action-icon" onclick="window.location.href='your-jokes.html'">
+                <div class="icon-circle">🎭</div>
+                <div class="icon-label">JOKES</div>
+            </div>
+            <div class="action-icon" onclick="window.location.href='bank.html'">
+                <div class="icon-circle">£</div>
+                <div class="icon-label">BANK</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+    <!-- Firebase config and database helper -->
+    <script src="../scripts/firebase-config.js"></script>
+    <script src="../scripts/database.js"></script>
+
+    <script src="../scripts/icons.js"></script>
+    <script src="../scripts/sound-toggle.js"></script>
+    <script src="../scripts/d3-buildings.js"></script>
+
+    <script>
+        // Flag to prevent game.js from auto-loading character conversations
+        window.forceCityMap = true;
+
+        // Get city name from URL parameter
+        function getCityFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const cityParam = urlParams.get('city');
+
+            if (cityParam) {
+                // Convert URL format (New-York) back to city name (New York)
+                return cityParam.replace(/-/g, ' ');
+            }
+            return 'New York'; // Default to New York
+        }
+
+        // ========================================
+        // ANIMATION FUNCTIONS
+        // ========================================
+
+        // Animate map bounce-in, then buildings, tiles, Rain, and callout
+        function animateMapAndBuildings() {
+            const mapContainer = document.querySelector('.map-container');
+            if (!mapContainer) return;
+
+            // Hide buildings first
+            const buildings = document.querySelectorAll('.d3-building-container');
+            buildings.forEach(building => {
+                building.classList.remove('bounce-in');
+                building.classList.add('animate-in');
+            });
+
+            // Hide tiles (dots with letters)
+            const tiles = document.querySelectorAll('.map-tile.walkable');
+            tiles.forEach(tile => {
+                tile.classList.remove('pop-in');
+                tile.classList.add('animate-in');
+            });
+
+            // Hide Rain (player)
+            const player = document.querySelector('.map-tile.player');
+            if (player) {
+                player.classList.remove('zoom-in', 'zoom-complete');
+                player.classList.add('animate-in');
+            }
+
+            // Start map animation
+            mapContainer.classList.remove('bounce-in');
+            mapContainer.classList.add('animate-in');
+
+            // Small delay then trigger map bounce
+            requestAnimationFrame(() => {
+                mapContainer.classList.remove('animate-in');
+                mapContainer.classList.add('bounce-in');
+            });
+
+            // After map animation completes (700ms), trigger building and tile animations
+            setTimeout(() => {
+                animateBuildingsSequentially();
+                animateTilesRandomly();
+
+                // Calculate when buildings and tiles finish
+                const buildingCount = buildings.length;
+                const buildingDuration = buildingCount * 150 + 600; // stagger + animation
+                const tileDuration = 800; // total tile animation time
+
+                // After buildings/tiles done, animate Rain
+                const longerDuration = Math.max(buildingDuration, tileDuration);
+                setTimeout(() => {
+                    animateRainIn();
+                }, longerDuration);
+            }, 700);
+        }
+
+        // Animate Rain zooming in
+        function animateRainIn() {
+            const player = document.querySelector('.map-tile.player');
+            if (player) {
+                player.classList.remove('animate-in');
+                player.classList.add('zoom-in');
+
+                // After Rain zoom animation (500ms), resume pulse and show callout
+                setTimeout(() => {
+                    // Switch from zoom-in to zoom-complete to resume pulse animation
+                    player.classList.remove('zoom-in');
+                    player.classList.add('zoom-complete');
+
+                    showCalloutWithAnimation();
+                }, 500);
+            }
+        }
+
+        // Show Rain's callout with fade-in animation
+        function showCalloutWithAnimation() {
+            // Find the existing Rain callout from game.js (in the map-grid)
+            const rainCallout = document.getElementById('rainCallout');
+            if (rainCallout) {
+                // Update the text content
+                const calloutContent = rainCallout.querySelector('.callout-content');
+                if (calloutContent) {
+                    calloutContent.textContent = 'Tap a dot space to move Rain on the map.';
+                }
+
+                // Show the callout with animation
+                rainCallout.style.display = '';
+                rainCallout.classList.remove('visible');
+
+                // Trigger fade-in animation
+                requestAnimationFrame(() => {
+                    rainCallout.classList.add('visible', 'animate-fade-in');
+                });
+            }
+        }
+
+        // Animate buildings bouncing in one after another
+        function animateBuildingsSequentially() {
+            const buildings = document.querySelectorAll('.d3-building-container');
+            const delay = 150; // ms between each building
+
+            // Trigger bounce animation with staggered delays
+            buildings.forEach((building, index) => {
+                setTimeout(() => {
+                    building.classList.remove('animate-in');
+                    building.classList.add('bounce-in');
+                }, index * delay);
+            });
+        }
+
+        // Animate tiles appearing in random order
+        function animateTilesRandomly() {
+            const tiles = Array.from(document.querySelectorAll('.map-tile.walkable'));
+            const totalDuration = 800; // Total time for all tiles to appear (ms)
+
+            // Shuffle the tiles array for random order
+            for (let i = tiles.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+            }
+
+            // Calculate delay between each tile
+            const delayPerTile = totalDuration / tiles.length;
+
+            // Trigger pop animation with staggered random delays
+            tiles.forEach((tile, index) => {
+                setTimeout(() => {
+                    tile.classList.remove('animate-in');
+                    tile.classList.add('pop-in');
+                }, index * delayPerTile);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Fix for mobile viewport height (Safari address bar issue)
+            function setViewportHeight() {
+                const vh = window.innerHeight * 0.01;
+                document.documentElement.style.setProperty('--vh', `${vh}px`);
+            }
+            setViewportHeight();
+            window.addEventListener('resize', setViewportHeight);
+            window.addEventListener('orientationchange', () => {
+                setTimeout(setViewportHeight, 100);
+            });
+
+            // Add fade-in animation to body
+            document.body.classList.add('page-fade-in');
+
+            // Get city name and update page title
+            const cityName = getCityFromURL();
+            document.title = `${cityName} - Joke Master`;
+
+            // Initialize Firebase first
+            await initializeFirebase();
+
+            // Load game.js dynamically after Firebase is ready
+            const gameScript = document.createElement('script');
+            gameScript.src = '../scripts/game.js';
+            gameScript.onload = function() {
+                // Force game state to overworld mode
+                if (typeof gameState !== 'undefined') {
+                    gameState.mode = 'overworld';
+                    gameState.tutorialStep = 1;
+                    gameState.hasStartedWalking = true;
+                    // Set player to center position if they haven't started walking yet
+                    if (!gameState.hasStartedWalking) {
+                        gameState.playerPosition = { x: 2, y: 2 };
+                    }
+                }
+
+                // Once game.js is loaded, render the overworld (flat map)
+                if (typeof renderOverworld === 'function') {
+                    renderOverworld();
+
+                    // Trigger the intro animation sequence
+                    setTimeout(() => animateMapAndBuildings(), 100);
+                }
+            };
+            document.body.appendChild(gameScript);
+        });
+    </script>
+</body>
+</html>
