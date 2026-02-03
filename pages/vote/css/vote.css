@@ -587,7 +587,7 @@ body {
     flex-direction: column;
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
+    overflow-y: hidden;
     padding-top: 30px;
 }
 
