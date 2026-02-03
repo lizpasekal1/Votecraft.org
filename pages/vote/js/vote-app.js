@@ -89,7 +89,9 @@ class VoteApp {
         if (!card || card.style.display === 'none') return;
         const h = card.offsetHeight;
         if (h > 0) {
-            document.getElementById('issue-hero').style.height = h + 'px';
+            const hero = document.getElementById('issue-hero');
+            hero.style.height = h + 'px';
+            hero.style.width = h + 'px';
             document.getElementById('issue-map-card').style.height = h + 'px';
             if (this.issueMap) this.issueMap.invalidateSize();
         }
