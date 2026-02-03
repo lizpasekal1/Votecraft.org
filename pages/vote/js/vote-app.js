@@ -84,6 +84,17 @@ class VoteApp {
         }).addTo(this.issueMap);
     }
 
+    syncHeights() {
+        const card = this.repAlignmentCard;
+        if (!card || card.style.display === 'none') return;
+        const h = card.offsetHeight;
+        if (h > 0) {
+            document.getElementById('issue-hero').style.height = h + 'px';
+            document.getElementById('issue-map-card').style.height = h + 'px';
+            if (this.issueMap) this.issueMap.invalidateSize();
+        }
+    }
+
     // ========== EVENTS ==========
 
     bindEvents() {
@@ -574,8 +585,11 @@ class VoteApp {
             this.repAlignmentBills.innerHTML = '<p class="alignment-prompt">Search for your location and select a representative to see how they align on this issue.</p>';
         }
 
-        // Initialize / refresh the Leaflet map
-        setTimeout(() => this.initMap(), 50);
+        // Initialize / refresh the Leaflet map, then sync heights
+        setTimeout(() => {
+            this.initMap();
+            this.syncHeights();
+        }, 50);
 
         // Load top 2 supporters widget
         this.loadTopSupporters(issue);

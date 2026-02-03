@@ -694,8 +694,7 @@ body {
     overflow: hidden;
     background: #f8f9fa;
     border: 1px solid rgba(255, 255, 255, 0.25);
-    flex: 1;
-    min-height: 0;
+    flex-shrink: 0;
 }
 
 #issue-map {
@@ -715,7 +714,7 @@ body {
     border-radius: 12px;
     overflow: hidden;
     border: 3px solid rgba(255, 255, 255, 0.2);
-    aspect-ratio: 1/1;
+    flex-shrink: 0;
 }
 
 .issue-hero img {
@@ -731,7 +730,8 @@ body {
     border-radius: 12px;
     padding: 16px;
     background: transparent;
-    aspect-ratio: 1/1;
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     overflow: hidden;
