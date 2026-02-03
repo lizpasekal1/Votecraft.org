@@ -9,6 +9,9 @@ dist/
 .env.local
 .env.*.local
 
+# Server-side files containing API keys (deployed separately)
+pages/api/
+
 # IDE
 .vscode/
 .idea/
