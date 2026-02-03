@@ -42,15 +42,12 @@ body {
 .vote-widget {
     width: 100%;
     height: 100vh;
-    display: flex;
-    flex-direction: column;
     overflow: hidden;
 }
 
 .vote-layout {
     display: flex;
-    flex: 1;
-    min-height: 0;
+    height: 100vh;
 }
 
 /* ========== LEFT PANEL ========== */
@@ -1062,6 +1059,7 @@ body {
 /* ========== NONPROFITS ========== */
 
 .nonprofits-section {
+    margin: 0 -40px;
     padding: 16px 40px 20px;
     background: #0d1b3a;
     color: #fff;
@@ -1256,6 +1254,11 @@ body {
         padding: 24px 16px;
     }
 
+    .nonprofits-section {
+        margin: 0 -16px;
+        padding: 16px 16px 20px;
+    }
+
     .nonprofits-grid {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -1291,6 +1294,11 @@ body {
 
     .right-panel {
         padding: 20px 12px;
+    }
+
+    .nonprofits-section {
+        margin: 0 -12px;
+        padding: 16px 12px 20px;
     }
 
     .nonprofits-grid {
