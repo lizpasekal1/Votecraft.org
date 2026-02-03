@@ -73,24 +73,28 @@
 
                 <!-- VIEW 2: Issue Detail -->
                 <div id="issue-detail-view" class="view-container" style="display:none;">
-                    <button id="back-btn" class="btn-back">BACK</button>
+                    <button id="back-btn" class="btn-back">OTHER ISSUES</button>
+
+                    <h1 id="issue-title" class="issue-detail-title"></h1>
 
                     <div class="issue-detail-layout">
-                        <div class="issue-content">
-                            <h1 id="issue-title" class="issue-detail-title"></h1>
+                        <div class="issue-hero-half">
                             <div id="issue-hero" class="issue-hero">
                                 <img id="issue-hero-img" src="" alt="">
                             </div>
-                            <p id="issue-description" class="issue-detail-desc"></p>
                         </div>
 
-                        <div id="rep-alignment-card" class="rep-alignment-card" style="display:none;">
-                            <div id="rep-card-photo" class="rep-card-photo"></div>
-                            <h3 id="rep-card-name" class="rep-card-name"></h3>
-                            <div id="rep-alignment-score" class="alignment-score"></div>
-                            <div id="rep-alignment-bills" class="alignment-bills"></div>
+                        <div class="issue-rep-half">
+                            <div id="rep-alignment-card" class="rep-alignment-card" style="display:none;">
+                                <div id="rep-card-photo" class="rep-card-photo"></div>
+                                <h3 id="rep-card-name" class="rep-card-name"></h3>
+                                <div id="rep-alignment-score" class="alignment-score"></div>
+                                <div id="rep-alignment-bills" class="alignment-bills"></div>
+                            </div>
                         </div>
                     </div>
+
+                    <p id="issue-description" class="issue-detail-desc"></p>
 
                     <div class="nonprofits-section">
                         <div id="nonprofits-grid" class="nonprofits-grid"></div>
@@ -100,9 +104,9 @@
         </div>
     </div>
 
-    <link rel="stylesheet" href="css/vote.css?v=5">
-    <script src="js/issues-data.js?v=5"></script>
-    <script src="js/civic-api.js?v=5"></script>
-    <script src="js/vote-app.js?v=5"></script>
+    <link rel="stylesheet" href="css/vote.css?v=28">
+    <script src="js/issues-data.js?v=28"></script>
+    <script src="js/civic-api.js?v=28"></script>
+    <script src="js/vote-app.js?v=28"></script>
 </body>
 </html>
