@@ -689,14 +689,6 @@ body {
     min-width: 0;
 }
 
-.issue-col:first-child {
-    align-items: flex-end;
-}
-
-.issue-col:nth-child(2) {
-    min-height: 0;
-}
-
 .issue-map-card {
     border-radius: var(--radius);
     overflow: hidden;
@@ -723,8 +715,6 @@ body {
     overflow: hidden;
     border: 3px solid rgba(255, 255, 255, 0.2);
     flex-shrink: 0;
-    aspect-ratio: 1 / 1;
-    width: 100%;
 }
 
 .issue-hero img {
@@ -932,9 +922,6 @@ body {
     padding: 24px;
     color: var(--text);
     text-align: center;
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
 }
 
 .rep-alignment-card.placeholder {
