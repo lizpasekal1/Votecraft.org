@@ -570,7 +570,7 @@ body {
     flex: 1;
     background: var(--right-bg);
     color: var(--right-text);
-    padding: 10px 40px 40px;
+    padding: 0 40px 40px;
     position: relative;
     overflow: hidden;
     display: flex;
@@ -664,7 +664,7 @@ body {
     border: none;
     border-radius: var(--radius);
     cursor: pointer;
-    margin-bottom: 24px;
+    margin-bottom: 12px;
     letter-spacing: 0.5px;
 }
 
