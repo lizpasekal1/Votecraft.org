@@ -587,6 +587,7 @@ body {
     flex-direction: column;
     flex: 1;
     min-height: 0;
+    overflow-y: auto;
 }
 
 .right-panel-title {
@@ -674,21 +675,17 @@ body {
 .issue-detail-layout {
     display: flex;
     gap: 24px;
-    align-items: stretch;
-    flex: 1;
-    min-height: 0;
+    align-items: flex-start;
 }
 
 .issue-hero-half {
     flex: 1;
     min-width: 0;
-    overflow-y: auto;
 }
 
 .issue-rep-half {
     flex: 1;
     min-width: 0;
-    overflow-y: auto;
 }
 
 .issue-detail-title {
@@ -959,17 +956,7 @@ body {
 .nonprofits-section {
     margin-top: 40px;
     padding-top: 24px;
-    position: relative;
-}
-
-.nonprofits-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: calc(200% + 24px);
-    height: 2px;
-    background: rgba(255, 255, 255, 0.25);
+    border-top: 2px solid rgba(255, 255, 255, 0.25);
 }
 
 .nonprofits-grid {
@@ -1105,11 +1092,6 @@ body {
 
     .issue-detail-layout {
         flex-direction: column;
-    }
-
-    .issue-hero-half,
-    .issue-rep-half {
-        overflow-y: visible;
     }
 
     #issue-detail-view {
