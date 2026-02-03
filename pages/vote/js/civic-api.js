@@ -88,6 +88,37 @@ const CivicAPI = {
     },
 
     /**
+     * Get all legislators for a jurisdiction (state or federal)
+     * @param {string} jurisdiction - Jurisdiction name (e.g., "Massachusetts")
+     * @param {number} perPage - Results per page (default 300 to get all)
+     * @returns {Promise<Array>} - Array of legislator objects
+     */
+    async getAllLegislators(jurisdiction, perPage = 300) {
+        const params = new URLSearchParams({
+            endpoint: 'people',
+            jurisdiction: jurisdiction,
+            per_page: perPage.toString()
+        });
+
+        const url = `${this.OPENSTATES_PROXY}?${params.toString()}`;
+        console.log('Fetching all legislators for:', jurisdiction);
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.error('All legislators API error:', response.status);
+                return [];
+            }
+            const data = await response.json();
+            console.log(`All legislators: ${data.results?.length || 0} found`);
+            return data.results || [];
+        } catch (error) {
+            console.error('Error fetching all legislators:', error);
+            return [];
+        }
+    },
+
+    /**
      * Get representatives for an address (main entry point)
      * @param {string} address - Full address to look up
      * @returns {Promise<object>} - Representatives in normalized format
@@ -179,9 +210,6 @@ const CivicAPI = {
             per_page: limit.toString(),
             sort: 'latest_action_desc'
         });
-        // Add 'include' twice (votes + sponsorships)
-        params.append('include', 'votes');
-
         const url = `${this.OPENSTATES_PROXY}?${params.toString()}`;
 
         console.log(`  Bills API URL: ${url}`);
@@ -274,7 +302,6 @@ const CivicAPI = {
             per_page: limit.toString(),
             sort: 'latest_action_desc'
         });
-        params.append('include', 'votes');
 
         const url = `${this.OPENSTATES_PROXY}?${params.toString()}`;
 
