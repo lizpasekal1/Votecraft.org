@@ -922,6 +922,8 @@ body {
     padding: 24px;
     color: var(--text);
     text-align: center;
+    flex: 1;
+    overflow-y: auto;
 }
 
 .rep-alignment-card.placeholder {

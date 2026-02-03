@@ -87,7 +87,9 @@ class VoteApp {
     syncHeights() {
         const card = this.repAlignmentCard;
         if (!card || card.style.display === 'none') return;
+        card.style.flex = 'none';
         const h = card.offsetHeight;
+        card.style.flex = '';
         if (h > 0) {
             const hero = document.getElementById('issue-hero');
             hero.style.height = h + 'px';
