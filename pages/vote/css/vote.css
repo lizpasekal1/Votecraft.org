@@ -731,7 +731,10 @@ body {
 
 .top-supporters-widget.placeholder .top-supporters-title {
     color: var(--primary);
-    font-size: 1rem;
+    font-size: 1.3rem;
+    text-align: center;
+    text-transform: none;
+    letter-spacing: normal;
 }
 
 .top-supporters-widget.placeholder .top-supporter-item {
