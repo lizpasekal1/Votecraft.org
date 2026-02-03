@@ -85,14 +85,10 @@ class VoteApp {
     }
 
     syncHeights() {
-        const card = this.repAlignmentCard;
-        if (!card || card.style.display === 'none') return;
-        const h = card.offsetHeight;
+        const hero = document.getElementById('issue-hero');
+        if (!hero) return;
+        const h = hero.offsetHeight;
         if (h > 0) {
-            const hero = document.getElementById('issue-hero');
-            hero.style.height = h + 'px';
-            hero.style.width = h + 'px';
-            document.querySelector('.issue-desc-box').style.width = h + 'px';
             document.getElementById('issue-map-card').style.height = h + 'px';
             if (this.issueMap) this.issueMap.invalidateSize();
         }
