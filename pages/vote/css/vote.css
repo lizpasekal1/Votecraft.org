@@ -679,7 +679,7 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 20px;
-    align-items: start;
+    align-items: stretch;
 }
 
 .issue-col {
@@ -690,10 +690,11 @@ body {
 }
 
 .issue-map-card {
-    border-radius: 12px;
+    border-radius: var(--radius);
     overflow: hidden;
-    background: #fff;
-    aspect-ratio: 4/3;
+    background: #f8f9fa;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    flex: 1;
 }
 
 .issue-map-card iframe {
