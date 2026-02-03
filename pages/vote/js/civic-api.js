@@ -328,7 +328,7 @@ const CivicAPI = {
             endpoint: 'bills',
             jurisdiction: jurisdiction,
             q: subject,
-            include: 'sponsorships',
+            include: 'sponsorships,votes',
             per_page: limit.toString(),
             sort: 'latest_action_desc'
         });

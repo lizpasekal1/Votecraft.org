@@ -39,6 +39,9 @@ class VoteApp {
         this.repAlignmentScore = document.getElementById('rep-alignment-score');
         this.repAlignmentBills = document.getElementById('rep-alignment-bills');
         this.nonprofitsGrid = document.getElementById('nonprofits-grid');
+        this.topSupportersWidget = document.getElementById('top-supporters-widget');
+        this.topSupportersList = document.getElementById('top-supporters-list');
+        this.viewAllSupportersBtn = document.getElementById('view-all-supporters-btn');
 
         // State
         this.legislators = [];
@@ -47,6 +50,7 @@ class VoteApp {
         this.currentJurisdiction = null;
         this.currentCoords = null;
         this.billCache = {};
+        this.activeStance = null;
 
         this.hasSearched = false;
 
@@ -75,6 +79,8 @@ class VoteApp {
 
         this.backBtn.addEventListener('click', () => this.goBack());
 
+        this.viewAllSupportersBtn.addEventListener('click', () => this.openSidebarSupporters());
+
         // Issue grid click delegation
         this.issuesGrid.addEventListener('click', (e) => {
             const card = e.target.closest('.issue-card');
@@ -83,6 +89,28 @@ class VoteApp {
 
         // Issues sidebar click delegation
         this.issuesSidebarList.addEventListener('click', (e) => {
+            // Stance button clicks
+            const stanceBtn = e.target.closest('.stance-btn');
+            if (stanceBtn) {
+                e.stopPropagation();
+                const issueId = stanceBtn.dataset.issueId;
+                const stance = stanceBtn.dataset.stance;
+                this.toggleStance(issueId, stance);
+                return;
+            }
+
+            // Stance rep item clicks
+            const stanceRep = e.target.closest('.stance-rep-item');
+            if (stanceRep) {
+                e.stopPropagation();
+                const index = parseInt(stanceRep.dataset.index);
+                if (!isNaN(index) && this.legislators[index]) {
+                    this.selectRep(this.legislators[index]);
+                }
+                return;
+            }
+
+            // Issue item clicks
             const item = e.target.closest('.issue-sidebar-item');
             if (item) this.showIssueDetail(item.dataset.issueId);
         });
@@ -115,6 +143,7 @@ class VoteApp {
         this.currentJurisdiction = null;
         this.currentCoords = null;
         this.billCache = {};
+        this.activeStance = null;
         this.hasSearched = false;
 
         // Reset views
@@ -414,8 +443,16 @@ class VoteApp {
         this.selectedRep = legislator;
         const index = this.legislators.indexOf(legislator);
 
-        // Update visual selection
+        // Update visual selection in reps panel
         document.querySelectorAll('.rep-item').forEach(item => {
+            item.classList.remove('selected');
+            if (parseInt(item.dataset.index) === index) {
+                item.classList.add('selected');
+            }
+        });
+
+        // Update visual selection in stance list
+        document.querySelectorAll('.stance-rep-item').forEach(item => {
             item.classList.remove('selected');
             if (parseInt(item.dataset.index) === index) {
                 item.classList.add('selected');
@@ -443,11 +480,29 @@ class VoteApp {
     }
 
     renderIssuesSidebar() {
-        this.issuesSidebarList.innerHTML = window.ISSUES_CATALOG.map(issue => `
-            <div class="issue-sidebar-item" data-issue-id="${issue.id}">
-                ${issue.title}
-            </div>
-        `).join('');
+        const activeIssueId = this.selectedIssue ? this.selectedIssue.id : null;
+        const activeStance = this.activeStance || null;
+
+        this.issuesSidebarList.innerHTML = window.ISSUES_CATALOG.map(issue => {
+            const isActive = issue.id === activeIssueId;
+            let html = `
+                <div class="issue-sidebar-item ${isActive ? 'active' : ''}" data-issue-id="${issue.id}">
+                    ${issue.title}`;
+
+            if (isActive) {
+                html += `
+                    <div class="issue-stance-buttons">
+                        <button class="stance-btn ${activeStance === 'supporters' ? 'active' : ''}"
+                                data-issue-id="${issue.id}" data-stance="supporters">Supporters</button>
+                        <button class="stance-btn opposed ${activeStance === 'opposed' ? 'active' : ''}"
+                                data-issue-id="${issue.id}" data-stance="opposed">Opposed</button>
+                    </div>
+                    <div id="stance-list-${issue.id}" class="stance-list" style="${activeStance ? '' : 'display:none;'}"></div>`;
+            }
+
+            html += `</div>`;
+            return html;
+        }).join('');
     }
 
     // ========== RIGHT PANEL: ISSUE DETAIL ==========
@@ -457,6 +512,7 @@ class VoteApp {
         if (!issue) return;
 
         this.selectedIssue = issue;
+        this.activeStance = null;
 
         // Switch views
         this.issuesGridView.style.display = 'none';
@@ -471,6 +527,9 @@ class VoteApp {
         // Render nonprofits
         this.renderNonprofits(issue);
 
+        // Re-render sidebar to show accordion buttons for selected issue
+        this.renderIssuesSidebar();
+
         // Show rep alignment if a rep is selected
         if (this.selectedRep) {
             this.repAlignmentCard.style.display = '';
@@ -482,6 +541,9 @@ class VoteApp {
             this.repAlignmentScore.textContent = '';
             this.repAlignmentBills.innerHTML = '<p class="alignment-prompt">Search for your location and select a representative to see how they align on this issue.</p>';
         }
+
+        // Load top 2 supporters widget
+        this.loadTopSupporters(issue);
     }
 
     renderNonprofits(issue) {
@@ -508,6 +570,289 @@ class VoteApp {
         this.issueDetailView.style.display = 'none';
         this.issuesGridView.style.display = '';
         this.selectedIssue = null;
+        this.activeStance = null;
+        this.renderIssuesSidebar();
+    }
+
+    // ========== SIDEBAR STANCE ACCORDION ==========
+
+    toggleStance(issueId, stance) {
+        const issue = window.ISSUES_CATALOG.find(i => i.id === issueId);
+        if (!issue) return;
+
+        // Toggle off if already active
+        if (this.activeStance === stance) {
+            this.activeStance = null;
+            this.renderIssuesSidebar();
+            return;
+        }
+
+        this.activeStance = stance;
+        this.renderIssuesSidebar();
+
+        if (stance === 'supporters') {
+            this.loadIssueSupporters(issue);
+        } else {
+            this.loadIssueOpposed(issue);
+        }
+    }
+
+    renderStancePlaceholders(listEl) {
+        listEl.innerHTML = [
+            { name: 'Your Senator', party: '???', chamber: 'upper', label: 'Senate' },
+            { name: 'Your Representative', party: '???', chamber: 'lower', label: 'House' }
+        ].map(p => `
+            <div class="stance-rep-item placeholder">
+                <div class="stance-rep-photo">${this.getInitials(p.name)}</div>
+                <div class="stance-rep-info">
+                    <div class="stance-rep-name">${p.name}</div>
+                    <div class="stance-rep-detail">${p.party}</div>
+                </div>
+                <span class="chamber-badge ${p.chamber}">${p.label}</span>
+            </div>
+        `).join('');
+    }
+
+    async loadIssueSupporters(issue) {
+        const listEl = document.getElementById(`stance-list-${issue.id}`);
+        if (!listEl) return;
+
+        listEl.style.display = '';
+
+        // Show placeholders if no location searched
+        if (!this.currentJurisdiction || this.legislators.length === 0) {
+            this.renderStancePlaceholders(listEl);
+            return;
+        }
+
+        listEl.innerHTML = '<div class="stance-loading"><div class="mini-loader"></div>Finding supporters...</div>';
+
+        const jurisdiction = this.currentJurisdiction;
+
+        // Fetch bills (reuses billCache)
+        const allBills = await this.fetchIssueBills(issue, jurisdiction);
+
+        if (allBills.length === 0) {
+            listEl.innerHTML = '<div class="stance-empty">No related bills found in current session.</div>';
+            return;
+        }
+
+        // Check all legislators for sponsorship
+        const supporters = [];
+        for (const leg of this.legislators) {
+            const alignment = this.computeAlignmentScore(leg, allBills);
+            if (alignment.sponsoredCount > 0) {
+                supporters.push({ legislator: leg, count: alignment.sponsoredCount });
+            }
+        }
+
+        supporters.sort((a, b) => b.count - a.count);
+
+        if (supporters.length === 0) {
+            listEl.innerHTML = '<div class="stance-empty">No legislators found who sponsored related bills.</div>';
+            return;
+        }
+
+        listEl.innerHTML = supporters.map(s => this.renderStanceRepItem(s.legislator, `${s.count} bill${s.count === 1 ? '' : 's'}`, false)).join('');
+    }
+
+    async loadIssueOpposed(issue) {
+        const listEl = document.getElementById(`stance-list-${issue.id}`);
+        if (!listEl) return;
+
+        listEl.style.display = '';
+
+        // Show placeholders if no location searched
+        if (!this.currentJurisdiction || this.legislators.length === 0) {
+            this.renderStancePlaceholders(listEl);
+            return;
+        }
+
+        listEl.innerHTML = '<div class="stance-loading"><div class="mini-loader"></div>Finding opposition...</div>';
+
+        const jurisdiction = this.currentJurisdiction;
+
+        // Fetch bills (reuses billCache — now includes votes)
+        const allBills = await this.fetchIssueBills(issue, jurisdiction);
+
+        if (allBills.length === 0) {
+            listEl.innerHTML = '<div class="stance-empty">No related bills found in current session.</div>';
+            return;
+        }
+
+        // Find legislators who voted nay on related bills
+        const opposedMap = {};
+        for (const bill of allBills) {
+            if (!bill.votes || bill.votes.length === 0) continue;
+            for (const vote of bill.votes) {
+                const individualVotes = vote.votes || [];
+                for (const leg of this.legislators) {
+                    const lastName = leg.name.split(' ').pop().toLowerCase();
+                    const theirVote = individualVotes.find(v => {
+                        const voterName = (v.voter_name || '').toLowerCase();
+                        return voterName.includes(lastName) || lastName.includes(voterName);
+                    });
+                    if (theirVote && theirVote.option === 'nay') {
+                        const key = leg.id || leg.name;
+                        if (!opposedMap[key]) {
+                            opposedMap[key] = { legislator: leg, count: 0 };
+                        }
+                        opposedMap[key].count++;
+                    }
+                }
+            }
+        }
+
+        const opposed = Object.values(opposedMap).sort((a, b) => b.count - a.count);
+
+        if (opposed.length === 0) {
+            listEl.innerHTML = '<div class="stance-empty">No nay votes found on related bills.</div>';
+            return;
+        }
+
+        listEl.innerHTML = opposed.map(o => this.renderStanceRepItem(o.legislator, `${o.count} nay vote${o.count === 1 ? '' : 's'}`, true)).join('');
+    }
+
+    async fetchIssueBills(issue, jurisdiction) {
+        const cacheKey = `${issue.id}_${jurisdiction}`;
+        if (this.billCache[cacheKey]) {
+            return this.billCache[cacheKey];
+        }
+
+        const allBills = [];
+        const seenIds = new Set();
+
+        for (const keyword of issue.billKeywords) {
+            try {
+                const bills = await window.CivicAPI.getBillsBySubject(jurisdiction, keyword, 10);
+                for (const bill of bills) {
+                    if (!seenIds.has(bill.id)) {
+                        seenIds.add(bill.id);
+                        allBills.push(bill);
+                    }
+                }
+            } catch (err) {
+                console.error(`Error fetching bills for keyword "${keyword}":`, err);
+            }
+        }
+
+        this.billCache[cacheKey] = allBills;
+        return allBills;
+    }
+
+    renderStanceRepItem(legislator, detail, isOpposed) {
+        const index = this.legislators.indexOf(legislator);
+        const photoHtml = legislator.photoUrl
+            ? `<img src="${legislator.photoUrl}" alt="${legislator.name}" onerror="this.style.display='none'; this.parentElement.textContent='${this.getInitials(legislator.name)}';">`
+            : this.getInitials(legislator.name);
+
+        const partyLower = legislator.party.toLowerCase();
+        let partyClass = '';
+        if (partyLower.includes('democrat')) partyClass = 'democratic';
+        else if (partyLower.includes('republican')) partyClass = 'republican';
+
+        const isSelected = this.selectedRep && this.legislators.indexOf(this.selectedRep) === index;
+
+        return `
+            <div class="stance-rep-item ${isSelected ? 'selected' : ''}" data-index="${index}">
+                <div class="stance-rep-photo">${photoHtml}</div>
+                <div class="stance-rep-info">
+                    <div class="stance-rep-name">${legislator.name}</div>
+                    <div class="stance-rep-detail"><span class="rep-party ${partyClass}">${legislator.party}</span></div>
+                </div>
+                <span class="stance-bill-count ${isOpposed ? 'opposed' : ''}">${detail}</span>
+            </div>
+        `;
+    }
+
+    // ========== TOP SUPPORTERS WIDGET (Right Panel) ==========
+
+    async loadTopSupporters(issue) {
+        if (!this.currentJurisdiction || this.legislators.length === 0) {
+            // Show placeholder state — white card matching rep alignment card
+            this.topSupportersWidget.style.display = '';
+            this.topSupportersWidget.classList.add('placeholder');
+            this.viewAllSupportersBtn.textContent = 'All Supporters';
+            this.topSupportersList.innerHTML = [
+                { name: 'Your Senator', party: '???', chamber: 'upper', label: 'Senate' },
+                { name: 'Your Representative', party: '???', chamber: 'lower', label: 'House' }
+            ].map(p => `
+                <div class="top-supporter-item placeholder">
+                    <div class="top-supporter-photo">${this.getInitials(p.name)}</div>
+                    <div class="top-supporter-info">
+                        <div class="top-supporter-name">${p.name}</div>
+                        <div class="top-supporter-detail">${p.party}</div>
+                    </div>
+                    <span class="chamber-badge ${p.chamber}">${p.label}</span>
+                </div>
+            `).join('');
+            return;
+        }
+
+        this.topSupportersWidget.classList.remove('placeholder');
+        this.viewAllSupportersBtn.textContent = 'View All Supporters';
+        this.topSupportersWidget.style.display = '';
+        this.topSupportersList.innerHTML = '<div class="stance-loading"><div class="mini-loader"></div>Finding top supporters...</div>';
+
+        const allBills = await this.fetchIssueBills(issue, this.currentJurisdiction);
+
+        if (allBills.length === 0) {
+            this.topSupportersWidget.style.display = 'none';
+            return;
+        }
+
+        const supporters = [];
+        for (const leg of this.legislators) {
+            const alignment = this.computeAlignmentScore(leg, allBills);
+            if (alignment.sponsoredCount > 0) {
+                supporters.push({ legislator: leg, count: alignment.sponsoredCount });
+            }
+        }
+
+        supporters.sort((a, b) => b.count - a.count);
+
+        if (supporters.length === 0) {
+            this.topSupportersWidget.style.display = 'none';
+            return;
+        }
+
+        const top2 = supporters.slice(0, 2);
+        this.topSupportersList.innerHTML = top2.map(s => {
+            const leg = s.legislator;
+            const photoHtml = leg.photoUrl
+                ? `<img src="${leg.photoUrl}" alt="${leg.name}" onerror="this.style.display='none'; this.parentElement.textContent='${this.getInitials(leg.name)}';">`
+                : this.getInitials(leg.name);
+
+            const partyLower = leg.party.toLowerCase();
+            let partyClass = '';
+            if (partyLower.includes('democrat')) partyClass = 'democratic';
+            else if (partyLower.includes('republican')) partyClass = 'republican';
+
+            return `
+                <div class="top-supporter-item">
+                    <div class="top-supporter-photo">${photoHtml}</div>
+                    <div class="top-supporter-info">
+                        <div class="top-supporter-name">${leg.name}</div>
+                        <div class="top-supporter-detail"><span class="rep-party ${partyClass}">${leg.party}</span></div>
+                    </div>
+                    <span class="top-supporter-count">${s.count} bill${s.count === 1 ? '' : 's'}</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    openSidebarSupporters() {
+        if (!this.selectedIssue) return;
+
+        // Switch to Issues tab
+        this.togglePanel('issues');
+
+        // Set the stance to supporters and re-render
+        this.activeStance = 'supporters';
+        this.renderIssuesSidebar();
+
+        // Load the supporters list
+        this.loadIssueSupporters(this.selectedIssue);
     }
 
     // ========== REP ALIGNMENT ==========
