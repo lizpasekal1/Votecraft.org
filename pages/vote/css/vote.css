@@ -1054,6 +1054,21 @@ body {
     border-top: 2px solid rgba(255, 255, 255, 0.25);
 }
 
+.nonprofits-headline {
+    font-size: 1.6rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.nonprofits-subtext {
+    font-size: 0.9rem;
+    text-align: center;
+    opacity: 0.85;
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
 .nonprofits-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
