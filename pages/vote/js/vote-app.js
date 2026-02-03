@@ -56,6 +56,7 @@ class VoteApp {
         this.currentCoords = null;
         this.billCache = {};
         this.activeStance = null;
+        this.issueMap = null;
 
         this.hasSearched = false;
 
@@ -63,6 +64,24 @@ class VoteApp {
         this.renderIssuesGrid();
         this.renderIssuesSidebar();
         this.showPlaceholderReps();
+    }
+
+    // ========== MAP ==========
+
+    initMap() {
+        if (this.issueMap) {
+            this.issueMap.invalidateSize();
+            return;
+        }
+        this.issueMap = L.map('issue-map', {
+            center: [37.8, -96],
+            zoom: 4,
+            zoomControl: false,
+            attributionControl: false
+        });
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            maxZoom: 19
+        }).addTo(this.issueMap);
     }
 
     // ========== EVENTS ==========
@@ -554,6 +573,9 @@ class VoteApp {
             this.repAlignmentScore.textContent = '';
             this.repAlignmentBills.innerHTML = '<p class="alignment-prompt">Search for your location and select a representative to see how they align on this issue.</p>';
         }
+
+        // Initialize / refresh the Leaflet map
+        setTimeout(() => this.initMap(), 50);
 
         // Load top 2 supporters widget
         this.loadTopSupporters(issue);
