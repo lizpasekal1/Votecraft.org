@@ -38,6 +38,7 @@ class VoteApp {
         this.repCardName = document.getElementById('rep-card-name');
         this.repAlignmentScore = document.getElementById('rep-alignment-score');
         this.repAlignmentBills = document.getElementById('rep-alignment-bills');
+        this.nonprofitsSection = document.getElementById('nonprofits-section');
         this.nonprofitsGrid = document.getElementById('nonprofits-grid');
         this.topSupportersWidget = document.getElementById('top-supporters-widget');
         this.topSupportersList = document.getElementById('top-supporters-list');
@@ -534,6 +535,7 @@ class VoteApp {
         this.learnMoreBtn.style.display = issue.learnMoreUrl ? '' : 'none';
 
         // Render nonprofits
+        this.nonprofitsSection.style.display = '';
         this.renderNonprofits(issue);
 
         // Re-render sidebar to show accordion buttons for selected issue
@@ -592,6 +594,7 @@ class VoteApp {
         this.closeLearnMore();
         this.issueDetailView.style.display = 'none';
         this.backBtn.style.display = 'none';
+        this.nonprofitsSection.style.display = 'none';
         this.issuesGridView.style.display = '';
         this.selectedIssue = null;
         this.activeStance = null;
