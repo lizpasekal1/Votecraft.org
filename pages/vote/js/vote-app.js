@@ -92,6 +92,7 @@ class VoteApp {
             const hero = document.getElementById('issue-hero');
             hero.style.height = h + 'px';
             hero.style.width = h + 'px';
+            document.querySelector('.issue-desc-box').style.width = h + 'px';
             document.getElementById('issue-map-card').style.height = h + 'px';
             if (this.issueMap) this.issueMap.invalidateSize();
         }
