@@ -88,6 +88,7 @@ class VoteApp {
         const card = this.repAlignmentCard;
         if (!card || card.style.display === 'none') return;
         card.style.flex = 'none';
+        card.style.height = '';
         const h = card.offsetHeight;
         card.style.flex = '';
         if (h > 0) {
@@ -98,6 +99,10 @@ class VoteApp {
             document.getElementById('issue-map-card').style.height = h + 'px';
             if (this.issueMap) this.issueMap.invalidateSize();
         }
+        requestAnimationFrame(() => {
+            const col = card.parentElement;
+            if (col) card.style.height = col.offsetHeight + 'px';
+        });
     }
 
     // ========== EVENTS ==========
