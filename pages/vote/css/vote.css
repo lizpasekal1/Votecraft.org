@@ -411,6 +411,159 @@ body {
     background: #1f2937;
 }
 
+.issue-sidebar-item.active {
+    border-color: var(--primary);
+    background: #1e3a5f;
+}
+
+/* Stance accordion buttons (Supporters / Opposed) */
+.issue-stance-buttons {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.stance-btn {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    font-family: inherit;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    border: 1px solid #374151;
+    border-radius: 6px;
+    background: #1f2937;
+    color: #9ca3af;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.stance-btn:hover {
+    border-color: #6b7280;
+    color: #d1d5db;
+}
+
+.stance-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+.stance-btn.opposed.active {
+    background: #dc2626;
+    border-color: #dc2626;
+}
+
+/* Stance list (accordion body) */
+.stance-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.stance-rep-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.stance-rep-item:hover {
+    background: #1f2937;
+}
+
+.stance-rep-item.selected {
+    background: #1e3a5f;
+}
+
+.stance-rep-photo {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #374151;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #9ca3af;
+}
+
+.stance-rep-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.stance-rep-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.stance-rep-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--left-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stance-rep-detail {
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+.stance-bill-count {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #22c55e;
+    white-space: nowrap;
+}
+
+.stance-bill-count.opposed {
+    color: #ef4444;
+}
+
+.stance-loading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 8px;
+    color: #9ca3af;
+    font-size: 0.8rem;
+}
+
+.stance-loading .mini-loader {
+    width: 14px;
+    height: 14px;
+    border: 2px solid #374151;
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+}
+
+.stance-empty {
+    padding: 12px 8px;
+    color: #6b7280;
+    font-size: 0.8rem;
+    font-style: italic;
+}
+
+.stance-rep-item.placeholder {
+    opacity: 0.5;
+    cursor: default;
+}
+
 /* ========== RIGHT PANEL ========== */
 
 .right-panel {
@@ -420,11 +573,20 @@ body {
     padding: 40px;
     position: relative;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .view-container {
     max-width: 960px;
     margin: 0 auto;
+}
+
+#issue-detail-view {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
 }
 
 .right-panel-title {
@@ -512,18 +674,21 @@ body {
 .issue-detail-layout {
     display: flex;
     gap: 24px;
-    align-items: flex-start;
-    margin-bottom: 24px;
+    align-items: stretch;
+    flex: 1;
+    min-height: 0;
 }
 
 .issue-hero-half {
     flex: 1;
     min-width: 0;
+    overflow-y: auto;
 }
 
 .issue-rep-half {
     flex: 1;
     min-width: 0;
+    overflow-y: auto;
 }
 
 .issue-detail-title {
@@ -549,6 +714,149 @@ body {
     font-size: 1.05rem;
     line-height: 1.7;
     opacity: 0.95;
+    margin-top: 16px;
+}
+
+/* Top supporters widget (right half, below alignment card) */
+.top-supporters-widget {
+    margin-top: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+/* Placeholder state: white card matching rep alignment card */
+.top-supporters-widget.placeholder {
+    background: #fff;
+    padding: 24px;
+    color: var(--text);
+}
+
+.top-supporters-widget.placeholder .top-supporters-title {
+    color: var(--primary);
+    font-size: 1rem;
+}
+
+.top-supporters-widget.placeholder .top-supporter-item {
+    background: var(--background-alt);
+}
+
+.top-supporters-widget.placeholder .top-supporter-photo {
+    background: var(--border);
+    color: var(--text-light);
+}
+
+.top-supporters-widget.placeholder .top-supporter-name {
+    color: var(--text);
+}
+
+.top-supporters-widget.placeholder .top-supporter-detail {
+    color: var(--text-light);
+}
+
+.top-supporters-widget.placeholder .btn-view-all-supporters {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+
+.top-supporters-widget.placeholder .btn-view-all-supporters:hover {
+    background: var(--primary-dark);
+}
+
+.top-supporters-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.top-supporters-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.top-supporter-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+}
+
+.top-supporter-photo {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.top-supporter-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.top-supporter-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.top-supporter-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.top-supporter-detail {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.top-supporter-count {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #22c55e;
+    white-space: nowrap;
+}
+
+.top-supporter-item.placeholder {
+    opacity: 0.5;
+}
+
+.btn-view-all-supporters {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-view-all-supporters:hover {
+    background: rgba(255, 255, 255, 0.25);
 }
 
 /* Rep alignment card */
@@ -776,6 +1084,7 @@ body {
 @media (max-width: 1024px) {
     .right-panel {
         padding: 32px 24px;
+        overflow-y: auto;
     }
 
     .right-panel-title {
@@ -784,6 +1093,15 @@ body {
 
     .issue-detail-layout {
         flex-direction: column;
+    }
+
+    .issue-hero-half,
+    .issue-rep-half {
+        overflow-y: visible;
+    }
+
+    #issue-detail-view {
+        flex: none;
     }
 
     .rep-alignment-card {
