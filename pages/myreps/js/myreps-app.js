@@ -324,6 +324,11 @@ class VotecraftApp {
             maxZoom: 19
         }).addTo(this.map);
 
+        // Create zoom control once (hidden until first search)
+        this._zoomControl = L.control.zoom();
+        this.map.addControl(this._zoomControl);
+        this._zoomControl.getContainer().style.display = 'none';
+
         // Fix map rendering issues
         setTimeout(() => {
             this.map.invalidateSize();
@@ -774,6 +779,17 @@ class VotecraftApp {
         }
         this.districtLayers = [];
 
+        // Clear explorer district highlight from previous search
+        if (this.explorerDistrictLayer && this.map) {
+            this.map.removeLayer(this.explorerDistrictLayer);
+            this.explorerDistrictLayer = null;
+        }
+
+        // Hide district explorer (will be reloaded for new state)
+        if (this.districtExplorer) {
+            this.districtExplorer.style.display = 'none';
+        }
+
         // Map already exists from placeholder, update it
         if (this.map) {
             // Enable map interactions after search
@@ -782,8 +798,9 @@ class VotecraftApp {
             this.map.doubleClickZoom.enable();
             this.map.boxZoom.enable();
             this.map.keyboard.enable();
-            if (!this.map.zoomControl) {
-                this.map.addControl(L.control.zoom());
+            // Show the zoom control (created once in initPlaceholderMap)
+            if (this._zoomControl) {
+                this._zoomControl.getContainer().style.display = '';
             }
 
             this.map.setView([this.currentCoords.lat, this.currentCoords.lng], 10);

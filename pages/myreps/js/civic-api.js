@@ -6,17 +6,13 @@
  */
 
 const CivicAPI = {
-    // OpenStates API key - get yours at https://open.pluralpolicy.com/
-    OPENSTATES_API_KEY: '064f1e91-b0a3-4e4b-b4c7-4313e70bc47d',
-    OPENSTATES_URL: 'https://v3.openstates.org',
+    // OpenStates API - proxied through WordPress REST API (key is server-side only)
+    OPENSTATES_PROXY: '/wp-json/votecraft/v1/openstates',
 
-    // Google Civic Information API key - get yours at https://console.cloud.google.com/
-    // Enable "Google Civic Information API" in your project
+    // Google Civic Information API key
+    // TODO: Move to server-side proxy (see security-plan.md remediation checklist)
     GOOGLE_CIVIC_API_KEY: 'AIzaSyCnUhJKt7HKGMZF8e_VGBbDvvOFLCH7aAw',
     GOOGLE_CIVIC_URL: 'https://www.googleapis.com/civicinfo/v2',
-
-    // CORS proxy for OpenStates API (needed for browser requests)
-    CORS_PROXY: 'https://corsproxy.io/?',
 
     /**
      * Geocode an address using OpenStreetMap Nominatim (free, CORS-enabled)
@@ -65,13 +61,7 @@ const CivicAPI = {
      * @returns {Promise<object>} - Legislators data
      */
     async getStateLegislators(lat, lng) {
-        const apiUrl = new URL(`${this.OPENSTATES_URL}/people.geo`);
-        apiUrl.searchParams.append('lat', lat);
-        apiUrl.searchParams.append('lng', lng);
-        apiUrl.searchParams.append('apikey', this.OPENSTATES_API_KEY);
-
-        // Use CORS proxy for browser requests (corsproxy.io doesn't need encoding)
-        const url = this.CORS_PROXY + apiUrl.toString();
+        const url = `${this.OPENSTATES_PROXY}?endpoint=people.geo&lat=${lat}&lng=${lng}`;
 
         console.log('Fetching legislators for:', lat, lng);
         console.log('URL:', url);
@@ -181,17 +171,18 @@ const CivicAPI = {
      * @returns {Promise<Array>} - Array of bills
      */
     async getBillsBySponsor(jurisdiction, sponsorName, limit = 5) {
-        // Use 'sponsor' parameter for sponsor name search
-        const apiUrl = new URL(`${this.OPENSTATES_URL}/bills`);
-        apiUrl.searchParams.append('jurisdiction', jurisdiction);
-        apiUrl.searchParams.append('sponsor', sponsorName);
-        apiUrl.searchParams.append('include', 'sponsorships');
-        apiUrl.searchParams.append('include', 'votes');
-        apiUrl.searchParams.append('per_page', limit.toString());
-        apiUrl.searchParams.append('sort', 'latest_action_desc');
-        apiUrl.searchParams.append('apikey', this.OPENSTATES_API_KEY);
+        const params = new URLSearchParams({
+            endpoint: 'bills',
+            jurisdiction: jurisdiction,
+            sponsor: sponsorName,
+            include: 'sponsorships',
+            per_page: limit.toString(),
+            sort: 'latest_action_desc'
+        });
+        // Add 'include' twice (votes + sponsorships)
+        params.append('include', 'votes');
 
-        const url = this.CORS_PROXY + apiUrl.toString();
+        const url = `${this.OPENSTATES_PROXY}?${params.toString()}`;
 
         console.log(`  Bills API URL: ${url}`);
 
@@ -275,16 +266,17 @@ const CivicAPI = {
      * @returns {Promise<Array>} - Array of bills
      */
     async getBillsBySubject(jurisdiction, subject, limit = 10) {
-        const apiUrl = new URL(`${this.OPENSTATES_URL}/bills`);
-        apiUrl.searchParams.append('jurisdiction', jurisdiction);
-        apiUrl.searchParams.append('q', subject);
-        apiUrl.searchParams.append('include', 'sponsorships');
-        apiUrl.searchParams.append('include', 'votes');
-        apiUrl.searchParams.append('per_page', limit.toString());
-        apiUrl.searchParams.append('sort', 'latest_action_desc');
-        apiUrl.searchParams.append('apikey', this.OPENSTATES_API_KEY);
+        const params = new URLSearchParams({
+            endpoint: 'bills',
+            jurisdiction: jurisdiction,
+            q: subject,
+            include: 'sponsorships',
+            per_page: limit.toString(),
+            sort: 'latest_action_desc'
+        });
+        params.append('include', 'votes');
 
-        const url = this.CORS_PROXY + apiUrl.toString();
+        const url = `${this.OPENSTATES_PROXY}?${params.toString()}`;
 
         try {
             const response = await fetch(url);
