@@ -654,8 +654,7 @@ body {
 
 .btn-back {
     display: block;
-    margin-left: 0;
-    margin-right: auto;
+    margin-left: auto;
     padding: 8px 20px;
     font-size: 0.85rem;
     font-family: inherit;
