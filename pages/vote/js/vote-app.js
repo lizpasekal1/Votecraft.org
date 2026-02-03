@@ -517,6 +517,7 @@ class VoteApp {
         // Switch views
         this.issuesGridView.style.display = 'none';
         this.issueDetailView.style.display = '';
+        this.backBtn.style.display = '';
 
         // Render content
         this.issueTitle.textContent = issue.title;
@@ -570,6 +571,7 @@ class VoteApp {
 
     goBack() {
         this.issueDetailView.style.display = 'none';
+        this.backBtn.style.display = 'none';
         this.issuesGridView.style.display = '';
         this.selectedIssue = null;
         this.activeStance = null;
