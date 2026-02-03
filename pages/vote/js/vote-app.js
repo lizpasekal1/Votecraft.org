@@ -42,6 +42,10 @@ class VoteApp {
         this.topSupportersWidget = document.getElementById('top-supporters-widget');
         this.topSupportersList = document.getElementById('top-supporters-list');
         this.viewAllSupportersBtn = document.getElementById('view-all-supporters-btn');
+        this.learnMoreBtn = document.getElementById('learn-more-btn');
+        this.learnMoreModal = document.getElementById('learn-more-modal');
+        this.learnMoreIframe = document.getElementById('learn-more-iframe');
+        this.learnMoreClose = document.getElementById('learn-more-close');
 
         // State
         this.legislators = [];
@@ -80,6 +84,9 @@ class VoteApp {
         this.backBtn.addEventListener('click', () => this.goBack());
 
         this.viewAllSupportersBtn.addEventListener('click', () => this.openSidebarSupporters());
+
+        this.learnMoreBtn.addEventListener('click', () => this.openLearnMore());
+        this.learnMoreClose.addEventListener('click', () => this.closeLearnMore());
 
         // Issue grid click delegation
         this.issuesGrid.addEventListener('click', (e) => {
@@ -524,6 +531,7 @@ class VoteApp {
         this.issueHeroImg.src = issue.heroImage;
         this.issueHeroImg.alt = issue.title;
         this.issueDescription.textContent = issue.description;
+        this.learnMoreBtn.style.display = issue.learnMoreUrl ? '' : 'none';
 
         // Render nonprofits
         this.renderNonprofits(issue);
@@ -569,7 +577,19 @@ class VoteApp {
         }).join('');
     }
 
+    openLearnMore() {
+        if (!this.selectedIssue || !this.selectedIssue.learnMoreUrl) return;
+        this.learnMoreIframe.src = this.selectedIssue.learnMoreUrl;
+        this.learnMoreModal.style.display = 'flex';
+    }
+
+    closeLearnMore() {
+        this.learnMoreModal.style.display = 'none';
+        this.learnMoreIframe.src = '';
+    }
+
     goBack() {
+        this.closeLearnMore();
         this.issueDetailView.style.display = 'none';
         this.backBtn.style.display = 'none';
         this.issuesGridView.style.display = '';
