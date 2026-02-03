@@ -570,7 +570,7 @@ body {
     flex: 1;
     background: var(--right-bg);
     color: var(--right-text);
-    padding: 40px;
+    padding: 10px 40px 40px;
     position: relative;
     overflow: hidden;
     display: flex;
@@ -959,7 +959,17 @@ body {
 .nonprofits-section {
     margin-top: 40px;
     padding-top: 24px;
-    border-top: 1px solid rgba(255, 255, 255, 0.25);
+    position: relative;
+}
+
+.nonprofits-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: calc(200% + 24px);
+    height: 2px;
+    background: rgba(255, 255, 255, 0.25);
 }
 
 .nonprofits-grid {
