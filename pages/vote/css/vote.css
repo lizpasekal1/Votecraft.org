@@ -869,6 +869,16 @@ body {
     text-align: center;
 }
 
+.rep-alignment-card.placeholder {
+    display: flex;
+    flex-direction: column;
+}
+
+.rep-alignment-card.placeholder .rep-card-name {
+    order: -1;
+    margin-bottom: 12px;
+}
+
 .rep-card-photo {
     width: 100px;
     height: 100px;
