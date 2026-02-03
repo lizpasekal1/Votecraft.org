@@ -726,16 +726,16 @@ body {
     font-size: 0.85rem;
     font-family: inherit;
     font-weight: 600;
-    background: var(--primary);
-    color: #fff;
-    border: 1px solid var(--primary);
+    background: #fff;
+    color: var(--primary);
+    border: 1px solid #fff;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .btn-learn-more:hover {
-    background: var(--primary-dark);
+    background: #e2e8f0;
 }
 
 /* Top supporters widget (right half, below alignment card) */
