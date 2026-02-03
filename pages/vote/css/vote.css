@@ -44,6 +44,7 @@ body {
     height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .vote-layout {
@@ -581,7 +582,6 @@ body {
 }
 
 .view-container {
-    max-width: 960px;
     margin: 0 auto;
 }
 
@@ -679,21 +679,31 @@ body {
 }
 
 .issue-detail-layout {
-    display: flex;
-    gap: 24px;
-    align-items: stretch;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    align-items: start;
 }
 
-.issue-hero-half {
-    flex: 1;
-    min-width: 0;
+.issue-col {
     display: flex;
     flex-direction: column;
+    gap: 16px;
+    min-width: 0;
 }
 
-.issue-rep-half {
-    flex: 1;
-    min-width: 0;
+.issue-map-card {
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    aspect-ratio: 4/3;
+}
+
+.issue-map-card iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
 }
 
 .issue-detail-title {
@@ -1053,7 +1063,8 @@ body {
 
 .nonprofits-section {
     padding: 20px 40px 28px;
-    background: rgba(0, 0, 0, 0.15);
+    background: #0d1b3a;
+    color: #fff;
     flex-shrink: 0;
 }
 
