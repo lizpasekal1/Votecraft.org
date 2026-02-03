@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoteCraft - Explore Issues & Representatives</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="vote-widget">
+        <div class="vote-layout">
+
+            <!-- LEFT PANEL: Search + Reps -->
+            <aside class="left-panel">
+                <div class="search-section">
+                    <input type="text" id="address-input"
+                           placeholder="State or zip"
+                           autocomplete="street-address">
+                    <button id="lookup-btn" class="btn-search">Search</button>
+                </div>
+
+                <div class="panel-toggle">
+                    <button id="toggle-reps" class="toggle-btn active">REPRESENTATIVES</button>
+                    <button id="toggle-issues" class="toggle-btn">ISSUES</button>
+                </div>
+
+                <!-- Representatives List -->
+                <div id="reps-panel" class="panel-content">
+                    <div id="federal-section" class="rep-section">
+                        <h3 class="rep-section-title">Federal Legislators</h3>
+                        <div id="federal-list" class="rep-list"></div>
+                    </div>
+                    <div id="state-section" class="rep-section">
+                        <h3 class="rep-section-title">State Legislators</h3>
+                        <div id="state-list" class="rep-list"></div>
+                    </div>
+                </div>
+
+                <!-- Issues List (mobile/toggle view) -->
+                <div id="issues-panel" class="panel-content" style="display:none;">
+                    <div id="issues-sidebar-list" class="issues-sidebar-list"></div>
+                </div>
+            </aside>
+
+            <!-- RIGHT PANEL: Content area -->
+            <main class="right-panel">
+                <!-- Loading overlay -->
+                <div id="loading-screen" class="loading-overlay">
+                    <div class="loader"></div>
+                    <p>Loading...</p>
+                </div>
+
+                <!-- Error message -->
+                <div id="error-screen" class="error-inline" style="display:none;">
+                    <div class="error-message">
+                        <span class="error-icon">!</span>
+                        <p id="error-text"></p>
+                    </div>
+                </div>
+
+                <!-- VIEW 1: Issues Grid -->
+                <div id="issues-grid-view" class="view-container">
+                    <h1 class="right-panel-title">Explore Issues</h1>
+                    <p class="right-panel-subtitle">Select an issue to learn more and see how these representatives align</p>
+                    <div id="issues-grid" class="issues-grid"></div>
+                </div>
+
+                <!-- VIEW 2: Issue Detail -->
+                <div id="issue-detail-view" class="view-container" style="display:none;">
+                    <button id="back-btn" class="btn-back">BACK</button>
+
+                    <div class="issue-detail-layout">
+                        <div class="issue-content">
+                            <h1 id="issue-title" class="issue-detail-title"></h1>
+                            <div id="issue-hero" class="issue-hero">
+                                <img id="issue-hero-img" src="" alt="">
+                            </div>
+                            <p id="issue-description" class="issue-detail-desc"></p>
+                        </div>
+
+                        <div id="rep-alignment-card" class="rep-alignment-card" style="display:none;">
+                            <div id="rep-card-photo" class="rep-card-photo"></div>
+                            <h3 id="rep-card-name" class="rep-card-name"></h3>
+                            <div id="rep-alignment-score" class="alignment-score"></div>
+                            <div id="rep-alignment-bills" class="alignment-bills"></div>
+                        </div>
+                    </div>
+
+                    <div class="nonprofits-section">
+                        <div id="nonprofits-grid" class="nonprofits-grid"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="css/vote.css">
+    <script src="js/issues-data.js"></script>
+    <script src="js/civic-api.js"></script>
+    <script src="js/vote-app.js"></script>
+</body>
+</html>

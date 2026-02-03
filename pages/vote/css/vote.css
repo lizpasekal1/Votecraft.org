@@ -1,0 +1,737 @@
+/* VoteCraft Vote Page Styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --upper-chamber: #14CCB0;
+    --lower-chamber: #FFC280;
+    --democrat: #3b82f6;
+    --republican: #ef4444;
+    --background: #ffffff;
+    --background-alt: #f8fafc;
+    --text: #1e293b;
+    --text-light: #64748b;
+    --border: #e2e8f0;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --radius: 8px;
+    --left-bg: #111827;
+    --left-text: #f9fafb;
+    --right-bg: #2563eb;
+    --right-text: #ffffff;
+}
+
+html, body {
+    overflow: hidden;
+    height: 100vh;
+}
+
+body {
+    font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--left-bg);
+    color: var(--text);
+    line-height: 1.5;
+}
+
+/* ========== TWO-PANEL LAYOUT ========== */
+
+.vote-widget {
+    width: 100%;
+    height: 100vh;
+}
+
+.vote-layout {
+    display: flex;
+    height: 100vh;
+}
+
+/* ========== LEFT PANEL ========== */
+
+.left-panel {
+    width: 30%;
+    min-width: 280px;
+    max-width: 420px;
+    background: var(--left-bg);
+    color: var(--left-text);
+    padding: 24px 16px;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.search-section {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.search-section input {
+    flex: 1;
+    padding: 10px 14px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    border: 1px solid #374151;
+    border-radius: var(--radius);
+    background: #1f2937;
+    color: var(--left-text);
+    outline: none;
+}
+
+.search-section input::placeholder {
+    color: #9ca3af;
+}
+
+.search-section input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
+}
+
+.btn-search {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    font-weight: 600;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btn-search:hover {
+    background: var(--primary-dark);
+}
+
+/* Toggle buttons */
+.panel-toggle {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.toggle-btn {
+    flex: 1;
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    border: 2px solid #374151;
+    border-radius: var(--radius);
+    background: transparent;
+    color: #d1d5db;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.toggle-btn.active {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #fff;
+}
+
+.toggle-btn:not(.active):hover {
+    border-color: #6b7280;
+    color: #f9fafb;
+}
+
+/* Rep sections */
+.panel-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.rep-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.rep-section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--left-text);
+    padding-bottom: 4px;
+}
+
+.rep-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Individual rep item */
+.rep-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid #374151;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.rep-item:hover {
+    border-color: #6b7280;
+    background: #1f2937;
+}
+
+.rep-item.selected {
+    border-color: var(--primary);
+    background: #1e3a5f;
+}
+
+.rep-photo {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #374151;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #9ca3af;
+}
+
+.rep-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.rep-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.rep-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--left-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rep-details {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.rep-party.democratic {
+    color: var(--democrat);
+    font-weight: 500;
+}
+
+.rep-party.republican {
+    color: var(--republican);
+    font-weight: 500;
+}
+
+.chamber-badge {
+    padding: 3px 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 20px;
+    flex-shrink: 0;
+}
+
+.chamber-badge.upper {
+    background: var(--upper-chamber);
+    color: #0d4a42;
+}
+
+.chamber-badge.lower {
+    background: var(--lower-chamber);
+    color: #6b4a00;
+}
+
+/* Issues sidebar list */
+.issues-sidebar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.issue-sidebar-item {
+    padding: 12px;
+    border: 1px solid #374151;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--left-text);
+    transition: all 0.2s;
+}
+
+.issue-sidebar-item:hover {
+    border-color: #6b7280;
+    background: #1f2937;
+}
+
+/* ========== RIGHT PANEL ========== */
+
+.right-panel {
+    flex: 1;
+    background: var(--right-bg);
+    color: var(--right-text);
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+}
+
+.view-container {
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+.right-panel-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.right-panel-subtitle {
+    font-size: 1.1rem;
+    text-align: center;
+    opacity: 0.9;
+    margin-bottom: 32px;
+}
+
+/* ========== ISSUES GRID ========== */
+
+.issues-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+.issue-card {
+    background: rgba(30, 58, 138, 0.6);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.issue-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.issue-card-image {
+    width: 45%;
+    height: 160px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.issue-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.issue-card-title {
+    flex: 1;
+    padding: 16px 20px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+}
+
+/* ========== ISSUE DETAIL VIEW ========== */
+
+.btn-back {
+    display: inline-block;
+    padding: 8px 20px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    font-weight: 600;
+    background: #fff;
+    color: var(--primary);
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    margin-bottom: 24px;
+    letter-spacing: 0.5px;
+}
+
+.btn-back:hover {
+    background: #e2e8f0;
+}
+
+.issue-detail-layout {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+}
+
+.issue-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.issue-detail-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.issue-hero {
+    margin-bottom: 20px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+}
+
+.issue-hero img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.issue-detail-desc {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    opacity: 0.95;
+}
+
+/* Rep alignment card */
+.rep-alignment-card {
+    width: 260px;
+    flex-shrink: 0;
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    color: var(--text);
+    text-align: center;
+}
+
+.rep-card-photo {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto 12px;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+.rep-card-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.rep-card-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 4px;
+}
+
+.alignment-score {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-bottom: 12px;
+}
+
+.alignment-bills {
+    text-align: left;
+    font-size: 0.85rem;
+    color: var(--text);
+}
+
+.alignment-bills .bill-item {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.alignment-bills .bill-item:last-child {
+    border-bottom: none;
+}
+
+.alignment-bills .bill-item a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.alignment-bills .bill-item a:hover {
+    text-decoration: underline;
+}
+
+.alignment-prompt {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    font-style: italic;
+}
+
+/* Loading state for alignment */
+.alignment-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.alignment-loading .mini-loader {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+/* ========== NONPROFITS ========== */
+
+.nonprofits-section {
+    margin-top: 40px;
+}
+
+.nonprofits-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.nonprofit-card {
+    text-align: center;
+}
+
+.nonprofit-logo {
+    width: 100%;
+    height: 140px;
+    background: rgba(30, 58, 138, 0.6);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.nonprofit-logo img {
+    max-width: 80%;
+    max-height: 80%;
+    object-fit: contain;
+}
+
+.nonprofit-logo .np-initials {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.btn-donate {
+    display: inline-block;
+    padding: 10px 32px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    font-weight: 600;
+    background: #fff;
+    color: var(--text);
+    border: none;
+    border-radius: 24px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.btn-donate:hover {
+    background: #f1f5f9;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ========== LOADING / ERROR ========== */
+
+.loading-overlay {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(37, 99, 235, 0.9);
+    z-index: 10;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: #fff;
+    font-size: 1.1rem;
+}
+
+.loading-overlay.active {
+    display: flex;
+}
+
+.loader {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.error-inline {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.error-message {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #fca5a5;
+}
+
+.error-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #ef4444;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+/* ========== RESPONSIVE ========== */
+
+@media (max-width: 1024px) {
+    .right-panel {
+        padding: 32px 24px;
+    }
+
+    .right-panel-title {
+        font-size: 1.8rem;
+    }
+
+    .issue-detail-layout {
+        flex-direction: column;
+    }
+
+    .rep-alignment-card {
+        width: 100%;
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        text-align: left;
+    }
+
+    .rep-card-photo {
+        margin: 0;
+        width: 80px;
+        height: 80px;
+    }
+}
+
+@media (max-width: 900px) {
+    .vote-layout {
+        flex-direction: column;
+    }
+
+    .left-panel {
+        width: 100%;
+        max-width: none;
+        min-width: auto;
+        padding: 16px;
+        max-height: 50vh;
+    }
+
+    .right-panel {
+        padding: 24px 16px;
+    }
+
+    .nonprofits-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .issues-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .issue-card {
+        flex-direction: row;
+    }
+
+    .issue-card-image {
+        width: 40%;
+        height: 120px;
+    }
+
+    .right-panel-title {
+        font-size: 1.5rem;
+    }
+
+    .issue-detail-title {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 520px) {
+    .left-panel {
+        padding: 12px;
+    }
+
+    .right-panel {
+        padding: 20px 12px;
+    }
+
+    .nonprofits-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .rep-alignment-card {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .rep-card-photo {
+        margin: 0 auto;
+    }
+}
