@@ -532,9 +532,11 @@ class VoteApp {
 
         // Show rep alignment if a rep is selected
         if (this.selectedRep) {
+            this.repAlignmentCard.classList.remove('placeholder');
             this.repAlignmentCard.style.display = '';
             this.loadRepAlignment(this.selectedRep, issue);
         } else {
+            this.repAlignmentCard.classList.add('placeholder');
             this.repAlignmentCard.style.display = '';
             this.repCardPhoto.innerHTML = '<div style="font-size:2rem;">?</div>';
             this.repCardName.textContent = 'Select a representative';
@@ -859,6 +861,7 @@ class VoteApp {
 
     async loadRepAlignment(rep, issue) {
         // Show loading state in alignment card
+        this.repAlignmentCard.classList.remove('placeholder');
         this.repAlignmentCard.style.display = '';
         const photoHtml = rep.photoUrl
             ? `<img src="${rep.photoUrl}" alt="${rep.name}" onerror="this.style.display='none'; this.parentElement.textContent='${this.getInitials(rep.name)}';">`
