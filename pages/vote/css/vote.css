@@ -677,7 +677,7 @@ body {
 
 .issue-detail-layout {
     display: grid;
-    grid-template-columns: auto 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 20px;
     align-items: stretch;
 }
@@ -690,7 +690,7 @@ body {
 }
 
 .issue-col:first-child {
-    align-items: center;
+    align-items: flex-end;
 }
 
 .issue-map-card {
