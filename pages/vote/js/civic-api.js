@@ -7,7 +7,7 @@
 
 const CivicAPI = {
     // OpenStates API - proxied through WordPress REST API (key is server-side only)
-    OPENSTATES_PROXY: '/wp-json/votecraft/v1/openstates',
+    OPENSTATES_PROXY: 'https://votecraft.org/wp-json/votecraft/v1/openstates',
 
     // Google Civic Information API key
     // TODO: Move to server-side proxy (see security-plan.md remediation checklist)
