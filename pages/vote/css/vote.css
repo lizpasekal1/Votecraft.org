@@ -711,11 +711,19 @@ body {
     display: block;
 }
 
+.issue-desc-box {
+    margin-top: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 12px;
+    padding: 24px;
+    background: transparent;
+}
+
 .issue-detail-desc {
-    font-size: 1.05rem;
+    font-size: 0.9rem;
     line-height: 1.4;
     opacity: 0.95;
-    margin-top: 16px;
+    margin-top: 0;
 }
 
 .btn-learn-more {
