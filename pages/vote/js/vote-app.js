@@ -180,6 +180,11 @@ class VoteApp {
             // Fetch all state legislators in the background (non-blocking)
             if (this.currentJurisdiction) {
                 const localIds = new Set(this.localLegislators.map(l => l.id));
+
+                // Show loading spinner in state section
+                this.stateSection.style.display = '';
+                this.stateList.innerHTML = '<div class="state-loading"><div class="mini-loader"></div>Loading state legislators...</div>';
+
                 try {
                     console.log(`Fetching all legislators for ${this.currentJurisdiction}...`);
                     const allPeople = await window.CivicAPI.getAllLegislators(this.currentJurisdiction);
@@ -187,7 +192,7 @@ class VoteApp {
                     this.stateLegislators = window.CivicAPI.parseRepresentatives({
                         officials: allPeople
                     }).filter(l => !localIds.has(l.id))
-                      .sort((a, b) => a.name.localeCompare(b.name));
+                      .sort((a, b) => (a.district || '').localeCompare(b.district || '', undefined, { numeric: true }));
                     console.log(`After filtering local: ${this.stateLegislators.length} state legislators`);
 
                     // Update combined list and re-render
@@ -242,17 +247,128 @@ class VoteApp {
             this.localSection.style.display = 'none';
         }
 
-        // State section: all other state legislators, alphabetically
+        // State section: grouped by chamber, House sub-grouped by county
         if (this.stateLegislators && this.stateLegislators.length > 0) {
             this.stateSection.style.display = '';
-            this.stateList.innerHTML = this.stateLegislators.map(l => this.renderRepItem(l)).join('');
+
+            const isSenate = l =>
+                l.office.toLowerCase().includes('senator') || l.office.toLowerCase().includes('senate');
+
+            const senate = this.stateLegislators.filter(isSenate)
+                .sort((a, b) => (a.district || '').localeCompare(b.district || '', undefined, { numeric: true }));
+
+            const house = this.stateLegislators.filter(l => !isSenate(l))
+                .sort((a, b) => (a.district || '').localeCompare(b.district || '', undefined, { numeric: true }));
+
+            // Extract county/region from district name (e.g. "3rd Suffolk" -> "Suffolk")
+            const getCounty = (district) => {
+                if (!district) return 'Other';
+                return district.replace(/^\d+(st|nd|rd|th)\s+/i, '').trim() || 'Other';
+            };
+
+            // Group House members by county
+            const houseByCounty = {};
+            for (const rep of house) {
+                const county = getCounty(rep.district);
+                if (!houseByCounty[county]) houseByCounty[county] = [];
+                houseByCounty[county].push(rep);
+            }
+            const countyKeys = Object.keys(houseByCounty).sort();
+
+            // Group Senate members by county
+            const senateByCounty = {};
+            for (const rep of senate) {
+                const county = getCounty(rep.district);
+                if (!senateByCounty[county]) senateByCounty[county] = [];
+                senateByCounty[county].push(rep);
+            }
+            const senateCountyKeys = Object.keys(senateByCounty).sort();
+
+            const senateSubgroups = senateCountyKeys.map(county => {
+                const reps = senateByCounty[county];
+                const repItems = reps.map(l => this.renderRepItem(l)).join('');
+                return `
+                    <div class="county-group">
+                        <div class="county-header" data-county="${county}">
+                            <span class="county-header-title">${county}</span>
+                            <span class="district-header-count">${reps.length}</span>
+                            <span class="district-toggle">+</span>
+                        </div>
+                        <div class="county-body" style="display:none;">
+                            ${repItems}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const senateHtml = senate.length > 0 ? `
+                <div class="district-group">
+                    <div class="district-header">
+                        <span class="district-header-title">Senate
+                            <span class="chamber-desc">State senators are elected from large districts to represent broad communities.</span>
+                        </span>
+                        <span class="district-header-count">${senate.length}</span>
+                        <span class="district-toggle">+</span>
+                    </div>
+                    <div class="district-body" style="display:none;">
+                        ${senateSubgroups}
+                    </div>
+                </div>
+            ` : '';
+
+            // Build House section with county sub-groups
+            const houseSubgroups = countyKeys.map(county => {
+                const reps = houseByCounty[county];
+                const repItems = reps.map(l => this.renderRepItem(l)).join('');
+                return `
+                    <div class="county-group">
+                        <div class="county-header" data-county="${county}">
+                            <span class="county-header-title">${county}</span>
+                            <span class="district-header-count">${reps.length}</span>
+                            <span class="district-toggle">+</span>
+                        </div>
+                        <div class="county-body" style="display:none;">
+                            ${repItems}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const houseHtml = house.length > 0 ? `
+                <div class="district-group">
+                    <div class="district-header">
+                        <span class="district-header-title">House
+                            <span class="chamber-desc">House Reps are elected by their local community to specifically represent them.</span>
+                        </span>
+                        <span class="district-header-count">${house.length}</span>
+                        <span class="district-toggle">+</span>
+                    </div>
+                    <div class="district-body" style="display:none;">
+                        ${houseSubgroups}
+                    </div>
+                </div>
+            ` : '';
+
+            this.stateList.innerHTML = senateHtml + houseHtml;
+
+            // Accordion click handlers for chamber + county headers
+            this.stateList.querySelectorAll('.district-header, .county-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const body = header.nextElementSibling;
+                    const toggle = header.querySelector('.district-toggle');
+                    const isOpen = body.style.display !== 'none';
+                    body.style.display = isOpen ? 'none' : '';
+                    toggle.textContent = isOpen ? '+' : '-';
+                });
+            });
         } else {
             this.stateSection.style.display = 'none';
         }
 
         // Add click handlers to rep items
         document.querySelectorAll('.rep-item').forEach(item => {
-            item.addEventListener('click', () => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
                 const index = parseInt(item.dataset.index);
                 if (!isNaN(index) && this.legislators[index]) {
                     this.selectRep(this.legislators[index]);

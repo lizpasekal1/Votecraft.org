@@ -93,28 +93,58 @@ const CivicAPI = {
      * @param {number} perPage - Results per page (default 300 to get all)
      * @returns {Promise<Array>} - Array of legislator objects
      */
-    async getAllLegislators(jurisdiction, perPage = 300) {
-        const params = new URLSearchParams({
-            endpoint: 'people',
-            jurisdiction: jurisdiction,
-            per_page: perPage.toString()
-        });
+    async getAllLegislators(jurisdiction) {
+        // Check sessionStorage cache first
+        const cacheKey = `legislators_${jurisdiction}`;
+        try {
+            const cached = sessionStorage.getItem(cacheKey);
+            if (cached) {
+                const data = JSON.parse(cached);
+                console.log(`Cache hit: ${data.length} legislators for ${jurisdiction}`);
+                return data;
+            }
+        } catch (e) { /* ignore storage errors */ }
 
-        const url = `${this.OPENSTATES_PROXY}?${params.toString()}`;
+        const allResults = [];
+        let page = 1;
+        let maxPage = 1;
+
         console.log('Fetching all legislators for:', jurisdiction);
 
         try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                console.error('All legislators API error:', response.status);
-                return [];
-            }
-            const data = await response.json();
-            console.log(`All legislators: ${data.results?.length || 0} found`);
-            return data.results || [];
+            do {
+                const params = new URLSearchParams({
+                    endpoint: 'people',
+                    jurisdiction: jurisdiction,
+                    per_page: '50',
+                    page: page.toString()
+                });
+
+                const url = `${this.OPENSTATES_PROXY}?${params.toString()}`;
+                const response = await fetch(url);
+                if (!response.ok) {
+                    console.error('All legislators API error:', response.status, 'page', page);
+                    break;
+                }
+                const data = await response.json();
+                const results = data.results || [];
+                allResults.push(...results);
+                maxPage = data.pagination?.max_page || 1;
+                console.log(`Page ${page}/${maxPage}: ${results.length} legislators (${allResults.length} total)`);
+                page++;
+            } while (page <= maxPage);
+
+            console.log(`All legislators: ${allResults.length} found`);
+
+            // Cache results in sessionStorage
+            try {
+                sessionStorage.setItem(cacheKey, JSON.stringify(allResults));
+            } catch (e) { /* ignore storage errors */ }
+
+            return allResults;
         } catch (error) {
             console.error('Error fetching all legislators:', error);
-            return [];
+            return allResults;
         }
     },
 
