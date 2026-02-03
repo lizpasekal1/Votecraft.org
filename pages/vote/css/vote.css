@@ -1049,9 +1049,9 @@ body {
 /* ========== NONPROFITS ========== */
 
 .nonprofits-section {
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 2px solid #fff;
+    margin: 20px -40px 0;
+    padding: 20px 40px 24px;
+    background: rgba(0, 0, 0, 0.15);
 }
 
 .nonprofits-headline {
