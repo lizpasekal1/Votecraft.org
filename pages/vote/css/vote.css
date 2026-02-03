@@ -588,6 +588,7 @@ body {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    padding-top: 30px;
 }
 
 .right-panel-title {
@@ -595,6 +596,7 @@ body {
     font-weight: 700;
     text-align: center;
     margin-bottom: 8px;
+    padding-top: 30px;
 }
 
 .right-panel-subtitle {
