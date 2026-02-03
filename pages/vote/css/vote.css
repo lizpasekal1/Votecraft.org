@@ -689,6 +689,10 @@ body {
     min-width: 0;
 }
 
+.issue-col:first-child {
+    align-items: flex-end;
+}
+
 .issue-map-card {
     border-radius: var(--radius);
     overflow: hidden;
