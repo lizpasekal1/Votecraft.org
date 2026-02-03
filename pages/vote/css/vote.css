@@ -715,11 +715,13 @@ body {
     border-radius: 12px;
     overflow: hidden;
     border: 3px solid rgba(255, 255, 255, 0.2);
+    aspect-ratio: 1/1;
 }
 
 .issue-hero img {
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: cover;
     display: block;
 }
 
@@ -727,34 +729,38 @@ body {
     margin-top: 16px;
     border: 1px solid rgba(255, 255, 255, 0.4);
     border-radius: 12px;
-    padding: 24px;
+    padding: 16px;
     background: transparent;
-    flex: 1;
+    aspect-ratio: 1/1;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .issue-detail-desc {
-    font-size: 0.85rem;
-    line-height: 1.5;
+    font-size: 0.78rem;
+    line-height: 1.45;
     opacity: 0.95;
     margin-top: 0;
+    flex: 1;
+    overflow: hidden;
 }
 
 .btn-learn-more {
     display: block;
-    width: 60%;
-    margin: auto auto 0;
-    padding: 10px;
-    font-size: 0.85rem;
+    width: 50%;
+    margin: 10px auto 0;
+    padding: 7px;
+    font-size: 0.78rem;
     font-family: inherit;
     font-weight: 600;
     background: #fff;
     color: var(--primary);
     border: 1px solid #fff;
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s;
+    flex-shrink: 0;
 }
 
 .btn-learn-more:hover {
