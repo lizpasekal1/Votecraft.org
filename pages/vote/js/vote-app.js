@@ -15,8 +15,10 @@ class VoteApp {
         this.repsPanel = document.getElementById('reps-panel');
         this.issuesPanel = document.getElementById('issues-panel');
         this.federalSection = document.getElementById('federal-section');
+        this.localSection = document.getElementById('local-section');
         this.stateSection = document.getElementById('state-section');
         this.federalList = document.getElementById('federal-list');
+        this.localList = document.getElementById('local-list');
         this.stateList = document.getElementById('state-list');
         this.issuesGridView = document.getElementById('issues-grid-view');
         this.issueDetailView = document.getElementById('issue-detail-view');
@@ -46,6 +48,8 @@ class VoteApp {
         this.currentCoords = null;
         this.billCache = {};
 
+        this.hasSearched = false;
+
         this.bindEvents();
         this.renderIssuesGrid();
         this.renderIssuesSidebar();
@@ -55,7 +59,13 @@ class VoteApp {
     // ========== EVENTS ==========
 
     bindEvents() {
-        this.lookupBtn.addEventListener('click', () => this.lookupReps());
+        this.lookupBtn.addEventListener('click', () => {
+            if (this.hasSearched) {
+                this.resetSearch();
+            } else {
+                this.lookupReps();
+            }
+        });
         this.addressInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.lookupReps();
         });
@@ -94,8 +104,35 @@ class VoteApp {
 
     // ========== REP LOOKUP ==========
 
+    resetSearch() {
+        this.addressInput.value = '';
+        this.addressInput.focus();
+        this.localLegislators = [];
+        this.stateLegislators = [];
+        this.legislators = [];
+        this.selectedRep = null;
+        this.selectedIssue = null;
+        this.currentJurisdiction = null;
+        this.currentCoords = null;
+        this.billCache = {};
+        this.hasSearched = false;
+
+        // Reset views
+        this.issuesGridView.style.display = '';
+        this.issueDetailView.style.display = 'none';
+        this.hideError();
+        this.showPlaceholderReps();
+    }
+
     async lookupReps() {
         const address = this.addressInput.value.trim();
+
+        // If already searched and input is empty or same, reset for new search
+        if (this.hasSearched && !address) {
+            this.resetSearch();
+            return;
+        }
+
         if (!address) {
             this.addressInput.focus();
             this.addressInput.style.borderColor = '#ef4444';
@@ -110,28 +147,60 @@ class VoteApp {
             const coords = await window.CivicAPI.geocodeAddress(address);
             this.currentCoords = coords;
 
+            // Get local legislators for this address
             const data = await window.CivicAPI.getStateLegislators(coords.lat, coords.lng);
-            this.legislators = window.CivicAPI.parseRepresentatives({
+            this.localLegislators = window.CivicAPI.parseRepresentatives({
                 officials: data.results || []
             });
 
-            if (this.legislators.length === 0) {
+            if (this.localLegislators.length === 0) {
                 this.showLoading(false);
                 this.showError('No legislators found for this location. Please try a different address.');
                 return;
             }
 
-            const stateLegislators = this.legislators.filter(l => l.level === 'state');
+            // Determine the state jurisdiction
+            const stateLegislators = this.localLegislators.filter(l => l.level === 'state');
             if (stateLegislators.length > 0 && stateLegislators[0].jurisdiction) {
                 this.currentJurisdiction = stateLegislators[0].jurisdiction;
             }
 
+            // Show local/federal reps immediately
+            this.stateLegislators = [];
+            this.legislators = [...this.localLegislators];
             this.renderReps();
             this.showLoading(false);
+            this.hasSearched = true;
 
             // Auto-select first rep
             if (this.legislators.length > 0) {
                 this.selectRep(this.legislators[0]);
+            }
+
+            // Fetch all state legislators in the background (non-blocking)
+            if (this.currentJurisdiction) {
+                const localIds = new Set(this.localLegislators.map(l => l.id));
+                try {
+                    console.log(`Fetching all legislators for ${this.currentJurisdiction}...`);
+                    const allPeople = await window.CivicAPI.getAllLegislators(this.currentJurisdiction);
+                    console.log(`Got ${allPeople.length} total legislators`);
+                    this.stateLegislators = window.CivicAPI.parseRepresentatives({
+                        officials: allPeople
+                    }).filter(l => !localIds.has(l.id))
+                      .sort((a, b) => a.name.localeCompare(b.name));
+                    console.log(`After filtering local: ${this.stateLegislators.length} state legislators`);
+
+                    // Update combined list and re-render
+                    this.legislators = [...this.localLegislators, ...this.stateLegislators];
+                    this.renderReps();
+
+                    // Re-select the current rep to keep it highlighted
+                    if (this.selectedRep) {
+                        this.selectRep(this.selectedRep);
+                    }
+                } catch (err) {
+                    console.error('Error fetching all state legislators:', err);
+                }
             }
 
         } catch (error) {
@@ -150,13 +219,13 @@ class VoteApp {
             { name: 'Your Representative', party: '???', office: 'Representative', district: '', level: 'federal', photoUrl: '' }
         ];
         this.federalList.innerHTML = placeholders.map(l => this.renderRepItem(l, true)).join('');
-        this.stateList.innerHTML = '<p style="color: #9ca3af; font-size: 0.85rem; padding: 8px;">Search to see your state legislators</p>';
+        this.localList.innerHTML = '<p style="color: #9ca3af; font-size: 0.85rem; padding: 8px;">Search to see your local legislators</p>';
+        this.stateList.innerHTML = '<p style="color: #9ca3af; font-size: 0.85rem; padding: 8px;">Search to see all state legislators</p>';
     }
 
     renderReps() {
-        const federal = this.legislators.filter(l => l.level === 'federal');
-        const state = this.legislators.filter(l => l.level === 'state');
-
+        // Federal section: US Senators and Representatives
+        const federal = this.localLegislators ? this.localLegislators.filter(l => l.level === 'federal') : [];
         if (federal.length > 0) {
             this.federalSection.style.display = '';
             this.federalList.innerHTML = federal.map(l => this.renderRepItem(l)).join('');
@@ -164,9 +233,19 @@ class VoteApp {
             this.federalSection.style.display = 'none';
         }
 
-        if (state.length > 0) {
+        // Local section: state-level reps from the user's address lookup
+        const local = this.localLegislators ? this.localLegislators.filter(l => l.level === 'state') : [];
+        if (local.length > 0) {
+            this.localSection.style.display = '';
+            this.localList.innerHTML = local.map(l => this.renderRepItem(l)).join('');
+        } else {
+            this.localSection.style.display = 'none';
+        }
+
+        // State section: all other state legislators, alphabetically
+        if (this.stateLegislators && this.stateLegislators.length > 0) {
             this.stateSection.style.display = '';
-            this.stateList.innerHTML = state.map(l => this.renderRepItem(l)).join('');
+            this.stateList.innerHTML = this.stateLegislators.map(l => this.renderRepItem(l)).join('');
         } else {
             this.stateSection.style.display = 'none';
         }
@@ -328,8 +407,21 @@ class VoteApp {
         this.repAlignmentScore.textContent = 'Loading alignment...';
         this.repAlignmentBills.innerHTML = '<div class="alignment-loading"><div class="mini-loader"></div>Searching bills...</div>';
 
-        // Check cache
-        const cacheKey = `${issue.id}_${this.currentJurisdiction}`;
+        // Use the rep's own jurisdiction — federal reps need federal bill search
+        const jurisdiction = rep.level === 'federal'
+            ? 'United States'
+            : (rep.jurisdiction || this.currentJurisdiction);
+
+        if (!jurisdiction) {
+            this.repAlignmentScore.textContent = 'Unable to determine jurisdiction';
+            this.repAlignmentBills.innerHTML = '<p class="alignment-prompt">Could not determine the legislative jurisdiction for this representative.</p>';
+            return;
+        }
+
+        console.log(`Loading alignment for ${rep.name} (${rep.level}) in jurisdiction: ${jurisdiction}`);
+
+        // Check cache (keyed by issue + jurisdiction)
+        const cacheKey = `${issue.id}_${jurisdiction}`;
         let allBills = this.billCache[cacheKey];
 
         if (!allBills) {
@@ -339,9 +431,11 @@ class VoteApp {
 
             for (const keyword of issue.billKeywords) {
                 try {
+                    console.log(`  Searching "${keyword}" in ${jurisdiction}...`);
                     const bills = await window.CivicAPI.getBillsBySubject(
-                        this.currentJurisdiction, keyword, 10
+                        jurisdiction, keyword, 10
                     );
+                    console.log(`  Found ${bills.length} bills for "${keyword}"`);
                     for (const bill of bills) {
                         if (!seenIds.has(bill.id)) {
                             seenIds.add(bill.id);
@@ -353,6 +447,7 @@ class VoteApp {
                 }
             }
 
+            console.log(`Total unique bills found: ${allBills.length}`);
             this.billCache[cacheKey] = allBills;
         }
 
@@ -379,32 +474,41 @@ class VoteApp {
         return {
             totalBills: bills.length,
             sponsoredCount: matchedBills.length,
-            matchedBills: matchedBills
+            matchedBills: matchedBills,
+            allBills: bills
         };
     }
 
     renderRepAlignmentCard(rep, alignment) {
         if (alignment.totalBills === 0) {
             this.repAlignmentScore.textContent = 'No related bills found';
-            this.repAlignmentBills.innerHTML = '<p class="alignment-prompt">No bills matching this issue were found in the current legislative session for this state.</p>';
+            this.repAlignmentBills.innerHTML = '<p class="alignment-prompt">No bills matching this issue were found in the current legislative session.</p>';
             return;
         }
 
-        if (alignment.sponsoredCount === 0) {
+        // Show sponsorship count if any, otherwise just the bill count
+        if (alignment.sponsoredCount > 0) {
+            this.repAlignmentScore.textContent = `Sponsored ${alignment.sponsoredCount} of ${alignment.totalBills} related bill${alignment.totalBills === 1 ? '' : 's'}`;
+        } else {
             this.repAlignmentScore.textContent = `${alignment.totalBills} related bill${alignment.totalBills === 1 ? '' : 's'} found`;
-            this.repAlignmentBills.innerHTML = '<p class="alignment-prompt">This representative has not sponsored any of the related bills found.</p>';
-            return;
         }
 
-        this.repAlignmentScore.textContent = `Sponsored ${alignment.sponsoredCount} of ${alignment.totalBills} related bill${alignment.totalBills === 1 ? '' : 's'}`;
+        // Show sponsored bills first, then other related bills
+        const sponsoredBills = alignment.matchedBills.slice(0, 5);
+        const otherBills = alignment.allBills
+            ? alignment.allBills.filter(b => !alignment.matchedBills.includes(b)).slice(0, 5 - sponsoredBills.length)
+            : [];
+        const billsToShow = [...sponsoredBills, ...otherBills].slice(0, 5);
 
-        const billsHtml = alignment.matchedBills.slice(0, 5).map(bill => {
+        const billsHtml = billsToShow.map(bill => {
             const title = bill.title || bill.identifier || 'Untitled bill';
             const identifier = bill.identifier || '';
             const url = bill.openstates_url || '#';
+            const isSponsored = alignment.matchedBills.includes(bill);
+            const sponsorBadge = isSponsored ? ' <span style="color: #22c55e; font-weight: 600;">✓ Sponsor</span>' : '';
             return `
                 <div class="bill-item">
-                    <a href="${url}" target="_blank" rel="noopener">${identifier}</a>
+                    <a href="${url}" target="_blank" rel="noopener">${identifier}</a>${sponsorBadge}
                     <div style="font-size:0.8rem; color: var(--text-light); margin-top: 2px;">${title.length > 80 ? title.substring(0, 80) + '...' : title}</div>
                 </div>
             `;
