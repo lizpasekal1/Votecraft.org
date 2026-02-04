@@ -28,11 +28,7 @@ const CivicAPI = {
 
         console.log('Geocoding address:', address);
 
-        const response = await fetch(url, {
-            headers: {
-                'User-Agent': 'Votecraft/1.0'
-            }
-        });
+        const response = await fetch(url);
 
         console.log('Geocode response status:', response.status);
 

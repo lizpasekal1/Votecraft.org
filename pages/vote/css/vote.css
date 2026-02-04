@@ -181,8 +181,19 @@ body {
     flex-shrink: 0;
 }
 
+.sidebar-logo {
+    display: block;
+    margin-bottom: 16px;
+}
+
+.sidebar-logo img {
+    height: 32px;
+    width: auto;
+}
+
 .search-section {
     display: flex;
+    align-items: center;
     gap: 8px;
     margin-bottom: 16px;
 }
@@ -245,6 +256,9 @@ body {
     color: #d1d5db;
     cursor: pointer;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .toggle-btn.active {
@@ -689,7 +703,7 @@ body {
     flex: 1;
     background: var(--right-bg);
     color: var(--right-text);
-    padding: 0 40px 0;
+    padding: 0 clamp(16px, 3vw, 40px) 0;
     position: relative;
     overflow: hidden;
     display: flex;
@@ -705,8 +719,8 @@ body {
     flex-direction: column;
     flex: 1;
     min-height: 0;
-    overflow: visible;
-    padding-top: 30px;
+    overflow: hidden;
+    padding-top: clamp(16px, 3vh, 30px);
 }
 
 .right-panel-title {
@@ -795,13 +809,13 @@ body {
 
 .issue-detail-layout {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 20px;
+    grid-template-columns: 1.8fr 1fr 1fr;
+    gap: clamp(12px, 2vw, 20px);
     align-items: stretch;
-    max-width: 960px;
-    margin: 0 auto;
-    overflow: visible;
-    transform: translateX(50px);
+    max-width: 1110px;
+    margin: 0 auto 60px;
+    flex: 1;
+    min-height: 0;
 }
 
 .issue-col {
@@ -809,11 +823,15 @@ body {
     flex-direction: column;
     gap: 16px;
     min-width: 0;
+    overflow: hidden;
 }
 
-.issue-col:first-child {
-    align-items: flex-end;
-    overflow: visible;
+.issue-col > * {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.issue-col:nth-child(2) {
 }
 
 .issue-map-card {
@@ -821,7 +839,8 @@ body {
     overflow: hidden;
     background: #f8f9fa;
     border: 1px solid rgba(255, 255, 255, 0.25);
-    flex-shrink: 0;
+    flex: 1;
+    min-height: 0;
 }
 
 #issue-map {
@@ -830,9 +849,9 @@ body {
 }
 
 .issue-detail-title {
-    font-size: 2rem;
+    font-size: clamp(1.4rem, 2.5vw, 2rem);
     font-weight: 700;
-    margin-bottom: 16px;
+    margin-bottom: clamp(8px, 1.5vh, 16px);
     text-align: left;
 }
 
@@ -841,40 +860,45 @@ body {
     border-radius: 12px;
     overflow: hidden;
     border: 3px solid rgba(255, 255, 255, 0.2);
-    flex-shrink: 0;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
 }
 
 .issue-hero img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: left center;
     display: block;
 }
 
 .issue-desc-box {
-    margin-top: 16px;
+    margin-top: clamp(8px, 1.5vh, 16px);
     border: none;
     border-radius: 12px;
-    padding: 16px;
+    padding: clamp(8px, 1.5vw, 16px);
     background: transparent;
-    flex: 1;
-    min-height: 0;
+    min-width: 0;
+    max-width: 100%;
     display: flex;
     flex-direction: column;
     overflow: hidden;
 }
 
 .issue-detail-desc {
-    font-size: 1rem;
+    font-size: clamp(0.85rem, 1vw, 1rem);
     line-height: 1.45;
     opacity: 0.95;
     margin-top: 0;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 .btn-learn-more {
     display: block;
     width: 50%;
-    margin: 30px auto 50px;
+    margin: clamp(12px, 2vh, 30px) auto clamp(16px, 3vh, 50px);
     padding: 7px;
     font-size: 0.78rem;
     font-family: inherit;
@@ -900,6 +924,13 @@ body {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.top-supporters-widget .rep-party {
+    color: #fff;
 }
 
 /* Placeholder state: white card matching rep alignment card */
@@ -911,10 +942,6 @@ body {
 
 .top-supporters-widget.placeholder .top-supporters-title {
     color: var(--primary);
-    font-size: 1.3rem;
-    text-align: center;
-    text-transform: none;
-    letter-spacing: normal;
 }
 
 .top-supporters-widget.placeholder .top-supporter-item {
@@ -945,12 +972,12 @@ body {
 }
 
 .top-supporters-title {
-    font-size: 0.9rem;
+    font-size: 1.3rem;
     font-weight: 700;
     color: #fff;
     margin-bottom: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    text-align: center;
+    letter-spacing: normal;
 }
 
 .top-supporters-list {
@@ -1044,11 +1071,30 @@ body {
     width: 100%;
     background: #fff;
     border-radius: 12px;
-    padding: 24px;
+    padding: clamp(12px, 2vw, 24px);
     color: var(--text);
     text-align: center;
     flex: 1;
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.rep-alignment-card::-webkit-scrollbar {
+    width: 6px;
+}
+
+.rep-alignment-card::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.rep-alignment-card::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.rep-alignment-card::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 
 .rep-alignment-card.placeholder {
@@ -1219,8 +1265,8 @@ body {
 /* ========== NONPROFITS ========== */
 
 .nonprofits-section {
-    margin: 0 -40px;
-    padding: 23px 40px 52px;
+    margin: 0 calc(-1 * clamp(16px, 3vw, 40px));
+    padding: clamp(12px, 2vh, 23px) clamp(16px, 3vw, 40px) clamp(20px, 4vh, 52px);
     background: #0036a9;
     color: #fff;
     flex-shrink: 0;
@@ -1573,9 +1619,58 @@ body {
 
 @media (max-width: 520px) {
     .left-panel {
-        padding: 12px;
-        padding-top: max(12px, env(safe-area-inset-top));
+        padding: 6px 10px;
+        padding-top: max(6px, env(safe-area-inset-top));
         max-height: 35vh;
+    }
+
+    .sidebar-logo {
+        margin-bottom: 4px;
+    }
+
+    .sidebar-logo img {
+        height: 20px;
+    }
+
+    .search-section {
+        margin-bottom: 6px;
+        gap: 6px;
+    }
+
+    .search-section input {
+        padding: 0 10px;
+        font-size: 0.85rem;
+        height: 32px;
+        border-radius: 6px;
+        border-width: 1px;
+    }
+
+    .btn-search {
+        padding: 0 12px;
+        font-size: 0.8rem;
+        height: 32px;
+        border-radius: 6px;
+    }
+
+    .panel-toggle {
+        margin-bottom: 6px;
+        gap: 0;
+        background: #1f2937;
+        border-radius: 6px;
+        padding: 2px;
+    }
+
+    .toggle-btn {
+        padding: 0 8px;
+        font-size: 0.7rem;
+        height: 26px;
+        border: none;
+        border-radius: 4px;
+        letter-spacing: 0.3px;
+    }
+
+    #federal-section {
+        margin-top: 20px;
     }
 
     .right-panel {
@@ -1590,13 +1685,35 @@ body {
         font-size: 0.78rem;
     }
 
-    .issue-hero {
-        margin: 0 -12px;
-        width: calc(100% + 24px) !important;
+    #issue-detail-view {
+        padding-top: 0;
+        overflow: visible;
+    }
+
+    .issue-col {
+        overflow: visible;
+    }
+
+    .issue-detail-title {
+        order: 1;
     }
 
     .issue-detail-layout {
+        grid-template-columns: 1fr;
         gap: 16px;
+    }
+
+    .issue-hero {
+        margin: -16px -12px 0;
+        width: calc(100% + 24px) !important;
+        max-width: none !important;
+        border-radius: 0;
+        border: none;
+        max-height: 220px;
+    }
+
+    .btn-back {
+        display: none !important;
     }
 
     .issue-map-card {
@@ -1692,5 +1809,21 @@ body {
 
     .top-supporters-widget.placeholder {
         padding: 16px;
+    }
+
+    .learn-more-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 20px;
+        z-index: 1000;
+    }
+
+    .learn-more-modal-inner {
+        max-width: 100%;
+        height: 100%;
+        border-radius: 8px;
     }
 }
