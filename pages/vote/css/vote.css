@@ -832,9 +832,8 @@ body {
 .issue-detail-title {
     font-size: 2rem;
     font-weight: 700;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     text-align: left;
-    transform: translateX(50px);
 }
 
 .issue-hero {
@@ -1156,34 +1155,50 @@ body {
     right: 0;
     bottom: 0;
     z-index: 10;
-    background: #fff;
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
-    flex-direction: column;
-    border-radius: 0;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
 }
 
-.learn-more-modal-header {
+.learn-more-modal-inner {
+    position: relative;
+    width: 100%;
+    max-width: 740px;
+    height: 85%;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
     display: flex;
-    justify-content: flex-end;
-    padding: 12px 16px;
-    background: var(--primary);
-    flex-shrink: 0;
+    flex-direction: column;
 }
 
 .learn-more-close {
-    padding: 6px 20px;
-    font-size: 0.85rem;
-    font-family: inherit;
-    font-weight: 600;
-    background: #fff;
-    color: var(--primary);
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
     border: none;
-    border-radius: var(--radius);
+    background: #000;
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 700;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: background 0.2s;
+    padding: 0;
 }
 
 .learn-more-close:hover {
-    background: #e2e8f0;
+    background: #333;
 }
 
 .learn-more-iframe {
@@ -1357,7 +1372,9 @@ body {
     }
 
     .issue-detail-title {
-        transform: none;
+        text-align: center;
+        margin-left: 0 !important;
+        font-size: 1.8rem;
     }
 
     #issue-detail-view {
@@ -1485,6 +1502,16 @@ body {
         display: flex;
     }
 
+    .vote-layout.expand-left .divider-btn-restore.visible {
+        top: auto;
+        bottom: 16px;
+        transform: rotate(180deg);
+    }
+
+    .vote-layout.expand-left .divider-btn-restore.visible:hover {
+        transform: rotate(180deg) scale(1.1);
+    }
+
     .right-panel {
         padding: 24px 16px;
         padding-bottom: max(24px, env(safe-area-inset-bottom));
@@ -1522,7 +1549,7 @@ body {
     }
 
     .issue-detail-title {
-        font-size: 1.5rem;
+        font-size: 1.6rem;
     }
 }
 
@@ -1546,9 +1573,8 @@ body {
     }
 
     .issue-detail-title {
-        font-size: 1.3rem;
+        font-size: 1.4rem;
         margin-bottom: 14px;
-        padding-right: 110px;
     }
 
     .issue-detail-layout {

@@ -81,7 +81,7 @@
                 </div>
 
                 <!-- Back button (positioned absolutely in right panel) -->
-                <button id="back-btn" class="btn-back" style="display:none;">OTHER ISSUES</button>
+                <button id="back-btn" class="btn-back" style="display:none;">BACK</button>
 
                 <!-- VIEW 2: Issue Detail -->
                 <div id="issue-detail-view" class="view-container" style="display:none;">
@@ -130,18 +130,18 @@
 
                 <!-- Learn More Modal -->
                 <div id="learn-more-modal" class="learn-more-modal" style="display:none;">
-                    <div class="learn-more-modal-header">
-                        <button id="learn-more-close" class="learn-more-close">Close</button>
+                    <div class="learn-more-modal-inner">
+                        <button id="learn-more-close" class="learn-more-close">&#x2715;</button>
+                        <iframe id="learn-more-iframe" class="learn-more-iframe" src="" title="Learn More"></iframe>
                     </div>
-                    <iframe id="learn-more-iframe" class="learn-more-iframe" src="" title="Learn More"></iframe>
                 </div>
             </main>
         </div>
     </div>
 
-    <link rel="stylesheet" href="css/vote.css?v=104">
+    <link rel="stylesheet" href="css/vote.css?v=110">
     <script src="js/issues-data.js?v=85"></script>
     <script src="js/civic-api.js?v=85"></script>
-    <script src="js/vote-app.js?v=90"></script>
+    <script src="js/vote-app.js?v=92"></script>
 </body>
 </html>
