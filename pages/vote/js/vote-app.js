@@ -182,6 +182,17 @@ class VoteApp {
 
         this.viewAllSupportersBtn.addEventListener('click', () => this.openSidebarSupporters());
 
+        // Top supporters widget click delegation
+        this.topSupportersList.addEventListener('click', (e) => {
+            const item = e.target.closest('.top-supporter-item');
+            if (item && item.dataset.index !== undefined) {
+                const index = parseInt(item.dataset.index);
+                if (!isNaN(index) && this.legislators[index]) {
+                    this.selectRep(this.legislators[index]);
+                }
+            }
+        });
+
         this.learnMoreBtn.addEventListener('click', () => this.openLearnMore());
         this.learnMoreClose.addEventListener('click', () => this.closeLearnMore());
 
@@ -1037,7 +1048,7 @@ class VoteApp {
             else if (partyLower.includes('republican')) partyClass = 'republican';
 
             return `
-                <div class="top-supporter-item">
+                <div class="top-supporter-item" data-index="${this.legislators.indexOf(leg)}" style="cursor:pointer;">
                     <div class="top-supporter-photo">${photoHtml}</div>
                     <div class="top-supporter-info">
                         <div class="top-supporter-name">${leg.name}</div>
@@ -1073,7 +1084,14 @@ class VoteApp {
             ? `<img src="${rep.photoUrl}" alt="${rep.name}" onerror="this.style.display='none'; this.parentElement.textContent='${this.getInitials(rep.name)}';">`
             : this.getInitials(rep.name);
         this.repCardPhoto.innerHTML = photoHtml;
-        this.repCardName.textContent = rep.name;
+
+        const partyLower = rep.party.toLowerCase();
+        let partyClass = '';
+        if (partyLower.includes('democrat')) partyClass = 'democratic';
+        else if (partyLower.includes('republican')) partyClass = 'republican';
+        const districtText = rep.district ? ` &middot; District ${rep.district}` : '';
+        this.repCardName.innerHTML = `${rep.name}<div class="rep-card-subtitle"><span class="rep-party ${partyClass}">${rep.party}</span>${districtText}</div>`;
+
         this.repAlignmentScore.textContent = 'Loading alignment...';
         this.repAlignmentBills.innerHTML = '<div class="alignment-loading"><div class="mini-loader"></div>Searching bills...</div>';
 
