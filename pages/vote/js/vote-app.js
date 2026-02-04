@@ -93,9 +93,10 @@ class VoteApp {
         card.style.flex = '';
         if (h > 0) {
             const hero = document.getElementById('issue-hero');
+            const heroW = Math.round(h * 16 / 9);
             hero.style.height = h + 'px';
-            hero.style.width = h + 'px';
-            document.querySelector('.issue-desc-box').style.width = h + 'px';
+            hero.style.width = heroW + 'px';
+            document.querySelector('.issue-desc-box').style.width = heroW + 'px';
             document.getElementById('issue-map-card').style.height = h + 'px';
             if (this.issueMap) this.issueMap.invalidateSize();
         }
@@ -128,6 +129,56 @@ class VoteApp {
 
         this.learnMoreBtn.addEventListener('click', () => this.openLearnMore());
         this.learnMoreClose.addEventListener('click', () => this.closeLearnMore());
+
+        // Panel expand/collapse
+        const expandLeftBtn = document.getElementById('expand-left-btn');
+        const expandRightBtn = document.getElementById('expand-right-btn');
+        const restoreBtn = document.getElementById('restore-btn');
+        const layout = document.querySelector('.vote-layout');
+        const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
+
+        if (expandLeftBtn) {
+            expandLeftBtn.addEventListener('click', () => {
+                if (isMobile()) {
+                    // Mobile: up arrow = slide sidebar up, reveal content
+                    layout.classList.remove('expand-left');
+                    layout.classList.add('expand-right');
+                } else {
+                    layout.classList.remove('expand-right');
+                    layout.classList.add('expand-left');
+                }
+                restoreBtn.classList.add('visible');
+                if (this.issueMap) {
+                    setTimeout(() => this.issueMap.invalidateSize(), 650);
+                }
+            });
+        }
+        if (expandRightBtn) {
+            expandRightBtn.addEventListener('click', () => {
+                if (isMobile()) {
+                    // Mobile: down arrow = slide content down, reveal sidebar
+                    layout.classList.remove('expand-right');
+                    layout.classList.add('expand-left');
+                } else {
+                    layout.classList.remove('expand-left');
+                    layout.classList.add('expand-right');
+                }
+                restoreBtn.classList.add('visible');
+                if (this.issueMap) {
+                    setTimeout(() => this.issueMap.invalidateSize(), 650);
+                }
+            });
+        }
+        if (restoreBtn) {
+            restoreBtn.addEventListener('click', () => {
+                layout.classList.remove('expand-left', 'expand-right');
+                restoreBtn.classList.remove('visible');
+                if (this.issueMap) {
+                    setTimeout(() => this.issueMap.invalidateSize(), 650);
+                }
+                this.syncHeights();
+            });
+        }
 
         // Issue grid click delegation
         this.issuesGrid.addEventListener('click', (e) => {

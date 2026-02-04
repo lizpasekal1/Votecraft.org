@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>VoteCraft - Explore Issues & Representatives</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,6 +49,13 @@
                     <div id="issues-sidebar-list" class="issues-sidebar-list"></div>
                 </div>
             </aside>
+
+            <!-- Panel divider with expand controls -->
+            <div class="panel-divider" id="panel-divider">
+                <button class="divider-btn divider-btn-left" id="expand-left-btn" title="Expand sidebar">&#x25C0;</button>
+                <button class="divider-btn divider-btn-right" id="expand-right-btn" title="Expand content">&#x25B6;</button>
+            </div>
+            <button class="divider-btn-restore" id="restore-btn" title="Restore split view">&#x25BC;</button>
 
             <!-- RIGHT PANEL: Content area -->
             <main class="right-panel">
@@ -132,9 +139,9 @@
         </div>
     </div>
 
-    <link rel="stylesheet" href="css/vote.css?v=78">
-    <script src="js/issues-data.js?v=78"></script>
-    <script src="js/civic-api.js?v=78"></script>
-    <script src="js/vote-app.js?v=78"></script>
+    <link rel="stylesheet" href="css/vote.css?v=104">
+    <script src="js/issues-data.js?v=85"></script>
+    <script src="js/civic-api.js?v=85"></script>
+    <script src="js/vote-app.js?v=90"></script>
 </body>
 </html>

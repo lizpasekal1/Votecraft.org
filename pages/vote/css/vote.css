@@ -28,6 +28,7 @@
 html, body {
     overflow: hidden;
     height: 100vh;
+    height: 100dvh;
 }
 
 body {
@@ -42,13 +43,130 @@ body {
 .vote-widget {
     width: 100%;
     height: 100vh;
+    height: 100dvh;
     overflow: hidden;
 }
 
 .vote-layout {
     display: flex;
     height: 100vh;
+    height: 100dvh;
 }
+
+/* ========== PANEL DIVIDER ========== */
+
+.panel-divider {
+    width: 6px;
+    background: rgba(0, 0, 0, 0.15);
+    position: relative;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    z-index: 5;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                height 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.panel-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 4px;
+    height: 32px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.divider-btn {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: var(--left-bg);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.6rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    padding: 0;
+    line-height: 1;
+}
+
+.divider-btn:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.divider-btn-left {
+    top: calc(50% - 22px);
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.divider-btn-right {
+    top: calc(50% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.divider-btn-left:hover {
+    transform: translateX(-50%) scale(1.1);
+}
+
+.divider-btn-right:hover {
+    transform: translateX(-50%) scale(1.1);
+}
+
+/* Restore button (shown when a panel is expanded) */
+.divider-btn-restore {
+    position: fixed;
+    top: 12px;
+    left: 16px;
+    z-index: 100;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    background: var(--left-bg);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.75rem;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+}
+
+.divider-btn-restore:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    transform: scale(1.1);
+}
+
+/* .divider-btn-restore.visible is in mobile media query only */
+
+/* Expand states */
+.vote-layout .left-panel,
+.vote-layout .right-panel {
+    transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                padding 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Expand states are mobile-only — see @media (max-width: 900px) */
 
 /* ========== LEFT PANEL ========== */
 
@@ -587,7 +705,7 @@ body {
     flex-direction: column;
     flex: 1;
     min-height: 0;
-    overflow-y: hidden;
+    overflow: visible;
     padding-top: 30px;
 }
 
@@ -680,6 +798,10 @@ body {
     grid-template-columns: 1fr 1fr 1fr;
     gap: 20px;
     align-items: stretch;
+    max-width: 960px;
+    margin: 0 auto;
+    overflow: visible;
+    transform: translateX(50px);
 }
 
 .issue-col {
@@ -691,6 +813,7 @@ body {
 
 .issue-col:first-child {
     align-items: flex-end;
+    overflow: visible;
 }
 
 .issue-map-card {
@@ -710,7 +833,8 @@ body {
     font-size: 2rem;
     font-weight: 700;
     margin-bottom: 20px;
-    text-align: center;
+    text-align: left;
+    transform: translateX(50px);
 }
 
 .issue-hero {
@@ -730,7 +854,7 @@ body {
 
 .issue-desc-box {
     margin-top: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    border: none;
     border-radius: 12px;
     padding: 16px;
     background: transparent;
@@ -742,18 +866,16 @@ body {
 }
 
 .issue-detail-desc {
-    font-size: 0.78rem;
+    font-size: 1rem;
     line-height: 1.45;
     opacity: 0.95;
     margin-top: 0;
-    flex: 1;
-    overflow: hidden;
 }
 
 .btn-learn-more {
     display: block;
     width: 50%;
-    margin: 10px auto 0;
+    margin: 30px auto 0;
     padding: 7px;
     font-size: 0.78rem;
     font-family: inherit;
@@ -1074,7 +1196,7 @@ body {
 
 .nonprofits-section {
     margin: 0 -40px;
-    padding: 16px 40px 20px;
+    padding: 48px 40px 52px;
     background: #0036a9;
     color: #fff;
     flex-shrink: 0;
@@ -1098,8 +1220,8 @@ body {
 .nonprofits-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    max-width: 700px;
+    gap: 40px;
+    max-width: 800px;
     margin: 0 auto;
 }
 
@@ -1229,19 +1351,39 @@ body {
     }
 
     .issue-detail-layout {
-        flex-direction: column;
+        grid-template-columns: 1fr;
+        max-width: 100%;
+        transform: none;
+    }
+
+    .issue-detail-title {
+        transform: none;
     }
 
     #issue-detail-view {
         flex: none;
     }
 
+    .issue-hero {
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    .issue-hero-img {
+        aspect-ratio: 16 / 9;
+    }
+
+    .issue-desc-box {
+        width: 100% !important;
+    }
+
+    .issue-map-card {
+        height: 300px !important;
+    }
+
     .rep-alignment-card {
         width: 100%;
-        display: flex;
-        gap: 20px;
-        align-items: center;
-        text-align: left;
+        height: auto !important;
     }
 
     .rep-card-photo {
@@ -1261,11 +1403,94 @@ body {
         max-width: none;
         min-width: auto;
         padding: 16px;
-        max-height: 50vh;
+        padding-top: max(16px, env(safe-area-inset-top));
+        max-height: 40vh;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        z-index: 2;
+        position: relative;
+    }
+
+    .panel-divider {
+        display: flex;
+        width: 100%;
+        height: 6px;
+        flex-direction: row;
+    }
+
+    .panel-divider::before {
+        width: 32px;
+        height: 4px;
+    }
+
+    .divider-btn-right {
+        top: 50%;
+        left: 20px;
+        transform: translateY(-50%) rotate(90deg);
+    }
+
+    .divider-btn-left {
+        top: 50%;
+        left: 48px;
+        transform: translateY(-50%) rotate(90deg);
+    }
+
+    .divider-btn-left:hover {
+        transform: translateY(-50%) rotate(90deg) scale(1.1);
+    }
+
+    .divider-btn-right:hover {
+        transform: translateY(-50%) rotate(90deg) scale(1.1);
+    }
+
+    .vote-layout.expand-left .left-panel {
+        max-height: 100dvh;
+        flex-grow: 1;
+    }
+
+    .vote-layout.expand-left .right-panel {
+        max-height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        overflow: hidden;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .vote-layout.expand-right .left-panel {
+        max-height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        overflow: hidden;
+        opacity: 0;
+        pointer-events: none;
+        width: 100%;
+        min-width: auto;
+    }
+
+    .vote-layout.expand-right .right-panel {
+        flex: 1;
+    }
+
+    .vote-layout.expand-left .panel-divider,
+    .vote-layout.expand-right .panel-divider {
+        height: 0;
+        width: 100%;
+        opacity: 0;
+        overflow: hidden;
+        pointer-events: none;
+    }
+
+    .divider-btn-restore.visible {
+        display: flex;
     }
 
     .right-panel {
         padding: 24px 16px;
+        padding-bottom: max(24px, env(safe-area-inset-bottom));
+        flex: 1;
+        min-height: 0;
+        max-height: 100dvh;
     }
 
     .nonprofits-section {
@@ -1304,27 +1529,124 @@ body {
 @media (max-width: 520px) {
     .left-panel {
         padding: 12px;
+        padding-top: max(12px, env(safe-area-inset-top));
+        max-height: 35vh;
     }
 
     .right-panel {
-        padding: 20px 12px;
+        padding: 16px 12px;
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
     }
 
-    .nonprofits-section {
-        margin: 0 -12px;
-        padding: 16px 12px 20px;
+    .btn-back {
+        top: 16px;
+        right: 12px;
+        padding: 8px 14px;
+        font-size: 0.78rem;
     }
 
-    .nonprofits-grid {
-        grid-template-columns: 1fr;
+    .issue-detail-title {
+        font-size: 1.3rem;
+        margin-bottom: 14px;
+        padding-right: 110px;
+    }
+
+    .issue-detail-layout {
+        gap: 16px;
+    }
+
+    .issue-map-card {
+        height: 200px !important;
+    }
+
+    .issue-detail-desc {
+        font-size: 0.9rem;
+    }
+
+    .issue-desc-box {
+        padding: 10px 0;
+    }
+
+    .btn-learn-more {
+        width: 60%;
+        margin-top: 20px;
+        padding: 10px;
+        font-size: 0.85rem;
     }
 
     .rep-alignment-card {
         flex-direction: column;
         text-align: center;
+        padding: 16px;
     }
 
     .rep-card-photo {
         margin: 0 auto;
+        width: 70px;
+        height: 70px;
+    }
+
+    .rep-card-name {
+        font-size: 1.1rem;
+    }
+
+    .nonprofits-section {
+        margin: 0 -12px;
+        padding: 24px 12px;
+    }
+
+    .nonprofits-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .nonprofits-headline {
+        font-size: 1.1rem;
+    }
+
+    .right-panel-title {
+        font-size: 1.3rem;
+        padding-top: 16px;
+    }
+
+    .right-panel-subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+    }
+
+    .issue-card-image {
+        width: 90px;
+        height: 90px;
+    }
+
+    .issue-card-title {
+        padding: 12px 14px;
+        font-size: 1.05rem;
+    }
+
+    .issues-grid {
+        gap: 12px;
+    }
+
+    .search-section input {
+        padding: 10px 12px;
+        font-size: 1rem;
+    }
+
+    .btn-search {
+        padding: 10px 16px;
+    }
+
+    .toggle-btn {
+        padding: 10px 12px;
+        font-size: 0.8rem;
+    }
+
+    .top-supporters-widget {
+        padding: 12px;
+    }
+
+    .top-supporters-widget.placeholder {
+        padding: 16px;
     }
 }
