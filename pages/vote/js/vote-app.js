@@ -59,6 +59,7 @@ class VoteApp {
         this.issueMap = null;
 
         this.hasSearched = false;
+        this._topSupportersVersion = 0;
 
         this.bindEvents();
         this.renderIssuesGrid();
@@ -82,6 +83,51 @@ class VoteApp {
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             maxZoom: 19
         }).addTo(this.issueMap);
+        this.districtLayer = null;
+    }
+
+    async showDistrictOnMap(legislator) {
+        if (!this.issueMap || !this.currentCoords) return;
+
+        // Clear previous district
+        if (this.districtLayer) {
+            this.issueMap.removeLayer(this.districtLayer);
+            this.districtLayer = null;
+        }
+
+        // Only show districts for state-level reps (Census has state legislative districts)
+        if (legislator.level === 'federal') {
+            // For federal reps, just center on the searched location
+            this.issueMap.setView([this.currentCoords.lat, this.currentCoords.lng], 8);
+            return;
+        }
+
+        try {
+            const boundaries = await window.CivicAPI.getDistrictBoundaries(
+                this.currentCoords.lat, this.currentCoords.lng
+            );
+
+            const isUpper = legislator.office.toLowerCase().includes('senator') ||
+                            legislator.office.toLowerCase().includes('senate');
+            const district = isUpper ? boundaries.stateSenate : boundaries.stateHouse;
+
+            if (district) {
+                this.districtLayer = L.geoJSON(district, {
+                    style: {
+                        color: '#2563eb',
+                        weight: 2,
+                        fillColor: '#2563eb',
+                        fillOpacity: 0.15
+                    }
+                }).addTo(this.issueMap);
+                this.issueMap.fitBounds(this.districtLayer.getBounds(), { padding: [20, 20] });
+            } else {
+                this.issueMap.setView([this.currentCoords.lat, this.currentCoords.lng], 10);
+            }
+        } catch (err) {
+            console.error('Error loading district boundary:', err);
+            this.issueMap.setView([this.currentCoords.lat, this.currentCoords.lng], 10);
+        }
     }
 
     syncHeights() {
@@ -340,6 +386,11 @@ class VoteApp {
                     if (this.selectedRep) {
                         this.selectRep(this.selectedRep);
                     }
+
+                    // Refresh top supporters now that full legislator list is available
+                    if (this.selectedIssue) {
+                        this.loadTopSupporters(this.selectedIssue);
+                    }
                 } catch (err) {
                     console.error('Error fetching all state legislators:', err);
                 }
@@ -567,9 +618,10 @@ class VoteApp {
             }
         });
 
-        // If issue detail is showing, load alignment
+        // If issue detail is showing, load alignment and update map
         if (this.selectedIssue) {
             this.loadRepAlignment(legislator, this.selectedIssue);
+            this.showDistrictOnMap(legislator);
         }
     }
 
@@ -659,6 +711,9 @@ class VoteApp {
         setTimeout(() => {
             this.initMap();
             this.syncHeights();
+            if (this.selectedRep) {
+                this.showDistrictOnMap(this.selectedRep);
+            }
         }, 50);
 
         // Load top 2 supporters widget
@@ -869,6 +924,11 @@ class VoteApp {
             }
         }
 
+        if (allBills.length > 0) {
+            const sample = allBills[0];
+            console.log(`[fetchIssueBills] Sample bill keys: ${Object.keys(sample).join(', ')}`);
+            console.log(`[fetchIssueBills] Has sponsorships: ${!!sample.sponsorships}, count: ${sample.sponsorships?.length || 0}`);
+        }
         this.billCache[cacheKey] = allBills;
         return allBills;
     }
@@ -901,7 +961,11 @@ class VoteApp {
     // ========== TOP SUPPORTERS WIDGET (Right Panel) ==========
 
     async loadTopSupporters(issue) {
+        const myVersion = ++this._topSupportersVersion;
+        console.log(`[TopSupporters v${myVersion}] START - issue=${issue.id}, jurisdiction=${this.currentJurisdiction}, legislators=${this.legislators.length}`);
+
         if (!this.currentJurisdiction || this.legislators.length === 0) {
+            console.log(`[TopSupporters v${myVersion}] Showing placeholder (no jurisdiction or no legislators)`);
             // Show placeholder state — white card matching rep alignment card
             this.topSupportersWidget.style.display = '';
             this.topSupportersWidget.classList.add('placeholder');
@@ -929,8 +993,17 @@ class VoteApp {
 
         const allBills = await this.fetchIssueBills(issue, this.currentJurisdiction);
 
+        // Stale call — a newer loadTopSupporters was triggered while we were fetching
+        if (myVersion !== this._topSupportersVersion) {
+            console.log(`[TopSupporters v${myVersion}] STALE - current version is ${this._topSupportersVersion}, skipping`);
+            return;
+        }
+
+        console.log(`[TopSupporters v${myVersion}] Got ${allBills.length} bills`);
+
         if (allBills.length === 0) {
-            this.topSupportersWidget.style.display = 'none';
+            console.log(`[TopSupporters v${myVersion}] No bills found`);
+            this.topSupportersList.innerHTML = '<p class="alignment-prompt">No related bills found for this issue in the current session.</p>';
             return;
         }
 
@@ -943,9 +1016,11 @@ class VoteApp {
         }
 
         supporters.sort((a, b) => b.count - a.count);
+        console.log(`[TopSupporters v${myVersion}] Found ${supporters.length} supporters out of ${this.legislators.length} legislators`);
 
         if (supporters.length === 0) {
-            this.topSupportersWidget.style.display = 'none';
+            console.log(`[TopSupporters v${myVersion}] No sponsors matched`);
+            this.topSupportersList.innerHTML = '<p class="alignment-prompt">No bill sponsors found among current legislators.</p>';
             return;
         }
 

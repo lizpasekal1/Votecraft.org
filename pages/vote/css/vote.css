@@ -874,7 +874,7 @@ body {
 .btn-learn-more {
     display: block;
     width: 50%;
-    margin: 30px auto 0;
+    margin: 30px auto 50px;
     padding: 7px;
     font-size: 0.78rem;
     font-family: inherit;
@@ -1099,6 +1099,8 @@ body {
     text-align: left;
     font-size: 0.85rem;
     color: var(--text);
+    max-height: 220px;
+    overflow-y: auto;
 }
 
 .alignment-bills .bill-item {
@@ -1165,8 +1167,8 @@ body {
 .learn-more-modal-inner {
     position: relative;
     width: 100%;
-    max-width: 740px;
-    height: 85%;
+    max-width: 420px;
+    height: 90%;
     background: #fff;
     border-radius: 12px;
     overflow: hidden;
@@ -1211,7 +1213,7 @@ body {
 
 .nonprofits-section {
     margin: 0 -40px;
-    padding: 48px 40px 52px;
+    padding: 23px 40px 52px;
     background: #0036a9;
     color: #fff;
     flex-shrink: 0;
@@ -1253,7 +1255,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 8px;
+    margin-bottom: 16px;
 }
 
 .nonprofit-logo img {
@@ -1372,18 +1374,22 @@ body {
     }
 
     .issue-detail-title {
-        text-align: center;
-        margin-left: 0 !important;
-        font-size: 1.8rem;
+        display: none;
     }
 
     #issue-detail-view {
         flex: none;
+        padding-top: 0;
     }
 
     .issue-hero {
         width: 100% !important;
         height: auto !important;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+        margin: 0 -24px;
+        width: calc(100% + 48px) !important;
     }
 
     .issue-hero-img {
@@ -1520,6 +1526,11 @@ body {
         max-height: 100dvh;
     }
 
+    .issue-hero {
+        margin: 0 -16px;
+        width: calc(100% + 32px) !important;
+    }
+
     .nonprofits-section {
         margin: 0 -16px;
         padding: 16px 16px 20px;
@@ -1572,9 +1583,9 @@ body {
         font-size: 0.78rem;
     }
 
-    .issue-detail-title {
-        font-size: 1.4rem;
-        margin-bottom: 14px;
+    .issue-hero {
+        margin: 0 -12px;
+        width: calc(100% + 24px) !important;
     }
 
     .issue-detail-layout {
