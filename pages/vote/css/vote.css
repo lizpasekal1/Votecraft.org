@@ -1089,6 +1089,13 @@ body {
     margin-bottom: 4px;
 }
 
+.rep-card-subtitle {
+    font-size: 0.82rem;
+    font-weight: 400;
+    color: var(--text-light);
+    margin-top: 2px;
+}
+
 .alignment-score {
     font-size: 0.9rem;
     color: var(--text-light);
