@@ -380,14 +380,11 @@ class VoteApp {
                 this.stateList.innerHTML = '<div class="state-loading"><div class="mini-loader"></div>Loading state legislators...</div>';
 
                 try {
-                    console.log(`Fetching all legislators for ${this.currentJurisdiction}...`);
                     const allPeople = await window.CivicAPI.getAllLegislators(this.currentJurisdiction);
-                    console.log(`Got ${allPeople.length} total legislators`);
                     this.stateLegislators = window.CivicAPI.parseRepresentatives({
                         officials: allPeople
                     }).filter(l => !localIds.has(l.id))
                       .sort((a, b) => (a.district || '').localeCompare(b.district || '', undefined, { numeric: true }));
-                    console.log(`After filtering local: ${this.stateLegislators.length} state legislators`);
 
                     // Update combined list and re-render
                     this.legislators = [...this.localLegislators, ...this.stateLegislators];
@@ -755,6 +752,21 @@ class VoteApp {
         if (!this.selectedIssue || !this.selectedIssue.learnMoreUrl) return;
         this.learnMoreIframe.src = this.selectedIssue.learnMoreUrl;
         this.learnMoreModal.style.display = 'flex';
+        this.learnMoreIframe.onload = () => {
+            try {
+                const doc = this.learnMoreIframe.contentDocument;
+                if (!doc) return;
+                // Hide WordPress admin toolbar and site header, remove gap
+                const style = doc.createElement('style');
+                style.textContent = `
+                    #wpadminbar, header, .site-header, #masthead, .wp-site-header { display: none !important; }
+                    html, body { margin-top: 0 !important; padding-top: 0 !important; }
+                `;
+                doc.head.appendChild(style);
+            } catch (e) {
+                // Cross-origin: cannot access iframe content
+            }
+        };
     }
 
     closeLearnMore() {
@@ -935,11 +947,6 @@ class VoteApp {
             }
         }
 
-        if (allBills.length > 0) {
-            const sample = allBills[0];
-            console.log(`[fetchIssueBills] Sample bill keys: ${Object.keys(sample).join(', ')}`);
-            console.log(`[fetchIssueBills] Has sponsorships: ${!!sample.sponsorships}, count: ${sample.sponsorships?.length || 0}`);
-        }
         this.billCache[cacheKey] = allBills;
         return allBills;
     }
@@ -973,10 +980,8 @@ class VoteApp {
 
     async loadTopSupporters(issue) {
         const myVersion = ++this._topSupportersVersion;
-        console.log(`[TopSupporters v${myVersion}] START - issue=${issue.id}, jurisdiction=${this.currentJurisdiction}, legislators=${this.legislators.length}`);
 
         if (!this.currentJurisdiction || this.legislators.length === 0) {
-            console.log(`[TopSupporters v${myVersion}] Showing placeholder (no jurisdiction or no legislators)`);
             // Show placeholder state — white card matching rep alignment card
             this.topSupportersWidget.style.display = '';
             this.topSupportersWidget.classList.add('placeholder');
@@ -1006,14 +1011,10 @@ class VoteApp {
 
         // Stale call — a newer loadTopSupporters was triggered while we were fetching
         if (myVersion !== this._topSupportersVersion) {
-            console.log(`[TopSupporters v${myVersion}] STALE - current version is ${this._topSupportersVersion}, skipping`);
             return;
         }
 
-        console.log(`[TopSupporters v${myVersion}] Got ${allBills.length} bills`);
-
         if (allBills.length === 0) {
-            console.log(`[TopSupporters v${myVersion}] No bills found`);
             this.topSupportersList.innerHTML = '<p class="alignment-prompt">No related bills found for this issue in the current session.</p>';
             return;
         }
@@ -1027,10 +1028,8 @@ class VoteApp {
         }
 
         supporters.sort((a, b) => b.count - a.count);
-        console.log(`[TopSupporters v${myVersion}] Found ${supporters.length} supporters out of ${this.legislators.length} legislators`);
 
         if (supporters.length === 0) {
-            console.log(`[TopSupporters v${myVersion}] No sponsors matched`);
             this.topSupportersList.innerHTML = '<p class="alignment-prompt">No bill sponsors found among current legislators.</p>';
             return;
         }
@@ -1106,8 +1105,6 @@ class VoteApp {
             return;
         }
 
-        console.log(`Loading alignment for ${rep.name} (${rep.level}) in jurisdiction: ${jurisdiction}`);
-
         // Check cache (keyed by issue + jurisdiction)
         const cacheKey = `${issue.id}_${jurisdiction}`;
         let allBills = this.billCache[cacheKey];
@@ -1119,11 +1116,9 @@ class VoteApp {
 
             for (const keyword of issue.billKeywords) {
                 try {
-                    console.log(`  Searching "${keyword}" in ${jurisdiction}...`);
                     const bills = await window.CivicAPI.getBillsBySubject(
                         jurisdiction, keyword, 10
                     );
-                    console.log(`  Found ${bills.length} bills for "${keyword}"`);
                     for (const bill of bills) {
                         if (!seenIds.has(bill.id)) {
                             seenIds.add(bill.id);
@@ -1135,7 +1130,6 @@ class VoteApp {
                 }
             }
 
-            console.log(`Total unique bills found: ${allBills.length}`);
             this.billCache[cacheKey] = allBills;
         }
 
