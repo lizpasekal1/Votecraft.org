@@ -328,11 +328,10 @@ const CivicAPI = {
             endpoint: 'bills',
             jurisdiction: jurisdiction,
             q: subject,
-            include: 'sponsorships,votes',
+            include: 'sponsorships',
             per_page: limit.toString(),
             sort: 'latest_action_desc'
         });
-
         const url = `${this.OPENSTATES_PROXY}?${params.toString()}`;
 
         try {

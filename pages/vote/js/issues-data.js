@@ -42,7 +42,7 @@ const ISSUES_CATALOG = [
         shortTitle: 'Debt Reform',
         description: 'Public debt profiteering occurs when financial institutions exploit government borrowing for outsized profits at taxpayer expense, including predatory lending and student loan abuses. Reform efforts aim to increase transparency, cap interest rates, and protect consumers.',
         heroImage: 'https://votecraft.org/wp-content/uploads/2026/02/end_public-debt-profiteering_feature.jpg',
-        learnMoreUrl: '',
+        learnMoreUrl: 'https://votecraft.org/solutions/debt-profiteering/',
         billKeywords: ['public debt', 'predatory lending', 'student debt relief', 'debt transparency'],
         nonprofits: [
             {
@@ -71,7 +71,7 @@ const ISSUES_CATALOG = [
         shortTitle: 'Citizens United',
         description: 'The Citizens United v. FEC decision opened the floodgates for unlimited corporate spending in elections through super PACs and dark money. Reform efforts seek to overturn this through constitutional amendments, disclosure requirements, and public campaign financing.',
         heroImage: 'https://votecraft.org/wp-content/uploads/2025/06/Citizens-united.jpg',
-        learnMoreUrl: '',
+        learnMoreUrl: 'https://votecraft.org/solutions/end-dark-money/',
         billKeywords: ['citizens united', 'campaign finance reform', 'dark money', 'political spending disclosure'],
         nonprofits: [
             {
@@ -100,7 +100,7 @@ const ISSUES_CATALOG = [
         shortTitle: 'Healthcare',
         description: 'Universal basic healthcare ensures every person has access to essential medical services regardless of income or pre-existing conditions. Proposals range from Medicare for All to public option plans, treating healthcare as a right while controlling costs.',
         heroImage: 'https://votecraft.org/wp-content/uploads/2025/06/healthcare1.jpg',
-        learnMoreUrl: '',
+        learnMoreUrl: 'https://votecraft.org/solutions/universal-basic-healthcare/',
         billKeywords: ['universal healthcare', 'medicare for all', 'public option', 'health coverage expansion'],
         nonprofits: [
             {
@@ -129,7 +129,7 @@ const ISSUES_CATALOG = [
         shortTitle: 'SCOTUS Reform',
         description: 'Supreme Court reform proposals aim to restore public trust through term limits for justices, expanding the number of seats, binding ethics codes, and increased transparency. These reforms seek to depoliticize the court and ensure it reflects the will of the people.',
         heroImage: 'https://votecraft.org/wp-content/uploads/2025/06/supreme-court2.jpg',
-        learnMoreUrl: '',
+        learnMoreUrl: 'https://votecraft.org/solutions/supreme-court-reform/',
         billKeywords: ['supreme court reform', 'judicial term limits', 'court expansion', 'judicial ethics'],
         nonprofits: [
             {
@@ -158,7 +158,7 @@ const ISSUES_CATALOG = [
         shortTitle: 'News Paywalls',
         description: 'News paywalls have created an information divide where access to quality journalism depends on ability to pay. Reform proposals include public funding for local journalism, tax incentives for free civic reporting, and cooperative ownership models.',
         heroImage: 'https://votecraft.org/wp-content/uploads/2026/02/news_paywall_reform_feature.jpg',
-        learnMoreUrl: '',
+        learnMoreUrl: 'https://votecraft.org/solutions/news-paywall-reform/',
         billKeywords: ['local journalism', 'news access', 'press freedom', 'journalism funding'],
         nonprofits: [
             {
