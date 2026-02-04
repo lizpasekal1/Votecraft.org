@@ -103,6 +103,15 @@ class VoteApp {
         requestAnimationFrame(() => {
             const col = card.parentElement;
             if (col) card.style.height = col.offsetHeight + 'px';
+
+            // Align title left edge with hero left edge
+            const hero = document.getElementById('issue-hero');
+            const view = this.issueDetailView;
+            if (hero && view && this.issueTitle) {
+                const heroLeft = hero.getBoundingClientRect().left;
+                const viewLeft = view.getBoundingClientRect().left;
+                this.issueTitle.style.marginLeft = (heroLeft - viewLeft) + 'px';
+            }
         });
     }
 
