@@ -406,95 +406,22 @@ function votecraft_openstates_proxy($request) {
         return $response;
     }
 
-    // For federal jurisdiction, don't fall back to OpenStates API (they don't have federal data)
-    $jurisdiction = isset($params['jurisdiction']) ? strtolower($params['jurisdiction']) : '';
-    if ($jurisdiction === 'united states' || $jurisdiction === 'us' || $jurisdiction === 'federal') {
-        // Return empty results - federal data should come from local DB only
-        return new WP_REST_Response(array('results' => array(), 'pagination' => array('total_items' => 0)), 200);
-    }
+    // LOCAL DATABASE ONLY MODE
+    // No external API calls - all data must come from synced local database
+    // If data not in local DB, return empty results
 
-    // Generate cache key from endpoint + params
+    // Check database cache for any previously cached API responses
     $cache_key = md5($endpoint . '|' . serialize($params));
     $ttl = votecraft_get_ttl($endpoint);
-
-    // Check database cache
     $cached = votecraft_cache_get($cache_key, $ttl);
 
-    if ($cached && $cached['fresh']) {
+    if ($cached) {
+        // Return cached data (even if stale) - no API refresh
         $response = new WP_REST_Response($cached['data'], 200);
-        $response->header('X-VoteCraft-Cache', 'HIT');
-        $response->header('X-VoteCraft-Cache-Age', $cached['age']);
+        $response->header('X-VoteCraft-Cache', $cached['fresh'] ? 'HIT' : 'STALE');
         return $response;
     }
 
-    // Server-side rate limiting: wait if we've made a request recently
-    $last_call = get_option(VOTECRAFT_RATE_LIMIT_OPTION, 0);
-    $now = microtime(true);
-    $elapsed = $now - $last_call;
-    if ($elapsed < VOTECRAFT_RATE_LIMIT_SECONDS) {
-        usleep((int)((VOTECRAFT_RATE_LIMIT_SECONDS - $elapsed) * 1000000));
-    }
-    update_option(VOTECRAFT_RATE_LIMIT_OPTION, microtime(true));
-
-    // Fetch fresh data from OpenStates
-    // Remove any client-sent include params — we control these server-side
-    unset($params['include']);
-    $params['apikey'] = $apiKey;
-    $query = votecraft_build_query($params);
-
-    // For bill queries, always include sponsorships and votes data
-    if ($endpoint === 'bills') {
-        $query .= '&include=sponsorships&include=votes';
-    }
-
-    $url = $baseUrl . '/' . $endpoint . '?' . $query;
-
-    $api_response = wp_remote_get($url, array(
-        'timeout' => 15,
-        'user-agent' => 'VoteCraft/1.0',
-    ));
-
-    if (is_wp_error($api_response)) {
-        // API failed — serve stale cache if available
-        if ($cached) {
-            $response = new WP_REST_Response($cached['data'], 200);
-            $response->header('X-VoteCraft-Cache', 'STALE');
-            return $response;
-        }
-        return new WP_Error('api_error', 'Failed to reach OpenStates API', array('status' => 502));
-    }
-
-    $body = wp_remote_retrieve_body($api_response);
-    $status = wp_remote_retrieve_response_code($api_response);
-
-    // Handle rate limiting from OpenStates
-    if ($status === 429) {
-        // Return stale cache if available
-        if ($cached) {
-            $response = new WP_REST_Response($cached['data'], 200);
-            $response->header('X-VoteCraft-Cache', 'STALE-RATELIMIT');
-            return $response;
-        }
-        return new WP_Error('rate_limited', 'OpenStates API rate limit exceeded', array('status' => 429));
-    }
-
-    $data = json_decode($body, true);
-    if ($data === null) {
-        // Parse error — serve stale cache if available
-        if ($cached) {
-            $response = new WP_REST_Response($cached['data'], 200);
-            $response->header('X-VoteCraft-Cache', 'STALE');
-            return $response;
-        }
-        return new WP_Error('parse_error', 'Invalid response from OpenStates', array('status' => 502));
-    }
-
-    // Save successful responses to database cache
-    if ($status >= 200 && $status < 300) {
-        votecraft_cache_set($cache_key, $endpoint, $data);
-    }
-
-    $response = new WP_REST_Response($data, $status);
-    $response->header('X-VoteCraft-Cache', 'MISS');
-    return $response;
+    // No local DB data and no cache - return empty results
+    return new WP_REST_Response(array('results' => array(), 'pagination' => array('total_items' => 0)), 200);
 }
