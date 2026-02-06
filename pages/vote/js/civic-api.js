@@ -270,12 +270,30 @@ const CivicAPI = {
             // Parse OpenStates format
             const role = person.current_role || {};
             const jurisdiction = person.jurisdiction || {};
+            const roleTitle = (role.title || '').toLowerCase();
+            const roleOrg = (role.org_classification || '').toLowerCase();
+
+            // Check if this is an executive branch official
+            const isExecutive = (
+                roleTitle.includes('governor') ||
+                roleTitle.includes('lieutenant governor') ||
+                roleTitle.includes('attorney general') ||
+                roleTitle.includes('secretary of') ||
+                roleTitle.includes('treasurer') ||
+                roleTitle.includes('auditor') ||
+                roleTitle.includes('comptroller') ||
+                roleTitle.includes('executive council') ||
+                roleOrg.includes('executive')
+            );
 
             // Determine level and office title
             let level = 'state';
             let office = role.title || 'Representative';
 
-            if (jurisdiction.classification === 'country') {
+            if (isExecutive) {
+                level = 'executive';
+                office = role.title || 'Executive Official';
+            } else if (jurisdiction.classification === 'country') {
                 level = 'congress';
                 if (role.org_classification === 'upper') {
                     office = 'U.S. Senator';

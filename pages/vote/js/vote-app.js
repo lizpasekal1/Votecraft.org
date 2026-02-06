@@ -560,32 +560,20 @@ class VoteApp {
             return office.includes('senator') || office.includes('senate');
         };
 
-        // Helper to check if someone is an executive branch official
-        const isExecutive = (l) => {
-            const office = (l.office || '').toLowerCase();
-            return office.includes('governor') ||
-                   office.includes('lieutenant governor') ||
-                   office.includes('executive council') ||
-                   office.includes('attorney general') ||
-                   office.includes('secretary of') ||
-                   office.includes('treasurer') ||
-                   office.includes('auditor');
-        };
-
-        // Get all legislators from localLegislators
+        // Get legislators by level from localLegislators
         const congressMembers = this.localLegislators ? this.localLegislators.filter(l => l.level === 'congress') : [];
         const stateLocalMembers = this.localLegislators ? this.localLegislators.filter(l => l.level === 'state') : [];
+        const localExecutives = this.localLegislators ? this.localLegislators.filter(l => l.level === 'executive') : [];
 
         // Split congress into Federal Senators and House Representatives
         const federalSenators = congressMembers.filter(isSenator);
         const houseReps = congressMembers.filter(l => !isSenator(l));
 
-        // Split state local members into State Senators, State House, and Executive
-        const stateSenators = stateLocalMembers.filter(l => isSenator(l) && !isExecutive(l));
-        const localExecutives = stateLocalMembers.filter(isExecutive);
+        // Get state senators from state local members
+        const stateSenators = stateLocalMembers.filter(isSenator);
 
-        // Also get executive officials from stateLegislators (all state legislators)
-        const stateExecutives = this.stateLegislators ? this.stateLegislators.filter(isExecutive) : [];
+        // Get executive officials from stateLegislators as well
+        const stateExecutives = this.stateLegislators ? this.stateLegislators.filter(l => l.level === 'executive') : [];
 
         // Combine and deduplicate executives by name
         const executiveMap = new Map();
@@ -629,8 +617,8 @@ class VoteApp {
         }
 
         // State section: grouped by chamber, House sub-grouped by county
-        // Filter out executive officials - they go in the Executive Branch section
-        const stateLegislatorsFiltered = this.stateLegislators ? this.stateLegislators.filter(l => !isExecutive(l)) : [];
+        // Filter to only include state legislators (not executives or congress)
+        const stateLegislatorsFiltered = this.stateLegislators ? this.stateLegislators.filter(l => l.level === 'state') : [];
 
         if (stateLegislatorsFiltered.length > 0) {
             this.stateSection.style.display = '';

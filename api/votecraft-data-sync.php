@@ -1118,7 +1118,7 @@ function votecraft_sync_legislators($state) {
         foreach ($all_legislators as $leg) {
             $current_role = isset($leg['current_role']) ? $leg['current_role'] : null;
 
-            // Determine if this is a Congress member (federal) or state legislator
+            // Determine if this is a Congress member, state legislator, or executive
             $role_title = $current_role ? strtolower($current_role['title'] ?? '') : '';
             $role_org = $current_role ? strtolower($current_role['org_classification'] ?? '') : '';
             $jurisdiction_id = isset($leg['jurisdiction']['id']) ? strtolower($leg['jurisdiction']['id']) : '';
@@ -1130,10 +1130,26 @@ function votecraft_sync_legislators($state) {
                 strpos($jurisdiction_id, 'country:us/government') !== false
             );
 
-            // Set level based on whether this is Congress or state
-            $level = $is_congress ? 'congress' : 'state';
+            // Check if this is an executive branch official
+            $is_executive = (
+                strpos($role_title, 'governor') !== false ||
+                strpos($role_title, 'lieutenant governor') !== false ||
+                strpos($role_title, 'attorney general') !== false ||
+                strpos($role_title, 'secretary of') !== false ||
+                strpos($role_title, 'treasurer') !== false ||
+                strpos($role_title, 'auditor') !== false ||
+                strpos($role_title, 'comptroller') !== false ||
+                strpos($role_title, 'executive council') !== false ||
+                strpos($role_org, 'executive') !== false
+            );
+
+            // Set level based on type
+            $level = 'state';
             if ($is_congress) {
+                $level = 'congress';
                 $congress_count++;
+            } elseif ($is_executive) {
+                $level = 'executive';
             }
 
             $wpdb->replace($table, array(
