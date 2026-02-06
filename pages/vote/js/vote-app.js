@@ -431,13 +431,16 @@ class VoteApp {
                     });
 
                     // Helper to score how much data a legislator has
+                    // Image is weighted heavily as it's the key indicator of a complete record
                     const dataScore = (l) => {
                         let score = 0;
                         if (l.party) score += 1;
-                        if (l.image) score += 1;
+                        if (l.image) score += 5; // Image is most important
                         if (l.email) score += 1;
                         if (l.phone) score += 1;
                         if (l.district) score += 1;
+                        // Prefer Congress.gov source for federal legislators
+                        if (l.id && l.id.startsWith('congress-')) score += 3;
                         return score;
                     };
 
@@ -451,12 +454,14 @@ class VoteApp {
                         if (localByLastName.has(normalizedName)) {
                             const localIdx = localByLastName.get(normalizedName);
                             const localLeg = this.localLegislators[localIdx];
+                            const stateScore = dataScore(l);
+                            const localScore = dataScore(localLeg);
                             // Compare data - keep the one with more info
-                            if (dataScore(l) > dataScore(localLeg)) {
-                                console.log('Replacing duplicate with better data:', localLeg.name, '->', l.name);
+                            if (stateScore > localScore) {
+                                console.log('Replacing duplicate with better data:', localLeg.name, `(score ${localScore})`, '->', l.name, `(score ${stateScore})`);
                                 this.localLegislators[localIdx] = l;
                             } else {
-                                console.log('Skipping duplicate (local has more data):', l.name);
+                                console.log('Skipping duplicate (local has more data):', l.name, `(state: ${stateScore}, local: ${localScore})`);
                             }
                             return false;
                         }
