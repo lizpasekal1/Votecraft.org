@@ -646,12 +646,97 @@ function votecraft_sync_admin_page() {
     );
 
     ?>
+    <style>
+        .votecraft-accordion {
+            max-width: 900px;
+            margin-bottom: 10px;
+            border: 1px solid #c3c4c7;
+            border-radius: 4px;
+            background: #fff;
+        }
+        .votecraft-accordion summary {
+            padding: 12px 15px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            background: #f6f7f7;
+            border-bottom: 1px solid #c3c4c7;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .votecraft-accordion summary::-webkit-details-marker {
+            display: none;
+        }
+        .votecraft-accordion summary::before {
+            content: '▶';
+            font-size: 10px;
+            transition: transform 0.2s;
+        }
+        .votecraft-accordion[open] summary::before {
+            transform: rotate(90deg);
+        }
+        .votecraft-accordion[open] summary {
+            border-bottom: 1px solid #c3c4c7;
+        }
+        .votecraft-accordion .accordion-content {
+            padding: 15px;
+        }
+        .votecraft-accordion.status-enabled summary {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .votecraft-accordion.status-disabled summary {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: auto;
+        }
+        .status-badge.enabled { background: #28a745; color: white; }
+        .status-badge.disabled { background: #ffc107; color: #333; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 10px 0;
+        }
+        .stat-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }
+        .stat-box .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2271b1;
+        }
+        .stat-box .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+
     <div class="wrap">
         <h1>VoteCraft Data Sync</h1>
 
         <!-- SCHEDULED SYNC DASHBOARD -->
-        <div class="card" style="max-width: 800px; margin-bottom: 20px; background: <?php echo $scheduled_enabled ? '#e7f5e7' : '#fff3cd'; ?>;">
-            <h2>📅 Scheduled Sync Dashboard</h2>
+        <details class="votecraft-accordion <?php echo $scheduled_enabled ? 'status-enabled' : 'status-disabled'; ?>" open>
+            <summary>
+                📅 Scheduled Sync
+                <span class="status-badge <?php echo $scheduled_enabled ? 'enabled' : 'disabled'; ?>">
+                    <?php echo $scheduled_enabled ? 'ENABLED' : 'DISABLED'; ?>
+                </span>
+            </summary>
+            <div class="accordion-content">
             <p><strong>Status:</strong>
                 <?php if ($scheduled_enabled): ?>
                     <span style="color: green; font-weight: bold;">✓ ENABLED</span> - Running every 4 hours
@@ -696,20 +781,22 @@ function votecraft_sync_admin_page() {
             </form>
 
             <?php if (!empty($scheduled_progress['completed_states'])): ?>
-            <details style="margin-top: 15px;">
+            <details style="margin-top: 15px; background: #f8f9fa; padding: 10px; border-radius: 5px;">
                 <summary style="cursor: pointer; font-weight: bold;">Completed States (<?php echo $completed_count; ?>)</summary>
                 <p style="margin-top: 10px; font-size: 0.9em;">
                     <?php echo esc_html(implode(', ', $scheduled_progress['completed_states'])); ?>
                 </p>
             </details>
             <?php endif; ?>
-        </div>
+            </div>
+        </details>
 
         <!-- RECENT BATCH ACTIVITY -->
         <?php if (!empty($recent_batches)): ?>
-        <div class="card" style="max-width: 800px; margin-bottom: 20px;">
-            <h2>📊 Recent Batch Activity</h2>
-            <table class="widefat" style="margin-top: 10px;">
+        <details class="votecraft-accordion">
+            <summary>📊 Recent Batch Activity <span style="margin-left: auto; font-weight: normal; color: #666;"><?php echo count($recent_batches); ?> runs</span></summary>
+            <div class="accordion-content">
+            <table class="widefat">
                 <thead>
                     <tr>
                         <th>Time</th>
@@ -737,28 +824,52 @@ function votecraft_sync_admin_page() {
                     <?php endforeach; ?>
                 </tbody>
             </table>
-        </div>
+            </div>
+        </details>
         <?php endif; ?>
 
-        <div class="card" style="max-width: 600px; margin-bottom: 20px;">
-            <h2>Database Stats</h2>
-            <p><strong>Total Legislators:</strong> <?php echo number_format($legislator_count); ?></p>
-            <p style="margin-left: 20px;">
-                <strong>Federal:</strong> <?php echo number_format($federal_count); ?> (Senators + Representatives)<br>
-                <strong>State:</strong> <?php echo number_format($state_leg_count); ?>
-            </p>
-            <p><strong>Total Bills:</strong> <?php echo number_format($bill_count); ?></p>
-            <p><strong>States with legislators:</strong> <?php echo count($states_with_data); ?></p>
-            <p><strong>States with bills:</strong> <?php echo count($states_with_bills); ?></p>
-        </div>
+        <!-- DATABASE STATS -->
+        <details class="votecraft-accordion" open>
+            <summary>📈 Database Stats <span style="margin-left: auto; font-weight: normal; color: #666;"><?php echo number_format($legislator_count); ?> legislators, <?php echo number_format($bill_count); ?> bills</span></summary>
+            <div class="accordion-content">
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value"><?php echo number_format($legislator_count); ?></div>
+                    <div class="stat-label">Total Legislators</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value"><?php echo number_format($federal_count); ?></div>
+                    <div class="stat-label">Federal</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value"><?php echo number_format($state_leg_count); ?></div>
+                    <div class="stat-label">State</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value"><?php echo number_format($bill_count); ?></div>
+                    <div class="stat-label">Total Bills</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value"><?php echo count($states_with_data); ?></div>
+                    <div class="stat-label">States w/ Legislators</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value"><?php echo count($states_with_bills); ?></div>
+                    <div class="stat-label">States w/ Bills</div>
+                </div>
+            </div>
+            </div>
+        </details>
 
+        <!-- BILLS BY ISSUE -->
         <?php if (!empty($issue_stats)): ?>
-        <div class="card" style="max-width: 100%; margin-bottom: 20px;">
-            <h2>Bills by Issue</h2>
+        <details class="votecraft-accordion">
+            <summary>📋 Bills by Issue <span style="margin-left: auto; font-weight: normal; color: #666;"><?php echo number_format(array_sum($issue_totals)); ?> total</span></summary>
+            <div class="accordion-content">
             <p>Count of synced bills matching each issue's keywords:</p>
 
             <!-- National Totals -->
-            <h3 style="margin-top: 20px;">National Totals</h3>
+            <h4 style="margin-top: 15px;">National Totals</h4>
             <table class="widefat" style="max-width: 600px;">
                 <thead>
                     <tr>
@@ -810,11 +921,16 @@ function votecraft_sync_admin_page() {
                     </tbody>
                 </table>
             </div>
-        </div>
+            </div>
+        </details>
         <?php endif; ?>
 
-        <div class="card" style="max-width: 600px; margin-bottom: 20px;">
-            <h2>Sync Single State</h2>
+        <!-- MANUAL SYNC -->
+        <details class="votecraft-accordion">
+            <summary>🔧 Manual Sync Controls</summary>
+            <div class="accordion-content">
+
+            <h4>Sync Single State</h4>
             <form method="post">
                 <?php wp_nonce_field('votecraft_sync'); ?>
                 <p>
@@ -834,78 +950,78 @@ function votecraft_sync_admin_page() {
                     </button>
                 </p>
             </form>
-        </div>
 
-        <div class="card" style="max-width: 600px; margin-bottom: 20px;">
-            <h2>Bulk Sync - All States</h2>
-            <p><em>Warning: These sync all 50 states. Run during off-peak hours. Each may take 10-30 minutes.</em></p>
-            <form method="post" style="margin-bottom: 15px;">
+            <hr style="margin: 20px 0;">
+
+            <h4>Bulk Sync - All States</h4>
+            <p style="font-size: 0.9em; color: #666;"><em>Warning: These sync all 50 states. Run during off-peak hours.</em></p>
+            <form method="post" style="display: inline-block; margin-right: 10px;">
                 <?php wp_nonce_field('votecraft_sync'); ?>
-                <button type="submit" name="votecraft_sync_action" value="sync_all_legislators" class="button button-primary">
+                <button type="submit" name="votecraft_sync_action" value="sync_all_legislators" class="button">
                     Sync All Legislators (50 States)
                 </button>
-                <p class="description" style="margin-top: 5px;">Downloads ~7,000+ legislators across all states. Run this first.</p>
             </form>
-            <form method="post">
+            <form method="post" style="display: inline-block;">
                 <?php wp_nonce_field('votecraft_sync'); ?>
-                <button type="submit" name="votecraft_sync_action" value="sync_all_issue_bills" class="button button-primary">
+                <button type="submit" name="votecraft_sync_action" value="sync_all_issue_bills" class="button">
                     Sync Issue-Related Bills (50 States)
                 </button>
-                <p class="description" style="margin-top: 5px;">Only bills from last 5 years matching your 6 issues: RCV, Debt Reform, Citizens United, Healthcare, SCOTUS, News Paywalls.</p>
             </form>
-        </div>
 
-        <div class="card" style="max-width: 600px; margin-bottom: 20px;">
-            <h2>Federal Legislators</h2>
-            <p>Sync federal officials (US Senators, US Representatives) from Congress.gov API.</p>
-            <form method="post">
-                <?php wp_nonce_field('votecraft_sync'); ?>
-                <button type="submit" name="votecraft_sync_action" value="sync_federal_legislators" class="button button-primary">
-                    Sync All Federal Legislators
-                </button>
-                <p class="description" style="margin-top: 5px;">Downloads ~538 current members of Congress (100 Senators + 435 Representatives + delegates). Uses Congress.gov API.</p>
-            </form>
-            <hr style="margin: 15px 0;">
+            <hr style="margin: 20px 0;">
+
+            <h4>Federal (Congress.gov API)</h4>
             <?php
             $bills_progress = get_option('votecraft_federal_bills_progress', array('offset' => 0, 'bills_added' => 0));
             $bills_offset = (int) $bills_progress['offset'];
             $bills_added = (int) $bills_progress['bills_added'];
             ?>
-            <form method="post" style="display: inline-block;">
+            <form method="post" style="display: inline-block; margin-right: 10px;">
+                <?php wp_nonce_field('votecraft_sync'); ?>
+                <button type="submit" name="votecraft_sync_action" value="sync_federal_legislators" class="button button-primary">
+                    Sync Federal Legislators
+                </button>
+            </form>
+            <form method="post" style="display: inline-block; margin-right: 10px;">
                 <?php wp_nonce_field('votecraft_sync'); ?>
                 <button type="submit" name="votecraft_sync_action" value="sync_federal_bills" class="button button-primary">
-                    <?php echo $bills_offset > 0 ? 'Continue Federal Bills Sync' : 'Sync Federal Bills (Issue-Related)'; ?>
+                    <?php echo $bills_offset > 0 ? 'Continue Federal Bills' : 'Sync Federal Bills'; ?>
                 </button>
             </form>
             <?php if ($bills_offset > 0): ?>
-            <form method="post" style="display: inline-block; margin-left: 10px;">
+            <form method="post" style="display: inline-block;">
                 <?php wp_nonce_field('votecraft_sync'); ?>
-                <button type="submit" name="votecraft_sync_action" value="reset_federal_bills" class="button">Reset Progress</button>
+                <button type="submit" name="votecraft_sync_action" value="reset_federal_bills" class="button">Reset</button>
             </form>
             <p class="description" style="margin-top: 5px; color: #2271b1;">
-                <strong>In Progress:</strong> <?php echo $bills_offset; ?> / 538 legislators processed, <?php echo $bills_added; ?> bills found so far.
+                <strong>Progress:</strong> <?php echo $bills_offset; ?>/538 legislators, <?php echo $bills_added; ?> bills found
             </p>
-            <?php else: ?>
-            <p class="description" style="margin-top: 5px;">Processes 50 legislators per click. Click multiple times until complete (~11 clicks total).</p>
             <?php endif; ?>
-        </div>
 
-        <div class="card" style="max-width: 600px; margin-bottom: 20px;">
-            <h2>Your 6 Issue Keywords</h2>
+            </div>
+        </details>
+
+        <!-- ISSUE KEYWORDS REFERENCE -->
+        <details class="votecraft-accordion">
+            <summary>📝 Issue Keywords Reference</summary>
+            <div class="accordion-content">
             <p>Bills are filtered to match these keywords:</p>
-            <ul style="margin-left: 20px;">
-                <li><strong>RCV:</strong> ranked choice voting, instant runoff, preferential voting</li>
-                <li><strong>Debt Reform:</strong> public debt, predatory lending, student debt relief, debt transparency</li>
-                <li><strong>Citizens United:</strong> citizens united, campaign finance reform, dark money, political spending disclosure</li>
-                <li><strong>Healthcare:</strong> universal healthcare, medicare for all, public option, health coverage expansion</li>
-                <li><strong>SCOTUS:</strong> supreme court reform, judicial term limits, court expansion, judicial ethics</li>
-                <li><strong>News Paywalls:</strong> local journalism, news access, press freedom, journalism funding</li>
-            </ul>
-        </div>
+            <table class="widefat" style="max-width: 600px;">
+                <tr><td><strong>RCV</strong></td><td>ranked choice voting, instant runoff, preferential voting</td></tr>
+                <tr><td><strong>Debt Reform</strong></td><td>public debt, predatory lending, student debt relief, debt transparency</td></tr>
+                <tr><td><strong>Citizens United</strong></td><td>citizens united, campaign finance reform, dark money, political spending disclosure</td></tr>
+                <tr><td><strong>Healthcare</strong></td><td>universal healthcare, medicare for all, public option, health coverage expansion</td></tr>
+                <tr><td><strong>SCOTUS</strong></td><td>supreme court reform, judicial term limits, court expansion, judicial ethics</td></tr>
+                <tr><td><strong>News Paywalls</strong></td><td>local journalism, news access, press freedom, journalism funding</td></tr>
+            </table>
+            </div>
+        </details>
 
+        <!-- RECENT SYNC HISTORY -->
         <?php if (!empty($syncs_by_state)): ?>
-        <div class="card" style="max-width: 900px;">
-            <h2>Recent Sync History</h2>
+        <details class="votecraft-accordion">
+            <summary>📜 Recent Sync History <span style="margin-left: auto; font-weight: normal; color: #666;"><?php echo count($syncs_by_state); ?> entries</span></summary>
+            <div class="accordion-content">
             <table class="widefat">
                 <thead>
                     <tr>
@@ -952,8 +1068,10 @@ function votecraft_sync_admin_page() {
                     <?php endforeach; ?>
                 </tbody>
             </table>
-        </div>
+            </div>
+        </details>
         <?php endif; ?>
+
     </div>
     <?php
 }
