@@ -380,6 +380,47 @@ class VoteApp {
         this.showLoading(true);
         this.hideError();
 
+        // Check if input is just a state name
+        const stateNames = [
+            'alabama', 'alaska', 'arizona', 'arkansas', 'california', 'colorado',
+            'connecticut', 'delaware', 'florida', 'georgia', 'hawaii', 'idaho',
+            'illinois', 'indiana', 'iowa', 'kansas', 'kentucky', 'louisiana',
+            'maine', 'maryland', 'massachusetts', 'michigan', 'minnesota', 'mississippi',
+            'missouri', 'montana', 'nebraska', 'nevada', 'new hampshire', 'new jersey',
+            'new mexico', 'new york', 'north carolina', 'north dakota', 'ohio', 'oklahoma',
+            'oregon', 'pennsylvania', 'rhode island', 'south carolina', 'south dakota',
+            'tennessee', 'texas', 'utah', 'vermont', 'virginia', 'washington',
+            'west virginia', 'wisconsin', 'wyoming', 'district of columbia'
+        ];
+        const inputLower = address.toLowerCase().trim();
+        const matchedState = stateNames.find(s => s === inputLower);
+
+        if (matchedState) {
+            // Direct state search - fetch all legislators for this state
+            const stateName = matchedState.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            this.currentJurisdiction = stateName;
+
+            try {
+                const allPeople = await window.CivicAPI.getAllLegislators(stateName);
+                this.localLegislators = [];
+                this.stateLegislators = window.CivicAPI.parseRepresentatives({ officials: allPeople });
+                this.legislators = [...this.stateLegislators];
+                this.renderReps();
+                this.showLoading(false);
+                this.hasSearched = true;
+
+                if (this.legislators.length > 0) {
+                    this.selectRep(this.legislators[0]);
+                }
+                return;
+            } catch (err) {
+                console.error('Error fetching state legislators:', err);
+                this.showLoading(false);
+                this.showError('Could not load legislators for ' + stateName);
+                return;
+            }
+        }
+
         try {
             const coords = await window.CivicAPI.geocodeAddress(address);
             this.currentCoords = coords;
