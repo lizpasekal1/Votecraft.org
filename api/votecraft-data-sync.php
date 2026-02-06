@@ -516,7 +516,57 @@ function votecraft_sync_admin_page() {
     $bill_count = $wpdb->get_var("SELECT COUNT(*) FROM $bills_table");
     $states_with_data = $wpdb->get_col("SELECT DISTINCT state FROM $legislators_table ORDER BY state");
     $states_with_bills = $wpdb->get_col("SELECT DISTINCT state FROM $bills_table ORDER BY state");
-    $recent_syncs = $wpdb->get_results("SELECT * FROM $log_table ORDER BY started_at DESC LIMIT 10");
+    $recent_syncs = $wpdb->get_results("SELECT * FROM $log_table ORDER BY started_at DESC LIMIT 30");
+
+    // Group syncs by state for cleaner display
+    $syncs_by_state = array();
+    foreach ($recent_syncs as $sync) {
+        $state = $sync->state ?: 'N/A';
+        $date_key = date('Y-m-d H', strtotime($sync->started_at)); // Group by hour
+
+        if (!isset($syncs_by_state[$state . '|' . $date_key])) {
+            $syncs_by_state[$state . '|' . $date_key] = array(
+                'state' => $state,
+                'legislators' => null,
+                'bills' => null,
+                'started_at' => $sync->started_at,
+                'status' => 'success',
+                'error' => ''
+            );
+        }
+
+        $entry = &$syncs_by_state[$state . '|' . $date_key];
+
+        if ($sync->sync_type === 'legislators') {
+            $entry['legislators'] = $sync->records_synced;
+        } elseif ($sync->sync_type === 'bills') {
+            $entry['bills'] = $sync->records_synced;
+        } elseif ($sync->sync_type === 'federal_legislators') {
+            $entry['state'] = 'Federal';
+            $entry['legislators'] = $sync->records_synced;
+        } elseif ($sync->sync_type === 'federal_bills_batch') {
+            $entry['state'] = 'Federal';
+            $entry['bills'] = $sync->records_synced;
+        }
+
+        if ($sync->status === 'error') {
+            $entry['status'] = 'error';
+            $entry['error'] = $sync->error_message;
+        } elseif ($sync->status === 'running' && $entry['status'] !== 'error') {
+            $entry['status'] = 'running';
+        }
+
+        // Use earliest start time
+        if (strtotime($sync->started_at) < strtotime($entry['started_at'])) {
+            $entry['started_at'] = $sync->started_at;
+        }
+    }
+
+    // Sort by date descending and limit to 15
+    uasort($syncs_by_state, function($a, $b) {
+        return strtotime($b['started_at']) - strtotime($a['started_at']);
+    });
+    $syncs_by_state = array_slice($syncs_by_state, 0, 15, true);
 
     // Issue keywords for counting bills
     $issue_keywords = array(
@@ -853,29 +903,51 @@ function votecraft_sync_admin_page() {
             </ul>
         </div>
 
-        <?php if (!empty($recent_syncs)): ?>
-        <div class="card" style="max-width: 800px;">
+        <?php if (!empty($syncs_by_state)): ?>
+        <div class="card" style="max-width: 900px;">
             <h2>Recent Sync History</h2>
             <table class="widefat">
                 <thead>
                     <tr>
-                        <th>Type</th>
                         <th>State</th>
-                        <th>Status</th>
-                        <th>Records</th>
+                        <th style="text-align: right;">Legislators</th>
+                        <th style="text-align: right;">Bills</th>
                         <th>Started</th>
+                        <th>Status</th>
                         <th>Error</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($recent_syncs as $sync): ?>
+                    <?php foreach ($syncs_by_state as $entry): ?>
                     <tr>
-                        <td><?php echo esc_html($sync->sync_type); ?></td>
-                        <td><?php echo esc_html($sync->state ?: 'All'); ?></td>
-                        <td><?php echo esc_html($sync->status); ?></td>
-                        <td><?php echo number_format($sync->records_synced); ?></td>
-                        <td><?php echo esc_html($sync->started_at); ?></td>
-                        <td><?php echo esc_html($sync->error_message ?: '-'); ?></td>
+                        <td><strong><?php echo esc_html($entry['state']); ?></strong></td>
+                        <td style="text-align: right;">
+                            <?php if ($entry['legislators'] !== null): ?>
+                                <?php echo number_format($entry['legislators']); ?>
+                            <?php else: ?>
+                                <span style="color: #999;">-</span>
+                            <?php endif; ?>
+                        </td>
+                        <td style="text-align: right;">
+                            <?php if ($entry['bills'] !== null): ?>
+                                <?php echo number_format($entry['bills']); ?>
+                            <?php else: ?>
+                                <span style="color: #999;">-</span>
+                            <?php endif; ?>
+                        </td>
+                        <td><?php echo esc_html(date('M j, g:i A', strtotime($entry['started_at']))); ?></td>
+                        <td>
+                            <?php if ($entry['status'] === 'success'): ?>
+                                <span style="color: green;">✓ Success</span>
+                            <?php elseif ($entry['status'] === 'running'): ?>
+                                <span style="color: blue;">⏳ Running</span>
+                            <?php else: ?>
+                                <span style="color: red;">✗ Error</span>
+                            <?php endif; ?>
+                        </td>
+                        <td style="font-size: 0.85em; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
+                            <?php echo esc_html($entry['error'] ?: '-'); ?>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
