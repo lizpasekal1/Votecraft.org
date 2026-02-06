@@ -34,7 +34,7 @@
                 <!-- Representatives List -->
                 <div id="reps-panel" class="panel-content">
                     <div id="federal-section" class="rep-section">
-                        <h3 class="rep-section-title">Federal Legislators</h3>
+                        <h3 class="rep-section-title">Congress</h3>
                         <div id="federal-list" class="rep-list"></div>
                     </div>
                     <div id="local-section" class="rep-section">
