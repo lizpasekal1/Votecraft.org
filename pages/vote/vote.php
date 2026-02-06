@@ -38,15 +38,15 @@
                         <div id="federal-senators-list" class="rep-list"></div>
                     </div>
                     <div id="state-senators-section" class="rep-section">
-                        <h3 class="rep-section-title">State Senators</h3>
+                        <h3 class="rep-section-title">Local Senators</h3>
                         <div id="state-senators-list" class="rep-list"></div>
                     </div>
                     <div id="house-section" class="rep-section">
-                        <h3 class="rep-section-title">House of Representatives</h3>
+                        <h3 class="rep-section-title">Local House Reps</h3>
                         <div id="house-list" class="rep-list"></div>
                     </div>
                     <div id="state-section" class="rep-section">
-                        <h3 class="rep-section-title">State Legislators</h3>
+                        <h3 class="rep-section-title">All State Legislators</h3>
                         <div id="state-list" class="rep-list"></div>
                     </div>
                     <div id="executive-section" class="rep-section">
