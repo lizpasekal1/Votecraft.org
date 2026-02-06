@@ -18,10 +18,12 @@ class VoteApp {
         this.stateSenatorsSection = document.getElementById('state-senators-section');
         this.houseSection = document.getElementById('house-section');
         this.stateSection = document.getElementById('state-section');
+        this.executiveSection = document.getElementById('executive-section');
         this.federalSenatorsList = document.getElementById('federal-senators-list');
         this.stateSenatorsList = document.getElementById('state-senators-list');
         this.houseList = document.getElementById('house-list');
         this.stateList = document.getElementById('state-list');
+        this.executiveList = document.getElementById('executive-list');
         this.issuesGridView = document.getElementById('issues-grid-view');
         this.issueDetailView = document.getElementById('issue-detail-view');
         this.issuesGrid = document.getElementById('issues-grid');
@@ -548,6 +550,7 @@ class VoteApp {
         this.stateSenatorsList.innerHTML = '<p style="color: #9ca3af; font-size: 0.85rem; padding: 8px;">Search to see your state senators</p>';
         this.houseList.innerHTML = housePlaceholders.map(l => this.renderRepItem(l, true)).join('');
         this.stateList.innerHTML = '<p style="color: #9ca3af; font-size: 0.85rem; padding: 8px;">Search to see all state legislators</p>';
+        this.executiveList.innerHTML = '<p style="color: #9ca3af; font-size: 0.85rem; padding: 8px;">Search to see executive branch officials</p>';
     }
 
     renderReps() {
@@ -555,6 +558,18 @@ class VoteApp {
         const isSenator = (l) => {
             const office = (l.office || '').toLowerCase();
             return office.includes('senator') || office.includes('senate');
+        };
+
+        // Helper to check if someone is an executive branch official
+        const isExecutive = (l) => {
+            const office = (l.office || '').toLowerCase();
+            return office.includes('governor') ||
+                   office.includes('lieutenant governor') ||
+                   office.includes('executive council') ||
+                   office.includes('attorney general') ||
+                   office.includes('secretary of') ||
+                   office.includes('treasurer') ||
+                   office.includes('auditor');
         };
 
         // Get all legislators from localLegislators
@@ -565,8 +580,21 @@ class VoteApp {
         const federalSenators = congressMembers.filter(isSenator);
         const houseReps = congressMembers.filter(l => !isSenator(l));
 
-        // Split state local members into State Senators and State House
-        const stateSenators = stateLocalMembers.filter(isSenator);
+        // Split state local members into State Senators, State House, and Executive
+        const stateSenators = stateLocalMembers.filter(l => isSenator(l) && !isExecutive(l));
+        const localExecutives = stateLocalMembers.filter(isExecutive);
+
+        // Also get executive officials from stateLegislators (all state legislators)
+        const stateExecutives = this.stateLegislators ? this.stateLegislators.filter(isExecutive) : [];
+
+        // Combine and deduplicate executives by name
+        const executiveMap = new Map();
+        [...localExecutives, ...stateExecutives].forEach(e => {
+            if (!executiveMap.has(e.name)) {
+                executiveMap.set(e.name, e);
+            }
+        });
+        const executiveOfficials = Array.from(executiveMap.values());
 
         // Federal Senators section (US Senators)
         if (federalSenators.length > 0) {
@@ -592,17 +620,28 @@ class VoteApp {
             this.houseSection.style.display = 'none';
         }
 
+        // Executive Branch section
+        if (executiveOfficials.length > 0) {
+            this.executiveSection.style.display = '';
+            this.executiveList.innerHTML = executiveOfficials.map(l => this.renderRepItem(l)).join('');
+        } else {
+            this.executiveSection.style.display = 'none';
+        }
+
         // State section: grouped by chamber, House sub-grouped by county
-        if (this.stateLegislators && this.stateLegislators.length > 0) {
+        // Filter out executive officials - they go in the Executive Branch section
+        const stateLegislatorsFiltered = this.stateLegislators ? this.stateLegislators.filter(l => !isExecutive(l)) : [];
+
+        if (stateLegislatorsFiltered.length > 0) {
             this.stateSection.style.display = '';
 
             const isSenate = l =>
                 l.office.toLowerCase().includes('senator') || l.office.toLowerCase().includes('senate');
 
-            const senate = this.stateLegislators.filter(isSenate)
+            const senate = stateLegislatorsFiltered.filter(isSenate)
                 .sort((a, b) => (a.district || '').localeCompare(b.district || '', undefined, { numeric: true }));
 
-            const house = this.stateLegislators.filter(l => !isSenate(l))
+            const house = stateLegislatorsFiltered.filter(l => !isSenate(l))
                 .sort((a, b) => (a.district || '').localeCompare(b.district || '', undefined, { numeric: true }));
 
             // Extract county/region from district name (e.g. "3rd Suffolk" -> "Suffolk")
