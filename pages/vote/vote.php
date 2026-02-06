@@ -49,6 +49,10 @@
                         <h3 class="rep-section-title">State Legislators</h3>
                         <div id="state-list" class="rep-list"></div>
                     </div>
+                    <div id="executive-section" class="rep-section">
+                        <h3 class="rep-section-title">Executive Branch</h3>
+                        <div id="executive-list" class="rep-list"></div>
+                    </div>
                 </div>
 
                 <!-- Issues List (mobile/toggle view) -->
