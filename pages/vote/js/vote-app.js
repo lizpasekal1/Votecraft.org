@@ -434,10 +434,10 @@ class VoteApp {
                     // Image is weighted heavily as it's the key indicator of a complete record
                     const dataScore = (l) => {
                         let score = 0;
-                        if (l.party) score += 1;
-                        if (l.image) score += 5; // Image is most important
-                        if (l.email) score += 1;
-                        if (l.phone) score += 1;
+                        if (l.party && l.party !== 'Unknown') score += 1;
+                        if (l.photoUrl) score += 5; // Image is most important (field is photoUrl not image)
+                        if (l.emails && l.emails.length > 0) score += 1;
+                        if (l.phones && l.phones.length > 0) score += 1;
                         if (l.district) score += 1;
                         // Prefer Congress.gov source for federal legislators
                         if (l.id && l.id.startsWith('congress-')) score += 3;
