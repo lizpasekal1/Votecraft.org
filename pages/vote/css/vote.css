@@ -202,6 +202,8 @@ body {
     flex: 1;
     padding: 10px 14px;
     font-size: 0.95rem;
+    font-weight: 400;
+    text-transform: none;
     font-family: inherit;
     border: 1px solid #374151;
     border-radius: var(--radius);
@@ -230,6 +232,9 @@ body {
     border-radius: var(--radius);
     cursor: pointer;
     white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-search:hover {
@@ -308,6 +313,7 @@ body {
     border-radius: var(--radius);
     cursor: pointer;
     transition: all 0.2s;
+    position: relative;
 }
 
 .rep-item:hover {
@@ -364,6 +370,11 @@ body {
     flex-wrap: wrap;
 }
 
+.rep-district {
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
 .rep-party.democratic {
     color: var(--democrat);
     font-weight: 500;
@@ -374,24 +385,39 @@ body {
     font-weight: 500;
 }
 
-.chamber-badge {
+.rep-separator {
+    color: #6b7280;
+    font-size: 0.6rem;
+}
+
+.rep-chamber {
+    color: #9ca3af;
+}
+
+.explore-badge {
     padding: 3px 8px;
     font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     border-radius: 20px;
-    flex-shrink: 0;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 4px;
+    background: #dc2626;
+    color: #fff;
+    display: none;
+    cursor: pointer;
+    transition: background 0.2s;
 }
 
-.chamber-badge.upper {
-    background: var(--upper-chamber);
-    color: #0d4a42;
+.explore-badge:hover {
+    background: #b91c1c;
 }
 
-.chamber-badge.lower {
-    background: var(--lower-chamber);
-    color: #6b4a00;
+.rep-item.selected .explore-badge {
+    display: inline-block;
 }
 
 /* District accordion groups */
@@ -539,6 +565,30 @@ body {
     transition: all 0.2s;
 }
 
+.issue-sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.issue-sidebar-title {
+    flex: 1;
+    min-width: 0;
+}
+
+.issue-toggle-arrow {
+    font-size: 0.75rem;
+    color: #6b7280;
+    transition: transform 0.25s ease;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.issue-sidebar-item.active .issue-toggle-arrow {
+    transform: rotate(180deg);
+    color: #93c5fd;
+}
+
 .issue-sidebar-item:hover {
     border-color: #6b7280;
     background: #1f2937;
@@ -582,9 +632,15 @@ body {
     color: #fff;
 }
 
-.stance-btn.opposed.active {
+.stance-btn.explore-stance {
     background: #dc2626;
     border-color: #dc2626;
+    color: #fff;
+}
+
+.stance-btn.explore-stance:hover {
+    background: #b91c1c;
+    border-color: #b91c1c;
 }
 
 /* Stance list (accordion body) */
@@ -611,8 +667,14 @@ body {
     background: #1f2937;
 }
 
+.stance-rep-item:active {
+    background: #2563eb;
+    transform: scale(0.98);
+}
+
 .stance-rep-item.selected {
     background: #1e3a5f;
+    border-left: 3px solid #3b82f6;
 }
 
 .stance-rep-photo {
@@ -1626,10 +1688,13 @@ body {
 
     .sidebar-logo {
         margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .sidebar-logo img {
-        height: 20px;
+        height: 35px;
     }
 
     .search-section {
@@ -1639,8 +1704,8 @@ body {
 
     .search-section input {
         padding: 0 10px;
-        font-size: 0.85rem;
-        height: 32px;
+        font-size: 0.8rem;
+        height: 27px;
         border-radius: 6px;
         border-width: 1px;
     }
@@ -1648,7 +1713,7 @@ body {
     .btn-search {
         padding: 0 12px;
         font-size: 0.8rem;
-        height: 32px;
+        height: 27px;
         border-radius: 6px;
     }
 

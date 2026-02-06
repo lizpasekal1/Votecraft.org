@@ -142,9 +142,9 @@
         </div>
     </div>
 
-    <link rel="stylesheet" href="css/vote.css?v=178">
-    <script src="js/issues-data.js?v=86"></script>
-    <script src="js/civic-api.js?v=94"></script>
-    <script src="js/vote-app.js?v=120"></script>
+    <link rel="stylesheet" href="css/vote.css?v=<?php echo filemtime(__DIR__ . '/css/vote.css'); ?>">
+    <script src="js/issues-data.js?v=<?php echo filemtime(__DIR__ . '/js/issues-data.js'); ?>"></script>
+    <script src="js/civic-api.js?v=<?php echo filemtime(__DIR__ . '/js/civic-api.js'); ?>"></script>
+    <script src="js/vote-app.js?v=<?php echo filemtime(__DIR__ . '/js/vote-app.js'); ?>"></script>
 </body>
 </html>

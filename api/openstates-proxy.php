@@ -17,6 +17,10 @@ define('VOTECRAFT_CACHE_TTL_PEOPLE_GEO', 12 * HOUR_IN_SECONDS);
 define('VOTECRAFT_CACHE_TTL_BILLS', 4 * HOUR_IN_SECONDS);
 define('VOTECRAFT_CACHE_MAX_AGE', 7 * DAY_IN_SECONDS); // Keep stale data for fallback
 
+// Rate limiting: minimum seconds between API requests
+define('VOTECRAFT_RATE_LIMIT_SECONDS', 1);
+define('VOTECRAFT_RATE_LIMIT_OPTION', 'votecraft_last_api_call');
+
 // Create cache table on plugin load
 register_activation_hook(__FILE__, 'votecraft_create_cache_table');
 add_action('plugins_loaded', 'votecraft_maybe_create_cache_table');
@@ -152,15 +156,221 @@ function votecraft_cache_set($cache_key, $endpoint, $data) {
 }
 
 /**
+ * Convert jurisdiction (abbreviation or name) to proper state name for DB lookup
+ */
+function votecraft_jurisdiction_to_state($jurisdiction) {
+    $abbrev_to_state = array(
+        'al' => 'Alabama', 'ak' => 'Alaska', 'az' => 'Arizona', 'ar' => 'Arkansas',
+        'ca' => 'California', 'co' => 'Colorado', 'ct' => 'Connecticut', 'de' => 'Delaware',
+        'fl' => 'Florida', 'ga' => 'Georgia', 'hi' => 'Hawaii', 'id' => 'Idaho',
+        'il' => 'Illinois', 'in' => 'Indiana', 'ia' => 'Iowa', 'ks' => 'Kansas',
+        'ky' => 'Kentucky', 'la' => 'Louisiana', 'me' => 'Maine', 'md' => 'Maryland',
+        'ma' => 'Massachusetts', 'mi' => 'Michigan', 'mn' => 'Minnesota', 'ms' => 'Mississippi',
+        'mo' => 'Missouri', 'mt' => 'Montana', 'ne' => 'Nebraska', 'nv' => 'Nevada',
+        'nh' => 'New Hampshire', 'nj' => 'New Jersey', 'nm' => 'New Mexico', 'ny' => 'New York',
+        'nc' => 'North Carolina', 'nd' => 'North Dakota', 'oh' => 'Ohio', 'ok' => 'Oklahoma',
+        'or' => 'Oregon', 'pa' => 'Pennsylvania', 'ri' => 'Rhode Island', 'sc' => 'South Carolina',
+        'sd' => 'South Dakota', 'tn' => 'Tennessee', 'tx' => 'Texas', 'ut' => 'Utah',
+        'vt' => 'Vermont', 'va' => 'Virginia', 'wa' => 'Washington', 'wv' => 'West Virginia',
+        'wi' => 'Wisconsin', 'wy' => 'Wyoming', 'dc' => 'District of Columbia'
+    );
+    $lower = strtolower($jurisdiction);
+    if (isset($abbrev_to_state[$lower])) {
+        return $abbrev_to_state[$lower];
+    }
+    // Fallback: capitalize words (e.g., "new-york" -> "New York")
+    return ucwords(str_replace('-', ' ', $jurisdiction));
+}
+
+/**
+ * Try to serve federal legislators from local synced database
+ * Returns array with 'results' key if data found, null otherwise
+ */
+function votecraft_try_local_federal_db($state = null) {
+    global $wpdb;
+    $table = $wpdb->prefix . 'votecraft_legislators';
+
+    // Check if we have any federal legislators
+    $count = $wpdb->get_var("SELECT COUNT(*) FROM $table WHERE level = 'federal'");
+    if ($count == 0) {
+        return null;
+    }
+
+    // Fetch federal legislators (optionally filtered by state)
+    if ($state) {
+        // Convert abbreviation to full name if needed
+        $state_name = votecraft_jurisdiction_to_state($state);
+        $legislators = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $table WHERE level = 'federal' AND state = %s ORDER BY chamber ASC, name ASC",
+            $state_name
+        ));
+    } else {
+        $legislators = $wpdb->get_results(
+            "SELECT * FROM $table WHERE level = 'federal' ORDER BY state ASC, chamber ASC, name ASC"
+        );
+    }
+
+    // Format results to match API response
+    $results = array();
+    foreach ($legislators as $leg) {
+        $raw = json_decode($leg->raw_data, true);
+        if ($raw) {
+            $results[] = $raw;
+        } else {
+            // Fallback to table fields
+            $results[] = array(
+                'id' => $leg->id,
+                'name' => $leg->name,
+                'party' => $leg->party,
+                'image' => $leg->photo_url,
+                'email' => $leg->email,
+                'current_role' => $leg->current_role ? json_decode($leg->current_role, true) : null,
+                'jurisdiction' => array(
+                    'name' => $leg->state,
+                    'classification' => 'country'
+                ),
+                'level' => 'federal',
+                'source' => 'congress.gov'
+            );
+        }
+    }
+
+    return array(
+        'results' => $results,
+        'pagination' => array('total_items' => count($results), 'per_page' => 100, 'page' => 1)
+    );
+}
+
+/**
+ * Try to serve from local synced database (votecraft_legislators, votecraft_bills)
+ * Returns array with 'results' key if data found, null otherwise
+ */
+function votecraft_try_local_db($endpoint, $params) {
+    global $wpdb;
+
+    // Only use local DB for people and bills endpoints with jurisdiction
+    $jurisdiction = isset($params['jurisdiction']) ? $params['jurisdiction'] : null;
+    if (!$jurisdiction) {
+        return null;
+    }
+
+    // Convert jurisdiction to state name for DB lookup
+    $state = votecraft_jurisdiction_to_state($jurisdiction);
+
+    // Check if we have synced data for this state
+    $legislators_table = $wpdb->prefix . 'votecraft_legislators';
+    $bills_table = $wpdb->prefix . 'votecraft_bills';
+    $sponsorships_table = $wpdb->prefix . 'votecraft_sponsorships';
+
+    if ($endpoint === 'people') {
+        // Check if we have legislators for this state
+        $count = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM $legislators_table WHERE state = %s",
+            $state
+        ));
+
+        if ($count > 0) {
+            $legislators = $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM $legislators_table WHERE state = %s ORDER BY name ASC",
+                $state
+            ));
+
+            // Format results to match OpenStates API response
+            $results = array();
+            foreach ($legislators as $leg) {
+                $raw = json_decode($leg->raw_data, true);
+                if ($raw) {
+                    $results[] = $raw;
+                } else {
+                    // Fallback to table fields
+                    $results[] = array(
+                        'id' => $leg->id,
+                        'name' => $leg->name,
+                        'party' => $leg->party,
+                        'image' => $leg->photo_url,
+                        'email' => $leg->email,
+                        'current_role' => $leg->current_role ? json_decode($leg->current_role, true) : null,
+                    );
+                }
+            }
+
+            return array(
+                'results' => $results,
+                'pagination' => array('total_items' => count($results), 'per_page' => 100, 'page' => 1)
+            );
+        }
+    }
+
+    if ($endpoint === 'bills') {
+        $keyword = isset($params['q']) ? $params['q'] : null;
+        if (!$keyword) {
+            return null;
+        }
+
+        // Check if we have bills for this state
+        $count = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM $bills_table WHERE state = %s",
+            $state
+        ));
+
+        if ($count > 0) {
+            // Search bills by keyword
+            $bills = $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM $bills_table
+                 WHERE state = %s
+                 AND (title LIKE %s OR subject LIKE %s)
+                 ORDER BY latest_action_date DESC
+                 LIMIT 20",
+                $state,
+                '%' . $wpdb->esc_like($keyword) . '%',
+                '%' . $wpdb->esc_like($keyword) . '%'
+            ));
+
+            // Format results and attach sponsorships
+            $results = array();
+            foreach ($bills as $bill) {
+                $raw = json_decode($bill->raw_data, true);
+                if ($raw) {
+                    // Fetch sponsorships from local DB
+                    $sponsors = $wpdb->get_results($wpdb->prepare(
+                        "SELECT * FROM $sponsorships_table WHERE bill_id = %s",
+                        $bill->id
+                    ));
+                    $raw['sponsorships'] = array();
+                    foreach ($sponsors as $s) {
+                        $raw['sponsorships'][] = array(
+                            'name' => $s->legislator_name,
+                            'primary' => $s->sponsorship_type === 'primary',
+                            'classification' => $s->classification,
+                            'person' => $s->legislator_id ? array('id' => $s->legislator_id) : null
+                        );
+                    }
+                    $results[] = $raw;
+                }
+            }
+
+            if (!empty($results)) {
+                return array(
+                    'results' => $results,
+                    'pagination' => array('total_items' => count($results), 'per_page' => 20, 'page' => 1)
+                );
+            }
+        }
+    }
+
+    return null;
+}
+
+/**
  * Main proxy handler
  */
 function votecraft_openstates_proxy($request) {
-    $apiKey = '064f1e91-b0a3-4e4b-b4c7-4313e70bc47d';
+    $apiKey = 'd2917281-d734-4e26-a557-eeb50ea60f78';
     $baseUrl = 'https://v3.openstates.org';
 
     $endpoint = $request->get_param('endpoint');
 
-    $allowedEndpoints = array('people.geo', 'people', 'bills');
+    $allowedEndpoints = array('people.geo', 'people', 'people.federal', 'bills');
     if (!in_array($endpoint, $allowedEndpoints)) {
         return new WP_Error('invalid_endpoint', 'Invalid endpoint', array('status' => 400));
     }
@@ -170,6 +380,27 @@ function votecraft_openstates_proxy($request) {
     unset($params['endpoint']);
     unset($params['_t']);
     unset($params['rest_route']);
+
+    // Handle federal legislators endpoint (local DB only)
+    if ($endpoint === 'people.federal') {
+        $state = isset($params['state']) ? $params['state'] : null;
+        $federal_data = votecraft_try_local_federal_db($state);
+        if ($federal_data) {
+            $response = new WP_REST_Response($federal_data, 200);
+            $response->header('X-VoteCraft-Cache', 'LOCAL-DB');
+            return $response;
+        }
+        // If no local data, return empty results (no external API fallback)
+        return new WP_REST_Response(array('results' => array(), 'pagination' => array('total_items' => 0)), 200);
+    }
+
+    // Try local synced database first (fastest, no API calls)
+    $local_data = votecraft_try_local_db($endpoint, $params);
+    if ($local_data) {
+        $response = new WP_REST_Response($local_data, 200);
+        $response->header('X-VoteCraft-Cache', 'LOCAL-DB');
+        return $response;
+    }
 
     // Generate cache key from endpoint + params
     $cache_key = md5($endpoint . '|' . serialize($params));
@@ -184,6 +415,15 @@ function votecraft_openstates_proxy($request) {
         $response->header('X-VoteCraft-Cache-Age', $cached['age']);
         return $response;
     }
+
+    // Server-side rate limiting: wait if we've made a request recently
+    $last_call = get_option(VOTECRAFT_RATE_LIMIT_OPTION, 0);
+    $now = microtime(true);
+    $elapsed = $now - $last_call;
+    if ($elapsed < VOTECRAFT_RATE_LIMIT_SECONDS) {
+        usleep((int)((VOTECRAFT_RATE_LIMIT_SECONDS - $elapsed) * 1000000));
+    }
+    update_option(VOTECRAFT_RATE_LIMIT_OPTION, microtime(true));
 
     // Fetch fresh data from OpenStates
     // Remove any client-sent include params — we control these server-side
@@ -215,6 +455,17 @@ function votecraft_openstates_proxy($request) {
 
     $body = wp_remote_retrieve_body($api_response);
     $status = wp_remote_retrieve_response_code($api_response);
+
+    // Handle rate limiting from OpenStates
+    if ($status === 429) {
+        // Return stale cache if available
+        if ($cached) {
+            $response = new WP_REST_Response($cached['data'], 200);
+            $response->header('X-VoteCraft-Cache', 'STALE-RATELIMIT');
+            return $response;
+        }
+        return new WP_Error('rate_limited', 'OpenStates API rate limit exceeded', array('status' => 429));
+    }
 
     $data = json_decode($body, true);
     if ($data === null) {
