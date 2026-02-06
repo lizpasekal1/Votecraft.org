@@ -20,6 +20,324 @@ define('VOTECRAFT_OPENSTATES_API_KEY', 'd2917281-d734-4e26-a557-eeb50ea60f78');
 // Get your free key at: https://api.congress.gov/sign-up/
 define('VOTECRAFT_CONGRESS_API_KEY', 'hAwu5fqahUrcpjdzEJpsPzMleub3epvnX64pmBNV');
 
+// Scheduled sync settings
+define('VOTECRAFT_BATCH_API_CALLS', 80); // Max API calls per batch (500/day ÷ 6 runs = ~83)
+
+// =============================================================================
+// SCHEDULED SYNC (WP-CRON)
+// =============================================================================
+
+// Register custom cron interval (every 4 hours = 6 times per day)
+add_filter('cron_schedules', 'votecraft_add_cron_interval');
+function votecraft_add_cron_interval($schedules) {
+    $schedules['every_four_hours'] = array(
+        'interval' => 4 * 60 * 60, // 4 hours in seconds
+        'display'  => 'Every 4 Hours'
+    );
+    return $schedules;
+}
+
+// Schedule the cron job on plugin activation
+register_activation_hook(__FILE__, 'votecraft_schedule_sync');
+function votecraft_schedule_sync() {
+    if (!wp_next_scheduled('votecraft_scheduled_sync')) {
+        wp_schedule_event(time(), 'every_four_hours', 'votecraft_scheduled_sync');
+    }
+}
+
+// Unschedule on deactivation
+register_deactivation_hook(__FILE__, 'votecraft_unschedule_sync');
+function votecraft_unschedule_sync() {
+    wp_clear_scheduled_hook('votecraft_scheduled_sync');
+}
+
+// Hook the actual sync function
+add_action('votecraft_scheduled_sync', 'votecraft_run_scheduled_batch');
+
+/**
+ * Run a scheduled batch sync
+ * Syncs legislators and bills in rotation, tracking progress
+ */
+function votecraft_run_scheduled_batch() {
+    // Check if scheduled sync is enabled
+    if (!get_option('votecraft_scheduled_sync_enabled', false)) {
+        return;
+    }
+
+    global $wpdb;
+    $log_table = $wpdb->prefix . 'votecraft_sync_log';
+
+    // Get progress
+    $progress = get_option('votecraft_scheduled_progress', array(
+        'state_index' => 0,
+        'phase' => 'legislators', // 'legislators' or 'bills'
+        'api_calls_today' => 0,
+        'last_reset_date' => date('Y-m-d'),
+        'completed_states' => array()
+    ));
+
+    // Reset daily counter if new day
+    if ($progress['last_reset_date'] !== date('Y-m-d')) {
+        $progress['api_calls_today'] = 0;
+        $progress['last_reset_date'] = date('Y-m-d');
+    }
+
+    // Check if we've hit daily limit
+    if ($progress['api_calls_today'] >= 450) { // Leave buffer of 50
+        return;
+    }
+
+    // All 50 states
+    $states = array(
+        'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado',
+        'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho',
+        'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana',
+        'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi',
+        'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey',
+        'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma',
+        'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
+        'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington',
+        'West Virginia', 'Wisconsin', 'Wyoming'
+    );
+
+    $batch_calls = 0;
+    $max_calls = min(VOTECRAFT_BATCH_API_CALLS, 450 - $progress['api_calls_today']);
+
+    // Log start
+    $wpdb->insert($log_table, array(
+        'sync_type' => 'scheduled_batch',
+        'state' => 'BATCH',
+        'status' => 'running',
+        'started_at' => current_time('mysql')
+    ));
+    $log_id = $wpdb->insert_id;
+
+    $synced_count = 0;
+    $states_synced = array();
+
+    try {
+        while ($batch_calls < $max_calls && $progress['state_index'] < count($states)) {
+            $state = $states[$progress['state_index']];
+
+            if ($progress['phase'] === 'legislators') {
+                // Sync legislators for this state
+                $result = votecraft_sync_legislators_batch($state, $max_calls - $batch_calls);
+                $batch_calls += $result['api_calls'];
+                $synced_count += $result['records'];
+
+                if ($result['complete']) {
+                    $progress['phase'] = 'bills';
+                    $states_synced[] = $state . ' (legislators)';
+                }
+            } else {
+                // Sync bills for this state
+                $result = votecraft_sync_bills_batch($state, $max_calls - $batch_calls);
+                $batch_calls += $result['api_calls'];
+                $synced_count += $result['records'];
+
+                if ($result['complete']) {
+                    $progress['phase'] = 'legislators';
+                    $progress['state_index']++;
+                    $progress['completed_states'][] = $state;
+                    $states_synced[] = $state . ' (bills)';
+                }
+            }
+
+            // Safety check
+            if ($batch_calls >= $max_calls) break;
+        }
+
+        // Check if all states complete
+        if ($progress['state_index'] >= count($states)) {
+            $progress['state_index'] = 0;
+            $progress['completed_states'] = array();
+            // Full cycle complete!
+        }
+
+        $progress['api_calls_today'] += $batch_calls;
+        update_option('votecraft_scheduled_progress', $progress);
+
+        // Log success
+        $wpdb->update($log_table, array(
+            'status' => 'success',
+            'records_synced' => $synced_count,
+            'error_message' => 'States: ' . implode(', ', $states_synced) . ' | API calls: ' . $batch_calls,
+            'completed_at' => current_time('mysql')
+        ), array('id' => $log_id));
+
+    } catch (Exception $e) {
+        update_option('votecraft_scheduled_progress', $progress);
+
+        $wpdb->update($log_table, array(
+            'status' => 'error',
+            'error_message' => $e->getMessage(),
+            'completed_at' => current_time('mysql')
+        ), array('id' => $log_id));
+    }
+}
+
+/**
+ * Sync legislators for a state with API call limit
+ */
+function votecraft_sync_legislators_batch($state, $max_calls) {
+    global $wpdb;
+    $table = $wpdb->prefix . 'votecraft_legislators';
+
+    $jurisdiction = votecraft_state_to_jurisdiction($state);
+    $api_calls = 0;
+    $count = 0;
+
+    $page = 1;
+    $per_page = 50;
+
+    while ($api_calls < $max_calls) {
+        $url = 'https://v3.openstates.org/people?' . http_build_query(array(
+            'jurisdiction' => $jurisdiction,
+            'per_page' => $per_page,
+            'page' => $page,
+            'apikey' => VOTECRAFT_OPENSTATES_API_KEY
+        ));
+
+        $response = wp_remote_get($url, array('timeout' => 30));
+        $api_calls++;
+
+        if (is_wp_error($response)) break;
+
+        $status = wp_remote_retrieve_response_code($response);
+        if ($status === 429) {
+            usleep(3000000); // Wait 3 seconds on rate limit
+            continue;
+        }
+        if ($status >= 400) break;
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        if (!isset($body['results'])) break;
+
+        foreach ($body['results'] as $leg) {
+            $current_role = isset($leg['current_role']) ? $leg['current_role'] : null;
+
+            $wpdb->replace($table, array(
+                'id' => $leg['id'],
+                'name' => $leg['name'],
+                'party' => isset($leg['party']) ? $leg['party'] : null,
+                'state' => $state,
+                'chamber' => $current_role ? ($current_role['org_classification'] ?? null) : null,
+                'district' => $current_role ? ($current_role['district'] ?? null) : null,
+                'photo_url' => isset($leg['image']) ? $leg['image'] : null,
+                'email' => isset($leg['email']) ? $leg['email'] : null,
+                'current_role' => $current_role ? json_encode($current_role) : null,
+                'jurisdiction_id' => isset($leg['jurisdiction']['id']) ? $leg['jurisdiction']['id'] : null,
+                'level' => 'state',
+                'raw_data' => json_encode($leg),
+                'updated_at' => current_time('mysql')
+            ));
+            $count++;
+        }
+
+        $has_more = count($body['results']) === $per_page;
+        if (!$has_more) {
+            return array('api_calls' => $api_calls, 'records' => $count, 'complete' => true);
+        }
+
+        $page++;
+        usleep(1500000); // Rate limit: 1.5s between requests
+    }
+
+    return array('api_calls' => $api_calls, 'records' => $count, 'complete' => false);
+}
+
+/**
+ * Sync bills for a state with API call limit
+ */
+function votecraft_sync_bills_batch($state, $max_calls) {
+    global $wpdb;
+    $bills_table = $wpdb->prefix . 'votecraft_bills';
+    $sponsorships_table = $wpdb->prefix . 'votecraft_sponsorships';
+
+    $jurisdiction = votecraft_state_to_jurisdiction($state);
+    $api_calls = 0;
+    $count = 0;
+
+    // Keywords from VoteCraft issues
+    $keywords = array(
+        'ranked choice voting', 'instant runoff',
+        'student debt', 'predatory lending',
+        'citizens united', 'campaign finance',
+        'medicare', 'healthcare',
+        'supreme court', 'judicial ethics',
+        'local journalism'
+    );
+
+    $five_years_ago = date('Y-m-d', strtotime('-5 years'));
+
+    foreach ($keywords as $keyword) {
+        if ($api_calls >= $max_calls) break;
+
+        $url = 'https://v3.openstates.org/bills?' . http_build_query(array(
+            'jurisdiction' => $jurisdiction,
+            'q' => $keyword,
+            'created_since' => $five_years_ago,
+            'include' => 'sponsorships',
+            'per_page' => 20,
+            'apikey' => VOTECRAFT_OPENSTATES_API_KEY
+        ));
+
+        $response = wp_remote_get($url, array('timeout' => 30));
+        $api_calls++;
+
+        if (is_wp_error($response)) continue;
+
+        $status = wp_remote_retrieve_response_code($response);
+        if ($status === 429) {
+            usleep(3000000);
+            continue;
+        }
+        if ($status >= 400) continue;
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        if (!isset($body['results'])) continue;
+
+        foreach ($body['results'] as $bill) {
+            $bill_id = $bill['id'];
+            $latest_action = isset($bill['latest_action']) ? $bill['latest_action'] : array();
+
+            $wpdb->replace($bills_table, array(
+                'id' => $bill_id,
+                'identifier' => $bill['identifier'] ?? '',
+                'title' => $bill['title'] ?? '',
+                'state' => $state,
+                'session' => $bill['session'] ?? '',
+                'chamber' => $bill['from_organization']['classification'] ?? null,
+                'classification' => is_array($bill['classification']) ? implode(',', $bill['classification']) : null,
+                'subject' => $keyword,
+                'latest_action_date' => $latest_action['date'] ?? null,
+                'latest_action_description' => $latest_action['description'] ?? null,
+                'openstates_url' => $bill['openstates_url'] ?? null,
+                'raw_data' => json_encode($bill),
+                'updated_at' => current_time('mysql')
+            ));
+
+            // Sync sponsorships
+            if (isset($bill['sponsorships'])) {
+                foreach ($bill['sponsorships'] as $sponsor) {
+                    $wpdb->replace($sponsorships_table, array(
+                        'bill_id' => $bill_id,
+                        'legislator_id' => $sponsor['person']['id'] ?? null,
+                        'legislator_name' => $sponsor['name'] ?? '',
+                        'sponsorship_type' => $sponsor['primary'] ? 'primary' : 'cosponsor',
+                        'classification' => $sponsor['classification'] ?? null
+                    ));
+                }
+            }
+            $count++;
+        }
+
+        usleep(1500000); // Rate limit
+    }
+
+    return array('api_calls' => $api_calls, 'records' => $count, 'complete' => true);
+}
+
 // =============================================================================
 // DATABASE SETUP
 // =============================================================================
@@ -167,6 +485,23 @@ function votecraft_sync_admin_page() {
         } elseif ($action === 'reset_federal_bills') {
             delete_option('votecraft_federal_bills_progress');
             echo '<div class="notice notice-success"><p>Federal bills sync progress has been reset.</p></div>';
+        } elseif ($action === 'enable_scheduled_sync') {
+            update_option('votecraft_scheduled_sync_enabled', true);
+            // Schedule if not already scheduled
+            if (!wp_next_scheduled('votecraft_scheduled_sync')) {
+                wp_schedule_event(time(), 'every_four_hours', 'votecraft_scheduled_sync');
+            }
+            echo '<div class="notice notice-success"><p>Scheduled sync enabled! Will run every 4 hours.</p></div>';
+        } elseif ($action === 'disable_scheduled_sync') {
+            update_option('votecraft_scheduled_sync_enabled', false);
+            echo '<div class="notice notice-success"><p>Scheduled sync disabled.</p></div>';
+        } elseif ($action === 'reset_scheduled_progress') {
+            delete_option('votecraft_scheduled_progress');
+            echo '<div class="notice notice-success"><p>Scheduled sync progress has been reset. Will start from Alabama.</p></div>';
+        } elseif ($action === 'run_batch_now') {
+            update_option('votecraft_scheduled_sync_enabled', true);
+            votecraft_run_scheduled_batch();
+            echo '<div class="notice notice-success"><p>Manual batch sync completed! Check progress below.</p></div>';
         }
     }
 
@@ -231,9 +566,129 @@ function votecraft_sync_admin_page() {
         'Wisconsin', 'Wyoming', 'District of Columbia'
     );
 
+    // Scheduled sync status
+    $scheduled_enabled = get_option('votecraft_scheduled_sync_enabled', false);
+    $scheduled_progress = get_option('votecraft_scheduled_progress', array(
+        'state_index' => 0,
+        'phase' => 'legislators',
+        'api_calls_today' => 0,
+        'last_reset_date' => date('Y-m-d'),
+        'completed_states' => array()
+    ));
+    $next_scheduled = wp_next_scheduled('votecraft_scheduled_sync');
+    $all_states_list = array(
+        'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado',
+        'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho',
+        'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana',
+        'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi',
+        'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey',
+        'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma',
+        'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
+        'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington',
+        'West Virginia', 'Wisconsin', 'Wyoming'
+    );
+    $current_state = isset($all_states_list[$scheduled_progress['state_index']]) ? $all_states_list[$scheduled_progress['state_index']] : 'Complete';
+    $completed_count = count($scheduled_progress['completed_states']);
+
+    // Get recent batch syncs
+    $recent_batches = $wpdb->get_results(
+        "SELECT * FROM $log_table WHERE sync_type = 'scheduled_batch' ORDER BY started_at DESC LIMIT 10"
+    );
+
     ?>
     <div class="wrap">
         <h1>VoteCraft Data Sync</h1>
+
+        <!-- SCHEDULED SYNC DASHBOARD -->
+        <div class="card" style="max-width: 800px; margin-bottom: 20px; background: <?php echo $scheduled_enabled ? '#e7f5e7' : '#fff3cd'; ?>;">
+            <h2>📅 Scheduled Sync Dashboard</h2>
+            <p><strong>Status:</strong>
+                <?php if ($scheduled_enabled): ?>
+                    <span style="color: green; font-weight: bold;">✓ ENABLED</span> - Running every 4 hours
+                <?php else: ?>
+                    <span style="color: orange; font-weight: bold;">⏸ DISABLED</span>
+                <?php endif; ?>
+            </p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 15px 0;">
+                <div style="background: #fff; padding: 15px; border-radius: 5px; border: 1px solid #ddd;">
+                    <h4 style="margin-top: 0;">Progress</h4>
+                    <p><strong>Current State:</strong> <?php echo esc_html($current_state); ?></p>
+                    <p><strong>Current Phase:</strong> <?php echo ucfirst($scheduled_progress['phase']); ?></p>
+                    <p><strong>States Completed:</strong> <?php echo $completed_count; ?> / 50</p>
+                    <div style="background: #e0e0e0; height: 20px; border-radius: 10px; overflow: hidden;">
+                        <div style="background: #4caf50; height: 100%; width: <?php echo ($completed_count / 50) * 100; ?>%;"></div>
+                    </div>
+                </div>
+
+                <div style="background: #fff; padding: 15px; border-radius: 5px; border: 1px solid #ddd;">
+                    <h4 style="margin-top: 0;">API Usage Today</h4>
+                    <p><strong>Calls Used:</strong> <?php echo $scheduled_progress['api_calls_today']; ?> / 500</p>
+                    <p><strong>Remaining:</strong> <?php echo max(0, 500 - $scheduled_progress['api_calls_today']); ?></p>
+                    <div style="background: #e0e0e0; height: 20px; border-radius: 10px; overflow: hidden;">
+                        <div style="background: <?php echo $scheduled_progress['api_calls_today'] > 400 ? '#ff9800' : '#2196f3'; ?>; height: 100%; width: <?php echo min(100, ($scheduled_progress['api_calls_today'] / 500) * 100); ?>%;"></div>
+                    </div>
+                    <p style="font-size: 0.85em; color: #666;"><strong>Next Run:</strong>
+                        <?php echo $next_scheduled ? date('M j, Y g:i A', $next_scheduled) : 'Not scheduled'; ?>
+                    </p>
+                </div>
+            </div>
+
+            <form method="post" style="margin-top: 15px;">
+                <?php wp_nonce_field('votecraft_sync'); ?>
+                <?php if ($scheduled_enabled): ?>
+                    <button type="submit" name="votecraft_sync_action" value="disable_scheduled_sync" class="button">⏸ Disable Scheduled Sync</button>
+                <?php else: ?>
+                    <button type="submit" name="votecraft_sync_action" value="enable_scheduled_sync" class="button button-primary">▶ Enable Scheduled Sync</button>
+                <?php endif; ?>
+                <button type="submit" name="votecraft_sync_action" value="run_batch_now" class="button">⚡ Run Batch Now</button>
+                <button type="submit" name="votecraft_sync_action" value="reset_scheduled_progress" class="button" onclick="return confirm('Reset progress? This will start syncing from Alabama again.');">🔄 Reset Progress</button>
+            </form>
+
+            <?php if (!empty($scheduled_progress['completed_states'])): ?>
+            <details style="margin-top: 15px;">
+                <summary style="cursor: pointer; font-weight: bold;">Completed States (<?php echo $completed_count; ?>)</summary>
+                <p style="margin-top: 10px; font-size: 0.9em;">
+                    <?php echo esc_html(implode(', ', $scheduled_progress['completed_states'])); ?>
+                </p>
+            </details>
+            <?php endif; ?>
+        </div>
+
+        <!-- RECENT BATCH ACTIVITY -->
+        <?php if (!empty($recent_batches)): ?>
+        <div class="card" style="max-width: 800px; margin-bottom: 20px;">
+            <h2>📊 Recent Batch Activity</h2>
+            <table class="widefat" style="margin-top: 10px;">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th>Records</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($recent_batches as $batch): ?>
+                    <tr>
+                        <td><?php echo esc_html(date('M j, g:i A', strtotime($batch->started_at))); ?></td>
+                        <td>
+                            <?php if ($batch->status === 'success'): ?>
+                                <span style="color: green;">✓ Success</span>
+                            <?php elseif ($batch->status === 'running'): ?>
+                                <span style="color: blue;">⏳ Running</span>
+                            <?php else: ?>
+                                <span style="color: red;">✗ Error</span>
+                            <?php endif; ?>
+                        </td>
+                        <td><?php echo number_format($batch->records_synced); ?></td>
+                        <td style="font-size: 0.85em;"><?php echo esc_html(substr($batch->error_message, 0, 100)); ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php endif; ?>
 
         <div class="card" style="max-width: 600px; margin-bottom: 20px;">
             <h2>Database Stats</h2>
