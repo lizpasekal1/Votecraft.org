@@ -14,13 +14,13 @@ class VoteApp {
         this.toggleIssuesBtn = document.getElementById('toggle-issues');
         this.repsPanel = document.getElementById('reps-panel');
         this.issuesPanel = document.getElementById('issues-panel');
-        this.senateSection = document.getElementById('senate-section');
+        this.federalSenatorsSection = document.getElementById('federal-senators-section');
+        this.stateSenatorsSection = document.getElementById('state-senators-section');
         this.houseSection = document.getElementById('house-section');
-        this.localSection = document.getElementById('local-section');
         this.stateSection = document.getElementById('state-section');
-        this.senateList = document.getElementById('senate-list');
+        this.federalSenatorsList = document.getElementById('federal-senators-list');
+        this.stateSenatorsList = document.getElementById('state-senators-list');
         this.houseList = document.getElementById('house-list');
-        this.localList = document.getElementById('local-list');
         this.stateList = document.getElementById('state-list');
         this.issuesGridView = document.getElementById('issues-grid-view');
         this.issueDetailView = document.getElementById('issue-detail-view');
@@ -537,56 +537,59 @@ class VoteApp {
     // ========== LEFT PANEL: REPRESENTATIVES ==========
 
     showPlaceholderReps() {
-        const senatePlaceholders = [
+        const federalSenatorPlaceholders = [
             { name: 'Your Senator', party: '???', office: 'U.S. Senator', district: '', level: 'congress', photoUrl: '' },
             { name: 'Your Senator', party: '???', office: 'U.S. Senator', district: '', level: 'congress', photoUrl: '' }
         ];
         const housePlaceholders = [
             { name: 'Your Representative', party: '???', office: 'U.S. Representative', district: '', level: 'congress', photoUrl: '' }
         ];
-        this.senateList.innerHTML = senatePlaceholders.map(l => this.renderRepItem(l, true)).join('');
+        this.federalSenatorsList.innerHTML = federalSenatorPlaceholders.map(l => this.renderRepItem(l, true)).join('');
+        this.stateSenatorsList.innerHTML = '<p style="color: #9ca3af; font-size: 0.85rem; padding: 8px;">Search to see your state senators</p>';
         this.houseList.innerHTML = housePlaceholders.map(l => this.renderRepItem(l, true)).join('');
-        this.localList.innerHTML = '<p style="color: #9ca3af; font-size: 0.85rem; padding: 8px;">Search to see your local legislators</p>';
         this.stateList.innerHTML = '<p style="color: #9ca3af; font-size: 0.85rem; padding: 8px;">Search to see all state legislators</p>';
     }
 
     renderReps() {
-        // Helper to check if a legislator is a Senator
+        // Helper to check if a legislator is a Senator (upper chamber)
         const isSenator = (l) => {
             const office = (l.office || '').toLowerCase();
             return office.includes('senator') || office.includes('senate');
         };
 
-        // Congress members from localLegislators
+        // Get all legislators from localLegislators
         const congressMembers = this.localLegislators ? this.localLegislators.filter(l => l.level === 'congress') : [];
+        const stateLocalMembers = this.localLegislators ? this.localLegislators.filter(l => l.level === 'state') : [];
 
-        // Split into Senate and House
-        const senators = congressMembers.filter(isSenator);
-        const representatives = congressMembers.filter(l => !isSenator(l));
+        // Split congress into Federal Senators and House Representatives
+        const federalSenators = congressMembers.filter(isSenator);
+        const houseReps = congressMembers.filter(l => !isSenator(l));
 
-        // Senate section
-        if (senators.length > 0) {
-            this.senateSection.style.display = '';
-            this.senateList.innerHTML = senators.map(l => this.renderRepItem(l)).join('');
+        // Split state local members into State Senators and State House
+        const stateSenators = stateLocalMembers.filter(isSenator);
+
+        // Federal Senators section (US Senators)
+        if (federalSenators.length > 0) {
+            this.federalSenatorsSection.style.display = '';
+            this.federalSenatorsList.innerHTML = federalSenators.map(l => this.renderRepItem(l)).join('');
         } else {
-            this.senateSection.style.display = 'none';
+            this.federalSenatorsSection.style.display = 'none';
         }
 
-        // House section
-        if (representatives.length > 0) {
+        // State Senators section (local state senators from address lookup)
+        if (stateSenators.length > 0) {
+            this.stateSenatorsSection.style.display = '';
+            this.stateSenatorsList.innerHTML = stateSenators.map(l => this.renderRepItem(l)).join('');
+        } else {
+            this.stateSenatorsSection.style.display = 'none';
+        }
+
+        // House of Representatives section (US Representatives)
+        if (houseReps.length > 0) {
             this.houseSection.style.display = '';
-            this.houseList.innerHTML = representatives.map(l => this.renderRepItem(l)).join('');
+            this.houseList.innerHTML = houseReps.map(l => this.renderRepItem(l)).join('');
         } else {
             this.houseSection.style.display = 'none';
-        }
-
-        // Local section: state-level reps from the user's address lookup
-        const local = this.localLegislators ? this.localLegislators.filter(l => l.level === 'state') : [];
-        if (local.length > 0) {
-            this.localSection.style.display = '';
-            this.localList.innerHTML = local.map(l => this.renderRepItem(l)).join('');
-        } else {
-            this.localSection.style.display = 'none';
         }
 
         // State section: grouped by chamber, House sub-grouped by county
