@@ -178,6 +178,10 @@ function votecraft_jurisdiction_to_state($jurisdiction) {
     if (isset($abbrev_to_state[$lower])) {
         return $abbrev_to_state[$lower];
     }
+    // Handle federal/US jurisdiction
+    if ($lower === 'united states' || $lower === 'us' || $lower === 'federal') {
+        return 'Federal';
+    }
     // Fallback: capitalize words (e.g., "new-york" -> "New York")
     return ucwords(str_replace('-', ' ', $jurisdiction));
 }
@@ -400,6 +404,13 @@ function votecraft_openstates_proxy($request) {
         $response = new WP_REST_Response($local_data, 200);
         $response->header('X-VoteCraft-Cache', 'LOCAL-DB');
         return $response;
+    }
+
+    // For federal jurisdiction, don't fall back to OpenStates API (they don't have federal data)
+    $jurisdiction = isset($params['jurisdiction']) ? strtolower($params['jurisdiction']) : '';
+    if ($jurisdiction === 'united states' || $jurisdiction === 'us' || $jurisdiction === 'federal') {
+        // Return empty results - federal data should come from local DB only
+        return new WP_REST_Response(array('results' => array(), 'pagination' => array('total_items' => 0)), 200);
     }
 
     // Generate cache key from endpoint + params
