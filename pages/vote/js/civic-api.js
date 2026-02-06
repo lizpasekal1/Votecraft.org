@@ -15,6 +15,24 @@ const CivicAPI = {
     GOOGLE_CIVIC_URL: 'https://www.googleapis.com/civicinfo/v2',
 
     /**
+     * Convert "Last, First Middle" format to "First Middle Last"
+     * @param {string} name - Name in any format
+     * @returns {string} - Name in "First Last" format
+     */
+    normalizeNameDisplay(name) {
+        if (!name) return '';
+        // Check if name is in "Last, First" format
+        if (name.includes(',')) {
+            const parts = name.split(',').map(p => p.trim());
+            if (parts.length >= 2) {
+                // "Markey, Edward J." -> "Edward J. Markey"
+                return `${parts[1]} ${parts[0]}`;
+            }
+        }
+        return name;
+    },
+
+    /**
      * Geocode an address using OpenStreetMap Nominatim (free, CORS-enabled)
      * @param {string} address - Full address to geocode
      * @returns {Promise<{lat: number, lng: number}>} - Coordinates
@@ -84,6 +102,154 @@ const CivicAPI = {
     },
 
     /**
+     * Get federal representatives - tries local DB first, then Google Civic API
+     * Returns US Senators, US Representatives
+     * @param {string} address - Full address to look up
+     * @param {string} state - Optional state name or abbreviation for local lookup
+     * @returns {Promise<Array>} - Array of federal officials
+     */
+    async getFederalRepresentatives(address, state = null) {
+        console.log('Fetching federal representatives for:', address, state);
+
+        // Try local proxy first (serves from synced database)
+        try {
+            const params = new URLSearchParams({ endpoint: 'people.federal' });
+            if (state) {
+                params.append('state', state);
+            }
+            const proxyUrl = `${this.OPENSTATES_PROXY}?${params.toString()}`;
+            const proxyResponse = await fetch(proxyUrl);
+
+            if (proxyResponse.ok) {
+                const proxyData = await proxyResponse.json();
+                const cacheHeader = proxyResponse.headers.get('X-VoteCraft-Cache');
+                console.log('Federal reps from proxy:', proxyData.results?.length || 0, 'cache:', cacheHeader);
+
+                if (proxyData.results && proxyData.results.length > 0) {
+                    // Data is already in normalized format from local DB
+                    return proxyData.results;
+                }
+            }
+        } catch (proxyError) {
+            console.log('Proxy not available for federal reps:', proxyError.message);
+        }
+
+        // No fallback - federal data must be synced locally from Congress.gov
+        // The Google Civic Representatives API was shut down in April 2025
+        console.log('No federal representatives in local database. Run sync from WordPress admin.');
+        return [];
+    },
+
+    /**
+     * Parse Google Civic API representatives response into app format
+     * @param {object} data - Raw Google Civic API response
+     * @returns {Array} - Normalized representative array
+     */
+    parseFederalRepresentatives(data) {
+        if (!data.officials || !data.offices) {
+            return [];
+        }
+
+        const results = [];
+
+        // Google Civic returns offices with officialIndices pointing to officials array
+        for (const office of data.offices) {
+            const officeName = office.name || '';
+            const division = office.divisionId || '';
+
+            // Determine if this is a federal office we want
+            let level = 'federal';
+            let normalizedOffice = officeName;
+
+            // Skip non-federal offices (we requested levels=country but double-check)
+            if (!division.includes('country:us') && !officeName.toLowerCase().includes('u.s.') &&
+                !officeName.toLowerCase().includes('united states') &&
+                !officeName.toLowerCase().includes('president')) {
+                continue;
+            }
+
+            // Normalize office titles
+            if (officeName.toLowerCase().includes('senator') || officeName.toLowerCase().includes('senate')) {
+                normalizedOffice = 'U.S. Senator';
+            } else if (officeName.toLowerCase().includes('representative') ||
+                       officeName.toLowerCase().includes('congress')) {
+                normalizedOffice = 'U.S. Representative';
+            } else if (officeName.toLowerCase().includes('president') &&
+                       !officeName.toLowerCase().includes('vice')) {
+                normalizedOffice = 'President of the United States';
+            } else if (officeName.toLowerCase().includes('vice president')) {
+                normalizedOffice = 'Vice President of the United States';
+            }
+
+            // Get the officials for this office
+            const indices = office.officialIndices || [];
+            for (const idx of indices) {
+                const official = data.officials[idx];
+                if (!official) continue;
+
+                // Extract state from division ID (e.g., "ocd-division/country:us/state:ma")
+                let state = '';
+                const stateMatch = division.match(/state:(\w+)/);
+                if (stateMatch) {
+                    state = stateMatch[1].toUpperCase();
+                }
+
+                // Extract district from division ID for representatives
+                let district = '';
+                const cdMatch = division.match(/cd:(\d+)/);
+                if (cdMatch) {
+                    district = `District ${cdMatch[1]}`;
+                }
+
+                results.push({
+                    id: `google-civic-${idx}`, // Synthetic ID for Google Civic officials
+                    name: official.name,
+                    office: normalizedOffice,
+                    level: level,
+                    party: official.party || 'Unknown',
+                    photoUrl: official.photoUrl || null,
+                    district: district,
+                    phones: official.phones || [],
+                    emails: official.emails || [],
+                    urls: official.urls || [],
+                    address: official.address?.[0] ?
+                        `${official.address[0].line1 || ''}, ${official.address[0].city || ''}, ${official.address[0].state || ''} ${official.address[0].zip || ''}`.trim() : null,
+                    channels: official.channels || [],
+                    jurisdiction: state ? this.stateAbbrevToName(state) : 'United States',
+                    source: 'google-civic'
+                });
+            }
+        }
+
+        console.log(`Parsed ${results.length} federal representatives`);
+        return results;
+    },
+
+    /**
+     * Convert state abbreviation to full name
+     * @param {string} abbrev - State abbreviation (e.g., "MA")
+     * @returns {string} - Full state name (e.g., "Massachusetts")
+     */
+    stateAbbrevToName(abbrev) {
+        const states = {
+            'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
+            'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
+            'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho',
+            'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
+            'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+            'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi',
+            'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada',
+            'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
+            'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma',
+            'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+            'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah',
+            'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia',
+            'WI': 'Wisconsin', 'WY': 'Wyoming', 'DC': 'District of Columbia'
+        };
+        return states[abbrev.toUpperCase()] || abbrev;
+    },
+
+    /**
      * Get all legislators for a jurisdiction (state or federal)
      * @param {string} jurisdiction - Jurisdiction name (e.g., "Massachusetts")
      * @param {number} perPage - Results per page (default 300 to get all)
@@ -146,6 +312,7 @@ const CivicAPI = {
 
     /**
      * Get representatives for an address (main entry point)
+     * Fetches both federal (Google Civic) and state (OpenStates) legislators
      * @param {string} address - Full address to look up
      * @returns {Promise<object>} - Representatives in normalized format
      */
@@ -153,19 +320,31 @@ const CivicAPI = {
         // Step 1: Geocode the address
         const coords = await this.geocodeAddress(address);
 
-        // Step 2: Get state legislators from OpenStates
-        const legislators = await this.getStateLegislators(coords.lat, coords.lng);
+        // Step 2: Fetch federal and state legislators in parallel
+        const [federalReps, stateLegislators] = await Promise.all([
+            this.getFederalRepresentatives(address),
+            this.getStateLegislators(coords.lat, coords.lng)
+        ]);
+
+        // Combine federal (first) and state legislators
+        const stateOfficials = stateLegislators.results || [];
+        const allOfficials = [...federalReps, ...stateOfficials];
+
+        console.log(`Combined ${federalReps.length} federal + ${stateOfficials.length} state = ${allOfficials.length} total officials`);
 
         // Return in a format compatible with the app
         return {
-            officials: legislators.results || [],
-            source: 'openstates'
+            officials: allOfficials,
+            federalOfficials: federalReps,
+            stateOfficials: stateOfficials,
+            source: 'combined'
         };
     },
 
     /**
-     * Parse OpenStates legislators into app format
-     * @param {object} data - Raw OpenStates response
+     * Parse representatives into app format
+     * Handles both Google Civic (already normalized) and OpenStates (needs parsing)
+     * @param {object} data - Raw API response
      * @returns {Array} - Normalized representative array
      */
     parseRepresentatives(data) {
@@ -179,6 +358,12 @@ const CivicAPI = {
         }
 
         return people.map(person => {
+            // If already normalized (from Google Civic), return as-is
+            if (person.source === 'google-civic') {
+                return person;
+            }
+
+            // Parse OpenStates format
             const role = person.current_role || {};
             const jurisdiction = person.jurisdiction || {};
 
@@ -204,7 +389,7 @@ const CivicAPI = {
 
             return {
                 id: person.id,  // OpenStates person ID for bill lookups
-                name: person.name,
+                name: this.normalizeNameDisplay(person.name),
                 office: office,
                 level: level,
                 party: person.party || 'Unknown',
@@ -215,7 +400,8 @@ const CivicAPI = {
                 urls: person.openstates_url ? [person.openstates_url] : [],
                 address: null,
                 channels: [],
-                jurisdiction: jurisdiction.name || ''
+                jurisdiction: jurisdiction.name || '',
+                source: 'openstates'
             };
         });
     },
@@ -330,18 +516,32 @@ const CivicAPI = {
         });
         const url = `${this.OPENSTATES_PROXY}?${params.toString()}`;
 
-        try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                console.error('Bills by subject API error:', response.status);
+        console.log(`Bills API: ${url}`);
+        const maxRetries = 3;
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+            try {
+                const response = await fetch(url);
+                console.log(`Bills API response: ${response.status}`);
+                if (response.status === 429) {
+                    const delay = Math.pow(2, attempt + 1) * 1000;
+                    console.warn(`Rate limited (429), retrying in ${delay}ms... (attempt ${attempt + 1}/${maxRetries})`);
+                    await new Promise(r => setTimeout(r, delay));
+                    continue;
+                }
+                if (!response.ok) {
+                    console.error('Bills by subject API error:', response.status);
+                    return [];
+                }
+                const data = await response.json();
+                console.log(`Bills API returned ${(data.results || []).length} results`);
+                return data.results || [];
+            } catch (error) {
+                console.error('Error fetching bills by subject:', error);
                 return [];
             }
-            const data = await response.json();
-            return data.results || [];
-        } catch (error) {
-            console.error('Error fetching bills by subject:', error);
-            return [];
         }
+        console.error('Bills by subject: max retries exceeded after all attempts');
+        return [];
     },
 
     /**
@@ -796,6 +996,44 @@ const CivicAPI = {
         } catch (error) {
             console.error('Error fetching state congressional districts:', error);
             return [];
+        }
+    },
+
+    /**
+     * Get state boundary from Census TIGERweb using a lat/lng point
+     * @param {number} lat - Latitude
+     * @param {number} lng - Longitude
+     * @returns {Promise<object|null>} - GeoJSON feature for the state
+     */
+    async getStateBoundary(lat, lng) {
+        const baseUrl = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer';
+
+        // Layer 0 = States
+        const url = `${baseUrl}/0/query?` + new URLSearchParams({
+            geometry: `${lng},${lat}`,
+            geometryType: 'esriGeometryPoint',
+            inSR: '4326',
+            spatialRel: 'esriSpatialRelIntersects',
+            outFields: '*',
+            returnGeometry: true,
+            f: 'geojson'
+        });
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.error('Failed to fetch state boundary');
+                return null;
+            }
+
+            const data = await response.json();
+            if (data.features && data.features.length > 0) {
+                return data.features[0];
+            }
+            return null;
+        } catch (error) {
+            console.error('Error fetching state boundary:', error);
+            return null;
         }
     },
 

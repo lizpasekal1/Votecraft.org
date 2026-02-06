@@ -95,21 +95,30 @@ class VoteApp {
             this.districtLayer = null;
         }
 
-        // Only show districts for state-level reps (Census has state legislative districts)
-        if (legislator.level === 'federal') {
-            // For federal reps, just center on the searched location
-            this.issueMap.setView([this.currentCoords.lat, this.currentCoords.lng], 8);
-            return;
-        }
+        const isUpper = legislator.office.toLowerCase().includes('senator') ||
+                        legislator.office.toLowerCase().includes('senate');
 
         try {
-            const boundaries = await window.CivicAPI.getDistrictBoundaries(
-                this.currentCoords.lat, this.currentCoords.lng
-            );
+            let district = null;
 
-            const isUpper = legislator.office.toLowerCase().includes('senator') ||
-                            legislator.office.toLowerCase().includes('senate');
-            const district = isUpper ? boundaries.stateSenate : boundaries.stateHouse;
+            if (legislator.level === 'federal' && isUpper) {
+                // US Senator — show state boundary
+                district = await window.CivicAPI.getStateBoundary(
+                    this.currentCoords.lat, this.currentCoords.lng
+                );
+            } else {
+                const boundaries = await window.CivicAPI.getDistrictBoundaries(
+                    this.currentCoords.lat, this.currentCoords.lng
+                );
+
+                if (legislator.level === 'federal') {
+                    // US Representative — congressional district
+                    district = boundaries.congressional;
+                } else {
+                    // State legislator
+                    district = isUpper ? boundaries.stateSenate : boundaries.stateHouse;
+                }
+            }
 
             if (district) {
                 this.districtLayer = L.geoJSON(district, {
@@ -203,6 +212,11 @@ class VoteApp {
         const layout = document.querySelector('.vote-layout');
         const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
 
+        // Start with sidebar full screen on mobile
+        if (isMobile()) {
+            layout.classList.add('expand-left');
+        }
+
         if (expandLeftBtn) {
             expandLeftBtn.addEventListener('click', () => {
                 if (isMobile()) {
@@ -254,6 +268,21 @@ class VoteApp {
 
         // Issues sidebar click delegation
         this.issuesSidebarList.addEventListener('click', (e) => {
+            // Explore button — switch to Issues tab and restore split view
+            const exploreBtn = e.target.closest('.explore-stance');
+            if (exploreBtn) {
+                e.stopPropagation();
+                const layout = document.querySelector('.vote-layout');
+                const restoreBtn = document.getElementById('restore-btn');
+                layout.classList.remove('expand-left', 'expand-right');
+                if (restoreBtn) restoreBtn.classList.remove('visible');
+                this.togglePanel('issues');
+                if (this.issueMap) {
+                    setTimeout(() => this.issueMap.invalidateSize(), 650);
+                }
+                return;
+            }
+
             // Stance button clicks
             const stanceBtn = e.target.closest('.stance-btn');
             if (stanceBtn) {
@@ -264,20 +293,34 @@ class VoteApp {
                 return;
             }
 
-            // Stance rep item clicks
+            // Stance rep item clicks (supporters/opposed in sidebar)
             const stanceRep = e.target.closest('.stance-rep-item');
-            if (stanceRep) {
+            if (stanceRep && !stanceRep.classList.contains('placeholder')) {
                 e.stopPropagation();
                 const index = parseInt(stanceRep.dataset.index);
-                if (!isNaN(index) && this.legislators[index]) {
+                console.log('Clicked stance rep item, index:', index, 'legislators count:', this.legislators.length);
+                if (!isNaN(index) && index >= 0 && this.legislators[index]) {
                     this.selectRep(this.legislators[index]);
+                    // Scroll the rep alignment card into view on mobile
+                    if (window.innerWidth <= 900 && this.repAlignmentCard) {
+                        setTimeout(() => this.repAlignmentCard.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                    }
+                } else {
+                    console.warn('Invalid index or legislator not found:', index);
                 }
                 return;
             }
 
-            // Issue item clicks
+            // Issue item clicks — toggle open/close
             const item = e.target.closest('.issue-sidebar-item');
-            if (item) this.showIssueDetail(item.dataset.issueId);
+            if (item) {
+                const issueId = item.dataset.issueId;
+                if (this.selectedIssue && this.selectedIssue.id === issueId) {
+                    this.collapseIssue();
+                } else {
+                    this.showIssueDetail(issueId);
+                }
+            }
         });
     }
 
@@ -373,18 +416,52 @@ class VoteApp {
 
             // Fetch all state legislators in the background (non-blocking)
             if (this.currentJurisdiction) {
-                const localIds = new Set(this.localLegislators.map(l => l.id));
-
                 // Show loading spinner in state section
                 this.stateSection.style.display = '';
                 this.stateList.innerHTML = '<div class="state-loading"><div class="mini-loader"></div>Loading state legislators...</div>';
 
                 try {
                     const allPeople = await window.CivicAPI.getAllLegislators(this.currentJurisdiction);
+
+                    // Build maps for deduplication (by ID and by normalized last name)
+                    const localIds = new Set(this.localLegislators.map(l => l.id));
+                    const localByLastName = new Map();
+                    this.localLegislators.forEach((l, idx) => {
+                        localByLastName.set(this.normalizeNameForDedup(l.name), idx);
+                    });
+
+                    // Helper to score how much data a legislator has
+                    const dataScore = (l) => {
+                        let score = 0;
+                        if (l.party) score += 1;
+                        if (l.image) score += 1;
+                        if (l.email) score += 1;
+                        if (l.phone) score += 1;
+                        if (l.district) score += 1;
+                        return score;
+                    };
+
                     this.stateLegislators = window.CivicAPI.parseRepresentatives({
                         officials: allPeople
-                    }).filter(l => !localIds.has(l.id))
-                      .sort((a, b) => (a.district || '').localeCompare(b.district || '', undefined, { numeric: true }));
+                    }).filter(l => {
+                        // Skip if same ID
+                        if (localIds.has(l.id)) return false;
+                        // Check if same last name (likely duplicate federal rep with different format)
+                        const normalizedName = this.normalizeNameForDedup(l.name);
+                        if (localByLastName.has(normalizedName)) {
+                            const localIdx = localByLastName.get(normalizedName);
+                            const localLeg = this.localLegislators[localIdx];
+                            // Compare data - keep the one with more info
+                            if (dataScore(l) > dataScore(localLeg)) {
+                                console.log('Replacing duplicate with better data:', localLeg.name, '->', l.name);
+                                this.localLegislators[localIdx] = l;
+                            } else {
+                                console.log('Skipping duplicate (local has more data):', l.name);
+                            }
+                            return false;
+                        }
+                        return true;
+                    }).sort((a, b) => (a.district || '').localeCompare(b.district || '', undefined, { numeric: true }));
 
                     // Update combined list and re-render
                     this.legislators = [...this.localLegislators, ...this.stateLegislators];
@@ -570,6 +647,15 @@ class VoteApp {
                     this.selectRep(this.legislators[index]);
                 }
             });
+
+            // Explore badge click — switch to Issues tab only
+            const exploreBadge = item.querySelector('.explore-badge');
+            if (exploreBadge) {
+                exploreBadge.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.togglePanel('issues');
+                });
+            }
         });
     }
 
@@ -581,7 +667,6 @@ class VoteApp {
 
         const isUpper = legislator.office.toLowerCase().includes('senator') ||
                         legislator.office.toLowerCase().includes('senate');
-        const chamberClass = isUpper ? 'upper' : 'lower';
         const chamberLabel = isUpper ? 'Senate' : 'House';
 
         const partyLower = legislator.party.toLowerCase();
@@ -589,7 +674,7 @@ class VoteApp {
         if (partyLower.includes('democrat')) partyClass = 'democratic';
         else if (partyLower.includes('republican')) partyClass = 'republican';
 
-        const districtText = legislator.district ? `• District ${legislator.district}` : '';
+        const districtText = legislator.district ? `District ${legislator.district}` : '';
 
         return `
             <div class="rep-item ${isPlaceholder ? 'placeholder' : ''}" data-index="${index}">
@@ -598,10 +683,12 @@ class VoteApp {
                     <div class="rep-name">${legislator.name}</div>
                     <div class="rep-details">
                         <span class="rep-party ${partyClass}">${legislator.party}</span>
-                        ${districtText ? `<span class="rep-district">${districtText}</span>` : ''}
+                        <span class="rep-separator">•</span>
+                        <span class="rep-chamber">${chamberLabel}</span>
                     </div>
+                    ${districtText ? `<div class="rep-district">${districtText}</div>` : ''}
                 </div>
-                <span class="chamber-badge ${chamberClass}">${chamberLabel}</span>
+                <span class="explore-badge">Explore</span>
             </div>
         `;
     }
@@ -609,6 +696,7 @@ class VoteApp {
     selectRep(legislator) {
         this.selectedRep = legislator;
         const index = this.legislators.indexOf(legislator);
+        console.log('selectRep called:', legislator.name, 'index:', index);
 
         // Update visual selection in reps panel
         document.querySelectorAll('.rep-item').forEach(item => {
@@ -626,10 +714,45 @@ class VoteApp {
             }
         });
 
+        // Always show the rep card with basic info
+        this.showRepCard(legislator);
+
         // If issue detail is showing, load alignment and update map
         if (this.selectedIssue) {
             this.loadRepAlignment(legislator, this.selectedIssue);
             this.showDistrictOnMap(legislator);
+        }
+    }
+
+    showRepCard(rep) {
+        // Show basic rep info in the alignment card even without full alignment data
+        this.repAlignmentCard.classList.remove('placeholder');
+        this.repAlignmentCard.style.display = '';
+
+        const photoHtml = rep.photoUrl
+            ? `<img src="${rep.photoUrl}" alt="${rep.name}" onerror="this.style.display='none'; this.parentElement.textContent='${this.getInitials(rep.name)}';">`
+            : this.getInitials(rep.name);
+        this.repCardPhoto.innerHTML = photoHtml;
+
+        const partyLower = (rep.party || '').toLowerCase();
+        let partyClass = '';
+        if (partyLower.includes('democrat')) partyClass = 'democratic';
+        else if (partyLower.includes('republican')) partyClass = 'republican';
+
+        const districtText = rep.district ? ` &middot; District ${rep.district}` : '';
+        const levelText = rep.level === 'federal' ? ' &middot; U.S. Congress' : '';
+        this.repCardName.innerHTML = `${rep.name}<div class="rep-card-subtitle"><span class="rep-party ${partyClass}">${rep.party || 'Unknown'}</span>${districtText}${levelText}</div>`;
+
+        // Show office info if available
+        if (rep.office) {
+            this.repAlignmentScore.innerHTML = `<strong>${rep.office}</strong>`;
+        } else {
+            this.repAlignmentScore.textContent = '';
+        }
+
+        // Clear bills section or show prompt
+        if (!this.selectedIssue) {
+            this.repAlignmentBills.innerHTML = '<p class="alignment-prompt">Select an issue above to see bill alignment.</p>';
         }
     }
 
@@ -655,15 +778,18 @@ class VoteApp {
             const isActive = issue.id === activeIssueId;
             let html = `
                 <div class="issue-sidebar-item ${isActive ? 'active' : ''}" data-issue-id="${issue.id}">
-                    ${issue.title}`;
+                    <div class="issue-sidebar-header">
+                        <span class="issue-sidebar-title">${issue.title}</span>
+                        <span class="issue-toggle-arrow">&#9662;</span>
+                    </div>`;
 
             if (isActive) {
                 html += `
                     <div class="issue-stance-buttons">
                         <button class="stance-btn ${activeStance === 'supporters' ? 'active' : ''}"
                                 data-issue-id="${issue.id}" data-stance="supporters">Supporters</button>
-                        <button class="stance-btn opposed ${activeStance === 'opposed' ? 'active' : ''}"
-                                data-issue-id="${issue.id}" data-stance="opposed">Opposed</button>
+                        <button class="stance-btn explore-stance"
+                                data-issue-id="${issue.id}" data-stance="explore">Explore</button>
                     </div>
                     <div id="stance-list-${issue.id}" class="stance-list" style="${activeStance ? '' : 'display:none;'}"></div>`;
             }
@@ -726,6 +852,12 @@ class VoteApp {
 
         // Load top 2 supporters widget
         this.loadTopSupporters(issue);
+    }
+
+    collapseIssue() {
+        this.selectedIssue = null;
+        this.activeStance = null;
+        this.renderIssuesSidebar();
     }
 
     renderNonprofits(issue) {
@@ -803,8 +935,6 @@ class VoteApp {
 
         if (stance === 'supporters') {
             this.loadIssueSupporters(issue);
-        } else {
-            this.loadIssueOpposed(issue);
         }
     }
 
@@ -1094,10 +1224,9 @@ class VoteApp {
         this.repAlignmentScore.textContent = 'Loading alignment...';
         this.repAlignmentBills.innerHTML = '<div class="alignment-loading"><div class="mini-loader"></div>Searching bills...</div>';
 
-        // Use the rep's own jurisdiction — federal reps need federal bill search
-        const jurisdiction = rep.level === 'federal'
-            ? 'United States'
-            : (rep.jurisdiction || this.currentJurisdiction);
+        // Use the state jurisdiction for bill searches
+        // Federal reps use their state's bills (OpenStates federal API is rate-limited)
+        const jurisdiction = rep.jurisdiction || this.currentJurisdiction;
 
         if (!jurisdiction) {
             this.repAlignmentScore.textContent = 'Unable to determine jurisdiction';
@@ -1114,11 +1243,16 @@ class VoteApp {
             allBills = [];
             const seenIds = new Set();
 
-            for (const keyword of issue.billKeywords) {
+            for (let i = 0; i < issue.billKeywords.length; i++) {
+                const keyword = issue.billKeywords[i];
+                // Delay between calls to avoid rate limiting
+                if (i > 0) await new Promise(r => setTimeout(r, 1000));
                 try {
+                    console.log(`Fetching bills for "${keyword}" in ${jurisdiction}...`);
                     const bills = await window.CivicAPI.getBillsBySubject(
                         jurisdiction, keyword, 10
                     );
+                    console.log(`Got ${bills.length} bills for "${keyword}"`);
                     for (const bill of bills) {
                         if (!seenIds.has(bill.id)) {
                             seenIds.add(bill.id);
@@ -1217,6 +1351,20 @@ class VoteApp {
 
     hideError() {
         this.errorScreen.style.display = 'none';
+    }
+
+    normalizeNameForDedup(name) {
+        // Extract last name for deduplication
+        // Handles "Markey, Edward J." -> "markey" and "Ed Markey" -> "markey"
+        if (!name) return '';
+        const cleaned = name.toLowerCase().replace(/[.,]/g, '').trim();
+        // If name is "Last, First" format
+        if (cleaned.includes(',')) {
+            return cleaned.split(',')[0].trim();
+        }
+        // Otherwise take last word as last name
+        const parts = cleaned.split(' ').filter(Boolean);
+        return parts[parts.length - 1] || '';
     }
 
     getInitials(name) {
