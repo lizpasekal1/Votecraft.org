@@ -187,30 +187,30 @@ function votecraft_jurisdiction_to_state($jurisdiction) {
 }
 
 /**
- * Try to serve federal legislators from local synced database
+ * Try to serve Congress legislators from local synced database
  * Returns array with 'results' key if data found, null otherwise
  */
-function votecraft_try_local_federal_db($state = null) {
+function votecraft_try_local_congress_db($state = null) {
     global $wpdb;
     $table = $wpdb->prefix . 'votecraft_legislators';
 
-    // Check if we have any federal legislators
-    $count = $wpdb->get_var("SELECT COUNT(*) FROM $table WHERE level = 'federal'");
+    // Check if we have any Congress legislators
+    $count = $wpdb->get_var("SELECT COUNT(*) FROM $table WHERE level = 'congress'");
     if ($count == 0) {
         return null;
     }
 
-    // Fetch federal legislators (optionally filtered by state)
+    // Fetch Congress legislators (optionally filtered by state)
     if ($state) {
         // Convert abbreviation to full name if needed
         $state_name = votecraft_jurisdiction_to_state($state);
         $legislators = $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM $table WHERE level = 'federal' AND state = %s ORDER BY chamber ASC, name ASC",
+            "SELECT * FROM $table WHERE level = 'congress' AND state = %s ORDER BY chamber ASC, name ASC",
             $state_name
         ));
     } else {
         $legislators = $wpdb->get_results(
-            "SELECT * FROM $table WHERE level = 'federal' ORDER BY state ASC, chamber ASC, name ASC"
+            "SELECT * FROM $table WHERE level = 'congress' ORDER BY state ASC, chamber ASC, name ASC"
         );
     }
 
@@ -233,8 +233,8 @@ function votecraft_try_local_federal_db($state = null) {
                     'name' => $leg->state,
                     'classification' => 'country'
                 ),
-                'level' => 'federal',
-                'source' => 'congress.gov'
+                'level' => 'congress',
+                'source' => 'openstates'
             );
         }
     }
@@ -374,7 +374,7 @@ function votecraft_openstates_proxy($request) {
 
     $endpoint = $request->get_param('endpoint');
 
-    $allowedEndpoints = array('people.geo', 'people', 'people.federal', 'bills');
+    $allowedEndpoints = array('people.geo', 'people', 'people.congress', 'bills');
     if (!in_array($endpoint, $allowedEndpoints)) {
         return new WP_Error('invalid_endpoint', 'Invalid endpoint', array('status' => 400));
     }
@@ -385,12 +385,12 @@ function votecraft_openstates_proxy($request) {
     unset($params['_t']);
     unset($params['rest_route']);
 
-    // Handle federal legislators endpoint (local DB only)
-    if ($endpoint === 'people.federal') {
+    // Handle Congress legislators endpoint (local DB only)
+    if ($endpoint === 'people.congress') {
         $state = isset($params['state']) ? $params['state'] : null;
-        $federal_data = votecraft_try_local_federal_db($state);
-        if ($federal_data) {
-            $response = new WP_REST_Response($federal_data, 200);
+        $congress_data = votecraft_try_local_congress_db($state);
+        if ($congress_data) {
+            $response = new WP_REST_Response($congress_data, 200);
             $response->header('X-VoteCraft-Cache', 'LOCAL-DB');
             return $response;
         }
