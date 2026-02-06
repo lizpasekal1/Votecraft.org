@@ -406,22 +406,92 @@ function votecraft_openstates_proxy($request) {
         return $response;
     }
 
-    // LOCAL DATABASE ONLY MODE
-    // No external API calls - all data must come from synced local database
-    // If data not in local DB, return empty results
-
-    // Check database cache for any previously cached API responses
+    // Generate cache key from endpoint + params
     $cache_key = md5($endpoint . '|' . serialize($params));
     $ttl = votecraft_get_ttl($endpoint);
+
+    // Check database cache
     $cached = votecraft_cache_get($cache_key, $ttl);
 
-    if ($cached) {
-        // Return cached data (even if stale) - no API refresh
+    if ($cached && $cached['fresh']) {
         $response = new WP_REST_Response($cached['data'], 200);
-        $response->header('X-VoteCraft-Cache', $cached['fresh'] ? 'HIT' : 'STALE');
+        $response->header('X-VoteCraft-Cache', 'HIT');
+        $response->header('X-VoteCraft-Cache-Age', $cached['age']);
         return $response;
     }
 
-    // No local DB data and no cache - return empty results
-    return new WP_REST_Response(array('results' => array(), 'pagination' => array('total_items' => 0)), 200);
+    // Strict rate limiting: 2 seconds between requests to avoid 429
+    $last_call = get_option(VOTECRAFT_RATE_LIMIT_OPTION, 0);
+    $now = microtime(true);
+    $elapsed = $now - $last_call;
+    if ($elapsed < 2.0) {
+        // Return stale cache if available, otherwise empty
+        if ($cached) {
+            $response = new WP_REST_Response($cached['data'], 200);
+            $response->header('X-VoteCraft-Cache', 'STALE-RATELIMIT');
+            return $response;
+        }
+        return new WP_REST_Response(array('results' => array(), 'pagination' => array('total_items' => 0)), 200);
+    }
+    update_option(VOTECRAFT_RATE_LIMIT_OPTION, microtime(true));
+
+    // Fetch from OpenStates API
+    $apiKey = 'd2917281-d734-4e26-a557-eeb50ea60f78';
+    $baseUrl = 'https://v3.openstates.org';
+
+    unset($params['include']);
+    $params['apikey'] = $apiKey;
+    $query = votecraft_build_query($params);
+
+    if ($endpoint === 'bills') {
+        $query .= '&include=sponsorships&include=votes';
+    }
+
+    $url = $baseUrl . '/' . $endpoint . '?' . $query;
+
+    $api_response = wp_remote_get($url, array(
+        'timeout' => 15,
+        'user-agent' => 'VoteCraft/1.0',
+    ));
+
+    if (is_wp_error($api_response)) {
+        if ($cached) {
+            $response = new WP_REST_Response($cached['data'], 200);
+            $response->header('X-VoteCraft-Cache', 'STALE');
+            return $response;
+        }
+        return new WP_Error('api_error', 'Failed to reach OpenStates API', array('status' => 502));
+    }
+
+    $body = wp_remote_retrieve_body($api_response);
+    $status = wp_remote_retrieve_response_code($api_response);
+
+    // Handle rate limiting - return stale cache
+    if ($status === 429) {
+        if ($cached) {
+            $response = new WP_REST_Response($cached['data'], 200);
+            $response->header('X-VoteCraft-Cache', 'STALE-RATELIMIT');
+            return $response;
+        }
+        return new WP_REST_Response(array('results' => array(), 'pagination' => array('total_items' => 0)), 200);
+    }
+
+    $data = json_decode($body, true);
+    if ($data === null) {
+        if ($cached) {
+            $response = new WP_REST_Response($cached['data'], 200);
+            $response->header('X-VoteCraft-Cache', 'STALE');
+            return $response;
+        }
+        return new WP_Error('parse_error', 'Invalid response from OpenStates', array('status' => 502));
+    }
+
+    // Cache successful responses
+    if ($status >= 200 && $status < 300) {
+        votecraft_cache_set($cache_key, $endpoint, $data);
+    }
+
+    $response = new WP_REST_Response($data, $status);
+    $response->header('X-VoteCraft-Cache', 'MISS');
+    return $response;
 }

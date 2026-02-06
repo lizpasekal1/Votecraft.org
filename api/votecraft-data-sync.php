@@ -1237,20 +1237,30 @@ function votecraft_sync_bills($state) {
     $sponsorships_table = $wpdb->prefix . 'votecraft_sponsorships';
     $log_table = $wpdb->prefix . 'votecraft_sync_log';
 
-    // Keywords from VoteCraft's 6 issues
+    // Expanded keywords to catch more relevant bills
     $keywords = array(
-        // RCV
-        'ranked choice voting', 'instant runoff', 'preferential voting',
-        // Debt Reform
-        'public debt', 'predatory lending', 'student debt relief', 'debt transparency',
-        // Citizens United
-        'citizens united', 'campaign finance reform', 'dark money', 'political spending disclosure',
+        // RCV / Voting Reform
+        'ranked choice', 'instant runoff', 'preferential voting', 'voting rights', 'election reform',
+        // Debt / Consumer Finance
+        'student loan', 'student debt', 'predatory lending', 'consumer protection', 'credit card',
+        'payday loan', 'debt collection', 'bankruptcy', 'financial literacy',
+        // Campaign Finance / Citizens United
+        'citizens united', 'campaign finance', 'dark money', 'political spending', 'super pac',
+        'election spending', 'lobbying', 'corporate money', 'disclosure',
         // Healthcare
-        'universal healthcare', 'medicare for all', 'public option', 'health coverage expansion',
-        // SCOTUS Reform
-        'supreme court reform', 'judicial term limits', 'court expansion', 'judicial ethics',
-        // News Paywalls
-        'local journalism', 'news access', 'press freedom', 'journalism funding'
+        'medicare', 'medicaid', 'healthcare', 'health care', 'public option', 'prescription drug',
+        'insulin', 'affordable care', 'health insurance', 'mental health',
+        // SCOTUS / Judicial Reform
+        'supreme court', 'judicial term', 'court reform', 'judicial ethics', 'recusal',
+        // News / Media
+        'local journalism', 'press freedom', 'news', 'misinformation',
+        // Additional Warren-style issues
+        'wall street', 'big bank', 'financial regulation', 'consumer bureau', 'cfpb',
+        'antitrust', 'monopoly', 'corporate accountability', 'executive compensation',
+        'tax fairness', 'wealth tax', 'corporate tax', 'minimum wage', 'living wage',
+        'housing', 'affordable housing', 'rent', 'eviction',
+        'climate', 'clean energy', 'environmental', 'pollution',
+        'childcare', 'child care', 'paid leave', 'family leave'
     );
 
     // Only bills from last 5 years
