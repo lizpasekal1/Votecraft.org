@@ -33,9 +33,13 @@
 
                 <!-- Representatives List -->
                 <div id="reps-panel" class="panel-content">
-                    <div id="federal-section" class="rep-section">
-                        <h3 class="rep-section-title">Congress</h3>
-                        <div id="federal-list" class="rep-list"></div>
+                    <div id="senate-section" class="rep-section">
+                        <h3 class="rep-section-title">Senate</h3>
+                        <div id="senate-list" class="rep-list"></div>
+                    </div>
+                    <div id="house-section" class="rep-section">
+                        <h3 class="rep-section-title">House of Representatives</h3>
+                        <div id="house-list" class="rep-list"></div>
                     </div>
                     <div id="local-section" class="rep-section">
                         <h3 class="rep-section-title">Local Legislators</h3>
