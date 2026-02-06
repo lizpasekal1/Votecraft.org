@@ -16,10 +16,6 @@ define('VOTECRAFT_SYNC_DB_VERSION', '1.0');
 // OpenStates API key
 define('VOTECRAFT_OPENSTATES_API_KEY', 'd2917281-d734-4e26-a557-eeb50ea60f78');
 
-// Congress.gov API key (for federal legislators and bills)
-// Get your free key at: https://api.congress.gov/sign-up/
-define('VOTECRAFT_CONGRESS_API_KEY', 'hAwu5fqahUrcpjdzEJpsPzMleub3epvnX64pmBNV');
-
 // Scheduled sync settings
 define('VOTECRAFT_BATCH_API_CALLS', 80); // Max API calls per batch (500/day ÷ 6 runs = ~83)
 
@@ -476,15 +472,6 @@ function votecraft_sync_admin_page() {
         } elseif ($action === 'sync_all_states') {
             $result = votecraft_sync_all_states();
             echo '<div class="notice notice-' . ($result['success'] ? 'success' : 'error') . '"><p>' . esc_html($result['message']) . '</p></div>';
-        } elseif ($action === 'sync_federal_legislators') {
-            $result = votecraft_sync_federal_legislators();
-            echo '<div class="notice notice-' . ($result['success'] ? 'success' : 'error') . '"><p>' . esc_html($result['message']) . '</p></div>';
-        } elseif ($action === 'sync_federal_bills') {
-            $result = votecraft_sync_federal_bills();
-            echo '<div class="notice notice-' . ($result['success'] ? 'success' : 'error') . '"><p>' . esc_html($result['message']) . '</p></div>';
-        } elseif ($action === 'reset_federal_bills') {
-            delete_option('votecraft_federal_bills_progress');
-            echo '<div class="notice notice-success"><p>Federal bills sync progress has been reset.</p></div>';
         } elseif ($action === 'enable_scheduled_sync') {
             update_option('votecraft_scheduled_sync_enabled', true);
             // Schedule if not already scheduled
@@ -511,7 +498,7 @@ function votecraft_sync_admin_page() {
     $log_table = $wpdb->prefix . 'votecraft_sync_log';
 
     $legislator_count = $wpdb->get_var("SELECT COUNT(*) FROM $legislators_table");
-    $federal_count = $wpdb->get_var("SELECT COUNT(*) FROM $legislators_table WHERE level = 'federal'");
+    $congress_count = $wpdb->get_var("SELECT COUNT(*) FROM $legislators_table WHERE level = 'congress'");
     $state_leg_count = $wpdb->get_var("SELECT COUNT(*) FROM $legislators_table WHERE level = 'state' OR level IS NULL");
     $bill_count = $wpdb->get_var("SELECT COUNT(*) FROM $bills_table");
     $states_with_data = $wpdb->get_col("SELECT DISTINCT state FROM $legislators_table ORDER BY state");
@@ -540,12 +527,6 @@ function votecraft_sync_admin_page() {
         if ($sync->sync_type === 'legislators') {
             $entry['legislators'] = $sync->records_synced;
         } elseif ($sync->sync_type === 'bills') {
-            $entry['bills'] = $sync->records_synced;
-        } elseif ($sync->sync_type === 'federal_legislators') {
-            $entry['state'] = 'Federal';
-            $entry['legislators'] = $sync->records_synced;
-        } elseif ($sync->sync_type === 'federal_bills_batch') {
-            $entry['state'] = 'Federal';
             $entry['bills'] = $sync->records_synced;
         }
 
@@ -838,8 +819,8 @@ function votecraft_sync_admin_page() {
                     <div class="stat-label">Total Legislators</div>
                 </div>
                 <div class="stat-box">
-                    <div class="stat-value"><?php echo number_format($federal_count); ?></div>
-                    <div class="stat-label">Federal</div>
+                    <div class="stat-value"><?php echo number_format($congress_count); ?></div>
+                    <div class="stat-label">Congress</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-value"><?php echo number_format($state_leg_count); ?></div>
@@ -967,36 +948,6 @@ function votecraft_sync_admin_page() {
                     Sync Issue-Related Bills (50 States)
                 </button>
             </form>
-
-            <hr style="margin: 20px 0;">
-
-            <h4>Federal (Congress.gov API)</h4>
-            <?php
-            $bills_progress = get_option('votecraft_federal_bills_progress', array('offset' => 0, 'bills_added' => 0));
-            $bills_offset = (int) $bills_progress['offset'];
-            $bills_added = (int) $bills_progress['bills_added'];
-            ?>
-            <form method="post" style="display: inline-block; margin-right: 10px;">
-                <?php wp_nonce_field('votecraft_sync'); ?>
-                <button type="submit" name="votecraft_sync_action" value="sync_federal_legislators" class="button button-primary">
-                    Sync Federal Legislators
-                </button>
-            </form>
-            <form method="post" style="display: inline-block; margin-right: 10px;">
-                <?php wp_nonce_field('votecraft_sync'); ?>
-                <button type="submit" name="votecraft_sync_action" value="sync_federal_bills" class="button button-primary">
-                    <?php echo $bills_offset > 0 ? 'Continue Federal Bills' : 'Sync Federal Bills'; ?>
-                </button>
-            </form>
-            <?php if ($bills_offset > 0): ?>
-            <form method="post" style="display: inline-block;">
-                <?php wp_nonce_field('votecraft_sync'); ?>
-                <button type="submit" name="votecraft_sync_action" value="reset_federal_bills" class="button">Reset</button>
-            </form>
-            <p class="description" style="margin-top: 5px; color: #2271b1;">
-                <strong>Progress:</strong> <?php echo $bills_offset; ?>/538 legislators, <?php echo $bills_added; ?> bills found
-            </p>
-            <?php endif; ?>
 
             </div>
         </details>
@@ -1163,25 +1114,26 @@ function votecraft_sync_legislators($state) {
 
         // Insert/update legislators
         $count = 0;
-        $skipped_federal = 0;
+        $congress_count = 0;
         foreach ($all_legislators as $leg) {
             $current_role = isset($leg['current_role']) ? $leg['current_role'] : null;
 
-            // Skip federal legislators - they come from Congress.gov
+            // Determine if this is a Congress member (federal) or state legislator
             $role_title = $current_role ? strtolower($current_role['title'] ?? '') : '';
             $role_org = $current_role ? strtolower($current_role['org_classification'] ?? '') : '';
             $jurisdiction_id = isset($leg['jurisdiction']['id']) ? strtolower($leg['jurisdiction']['id']) : '';
 
-            $is_federal = (
+            $is_congress = (
                 strpos($role_title, 'u.s.') !== false ||
                 strpos($role_title, 'united states') !== false ||
                 strpos($role_org, 'congress') !== false ||
                 strpos($jurisdiction_id, 'country:us/government') !== false
             );
 
-            if ($is_federal) {
-                $skipped_federal++;
-                continue;
+            // Set level based on whether this is Congress or state
+            $level = $is_congress ? 'congress' : 'state';
+            if ($is_congress) {
+                $congress_count++;
             }
 
             $wpdb->replace($table, array(
@@ -1195,7 +1147,7 @@ function votecraft_sync_legislators($state) {
                 'email' => isset($leg['email']) ? $leg['email'] : null,
                 'current_role' => $current_role ? json_encode($current_role) : null,
                 'jurisdiction_id' => isset($leg['jurisdiction']['id']) ? $leg['jurisdiction']['id'] : null,
-                'level' => 'state',
+                'level' => $level,
                 'raw_data' => json_encode($leg),
                 'updated_at' => current_time('mysql')
             ));
@@ -1210,8 +1162,8 @@ function votecraft_sync_legislators($state) {
         ), array('id' => $log_id));
 
         $msg = "Synced $count legislators for $state";
-        if ($skipped_federal > 0) {
-            $msg .= " (skipped $skipped_federal federal legislators)";
+        if ($congress_count > 0) {
+            $msg .= " ($congress_count Congress members)";
         }
         return array('success' => true, 'message' => $msg);
 
@@ -1643,444 +1595,6 @@ function votecraft_has_local_data($state, $type = 'legislators') {
 }
 
 // =============================================================================
-// FEDERAL LEGISLATORS SYNC (Google Civic API)
-// =============================================================================
-
-/**
- * Sync federal legislators for all states using Google Civic API
- * Fetches US Senators and US Representatives
- */
-function votecraft_sync_federal_legislators() {
-    global $wpdb;
-    $table = $wpdb->prefix . 'votecraft_legislators';
-    $log_table = $wpdb->prefix . 'votecraft_sync_log';
-
-    // Log start
-    $wpdb->insert($log_table, array(
-        'sync_type' => 'federal_legislators',
-        'state' => 'ALL',
-        'status' => 'running',
-        'started_at' => current_time('mysql')
-    ));
-    $log_id = $wpdb->insert_id;
-
-    try {
-        // Delete existing federal legislators first (clean sync)
-        $wpdb->delete($table, array('level' => 'federal'));
-
-        $all_members = array();
-        $offset = 0;
-        $limit = 250;
-
-        // Fetch all current members of Congress (paginated)
-        do {
-            $url = 'https://api.congress.gov/v3/member?' . http_build_query(array(
-                'currentMember' => 'true',
-                'limit' => $limit,
-                'offset' => $offset,
-                'format' => 'json',
-                'api_key' => VOTECRAFT_CONGRESS_API_KEY
-            ));
-
-            $response = wp_remote_get($url, array(
-                'timeout' => 30,
-                'user-agent' => 'VoteCraft/1.0'
-            ));
-
-            if (is_wp_error($response)) {
-                throw new Exception('API request failed: ' . $response->get_error_message());
-            }
-
-            $status = wp_remote_retrieve_response_code($response);
-            if ($status !== 200) {
-                $body = wp_remote_retrieve_body($response);
-                throw new Exception("API returned HTTP $status: " . substr($body, 0, 200));
-            }
-
-            $body = wp_remote_retrieve_body($response);
-            $data = json_decode($body, true);
-
-            if (!isset($data['members'])) {
-                throw new Exception('Invalid API response - no members array');
-            }
-
-            $all_members = array_merge($all_members, $data['members']);
-            $total_count = isset($data['pagination']['count']) ? (int)$data['pagination']['count'] : 0;
-            $offset += $limit;
-
-            // Rate limit - 200ms between requests
-            usleep(200000);
-
-        } while ($offset < $total_count && count($data['members']) === $limit);
-
-        // State abbreviation to full name mapping
-        $state_names = array_flip(array(
-            'Alabama' => 'AL', 'Alaska' => 'AK', 'Arizona' => 'AZ', 'Arkansas' => 'AR',
-            'California' => 'CA', 'Colorado' => 'CO', 'Connecticut' => 'CT', 'Delaware' => 'DE',
-            'Florida' => 'FL', 'Georgia' => 'GA', 'Hawaii' => 'HI', 'Idaho' => 'ID',
-            'Illinois' => 'IL', 'Indiana' => 'IN', 'Iowa' => 'IA', 'Kansas' => 'KS',
-            'Kentucky' => 'KY', 'Louisiana' => 'LA', 'Maine' => 'ME', 'Maryland' => 'MD',
-            'Massachusetts' => 'MA', 'Michigan' => 'MI', 'Minnesota' => 'MN', 'Mississippi' => 'MS',
-            'Missouri' => 'MO', 'Montana' => 'MT', 'Nebraska' => 'NE', 'Nevada' => 'NV',
-            'New Hampshire' => 'NH', 'New Jersey' => 'NJ', 'New Mexico' => 'NM', 'New York' => 'NY',
-            'North Carolina' => 'NC', 'North Dakota' => 'ND', 'Ohio' => 'OH', 'Oklahoma' => 'OK',
-            'Oregon' => 'OR', 'Pennsylvania' => 'PA', 'Rhode Island' => 'RI', 'South Carolina' => 'SC',
-            'South Dakota' => 'SD', 'Tennessee' => 'TN', 'Texas' => 'TX', 'Utah' => 'UT',
-            'Vermont' => 'VT', 'Virginia' => 'VA', 'Washington' => 'WA', 'West Virginia' => 'WV',
-            'Wisconsin' => 'WI', 'Wyoming' => 'WY', 'District of Columbia' => 'DC',
-            'American Samoa' => 'AS', 'Guam' => 'GU', 'Northern Mariana Islands' => 'MP',
-            'Puerto Rico' => 'PR', 'Virgin Islands' => 'VI'
-        ));
-
-        // Insert members into database
-        $count = 0;
-        foreach ($all_members as $member) {
-            $bioguide_id = $member['bioguideId'] ?? '';
-            if (empty($bioguide_id)) continue;
-
-            // Get state full name from abbreviation
-            $state_abbrev = $member['state'] ?? '';
-            $state_full = isset($state_names[$state_abbrev]) ? $state_names[$state_abbrev] : $state_abbrev;
-
-            // Determine chamber from terms
-            $chamber = 'lower'; // default to House
-            $terms = $member['terms']['item'] ?? array();
-            if (!empty($terms)) {
-                $latest_term = end($terms);
-                $chamber_name = $latest_term['chamber'] ?? '';
-                if (stripos($chamber_name, 'Senate') !== false) {
-                    $chamber = 'upper';
-                }
-            }
-
-            // Get district (for House members)
-            $district = isset($member['district']) ? (string)$member['district'] : '';
-
-            // Get photo URL
-            $photo_url = isset($member['depiction']['imageUrl']) ? $member['depiction']['imageUrl'] : null;
-
-            // Normalize party name
-            $party = $member['partyName'] ?? '';
-
-            $legislator_data = array(
-                'id' => 'congress-' . $bioguide_id,
-                'name' => $member['name'] ?? '',
-                'party' => $party,
-                'state' => $state_full,
-                'chamber' => $chamber,
-                'district' => $district,
-                'photo_url' => $photo_url,
-                'email' => null, // Will be fetched from detail endpoint if needed
-                'current_role' => json_encode(array(
-                    'title' => $chamber === 'upper' ? 'U.S. Senator' : 'U.S. Representative',
-                    'org_classification' => $chamber,
-                    'district' => $district
-                )),
-                'jurisdiction_id' => 'ocd-jurisdiction/country:us/government',
-                'level' => 'federal',
-                'raw_data' => json_encode(array(
-                    'bioguideId' => $bioguide_id,
-                    'name' => $member['name'] ?? '',
-                    'party' => $party,
-                    'state' => $state_abbrev,
-                    'state_full' => $state_full,
-                    'district' => $district,
-                    'image' => $photo_url,
-                    'terms' => $terms,
-                    'url' => $member['url'] ?? '',
-                    'source' => 'congress.gov'
-                )),
-                'updated_at' => current_time('mysql')
-            );
-
-            $wpdb->replace($table, $legislator_data);
-            $count++;
-        }
-
-        // Clean up any state-level duplicates that match federal legislators by last name
-        // This handles cases where OpenStates had federal reps stored as state-level
-        $federal_names = $wpdb->get_col("SELECT name FROM $table WHERE level = 'federal'");
-        $duplicates_removed = 0;
-
-        foreach ($federal_names as $fed_name) {
-            // Extract last name (handles "Last, First" and "First Last" formats)
-            $fed_name_lower = strtolower(trim($fed_name));
-            if (strpos($fed_name_lower, ',') !== false) {
-                $last_name = trim(explode(',', $fed_name_lower)[0]);
-            } else {
-                $parts = explode(' ', $fed_name_lower);
-                $last_name = end($parts);
-            }
-
-            // Delete state-level legislators with matching last name
-            $deleted = $wpdb->query($wpdb->prepare(
-                "DELETE FROM $table WHERE level = 'state' AND LOWER(name) LIKE %s",
-                '%' . $wpdb->esc_like($last_name) . '%'
-            ));
-            $duplicates_removed += $deleted;
-        }
-
-        // Log success
-        $wpdb->update($log_table, array(
-            'status' => 'success',
-            'records_synced' => $count,
-            'completed_at' => current_time('mysql')
-        ), array('id' => $log_id));
-
-        $msg = "Synced $count federal legislators from Congress.gov";
-        if ($duplicates_removed > 0) {
-            $msg .= " (removed $duplicates_removed state-level duplicates)";
-        }
-        return array('success' => true, 'message' => $msg);
-
-    } catch (Exception $e) {
-        // Log error
-        $wpdb->update($log_table, array(
-            'status' => 'error',
-            'error_message' => $e->getMessage(),
-            'completed_at' => current_time('mysql')
-        ), array('id' => $log_id));
-
-        return array('success' => false, 'message' => 'Error: ' . $e->getMessage());
-    }
-}
-
-/**
- * Sync federal bills from Congress.gov matching issue keywords
- * Fetches bills from the last 2 Congresses (~4 years)
- */
-function votecraft_sync_federal_bills() {
-    global $wpdb;
-    $bills_table = $wpdb->prefix . 'votecraft_bills';
-    $sponsorships_table = $wpdb->prefix . 'votecraft_sponsorships';
-    $legislators_table = $wpdb->prefix . 'votecraft_legislators';
-    $log_table = $wpdb->prefix . 'votecraft_sync_log';
-
-    // Batch size - process this many legislators per click
-    $batch_size = 50;
-
-    // Issue keywords to filter bills (expanded for better matching)
-    $search_terms = array(
-        // RCV / Voting Reform
-        'ranked choice', 'instant runoff', 'preferential voting', 'voting reform',
-        'ballot access', 'election reform', 'voter', 'electoral', 'gerrymandering',
-
-        // Campaign Finance / Citizens United
-        'campaign finance', 'citizens united', 'dark money', 'political spending',
-        'super pac', 'election spending', 'political contribution', 'lobbying',
-        'money in politics', 'disclosure', 'transparency',
-
-        // Healthcare
-        'medicare', 'medicaid', 'healthcare', 'health care', 'public option',
-        'affordable care', 'health insurance', 'prescription drug', 'drug price',
-        'hospital', 'physician', 'patient', 'medical', 'nursing', 'mental health',
-
-        // SCOTUS / Judicial Reform
-        'supreme court', 'judicial ethics', 'court reform', 'term limits',
-        'federal judge', 'judiciary', 'justice', 'appellate',
-
-        // Debt / Economic Reform
-        'student debt', 'student loan', 'predatory lending', 'debt relief',
-        'consumer protection', 'credit card', 'bankruptcy', 'mortgage',
-        'payday loan', 'financial literacy', 'usury',
-
-        // Journalism / Press Freedom
-        'journalism', 'press freedom', 'local news', 'newspaper', 'media',
-        'first amendment', 'free press', 'reporter', 'broadcast',
-
-        // Additional common legislative topics
-        'climate', 'environment', 'clean energy', 'renewable',
-        'education', 'school', 'teacher', 'college',
-        'worker', 'labor', 'wage', 'union', 'employment',
-        'housing', 'affordable housing', 'rent', 'homeless',
-        'immigration', 'border', 'citizenship',
-        'veteran', 'military', 'defense',
-        'tax', 'budget', 'appropriation',
-        'infrastructure', 'transportation', 'broadband',
-        'civil rights', 'discrimination', 'equality'
-    );
-
-    // Get batch progress
-    $progress = get_option('votecraft_federal_bills_progress', array('offset' => 0, 'bills_added' => 0));
-    $offset = (int) $progress['offset'];
-    $total_bills_added = (int) $progress['bills_added'];
-
-    // Get all federal legislators from database
-    $legislators = $wpdb->get_results(
-        "SELECT id, name, raw_data FROM $legislators_table WHERE level = 'federal' ORDER BY id ASC"
-    );
-
-    if (empty($legislators)) {
-        return array('success' => false, 'message' => 'No federal legislators in database. Sync legislators first.');
-    }
-
-    $total_legislators = count($legislators);
-
-    // Check if we're done
-    if ($offset >= $total_legislators) {
-        // Reset progress for next time
-        delete_option('votecraft_federal_bills_progress');
-        return array('success' => true, 'message' => "Complete! Synced $total_bills_added bills from all $total_legislators legislators.");
-    }
-
-    // Log start of this batch
-    $wpdb->insert($log_table, array(
-        'sync_type' => 'federal_bills_batch',
-        'state' => 'Federal',
-        'status' => 'running',
-        'started_at' => current_time('mysql'),
-        'error_message' => "Batch: legislators $offset to " . min($offset + $batch_size, $total_legislators)
-    ));
-    $log_id = $wpdb->insert_id;
-
-    try {
-        // Get this batch of legislators
-        $batch = array_slice($legislators, $offset, $batch_size);
-        $bills_this_batch = 0;
-
-        foreach ($batch as $leg) {
-            $raw = json_decode($leg->raw_data, true);
-            $bioguide_id = isset($raw['bioguideId']) ? $raw['bioguideId'] : null;
-
-            if (!$bioguide_id) {
-                continue;
-            }
-
-            // Fetch sponsored legislation for this legislator
-            $url = 'https://api.congress.gov/v3/member/' . $bioguide_id . '/sponsored-legislation?' . http_build_query(array(
-                'limit' => 100,
-                'format' => 'json',
-                'api_key' => VOTECRAFT_CONGRESS_API_KEY
-            ));
-
-            $response = wp_remote_get($url, array(
-                'timeout' => 30,
-                'user-agent' => 'VoteCraft/1.0'
-            ));
-
-            if (is_wp_error($response)) {
-                continue;
-            }
-
-            $status = wp_remote_retrieve_response_code($response);
-            if ($status !== 200) {
-                continue;
-            }
-
-            $body = wp_remote_retrieve_body($response);
-            $data = json_decode($body, true);
-
-            if (!isset($data['sponsoredLegislation'])) {
-                continue;
-            }
-
-            foreach ($data['sponsoredLegislation'] as $bill) {
-                $congress = $bill['congress'] ?? 0;
-                $bill_type = $bill['type'] ?? '';
-                $bill_number = $bill['number'] ?? '';
-                $bill_id = 'congress-' . $congress . '-' . $bill_type . '-' . $bill_number;
-
-                // Only include 118th and 119th Congress (last ~4 years)
-                if ($congress < 118) {
-                    continue;
-                }
-
-                // Check if title matches any of our issue keywords
-                $title = strtolower($bill['title'] ?? '');
-                $matches_keyword = false;
-                $matched_term = '';
-
-                foreach ($search_terms as $kw) {
-                    if (strpos($title, strtolower($kw)) !== false) {
-                        $matches_keyword = true;
-                        $matched_term = $kw;
-                        break;
-                    }
-                }
-
-                if ($matches_keyword) {
-                    $latest_action = $bill['latestAction'] ?? array();
-                    $action_date = isset($latest_action['actionDate']) ? $latest_action['actionDate'] : null;
-                    $action_desc = isset($latest_action['text']) ? $latest_action['text'] : null;
-                    $origin_chamber = isset($bill['originChamber']) ? strtolower($bill['originChamber']) : 'house';
-                    $chamber_path = ($origin_chamber === 'senate') ? 'senate-bill' : 'house-bill';
-
-                    // Insert bill (use INSERT IGNORE to skip duplicates)
-                    $wpdb->query($wpdb->prepare(
-                        "INSERT IGNORE INTO $bills_table (id, identifier, title, state, session, chamber, classification, subject, latest_action_date, latest_action_description, openstates_url, raw_data, updated_at)
-                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                        $bill_id,
-                        $bill_type . ' ' . $bill_number,
-                        $bill['title'] ?? '',
-                        'Federal',
-                        $congress . 'th Congress',
-                        $origin_chamber,
-                        $bill_type,
-                        $matched_term,
-                        $action_date,
-                        $action_desc,
-                        'https://www.congress.gov/bill/' . $congress . 'th-congress/' . $chamber_path . '/' . $bill_number,
-                        json_encode($bill),
-                        current_time('mysql')
-                    ));
-
-                    // Add sponsorship
-                    $wpdb->query($wpdb->prepare(
-                        "INSERT IGNORE INTO $sponsorships_table (bill_id, legislator_id, legislator_name, sponsorship_type, classification)
-                         VALUES (%s, %s, %s, %s, %s)",
-                        $bill_id,
-                        $leg->id,
-                        $leg->name,
-                        'primary',
-                        'sponsor'
-                    ));
-
-                    $bills_this_batch++;
-                }
-            }
-
-            // Rate limit - 200ms between requests
-            usleep(200000);
-        }
-
-        // Update progress
-        $new_offset = $offset + $batch_size;
-        $total_bills_added += $bills_this_batch;
-        update_option('votecraft_federal_bills_progress', array('offset' => $new_offset, 'bills_added' => $total_bills_added));
-
-        // Log success
-        $wpdb->update($log_table, array(
-            'status' => 'success',
-            'records_synced' => $bills_this_batch,
-            'error_message' => null,
-            'completed_at' => current_time('mysql')
-        ), array('id' => $log_id));
-
-        $remaining = $total_legislators - $new_offset;
-        if ($remaining > 0) {
-            return array(
-                'success' => true,
-                'message' => "Batch complete! Added $bills_this_batch bills. Progress: $new_offset / $total_legislators legislators. Click again to continue ($remaining remaining)."
-            );
-        } else {
-            delete_option('votecraft_federal_bills_progress');
-            return array(
-                'success' => true,
-                'message' => "Complete! Synced $total_bills_added total bills from all $total_legislators legislators."
-            );
-        }
-
-    } catch (Exception $e) {
-        $wpdb->update($log_table, array(
-            'status' => 'error',
-            'error_message' => $e->getMessage(),
-            'completed_at' => current_time('mysql')
-        ), array('id' => $log_id));
-
-        return array('success' => false, 'message' => 'Error: ' . $e->getMessage());
-    }
-}
-
 /**
  * Get state capitals for address lookups
  */
@@ -2141,21 +1655,21 @@ function votecraft_get_state_capitals() {
 }
 
 /**
- * Get federal legislators for a state from local database
+ * Get Congress members for a state from local database
  */
-function votecraft_local_get_federal_legislators($state = null) {
+function votecraft_local_get_congress_legislators($state = null) {
     global $wpdb;
     $table = $wpdb->prefix . 'votecraft_legislators';
 
     if ($state) {
         return $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM $table WHERE level = 'federal' AND state = %s ORDER BY chamber ASC, name ASC",
+            "SELECT * FROM $table WHERE level = 'congress' AND state = %s ORDER BY chamber ASC, name ASC",
             $state
         ));
     }
 
     return $wpdb->get_results(
-        "SELECT * FROM $table WHERE level = 'federal' ORDER BY state ASC, chamber ASC, name ASC"
+        "SELECT * FROM $table WHERE level = 'congress' ORDER BY state ASC, chamber ASC, name ASC"
     );
 }
 

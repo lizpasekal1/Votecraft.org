@@ -101,7 +101,7 @@ class VoteApp {
         try {
             let district = null;
 
-            if (legislator.level === 'federal' && isUpper) {
+            if (legislator.level === 'congress' && isUpper) {
                 // US Senator — show state boundary
                 district = await window.CivicAPI.getStateBoundary(
                     this.currentCoords.lat, this.currentCoords.lng
@@ -111,7 +111,7 @@ class VoteApp {
                     this.currentCoords.lat, this.currentCoords.lng
                 );
 
-                if (legislator.level === 'federal') {
+                if (legislator.level === 'congress') {
                     // US Representative — congressional district
                     district = boundaries.congressional;
                 } else {
@@ -476,12 +476,10 @@ class VoteApp {
                     const dataScore = (l) => {
                         let score = 0;
                         if (l.party && l.party !== 'Unknown') score += 1;
-                        if (l.photoUrl) score += 5; // Image is most important (field is photoUrl not image)
+                        if (l.photoUrl) score += 5; // Image is most important
                         if (l.emails && l.emails.length > 0) score += 1;
                         if (l.phones && l.phones.length > 0) score += 1;
                         if (l.district) score += 1;
-                        // Prefer Congress.gov source for federal legislators
-                        if (l.id && l.id.startsWith('congress-')) score += 3;
                         return score;
                     };
 
@@ -490,7 +488,7 @@ class VoteApp {
                     }).filter(l => {
                         // Skip if same ID
                         if (localIds.has(l.id)) return false;
-                        // Check if same last name (likely duplicate federal rep with different format)
+                        // Check if same last name (likely duplicate Congress rep with different format)
                         const normalizedName = this.normalizeNameForDedup(l.name);
                         if (localByLastName.has(normalizedName)) {
                             const localIdx = localByLastName.get(normalizedName);
@@ -538,9 +536,9 @@ class VoteApp {
 
     showPlaceholderReps() {
         const placeholders = [
-            { name: 'Your Senator', party: '???', office: 'Senator', district: '', level: 'federal', photoUrl: '' },
-            { name: 'Your Senator', party: '???', office: 'Senator', district: '', level: 'federal', photoUrl: '' },
-            { name: 'Your Representative', party: '???', office: 'Representative', district: '', level: 'federal', photoUrl: '' }
+            { name: 'Your Senator', party: '???', office: 'Senator', district: '', level: 'congress', photoUrl: '' },
+            { name: 'Your Senator', party: '???', office: 'Senator', district: '', level: 'congress', photoUrl: '' },
+            { name: 'Your Representative', party: '???', office: 'Representative', district: '', level: 'congress', photoUrl: '' }
         ];
         this.federalList.innerHTML = placeholders.map(l => this.renderRepItem(l, true)).join('');
         this.localList.innerHTML = '<p style="color: #9ca3af; font-size: 0.85rem; padding: 8px;">Search to see your local legislators</p>';
@@ -548,8 +546,8 @@ class VoteApp {
     }
 
     renderReps() {
-        // Federal section: US Senators and Representatives
-        const federal = this.localLegislators ? this.localLegislators.filter(l => l.level === 'federal') : [];
+        // Congress section: US Senators and Representatives
+        const federal = this.localLegislators ? this.localLegislators.filter(l => l.level === 'congress') : [];
         if (federal.length > 0) {
             this.federalSection.style.display = '';
             this.federalList.innerHTML = federal.map(l => this.renderRepItem(l)).join('');
@@ -786,7 +784,7 @@ class VoteApp {
         else if (partyLower.includes('republican')) partyClass = 'republican';
 
         const districtText = rep.district ? ` &middot; District ${rep.district}` : '';
-        const levelText = rep.level === 'federal' ? ' &middot; U.S. Congress' : '';
+        const levelText = rep.level === 'congress' ? ' &middot; U.S. Congress' : '';
         this.repCardName.innerHTML = `${rep.name}<div class="rep-card-subtitle"><span class="rep-party ${partyClass}">${rep.party || 'Unknown'}</span>${districtText}${levelText}</div>`;
 
         // Show office info if available
@@ -1271,7 +1269,7 @@ class VoteApp {
         this.repAlignmentBills.innerHTML = '<div class="alignment-loading"><div class="mini-loader"></div>Searching bills...</div>';
 
         // Use the state jurisdiction for bill searches
-        // Federal reps use their state's bills (OpenStates federal API is rate-limited)
+        // Congress reps use their state's bills as well
         const jurisdiction = rep.jurisdiction || this.currentJurisdiction;
 
         if (!jurisdiction) {
