@@ -20,6 +20,77 @@ define('VOTECRAFT_OPENSTATES_API_KEY', 'd2917281-d734-4e26-a557-eeb50ea60f78');
 define('VOTECRAFT_BATCH_API_CALLS', 80); // Max API calls per batch (500/day ÷ 6 runs = ~83)
 
 // =============================================================================
+// RATE LIMIT HANDLING
+// =============================================================================
+
+/**
+ * Check if OpenStates API daily rate limit has been hit today
+ */
+function votecraft_is_rate_limited() {
+    $rate_limit_date = get_option('votecraft_openstates_rate_limit_date', '');
+    return $rate_limit_date === date('Y-m-d');
+}
+
+/**
+ * Mark that we've hit the OpenStates daily rate limit
+ */
+function votecraft_set_rate_limited() {
+    update_option('votecraft_openstates_rate_limit_date', date('Y-m-d'));
+}
+
+/**
+ * Parse rate limit error response to determine if it's daily or per-minute
+ * Returns: 'daily', 'minute', or false if not a rate limit error
+ */
+function votecraft_parse_rate_limit_error($response_body) {
+    if (strpos($response_body, 'exceeded limit of') === false) {
+        return false;
+    }
+    if (strpos($response_body, '/day') !== false) {
+        return 'daily';
+    }
+    if (strpos($response_body, '/min') !== false) {
+        return 'minute';
+    }
+    return 'unknown';
+}
+
+/**
+ * Check if Congress.gov API daily rate limit has been hit today
+ * Congress.gov has a 500 calls/hour limit
+ */
+function votecraft_is_congress_rate_limited() {
+    $rate_limit_time = get_option('votecraft_congress_rate_limit_time', 0);
+    // Rate limit expires after 1 hour
+    return (time() - $rate_limit_time) < 3600;
+}
+
+/**
+ * Mark that we've hit the Congress.gov rate limit
+ */
+function votecraft_set_congress_rate_limited() {
+    update_option('votecraft_congress_rate_limit_time', time());
+}
+
+/**
+ * Parse Congress.gov rate limit error
+ * Congress.gov returns 429 with various messages
+ */
+function votecraft_parse_congress_rate_limit($response_body, $status_code) {
+    if ($status_code === 429) {
+        return true;
+    }
+    // Congress.gov may also return rate limit info in other ways
+    if (strpos(strtolower($response_body), 'rate limit') !== false) {
+        return true;
+    }
+    if (strpos(strtolower($response_body), 'too many requests') !== false) {
+        return true;
+    }
+    return false;
+}
+
+// =============================================================================
 // SCHEDULED SYNC (WP-CRON)
 // =============================================================================
 
@@ -29,6 +100,10 @@ function votecraft_add_cron_interval($schedules) {
     $schedules['every_four_hours'] = array(
         'interval' => 4 * 60 * 60, // 4 hours in seconds
         'display'  => 'Every 4 Hours'
+    );
+    $schedules['monthly'] = array(
+        'interval' => 30 * 24 * 60 * 60, // 30 days in seconds
+        'display'  => 'Once Monthly'
     );
     return $schedules;
 }
@@ -45,10 +120,82 @@ function votecraft_schedule_sync() {
 register_deactivation_hook(__FILE__, 'votecraft_unschedule_sync');
 function votecraft_unschedule_sync() {
     wp_clear_scheduled_hook('votecraft_scheduled_sync');
+    wp_clear_scheduled_hook('votecraft_congress_monthly_sync');
 }
 
 // Hook the actual sync function
 add_action('votecraft_scheduled_sync', 'votecraft_run_scheduled_batch');
+
+// Hook the Congress daily sync (runs daily during sync period, then monthly)
+add_action('votecraft_congress_daily_sync', 'votecraft_run_congress_daily_sync');
+
+/**
+ * Run the Congress.gov sync in daily batches
+ * Runs daily until complete, then waits ~30 days before starting again
+ * Respects the 500 API calls/day limit
+ */
+function votecraft_run_congress_daily_sync() {
+    if (!get_option('votecraft_congress_scheduled_sync_enabled', false)) {
+        return;
+    }
+
+    // Check if we hit the rate limit - if so, skip until next hour
+    if (votecraft_is_congress_rate_limited()) {
+        // Schedule retry in 1 hour instead of tomorrow
+        wp_clear_scheduled_hook('votecraft_congress_daily_sync');
+        wp_schedule_single_event(time() + 3600, 'votecraft_congress_daily_sync');
+        return;
+    }
+
+    // Get current progress
+    $progress = get_option('votecraft_congress_sync_progress', array(
+        'chamber' => 'senate',
+        'offset' => 0,
+        'total_synced' => 0,
+        'completed' => false,
+        'last_run' => null,
+        'sync_started' => null
+    ));
+
+    // If sync is complete, check if we should start a new cycle
+    if ($progress['completed']) {
+        $last_complete = isset($progress['last_complete']) ? strtotime($progress['last_complete']) : 0;
+        $days_since_complete = (time() - $last_complete) / DAY_IN_SECONDS;
+
+        // Wait 30 days before starting a new sync cycle
+        if ($days_since_complete < 30) {
+            // Schedule next check for tomorrow
+            wp_clear_scheduled_hook('votecraft_congress_daily_sync');
+            wp_schedule_single_event(strtotime('tomorrow 6:00 AM'), 'votecraft_congress_daily_sync');
+            return;
+        }
+
+        // Start a new sync cycle
+        votecraft_reset_congress_sync_progress();
+        $progress = get_option('votecraft_congress_sync_progress');
+        $progress['sync_started'] = current_time('mysql');
+        update_option('votecraft_congress_sync_progress', $progress);
+    }
+
+    // Run batches for today (limit to ~100 API calls to stay well under 500/day limit)
+    // Each batch of 50 members uses ~2-3 API calls (member list + pagination)
+    $batches_today = 3; // ~150 members, ~6-9 API calls
+    for ($i = 0; $i < $batches_today; $i++) {
+        $result = votecraft_sync_congress_members(50);
+        if (isset($result['progress']['completed']) && $result['progress']['completed']) {
+            // Mark completion time
+            $progress = get_option('votecraft_congress_sync_progress');
+            $progress['last_complete'] = current_time('mysql');
+            update_option('votecraft_congress_sync_progress', $progress);
+            break;
+        }
+        usleep(500000); // Small delay between batches
+    }
+
+    // Schedule next run for tomorrow (continues daily until complete)
+    wp_clear_scheduled_hook('votecraft_congress_daily_sync');
+    wp_schedule_single_event(strtotime('tomorrow 6:00 AM'), 'votecraft_congress_daily_sync');
+}
 
 /**
  * Run a scheduled batch sync
@@ -58,6 +205,11 @@ function votecraft_run_scheduled_batch() {
     // Check if scheduled sync is enabled
     if (!get_option('votecraft_scheduled_sync_enabled', false)) {
         return;
+    }
+
+    // Check if we already hit the daily rate limit today
+    if (votecraft_is_rate_limited()) {
+        return; // Skip - will try again tomorrow
     }
 
     global $wpdb;
@@ -112,7 +264,8 @@ function votecraft_run_scheduled_batch() {
     $states_synced = array();
 
     try {
-        while ($batch_calls < $max_calls && $progress['state_index'] < count($states)) {
+        $rate_limited = false;
+        while ($batch_calls < $max_calls && $progress['state_index'] < count($states) && !$rate_limited) {
             $state = $states[$progress['state_index']];
 
             if ($progress['phase'] === 'legislators') {
@@ -120,6 +273,12 @@ function votecraft_run_scheduled_batch() {
                 $result = votecraft_sync_legislators_batch($state, $max_calls - $batch_calls);
                 $batch_calls += $result['api_calls'];
                 $synced_count += $result['records'];
+
+                // Check if rate limited
+                if (!empty($result['rate_limited'])) {
+                    $rate_limited = true;
+                    break;
+                }
 
                 if ($result['complete']) {
                     $progress['phase'] = 'bills';
@@ -131,6 +290,12 @@ function votecraft_run_scheduled_batch() {
                 $batch_calls += $result['api_calls'];
                 $synced_count += $result['records'];
 
+                // Check if rate limited
+                if (!empty($result['rate_limited'])) {
+                    $rate_limited = true;
+                    break;
+                }
+
                 if ($result['complete']) {
                     $progress['phase'] = 'legislators';
                     $progress['state_index']++;
@@ -141,6 +306,11 @@ function votecraft_run_scheduled_batch() {
 
             // Safety check
             if ($batch_calls >= $max_calls) break;
+        }
+
+        // If rate limited, update the log message
+        if ($rate_limited) {
+            throw new Exception('⚠️ DAILY RATE LIMIT HIT - OpenStates limit reached. Will resume tomorrow.');
         }
 
         // Check if all states complete
@@ -179,6 +349,11 @@ function votecraft_sync_legislators_batch($state, $max_calls) {
     global $wpdb;
     $table = $wpdb->prefix . 'votecraft_legislators';
 
+    // Check if already rate limited
+    if (votecraft_is_rate_limited()) {
+        return array('api_calls' => 0, 'records' => 0, 'complete' => false, 'rate_limited' => true);
+    }
+
     $jurisdiction = votecraft_state_to_jurisdiction($state);
     $api_calls = 0;
     $count = 0;
@@ -200,9 +375,17 @@ function votecraft_sync_legislators_batch($state, $max_calls) {
         if (is_wp_error($response)) break;
 
         $status = wp_remote_retrieve_response_code($response);
+        $raw_body = wp_remote_retrieve_body($response);
+
         if ($status === 429) {
-            usleep(3000000); // Wait 3 seconds on rate limit
-            continue;
+            // Check if daily limit
+            $limit_type = votecraft_parse_rate_limit_error($raw_body);
+            if ($limit_type === 'daily') {
+                votecraft_set_rate_limited();
+                return array('api_calls' => $api_calls, 'records' => $count, 'complete' => false, 'rate_limited' => true);
+            }
+            // Per-minute limit - wait and stop batch (will resume on next batch)
+            return array('api_calls' => $api_calls, 'records' => $count, 'complete' => false, 'rate_limited' => false);
         }
         if ($status >= 400) break;
 
@@ -250,6 +433,11 @@ function votecraft_sync_bills_batch($state, $max_calls) {
     $bills_table = $wpdb->prefix . 'votecraft_bills';
     $sponsorships_table = $wpdb->prefix . 'votecraft_sponsorships';
 
+    // Check if already rate limited
+    if (votecraft_is_rate_limited()) {
+        return array('api_calls' => 0, 'records' => 0, 'complete' => false, 'rate_limited' => true);
+    }
+
     $jurisdiction = votecraft_state_to_jurisdiction($state);
     $api_calls = 0;
     $count = 0;
@@ -284,9 +472,17 @@ function votecraft_sync_bills_batch($state, $max_calls) {
         if (is_wp_error($response)) continue;
 
         $status = wp_remote_retrieve_response_code($response);
+        $raw_body = wp_remote_retrieve_body($response);
+
         if ($status === 429) {
-            usleep(3000000);
-            continue;
+            // Check if daily limit
+            $limit_type = votecraft_parse_rate_limit_error($raw_body);
+            if ($limit_type === 'daily') {
+                votecraft_set_rate_limited();
+                return array('api_calls' => $api_calls, 'records' => $count, 'complete' => false, 'rate_limited' => true);
+            }
+            // Per-minute limit - stop batch
+            return array('api_calls' => $api_calls, 'records' => $count, 'complete' => false, 'rate_limited' => false);
         }
         if ($status >= 400) continue;
 
@@ -440,12 +636,33 @@ function votecraft_sync_create_tables() {
 add_action('admin_menu', 'votecraft_sync_admin_menu');
 
 function votecraft_sync_admin_menu() {
+    // Main menu page under Tools
     add_management_page(
         'VoteCraft Data Sync',
         'VoteCraft Sync',
         'manage_options',
         'votecraft-sync',
         'votecraft_sync_admin_page'
+    );
+
+    // Add submenu for Issue Keywords
+    add_submenu_page(
+        'tools.php',
+        'VoteCraft Keywords',
+        'VC Keywords',
+        'manage_options',
+        'votecraft-keywords',
+        'votecraft_keywords_admin_page'
+    );
+
+    // Add submenu for Bill Associations
+    add_submenu_page(
+        'tools.php',
+        'VoteCraft Bill Associations',
+        'VC Bill Associations',
+        'manage_options',
+        'votecraft-bill-associations',
+        'votecraft_bill_associations_admin_page'
     );
 }
 
@@ -489,6 +706,39 @@ function votecraft_sync_admin_page() {
             update_option('votecraft_scheduled_sync_enabled', true);
             votecraft_run_scheduled_batch();
             echo '<div class="notice notice-success"><p>Manual batch sync completed! Check progress below.</p></div>';
+        } elseif ($action === 'sync_congress_members') {
+            $result = votecraft_sync_congress_members();
+            echo '<div class="notice notice-' . ($result['success'] ? 'success' : 'error') . '"><p>' . esc_html($result['message']) . '</p></div>';
+        } elseif ($action === 'sync_congress_issue_bills') {
+            $result = votecraft_sync_congress_issue_bills();
+            echo '<div class="notice notice-' . ($result['success'] ? 'success' : 'error') . '"><p>' . esc_html($result['message']) . '</p></div>';
+        } elseif ($action === 'clear_congress_cache') {
+            $cache_table = $wpdb->prefix . 'votecraft_cache';
+            $deleted = $wpdb->query("DELETE FROM $cache_table WHERE endpoint = 'congress' OR cache_key LIKE 'congress_%'");
+            echo '<div class="notice notice-success"><p>Cleared ' . intval($deleted) . ' Congress.gov cache entries.</p></div>';
+        } elseif ($action === 'refresh_congress_member') {
+            $member_name = isset($_POST['congress_member_name']) ? sanitize_text_field($_POST['congress_member_name']) : '';
+            if ($member_name) {
+                $result = votecraft_refresh_congress_member_cache($member_name);
+                echo '<div class="notice notice-' . ($result['success'] ? 'success' : 'error') . '"><p>' . esc_html($result['message']) . '</p></div>';
+            }
+        } elseif ($action === 'reset_congress_progress') {
+            $result = votecraft_reset_congress_sync_progress();
+            echo '<div class="notice notice-success"><p>' . esc_html($result['message']) . '</p></div>';
+        } elseif ($action === 'enable_congress_scheduled_sync') {
+            update_option('votecraft_congress_scheduled_sync_enabled', true);
+            // Clear any existing schedule first
+            wp_clear_scheduled_hook('votecraft_congress_daily_sync');
+            wp_clear_scheduled_hook('votecraft_congress_monthly_sync'); // Legacy cleanup
+            // Schedule to start tomorrow at 6 AM (runs daily during sync, then waits 30 days)
+            $tomorrow_6am = strtotime('tomorrow 6:00 AM');
+            wp_schedule_single_event($tomorrow_6am, 'votecraft_congress_daily_sync');
+            echo '<div class="notice notice-success"><p>Congress.gov sync enabled! First run scheduled for ' . wp_date('M j, Y g:i A', $tomorrow_6am) . '. Will run daily until complete, then monthly.</p></div>';
+        } elseif ($action === 'disable_congress_scheduled_sync') {
+            update_option('votecraft_congress_scheduled_sync_enabled', false);
+            wp_clear_scheduled_hook('votecraft_congress_daily_sync');
+            wp_clear_scheduled_hook('votecraft_congress_monthly_sync'); // Legacy cleanup
+            echo '<div class="notice notice-success"><p>Congress.gov sync disabled.</p></div>';
         }
     }
 
@@ -501,9 +751,40 @@ function votecraft_sync_admin_page() {
     $congress_count = $wpdb->get_var("SELECT COUNT(*) FROM $legislators_table WHERE level = 'congress'");
     $state_leg_count = $wpdb->get_var("SELECT COUNT(*) FROM $legislators_table WHERE level = 'state' OR level IS NULL");
     $bill_count = $wpdb->get_var("SELECT COUNT(*) FROM $bills_table");
+    $congress_bill_count = $wpdb->get_var("SELECT COUNT(*) FROM $bills_table WHERE state = 'Federal'");
+    $state_bill_count = $wpdb->get_var("SELECT COUNT(*) FROM $bills_table WHERE state != 'Federal' OR state IS NULL");
     $states_with_data = $wpdb->get_col("SELECT DISTINCT state FROM $legislators_table ORDER BY state");
     $states_with_bills = $wpdb->get_col("SELECT DISTINCT state FROM $bills_table ORDER BY state");
     $recent_syncs = $wpdb->get_results("SELECT * FROM $log_table ORDER BY started_at DESC LIMIT 30");
+
+    // Congress.gov cache stats
+    $cache_table = $wpdb->prefix . 'votecraft_cache';
+    $congress_cache_count = $wpdb->get_var("SELECT COUNT(*) FROM $cache_table WHERE endpoint = 'congress' OR cache_key LIKE 'congress_%'");
+    $congress_cache_recent = $wpdb->get_results(
+        "SELECT cache_key, created_at FROM $cache_table
+         WHERE endpoint = 'congress' OR cache_key LIKE 'congress_%'
+         ORDER BY created_at DESC LIMIT 10"
+    );
+    $congress_cache_oldest = $wpdb->get_var(
+        "SELECT MIN(created_at) FROM $cache_table WHERE endpoint = 'congress' OR cache_key LIKE 'congress_%'"
+    );
+    $congress_cache_newest = $wpdb->get_var(
+        "SELECT MAX(created_at) FROM $cache_table WHERE endpoint = 'congress' OR cache_key LIKE 'congress_%'"
+    );
+
+    // Congress sync progress and schedule status
+    $congress_sync_progress = get_option('votecraft_congress_sync_progress', array(
+        'chamber' => 'senate',
+        'offset' => 0,
+        'total_synced' => 0,
+        'completed' => false,
+        'last_run' => null
+    ));
+    $congress_scheduled_enabled = get_option('votecraft_congress_scheduled_sync_enabled', false);
+    $congress_next_scheduled = wp_next_scheduled('votecraft_congress_daily_sync');
+    if (!$congress_next_scheduled) {
+        $congress_next_scheduled = wp_next_scheduled('votecraft_congress_monthly_sync'); // Legacy fallback
+    }
 
     // Group syncs by state for cleaner display
     $syncs_by_state = array();
@@ -709,10 +990,10 @@ function votecraft_sync_admin_page() {
     <div class="wrap">
         <h1>VoteCraft Data Sync</h1>
 
-        <!-- SCHEDULED SYNC DASHBOARD -->
+        <!-- OPENSTATES SCHEDULED SYNC -->
         <details class="votecraft-accordion <?php echo $scheduled_enabled ? 'status-enabled' : 'status-disabled'; ?>" open>
             <summary>
-                📅 Scheduled Sync
+                🗂️ OpenStates Scheduled Sync
                 <span class="status-badge <?php echo $scheduled_enabled ? 'enabled' : 'disabled'; ?>">
                     <?php echo $scheduled_enabled ? 'ENABLED' : 'DISABLED'; ?>
                 </span>
@@ -745,7 +1026,7 @@ function votecraft_sync_admin_page() {
                         <div style="background: <?php echo $scheduled_progress['api_calls_today'] > 400 ? '#ff9800' : '#2196f3'; ?>; height: 100%; width: <?php echo min(100, ($scheduled_progress['api_calls_today'] / 500) * 100); ?>%;"></div>
                     </div>
                     <p style="font-size: 0.85em; color: #666;"><strong>Next Run:</strong>
-                        <?php echo $next_scheduled ? date('M j, Y g:i A', $next_scheduled) : 'Not scheduled'; ?>
+                        <?php echo $next_scheduled ? wp_date('M j, Y g:i A', $next_scheduled) : 'Not scheduled'; ?>
                     </p>
                 </div>
             </div>
@@ -772,35 +1053,112 @@ function votecraft_sync_admin_page() {
             </div>
         </details>
 
+        <!-- CONGRESS.GOV SCHEDULED SYNC -->
+        <details class="votecraft-accordion <?php echo $congress_scheduled_enabled ? 'status-enabled' : 'status-disabled'; ?>">
+            <summary>
+                🏛️ Congress.gov Scheduled Sync
+                <span class="status-badge <?php echo $congress_scheduled_enabled ? 'enabled' : 'disabled'; ?>">
+                    <?php echo $congress_scheduled_enabled ? 'ENABLED' : 'DISABLED'; ?>
+                </span>
+            </summary>
+            <div class="accordion-content">
+            <p><strong>Status:</strong>
+                <?php if ($congress_scheduled_enabled): ?>
+                    <span style="color: green; font-weight: bold;">✓ ENABLED</span> - Runs daily until complete, then waits 30 days
+                <?php else: ?>
+                    <span style="color: orange; font-weight: bold;">⏸ DISABLED</span>
+                <?php endif; ?>
+            </p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 15px 0;">
+                <div style="background: #fff; padding: 15px; border-radius: 5px; border: 1px solid #ddd;">
+                    <h4 style="margin-top: 0;">Progress</h4>
+                    <p><strong>Current Chamber:</strong> <?php echo ucfirst($congress_sync_progress['chamber']); ?></p>
+                    <p><strong>Members Synced:</strong> <?php echo number_format($congress_sync_progress['total_synced']); ?> / ~535</p>
+                    <p><strong>Status:</strong> <?php echo $congress_sync_progress['completed'] ? '<span style="color: green;">✓ Complete</span>' : '<span style="color: blue;">In Progress</span>'; ?></p>
+                    <div style="background: #e0e0e0; height: 20px; border-radius: 10px; overflow: hidden;">
+                        <div style="background: #4caf50; height: 100%; width: <?php echo min(100, ($congress_sync_progress['total_synced'] / 535) * 100); ?>%;"></div>
+                    </div>
+                </div>
+
+                <div style="background: #fff; padding: 15px; border-radius: 5px; border: 1px solid #ddd;">
+                    <h4 style="margin-top: 0;">API Info</h4>
+                    <p><strong>Daily Limit:</strong> 500 calls/day</p>
+                    <p><strong>Cached Members:</strong> <?php echo number_format($congress_cache_count); ?></p>
+                    <p><strong>Last Sync:</strong> <?php echo $congress_sync_progress['last_run'] ? wp_date('M j, g:i A', strtotime($congress_sync_progress['last_run'])) : 'Never'; ?></p>
+                    <p style="font-size: 0.85em; color: #666;"><strong>Next Run:</strong>
+                        <?php echo $congress_next_scheduled ? wp_date('M j, Y g:i A', $congress_next_scheduled) : 'Not scheduled'; ?>
+                    </p>
+                </div>
+            </div>
+
+            <form method="post" style="margin-top: 15px;">
+                <?php wp_nonce_field('votecraft_sync'); ?>
+                <?php if ($congress_scheduled_enabled): ?>
+                    <button type="submit" name="votecraft_sync_action" value="disable_congress_scheduled_sync" class="button">⏸ Disable Sync</button>
+                <?php else: ?>
+                    <button type="submit" name="votecraft_sync_action" value="enable_congress_scheduled_sync" class="button button-primary">▶ Enable Sync</button>
+                <?php endif; ?>
+                <button type="submit" name="votecraft_sync_action" value="sync_congress_members" class="button">⚡ Run Batch Now</button>
+                <button type="submit" name="votecraft_sync_action" value="reset_congress_progress" class="button" onclick="return confirm('Reset progress? This will start syncing from the beginning.');">🔄 Reset Progress</button>
+                <button type="submit" name="votecraft_sync_action" value="clear_congress_cache" class="button" onclick="return confirm('Clear all Congress.gov cache?');">🗑️ Clear Cache</button>
+            </form>
+            </div>
+        </details>
+
         <!-- RECENT BATCH ACTIVITY -->
         <?php if (!empty($recent_batches)): ?>
         <details class="votecraft-accordion">
-            <summary>📊 Recent Batch Activity <span style="margin-left: auto; font-weight: normal; color: #666;"><?php echo count($recent_batches); ?> runs</span></summary>
+            <summary>📊 Recent OpenStates Sync Activity <span style="margin-left: auto; font-weight: normal; color: #666;"><?php echo count($recent_batches); ?> batch runs</span></summary>
             <div class="accordion-content">
+            <p style="color: #666; margin-bottom: 10px; font-size: 0.9em;">
+                Tracks scheduled sync runs for state legislators via OpenStates API. Each run processes a batch of states.
+            </p>
             <table class="widefat">
                 <thead>
                     <tr>
-                        <th>Time</th>
-                        <th>Status</th>
-                        <th>Records</th>
-                        <th>Details</th>
+                        <th>When</th>
+                        <th>Result</th>
+                        <th title="Number of legislator records added or updated">Records Updated</th>
+                        <th title="OpenStates API calls used during this batch">OpenStates API Calls Used</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($recent_batches as $batch): ?>
                     <tr>
-                        <td><?php echo esc_html(date('M j, g:i A', strtotime($batch->started_at))); ?></td>
+                        <td><?php echo esc_html(wp_date('M j, g:i A', strtotime($batch->started_at))); ?></td>
                         <td>
                             <?php if ($batch->status === 'success'): ?>
-                                <span style="color: green;">✓ Success</span>
+                                <span style="color: green;">✓ Complete</span>
                             <?php elseif ($batch->status === 'running'): ?>
-                                <span style="color: blue;">⏳ Running</span>
+                                <span style="color: blue;">⏳ In Progress</span>
                             <?php else: ?>
-                                <span style="color: red;">✗ Error</span>
+                                <span style="color: red;">✗ Failed</span>
                             <?php endif; ?>
                         </td>
-                        <td><?php echo number_format($batch->records_synced); ?></td>
-                        <td style="font-size: 0.85em;"><?php echo esc_html(substr($batch->error_message, 0, 100)); ?></td>
+                        <td>
+                            <?php
+                            $records = intval($batch->records_synced);
+                            if ($records > 0) {
+                                echo number_format($records) . ' updated';
+                            } else {
+                                echo '<span style="color: #888;">No changes</span>';
+                            }
+                            ?>
+                        </td>
+                        <td style="font-size: 0.85em;">
+                            <?php
+                            $details = $batch->error_message;
+                            // Parse API calls info if present
+                            if (preg_match('/API calls?:\s*(\d+)/i', $details, $matches)) {
+                                echo $matches[1] . ' API calls';
+                            } elseif (!empty($details)) {
+                                echo esc_html(substr($details, 0, 80));
+                            } else {
+                                echo '<span style="color: #888;">—</span>';
+                            }
+                            ?>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -811,7 +1169,7 @@ function votecraft_sync_admin_page() {
 
         <!-- DATABASE STATS -->
         <details class="votecraft-accordion" open>
-            <summary>📈 Database Stats <span style="margin-left: auto; font-weight: normal; color: #666;"><?php echo number_format($legislator_count); ?> legislators, <?php echo number_format($bill_count); ?> bills</span></summary>
+            <summary>📈 Database Stats <span style="margin-left: auto; font-weight: normal; color: #666;"><?php echo number_format($legislator_count); ?> legislators, <?php echo number_format($bill_count); ?> bills (<?php echo number_format($congress_bill_count); ?> federal)</span></summary>
             <div class="accordion-content">
             <div class="stats-grid">
                 <div class="stat-box">
@@ -820,15 +1178,27 @@ function votecraft_sync_admin_page() {
                 </div>
                 <div class="stat-box">
                     <div class="stat-value"><?php echo number_format($congress_count); ?></div>
-                    <div class="stat-label">Congress</div>
+                    <div class="stat-label">Congress Members</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-value"><?php echo number_format($state_leg_count); ?></div>
-                    <div class="stat-label">State</div>
+                    <div class="stat-label">State Legislators</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-value"><?php echo number_format($bill_count); ?></div>
                     <div class="stat-label">Total Bills</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value"><?php echo number_format($congress_bill_count); ?></div>
+                    <div class="stat-label">Congress Bills</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value"><?php echo number_format($state_bill_count); ?></div>
+                    <div class="stat-label">State Bills</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value"><?php echo number_format($congress_cache_count); ?></div>
+                    <div class="stat-label">Congress.gov Cached</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-value"><?php echo count($states_with_data); ?></div>
@@ -839,6 +1209,9 @@ function votecraft_sync_admin_page() {
                     <div class="stat-label">States w/ Bills</div>
                 </div>
             </div>
+            <p style="font-size: 0.85em; color: #666; margin-top: 10px;">
+                <strong>Note:</strong> Congress.gov cached entries include both sponsored and cosponsored legislation for each member.
+            </p>
             </div>
         </details>
 
@@ -911,6 +1284,8 @@ function votecraft_sync_admin_page() {
             <summary>🔧 Manual Sync Controls</summary>
             <div class="accordion-content">
 
+            <h4>🗂️ OpenStates Sync</h4>
+
             <h4>Sync Single State</h4>
             <form method="post">
                 <?php wp_nonce_field('votecraft_sync'); ?>
@@ -947,6 +1322,25 @@ function votecraft_sync_admin_page() {
                 <button type="submit" name="votecraft_sync_action" value="sync_all_issue_bills" class="button">
                     Sync Issue-Related Bills (50 States)
                 </button>
+            </form>
+
+            <hr style="margin: 20px 0;">
+
+            <h4>🏛️ Congress.gov Sync <span style="font-weight: normal; color: #666; font-size: 0.9em;">(<?php echo number_format($congress_cache_count); ?> cached, <?php echo number_format($congress_count); ?> in DB)</span></h4>
+            <p style="font-size: 0.9em; color: #666;">Sync federal legislators from Congress.gov. <strong>Note:</strong> 500 API calls/day limit.</p>
+
+            <form method="post" style="display: inline-block; margin-right: 10px;">
+                <?php wp_nonce_field('votecraft_sync'); ?>
+                <button type="submit" name="votecraft_sync_action" value="sync_congress_members" class="button">
+                    Sync All Members
+                </button>
+            </form>
+            <form method="post" style="display: inline-block;">
+                <?php wp_nonce_field('votecraft_sync'); ?>
+                <button type="submit" name="votecraft_sync_action" value="sync_congress_issue_bills" class="button">
+                    Sync Issue-Related Bills
+                </button>
+                <span style="font-size: 0.85em; color: #666; margin-left: 5px;">(50 members per batch)</span>
             </form>
 
             </div>
@@ -1002,7 +1396,7 @@ function votecraft_sync_admin_page() {
                                 <span style="color: #999;">-</span>
                             <?php endif; ?>
                         </td>
-                        <td><?php echo esc_html(date('M j, g:i A', strtotime($entry['started_at']))); ?></td>
+                        <td><?php echo esc_html(wp_date('M j, g:i A', strtotime($entry['started_at']))); ?></td>
                         <td>
                             <?php if ($entry['status'] === 'success'): ?>
                                 <span style="color: green;">✓ Success</span>
@@ -1038,6 +1432,20 @@ function votecraft_sync_legislators($state) {
     global $wpdb;
     $table = $wpdb->prefix . 'votecraft_legislators';
     $log_table = $wpdb->prefix . 'votecraft_sync_log';
+
+    // Check if we're already rate limited today
+    if (votecraft_is_rate_limited()) {
+        // Log as rate limited
+        $wpdb->insert($log_table, array(
+            'sync_type' => 'legislators',
+            'state' => $state,
+            'status' => 'error',
+            'error_message' => '⚠️ DAILY RATE LIMIT - Waiting until tomorrow',
+            'started_at' => current_time('mysql'),
+            'completed_at' => current_time('mysql')
+        ));
+        return array('error' => 'Daily rate limit hit - try again tomorrow');
+    }
 
     // Log start
     $wpdb->insert($log_table, array(
@@ -1076,17 +1484,45 @@ function votecraft_sync_legislators($state) {
 
             // Handle rate limiting
             if ($status === 429) {
-                sleep(3);
+                // Check if this is a daily or per-minute limit
+                $limit_type = votecraft_parse_rate_limit_error($raw_body);
+
+                if ($limit_type === 'daily') {
+                    // Daily limit hit - stop all syncing for today
+                    votecraft_set_rate_limited();
+                    throw new Exception('⚠️ DAILY RATE LIMIT HIT - Syncing paused until tomorrow');
+                }
+
+                // Per-minute limit - wait 65 seconds and retry once
+                sleep(65);
                 $response = wp_remote_get($url, array('timeout' => 30));
                 if (is_wp_error($response)) {
                     throw new Exception('API request failed after retry');
                 }
                 $status = wp_remote_retrieve_response_code($response);
                 $raw_body = wp_remote_retrieve_body($response);
+
+                // If still rate limited after retry, check if daily limit
+                if ($status === 429) {
+                    $limit_type = votecraft_parse_rate_limit_error($raw_body);
+                    if ($limit_type === 'daily') {
+                        votecraft_set_rate_limited();
+                        throw new Exception('⚠️ DAILY RATE LIMIT HIT - Syncing paused until tomorrow');
+                    }
+                    throw new Exception('⚠️ RATE LIMIT - Too many requests per minute');
+                }
             }
 
             // Check for HTTP errors
             if ($status >= 400) {
+                // Check if this is a rate limit error (429 might have been missed)
+                if (strpos($raw_body, 'exceeded limit') !== false) {
+                    $limit_type = votecraft_parse_rate_limit_error($raw_body);
+                    if ($limit_type === 'daily') {
+                        votecraft_set_rate_limited();
+                        throw new Exception('⚠️ DAILY RATE LIMIT HIT - Syncing paused until tomorrow');
+                    }
+                }
                 throw new Exception("API returned HTTP $status: " . substr($raw_body, 0, 200));
             }
 
@@ -1205,6 +1641,19 @@ function votecraft_sync_bills($state) {
     $sponsorships_table = $wpdb->prefix . 'votecraft_sponsorships';
     $log_table = $wpdb->prefix . 'votecraft_sync_log';
 
+    // Check if we're already rate limited today
+    if (votecraft_is_rate_limited()) {
+        $wpdb->insert($log_table, array(
+            'sync_type' => 'bills',
+            'state' => $state,
+            'status' => 'error',
+            'error_message' => '⚠️ DAILY RATE LIMIT - Waiting until tomorrow',
+            'started_at' => current_time('mysql'),
+            'completed_at' => current_time('mysql')
+        ));
+        return array('error' => 'Daily rate limit hit - try again tomorrow');
+    }
+
     // Expanded keywords to catch more relevant bills
     $keywords = array(
         // RCV / Voting Reform
@@ -1270,13 +1719,27 @@ function votecraft_sync_bills($state) {
             }
 
             $status = wp_remote_retrieve_response_code($response);
+            $raw_body = wp_remote_retrieve_body($response);
+
             if ($status === 429) {
-                sleep(3); // Wait longer on rate limit
+                // Check if daily or per-minute limit
+                $limit_type = votecraft_parse_rate_limit_error($raw_body);
+                if ($limit_type === 'daily') {
+                    votecraft_set_rate_limited();
+                    throw new Exception('⚠️ DAILY RATE LIMIT HIT - Syncing paused until tomorrow');
+                }
+                // Per-minute limit - wait 65 seconds
+                sleep(65);
                 continue;
             }
 
             if ($status >= 400) {
-                continue; // Skip on HTTP errors
+                // Check for rate limit in error body
+                if (strpos($raw_body, 'exceeded limit') !== false && strpos($raw_body, '/day') !== false) {
+                    votecraft_set_rate_limited();
+                    throw new Exception('⚠️ DAILY RATE LIMIT HIT - Syncing paused until tomorrow');
+                }
+                continue; // Skip on other HTTP errors
             }
 
             $body = json_decode(wp_remote_retrieve_body($response), true);
@@ -1769,4 +2232,1261 @@ function votecraft_run_monthly_sync() {
         votecraft_sync_bills($state);
         sleep(2);
     }
+}
+
+// =============================================================================
+// ISSUE KEYWORDS MANAGEMENT
+// =============================================================================
+
+/**
+ * Get default keywords (matches issues-data.js)
+ */
+function votecraft_get_default_keywords() {
+    return array(
+        'rcv' => array(
+            'title' => 'Rank Choice Voting',
+            'keywords' => array('ranked choice', 'ranked-choice', 'instant runoff', 'preferential voting', 'alternative voting', 'final five voting', 'rank the vote', 'voting method', 'voting system reform')
+        ),
+        'debt-profiteering' => array(
+            'title' => 'Public Debt Profiteering',
+            'keywords' => array('public debt', 'predatory lending', 'student debt', 'student loan', 'debt relief', 'debt collection', 'payday loan', 'loan forgiveness', 'borrower', 'consumer financial')
+        ),
+        'citizens-united' => array(
+            'title' => "Ending Citizen's United",
+            'keywords' => array('citizens united', 'campaign finance', 'dark money', 'super pac', 'political action committee', 'corporate political', 'campaign spending', 'political contribution', 'money in politics', 'disclose act', 'for the people act', 'freedom to vote', 'democracy for all', 'honest ads', 'foreign money', 'election integrity', 'voter disclosure', 'political spending', 'corporate money')
+        ),
+        'healthcare' => array(
+            'title' => 'Universal Basic Healthcare',
+            'keywords' => array('universal health', 'medicare for all', 'public option', 'medicaid expansion', 'single payer', 'affordable care', 'healthcare for all', 'drug pricing', 'prescription drug', 'health care coverage', 'health insurance')
+        ),
+        'scotus' => array(
+            'title' => 'Supreme Court Reform',
+            'keywords' => array('supreme court', 'judicial term limits', 'court expansion', 'judicial ethics', 'court reform', 'judicial accountability', 'scotus', 'justice term limit')
+        ),
+        'news-paywalls' => array(
+            'title' => 'News Paywall Reform',
+            'keywords' => array('local journalism', 'journalism funding', 'local news', 'news deserts', 'journalism tax credit', 'community news', 'newsroom', 'journalism preservation')
+        )
+    );
+}
+
+/**
+ * Get keywords (from options or defaults)
+ */
+function votecraft_get_keywords() {
+    $saved = get_option('votecraft_issue_keywords');
+    if ($saved && is_array($saved)) {
+        return $saved;
+    }
+    return votecraft_get_default_keywords();
+}
+
+/**
+ * Keywords admin page
+ */
+function votecraft_keywords_admin_page() {
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+
+    // Handle form submission
+    if (isset($_POST['votecraft_save_keywords']) && check_admin_referer('votecraft_keywords_nonce')) {
+        $keywords = array();
+        $defaults = votecraft_get_default_keywords();
+
+        foreach ($defaults as $issue_id => $issue_data) {
+            $field_name = 'keywords_' . $issue_id;
+            $raw_keywords = isset($_POST[$field_name]) ? sanitize_textarea_field($_POST[$field_name]) : '';
+
+            // Parse keywords from textarea (one per line or comma-separated)
+            $parsed = array_filter(array_map('trim', preg_split('/[\n,]+/', $raw_keywords)));
+
+            $keywords[$issue_id] = array(
+                'title' => $issue_data['title'],
+                'keywords' => $parsed
+            );
+        }
+
+        update_option('votecraft_issue_keywords', $keywords);
+        echo '<div class="notice notice-success is-dismissible"><p>Keywords saved successfully!</p></div>';
+    }
+
+    // Handle reset to defaults
+    if (isset($_POST['votecraft_reset_keywords']) && check_admin_referer('votecraft_keywords_nonce')) {
+        delete_option('votecraft_issue_keywords');
+        echo '<div class="notice notice-info is-dismissible"><p>Keywords reset to defaults.</p></div>';
+    }
+
+    $keywords = votecraft_get_keywords();
+    ?>
+    <div class="wrap">
+        <h1>VoteCraft Issue Keywords</h1>
+        <p>Manage the bill search keywords for each civic issue. These keywords are used to find related legislation when showing representative alignment.</p>
+
+        <form method="post" action="">
+            <?php wp_nonce_field('votecraft_keywords_nonce'); ?>
+
+            <table class="form-table" role="presentation">
+                <?php foreach ($keywords as $issue_id => $issue_data): ?>
+                <tr>
+                    <th scope="row">
+                        <label for="keywords_<?php echo esc_attr($issue_id); ?>">
+                            <?php echo esc_html($issue_data['title']); ?>
+                        </label>
+                    </th>
+                    <td>
+                        <textarea
+                            name="keywords_<?php echo esc_attr($issue_id); ?>"
+                            id="keywords_<?php echo esc_attr($issue_id); ?>"
+                            rows="5"
+                            cols="60"
+                            class="large-text"
+                        ><?php echo esc_textarea(implode("\n", $issue_data['keywords'])); ?></textarea>
+                        <p class="description">Enter one keyword per line, or separate with commas. Keywords are matched against bill titles.</p>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </table>
+
+            <p class="submit">
+                <input type="submit" name="votecraft_save_keywords" class="button button-primary" value="Save Keywords">
+                <input type="submit" name="votecraft_reset_keywords" class="button" value="Reset to Defaults" onclick="return confirm('Are you sure you want to reset all keywords to their default values?');">
+            </p>
+        </form>
+
+        <hr>
+
+        <h2>Tips for Good Keywords</h2>
+        <ul>
+            <li><strong>Use phrases</strong>: "ranked choice voting" works better than just "voting"</li>
+            <li><strong>Include bill names</strong>: Add specific bill names like "DISCLOSE Act" or "For the People Act"</li>
+            <li><strong>Be specific</strong>: More specific keywords reduce false positives</li>
+            <li><strong>Test changes</strong>: After saving, visit the vote page with <code>?nocache=1</code> to test</li>
+        </ul>
+
+        <h2>API Endpoint</h2>
+        <p>Keywords are served via: <code><?php echo esc_url(rest_url('votecraft/v1/keywords')); ?></code></p>
+    </div>
+    <?php
+}
+
+// =============================================================================
+// BILL ASSOCIATIONS MANAGEMENT
+// =============================================================================
+
+/**
+ * Get bill associations
+ */
+function votecraft_get_bill_associations() {
+    $saved = get_option('votecraft_bill_associations');
+    if ($saved && is_array($saved)) {
+        return $saved;
+    }
+    return array();
+}
+
+/**
+ * Bill associations admin page
+ */
+function votecraft_bill_associations_admin_page() {
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+
+    $keywords = votecraft_get_keywords();
+    $associations = votecraft_get_bill_associations();
+
+    // Handle form submission - Add new association
+    if (isset($_POST['votecraft_add_association']) && check_admin_referer('votecraft_associations_nonce')) {
+        $legislator_name = sanitize_text_field($_POST['legislator_name'] ?? '');
+        $issue_id = sanitize_text_field($_POST['issue_id'] ?? '');
+        $bill_id = sanitize_text_field($_POST['bill_id'] ?? '');
+        $bill_title = sanitize_text_field($_POST['bill_title'] ?? '');
+        $bill_url = esc_url_raw($_POST['bill_url'] ?? '');
+
+        if ($legislator_name && $issue_id && $bill_id) {
+            if (!isset($associations[$legislator_name])) {
+                $associations[$legislator_name] = array();
+            }
+            if (!isset($associations[$legislator_name][$issue_id])) {
+                $associations[$legislator_name][$issue_id] = array();
+            }
+
+            // Add the bill
+            $associations[$legislator_name][$issue_id][] = array(
+                'id' => $bill_id,
+                'title' => $bill_title,
+                'url' => $bill_url
+            );
+
+            update_option('votecraft_bill_associations', $associations);
+            echo '<div class="notice notice-success is-dismissible"><p>Bill association added successfully!</p></div>';
+        } else {
+            echo '<div class="notice notice-error is-dismissible"><p>Please fill in all required fields.</p></div>';
+        }
+    }
+
+    // Handle delete association
+    if (isset($_POST['votecraft_delete_association']) && check_admin_referer('votecraft_associations_nonce')) {
+        $delete_legislator = sanitize_text_field($_POST['delete_legislator'] ?? '');
+        $delete_issue = sanitize_text_field($_POST['delete_issue'] ?? '');
+        $delete_index = intval($_POST['delete_index'] ?? -1);
+
+        if ($delete_legislator && $delete_issue && $delete_index >= 0) {
+            if (isset($associations[$delete_legislator][$delete_issue][$delete_index])) {
+                array_splice($associations[$delete_legislator][$delete_issue], $delete_index, 1);
+
+                // Clean up empty arrays
+                if (empty($associations[$delete_legislator][$delete_issue])) {
+                    unset($associations[$delete_legislator][$delete_issue]);
+                }
+                if (empty($associations[$delete_legislator])) {
+                    unset($associations[$delete_legislator]);
+                }
+
+                update_option('votecraft_bill_associations', $associations);
+                echo '<div class="notice notice-info is-dismissible"><p>Bill association removed.</p></div>';
+            }
+        }
+    }
+
+    // Refresh associations after any changes
+    $associations = votecraft_get_bill_associations();
+    ?>
+    <div class="wrap">
+        <h1>Bill Associations</h1>
+        <p>Manage bill-legislator associations and curate which bills appear for each issue.</p>
+
+        <h2>View & Manage Keyword Matches</h2>
+        <p>Look up bills matched for a Federal legislator. You can exclude bills that don't actually apply to an issue.</p>
+
+        <form method="post" action="">
+            <?php wp_nonce_field('votecraft_associations_nonce'); ?>
+            <table class="form-table" role="presentation">
+                <tr>
+                    <th scope="row"><label for="lookup_name">Name</label></th>
+                    <td>
+                        <input type="text" name="lookup_name" id="lookup_name" class="regular-text"
+                               placeholder="e.g., Elizabeth Warren"
+                               value="<?php echo esc_attr($_POST['lookup_name'] ?? ''); ?>">
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="lookup_state">State</label></th>
+                    <td>
+                        <?php
+                        $us_states = array(
+                            '' => 'All States',
+                            'AL' => 'Alabama', 'AK' => 'Alaska', 'AZ' => 'Arizona', 'AR' => 'Arkansas',
+                            'CA' => 'California', 'CO' => 'Colorado', 'CT' => 'Connecticut', 'DE' => 'Delaware',
+                            'FL' => 'Florida', 'GA' => 'Georgia', 'HI' => 'Hawaii', 'ID' => 'Idaho',
+                            'IL' => 'Illinois', 'IN' => 'Indiana', 'IA' => 'Iowa', 'KS' => 'Kansas',
+                            'KY' => 'Kentucky', 'LA' => 'Louisiana', 'ME' => 'Maine', 'MD' => 'Maryland',
+                            'MA' => 'Massachusetts', 'MI' => 'Michigan', 'MN' => 'Minnesota', 'MS' => 'Mississippi',
+                            'MO' => 'Missouri', 'MT' => 'Montana', 'NE' => 'Nebraska', 'NV' => 'Nevada',
+                            'NH' => 'New Hampshire', 'NJ' => 'New Jersey', 'NM' => 'New Mexico', 'NY' => 'New York',
+                            'NC' => 'North Carolina', 'ND' => 'North Dakota', 'OH' => 'Ohio', 'OK' => 'Oklahoma',
+                            'OR' => 'Oregon', 'PA' => 'Pennsylvania', 'RI' => 'Rhode Island', 'SC' => 'South Carolina',
+                            'SD' => 'South Dakota', 'TN' => 'Tennessee', 'TX' => 'Texas', 'UT' => 'Utah',
+                            'VT' => 'Vermont', 'VA' => 'Virginia', 'WA' => 'Washington', 'WV' => 'West Virginia',
+                            'WI' => 'Wisconsin', 'WY' => 'Wyoming', 'DC' => 'District of Columbia'
+                        );
+                        $selected_state = $_POST['lookup_state'] ?? '';
+                        ?>
+                        <select name="lookup_state" id="lookup_state">
+                            <?php foreach ($us_states as $code => $state_name): ?>
+                            <option value="<?php echo esc_attr($code); ?>" <?php selected($selected_state, $code); ?>><?php echo esc_html($state_name); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <p class="description">Optional: Filter by state to find the correct legislator</p>
+                    </td>
+                </tr>
+            </table>
+            <p class="submit">
+                <input type="submit" name="votecraft_lookup_bills" class="button button-primary" value="Look Up Bills">
+            </p>
+        </form>
+
+        <?php
+        // Track the looked-up legislator name for pre-filling forms
+        $looked_up_legislator = '';
+
+        // Get excluded bills
+        $excluded_bills = get_option('votecraft_excluded_bills', array());
+
+        // Handle exclude bill action
+        if (isset($_POST['votecraft_exclude_bill']) && check_admin_referer('votecraft_associations_nonce')) {
+            $exc_legislator = sanitize_text_field($_POST['exc_legislator'] ?? '');
+            $exc_issue = sanitize_text_field($_POST['exc_issue'] ?? '');
+            $exc_bill_id = sanitize_text_field($_POST['exc_bill_id'] ?? '');
+            $looked_up_legislator = $exc_legislator; // Remember for form pre-fill
+
+            if ($exc_legislator && $exc_issue && $exc_bill_id) {
+                if (!isset($excluded_bills[$exc_legislator])) {
+                    $excluded_bills[$exc_legislator] = array();
+                }
+                if (!isset($excluded_bills[$exc_legislator][$exc_issue])) {
+                    $excluded_bills[$exc_legislator][$exc_issue] = array();
+                }
+                if (!in_array($exc_bill_id, $excluded_bills[$exc_legislator][$exc_issue])) {
+                    $excluded_bills[$exc_legislator][$exc_issue][] = $exc_bill_id;
+                    update_option('votecraft_excluded_bills', $excluded_bills);
+                    echo '<div class="notice notice-success is-dismissible"><p>Bill excluded from ' . esc_html($exc_issue) . '.</p></div>';
+                }
+            }
+        }
+
+        // Handle restore bill action
+        if (isset($_POST['votecraft_restore_bill']) && check_admin_referer('votecraft_associations_nonce')) {
+            $rest_legislator = sanitize_text_field($_POST['rest_legislator'] ?? '');
+            $rest_issue = sanitize_text_field($_POST['rest_issue'] ?? '');
+            $rest_bill_id = sanitize_text_field($_POST['rest_bill_id'] ?? '');
+            $looked_up_legislator = $rest_legislator; // Remember for form pre-fill
+
+            if ($rest_legislator && $rest_issue && $rest_bill_id) {
+                if (isset($excluded_bills[$rest_legislator][$rest_issue])) {
+                    $key = array_search($rest_bill_id, $excluded_bills[$rest_legislator][$rest_issue]);
+                    if ($key !== false) {
+                        array_splice($excluded_bills[$rest_legislator][$rest_issue], $key, 1);
+                        if (empty($excluded_bills[$rest_legislator][$rest_issue])) {
+                            unset($excluded_bills[$rest_legislator][$rest_issue]);
+                        }
+                        if (empty($excluded_bills[$rest_legislator])) {
+                            unset($excluded_bills[$rest_legislator]);
+                        }
+                        update_option('votecraft_excluded_bills', $excluded_bills);
+                        echo '<div class="notice notice-info is-dismissible"><p>Bill restored.</p></div>';
+                    }
+                }
+            }
+        }
+
+        // Refresh excluded bills
+        $excluded_bills = get_option('votecraft_excluded_bills', array());
+
+        // Handle bill lookup - show accordion by issue
+        if (isset($_POST['votecraft_lookup_bills']) && check_admin_referer('votecraft_associations_nonce')) {
+            $lookup_name = sanitize_text_field($_POST['lookup_name'] ?? '');
+            $lookup_state = sanitize_text_field($_POST['lookup_state'] ?? '');
+
+            if ($lookup_name) {
+                // Get all bills from Congress.gov (no issue filter)
+                $all_matched = votecraft_lookup_congress_bills_by_issue($lookup_name, $keywords, $lookup_state);
+                $legislator_display = $all_matched['legislator_name'] ?? $lookup_name;
+                $looked_up_legislator = $legislator_display; // Remember for form pre-fill
+                $bills_by_issue = $all_matched['by_issue'] ?? array();
+                $legislator_excluded = isset($excluded_bills[$legislator_display]) ? $excluded_bills[$legislator_display] : array();
+
+                echo '<div class="lookup-results" style="margin-top: 20px;">';
+
+                // Show debug info
+                $total_bills = isset($all_matched['total_bills']) ? $all_matched['total_bills'] : 0;
+                $error_msg = isset($all_matched['error']) ? $all_matched['error'] : '';
+
+                if ($error_msg) {
+                    echo '<div class="notice notice-error" style="margin: 10px 0; padding: 10px;"><strong>Error:</strong> ' . esc_html($error_msg) . '</div>';
+                } elseif ($total_bills > 0) {
+                    echo '<p style="color: #666;">Found ' . $total_bills . ' total bills, matched against issue keywords.</p>';
+                }
+
+                echo '<h3>Matched Bills for: <strong>' . esc_html($legislator_display) . '</strong></h3>';
+
+                // Always show debug info
+                $debug = isset($all_matched['debug']) ? $all_matched['debug'] : array();
+                echo '<details style="margin-bottom: 15px; background: #f0f0f1; padding: 10px; border-radius: 4px;">';
+                echo '<summary style="cursor: pointer; font-weight: 600;">Debug Info (click to expand)</summary>';
+                echo '<div style="margin-top: 10px; font-size: 12px;">';
+                echo '<p><strong>Total bills fetched:</strong> ' . $total_bills . '</p>';
+                if (!empty($debug)) {
+                    if (isset($debug['member_found'])) echo '<p><strong>Member found:</strong> ' . esc_html($debug['member_found']) . '</p>';
+                    if (isset($debug['state_filter'])) echo '<p><strong>State filter:</strong> ' . esc_html($debug['state_filter']) . '</p>';
+                    if (isset($debug['bioguideId'])) echo '<p><strong>BioguideID:</strong> ' . esc_html($debug['bioguideId']) . '</p>';
+                    if (isset($debug['sponsored_status'])) echo '<p><strong>Sponsored API status:</strong> ' . esc_html($debug['sponsored_status']) . '</p>';
+                    if (isset($debug['sponsored_count'])) echo '<p><strong>Sponsored bills raw:</strong> ' . esc_html($debug['sponsored_count']) . '</p>';
+                    if (isset($debug['sponsored_error'])) echo '<p style="color:red;"><strong>Sponsored error:</strong> ' . esc_html($debug['sponsored_error']) . '</p>';
+                    if (isset($debug['cosponsored_status'])) echo '<p><strong>Cosponsored API status:</strong> ' . esc_html($debug['cosponsored_status']) . '</p>';
+                    if (isset($debug['cosponsored_count'])) echo '<p><strong>Cosponsored bills raw:</strong> ' . esc_html($debug['cosponsored_count']) . '</p>';
+                    if (isset($debug['cosponsored_error'])) echo '<p style="color:red;"><strong>Cosponsored error:</strong> ' . esc_html($debug['cosponsored_error']) . '</p>';
+                } else {
+                    echo '<p style="color: orange;">No debug info available - this may indicate an early return in the lookup function.</p>';
+                    if ($error_msg) echo '<p><strong>Error:</strong> ' . esc_html($error_msg) . '</p>';
+                }
+                echo '</div></details>';
+
+                if (empty($bills_by_issue)) {
+                    echo '<p>No matching bills found.</p>';
+                    if ($total_bills == 0 && !$error_msg) {
+                        echo '<p style="color: #666;">The Congress.gov API returned no bills. This could be a temporary API issue - please try again.</p>';
+                    } elseif ($total_bills > 0) {
+                        echo '<p style="color: #666;">Bills were fetched (' . $total_bills . '), but none matched the issue keywords. Check keywords in VC Keywords.</p>';
+                    }
+                } else {
+                    // Accordion styles
+                    echo '<style>
+                        .vc-accordion { border: 1px solid #c3c4c7; border-radius: 4px; margin-bottom: 10px; }
+                        .vc-accordion summary { padding: 12px 15px; cursor: pointer; background: #f6f7f7; font-weight: 600; }
+                        .vc-accordion summary:hover { background: #f0f0f1; }
+                        .vc-accordion[open] summary { border-bottom: 1px solid #c3c4c7; }
+                        .vc-accordion .acc-content { padding: 15px; background: #fff; }
+                        .vc-accordion .bill-count { float: right; font-weight: normal; color: #666; }
+                        .excluded-row { background: #fcf0f0 !important; }
+                        .excluded-row td { color: #999; }
+                    </style>';
+
+                    foreach ($keywords as $issue_id => $issue_data) {
+                        $issue_bills = isset($bills_by_issue[$issue_id]) ? $bills_by_issue[$issue_id] : array();
+                        $issue_excluded = isset($legislator_excluded[$issue_id]) ? $legislator_excluded[$issue_id] : array();
+                        $active_count = 0;
+                        foreach ($issue_bills as $b) {
+                            if (!in_array($b['billNumber'], $issue_excluded)) $active_count++;
+                        }
+                        $excluded_count = count($issue_excluded);
+
+                        echo '<details class="vc-accordion"' . ($active_count > 0 ? ' open' : '') . '>';
+                        echo '<summary>' . esc_html($issue_data['title']);
+                        echo '<span class="bill-count">' . $active_count . ' active' . ($excluded_count > 0 ? ', ' . $excluded_count . ' excluded' : '') . '</span>';
+                        echo '</summary>';
+                        echo '<div class="acc-content">';
+
+                        if (empty($issue_bills) && empty($issue_excluded)) {
+                            echo '<p style="color: #666; font-style: italic;">No bills matched for this issue.</p>';
+                        } else {
+                            echo '<table class="wp-list-table widefat fixed striped">';
+                            echo '<thead><tr><th style="width:100px;">Bill</th><th>Title</th><th style="width:80px;">Type</th><th style="width:100px;">Action</th></tr></thead>';
+                            echo '<tbody>';
+
+                            // Show active bills
+                            foreach ($issue_bills as $bill) {
+                                $is_excluded = in_array($bill['billNumber'], $issue_excluded);
+                                if ($is_excluded) continue; // Show excluded separately
+
+                                $bill_url = !empty($bill['url']) ? $bill['url'] : '#';
+                                echo '<tr>';
+                                echo '<td><a href="' . esc_url($bill_url) . '" target="_blank">' . esc_html($bill['billNumber']) . '</a></td>';
+                                echo '<td>' . esc_html(substr($bill['title'], 0, 100)) . (strlen($bill['title']) > 100 ? '...' : '') . '</td>';
+                                echo '<td>' . esc_html($bill['sponsorshipType']) . '</td>';
+                                echo '<td>';
+                                echo '<form method="post" style="display:inline;">';
+                                wp_nonce_field('votecraft_associations_nonce');
+                                echo '<input type="hidden" name="lookup_name" value="' . esc_attr($lookup_name) . '">';
+                                echo '<input type="hidden" name="lookup_state" value="' . esc_attr($lookup_state) . '">';
+                                echo '<input type="hidden" name="exc_legislator" value="' . esc_attr($legislator_display) . '">';
+                                echo '<input type="hidden" name="exc_issue" value="' . esc_attr($issue_id) . '">';
+                                echo '<input type="hidden" name="exc_bill_id" value="' . esc_attr($bill['billNumber']) . '">';
+                                echo '<input type="submit" name="votecraft_exclude_bill" class="button button-small" value="Exclude" onclick="return confirm(\'Exclude this bill from ' . esc_js($issue_data['title']) . '?\');">';
+                                echo '</form>';
+                                echo '</td>';
+                                echo '</tr>';
+                            }
+
+                            // Show excluded bills (greyed out with restore option)
+                            foreach ($issue_bills as $bill) {
+                                $is_excluded = in_array($bill['billNumber'], $issue_excluded);
+                                if (!$is_excluded) continue;
+
+                                $bill_url = !empty($bill['url']) ? $bill['url'] : '#';
+                                echo '<tr class="excluded-row">';
+                                echo '<td><del>' . esc_html($bill['billNumber']) . '</del></td>';
+                                echo '<td><del>' . esc_html(substr($bill['title'], 0, 100)) . '</del></td>';
+                                echo '<td>' . esc_html($bill['sponsorshipType']) . '</td>';
+                                echo '<td>';
+                                echo '<form method="post" style="display:inline;">';
+                                wp_nonce_field('votecraft_associations_nonce');
+                                echo '<input type="hidden" name="lookup_name" value="' . esc_attr($lookup_name) . '">';
+                                echo '<input type="hidden" name="lookup_state" value="' . esc_attr($lookup_state) . '">';
+                                echo '<input type="hidden" name="rest_legislator" value="' . esc_attr($legislator_display) . '">';
+                                echo '<input type="hidden" name="rest_issue" value="' . esc_attr($issue_id) . '">';
+                                echo '<input type="hidden" name="rest_bill_id" value="' . esc_attr($bill['billNumber']) . '">';
+                                echo '<input type="submit" name="votecraft_restore_bill" class="button button-small" value="Restore">';
+                                echo '</form>';
+                                echo '</td>';
+                                echo '</tr>';
+                            }
+
+                            // Show excluded bills that aren't in current results (from previous lookups)
+                            foreach ($issue_excluded as $exc_bill_id) {
+                                $found_in_current = false;
+                                foreach ($issue_bills as $b) {
+                                    if ($b['billNumber'] === $exc_bill_id) { $found_in_current = true; break; }
+                                }
+                                if (!$found_in_current) {
+                                    echo '<tr class="excluded-row">';
+                                    echo '<td><del>' . esc_html($exc_bill_id) . '</del></td>';
+                                    echo '<td><em style="color:#999;">Previously excluded</em></td>';
+                                    echo '<td>-</td>';
+                                    echo '<td>';
+                                    echo '<form method="post" style="display:inline;">';
+                                    wp_nonce_field('votecraft_associations_nonce');
+                                    echo '<input type="hidden" name="lookup_name" value="' . esc_attr($lookup_name) . '">';
+                                echo '<input type="hidden" name="lookup_state" value="' . esc_attr($lookup_state) . '">';
+                                    echo '<input type="hidden" name="rest_legislator" value="' . esc_attr($legislator_display) . '">';
+                                    echo '<input type="hidden" name="rest_issue" value="' . esc_attr($issue_id) . '">';
+                                    echo '<input type="hidden" name="rest_bill_id" value="' . esc_attr($exc_bill_id) . '">';
+                                    echo '<input type="submit" name="votecraft_restore_bill" class="button button-small" value="Restore">';
+                                    echo '</form>';
+                                    echo '</td>';
+                                    echo '</tr>';
+                                }
+                            }
+
+                            echo '</tbody></table>';
+                        }
+                        echo '</div></details>';
+                    }
+                }
+                echo '</div>';
+            } else {
+                echo '<div class="notice notice-warning"><p>Please enter a legislator name.</p></div>';
+            }
+        }
+        ?>
+
+        <hr>
+
+        <h2>Current Associations</h2>
+        <?php if (empty($associations)): ?>
+            <p>No bill associations have been added yet.</p>
+        <?php else: ?>
+            <table class="wp-list-table widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th>Legislator</th>
+                        <th>Issue</th>
+                        <th>Bill ID</th>
+                        <th>Bill Title</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($associations as $legislator => $issues): ?>
+                        <?php foreach ($issues as $issue_id => $bills): ?>
+                            <?php foreach ($bills as $index => $bill): ?>
+                            <tr>
+                                <td><?php echo esc_html($legislator); ?></td>
+                                <td><?php echo esc_html($keywords[$issue_id]['title'] ?? $issue_id); ?></td>
+                                <td>
+                                    <?php if (!empty($bill['url'])): ?>
+                                        <a href="<?php echo esc_url($bill['url']); ?>" target="_blank"><?php echo esc_html($bill['id']); ?></a>
+                                    <?php else: ?>
+                                        <?php echo esc_html($bill['id']); ?>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?php echo esc_html($bill['title'] ?: '-'); ?></td>
+                                <td>
+                                    <form method="post" action="" style="display:inline;">
+                                        <?php wp_nonce_field('votecraft_associations_nonce'); ?>
+                                        <input type="hidden" name="delete_legislator" value="<?php echo esc_attr($legislator); ?>">
+                                        <input type="hidden" name="delete_issue" value="<?php echo esc_attr($issue_id); ?>">
+                                        <input type="hidden" name="delete_index" value="<?php echo esc_attr($index); ?>">
+                                        <input type="submit" name="votecraft_delete_association" class="button button-small" value="Remove"
+                                               onclick="return confirm('Remove this association?');">
+                                    </form>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        <?php endforeach; ?>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+
+        <hr>
+
+        <h2>Add Manual Association</h2>
+        <p>Manually associate specific bills with legislators. These associations will appear regardless of keyword matching.</p>
+        <form method="post" action="">
+            <?php wp_nonce_field('votecraft_associations_nonce'); ?>
+
+            <table class="form-table" role="presentation">
+                <tr>
+                    <th scope="row"><label for="legislator_name">Name *</label></th>
+                    <td>
+                        <input type="text" name="legislator_name" id="legislator_name" class="regular-text" required
+                               placeholder="e.g., Elizabeth Warren"
+                               value="<?php echo esc_attr($looked_up_legislator); ?>">
+                        <p class="description">Enter the legislator's name exactly as it appears in the app (e.g., "Elizabeth Warren")</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="issue_id">Issue *</label></th>
+                    <td>
+                        <select name="issue_id" id="issue_id" required>
+                            <option value="">Select an issue...</option>
+                            <?php foreach ($keywords as $id => $data): ?>
+                            <option value="<?php echo esc_attr($id); ?>"><?php echo esc_html($data['title']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="bill_id">Bill ID *</label></th>
+                    <td>
+                        <input type="text" name="bill_id" id="bill_id" class="regular-text" required
+                               placeholder="e.g., S 5048 or HR 1">
+                        <p class="description">The bill identifier (e.g., "S 5048", "HR 1", "H.R. 8873")</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="bill_title">Bill Title</label></th>
+                    <td>
+                        <input type="text" name="bill_title" id="bill_title" class="large-text"
+                               placeholder="e.g., Ranked Choice Voting Act">
+                        <p class="description">Optional: The full title of the bill</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="bill_url">Bill URL</label></th>
+                    <td>
+                        <input type="url" name="bill_url" id="bill_url" class="large-text"
+                               placeholder="e.g., https://www.congress.gov/bill/118th-congress/senate-bill/5048">
+                        <p class="description">Optional: Link to the bill on Congress.gov or state legislature</p>
+                    </td>
+                </tr>
+            </table>
+
+            <p class="submit">
+                <input type="submit" name="votecraft_add_association" class="button button-primary" value="Add Association">
+            </p>
+        </form>
+
+        <hr>
+
+        <h2>How It Works</h2>
+        <ul>
+            <li>Manual associations are <strong>in addition to</strong> keyword-matched bills</li>
+            <li>Use this to ensure specific legislators show up for specific issues</li>
+            <li>Example: Add Elizabeth Warren + "Rank Choice Voting" + "S 5048" to ensure she appears for RCV</li>
+            <li>The legislator name must match exactly how it appears in the app</li>
+        </ul>
+
+        <h2>API Endpoint</h2>
+        <p>Associations are served via: <code><?php echo esc_url(rest_url('votecraft/v1/bill-associations')); ?></code></p>
+    </div>
+    <?php
+}
+
+/**
+ * Look up bills from Congress.gov for a legislator and match against issue keywords
+ */
+function votecraft_lookup_congress_bills($name, $issue_id, $keywords) {
+    // Use the internal REST API proxy to fetch bills (same as frontend)
+    $request = new WP_REST_Request('GET', '/votecraft/v1/congress');
+    $request->set_param('endpoint', 'member/bills');
+    $request->set_param('name', $name);
+    $request->set_param('limit', '250');
+
+    $response = rest_do_request($request);
+    $data = $response->get_data();
+
+    if ($response->is_error() || empty($data['bills'])) {
+        return array();
+    }
+
+    $allBills = $data['bills'];
+
+    // Now match bills against issue keywords
+    $matchedBills = array();
+
+    // Determine which issues to check
+    $issuesToCheck = array();
+    if ($issue_id && isset($keywords[$issue_id])) {
+        $issuesToCheck[$issue_id] = $keywords[$issue_id];
+    } else {
+        $issuesToCheck = $keywords;
+    }
+
+    foreach ($allBills as $bill) {
+        $title = strtolower($bill['title'] ?? '');
+        // Handle policyArea - could be string or object
+        $policyArea = '';
+        if (isset($bill['policyArea'])) {
+            if (is_array($bill['policyArea']) && isset($bill['policyArea']['name'])) {
+                $policyArea = strtolower($bill['policyArea']['name']);
+            } elseif (is_string($bill['policyArea'])) {
+                $policyArea = strtolower($bill['policyArea']);
+            }
+        }
+
+        foreach ($issuesToCheck as $issueKey => $issueData) {
+            $issueKeywords = $issueData['keywords'];
+            foreach ($issueKeywords as $keyword) {
+                $keywordLower = strtolower($keyword);
+                if (strpos($title, $keywordLower) !== false || strpos($policyArea, $keywordLower) !== false) {
+                    $billNumber = $bill['billNumber'] ?? (($bill['type'] ?? '') . ' ' . ($bill['number'] ?? ''));
+                    $matchedBills[] = array(
+                        'billNumber' => $billNumber,
+                        'title' => $bill['title'] ?? '',
+                        'url' => $bill['url'] ?? '',
+                        'matchedIssue' => $issueData['title'],
+                        'matchedKeyword' => $keyword,
+                        'sponsorshipType' => $bill['sponsorshipType'] ?? 'sponsor'
+                    );
+                    break 2; // Only count each bill once
+                }
+            }
+        }
+    }
+
+    return $matchedBills;
+}
+
+/**
+ * Look up bills from Congress.gov organized by issue (for accordion display)
+ * @param string $name - Legislator name to search for
+ * @param array $keywords - Keywords array organized by issue
+ * @param string $state - Optional state code (e.g., 'MA') to filter results
+ */
+function votecraft_lookup_congress_bills_by_issue($name, $keywords, $state = '') {
+    // Use the internal REST API proxy to fetch bills (same as frontend)
+    // This ensures caching works and we use the same data source
+    $request = new WP_REST_Request('GET', '/votecraft/v1/congress');
+    $request->set_param('endpoint', 'member/bills');
+    $request->set_param('name', $name);
+    $request->set_param('limit', '250');
+    if (!empty($state)) {
+        $request->set_param('state', $state);
+    }
+
+    $response = rest_do_request($request);
+    $data = $response->get_data();
+
+    // Check for errors
+    if ($response->is_error()) {
+        $error = $response->as_error();
+        return array('legislator_name' => $name, 'by_issue' => array(), 'total_bills' => 0, 'error' => $error->get_error_message());
+    }
+
+    // Get bills from response
+    $allBills = isset($data['bills']) ? $data['bills'] : array();
+    $member = isset($data['member']) ? $data['member'] : null;
+
+    // Determine legislator name
+    $legislatorName = $name;
+    if ($member && isset($member['name'])) {
+        $legislatorName = $member['name'];
+        // Normalize name to "First Last" format
+        if (strpos($legislatorName, ',') !== false) {
+            $parts = explode(',', $legislatorName);
+            $legislatorName = trim($parts[1]) . ' ' . trim($parts[0]);
+        }
+    }
+
+    if (empty($allBills)) {
+        $debugMsg = 'No bills found';
+        if (empty($member)) {
+            $debugMsg = 'No member found matching "' . $name . '"';
+            if (!empty($state)) {
+                $debugMsg .= ' in state ' . $state;
+            }
+        }
+        return array('legislator_name' => $legislatorName, 'by_issue' => array(), 'total_bills' => 0, 'error' => $debugMsg);
+    }
+
+    // Organize bills by issue
+    $billsByIssue = array();
+
+    foreach ($allBills as $bill) {
+        $title = strtolower($bill['title'] ?? '');
+        // Handle policyArea - could be string or object
+        $policyArea = '';
+        if (isset($bill['policyArea'])) {
+            if (is_array($bill['policyArea']) && isset($bill['policyArea']['name'])) {
+                $policyArea = strtolower($bill['policyArea']['name']);
+            } elseif (is_string($bill['policyArea'])) {
+                $policyArea = strtolower($bill['policyArea']);
+            }
+        }
+
+        foreach ($keywords as $issueKey => $issueData) {
+            $issueKeywords = $issueData['keywords'];
+            foreach ($issueKeywords as $keyword) {
+                $keywordLower = strtolower($keyword);
+                if (strpos($title, $keywordLower) !== false || strpos($policyArea, $keywordLower) !== false) {
+                    if (!isset($billsByIssue[$issueKey])) {
+                        $billsByIssue[$issueKey] = array();
+                    }
+                    // Use billNumber from proxy response, or construct from type+number
+                    $billNumber = $bill['billNumber'] ?? (($bill['type'] ?? '') . ' ' . ($bill['number'] ?? ''));
+                    $billsByIssue[$issueKey][] = array(
+                        'billNumber' => $billNumber,
+                        'title' => $bill['title'] ?? '',
+                        'url' => $bill['url'] ?? '',
+                        'matchedKeyword' => $keyword,
+                        'sponsorshipType' => $bill['sponsorshipType'] ?? 'sponsor'
+                    );
+                    break; // Only add to this issue once, but continue to other issues
+                }
+            }
+        }
+    }
+
+    return array(
+        'legislator_name' => $legislatorName,
+        'by_issue' => $billsByIssue,
+        'total_bills' => count($allBills)
+    );
+}
+
+/**
+ * Get excluded bills
+ */
+function votecraft_get_excluded_bills() {
+    $saved = get_option('votecraft_excluded_bills');
+    if ($saved && is_array($saved)) {
+        return $saved;
+    }
+    return array();
+}
+
+// =============================================================================
+// CONGRESS.GOV SYNC FUNCTIONS
+// =============================================================================
+
+/**
+ * Sync Congress members from Congress.gov API in batches
+ * Fetches current members of both chambers and caches them locally
+ * Uses progress tracking to allow resuming and prevent timeouts
+ */
+function votecraft_sync_congress_members($batch_size = 50) {
+    global $wpdb;
+
+    // Check if we're rate limited
+    if (votecraft_is_congress_rate_limited()) {
+        return array(
+            'synced' => 0,
+            'errors' => array('⚠️ RATE LIMIT - Congress.gov rate limit hit. Waiting 1 hour before retrying.'),
+            'progress' => get_option('votecraft_congress_sync_progress', array())
+        );
+    }
+
+    $apiKey = 'RxFNqgFXr8fBLvPMkWdSzyTFDRA9L4ncBpAHuWXy';
+    $baseUrl = 'https://api.congress.gov/v3';
+
+    // Get current progress
+    $progress = get_option('votecraft_congress_sync_progress', array(
+        'chamber' => 'senate',  // 'senate' or 'house'
+        'offset' => 0,
+        'total_synced' => 0,
+        'completed' => false,
+        'last_run' => null
+    ));
+
+    // If completed, reset for new sync
+    if ($progress['completed']) {
+        $progress = array(
+            'chamber' => 'senate',
+            'offset' => 0,
+            'total_synced' => 0,
+            'completed' => false,
+            'last_run' => null
+        );
+    }
+
+    $synced = 0;
+    $errors = array();
+    $chamber = $progress['chamber'];
+    $offset = $progress['offset'];
+    $table = $wpdb->prefix . 'votecraft_legislators';
+
+    // Fetch one batch
+    $url = $baseUrl . '/member?api_key=' . $apiKey . '&format=json&limit=' . $batch_size . '&offset=' . $offset;
+    $url .= '&chamber=' . $chamber . '&currentMember=true';
+
+    $response = wp_remote_get($url, array('timeout' => 30));
+
+    if (is_wp_error($response)) {
+        $errors[] = ucfirst($chamber) . ': ' . $response->get_error_message();
+    } else {
+        $status_code = wp_remote_retrieve_response_code($response);
+        $raw_body = wp_remote_retrieve_body($response);
+
+        // Check for rate limiting
+        if (votecraft_parse_congress_rate_limit($raw_body, $status_code)) {
+            votecraft_set_congress_rate_limited();
+            return array(
+                'synced' => 0,
+                'errors' => array('⚠️ RATE LIMIT HIT - Congress.gov rate limit exceeded. Waiting 1 hour.'),
+                'progress' => $progress
+            );
+        }
+
+        $body = json_decode($raw_body, true);
+        $members = isset($body['members']) ? $body['members'] : array();
+
+        foreach ($members as $member) {
+            $bioguideId = $member['bioguideId'] ?? '';
+            $name = $member['name'] ?? '';
+            $state = $member['state'] ?? '';
+            $party = $member['partyName'] ?? '';
+            $district = $member['district'] ?? null;
+
+            // Normalize name to "First Last" format
+            if (strpos($name, ',') !== false) {
+                $parts = explode(',', $name);
+                $name = trim($parts[1]) . ' ' . trim($parts[0]);
+            }
+
+            $office = ($chamber === 'senate') ? 'U.S. Senator' : 'U.S. Representative';
+
+            // Upsert into legislators table
+            $existing = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM $table WHERE openstates_id = %s",
+                'congress-' . $bioguideId
+            ));
+
+            $data = array(
+                'openstates_id' => 'congress-' . $bioguideId,
+                'name' => $name,
+                'party' => $party,
+                'state' => $state,
+                'district' => $district,
+                'office' => $office,
+                'level' => 'congress',
+                'photo_url' => $member['depiction']['imageUrl'] ?? null,
+                'updated_at' => current_time('mysql')
+            );
+
+            if ($existing) {
+                $wpdb->update($table, $data, array('id' => $existing));
+            } else {
+                $data['created_at'] = current_time('mysql');
+                $wpdb->insert($table, $data);
+            }
+
+            $synced++;
+        }
+
+        // Update progress
+        if (count($members) < $batch_size) {
+            // This chamber is done, move to next or complete
+            if ($chamber === 'senate') {
+                $progress['chamber'] = 'house';
+                $progress['offset'] = 0;
+            } else {
+                $progress['completed'] = true;
+            }
+        } else {
+            $progress['offset'] = $offset + $batch_size;
+        }
+    }
+
+    $progress['total_synced'] += $synced;
+    $progress['last_run'] = current_time('mysql');
+    update_option('votecraft_congress_sync_progress', $progress);
+
+    // Log the sync
+    $log_table = $wpdb->prefix . 'votecraft_sync_log';
+    $wpdb->insert($log_table, array(
+        'sync_type' => 'congress_batch',
+        'state' => 'Federal (' . ucfirst($chamber) . ')',
+        'status' => empty($errors) ? 'success' : 'error',
+        'records_synced' => $synced,
+        'error_message' => empty($errors) ? 'Offset: ' . $offset : implode('; ', $errors),
+        'started_at' => current_time('mysql')
+    ));
+
+    if (!empty($errors)) {
+        return array(
+            'success' => false,
+            'message' => 'Batch error: ' . implode('; ', $errors),
+            'progress' => $progress
+        );
+    }
+
+    if ($progress['completed']) {
+        return array(
+            'success' => true,
+            'message' => 'Sync complete! Total: ' . $progress['total_synced'] . ' Congress members synced.',
+            'progress' => $progress
+        );
+    }
+
+    return array(
+        'success' => true,
+        'message' => 'Batch synced ' . $synced . ' ' . ucfirst($chamber) . ' members. Total so far: ' . $progress['total_synced'] . '. Click again to continue.',
+        'progress' => $progress
+    );
+}
+
+/**
+ * Reset Congress sync progress
+ */
+function votecraft_reset_congress_sync_progress() {
+    delete_option('votecraft_congress_sync_progress');
+    return array(
+        'success' => true,
+        'message' => 'Congress sync progress reset. Ready to start fresh.'
+    );
+}
+
+/**
+ * Sync issue-related bills for Congress members
+ * Fetches bills for each Congress member and filters by issue keywords
+ */
+function votecraft_sync_congress_issue_bills($batch_size = 50) {
+    global $wpdb;
+
+    // Check if we're rate limited
+    if (votecraft_is_congress_rate_limited()) {
+        return array(
+            'success' => false,
+            'message' => '⚠️ RATE LIMIT - Congress.gov rate limit hit. Waiting 1 hour before retrying.',
+            'progress' => get_option('votecraft_congress_bills_sync_progress', array())
+        );
+    }
+
+    $table = $wpdb->prefix . 'votecraft_legislators';
+    $bills_table = $wpdb->prefix . 'votecraft_bills';
+
+    // Get progress
+    $progress = get_option('votecraft_congress_bills_sync_progress', array(
+        'offset' => 0,
+        'total_synced' => 0,
+        'bills_found' => 0,
+        'completed' => false,
+        'last_run' => null
+    ));
+
+    // Reset if completed
+    if ($progress['completed']) {
+        $progress = array(
+            'offset' => 0,
+            'total_synced' => 0,
+            'bills_found' => 0,
+            'completed' => false,
+            'last_run' => null
+        );
+    }
+
+    // Get batch of Congress members
+    $members = $wpdb->get_results($wpdb->prepare(
+        "SELECT * FROM $table WHERE level = 'congress' ORDER BY name LIMIT %d OFFSET %d",
+        $batch_size,
+        $progress['offset']
+    ));
+
+    if (empty($members)) {
+        $progress['completed'] = true;
+        $progress['last_run'] = current_time('mysql');
+        update_option('votecraft_congress_bills_sync_progress', $progress);
+        return array(
+            'success' => true,
+            'message' => 'Sync complete! Processed ' . $progress['total_synced'] . ' members, found ' . $progress['bills_found'] . ' issue-related bills.',
+            'progress' => $progress
+        );
+    }
+
+    // Get issue keywords from ISSUES_CATALOG equivalent
+    $issues = votecraft_get_issues_catalog();
+    $synced = 0;
+    $bills_found = 0;
+
+    foreach ($members as $member) {
+        // Lookup bills for this member using internal REST API
+        foreach ($issues as $issue) {
+            $result = votecraft_lookup_congress_bills_by_issue($member->name, $issue['billKeywords'], $member->state);
+
+            if ($result['success'] && !empty($result['bills'])) {
+                foreach ($result['bills'] as $bill) {
+                    // Store bill in database
+                    $bill_id = $bill['billNumber'] ?? $bill['identifier'] ?? '';
+                    if (empty($bill_id)) continue;
+
+                    $existing = $wpdb->get_var($wpdb->prepare(
+                        "SELECT id FROM $bills_table WHERE bill_id = %s AND legislator_name = %s AND issue_id = %s",
+                        $bill_id, $member->name, $issue['id']
+                    ));
+
+                    $data = array(
+                        'bill_id' => $bill_id,
+                        'title' => $bill['title'] ?? '',
+                        'state' => 'Federal',
+                        'legislator_name' => $member->name,
+                        'issue_id' => $issue['id'],
+                        'url' => $bill['url'] ?? '',
+                        'updated_at' => current_time('mysql')
+                    );
+
+                    if ($existing) {
+                        $wpdb->update($bills_table, $data, array('id' => $existing));
+                    } else {
+                        $data['created_at'] = current_time('mysql');
+                        $wpdb->insert($bills_table, $data);
+                        $bills_found++;
+                    }
+                }
+            }
+        }
+        $synced++;
+    }
+
+    // Update progress
+    $progress['offset'] += count($members);
+    $progress['total_synced'] += $synced;
+    $progress['bills_found'] += $bills_found;
+    $progress['last_run'] = current_time('mysql');
+
+    if (count($members) < $batch_size) {
+        $progress['completed'] = true;
+    }
+
+    update_option('votecraft_congress_bills_sync_progress', $progress);
+
+    // Log the sync
+    $log_table = $wpdb->prefix . 'votecraft_sync_log';
+    $wpdb->insert($log_table, array(
+        'sync_type' => 'congress_bills_batch',
+        'state' => 'Federal',
+        'status' => 'success',
+        'records_synced' => $bills_found,
+        'error_message' => 'Members: ' . $synced . ', Bills: ' . $bills_found,
+        'started_at' => current_time('mysql')
+    ));
+
+    if ($progress['completed']) {
+        return array(
+            'success' => true,
+            'message' => 'Sync complete! Processed ' . $progress['total_synced'] . ' members, found ' . $progress['bills_found'] . ' issue-related bills.',
+            'progress' => $progress
+        );
+    }
+
+    return array(
+        'success' => true,
+        'message' => 'Batch processed ' . $synced . ' members (' . $bills_found . ' bills). Total so far: ' . $progress['total_synced'] . ' members. Click again to continue.',
+        'progress' => $progress
+    );
+}
+
+/**
+ * Get issues catalog with keywords
+ */
+function votecraft_get_issues_catalog() {
+    return array(
+        array(
+            'id' => 'rcv',
+            'billKeywords' => array('ranked choice', 'ranked-choice', 'instant runoff', 'preferential voting', 'alternative voting', 'final five voting', 'rank the vote', 'voting method', 'voting system reform')
+        ),
+        array(
+            'id' => 'debt-profiteering',
+            'billKeywords' => array('public debt', 'predatory lending', 'student debt', 'student loan', 'debt relief', 'debt collection', 'payday loan', 'loan forgiveness', 'borrower', 'consumer financial')
+        ),
+        array(
+            'id' => 'citizens-united',
+            'billKeywords' => array('citizens united', 'campaign finance', 'dark money', 'super pac', 'political action committee', 'corporate political', 'campaign spending', 'political contribution', 'money in politics', 'disclose act', 'for the people act', 'freedom to vote', 'democracy for all', 'honest ads', 'foreign money', 'election integrity', 'voter disclosure', 'political spending', 'corporate money')
+        ),
+        array(
+            'id' => 'healthcare',
+            'billKeywords' => array('universal health', 'medicare for all', 'public option', 'medicaid expansion', 'single payer', 'affordable care', 'healthcare for all', 'drug pricing', 'prescription drug', 'health care coverage', 'health insurance')
+        ),
+        array(
+            'id' => 'scotus',
+            'billKeywords' => array('supreme court', 'judicial term limits', 'court expansion', 'judicial ethics', 'court reform', 'judicial accountability', 'scotus', 'justice term limit')
+        ),
+        array(
+            'id' => 'news-paywalls',
+            'billKeywords' => array('local journalism', 'journalism funding', 'local news', 'news deserts', 'journalism tax credit', 'community news', 'newsroom', 'journalism preservation')
+        )
+    );
+}
+
+/**
+ * Refresh cache for a specific Congress member
+ */
+function votecraft_refresh_congress_member_cache($member_name) {
+    global $wpdb;
+
+    $cache_table = $wpdb->prefix . 'votecraft_cache';
+
+    // Delete any cache entries for this member
+    $deleted = $wpdb->query($wpdb->prepare(
+        "DELETE FROM $cache_table WHERE (endpoint = 'congress' OR cache_key LIKE 'congress_%')
+         AND cache_key LIKE %s",
+        '%' . $wpdb->esc_like($member_name) . '%'
+    ));
+
+    if ($deleted === false) {
+        return array(
+            'success' => false,
+            'message' => 'Database error clearing cache for "' . $member_name . '".'
+        );
+    }
+
+    if ($deleted === 0) {
+        // No cached entries found - try to fetch fresh data
+        $request = new WP_REST_Request('GET', '/votecraft/v1/congress');
+        $request->set_param('endpoint', 'member/bills');
+        $request->set_param('name', $member_name);
+        $request->set_param('limit', '250');
+        $request->set_param('nocache', '1');
+
+        $response = rest_do_request($request);
+        $data = $response->get_data();
+
+        if ($response->is_error()) {
+            return array(
+                'success' => false,
+                'message' => 'Error fetching fresh data for "' . $member_name . '": ' . $response->as_error()->get_error_message()
+            );
+        }
+
+        $bill_count = isset($data['bills']) ? count($data['bills']) : 0;
+        return array(
+            'success' => true,
+            'message' => 'Fetched fresh data for "' . $member_name . '": ' . $bill_count . ' bills found and cached.'
+        );
+    }
+
+    return array(
+        'success' => true,
+        'message' => 'Cleared ' . $deleted . ' cache entries for "' . $member_name . '". Fresh data will be fetched on next request.'
+    );
+}
+
+// =============================================================================
+// REST API ENDPOINTS FOR KEYWORDS AND BILL ASSOCIATIONS
+// =============================================================================
+
+add_action('rest_api_init', 'votecraft_register_rest_endpoints');
+function votecraft_register_rest_endpoints() {
+    // Keywords endpoint
+    register_rest_route('votecraft/v1', '/keywords', array(
+        'methods' => 'GET',
+        'callback' => 'votecraft_get_keywords_api',
+        'permission_callback' => '__return_true',
+    ));
+
+    // Bill associations endpoint
+    register_rest_route('votecraft/v1', '/bill-associations', array(
+        'methods' => 'GET',
+        'callback' => 'votecraft_get_bill_associations_api',
+        'permission_callback' => '__return_true',
+    ));
+
+    // Excluded bills endpoint
+    register_rest_route('votecraft/v1', '/excluded-bills', array(
+        'methods' => 'GET',
+        'callback' => 'votecraft_get_excluded_bills_api',
+        'permission_callback' => '__return_true',
+    ));
+}
+
+function votecraft_get_keywords_api($request) {
+    $keywords = votecraft_get_keywords();
+
+    // Transform to match frontend format
+    $result = array();
+    foreach ($keywords as $issue_id => $issue_data) {
+        $result[$issue_id] = $issue_data['keywords'];
+    }
+
+    return new WP_REST_Response($result, 200);
+}
+
+function votecraft_get_bill_associations_api($request) {
+    return new WP_REST_Response(votecraft_get_bill_associations(), 200);
+}
+
+function votecraft_get_excluded_bills_api($request) {
+    return new WP_REST_Response(votecraft_get_excluded_bills(), 200);
 }

@@ -1197,6 +1197,16 @@ body {
     margin-bottom: 4px;
 }
 
+.rep-card-name-link {
+    color: #3b82f6;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.rep-card-name-link:hover {
+    color: #2563eb;
+}
+
 .rep-card-subtitle {
     font-size: 0.82rem;
     font-weight: 400;

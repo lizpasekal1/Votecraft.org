@@ -14,7 +14,7 @@ const ISSUES_CATALOG = [
         description: 'Ranked Choice Voting lets voters rank candidates by preference, ensuring winners have broad support while reducing vote-splitting and negative campaigning. If no candidate wins a majority, the lowest-ranked is eliminated and those votes transfer until someone earns a majority.',
         heroImage: 'https://votecraft.org/wp-content/uploads/2025/06/rank-the-vote.jpg',
         learnMoreUrl: 'https://votecraft.org/solutions/rank-choice-voting/',
-        billKeywords: ['ranked choice voting', 'instant runoff', 'preferential voting'],
+        billKeywords: ['ranked choice', 'ranked-choice', 'instant runoff', 'preferential voting', 'alternative voting', 'final five voting', 'rank the vote', 'voting method', 'voting system reform'],
         nonprofits: [
             {
                 name: 'FairVote',
@@ -43,7 +43,7 @@ const ISSUES_CATALOG = [
         description: 'Public debt profiteering occurs when financial institutions exploit government borrowing for outsized profits at taxpayer expense, including predatory lending and student loan abuses. Reform efforts aim to increase transparency, cap interest rates, and protect consumers.',
         heroImage: 'https://votecraft.org/wp-content/uploads/2026/02/end_public-debt-profiteering_feature.jpg',
         learnMoreUrl: 'https://votecraft.org/solutions/debt-profiteering/',
-        billKeywords: ['public debt', 'predatory lending', 'student debt relief', 'debt transparency'],
+        billKeywords: ['public debt', 'predatory lending', 'student debt', 'student loan', 'debt relief', 'debt collection', 'payday loan', 'loan forgiveness', 'borrower', 'consumer financial'],
         nonprofits: [
             {
                 name: 'Americans for Financial Reform',
@@ -72,7 +72,7 @@ const ISSUES_CATALOG = [
         description: 'The Citizens United v. FEC decision opened the floodgates for unlimited corporate spending in elections through super PACs and dark money. Reform efforts seek to overturn this through constitutional amendments, disclosure requirements, and public campaign financing.',
         heroImage: 'https://votecraft.org/wp-content/uploads/2025/06/Citizens-united.jpg',
         learnMoreUrl: 'https://votecraft.org/solutions/end-dark-money/',
-        billKeywords: ['citizens united', 'campaign finance reform', 'dark money', 'political spending disclosure'],
+        billKeywords: ['citizens united', 'campaign finance', 'dark money', 'super pac', 'political action committee', 'corporate political', 'campaign spending', 'political contribution', 'money in politics', 'disclose act', 'for the people act', 'freedom to vote', 'democracy for all', 'honest ads', 'foreign money', 'election integrity', 'voter disclosure', 'political spending', 'corporate money'],
         nonprofits: [
             {
                 name: 'End Citizens United',
@@ -101,7 +101,7 @@ const ISSUES_CATALOG = [
         description: 'Universal basic healthcare ensures every person has access to essential medical services regardless of income or pre-existing conditions. Proposals range from Medicare for All to public option plans, treating healthcare as a right while controlling costs.',
         heroImage: 'https://votecraft.org/wp-content/uploads/2025/06/healthcare1.jpg',
         learnMoreUrl: 'https://votecraft.org/solutions/universal-basic-healthcare/',
-        billKeywords: ['universal healthcare', 'medicare for all', 'public option', 'health coverage expansion'],
+        billKeywords: ['universal health', 'medicare for all', 'public option', 'medicaid expansion', 'single payer', 'affordable care', 'healthcare for all', 'drug pricing', 'prescription drug', 'health care coverage', 'health insurance'],
         nonprofits: [
             {
                 name: 'Physicians for a National Health Program',
@@ -130,7 +130,7 @@ const ISSUES_CATALOG = [
         description: 'Supreme Court reform proposals aim to restore public trust through term limits for justices, expanding the number of seats, binding ethics codes, and increased transparency. These reforms seek to depoliticize the court and ensure it reflects the will of the people.',
         heroImage: 'https://votecraft.org/wp-content/uploads/2025/06/supreme-court2.jpg',
         learnMoreUrl: 'https://votecraft.org/solutions/supreme-court-reform/',
-        billKeywords: ['supreme court reform', 'judicial term limits', 'court expansion', 'judicial ethics'],
+        billKeywords: ['supreme court', 'judicial term limits', 'court expansion', 'judicial ethics', 'court reform', 'judicial accountability', 'scotus', 'justice term limit'],
         nonprofits: [
             {
                 name: 'Fix the Court',
@@ -159,7 +159,7 @@ const ISSUES_CATALOG = [
         description: 'News paywalls have created an information divide where access to quality journalism depends on ability to pay. Reform proposals include public funding for local journalism, tax incentives for free civic reporting, and cooperative ownership models.',
         heroImage: 'https://votecraft.org/wp-content/uploads/2026/02/news_paywall_reform_feature.jpg',
         learnMoreUrl: 'https://votecraft.org/solutions/news-paywall-reform/',
-        billKeywords: ['local journalism', 'news access', 'press freedom', 'journalism funding'],
+        billKeywords: ['local journalism', 'journalism funding', 'local news', 'news deserts', 'journalism tax credit', 'community news', 'newsroom', 'journalism preservation'],
         nonprofits: [
             {
                 name: 'Free Press',
@@ -184,3 +184,77 @@ const ISSUES_CATALOG = [
 ];
 
 window.ISSUES_CATALOG = ISSUES_CATALOG;
+
+/**
+ * Fetch keywords from WordPress admin dashboard (if available)
+ * Falls back to static keywords if API is unavailable
+ */
+async function loadKeywordsFromAPI() {
+    try {
+        const response = await fetch('https://votecraft.org/wp-json/votecraft/v1/keywords');
+        if (!response.ok) {
+            console.log('Keywords API not available, using static keywords');
+            return;
+        }
+        const apiKeywords = await response.json();
+
+        // Merge API keywords into ISSUES_CATALOG
+        for (const issue of ISSUES_CATALOG) {
+            if (apiKeywords[issue.id] && Array.isArray(apiKeywords[issue.id])) {
+                issue.billKeywords = apiKeywords[issue.id];
+                console.log(`Updated keywords for ${issue.id}:`, issue.billKeywords.length, 'keywords');
+            }
+        }
+    } catch (error) {
+        console.log('Could not load keywords from API, using static keywords:', error.message);
+    }
+}
+
+/**
+ * Fetch manual bill-legislator associations from WordPress admin
+ * Returns an object mapping legislator names to arrays of bills they should show for each issue
+ */
+async function loadManualAssociations() {
+    try {
+        const response = await fetch('https://votecraft.org/wp-json/votecraft/v1/bill-associations');
+        if (!response.ok) {
+            return {};
+        }
+        const associations = await response.json();
+        window.MANUAL_BILL_ASSOCIATIONS = associations;
+        console.log('Loaded manual bill associations:', Object.keys(associations).length, 'legislators');
+        return associations;
+    } catch (error) {
+        console.log('Could not load manual bill associations:', error.message);
+        window.MANUAL_BILL_ASSOCIATIONS = {};
+        return {};
+    }
+}
+
+/**
+ * Fetch excluded bills from WordPress admin
+ * Returns an object mapping legislator names to issue IDs to arrays of excluded bill IDs
+ */
+async function loadExcludedBills() {
+    try {
+        const response = await fetch('https://votecraft.org/wp-json/votecraft/v1/excluded-bills');
+        if (!response.ok) {
+            return {};
+        }
+        const excluded = await response.json();
+        window.EXCLUDED_BILLS = excluded;
+        console.log('Loaded excluded bills:', Object.keys(excluded).length, 'legislators');
+        return excluded;
+    } catch (error) {
+        console.log('Could not load excluded bills:', error.message);
+        window.EXCLUDED_BILLS = {};
+        return {};
+    }
+}
+
+// Load keywords, associations, and exclusions when page loads
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadKeywordsFromAPI();
+    await loadManualAssociations();
+    await loadExcludedBills();
+});

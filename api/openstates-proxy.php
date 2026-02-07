@@ -11,6 +11,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// Note: Keywords and bill associations management is now in votecraft-data-sync.php
+
 // How long before cached data is considered stale (seconds)
 define('VOTECRAFT_CACHE_TTL_PEOPLE', 24 * HOUR_IN_SECONDS);
 define('VOTECRAFT_CACHE_TTL_PEOPLE_GEO', 12 * HOUR_IN_SECONDS);
@@ -83,6 +85,12 @@ add_action('rest_api_init', function () {
     register_rest_route('votecraft/v1', '/openstates', array(
         'methods' => 'GET',
         'callback' => 'votecraft_openstates_proxy',
+        'permission_callback' => '__return_true',
+    ));
+
+    register_rest_route('votecraft/v1', '/congress', array(
+        'methods' => 'GET',
+        'callback' => 'votecraft_congress_proxy',
         'permission_callback' => '__return_true',
     ));
 });
@@ -447,6 +455,11 @@ function votecraft_openstates_proxy($request) {
         $query .= '&include=sponsorships&include=votes';
     }
 
+    // Include links for people endpoints to get personal websites
+    if ($endpoint === 'people' || $endpoint === 'people.geo') {
+        $query .= '&include=links';
+    }
+
     $url = $baseUrl . '/' . $endpoint . '?' . $query;
 
     $api_response = wp_remote_get($url, array(
@@ -492,6 +505,243 @@ function votecraft_openstates_proxy($request) {
     }
 
     $response = new WP_REST_Response($data, $status);
+    $response->header('X-VoteCraft-Cache', 'MISS');
+    return $response;
+}
+
+/**
+ * Congress.gov API proxy handler
+ * Provides access to federal bill and member data
+ */
+function votecraft_congress_proxy($request) {
+    // Congress.gov API key
+    $apiKey = 'hAwu5fqahUrcpjdzEJpsPzMleub3epvnX64pmBNV';
+    $baseUrl = 'https://api.congress.gov/v3';
+
+    $endpoint = $request->get_param('endpoint');
+
+    $allowedEndpoints = array('bill/search', 'member/bills', 'bill', 'member');
+    if (!$endpoint || !in_array($endpoint, $allowedEndpoints)) {
+        return new WP_Error('invalid_endpoint', 'Invalid Congress.gov endpoint', array('status' => 400));
+    }
+
+    $params = $request->get_query_params();
+    unset($params['endpoint']);
+    unset($params['rest_route']);
+
+    // Check for cache bypass
+    $bypass_cache = isset($params['nocache']) && $params['nocache'] === '1';
+    unset($params['nocache']);
+    unset($params['_t']);
+
+    // Generate cache key
+    $cache_key = 'congress_' . md5($endpoint . '|' . serialize($params));
+
+    // Check cache (4 hour TTL for Congress data) - skip if bypass requested
+    $cached = votecraft_cache_get($cache_key, 4 * HOUR_IN_SECONDS);
+    if (!$bypass_cache && $cached && $cached['fresh']) {
+        $response = new WP_REST_Response($cached['data'], 200);
+        $response->header('X-VoteCraft-Cache', 'HIT');
+        return $response;
+    }
+
+    // Build API request based on endpoint type
+    $url = '';
+    $limit = isset($params['limit']) ? intval($params['limit']) : 20;
+
+    if ($endpoint === 'bill/search') {
+        // Search bills by keyword
+        $query = isset($params['query']) ? $params['query'] : '';
+        $url = $baseUrl . '/bill?api_key=' . $apiKey . '&format=json&limit=' . $limit;
+        if ($query) {
+            $url .= '&query=' . urlencode($query);
+        }
+    } elseif ($endpoint === 'member/bills') {
+        // Get bills sponsored by a member (search by name)
+        $name = isset($params['name']) ? $params['name'] : '';
+        $chamber = isset($params['chamber']) ? $params['chamber'] : '';
+
+        // First, find the member by name
+        $memberUrl = $baseUrl . '/member?api_key=' . $apiKey . '&format=json&limit=10';
+        if ($name) {
+            $memberUrl .= '&name=' . urlencode($name);
+        }
+        if ($chamber) {
+            $memberUrl .= '&chamber=' . urlencode($chamber);
+        }
+
+        $memberResponse = wp_remote_get($memberUrl, array('timeout' => 15));
+        if (is_wp_error($memberResponse)) {
+            return new WP_Error('api_error', 'Failed to search Congress members', array('status' => 502));
+        }
+
+        $memberBody = wp_remote_retrieve_body($memberResponse);
+        $memberData = json_decode($memberBody, true);
+
+        $members = isset($memberData['members']) ? $memberData['members'] : array();
+        if (empty($members)) {
+            return new WP_REST_Response(array('bills' => array(), 'member' => null), 200);
+        }
+
+        // Get the first matching member's bioguide ID
+        $member = $members[0];
+        $bioguideId = isset($member['bioguideId']) ? $member['bioguideId'] : null;
+
+        if (!$bioguideId) {
+            return new WP_REST_Response(array('bills' => array(), 'member' => $member), 200);
+        }
+
+        // Now get their legislation - fetch both sponsored AND cosponsored for comprehensive coverage
+        // Congress.gov allows max 250 per request, so we paginate for more
+        $allBills = array();
+        $seenBillIds = array();  // Track seen bills to avoid duplicates
+        $pageLimit = min($limit, 250);
+
+        // Fetch SPONSORED legislation (bills they are primary sponsor of)
+        $offset = 0;
+        $maxPages = 5;  // Up to 1250 bills per type
+        for ($page = 0; $page < $maxPages; $page++) {
+            $pageUrl = $baseUrl . '/member/' . $bioguideId . '/sponsored-legislation?api_key=' . $apiKey . '&format=json&limit=' . $pageLimit . '&offset=' . $offset;
+
+            $pageResponse = wp_remote_get($pageUrl, array('timeout' => 15));
+            if (is_wp_error($pageResponse)) {
+                break;
+            }
+
+            $pageBody = wp_remote_retrieve_body($pageResponse);
+            $pageData = json_decode($pageBody, true);
+
+            $pageBills = isset($pageData['sponsoredLegislation']) ? $pageData['sponsoredLegislation'] : array();
+            if (empty($pageBills)) {
+                break;
+            }
+
+            foreach ($pageBills as $bill) {
+                $billId = isset($bill['congress']) && isset($bill['number']) && isset($bill['type'])
+                    ? $bill['congress'] . '-' . $bill['type'] . '-' . $bill['number']
+                    : null;
+                if ($billId && !isset($seenBillIds[$billId])) {
+                    $seenBillIds[$billId] = true;
+                    $bill['sponsorshipType'] = 'primary';  // Mark as primary sponsor
+                    $allBills[] = $bill;
+                }
+            }
+
+            $offset += $pageLimit;
+            if (count($pageBills) < $pageLimit) {
+                break;
+            }
+        }
+
+        // Fetch COSPONSORED legislation (bills they cosponsor)
+        $offset = 0;
+        for ($page = 0; $page < $maxPages; $page++) {
+            $pageUrl = $baseUrl . '/member/' . $bioguideId . '/cosponsored-legislation?api_key=' . $apiKey . '&format=json&limit=' . $pageLimit . '&offset=' . $offset;
+
+            $pageResponse = wp_remote_get($pageUrl, array('timeout' => 15));
+            if (is_wp_error($pageResponse)) {
+                break;
+            }
+
+            $pageBody = wp_remote_retrieve_body($pageResponse);
+            $pageData = json_decode($pageBody, true);
+
+            $pageBills = isset($pageData['cosponsoredLegislation']) ? $pageData['cosponsoredLegislation'] : array();
+            if (empty($pageBills)) {
+                break;
+            }
+
+            foreach ($pageBills as $bill) {
+                $billId = isset($bill['congress']) && isset($bill['number']) && isset($bill['type'])
+                    ? $bill['congress'] . '-' . $bill['type'] . '-' . $bill['number']
+                    : null;
+                if ($billId && !isset($seenBillIds[$billId])) {
+                    $seenBillIds[$billId] = true;
+                    $bill['sponsorshipType'] = 'cosponsor';  // Mark as cosponsor
+                    $allBills[] = $bill;
+                }
+            }
+
+            $offset += $pageLimit;
+            if (count($pageBills) < $pageLimit) {
+                break;
+            }
+        }
+
+        // Store bills for normalization below
+        $data = array('sponsoredLegislation' => $allBills);
+        $url = 'paginated';  // Mark as already fetched
+    } else {
+        return new WP_Error('invalid_endpoint', 'Endpoint not implemented', array('status' => 400));
+    }
+
+    // Make the API request (skip if already paginated)
+    if ($url !== 'paginated') {
+        $api_response = wp_remote_get($url, array(
+            'timeout' => 15,
+            'user-agent' => 'VoteCraft/1.0',
+        ));
+
+        if (is_wp_error($api_response)) {
+            if ($cached) {
+                $response = new WP_REST_Response($cached['data'], 200);
+                $response->header('X-VoteCraft-Cache', 'STALE');
+                return $response;
+            }
+            return new WP_Error('api_error', 'Failed to reach Congress.gov API', array('status' => 502));
+        }
+
+        $body = wp_remote_retrieve_body($api_response);
+        $status = wp_remote_retrieve_response_code($api_response);
+        $data = json_decode($body, true);
+
+        if ($data === null) {
+            if ($cached) {
+                return new WP_REST_Response($cached['data'], 200);
+            }
+            return new WP_Error('parse_error', 'Invalid response from Congress.gov', array('status' => 502));
+        }
+    }
+
+    // For paginated requests, $data was already set above
+    $status = 200;
+    if ($data === null) {
+        return new WP_Error('parse_error', 'No data available', array('status' => 502));
+    }
+
+    // Normalize the response
+    $normalizedData = array(
+        'bills' => array(),
+        'member' => isset($member) ? $member : null
+    );
+
+    // Congress.gov returns bills under different keys depending on endpoint
+    $bills = isset($data['sponsoredLegislation']) ? $data['sponsoredLegislation'] :
+             (isset($data['bills']) ? $data['bills'] : array());
+
+    foreach ($bills as $bill) {
+        $normalizedData['bills'][] = array(
+            'id' => isset($bill['congress']) && isset($bill['number']) ? $bill['congress'] . '-' . $bill['number'] : null,
+            'number' => isset($bill['number']) ? $bill['number'] : null,
+            'billNumber' => isset($bill['number']) ? $bill['type'] . ' ' . $bill['number'] : null,
+            'title' => isset($bill['title']) ? $bill['title'] : '',
+            'type' => isset($bill['type']) ? $bill['type'] : '',
+            'congress' => isset($bill['congress']) ? $bill['congress'] : null,
+            'introducedDate' => isset($bill['introducedDate']) ? $bill['introducedDate'] : null,
+            'latestAction' => isset($bill['latestAction']) ? $bill['latestAction'] : null,
+            'url' => isset($bill['url']) ? $bill['url'] : null,
+            'policyArea' => isset($bill['policyArea']) ? $bill['policyArea'] : null,
+            'sponsors' => isset($bill['sponsors']) ? $bill['sponsors'] : array(),
+            'sponsorshipType' => isset($bill['sponsorshipType']) ? $bill['sponsorshipType'] : 'primary'
+        );
+    }
+
+    // Cache the result
+    if ($status >= 200 && $status < 300) {
+        votecraft_cache_set($cache_key, 'congress', $normalizedData);
+    }
+
+    $response = new WP_REST_Response($normalizedData, 200);
     $response->header('X-VoteCraft-Cache', 'MISS');
     return $response;
 }
