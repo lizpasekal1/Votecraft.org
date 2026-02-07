@@ -286,6 +286,13 @@ const CivicAPI = {
                 roleOrg.includes('executive')
             );
 
+            // Check if this is a Congress member (US Senator or US Representative)
+            // Congress members have jurisdiction.classification = 'country' (not 'state')
+            const isCongress = (
+                jurisdiction.classification === 'country' ||
+                roleOrg === 'congress'
+            );
+
             // Determine level and office title
             let level = 'state';
             let office = role.title || 'Representative';
@@ -293,9 +300,9 @@ const CivicAPI = {
             if (isExecutive) {
                 level = 'executive';
                 office = role.title || 'Executive Official';
-            } else if (jurisdiction.classification === 'country') {
+            } else if (isCongress) {
                 level = 'congress';
-                if (role.org_classification === 'upper') {
+                if (role.org_classification === 'upper' || roleTitle.includes('senator')) {
                     office = 'U.S. Senator';
                 } else {
                     office = 'U.S. Representative';
@@ -309,6 +316,10 @@ const CivicAPI = {
                 }
             }
 
+            // Extract personal/official website from links array
+            const links = person.links || [];
+            const personalWebsite = links.find(l => l.url && !l.url.includes('openstates'))?.url || null;
+
             return {
                 id: person.id,  // OpenStates person ID for bill lookups
                 name: this.normalizeNameDisplay(person.name),
@@ -320,6 +331,7 @@ const CivicAPI = {
                 phones: [],
                 emails: person.email ? [person.email] : [],
                 urls: person.openstates_url ? [person.openstates_url] : [],
+                personalWebsite: personalWebsite,
                 address: null,
                 channels: [],
                 jurisdiction: jurisdiction.name || '',
@@ -771,6 +783,120 @@ const CivicAPI = {
         'South Dakota': '46', 'Tennessee': '47', 'Texas': '48', 'Utah': '49',
         'Vermont': '50', 'Virginia': '51', 'Washington': '53', 'West Virginia': '54',
         'Wisconsin': '55', 'Wyoming': '56', 'District of Columbia': '11'
+    },
+
+    // Congress.gov API proxy
+    CONGRESS_GOV_PROXY: 'https://votecraft.org/wp-json/votecraft/v1/congress',
+
+    /**
+     * Search bills on Congress.gov by keyword
+     * @param {string} query - Search query (e.g., "ranked choice voting")
+     * @param {number} limit - Max results (default 20)
+     * @returns {Promise<Array>} - Array of bills
+     */
+    async searchCongressBills(query, limit = 20) {
+        const params = new URLSearchParams({
+            endpoint: 'bill/search',
+            query: query,
+            limit: limit.toString()
+        });
+        const url = `${this.CONGRESS_GOV_PROXY}?${params.toString()}`;
+
+        console.log('Congress.gov bill search:', query);
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.error('Congress.gov API error:', response.status);
+                return [];
+            }
+            const data = await response.json();
+            return data.bills || [];
+        } catch (error) {
+            console.error('Error searching Congress.gov bills:', error);
+            return [];
+        }
+    },
+
+    /**
+     * Get bills sponsored by a Congress member
+     * @param {string} memberName - Member's last name (e.g., "Warren")
+     * @param {string} chamber - "senate" or "house"
+     * @param {number} limit - Max results (default 50)
+     * @returns {Promise<Array>} - Array of sponsored bills
+     */
+    async getCongressMemberBills(memberName, chamber = null, limit = 50) {
+        const params = new URLSearchParams({
+            endpoint: 'member/bills',
+            name: memberName,
+            limit: limit.toString()
+        });
+        if (chamber) {
+            params.append('chamber', chamber);
+        }
+        // Check if page URL has nocache parameter - pass it through to bypass server cache
+        if (window.location.search.includes('nocache=1')) {
+            params.append('nocache', '1');
+        }
+        const url = `${this.CONGRESS_GOV_PROXY}?${params.toString()}`;
+
+        console.log('Congress.gov member bills:', memberName);
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.error('Congress.gov member bills API error:', response.status);
+                return [];
+            }
+            const data = await response.json();
+            return data.bills || [];
+        } catch (error) {
+            console.error('Error fetching Congress member bills:', error);
+            return [];
+        }
+    },
+
+    /**
+     * Get bills from Congress.gov matching issue keywords
+     * Used for federal legislators (Congress members)
+     * @param {Array} keywords - Array of search keywords
+     * @param {string} sponsorName - Optional sponsor name to filter by
+     * @param {number} limit - Max results per keyword
+     * @returns {Promise<Array>} - Array of bills with sponsorship info
+     */
+    async getCongressBillsByIssue(keywords, sponsorName = null, limit = 20) {
+        const allBills = [];
+        const seenIds = new Set();
+
+        for (const keyword of keywords) {
+            try {
+                const bills = await this.searchCongressBills(keyword, limit);
+                for (const bill of bills) {
+                    const billId = bill.number || bill.billNumber || bill.title;
+                    if (!seenIds.has(billId)) {
+                        seenIds.add(billId);
+                        allBills.push(bill);
+                    }
+                }
+                // Rate limit ourselves
+                await new Promise(r => setTimeout(r, 500));
+            } catch (error) {
+                console.error(`Error fetching Congress bills for "${keyword}":`, error);
+            }
+        }
+
+        // If sponsor name provided, mark which bills they sponsored
+        if (sponsorName) {
+            const sponsorLower = sponsorName.toLowerCase();
+            for (const bill of allBills) {
+                const sponsors = bill.sponsors || [];
+                bill.isSponsored = sponsors.some(s =>
+                    (s.name || s.fullName || '').toLowerCase().includes(sponsorLower)
+                );
+            }
+        }
+
+        return allBills;
     }
 };
 

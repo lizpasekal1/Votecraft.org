@@ -52,6 +52,11 @@ class VoteApp {
         this.learnMoreIframe = document.getElementById('learn-more-iframe');
         this.learnMoreClose = document.getElementById('learn-more-close');
 
+        // Rep website modal
+        this.repWebsiteModal = document.getElementById('rep-website-modal');
+        this.repWebsiteIframe = document.getElementById('rep-website-iframe');
+        this.repWebsiteClose = document.getElementById('rep-website-close');
+
         // State
         this.legislators = [];
         this.selectedRep = null;
@@ -208,6 +213,7 @@ class VoteApp {
 
         this.learnMoreBtn.addEventListener('click', () => this.openLearnMore());
         this.learnMoreClose.addEventListener('click', () => this.closeLearnMore());
+        this.repWebsiteClose.addEventListener('click', () => this.closeRepWebsite());
 
         // Panel expand/collapse
         const expandLeftBtn = document.getElementById('expand-left-btn');
@@ -840,7 +846,22 @@ class VoteApp {
 
         const districtText = rep.district ? ` &middot; District ${rep.district}` : '';
         const levelText = rep.level === 'congress' ? ' &middot; U.S. Congress' : '';
-        this.repCardName.innerHTML = `${rep.name}<div class="rep-card-subtitle"><span class="rep-party ${partyClass}">${rep.party || 'Unknown'}</span>${districtText}${levelText}</div>`;
+
+        // Make name clickable if rep has personal website
+        const nameClass = rep.personalWebsite ? 'rep-card-name-link' : '';
+        const nameHtml = rep.personalWebsite
+            ? `<span class="${nameClass}" data-website="${rep.personalWebsite}">${rep.name}</span>`
+            : rep.name;
+        this.repCardName.innerHTML = `${nameHtml}<div class="rep-card-subtitle"><span class="rep-party ${partyClass}">${rep.party || 'Unknown'}</span>${districtText}${levelText}</div>`;
+
+        // Add click handler for name link
+        const nameLink = this.repCardName.querySelector('.rep-card-name-link');
+        if (nameLink) {
+            nameLink.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.openRepWebsite(rep.personalWebsite);
+            });
+        }
 
         // Show office info if available
         if (rep.office) {
@@ -1003,6 +1024,17 @@ class VoteApp {
     closeLearnMore() {
         this.learnMoreModal.style.display = 'none';
         this.learnMoreIframe.src = '';
+    }
+
+    openRepWebsite(url) {
+        if (!url) return;
+        this.repWebsiteIframe.src = url;
+        this.repWebsiteModal.style.display = 'flex';
+    }
+
+    closeRepWebsite() {
+        this.repWebsiteModal.style.display = 'none';
+        this.repWebsiteIframe.src = '';
     }
 
     goBack() {
@@ -1318,7 +1350,22 @@ class VoteApp {
         if (partyLower.includes('democrat')) partyClass = 'democratic';
         else if (partyLower.includes('republican')) partyClass = 'republican';
         const districtText = rep.district ? ` &middot; District ${rep.district}` : '';
-        this.repCardName.innerHTML = `${rep.name}<div class="rep-card-subtitle"><span class="rep-party ${partyClass}">${rep.party}</span>${districtText}</div>`;
+
+        // Make name clickable if rep has personal website
+        const nameClass = rep.personalWebsite ? 'rep-card-name-link' : '';
+        const nameHtml = rep.personalWebsite
+            ? `<span class="${nameClass}" data-website="${rep.personalWebsite}">${rep.name}</span>`
+            : rep.name;
+        this.repCardName.innerHTML = `${nameHtml}<div class="rep-card-subtitle"><span class="rep-party ${partyClass}">${rep.party}</span>${districtText}</div>`;
+
+        // Add click handler for name link
+        const nameLink = this.repCardName.querySelector('.rep-card-name-link');
+        if (nameLink) {
+            nameLink.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.openRepWebsite(rep.personalWebsite);
+            });
+        }
 
         this.repAlignmentScore.textContent = 'Loading alignment...';
         this.repAlignmentBills.innerHTML = '<div class="alignment-loading"><div class="mini-loader"></div>Searching bills...</div>';
@@ -1333,37 +1380,141 @@ class VoteApp {
             return;
         }
 
-        // Check cache (keyed by issue + jurisdiction)
-        const cacheKey = `${issue.id}_${jurisdiction}`;
+        // Check cache (keyed by issue + jurisdiction + rep level)
+        const cacheKey = `${issue.id}_${jurisdiction}_${rep.level || 'state'}`;
         let allBills = this.billCache[cacheKey];
 
+        console.log(`loadRepAlignment: ${rep.name}, level=${rep.level}, office=${rep.office}, jurisdiction=${jurisdiction}`);
+
         if (!allBills) {
-            // Fetch bills for each keyword
             allBills = [];
             const seenIds = new Set();
 
-            for (let i = 0; i < issue.billKeywords.length; i++) {
-                const keyword = issue.billKeywords[i];
-                // Delay between calls to avoid rate limiting
-                if (i > 0) await new Promise(r => setTimeout(r, 1000));
+            // Use Congress.gov for federal legislators
+            if (rep.level === 'congress') {
+                console.log(`Fetching Congress.gov bills for ${rep.name}...`);
                 try {
-                    console.log(`Fetching bills for "${keyword}" in ${jurisdiction}...`);
-                    const bills = await window.CivicAPI.getBillsBySubject(
-                        jurisdiction, keyword, 10
-                    );
-                    console.log(`Got ${bills.length} bills for "${keyword}"`);
-                    for (const bill of bills) {
-                        if (!seenIds.has(bill.id)) {
-                            seenIds.add(bill.id);
-                            allBills.push(bill);
+                    // Get bills sponsored by this member - fetch up to 1250 bills for 15-year history
+                    // Use full name for better matching (avoids getting wrong person with same last name)
+                    const chamber = rep.office?.toLowerCase().includes('senator') ? 'senate' : 'house';
+                    const memberBills = await window.CivicAPI.getCongressMemberBills(rep.name, chamber, 1250);
+
+                    console.log(`Got ${memberBills.length} sponsored bills from Congress.gov`);
+
+                    // Debug: Show sample bill titles and policy areas
+                    if (memberBills.length > 0) {
+                        console.log('Sample bills (first 5):');
+                        memberBills.slice(0, 5).forEach(b => {
+                            console.log(`  - ${b.billNumber}: ${(b.title || '').substring(0, 80)}... [Policy: ${b.policyArea?.name || 'none'}]`);
+                        });
+                    }
+
+                    // Filter bills by issue keywords - phrase matching only (more precise)
+                    const keywords = issue.billKeywords.map(k => k.toLowerCase());
+
+                    for (const bill of memberBills) {
+                        const billTitle = (bill.title || '').toLowerCase();
+                        const policyArea = (bill.policyArea?.name || '').toLowerCase();
+                        const billId = bill.id || bill.billNumber || bill.title;
+
+                        // Check if bill title or policy area matches any full keyword phrase
+                        const matchesKeyword = keywords.some(keyword =>
+                            billTitle.includes(keyword) || policyArea.includes(keyword)
+                        );
+
+                        if (matchesKeyword && !seenIds.has(billId)) {
+                            seenIds.add(billId);
+                            console.log(`Matched bill: ${bill.billNumber} - ${billTitle.substring(0, 60)}...`);
+                            // Normalize to match OpenStates format
+                            allBills.push({
+                                id: billId,
+                                identifier: bill.billNumber || bill.number,
+                                title: bill.title,
+                                openstates_url: this.buildCongressGovUrl(bill.type, bill.congress, bill.number),
+                                sponsorships: [{ name: rep.name, primary: true }],
+                                latest_action_date: bill.latestAction?.actionDate || bill.introducedDate
+                            });
                         }
                     }
+
+                    console.log(`Filtered to ${allBills.length} bills matching issue keywords`);
+                    // Note: Congress.gov /bill endpoint doesn't support keyword search
+                    // We rely on filtering the member's sponsored bills by keywords above
                 } catch (err) {
-                    console.error(`Error fetching bills for keyword "${keyword}":`, err);
+                    console.error('Error fetching Congress.gov bills:', err);
+                }
+            } else {
+                // Use OpenStates for state legislators
+                for (let i = 0; i < issue.billKeywords.length; i++) {
+                    const keyword = issue.billKeywords[i];
+                    // Delay between calls to avoid rate limiting
+                    if (i > 0) await new Promise(r => setTimeout(r, 1000));
+                    try {
+                        console.log(`Fetching bills for "${keyword}" in ${jurisdiction}...`);
+                        const bills = await window.CivicAPI.getBillsBySubject(
+                            jurisdiction, keyword, 10
+                        );
+                        console.log(`Got ${bills.length} bills for "${keyword}"`);
+                        for (const bill of bills) {
+                            if (!seenIds.has(bill.id)) {
+                                seenIds.add(bill.id);
+                                allBills.push(bill);
+                            }
+                        }
+                    } catch (err) {
+                        console.error(`Error fetching bills for keyword "${keyword}":`, err);
+                    }
                 }
             }
 
             this.billCache[cacheKey] = allBills;
+        }
+
+        // Add any manually associated bills for this legislator and issue
+        const manualAssociations = window.MANUAL_BILL_ASSOCIATIONS || {};
+        if (manualAssociations[rep.name] && manualAssociations[rep.name][issue.id]) {
+            const manualBills = manualAssociations[rep.name][issue.id];
+            console.log(`Adding ${manualBills.length} manually associated bills for ${rep.name} on ${issue.id}`);
+
+            for (const manualBill of manualBills) {
+                // Check if bill already exists in list
+                const existingIndex = allBills.findIndex(b =>
+                    b.identifier === manualBill.id ||
+                    b.id === manualBill.id ||
+                    (b.identifier && manualBill.id && b.identifier.replace(/\s+/g, '').toLowerCase() === manualBill.id.replace(/\s+/g, '').toLowerCase())
+                );
+
+                if (existingIndex === -1) {
+                    // Add the manual bill
+                    allBills.push({
+                        id: manualBill.id,
+                        identifier: manualBill.id,
+                        title: manualBill.title || manualBill.id,
+                        openstates_url: manualBill.url || '#',
+                        sponsorships: [{ name: rep.name, primary: true }],
+                        isManualAssociation: true
+                    });
+                }
+            }
+        }
+
+        // Filter out excluded bills
+        const excludedBills = window.EXCLUDED_BILLS || {};
+        if (excludedBills[rep.name] && excludedBills[rep.name][issue.id]) {
+            const excludedList = excludedBills[rep.name][issue.id];
+            const beforeCount = allBills.length;
+            allBills = allBills.filter(bill => {
+                const billId = bill.identifier || bill.billNumber || bill.id;
+                // Normalize bill ID for comparison (remove spaces, lowercase)
+                const normalizedBillId = billId ? billId.replace(/\s+/g, '').toLowerCase() : '';
+                return !excludedList.some(excId => {
+                    const normalizedExcId = excId.replace(/\s+/g, '').toLowerCase();
+                    return normalizedBillId === normalizedExcId;
+                });
+            });
+            if (beforeCount !== allBills.length) {
+                console.log(`Filtered ${beforeCount - allBills.length} excluded bills for ${rep.name} on ${issue.id}`);
+            }
         }
 
         // Compute alignment
@@ -1473,6 +1624,29 @@ class VoteApp {
             .join('')
             .toUpperCase()
             .substring(0, 2);
+    }
+
+    /**
+     * Build a proper Congress.gov website URL for a bill
+     * @param {string} type - Bill type (HR, S, HRES, SRES, HJRES, SJRES, HCONRES, SCONRES)
+     * @param {number} congress - Congress number (e.g., 118)
+     * @param {number} number - Bill number
+     * @returns {string} - Website URL
+     */
+    buildCongressGovUrl(type, congress, number) {
+        // Map bill type codes to URL-friendly names
+        const typeMap = {
+            'HR': 'house-bill',
+            'S': 'senate-bill',
+            'HRES': 'house-resolution',
+            'SRES': 'senate-resolution',
+            'HJRES': 'house-joint-resolution',
+            'SJRES': 'senate-joint-resolution',
+            'HCONRES': 'house-concurrent-resolution',
+            'SCONRES': 'senate-concurrent-resolution'
+        };
+        const typeName = typeMap[(type || '').toUpperCase()] || 'bill';
+        return `https://www.congress.gov/bill/${congress}th-congress/${typeName}/${number}`;
     }
 }
 
