@@ -14,7 +14,7 @@ const ISSUES_CATALOG = [
         description: 'Ranked Choice Voting lets voters rank candidates by preference, ensuring winners have broad support while reducing vote-splitting and negative campaigning. If no candidate wins a majority, the lowest-ranked is eliminated and those votes transfer until someone earns a majority.',
         heroImage: 'https://votecraft.org/wp-content/uploads/2025/06/rank-the-vote.jpg',
         learnMoreUrl: 'https://votecraft.org/solutions/rank-choice-voting/',
-        billKeywords: ['ranked choice', 'ranked-choice', 'instant runoff', 'preferential voting', 'alternative voting', 'final five voting', 'rank the vote', 'voting method', 'voting system reform'],
+        billKeywords: ['ranked choice', 'ranked-choice', 'ranked choice voting', 'instant runoff', 'preferential voting', 'alternative voting', 'final five voting', 'rank the vote', 'rcv', 'local option voting', 'municipal election voting'],
         nonprofits: [
             {
                 name: 'FairVote',

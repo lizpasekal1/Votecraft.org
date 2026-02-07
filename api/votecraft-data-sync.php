@@ -444,7 +444,7 @@ function votecraft_sync_bills_batch($state, $max_calls) {
 
     // Keywords from VoteCraft issues
     $keywords = array(
-        'ranked choice voting', 'instant runoff',
+        'ranked choice', 'ranked choice voting', 'instant runoff', 'preferential voting', 'rcv',
         'student debt', 'predatory lending',
         'citizens united', 'campaign finance',
         'medicare', 'healthcare',
@@ -832,7 +832,7 @@ function votecraft_sync_admin_page() {
 
     // Issue keywords for counting bills
     $issue_keywords = array(
-        'RCV' => array('ranked choice voting', 'instant runoff', 'preferential voting'),
+        'RCV' => array('ranked choice', 'ranked choice voting', 'instant runoff', 'preferential voting', 'alternative voting', 'final five voting', 'rcv', 'local option voting'),
         'Debt Reform' => array('public debt', 'predatory lending', 'student debt relief', 'debt transparency'),
         'Citizens United' => array('citizens united', 'campaign finance reform', 'dark money', 'political spending disclosure'),
         'Healthcare' => array('universal healthcare', 'medicare for all', 'public option', 'health coverage expansion'),
@@ -1352,7 +1352,7 @@ function votecraft_sync_admin_page() {
             <div class="accordion-content">
             <p>Bills are filtered to match these keywords:</p>
             <table class="widefat" style="max-width: 600px;">
-                <tr><td><strong>RCV</strong></td><td>ranked choice voting, instant runoff, preferential voting</td></tr>
+                <tr><td><strong>RCV</strong></td><td>ranked choice, ranked choice voting, instant runoff, preferential voting, rcv, local option voting</td></tr>
                 <tr><td><strong>Debt Reform</strong></td><td>public debt, predatory lending, student debt relief, debt transparency</td></tr>
                 <tr><td><strong>Citizens United</strong></td><td>citizens united, campaign finance reform, dark money, political spending disclosure</td></tr>
                 <tr><td><strong>Healthcare</strong></td><td>universal healthcare, medicare for all, public option, health coverage expansion</td></tr>
@@ -1657,7 +1657,7 @@ function votecraft_sync_bills($state) {
     // Expanded keywords to catch more relevant bills
     $keywords = array(
         // RCV / Voting Reform
-        'ranked choice', 'instant runoff', 'preferential voting', 'voting rights', 'election reform',
+        'ranked choice', 'ranked choice voting', 'instant runoff', 'preferential voting', 'alternative voting', 'final five voting', 'rank the vote', 'rcv', 'local option voting',
         // Debt / Consumer Finance
         'student loan', 'student debt', 'predatory lending', 'consumer protection', 'credit card',
         'payday loan', 'debt collection', 'bankruptcy', 'financial literacy',
@@ -2458,54 +2458,102 @@ function votecraft_bill_associations_admin_page() {
         <p>Manage bill-legislator associations and curate which bills appear for each issue.</p>
 
         <h2>View & Manage Keyword Matches</h2>
-        <p>Look up bills matched for a Federal legislator. You can exclude bills that don't actually apply to an issue.</p>
+        <p>Look up bills matched for any legislator (state or federal). Search from your synced database.</p>
 
+        <?php
+        // Search for legislators in local database
+        global $wpdb;
+        $legislators_table = $wpdb->prefix . 'votecraft_legislators';
+        $search_results = array();
+        $selected_legislator = null;
+        $search_term = isset($_POST['search_name']) ? sanitize_text_field($_POST['search_name']) : '';
+        $selected_legislator_id = isset($_POST['legislator_id']) ? sanitize_text_field($_POST['legislator_id']) : '';
+
+        // If we have a search term, find matching legislators
+        if ($search_term) {
+            $search_results = $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM $legislators_table WHERE name LIKE %s ORDER BY level DESC, name ASC LIMIT 50",
+                '%' . $wpdb->esc_like($search_term) . '%'
+            ));
+        }
+
+        // If a legislator was selected, get their details
+        // Note: legislator ID is VARCHAR (OpenStates format), not integer
+        if ($selected_legislator_id) {
+            $selected_legislator = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM $legislators_table WHERE id = %s",
+                $selected_legislator_id
+            ));
+        }
+        ?>
+
+        <!-- Step 1: Search for legislator -->
         <form method="post" action="">
             <?php wp_nonce_field('votecraft_associations_nonce'); ?>
             <table class="form-table" role="presentation">
                 <tr>
-                    <th scope="row"><label for="lookup_name">Name</label></th>
+                    <th scope="row"><label for="search_name">Search Legislator</label></th>
                     <td>
-                        <input type="text" name="lookup_name" id="lookup_name" class="regular-text"
-                               placeholder="e.g., Elizabeth Warren"
-                               value="<?php echo esc_attr($_POST['lookup_name'] ?? ''); ?>">
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="lookup_state">State</label></th>
-                    <td>
-                        <?php
-                        $us_states = array(
-                            '' => 'All States',
-                            'AL' => 'Alabama', 'AK' => 'Alaska', 'AZ' => 'Arizona', 'AR' => 'Arkansas',
-                            'CA' => 'California', 'CO' => 'Colorado', 'CT' => 'Connecticut', 'DE' => 'Delaware',
-                            'FL' => 'Florida', 'GA' => 'Georgia', 'HI' => 'Hawaii', 'ID' => 'Idaho',
-                            'IL' => 'Illinois', 'IN' => 'Indiana', 'IA' => 'Iowa', 'KS' => 'Kansas',
-                            'KY' => 'Kentucky', 'LA' => 'Louisiana', 'ME' => 'Maine', 'MD' => 'Maryland',
-                            'MA' => 'Massachusetts', 'MI' => 'Michigan', 'MN' => 'Minnesota', 'MS' => 'Mississippi',
-                            'MO' => 'Missouri', 'MT' => 'Montana', 'NE' => 'Nebraska', 'NV' => 'Nevada',
-                            'NH' => 'New Hampshire', 'NJ' => 'New Jersey', 'NM' => 'New Mexico', 'NY' => 'New York',
-                            'NC' => 'North Carolina', 'ND' => 'North Dakota', 'OH' => 'Ohio', 'OK' => 'Oklahoma',
-                            'OR' => 'Oregon', 'PA' => 'Pennsylvania', 'RI' => 'Rhode Island', 'SC' => 'South Carolina',
-                            'SD' => 'South Dakota', 'TN' => 'Tennessee', 'TX' => 'Texas', 'UT' => 'Utah',
-                            'VT' => 'Vermont', 'VA' => 'Virginia', 'WA' => 'Washington', 'WV' => 'West Virginia',
-                            'WI' => 'Wisconsin', 'WY' => 'Wyoming', 'DC' => 'District of Columbia'
-                        );
-                        $selected_state = $_POST['lookup_state'] ?? '';
-                        ?>
-                        <select name="lookup_state" id="lookup_state">
-                            <?php foreach ($us_states as $code => $state_name): ?>
-                            <option value="<?php echo esc_attr($code); ?>" <?php selected($selected_state, $code); ?>><?php echo esc_html($state_name); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <p class="description">Optional: Filter by state to find the correct legislator</p>
+                        <input type="text" name="search_name" id="search_name" class="regular-text"
+                               placeholder="e.g., Cynthia Creem or Elizabeth Warren"
+                               value="<?php echo esc_attr($search_term); ?>">
+                        <input type="submit" name="votecraft_search_legislator" class="button" value="Search Database">
+                        <p class="description">Search for legislators in your synced database (both state and federal)</p>
                     </td>
                 </tr>
             </table>
-            <p class="submit">
-                <input type="submit" name="votecraft_lookup_bills" class="button button-primary" value="Look Up Bills">
-            </p>
         </form>
+
+        <?php if (!empty($search_results)): ?>
+        <!-- Step 2: Select from search results -->
+        <div style="background: #f9f9f9; padding: 15px; margin: 15px 0; border: 1px solid #ddd; border-radius: 4px;">
+            <h3 style="margin-top: 0;">Search Results (<?php echo count($search_results); ?> found)</h3>
+            <form method="post" action="">
+                <?php wp_nonce_field('votecraft_associations_nonce'); ?>
+                <input type="hidden" name="search_name" value="<?php echo esc_attr($search_term); ?>">
+                <table class="widefat" style="margin-bottom: 15px;">
+                    <thead>
+                        <tr>
+                            <th style="width: 30px;"></th>
+                            <th>Name</th>
+                            <th>Level</th>
+                            <th>State</th>
+                            <th>Office</th>
+                            <th>Party</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($search_results as $leg): ?>
+                        <tr>
+                            <td>
+                                <input type="radio" name="legislator_id" value="<?php echo esc_attr($leg->id); ?>"
+                                       <?php checked($selected_legislator_id, $leg->id); ?>>
+                            </td>
+                            <td><strong><?php echo esc_html($leg->name); ?></strong></td>
+                            <td>
+                                <?php if ($leg->level === 'congress'): ?>
+                                    <span style="background: #0073aa; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px;">FEDERAL</span>
+                                <?php elseif ($leg->level === 'state'): ?>
+                                    <span style="background: #46b450; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px;">STATE</span>
+                                <?php else: ?>
+                                    <span style="background: #666; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px;"><?php echo esc_html(strtoupper($leg->level ?: 'unknown')); ?></span>
+                                <?php endif; ?>
+                            </td>
+                            <td><?php echo esc_html($leg->state); ?></td>
+                            <td><?php echo esc_html($leg->office ?: $leg->chamber); ?></td>
+                            <td><?php echo esc_html($leg->party); ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <input type="submit" name="votecraft_lookup_bills" class="button button-primary" value="Look Up Bills for Selected Legislator">
+            </form>
+        </div>
+        <?php elseif ($search_term && empty($search_results)): ?>
+        <div class="notice notice-warning" style="margin: 15px 0;">
+            <p>No legislators found matching "<strong><?php echo esc_html($search_term); ?></strong>" in your database. Make sure you've synced legislator data.</p>
+        </div>
+        <?php endif; ?>
 
         <?php
         // Track the looked-up legislator name for pre-filling forms
@@ -2531,7 +2579,7 @@ function votecraft_bill_associations_admin_page() {
                 if (!in_array($exc_bill_id, $excluded_bills[$exc_legislator][$exc_issue])) {
                     $excluded_bills[$exc_legislator][$exc_issue][] = $exc_bill_id;
                     update_option('votecraft_excluded_bills', $excluded_bills);
-                    echo '<div class="notice notice-success is-dismissible"><p>Bill excluded from ' . esc_html($exc_issue) . '.</p></div>';
+                    echo '<div class="notice notice-success is-dismissible"><p>Bill excluded from ' . esc_html($exc_issue) . '. Click "Look Up Bills" to refresh results.</p></div>';
                 }
             }
         }
@@ -2566,18 +2614,47 @@ function votecraft_bill_associations_admin_page() {
 
         // Handle bill lookup - show accordion by issue
         if (isset($_POST['votecraft_lookup_bills']) && check_admin_referer('votecraft_associations_nonce')) {
-            $lookup_name = sanitize_text_field($_POST['lookup_name'] ?? '');
-            $lookup_state = sanitize_text_field($_POST['lookup_state'] ?? '');
+            $legislator_id = sanitize_text_field($_POST['legislator_id'] ?? '');
 
-            if ($lookup_name) {
-                // Get all bills from Congress.gov (no issue filter)
-                $all_matched = votecraft_lookup_congress_bills_by_issue($lookup_name, $keywords, $lookup_state);
+            // Get the selected legislator from the database
+            // Note: legislator ID is VARCHAR (OpenStates ID like ocd-person/...), not integer
+            $lookup_legislator = null;
+            if ($legislator_id) {
+                $lookup_legislator = $wpdb->get_row($wpdb->prepare(
+                    "SELECT * FROM $legislators_table WHERE id = %s",
+                    $legislator_id
+                ));
+            }
+
+            if ($lookup_legislator) {
+                $lookup_name = $lookup_legislator->name;
+                $lookup_state = $lookup_legislator->state;
+                $lookup_level = $lookup_legislator->level;
+                // For state legislators, the id IS the OpenStates ID (ocd-person/...)
+                $openstates_id = $lookup_legislator->id;
+
+                // Route to correct API based on legislator level
+                if ($lookup_level === 'congress') {
+                    // Federal legislator - use Congress.gov API
+                    $all_matched = votecraft_lookup_congress_bills_by_issue($lookup_name, $keywords, $lookup_state);
+                    $api_source = 'Congress.gov API';
+                } else {
+                    // State legislator - use local database (synced from OpenStates)
+                    $all_matched = votecraft_lookup_openstates_bills_by_issue($lookup_name, $keywords, $lookup_state, $openstates_id);
+                    $api_source = 'Local Database (OpenStates)';
+                }
+
                 $legislator_display = $all_matched['legislator_name'] ?? $lookup_name;
                 $looked_up_legislator = $legislator_display; // Remember for form pre-fill
                 $bills_by_issue = $all_matched['by_issue'] ?? array();
                 $legislator_excluded = isset($excluded_bills[$legislator_display]) ? $excluded_bills[$legislator_display] : array();
 
                 echo '<div class="lookup-results" style="margin-top: 20px;">';
+
+                // Show level badge
+                $level_badge = $lookup_level === 'congress'
+                    ? ' <span style="background: #0073aa; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; margin-left: 8px; display: inline-block; vertical-align: middle;">FEDERAL</span>'
+                    : ' <span style="background: #46b450; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; margin-left: 8px; display: inline-block; vertical-align: middle;">STATE</span>';
 
                 // Show debug info
                 $total_bills = isset($all_matched['total_bills']) ? $all_matched['total_bills'] : 0;
@@ -2586,21 +2663,24 @@ function votecraft_bill_associations_admin_page() {
                 if ($error_msg) {
                     echo '<div class="notice notice-error" style="margin: 10px 0; padding: 10px;"><strong>Error:</strong> ' . esc_html($error_msg) . '</div>';
                 } elseif ($total_bills > 0) {
-                    echo '<p style="color: #666;">Found ' . $total_bills . ' total bills, matched against issue keywords.</p>';
+                    echo '<p style="color: #666;">Found ' . $total_bills . ' total bills from ' . esc_html($api_source) . ', matched against issue keywords.</p>';
                 }
 
-                echo '<h3>Matched Bills for: <strong>' . esc_html($legislator_display) . '</strong></h3>';
+                echo '<h3>Matched Bills for: <strong>' . esc_html($legislator_display) . '</strong>' . $level_badge . '</h3>';
 
                 // Always show debug info
                 $debug = isset($all_matched['debug']) ? $all_matched['debug'] : array();
                 echo '<details style="margin-bottom: 15px; background: #f0f0f1; padding: 10px; border-radius: 4px;">';
                 echo '<summary style="cursor: pointer; font-weight: 600;">Debug Info (click to expand)</summary>';
                 echo '<div style="margin-top: 10px; font-size: 12px;">';
+                echo '<p><strong>Data source:</strong> ' . esc_html($api_source) . '</p>';
                 echo '<p><strong>Total bills fetched:</strong> ' . $total_bills . '</p>';
                 if (!empty($debug)) {
+                    if (isset($debug['source'])) echo '<p><strong>Source:</strong> ' . esc_html($debug['source']) . '</p>';
                     if (isset($debug['member_found'])) echo '<p><strong>Member found:</strong> ' . esc_html($debug['member_found']) . '</p>';
-                    if (isset($debug['state_filter'])) echo '<p><strong>State filter:</strong> ' . esc_html($debug['state_filter']) . '</p>';
+                    if (isset($debug['state_filter']) || isset($debug['state'])) echo '<p><strong>State:</strong> ' . esc_html($debug['state_filter'] ?? $debug['state']) . '</p>';
                     if (isset($debug['bioguideId'])) echo '<p><strong>BioguideID:</strong> ' . esc_html($debug['bioguideId']) . '</p>';
+                    if (isset($debug['openstates_id'])) echo '<p><strong>OpenStates ID:</strong> ' . esc_html($debug['openstates_id']) . '</p>';
                     if (isset($debug['sponsored_status'])) echo '<p><strong>Sponsored API status:</strong> ' . esc_html($debug['sponsored_status']) . '</p>';
                     if (isset($debug['sponsored_count'])) echo '<p><strong>Sponsored bills raw:</strong> ' . esc_html($debug['sponsored_count']) . '</p>';
                     if (isset($debug['sponsored_error'])) echo '<p style="color:red;"><strong>Sponsored error:</strong> ' . esc_html($debug['sponsored_error']) . '</p>';
@@ -2616,7 +2696,11 @@ function votecraft_bill_associations_admin_page() {
                 if (empty($bills_by_issue)) {
                     echo '<p>No matching bills found.</p>';
                     if ($total_bills == 0 && !$error_msg) {
-                        echo '<p style="color: #666;">The Congress.gov API returned no bills. This could be a temporary API issue - please try again.</p>';
+                        if ($lookup_level === 'congress') {
+                            echo '<p style="color: #666;">The Congress.gov API returned no bills. This could be a temporary API issue - please try again.</p>';
+                        } else {
+                            echo '<p style="color: #666;">No bills found in the local database. Make sure bills have been synced for ' . esc_html($lookup_state) . '.</p>';
+                        }
                     } elseif ($total_bills > 0) {
                         echo '<p style="color: #666;">Bills were fetched (' . $total_bills . '), but none matched the issue keywords. Check keywords in VC Keywords.</p>';
                     }
@@ -2668,8 +2752,8 @@ function votecraft_bill_associations_admin_page() {
                                 echo '<td>';
                                 echo '<form method="post" style="display:inline;">';
                                 wp_nonce_field('votecraft_associations_nonce');
-                                echo '<input type="hidden" name="lookup_name" value="' . esc_attr($lookup_name) . '">';
-                                echo '<input type="hidden" name="lookup_state" value="' . esc_attr($lookup_state) . '">';
+                                echo '<input type="hidden" name="legislator_id" value="' . esc_attr($legislator_id) . '">';
+                                echo '<input type="hidden" name="search_name" value="' . esc_attr($search_term) . '">';
                                 echo '<input type="hidden" name="exc_legislator" value="' . esc_attr($legislator_display) . '">';
                                 echo '<input type="hidden" name="exc_issue" value="' . esc_attr($issue_id) . '">';
                                 echo '<input type="hidden" name="exc_bill_id" value="' . esc_attr($bill['billNumber']) . '">';
@@ -2692,8 +2776,8 @@ function votecraft_bill_associations_admin_page() {
                                 echo '<td>';
                                 echo '<form method="post" style="display:inline;">';
                                 wp_nonce_field('votecraft_associations_nonce');
-                                echo '<input type="hidden" name="lookup_name" value="' . esc_attr($lookup_name) . '">';
-                                echo '<input type="hidden" name="lookup_state" value="' . esc_attr($lookup_state) . '">';
+                                echo '<input type="hidden" name="legislator_id" value="' . esc_attr($legislator_id) . '">';
+                                echo '<input type="hidden" name="search_name" value="' . esc_attr($search_term) . '">';
                                 echo '<input type="hidden" name="rest_legislator" value="' . esc_attr($legislator_display) . '">';
                                 echo '<input type="hidden" name="rest_issue" value="' . esc_attr($issue_id) . '">';
                                 echo '<input type="hidden" name="rest_bill_id" value="' . esc_attr($bill['billNumber']) . '">';
@@ -2717,8 +2801,8 @@ function votecraft_bill_associations_admin_page() {
                                     echo '<td>';
                                     echo '<form method="post" style="display:inline;">';
                                     wp_nonce_field('votecraft_associations_nonce');
-                                    echo '<input type="hidden" name="lookup_name" value="' . esc_attr($lookup_name) . '">';
-                                echo '<input type="hidden" name="lookup_state" value="' . esc_attr($lookup_state) . '">';
+                                    echo '<input type="hidden" name="legislator_id" value="' . esc_attr($legislator_id) . '">';
+                                    echo '<input type="hidden" name="search_name" value="' . esc_attr($search_term) . '">';
                                     echo '<input type="hidden" name="rest_legislator" value="' . esc_attr($legislator_display) . '">';
                                     echo '<input type="hidden" name="rest_issue" value="' . esc_attr($issue_id) . '">';
                                     echo '<input type="hidden" name="rest_bill_id" value="' . esc_attr($exc_bill_id) . '">';
@@ -2736,7 +2820,7 @@ function votecraft_bill_associations_admin_page() {
                 }
                 echo '</div>';
             } else {
-                echo '<div class="notice notice-warning"><p>Please enter a legislator name.</p></div>';
+                echo '<div class="notice notice-warning"><p>Please select a legislator from the search results first.</p></div>';
             }
         }
         ?>
@@ -2803,7 +2887,7 @@ function votecraft_bill_associations_admin_page() {
                     <td>
                         <input type="text" name="legislator_name" id="legislator_name" class="regular-text" required
                                placeholder="e.g., Elizabeth Warren"
-                               value="<?php echo esc_attr($looked_up_legislator); ?>">
+                               value="<?php echo esc_attr($selected_legislator ? $selected_legislator->name : $looked_up_legislator); ?>">
                         <p class="description">Enter the legislator's name exactly as it appears in the app (e.g., "Elizabeth Warren")</p>
                     </td>
                 </tr>
@@ -3024,6 +3108,205 @@ function votecraft_lookup_congress_bills_by_issue($name, $keywords, $state = '')
         'legislator_name' => $legislatorName,
         'by_issue' => $billsByIssue,
         'total_bills' => count($allBills)
+    );
+}
+
+/**
+ * Look up bills for a state legislator from local database and match to issues
+ */
+function votecraft_lookup_openstates_bills_by_issue($legislator_name, $keywords, $state = '', $openstates_id = '') {
+    // Query bills from local database only - no external API calls
+    // Checks: 1) Synced tables (bills + sponsorships), 2) Cache table (stored API responses)
+    global $wpdb;
+
+    $bills_table = $wpdb->prefix . 'votecraft_bills';
+    $sponsorships_table = $wpdb->prefix . 'votecraft_sponsorships';
+    $cache_table = $wpdb->prefix . 'votecraft_cache';
+
+    $allBills = array();
+    $debug = array(
+        'source' => 'local_database',
+        'state' => $state,
+        'openstates_id' => $openstates_id,
+        'legislator_name' => $legislator_name
+    );
+
+    // Convert state name to jurisdiction for cache lookups
+    $jurisdiction = votecraft_state_to_jurisdiction($state);
+
+    // For each issue, search bills by keyword
+    foreach ($keywords as $issueKey => $issueData) {
+        $issueKeywords = $issueData['keywords'];
+
+        foreach ($issueKeywords as $keyword) {
+            // First try: Search synced bills/sponsorships tables
+            $bills = $wpdb->get_results($wpdb->prepare(
+                "SELECT b.*, s.legislator_name as sponsor_name, s.legislator_id, s.sponsorship_type, s.classification
+                 FROM $bills_table b
+                 INNER JOIN $sponsorships_table s ON b.id = s.bill_id
+                 WHERE b.state = %s
+                 AND (b.title LIKE %s OR b.subject LIKE %s OR b.identifier LIKE %s)
+                 AND (s.legislator_id = %s OR s.legislator_name LIKE %s)
+                 ORDER BY b.latest_action_date DESC
+                 LIMIT 50",
+                $state,
+                '%' . $wpdb->esc_like($keyword) . '%',
+                '%' . $wpdb->esc_like($keyword) . '%',
+                '%' . $wpdb->esc_like($keyword) . '%',
+                $openstates_id,
+                '%' . $wpdb->esc_like($legislator_name) . '%'
+            ));
+
+            // Process synced table results - validate keyword matches as whole phrases
+            foreach ($bills as $bill) {
+                // Verify keyword matches as a whole phrase (not partial word like "dark" in "dark-sky")
+                $keywordPattern = '/\b' . preg_quote(strtolower($keyword), '/') . '\b/i';
+                $titleMatches = preg_match($keywordPattern, strtolower($bill->title));
+                $subjectMatches = $bill->subject ? preg_match($keywordPattern, strtolower($bill->subject)) : false;
+                $identifierMatches = preg_match($keywordPattern, strtolower($bill->identifier));
+
+                if (!$titleMatches && !$subjectMatches && !$identifierMatches) {
+                    continue; // Skip false positive matches
+                }
+
+                $billId = $bill->identifier;
+                $exists = false;
+                foreach ($allBills as $existing) {
+                    if ($existing['billNumber'] === $billId && $existing['issue'] === $issueKey) {
+                        $exists = true;
+                        break;
+                    }
+                }
+                if (!$exists) {
+                    $sponsorshipType = 'sponsor';
+                    if ($bill->sponsorship_type === 'primary' || $bill->classification === 'primary') {
+                        $sponsorshipType = 'primary';
+                    } elseif ($bill->sponsorship_type === 'cosponsor' || $bill->classification === 'cosponsor') {
+                        $sponsorshipType = 'cosponsor';
+                    }
+
+                    $allBills[] = array(
+                        'billNumber' => $billId,
+                        'title' => $bill->title,
+                        'url' => $bill->openstates_url ?: 'https://openstates.org/' . strtolower($state) . '/bills/' . ($bill->session ?: '') . '/' . urlencode($billId),
+                        'matchedKeyword' => $keyword,
+                        'sponsorshipType' => $sponsorshipType,
+                        'issue' => $issueKey,
+                        'source' => 'sync_table'
+                    );
+                }
+            }
+
+            // Second try: Search cache table for stored API responses
+            // Cache keys are MD5 hashes, so we search response_data for the keyword
+            // Search for cached responses that contain this keyword in the JSON
+            $cached_responses = $wpdb->get_results($wpdb->prepare(
+                "SELECT response_data FROM $cache_table
+                 WHERE endpoint = 'bills'
+                 AND response_data LIKE %s
+                 ORDER BY created_at DESC
+                 LIMIT 20",
+                '%' . $wpdb->esc_like($keyword) . '%'
+            ));
+
+            foreach ($cached_responses as $cached) {
+                $data = json_decode($cached->response_data, true);
+
+                // Handle different response formats: 'results' array or 'bills' array
+                $billsArray = array();
+                if (isset($data['results']) && is_array($data['results'])) {
+                    $billsArray = $data['results'];
+                } elseif (isset($data['bills']) && is_array($data['bills'])) {
+                    $billsArray = $data['bills'];
+                } else {
+                    continue;
+                }
+
+                foreach ($billsArray as $bill) {
+                    // Check if this bill matches the keyword as a whole phrase (not partial words)
+                    $title = isset($bill['title']) ? strtolower($bill['title']) : '';
+                    $identifier = isset($bill['identifier']) ? strtolower($bill['identifier']) : '';
+                    $keywordLower = strtolower($keyword);
+
+                    // Use word boundary matching to avoid false positives like "dark-sky" matching "dark money"
+                    // For multi-word keywords, require the full phrase to match
+                    $keywordPattern = '/\b' . preg_quote($keywordLower, '/') . '\b/i';
+                    $titleMatches = preg_match($keywordPattern, $title);
+                    $identifierMatches = preg_match($keywordPattern, $identifier);
+
+                    if (!$titleMatches && !$identifierMatches) {
+                        continue;
+                    }
+
+                    // Check if legislator sponsors this bill
+                    $sponsorships = isset($bill['sponsorships']) ? $bill['sponsorships'] : array();
+                    $isSponsored = false;
+                    $sponsorshipType = 'sponsor';
+
+                    // Extract last name for matching (handles "Cynthia Creem" -> "Creem")
+                    $nameParts = explode(' ', $legislator_name);
+                    $lastName = end($nameParts);
+
+                    foreach ($sponsorships as $sponsor) {
+                        $sponsorName = isset($sponsor['name']) ? $sponsor['name'] : '';
+                        $sponsorId = isset($sponsor['person']['id']) ? $sponsor['person']['id'] : '';
+
+                        // Match by OpenStates ID, full name, or last name
+                        if (($openstates_id && $sponsorId === $openstates_id) ||
+                            stripos($sponsorName, $legislator_name) !== false ||
+                            stripos($legislator_name, $sponsorName) !== false ||
+                            stripos($sponsorName, $lastName) !== false) {
+                            $isSponsored = true;
+                            $sponsorshipType = (isset($sponsor['primary']) && $sponsor['primary']) ? 'primary' : 'cosponsor';
+                            break;
+                        }
+                    }
+
+                    if ($isSponsored) {
+                        $billId = $bill['identifier'] ?? '';
+                        $exists = false;
+                        foreach ($allBills as $existing) {
+                            if ($existing['billNumber'] === $billId && $existing['issue'] === $issueKey) {
+                                $exists = true;
+                                break;
+                            }
+                        }
+                        if (!$exists) {
+                            $allBills[] = array(
+                                'billNumber' => $billId,
+                                'title' => $bill['title'] ?? '',
+                                'url' => $bill['openstates_url'] ?? 'https://openstates.org/' . strtolower($state) . '/bills/' . ($bill['session'] ?? '') . '/' . urlencode($billId),
+                                'matchedKeyword' => $keyword,
+                                'sponsorshipType' => $sponsorshipType,
+                                'issue' => $issueKey,
+                                'source' => 'cache_table'
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Organize bills by issue
+    $billsByIssue = array();
+    foreach ($allBills as $bill) {
+        $issueKey = $bill['issue'];
+        unset($bill['issue']); // Remove issue from bill data
+        unset($bill['source']); // Remove source from bill data
+        if (!isset($billsByIssue[$issueKey])) {
+            $billsByIssue[$issueKey] = array();
+        }
+        $billsByIssue[$issueKey][] = $bill;
+    }
+
+    $debug['total_db_bills'] = count($allBills);
+
+    return array(
+        'legislator_name' => $legislator_name,
+        'by_issue' => $billsByIssue,
+        'total_bills' => count($allBills),
+        'debug' => $debug
     );
 }
 
