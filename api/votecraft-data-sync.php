@@ -1514,7 +1514,7 @@ function votecraft_sync_admin_page() {
         <!-- ISSUE KEYWORDS EDITOR -->
         <?php $vc_keywords = votecraft_get_keywords(); ?>
         <details class="votecraft-accordion">
-            <summary>📝 Issue Keywords Reference <span style="margin-left: auto; font-weight: normal; color: #666;"><?php echo array_sum(array_map(function($d) { return count($d['keywords']); }, $vc_keywords)); ?> keywords across <?php echo count($vc_keywords); ?> issues</span></summary>
+            <summary>📝 Keyword Controls <span style="margin-left: auto; font-weight: normal; color: #666;"><?php echo array_sum(array_map(function($d) { return count($d['keywords']); }, $vc_keywords)); ?> keywords across <?php echo count($vc_keywords); ?> issues</span></summary>
             <div class="accordion-content">
             <p>These keywords are used to filter bills from both OpenStates and Congress.gov. Edit below and save, or reset to defaults.</p>
 
