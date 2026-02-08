@@ -3186,30 +3186,34 @@ function votecraft_lookup_openstates_bills_by_issue($legislator_name, $keywords,
 
         foreach ($issueKeywords as $keyword) {
             // First try: Search synced bills/sponsorships tables
-            // Note: subject field stores the search keyword/issue ID, NOT the bill's actual subject,
-            // so we only match against title to avoid circular false positives
+            // Title: LIKE + word boundary validation for keyword in actual bill text
+            // Subject: exact match only (subject stores the search keyword/issue ID that
+            //   originally found this bill, so exact match confirms it was found by this keyword)
             $bills = $wpdb->get_results($wpdb->prepare(
                 "SELECT b.*, s.legislator_name as sponsor_name, s.legislator_id, s.sponsorship_type, s.classification
                  FROM $bills_table b
                  INNER JOIN $sponsorships_table s ON b.id = s.bill_id
                  WHERE b.state = %s
-                 AND b.title LIKE %s
+                 AND (b.title LIKE %s OR b.subject = %s)
                  AND (s.legislator_id = %s OR s.legislator_name LIKE %s)
                  ORDER BY b.latest_action_date DESC
                  LIMIT 50",
                 $state,
                 '%' . $wpdb->esc_like($keyword) . '%',
+                $keyword,
                 $openstates_id,
                 '%' . $wpdb->esc_like($legislator_name) . '%'
             ));
 
-            // Process synced table results - validate keyword matches as whole phrases
+            // Process synced table results - validate keyword matches
             foreach ($bills as $bill) {
-                // Verify keyword matches as a whole phrase (not partial word like "dark" in "dark-sky")
+                // Accept if subject exactly matches the keyword (bill was found by this keyword)
+                $subjectExactMatch = (strtolower(trim($bill->subject ?? '')) === strtolower(trim($keyword)));
+                // Or verify keyword appears in title as a whole phrase
                 $keywordPattern = '/\b' . preg_quote(strtolower($keyword), '/') . '\b/i';
                 $titleMatches = preg_match($keywordPattern, strtolower($bill->title));
 
-                if (!$titleMatches) {
+                if (!$titleMatches && !$subjectExactMatch) {
                     continue; // Skip false positive matches
                 }
 
