@@ -943,7 +943,6 @@ function votecraft_sync_admin_page() {
             $like_clauses[] = $wpdb->prepare("title LIKE %s", '%' . $wpdb->esc_like($kw) . '%');
             $like_clauses[] = $wpdb->prepare("subjects LIKE %s", '%' . $wpdb->esc_like($kw) . '%');
             $like_clauses[] = $wpdb->prepare("abstract LIKE %s", '%' . $wpdb->esc_like($kw) . '%');
-            $like_clauses[] = $wpdb->prepare("issue_id LIKE %s", '%' . $wpdb->esc_like($kw) . '%');
         }
         $where = implode(' OR ', $like_clauses);
 
@@ -2209,19 +2208,18 @@ function votecraft_local_search_bills($state, $keyword, $limit = 20) {
     $bills_table = $wpdb->prefix . 'votecraft_bills';
     $sponsorships_table = $wpdb->prefix . 'votecraft_sponsorships';
 
-    // Search by keyword in title, subjects, abstract, or issue_id
+    // Search by keyword in actual bill content (title, subjects, abstract)
     $like_kw = '%' . $wpdb->esc_like($keyword) . '%';
     $bills = $wpdb->get_results($wpdb->prepare(
         "SELECT * FROM $bills_table
          WHERE state = %s
-         AND (title LIKE %s OR subjects LIKE %s OR abstract LIKE %s OR issue_id = %s)
+         AND (title LIKE %s OR subjects LIKE %s OR abstract LIKE %s)
          ORDER BY latest_action_date DESC
          LIMIT %d",
         $state,
         $like_kw,
         $like_kw,
         $like_kw,
-        $keyword,
         $limit
     ));
 
@@ -3282,35 +3280,31 @@ function votecraft_lookup_openstates_bills_by_issue($legislator_name, $keywords,
 
         foreach ($issueKeywords as $keyword) {
             // First try: Search synced bills/sponsorships tables
-            // Search actual bill content (title, subjects, abstract) + issue_id for exact match
+            // Search actual bill content only (not issue_id — that stores the search keyword, not bill content)
             $like_kw = '%' . $wpdb->esc_like($keyword) . '%';
             $bills = $wpdb->get_results($wpdb->prepare(
                 "SELECT b.*, s.legislator_name as sponsor_name, s.legislator_id, s.sponsorship_type, s.classification
                  FROM $bills_table b
                  INNER JOIN $sponsorships_table s ON b.id = s.bill_id
                  WHERE b.state = %s
-                 AND (b.title LIKE %s OR b.subjects LIKE %s OR b.abstract LIKE %s OR b.issue_id = %s)
+                 AND (b.title LIKE %s OR b.subjects LIKE %s OR b.abstract LIKE %s)
                  AND (s.legislator_id = %s OR s.legislator_name LIKE %s)
                  ORDER BY b.latest_action_date DESC
                  LIMIT 50",
                 $state,
                 $like_kw, $like_kw, $like_kw,
-                $keyword,
                 $openstates_id,
                 '%' . $wpdb->esc_like($legislator_name) . '%'
             ));
 
-            // Process synced table results - validate keyword matches
+            // Process synced table results - validate keyword matches with word boundaries
             foreach ($bills as $bill) {
-                // Accept if issue_id exactly matches the keyword
-                $issueMatch = (strtolower(trim($bill->issue_id ?? '')) === strtolower(trim($keyword)));
-                // Or verify keyword appears in content as a whole phrase
                 $keywordPattern = '/\b' . preg_quote(strtolower($keyword), '/') . '\b/i';
                 $titleMatches = preg_match($keywordPattern, strtolower($bill->title));
                 $subjectsMatch = preg_match($keywordPattern, strtolower($bill->subjects ?? ''));
                 $abstractMatch = preg_match($keywordPattern, strtolower($bill->abstract ?? ''));
 
-                if (!$titleMatches && !$subjectsMatch && !$abstractMatch && !$issueMatch) {
+                if (!$titleMatches && !$subjectsMatch && !$abstractMatch) {
                     continue; // Skip false positive matches
                 }
 

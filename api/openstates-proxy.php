@@ -326,30 +326,27 @@ function votecraft_try_local_db($endpoint, $params) {
         ));
 
         if ($count > 0) {
-            // Search bills by keyword against actual bill content:
-            // - title/subjects/abstract: LIKE for SQL filter, then word boundary regex
-            // - issue_id: exact match (identifies which VoteCraft issue found this bill)
+            // Search bills by keyword against actual bill content only
+            // (not issue_id, which stores the search keyword that found the bill — circular)
             $like_kw = '%' . $wpdb->esc_like($keyword) . '%';
             $bills = $wpdb->get_results($wpdb->prepare(
                 "SELECT * FROM $bills_table
                  WHERE state = %s
-                 AND (title LIKE %s OR subjects LIKE %s OR abstract LIKE %s OR issue_id = %s)
+                 AND (title LIKE %s OR subjects LIKE %s OR abstract LIKE %s)
                  ORDER BY latest_action_date DESC
                  LIMIT 50",
                 $state,
-                $like_kw, $like_kw, $like_kw,
-                $keyword
+                $like_kw, $like_kw, $like_kw
             ));
 
-            // Validate: accept issue_id exact match, or word boundary match in content
+            // Validate with word boundary regex to eliminate partial matches
             $keywordPattern = '/\b' . preg_quote(strtolower($keyword), '/') . '\b/i';
             $validated_bills = array();
             foreach ($bills as $bill) {
-                $issueMatch = (strtolower(trim($bill->issue_id ?? '')) === strtolower(trim($keyword)));
                 $titleMatch = preg_match($keywordPattern, strtolower($bill->title ?: ''));
                 $subjectsMatch = preg_match($keywordPattern, strtolower($bill->subjects ?: ''));
                 $abstractMatch = preg_match($keywordPattern, strtolower($bill->abstract ?: ''));
-                if ($issueMatch || $titleMatch || $subjectsMatch || $abstractMatch) {
+                if ($titleMatch || $subjectsMatch || $abstractMatch) {
                     $validated_bills[] = $bill;
                 }
             }
