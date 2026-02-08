@@ -786,7 +786,7 @@ function votecraft_sync_admin_page() {
     $state_bill_count = $wpdb->get_var("SELECT COUNT(*) FROM $bills_table WHERE state != 'Federal' OR state IS NULL");
     $states_with_data = $wpdb->get_col("SELECT DISTINCT state FROM $legislators_table ORDER BY state");
     $states_with_bills = $wpdb->get_col("SELECT DISTINCT state FROM $bills_table ORDER BY state");
-    $recent_syncs = $wpdb->get_results("SELECT * FROM $log_table ORDER BY started_at DESC LIMIT 30");
+    $recent_syncs = $wpdb->get_results("SELECT * FROM $log_table WHERE sync_type IN ('legislators', 'bills') ORDER BY started_at DESC LIMIT 30");
 
     // Congress.gov cache stats
     $cache_table = $wpdb->prefix . 'votecraft_cache';
@@ -1141,86 +1141,87 @@ function votecraft_sync_admin_page() {
             </details>
             <?php endif; ?>
 
-            <?php if (!empty($recent_batches) || !empty($syncs_by_state)): ?>
-            <hr style="margin: 20px 0 15px;">
-            <h4 style="margin-top: 0;">Recent Sync Activity</h4>
-            <?php endif; ?>
-
             <?php if (!empty($recent_batches)): ?>
-            <table class="widefat" style="margin-bottom: 15px;">
-                <thead>
-                    <tr>
-                        <th>When</th>
-                        <th>Result</th>
-                        <th>Records Updated</th>
-                        <th>API Calls</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($recent_batches as $batch): ?>
-                    <tr>
-                        <td><?php echo esc_html(wp_date('M j, g:i A', strtotime($batch->started_at))); ?></td>
-                        <td>
-                            <?php if ($batch->status === 'success'): ?>
-                                <span style="color: green;">✓ Complete</span>
-                            <?php elseif ($batch->status === 'running'): ?>
-                                <span style="color: blue;">⏳ In Progress</span>
-                            <?php else: ?>
-                                <span style="color: red;">✗ Failed</span>
-                            <?php endif; ?>
-                        </td>
-                        <td><?php $records = intval($batch->records_synced); echo $records > 0 ? number_format($records) . ' updated' : '<span style="color: #888;">No changes</span>'; ?></td>
-                        <td style="font-size: 0.85em;">
-                            <?php
-                            $details = $batch->error_message;
-                            if (preg_match('/API calls?:\s*(\d+)/i', $details, $matches)) {
-                                echo $matches[1];
-                            } elseif (!empty($details)) {
-                                echo esc_html(substr($details, 0, 80));
-                            } else {
-                                echo '<span style="color: #888;">—</span>';
-                            }
-                            ?>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+            <details style="margin-top: 15px; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                <summary style="cursor: pointer; font-weight: bold;">Batch Run History (<?php echo count($recent_batches); ?>)</summary>
+                <table class="widefat" style="margin-top: 10px;">
+                    <thead>
+                        <tr>
+                            <th>When</th>
+                            <th>Result</th>
+                            <th>Records Updated</th>
+                            <th>API Calls</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($recent_batches as $batch): ?>
+                        <tr>
+                            <td><?php echo esc_html(wp_date('M j, g:i A', strtotime($batch->started_at))); ?></td>
+                            <td>
+                                <?php if ($batch->status === 'success'): ?>
+                                    <span style="color: green;">✓ Complete</span>
+                                <?php elseif ($batch->status === 'running'): ?>
+                                    <span style="color: blue;">⏳ In Progress</span>
+                                <?php else: ?>
+                                    <span style="color: red;">✗ Failed</span>
+                                <?php endif; ?>
+                            </td>
+                            <td><?php $records = intval($batch->records_synced); echo $records > 0 ? number_format($records) . ' updated' : '<span style="color: #888;">No changes</span>'; ?></td>
+                            <td style="font-size: 0.85em;">
+                                <?php
+                                $details = $batch->error_message;
+                                if (preg_match('/API calls?:\s*(\d+)/i', $details, $matches)) {
+                                    echo $matches[1];
+                                } elseif (!empty($details)) {
+                                    echo esc_html(substr($details, 0, 80));
+                                } else {
+                                    echo '<span style="color: #888;">—</span>';
+                                }
+                                ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </details>
             <?php endif; ?>
 
             <?php if (!empty($syncs_by_state)): ?>
-            <table class="widefat">
-                <thead>
-                    <tr>
-                        <th>State</th>
-                        <th style="text-align: right;">Legislators</th>
-                        <th style="text-align: right;">Bills</th>
-                        <th>Started</th>
-                        <th>Status</th>
-                        <th>Error</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($syncs_by_state as $entry): ?>
-                    <tr>
-                        <td><strong><?php echo esc_html($entry['state']); ?></strong></td>
-                        <td style="text-align: right;"><?php echo $entry['legislators'] !== null ? number_format($entry['legislators']) : '<span style="color: #999;">-</span>'; ?></td>
-                        <td style="text-align: right;"><?php echo $entry['bills'] !== null ? number_format($entry['bills']) : '<span style="color: #999;">-</span>'; ?></td>
-                        <td><?php echo esc_html(wp_date('M j, g:i A', strtotime($entry['started_at']))); ?></td>
-                        <td>
-                            <?php if ($entry['status'] === 'success'): ?>
-                                <span style="color: green;">✓ Success</span>
-                            <?php elseif ($entry['status'] === 'running'): ?>
-                                <span style="color: blue;">⏳ Running</span>
-                            <?php else: ?>
-                                <span style="color: red;">✗ Error</span>
-                            <?php endif; ?>
-                        </td>
-                        <td style="font-size: 0.85em; max-width: 200px; overflow: hidden; text-overflow: ellipsis;"><?php echo esc_html($entry['error'] ?: '-'); ?></td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+            <details style="margin-top: 10px; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                <summary style="cursor: pointer; font-weight: bold;">Per-State Sync History (<?php echo count($syncs_by_state); ?>)</summary>
+                <table class="widefat" style="margin-top: 10px;">
+                    <thead>
+                        <tr>
+                            <th>State</th>
+                            <th style="text-align: right;">Legislators</th>
+                            <th style="text-align: right;">Bills</th>
+                            <th>Started</th>
+                            <th>Status</th>
+                            <th>Error</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($syncs_by_state as $entry): ?>
+                        <tr>
+                            <td><strong><?php echo esc_html($entry['state']); ?></strong></td>
+                            <td style="text-align: right;"><?php echo $entry['legislators'] !== null ? number_format($entry['legislators']) : '<span style="color: #999;">-</span>'; ?></td>
+                            <td style="text-align: right;"><?php echo $entry['bills'] !== null ? number_format($entry['bills']) : '<span style="color: #999;">-</span>'; ?></td>
+                            <td><?php echo esc_html(wp_date('M j, g:i A', strtotime($entry['started_at']))); ?></td>
+                            <td>
+                                <?php if ($entry['status'] === 'success'): ?>
+                                    <span style="color: green;">✓ Success</span>
+                                <?php elseif ($entry['status'] === 'running'): ?>
+                                    <span style="color: blue;">⏳ Running</span>
+                                <?php else: ?>
+                                    <span style="color: red;">✗ Error</span>
+                                <?php endif; ?>
+                            </td>
+                            <td style="font-size: 0.85em; max-width: 200px; overflow: hidden; text-overflow: ellipsis;"><?php echo esc_html($entry['error'] ?: '-'); ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </details>
             <?php endif; ?>
 
             </div>
@@ -1278,38 +1279,39 @@ function votecraft_sync_admin_page() {
             </form>
 
             <?php if (!empty($congress_recent_syncs)): ?>
-            <hr style="margin: 20px 0 15px;">
-            <h4 style="margin-top: 0;">Recent Sync Activity</h4>
-            <table class="widefat">
-                <thead>
-                    <tr>
-                        <th>When</th>
-                        <th>Type</th>
-                        <th>Result</th>
-                        <th>Records</th>
-                        <th>Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($congress_recent_syncs as $sync): ?>
-                    <tr>
-                        <td><?php echo esc_html(wp_date('M j, g:i A', strtotime($sync->started_at))); ?></td>
-                        <td><?php echo $sync->sync_type === 'congress_batch' ? 'Members' : 'Bills'; ?></td>
-                        <td>
-                            <?php if ($sync->status === 'success'): ?>
-                                <span style="color: green;">✓ Success</span>
-                            <?php elseif ($sync->status === 'running'): ?>
-                                <span style="color: blue;">⏳ Running</span>
-                            <?php else: ?>
-                                <span style="color: red;">✗ Error</span>
-                            <?php endif; ?>
-                        </td>
-                        <td><?php echo $sync->records_synced ? number_format($sync->records_synced) : '<span style="color: #888;">-</span>'; ?></td>
-                        <td style="font-size: 0.85em; max-width: 200px; overflow: hidden; text-overflow: ellipsis;"><?php echo esc_html($sync->error_message ?: '-'); ?></td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+            <details style="margin-top: 15px; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                <summary style="cursor: pointer; font-weight: bold;">Recent Sync Activity (<?php echo count($congress_recent_syncs); ?>)</summary>
+                <table class="widefat" style="margin-top: 10px;">
+                    <thead>
+                        <tr>
+                            <th>When</th>
+                            <th>Type</th>
+                            <th>Result</th>
+                            <th>Records</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($congress_recent_syncs as $sync): ?>
+                        <tr>
+                            <td><?php echo esc_html(wp_date('M j, g:i A', strtotime($sync->started_at))); ?></td>
+                            <td><?php echo $sync->sync_type === 'congress_batch' ? 'Members' : 'Bills'; ?></td>
+                            <td>
+                                <?php if ($sync->status === 'success'): ?>
+                                    <span style="color: green;">✓ Success</span>
+                                <?php elseif ($sync->status === 'running'): ?>
+                                    <span style="color: blue;">⏳ Running</span>
+                                <?php else: ?>
+                                    <span style="color: red;">✗ Error</span>
+                                <?php endif; ?>
+                            </td>
+                            <td><?php echo $sync->records_synced ? number_format($sync->records_synced) : '<span style="color: #888;">-</span>'; ?></td>
+                            <td style="font-size: 0.85em; max-width: 200px; overflow: hidden; text-overflow: ellipsis;"><?php echo esc_html($sync->error_message ?: '-'); ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </details>
             <?php endif; ?>
 
             </div>
