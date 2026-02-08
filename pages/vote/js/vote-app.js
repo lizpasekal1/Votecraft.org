@@ -1409,17 +1409,20 @@ class VoteApp {
                         });
                     }
 
-                    // Filter bills by issue keywords - phrase matching only (more precise)
-                    const keywords = issue.billKeywords.map(k => k.toLowerCase());
+                    // Filter bills by issue keywords with word boundary matching
+                    const keywordPatterns = issue.billKeywords.map(k => {
+                        const escaped = k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        return new RegExp('\\b' + escaped + '\\b', 'i');
+                    });
 
                     for (const bill of memberBills) {
-                        const billTitle = (bill.title || '').toLowerCase();
-                        const policyArea = (bill.policyArea?.name || '').toLowerCase();
+                        const billTitle = bill.title || '';
+                        const policyArea = bill.policyArea?.name || '';
                         const billId = bill.id || bill.billNumber || bill.title;
 
-                        // Check if bill title or policy area matches any full keyword phrase
-                        const matchesKeyword = keywords.some(keyword =>
-                            billTitle.includes(keyword) || policyArea.includes(keyword)
+                        // Check if bill title or policy area matches any keyword with word boundaries
+                        const matchesKeyword = keywordPatterns.some(pattern =>
+                            pattern.test(billTitle) || pattern.test(policyArea)
                         );
 
                         if (matchesKeyword && !seenIds.has(billId)) {
