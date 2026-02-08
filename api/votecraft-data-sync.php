@@ -3412,27 +3412,29 @@ function votecraft_sync_congress_members($batch_size = 50) {
             $office = ($chamber === 'senate') ? 'U.S. Senator' : 'U.S. Representative';
 
             // Upsert into legislators table
+            $congress_id = 'congress-' . $bioguideId;
             $existing = $wpdb->get_var($wpdb->prepare(
-                "SELECT id FROM $table WHERE openstates_id = %s",
-                'congress-' . $bioguideId
+                "SELECT id FROM $table WHERE id = %s",
+                $congress_id
             ));
 
             $data = array(
-                'openstates_id' => 'congress-' . $bioguideId,
+                'id' => $congress_id,
                 'name' => $name,
                 'party' => $party,
                 'state' => $state,
+                'chamber' => $chamber,
                 'district' => $district,
-                'office' => $office,
+                'current_role' => json_encode(array('title' => $office, 'org_classification' => $chamber)),
                 'level' => 'congress',
                 'photo_url' => $member['depiction']['imageUrl'] ?? null,
+                'raw_data' => json_encode($member),
                 'updated_at' => current_time('mysql')
             );
 
             if ($existing) {
-                $wpdb->update($table, $data, array('id' => $existing));
+                $wpdb->update($table, $data, array('id' => $congress_id));
             } else {
-                $data['created_at'] = current_time('mysql');
                 $wpdb->insert($table, $data);
             }
 
@@ -3520,6 +3522,7 @@ function votecraft_sync_congress_issue_bills($batch_size = 50) {
 
     $table = $wpdb->prefix . 'votecraft_legislators';
     $bills_table = $wpdb->prefix . 'votecraft_bills';
+    $sponsorships_table = $wpdb->prefix . 'votecraft_sponsorships';
 
     // Get progress
     $progress = get_option('votecraft_congress_bills_sync_progress', array(
@@ -3571,30 +3574,54 @@ function votecraft_sync_congress_issue_bills($batch_size = 50) {
 
             if ($result['success'] && !empty($result['bills'])) {
                 foreach ($result['bills'] as $bill) {
-                    // Store bill in database
-                    $bill_id = $bill['billNumber'] ?? $bill['identifier'] ?? '';
-                    if (empty($bill_id)) continue;
+                    $bill_number = $bill['billNumber'] ?? $bill['identifier'] ?? '';
+                    if (empty($bill_number)) continue;
 
-                    $existing = $wpdb->get_var($wpdb->prepare(
-                        "SELECT id FROM $bills_table WHERE bill_id = %s AND legislator_name = %s AND issue_id = %s",
-                        $bill_id, $member->name, $issue['id']
+                    // Generate a unique bill ID for Congress bills
+                    $congress_num = $bill['congress'] ?? '';
+                    $bill_type = $bill['type'] ?? '';
+                    $bill_num = $bill['number'] ?? '';
+                    $bill_id = $congress_num ? "congress-{$congress_num}-{$bill_type}-{$bill_num}" : 'congress-' . md5($bill_number . ($bill['title'] ?? ''));
+
+                    // Upsert bill into bills table
+                    $existing_bill = $wpdb->get_var($wpdb->prepare(
+                        "SELECT id FROM $bills_table WHERE id = %s",
+                        $bill_id
                     ));
 
-                    $data = array(
-                        'bill_id' => $bill_id,
+                    $bill_data = array(
+                        'id' => $bill_id,
+                        'identifier' => $bill_number,
                         'title' => $bill['title'] ?? '',
                         'state' => 'Federal',
-                        'legislator_name' => $member->name,
-                        'issue_id' => $issue['id'],
-                        'url' => $bill['url'] ?? '',
+                        'session' => $congress_num ? $congress_num . 'th Congress' : null,
+                        'chamber' => $bill_type ? (in_array(strtoupper($bill_type), array('S', 'SRES', 'SJRES', 'SCONRES')) ? 'upper' : 'lower') : null,
+                        'subject' => $issue['id'],
+                        'openstates_url' => $bill['url'] ?? '',
+                        'raw_data' => json_encode($bill),
                         'updated_at' => current_time('mysql')
                     );
 
-                    if ($existing) {
-                        $wpdb->update($bills_table, $data, array('id' => $existing));
+                    if ($existing_bill) {
+                        $wpdb->update($bills_table, $bill_data, array('id' => $bill_id));
                     } else {
-                        $data['created_at'] = current_time('mysql');
-                        $wpdb->insert($bills_table, $data);
+                        $wpdb->insert($bills_table, $bill_data);
+                    }
+
+                    // Upsert sponsorship link
+                    $existing_sponsorship = $wpdb->get_var($wpdb->prepare(
+                        "SELECT id FROM $sponsorships_table WHERE bill_id = %s AND legislator_id = %s",
+                        $bill_id, $member->id
+                    ));
+
+                    if (!$existing_sponsorship) {
+                        $wpdb->insert($sponsorships_table, array(
+                            'bill_id' => $bill_id,
+                            'legislator_id' => $member->id,
+                            'legislator_name' => $member->name,
+                            'sponsorship_type' => $bill['sponsorshipType'] ?? 'sponsor',
+                            'classification' => $bill['sponsorshipType'] ?? 'sponsor'
+                        ));
                         $bills_found++;
                     }
                 }
@@ -3648,7 +3675,7 @@ function votecraft_get_issues_catalog() {
     return array(
         array(
             'id' => 'rcv',
-            'billKeywords' => array('ranked choice', 'ranked-choice', 'instant runoff', 'preferential voting', 'alternative voting', 'final five voting', 'rank the vote', 'voting method', 'voting system reform')
+            'billKeywords' => array('ranked choice', 'ranked-choice', 'ranked choice voting', 'instant runoff', 'preferential voting', 'alternative voting', 'final five voting', 'rank the vote', 'rcv', 'local option voting')
         ),
         array(
             'id' => 'debt-profiteering',
