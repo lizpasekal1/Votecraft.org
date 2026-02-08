@@ -3150,7 +3150,7 @@ function votecraft_lookup_congress_bills_by_issue($name, $keywords, $state = '')
     // Check for errors
     if ($response->is_error()) {
         $error = $response->as_error();
-        return array('legislator_name' => $name, 'by_issue' => array(), 'total_bills' => 0, 'error' => $error->get_error_message());
+        return array('success' => false, 'legislator_name' => $name, 'bills' => array(), 'by_issue' => array(), 'total_bills' => 0, 'error' => $error->get_error_message());
     }
 
     // Get bills from response
@@ -3176,7 +3176,7 @@ function votecraft_lookup_congress_bills_by_issue($name, $keywords, $state = '')
                 $debugMsg .= ' in state ' . $state;
             }
         }
-        return array('legislator_name' => $legislatorName, 'by_issue' => array(), 'total_bills' => 0, 'error' => $debugMsg);
+        return array('success' => false, 'legislator_name' => $legislatorName, 'bills' => array(), 'by_issue' => array(), 'total_bills' => 0, 'error' => $debugMsg);
     }
 
     // Organize bills by issue
@@ -3218,6 +3218,11 @@ function votecraft_lookup_congress_bills_by_issue($name, $keywords, $state = '')
                         'billNumber' => $billNumber,
                         'title' => $bill['title'] ?? '',
                         'url' => $bill['url'] ?? '',
+                        'congress' => $bill['congress'] ?? '',
+                        'type' => $bill['type'] ?? '',
+                        'number' => $bill['number'] ?? '',
+                        'latestAction' => $bill['latestAction'] ?? null,
+                        'policyArea' => $bill['policyArea'] ?? null,
                         'matchedKeyword' => $keyword,
                         'sponsorshipType' => $bill['sponsorshipType'] ?? 'sponsor'
                     );
@@ -3227,8 +3232,22 @@ function votecraft_lookup_congress_bills_by_issue($name, $keywords, $state = '')
         }
     }
 
+    // Flatten all matched bills into one array (dedup by billNumber)
+    $allMatchedBills = array();
+    $seenBills = array();
+    foreach ($billsByIssue as $bills) {
+        foreach ($bills as $bill) {
+            if (!isset($seenBills[$bill['billNumber']])) {
+                $seenBills[$bill['billNumber']] = true;
+                $allMatchedBills[] = $bill;
+            }
+        }
+    }
+
     return array(
+        'success' => true,
         'legislator_name' => $legislatorName,
+        'bills' => $allMatchedBills,
         'by_issue' => $billsByIssue,
         'total_bills' => count($allBills)
     );
@@ -3631,6 +3650,53 @@ function votecraft_reset_congress_sync_progress() {
 }
 
 /**
+ * Fetch detailed subjects (legislativeSubjects + policyArea) for a Congress bill
+ * Returns array of subject strings, e.g. ["Health", "Medicare", "Prescription drugs"]
+ */
+function votecraft_fetch_congress_bill_subjects($congress, $type, $number) {
+    $apiKey = 'hAwu5fqahUrcpjdzEJpsPzMleub3epvnX64pmBNV';
+    $url = "https://api.congress.gov/v3/bill/{$congress}/" . strtolower($type) . "/{$number}/subjects?api_key={$apiKey}&format=json";
+
+    $response = wp_remote_get($url, array('timeout' => 10));
+    if (is_wp_error($response)) return array();
+
+    $body = json_decode(wp_remote_retrieve_body($response), true);
+    if (!$body) return array();
+
+    $subjects = array();
+    if (isset($body['subjects']['policyArea']['name'])) {
+        $subjects[] = $body['subjects']['policyArea']['name'];
+    }
+    if (isset($body['subjects']['legislativeSubjects']) && is_array($body['subjects']['legislativeSubjects'])) {
+        foreach ($body['subjects']['legislativeSubjects'] as $subject) {
+            if (isset($subject['name'])) {
+                $subjects[] = $subject['name'];
+            }
+        }
+    }
+    return array_unique($subjects);
+}
+
+/**
+ * Fetch bill summary text from Congress.gov
+ * Returns plain text summary (HTML stripped), or empty string
+ */
+function votecraft_fetch_congress_bill_summary($congress, $type, $number) {
+    $apiKey = 'hAwu5fqahUrcpjdzEJpsPzMleub3epvnX64pmBNV';
+    $url = "https://api.congress.gov/v3/bill/{$congress}/" . strtolower($type) . "/{$number}/summaries?api_key={$apiKey}&format=json";
+
+    $response = wp_remote_get($url, array('timeout' => 10));
+    if (is_wp_error($response)) return '';
+
+    $body = json_decode(wp_remote_retrieve_body($response), true);
+    if (!$body || !isset($body['summaries']) || empty($body['summaries'])) return '';
+
+    // Get the latest summary
+    $latest = end($body['summaries']);
+    return strip_tags($latest['text'] ?? '');
+}
+
+/**
  * Sync issue-related bills for Congress members
  * Fetches bills for each Congress member and filters by issue keywords
  */
@@ -3715,12 +3781,35 @@ function votecraft_sync_congress_issue_bills($batch_size = 25) {
                         $bill_id
                     ));
 
-                    // Extract policyArea from Congress.gov bill data
-                    $policy_area = '';
-                    if (isset($bill['policyArea']['name'])) {
-                        $policy_area = $bill['policyArea']['name'];
-                    } elseif (isset($bill['policyArea']) && is_string($bill['policyArea'])) {
-                        $policy_area = $bill['policyArea'];
+                    // Extract latestAction from bill data
+                    $latest_action_date = null;
+                    $latest_action_desc = null;
+                    if (isset($bill['latestAction'])) {
+                        $la = $bill['latestAction'];
+                        $latest_action_date = $la['actionDate'] ?? null;
+                        $latest_action_desc = $la['text'] ?? null;
+                    }
+
+                    // Fetch detailed subjects (legislativeSubjects + policyArea) from Congress.gov
+                    $subjects = array();
+                    $abstract = '';
+                    if ($congress_num && $bill_type && $bill_num) {
+                        $subjects = votecraft_fetch_congress_bill_subjects($congress_num, $bill_type, $bill_num);
+                        $abstract = votecraft_fetch_congress_bill_summary($congress_num, $bill_type, $bill_num);
+                        usleep(100000); // 100ms delay to respect rate limits
+                    }
+
+                    // Fallback to policyArea if subjects endpoint returned nothing
+                    if (empty($subjects)) {
+                        $policy_area = '';
+                        if (isset($bill['policyArea']['name'])) {
+                            $policy_area = $bill['policyArea']['name'];
+                        } elseif (isset($bill['policyArea']) && is_string($bill['policyArea'])) {
+                            $policy_area = $bill['policyArea'];
+                        }
+                        if ($policy_area) {
+                            $subjects = array($policy_area);
+                        }
                     }
 
                     $bill_data = array(
@@ -3732,8 +3821,10 @@ function votecraft_sync_congress_issue_bills($batch_size = 25) {
                         'chamber' => $bill_type ? (in_array(strtoupper($bill_type), array('S', 'SRES', 'SJRES', 'SCONRES')) ? 'upper' : 'lower') : null,
                         'subject' => $issue['id'],
                         'issue_id' => $issue['id'],
-                        'subjects' => json_encode($policy_area ? array($policy_area) : array()),
-                        'abstract' => '',
+                        'subjects' => json_encode($subjects),
+                        'abstract' => $abstract,
+                        'latest_action_date' => $latest_action_date,
+                        'latest_action_description' => $latest_action_desc,
                         'openstates_url' => $bill['url'] ?? '',
                         'raw_data' => json_encode($bill),
                         'updated_at' => current_time('mysql')
