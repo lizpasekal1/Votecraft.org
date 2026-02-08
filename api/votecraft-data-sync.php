@@ -1247,49 +1247,28 @@ function votecraft_sync_admin_page() {
 
         <!-- DATABASE STATS -->
         <details class="votecraft-accordion" open>
-            <summary>📈 Database Stats <span style="margin-left: auto; font-weight: normal; color: #666;"><?php echo number_format($legislator_count); ?> legislators, <?php echo number_format($bill_count); ?> bills (<?php echo number_format($congress_bill_count); ?> federal)</span></summary>
+            <summary>📈 Database Stats <span style="margin-left: auto; font-weight: normal; color: #666;"><?php echo number_format($legislator_count); ?> legislators, <?php echo number_format($bill_count); ?> bills</span></summary>
             <div class="accordion-content">
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="stat-value"><?php echo number_format($legislator_count); ?></div>
-                    <div class="stat-label">Total Legislators</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value"><?php echo number_format($congress_count); ?></div>
-                    <div class="stat-label">Congress Members</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value"><?php echo number_format($state_leg_count); ?></div>
-                    <div class="stat-label">State Legislators</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value"><?php echo number_format($bill_count); ?></div>
-                    <div class="stat-label">Total Bills</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value"><?php echo number_format($congress_bill_count); ?></div>
-                    <div class="stat-label">Congress Bills</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value"><?php echo number_format($state_bill_count); ?></div>
-                    <div class="stat-label">State Bills</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value"><?php echo number_format($congress_cache_count); ?></div>
-                    <div class="stat-label">Congress.gov Cached</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value"><?php echo count($states_with_data); ?></div>
-                    <div class="stat-label">States w/ Legislators</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value"><?php echo count($states_with_bills); ?></div>
-                    <div class="stat-label">States w/ Bills</div>
-                </div>
-            </div>
-            <p style="font-size: 0.85em; color: #666; margin-top: 10px;">
-                <strong>Note:</strong> Congress.gov cached entries include both sponsored and cosponsored legislation for each member.
-            </p>
+
+            <h4 style="margin-top: 0;">🏛️ Congress.gov (Federal)</h4>
+            <table class="widefat" style="max-width: 500px; margin-bottom: 20px;">
+                <tbody>
+                    <tr><td><strong>Members in DB</strong></td><td style="text-align: right;"><?php echo number_format($congress_count); ?></td></tr>
+                    <tr><td><strong>Federal Bills</strong></td><td style="text-align: right;"><?php echo number_format($congress_bill_count); ?></td></tr>
+                    <tr><td><strong>Cached API Responses</strong></td><td style="text-align: right;"><?php echo number_format($congress_cache_count); ?></td></tr>
+                </tbody>
+            </table>
+
+            <h4>🗂️ OpenStates (State)</h4>
+            <table class="widefat" style="max-width: 500px; margin-bottom: 20px;">
+                <tbody>
+                    <tr><td><strong>State Legislators</strong></td><td style="text-align: right;"><?php echo number_format($state_leg_count); ?></td></tr>
+                    <tr><td><strong>State Bills</strong></td><td style="text-align: right;"><?php echo number_format($state_bill_count); ?></td></tr>
+                    <tr><td><strong>States w/ Legislators</strong></td><td style="text-align: right;"><?php echo count($states_with_data); ?></td></tr>
+                    <tr><td><strong>States w/ Bills</strong></td><td style="text-align: right;"><?php echo count($states_with_bills); ?></td></tr>
+                </tbody>
+            </table>
+
             </div>
         </details>
 
