@@ -3342,7 +3342,7 @@ function votecraft_sync_congress_members($batch_size = 50) {
         );
     }
 
-    $apiKey = 'RxFNqgFXr8fBLvPMkWdSzyTFDRA9L4ncBpAHuWXy';
+    $apiKey = 'hAwu5fqahUrcpjdzEJpsPzMleub3epvnX64pmBNV';
     $baseUrl = 'https://api.congress.gov/v3';
 
     // Get current progress
