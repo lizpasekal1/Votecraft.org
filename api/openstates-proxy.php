@@ -326,28 +326,30 @@ function votecraft_try_local_db($endpoint, $params) {
         ));
 
         if ($count > 0) {
-            // Search bills by keyword:
-            // - Title: LIKE for SQL filter, then word boundary regex validation
-            // - Subject: exact match only (subject stores the search keyword that
-            //   originally found this bill, not the bill's actual topic)
+            // Search bills by keyword against actual bill content:
+            // - title/subjects/abstract: LIKE for SQL filter, then word boundary regex
+            // - issue_id: exact match (identifies which VoteCraft issue found this bill)
+            $like_kw = '%' . $wpdb->esc_like($keyword) . '%';
             $bills = $wpdb->get_results($wpdb->prepare(
                 "SELECT * FROM $bills_table
                  WHERE state = %s
-                 AND (title LIKE %s OR subject = %s)
+                 AND (title LIKE %s OR subjects LIKE %s OR abstract LIKE %s OR issue_id = %s)
                  ORDER BY latest_action_date DESC
                  LIMIT 50",
                 $state,
-                '%' . $wpdb->esc_like($keyword) . '%',
+                $like_kw, $like_kw, $like_kw,
                 $keyword
             ));
 
-            // Validate matches - accept exact subject match or word boundary title match
+            // Validate: accept issue_id exact match, or word boundary match in content
             $keywordPattern = '/\b' . preg_quote(strtolower($keyword), '/') . '\b/i';
             $validated_bills = array();
             foreach ($bills as $bill) {
-                $title = strtolower($bill->title ?: '');
-                $subjectExact = (strtolower(trim($bill->subject ?? '')) === strtolower(trim($keyword)));
-                if (preg_match($keywordPattern, $title) || $subjectExact) {
+                $issueMatch = (strtolower(trim($bill->issue_id ?? '')) === strtolower(trim($keyword)));
+                $titleMatch = preg_match($keywordPattern, strtolower($bill->title ?: ''));
+                $subjectsMatch = preg_match($keywordPattern, strtolower($bill->subjects ?: ''));
+                $abstractMatch = preg_match($keywordPattern, strtolower($bill->abstract ?: ''));
+                if ($issueMatch || $titleMatch || $subjectsMatch || $abstractMatch) {
                     $validated_bills[] = $bill;
                 }
             }
