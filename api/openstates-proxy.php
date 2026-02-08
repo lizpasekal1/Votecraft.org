@@ -326,17 +326,29 @@ function votecraft_try_local_db($endpoint, $params) {
         ));
 
         if ($count > 0) {
-            // Search bills by keyword
+            // Search bills by keyword (SQL LIKE for initial filter)
             $bills = $wpdb->get_results($wpdb->prepare(
                 "SELECT * FROM $bills_table
                  WHERE state = %s
                  AND (title LIKE %s OR subject LIKE %s)
                  ORDER BY latest_action_date DESC
-                 LIMIT 20",
+                 LIMIT 50",
                 $state,
                 '%' . $wpdb->esc_like($keyword) . '%',
                 '%' . $wpdb->esc_like($keyword) . '%'
             ));
+
+            // Word boundary validation - filter out false positives from LIKE matching
+            $keywordPattern = '/\b' . preg_quote(strtolower($keyword), '/') . '\b/i';
+            $validated_bills = array();
+            foreach ($bills as $bill) {
+                $title = strtolower($bill->title ?: '');
+                $subject = strtolower($bill->subject ?: '');
+                if (preg_match($keywordPattern, $title) || preg_match($keywordPattern, $subject)) {
+                    $validated_bills[] = $bill;
+                }
+            }
+            $bills = array_slice($validated_bills, 0, 20);
 
             // Format results and attach sponsorships
             $results = array();
