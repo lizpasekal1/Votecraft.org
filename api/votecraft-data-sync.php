@@ -674,6 +674,14 @@ function votecraft_sync_admin_page() {
         $action = sanitize_text_field($_POST['votecraft_sync_action']);
         $state = isset($_POST['state']) ? sanitize_text_field($_POST['state']) : null;
 
+        // Prevent PHP timeout during sync operations
+        @set_time_limit(300); // 5 minutes max
+
+        // Show loading message immediately before sync starts
+        echo '<div class="notice notice-info" id="votecraft-sync-loading"><p>Syncing... please wait, this may take a minute.</p></div>';
+        if (ob_get_level()) ob_flush();
+        flush();
+
         if ($action === 'sync_legislators' && $state) {
             $result = votecraft_sync_legislators($state);
             echo '<div class="notice notice-' . ($result['success'] ? 'success' : 'error') . '"><p>' . esc_html($result['message']) . '</p></div>';
@@ -1001,7 +1009,61 @@ function votecraft_sync_admin_page() {
             color: #666;
             margin-top: 5px;
         }
+        /* Loading overlay */
+        .votecraft-sync-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .votecraft-sync-overlay.active {
+            display: flex;
+        }
+        .votecraft-sync-overlay .spinner-text {
+            font-size: 18px;
+            color: #2271b1;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+        .votecraft-sync-overlay .wp-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e0e0e0;
+            border-top: 4px solid #2271b1;
+            border-radius: 50%;
+            animation: vc-spin 0.8s linear infinite;
+        }
+        @keyframes vc-spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
+
+    <div class="votecraft-sync-overlay" id="votecraft-sync-overlay">
+        <div class="wp-spinner"></div>
+        <div class="spinner-text" id="votecraft-sync-text">Syncing... please wait</div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show loading overlay when any sync form is submitted
+        var forms = document.querySelectorAll('form[method="post"]');
+        forms.forEach(function(form) {
+            form.addEventListener('submit', function(e) {
+                var btn = e.submitter;
+                if (btn && btn.name === 'votecraft_sync_action') {
+                    var overlay = document.getElementById('votecraft-sync-overlay');
+                    var text = document.getElementById('votecraft-sync-text');
+                    text.textContent = 'Syncing ' + (btn.textContent.trim()) + '... please wait';
+                    overlay.classList.add('active');
+                }
+            });
+        });
+    });
+    </script>
 
     <div class="wrap">
         <h1>VoteCraft Data Sync</h1>
