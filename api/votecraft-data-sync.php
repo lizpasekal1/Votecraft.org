@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Database version for migrations
-define('VOTECRAFT_SYNC_DB_VERSION', '1.0');
+define('VOTECRAFT_SYNC_DB_VERSION', '2.0');
 
 // OpenStates API key
 define('VOTECRAFT_OPENSTATES_API_KEY', 'd2917281-d734-4e26-a557-eeb50ea60f78');
@@ -461,7 +461,7 @@ function votecraft_sync_bills_batch($state, $max_calls) {
             'jurisdiction' => $jurisdiction,
             'q' => $keyword,
             'created_since' => $five_years_ago,
-            'include' => 'sponsorships',
+            'include' => array('sponsorships', 'abstracts'),
             'per_page' => 20,
             'apikey' => VOTECRAFT_OPENSTATES_API_KEY
         ));
@@ -493,6 +493,13 @@ function votecraft_sync_bills_batch($state, $max_calls) {
             $bill_id = $bill['id'];
             $latest_action = isset($bill['latest_action']) ? $bill['latest_action'] : array();
 
+            // Extract actual subjects and abstract from API response
+            $api_subjects = isset($bill['subject']) && is_array($bill['subject']) ? $bill['subject'] : array();
+            $api_abstract = '';
+            if (isset($bill['abstracts']) && is_array($bill['abstracts']) && !empty($bill['abstracts'])) {
+                $api_abstract = $bill['abstracts'][0]['abstract'] ?? '';
+            }
+
             $wpdb->replace($bills_table, array(
                 'id' => $bill_id,
                 'identifier' => $bill['identifier'] ?? '',
@@ -502,6 +509,9 @@ function votecraft_sync_bills_batch($state, $max_calls) {
                 'chamber' => $bill['from_organization']['classification'] ?? null,
                 'classification' => is_array($bill['classification']) ? implode(',', $bill['classification']) : null,
                 'subject' => $keyword,
+                'issue_id' => $keyword,
+                'subjects' => json_encode($api_subjects),
+                'abstract' => $api_abstract,
                 'latest_action_date' => $latest_action['date'] ?? null,
                 'latest_action_description' => $latest_action['description'] ?? null,
                 'openstates_url' => $bill['openstates_url'] ?? null,
@@ -538,8 +548,58 @@ register_activation_hook(__FILE__, 'votecraft_sync_create_tables');
 add_action('plugins_loaded', 'votecraft_sync_maybe_create_tables');
 
 function votecraft_sync_maybe_create_tables() {
-    if (get_option('votecraft_sync_db_version') !== VOTECRAFT_SYNC_DB_VERSION) {
+    $current_version = get_option('votecraft_sync_db_version', '0');
+    if ($current_version !== VOTECRAFT_SYNC_DB_VERSION) {
         votecraft_sync_create_tables();
+
+        // v2.0 migration: backfill issue_id, subjects, abstract from raw_data
+        if (version_compare($current_version, '2.0', '<')) {
+            votecraft_migrate_bill_subjects();
+        }
+    }
+}
+
+/**
+ * One-time migration: populate issue_id, subjects, abstract from existing data
+ */
+function votecraft_migrate_bill_subjects() {
+    global $wpdb;
+    $bills_table = $wpdb->prefix . 'votecraft_bills';
+
+    // Copy subject -> issue_id for all existing bills
+    $wpdb->query("UPDATE $bills_table SET issue_id = subject WHERE issue_id IS NULL AND subject IS NOT NULL");
+
+    // Backfill subjects and abstract from raw_data JSON
+    $bills = $wpdb->get_results("SELECT id, state, raw_data FROM $bills_table WHERE subjects IS NULL AND raw_data IS NOT NULL LIMIT 5000");
+
+    foreach ($bills as $bill) {
+        $raw = json_decode($bill->raw_data, true);
+        if (!$raw) continue;
+
+        $subjects = '[]';
+        $abstract = '';
+
+        if ($bill->state === 'Federal') {
+            // Congress.gov: extract policyArea
+            if (isset($raw['policyArea']['name'])) {
+                $subjects = json_encode(array($raw['policyArea']['name']));
+            } elseif (isset($raw['policyArea']) && is_string($raw['policyArea'])) {
+                $subjects = json_encode(array($raw['policyArea']));
+            }
+        } else {
+            // OpenStates: extract subject array and first abstract
+            if (isset($raw['subject']) && is_array($raw['subject'])) {
+                $subjects = json_encode($raw['subject']);
+            }
+            if (isset($raw['abstracts']) && is_array($raw['abstracts']) && !empty($raw['abstracts'])) {
+                $abstract = $raw['abstracts'][0]['abstract'] ?? '';
+            }
+        }
+
+        $wpdb->update($bills_table, array(
+            'subjects' => $subjects,
+            'abstract' => $abstract
+        ), array('id' => $bill->id));
     }
 }
 
@@ -579,6 +639,9 @@ function votecraft_sync_create_tables() {
         chamber VARCHAR(20),
         classification VARCHAR(100),
         subject TEXT,
+        issue_id VARCHAR(50),
+        subjects TEXT,
+        abstract TEXT,
         latest_action_date DATE,
         latest_action_description TEXT,
         openstates_url VARCHAR(500),
@@ -586,8 +649,7 @@ function votecraft_sync_create_tables() {
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (id),
         KEY state_session (state, session),
-        KEY subject_search (state, subject(100)),
-        FULLTEXT KEY title_search (title)
+        KEY issue_search (state, issue_id)
     ) $charset;";
 
     // Bill sponsorships table (links bills to legislators)
@@ -879,7 +941,9 @@ function votecraft_sync_admin_page() {
         $like_clauses = array();
         foreach ($keywords as $kw) {
             $like_clauses[] = $wpdb->prepare("title LIKE %s", '%' . $wpdb->esc_like($kw) . '%');
-            $like_clauses[] = $wpdb->prepare("subject LIKE %s", '%' . $wpdb->esc_like($kw) . '%');
+            $like_clauses[] = $wpdb->prepare("subjects LIKE %s", '%' . $wpdb->esc_like($kw) . '%');
+            $like_clauses[] = $wpdb->prepare("abstract LIKE %s", '%' . $wpdb->esc_like($kw) . '%');
+            $like_clauses[] = $wpdb->prepare("issue_id LIKE %s", '%' . $wpdb->esc_like($kw) . '%');
         }
         $where = implode(' OR ', $like_clauses);
 
@@ -1829,7 +1893,7 @@ function votecraft_sync_bills($state) {
             $params = array(
                 'jurisdiction' => $jurisdiction,
                 'q' => $keyword,
-                'include' => 'sponsorships',
+                'include' => array('sponsorships', 'abstracts'),
                 'per_page' => 20,
                 'sort' => 'latest_action_desc',
                 'created_since' => $five_years_ago,
@@ -1887,6 +1951,13 @@ function votecraft_sync_bills($state) {
         foreach ($all_bills as $bill) {
             $latest_action = isset($bill['latest_action_date']) ? $bill['latest_action_date'] : null;
 
+            // Extract actual subjects and abstract from API response
+            $api_subjects = isset($bill['subject']) && is_array($bill['subject']) ? $bill['subject'] : array();
+            $api_abstract = '';
+            if (isset($bill['abstracts']) && is_array($bill['abstracts']) && !empty($bill['abstracts'])) {
+                $api_abstract = $bill['abstracts'][0]['abstract'] ?? '';
+            }
+
             $wpdb->replace($bills_table, array(
                 'id' => $bill['id'],
                 'identifier' => $bill['identifier'],
@@ -1896,6 +1967,9 @@ function votecraft_sync_bills($state) {
                 'chamber' => isset($bill['from_organization']['classification']) ? $bill['from_organization']['classification'] : null,
                 'classification' => isset($bill['classification']) ? (is_array($bill['classification']) ? implode(', ', $bill['classification']) : $bill['classification']) : null,
                 'subject' => $bill['_keyword'],
+                'issue_id' => $bill['_keyword'],
+                'subjects' => json_encode($api_subjects),
+                'abstract' => $api_abstract,
                 'latest_action_date' => $latest_action,
                 'latest_action_description' => isset($bill['latest_action_description']) ? $bill['latest_action_description'] : null,
                 'openstates_url' => isset($bill['openstates_url']) ? $bill['openstates_url'] : null,
@@ -2135,16 +2209,19 @@ function votecraft_local_search_bills($state, $keyword, $limit = 20) {
     $bills_table = $wpdb->prefix . 'votecraft_bills';
     $sponsorships_table = $wpdb->prefix . 'votecraft_sponsorships';
 
-    // Search by keyword in title or subject
+    // Search by keyword in title, subjects, abstract, or issue_id
+    $like_kw = '%' . $wpdb->esc_like($keyword) . '%';
     $bills = $wpdb->get_results($wpdb->prepare(
         "SELECT * FROM $bills_table
          WHERE state = %s
-         AND (title LIKE %s OR subject LIKE %s)
+         AND (title LIKE %s OR subjects LIKE %s OR abstract LIKE %s OR issue_id = %s)
          ORDER BY latest_action_date DESC
          LIMIT %d",
         $state,
-        '%' . $wpdb->esc_like($keyword) . '%',
-        '%' . $wpdb->esc_like($keyword) . '%',
+        $like_kw,
+        $like_kw,
+        $like_kw,
+        $keyword,
         $limit
     ));
 
@@ -3186,20 +3263,19 @@ function votecraft_lookup_openstates_bills_by_issue($legislator_name, $keywords,
 
         foreach ($issueKeywords as $keyword) {
             // First try: Search synced bills/sponsorships tables
-            // Title: LIKE + word boundary validation for keyword in actual bill text
-            // Subject: exact match only (subject stores the search keyword/issue ID that
-            //   originally found this bill, so exact match confirms it was found by this keyword)
+            // Search actual bill content (title, subjects, abstract) + issue_id for exact match
+            $like_kw = '%' . $wpdb->esc_like($keyword) . '%';
             $bills = $wpdb->get_results($wpdb->prepare(
                 "SELECT b.*, s.legislator_name as sponsor_name, s.legislator_id, s.sponsorship_type, s.classification
                  FROM $bills_table b
                  INNER JOIN $sponsorships_table s ON b.id = s.bill_id
                  WHERE b.state = %s
-                 AND (b.title LIKE %s OR b.subject = %s)
+                 AND (b.title LIKE %s OR b.subjects LIKE %s OR b.abstract LIKE %s OR b.issue_id = %s)
                  AND (s.legislator_id = %s OR s.legislator_name LIKE %s)
                  ORDER BY b.latest_action_date DESC
                  LIMIT 50",
                 $state,
-                '%' . $wpdb->esc_like($keyword) . '%',
+                $like_kw, $like_kw, $like_kw,
                 $keyword,
                 $openstates_id,
                 '%' . $wpdb->esc_like($legislator_name) . '%'
@@ -3207,13 +3283,15 @@ function votecraft_lookup_openstates_bills_by_issue($legislator_name, $keywords,
 
             // Process synced table results - validate keyword matches
             foreach ($bills as $bill) {
-                // Accept if subject exactly matches the keyword (bill was found by this keyword)
-                $subjectExactMatch = (strtolower(trim($bill->subject ?? '')) === strtolower(trim($keyword)));
-                // Or verify keyword appears in title as a whole phrase
+                // Accept if issue_id exactly matches the keyword
+                $issueMatch = (strtolower(trim($bill->issue_id ?? '')) === strtolower(trim($keyword)));
+                // Or verify keyword appears in content as a whole phrase
                 $keywordPattern = '/\b' . preg_quote(strtolower($keyword), '/') . '\b/i';
                 $titleMatches = preg_match($keywordPattern, strtolower($bill->title));
+                $subjectsMatch = preg_match($keywordPattern, strtolower($bill->subjects ?? ''));
+                $abstractMatch = preg_match($keywordPattern, strtolower($bill->abstract ?? ''));
 
-                if (!$titleMatches && !$subjectExactMatch) {
+                if (!$titleMatches && !$subjectsMatch && !$abstractMatch && !$issueMatch) {
                     continue; // Skip false positive matches
                 }
 
@@ -3637,6 +3715,14 @@ function votecraft_sync_congress_issue_bills($batch_size = 25) {
                         $bill_id
                     ));
 
+                    // Extract policyArea from Congress.gov bill data
+                    $policy_area = '';
+                    if (isset($bill['policyArea']['name'])) {
+                        $policy_area = $bill['policyArea']['name'];
+                    } elseif (isset($bill['policyArea']) && is_string($bill['policyArea'])) {
+                        $policy_area = $bill['policyArea'];
+                    }
+
                     $bill_data = array(
                         'id' => $bill_id,
                         'identifier' => $bill_number,
@@ -3645,6 +3731,9 @@ function votecraft_sync_congress_issue_bills($batch_size = 25) {
                         'session' => $congress_num ? $congress_num . 'th Congress' : null,
                         'chamber' => $bill_type ? (in_array(strtoupper($bill_type), array('S', 'SRES', 'SJRES', 'SCONRES')) ? 'upper' : 'lower') : null,
                         'subject' => $issue['id'],
+                        'issue_id' => $issue['id'],
+                        'subjects' => json_encode($policy_area ? array($policy_area) : array()),
+                        'abstract' => '',
                         'openstates_url' => $bill['url'] ?? '',
                         'raw_data' => json_encode($bill),
                         'updated_at' => current_time('mysql')
