@@ -326,25 +326,28 @@ function votecraft_try_local_db($endpoint, $params) {
         ));
 
         if ($count > 0) {
-            // Search bills by keyword - title only (subject field stores the search
-            // keyword/issue ID, not the bill's actual subject, so matching it causes
-            // circular false positives)
+            // Search bills by keyword:
+            // - Title: LIKE for SQL filter, then word boundary regex validation
+            // - Subject: exact match only (subject stores the search keyword that
+            //   originally found this bill, not the bill's actual topic)
             $bills = $wpdb->get_results($wpdb->prepare(
                 "SELECT * FROM $bills_table
                  WHERE state = %s
-                 AND title LIKE %s
+                 AND (title LIKE %s OR subject = %s)
                  ORDER BY latest_action_date DESC
                  LIMIT 50",
                 $state,
-                '%' . $wpdb->esc_like($keyword) . '%'
+                '%' . $wpdb->esc_like($keyword) . '%',
+                $keyword
             ));
 
-            // Word boundary validation - filter out false positives from LIKE matching
+            // Validate matches - accept exact subject match or word boundary title match
             $keywordPattern = '/\b' . preg_quote(strtolower($keyword), '/') . '\b/i';
             $validated_bills = array();
             foreach ($bills as $bill) {
                 $title = strtolower($bill->title ?: '');
-                if (preg_match($keywordPattern, $title)) {
+                $subjectExact = (strtolower(trim($bill->subject ?? '')) === strtolower(trim($keyword)));
+                if (preg_match($keywordPattern, $title) || $subjectExact) {
                     $validated_bills[] = $bill;
                 }
             }
