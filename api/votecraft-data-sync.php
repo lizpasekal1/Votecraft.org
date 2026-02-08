@@ -1301,6 +1301,10 @@ function votecraft_sync_admin_page() {
             <div class="accordion-content">
 
             <h4>🗂️ OpenStates Sync</h4>
+            <p style="font-size: 0.9em; color: #666;">
+                <strong>Stats:</strong> <?php echo number_format($state_leg_count); ?> state legislators, <?php echo number_format($state_bill_count); ?> state bills across <?php echo count($states_with_data); ?> states.
+                <strong>Rate limit:</strong> <?php echo votecraft_is_rate_limited() ? '<span style="color: #dc3545;">Daily limit hit — try again tomorrow</span>' : '<span style="color: #28a745;">OK</span>'; ?>
+            </p>
 
             <h4>Sync Single State</h4>
             <form method="post">
@@ -1317,27 +1321,31 @@ function votecraft_sync_admin_page() {
                     <button type="submit" name="votecraft_sync_action" value="sync_legislators" class="button">
                         Sync Legislators
                     </button>
-                    <button type="submit" name="votecraft_sync_action" value="sync_bills" class="button">
+                    <span style="font-size: 0.85em; color: #666;">(~2 API calls)</span>
+                    <button type="submit" name="votecraft_sync_action" value="sync_bills" class="button" style="margin-left: 10px;">
                         Sync Bills
                     </button>
+                    <span style="font-size: 0.85em; color: #666;">(~40 API calls per state)</span>
                 </p>
             </form>
 
             <hr style="margin: 20px 0;">
 
             <h4>Bulk Sync - All States</h4>
-            <p style="font-size: 0.9em; color: #666;"><em>Warning: These sync all 50 states. Run during off-peak hours.</em></p>
+            <p style="font-size: 0.9em; color: #666;"><em>Warning: These sync all 50 states. Uses batched API calls with rate limiting.</em></p>
             <form method="post" style="display: inline-block; margin-right: 10px;">
                 <?php wp_nonce_field('votecraft_sync'); ?>
                 <button type="submit" name="votecraft_sync_action" value="sync_all_legislators" class="button">
                     Sync All Legislators (50 States)
                 </button>
+                <span style="font-size: 0.85em; color: #666;">(~100 API calls)</span>
             </form>
             <form method="post" style="display: inline-block;">
                 <?php wp_nonce_field('votecraft_sync'); ?>
                 <button type="submit" name="votecraft_sync_action" value="sync_all_issue_bills" class="button">
                     Sync Issue-Related Bills (50 States)
                 </button>
+                <span style="font-size: 0.85em; color: #666;">(~2,000 API calls — runs in batches)</span>
             </form>
 
             <hr style="margin: 20px 0;">
@@ -1350,13 +1358,41 @@ function votecraft_sync_admin_page() {
                 <button type="submit" name="votecraft_sync_action" value="sync_congress_members" class="button">
                     Sync All Members
                 </button>
+                <?php
+                    $cong_progress = get_option('votecraft_congress_sync_progress', array('chamber' => 'senate', 'offset' => 0, 'total_synced' => 0, 'completed' => false));
+                    $cong_synced = isset($cong_progress['total_synced']) ? $cong_progress['total_synced'] : 0;
+                    $cong_chamber = isset($cong_progress['chamber']) ? ucfirst($cong_progress['chamber']) : 'Senate';
+                    $cong_done = isset($cong_progress['completed']) && $cong_progress['completed'];
+                ?>
+                <span style="font-size: 0.85em; color: #666; margin-left: 5px;">(50 per batch)</span>
+                <?php if ($cong_synced > 0): ?>
+                <br><span style="font-size: 0.85em; color: <?php echo $cong_done ? '#28a745' : '#d63384'; ?>; margin-left: 5px;">
+                    Progress: <?php echo $cong_synced; ?> members synced<?php echo $cong_done ? ' ✓ Complete' : ' — next: ' . $cong_chamber . ', click again to continue'; ?>
+                </span>
+                <?php endif; ?>
             </form>
             <form method="post" style="display: inline-block;">
                 <?php wp_nonce_field('votecraft_sync'); ?>
                 <button type="submit" name="votecraft_sync_action" value="sync_congress_issue_bills" class="button">
                     Sync Issue-Related Bills
                 </button>
-                <span style="font-size: 0.85em; color: #666; margin-left: 5px;">(50 members per batch)</span>
+                <?php
+                    $bills_progress = get_option('votecraft_congress_bills_sync_progress', array('offset' => 0, 'total_synced' => 0, 'bills_found' => 0, 'completed' => false));
+                    $bills_batch = 10;
+                    $bills_offset = isset($bills_progress['offset']) ? $bills_progress['offset'] : 0;
+                    $bills_total = isset($bills_progress['total_synced']) ? $bills_progress['total_synced'] : 0;
+                    $bills_found = isset($bills_progress['bills_found']) ? $bills_progress['bills_found'] : 0;
+                    $bills_done = isset($bills_progress['completed']) && $bills_progress['completed'];
+                ?>
+                <span style="font-size: 0.85em; color: #666; margin-left: 5px;">
+                    (<?php echo $bills_batch; ?> members per batch, ~<?php echo $bills_batch * 11; ?> API calls)
+                </span>
+                <?php if ($bills_total > 0 || $bills_found > 0): ?>
+                <br><span style="font-size: 0.85em; color: <?php echo $bills_done ? '#28a745' : '#d63384'; ?>; margin-left: 5px;">
+                    Progress: <?php echo $bills_total; ?>/<?php echo number_format($congress_count); ?> members processed, <?php echo $bills_found; ?> bills found
+                    <?php echo $bills_done ? ' ✓ Complete' : ' — click again to continue'; ?>
+                </span>
+                <?php endif; ?>
             </form>
 
             </div>
@@ -3534,7 +3570,7 @@ function votecraft_reset_congress_sync_progress() {
  * Sync issue-related bills for Congress members
  * Fetches bills for each Congress member and filters by issue keywords
  */
-function votecraft_sync_congress_issue_bills($batch_size = 50) {
+function votecraft_sync_congress_issue_bills($batch_size = 10) {
     global $wpdb;
 
     // Check if we're rate limited
