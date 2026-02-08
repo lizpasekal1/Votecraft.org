@@ -311,7 +311,17 @@ AND response_data LIKE '%ranked choice%';
 - Admin: Only checked sync tables (different data source)
 **Fix:** Admin now uses same data sources as frontend (sync tables + cache fallback)
 
-### Issue 5: API Rate Limits
+### Issue 5: Congress.gov Sync Silently Failing
+**Status:** Fixed (2026-02-08)
+**Problem:** Congress member sync and Congress bills sync were silently failing - no data stored
+**Root Cause:** Column name mismatches between code and actual table schema:
+- Code used `openstates_id` → table has `id`
+- Code used `office` → table has `current_role`
+- Code used `created_at` → column doesn't exist
+- Bills sync used `bill_id`, `legislator_name`, `issue_id`, `url` → none exist in bills table
+**Fix:** Updated both `votecraft_sync_congress_members()` and `votecraft_sync_congress_issue_bills()` to use correct column names. Bills now stored in `wp_votecraft_bills` with sponsorships in `wp_votecraft_sponsorships`.
+
+### Issue 6: API Rate Limits
 **Status:** Ongoing
 **Problem:** OpenStates has daily rate limit, Congress.gov has hourly limit
 **Mitigation:**
