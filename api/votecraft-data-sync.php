@@ -1321,11 +1321,11 @@ function votecraft_sync_admin_page() {
                     <button type="submit" name="votecraft_sync_action" value="sync_legislators" class="button">
                         Sync Legislators
                     </button>
-                    <span style="font-size: 0.85em; color: #666;">(~2 API calls)</span>
+                    <span style="font-size: 0.85em; color: #666;">(1 API call)</span>
                     <button type="submit" name="votecraft_sync_action" value="sync_bills" class="button" style="margin-left: 10px;">
                         Sync Bills
                     </button>
-                    <span style="font-size: 0.85em; color: #666;">(~40 API calls per state)</span>
+                    <span style="font-size: 0.85em; color: #666;">(~33 API calls per state)</span>
                 </p>
             </form>
 
@@ -1338,14 +1338,14 @@ function votecraft_sync_admin_page() {
                 <button type="submit" name="votecraft_sync_action" value="sync_all_legislators" class="button">
                     Sync All Legislators (50 States)
                 </button>
-                <span style="font-size: 0.85em; color: #666;">(~100 API calls)</span>
+                <span style="font-size: 0.85em; color: #666;">(~50 API calls total)</span>
             </form>
             <form method="post" style="display: inline-block;">
                 <?php wp_nonce_field('votecraft_sync'); ?>
                 <button type="submit" name="votecraft_sync_action" value="sync_all_issue_bills" class="button">
                     Sync Issue-Related Bills (50 States)
                 </button>
-                <span style="font-size: 0.85em; color: #666;">(~2,000 API calls — runs in batches)</span>
+                <span style="font-size: 0.85em; color: #666;">(~1,650 API calls — runs in batches)</span>
             </form>
 
             <hr style="margin: 20px 0;">
@@ -1378,14 +1378,14 @@ function votecraft_sync_admin_page() {
                 </button>
                 <?php
                     $bills_progress = get_option('votecraft_congress_bills_sync_progress', array('offset' => 0, 'total_synced' => 0, 'bills_found' => 0, 'completed' => false));
-                    $bills_batch = 10;
+                    $bills_batch = 25;
                     $bills_offset = isset($bills_progress['offset']) ? $bills_progress['offset'] : 0;
                     $bills_total = isset($bills_progress['total_synced']) ? $bills_progress['total_synced'] : 0;
                     $bills_found = isset($bills_progress['bills_found']) ? $bills_progress['bills_found'] : 0;
                     $bills_done = isset($bills_progress['completed']) && $bills_progress['completed'];
                 ?>
                 <span style="font-size: 0.85em; color: #666; margin-left: 5px;">
-                    (<?php echo $bills_batch; ?> members per batch, ~<?php echo $bills_batch * 11; ?> API calls)
+                    (<?php echo $bills_batch; ?> members per batch, ~<?php echo $bills_batch * 4; ?> API calls)
                 </span>
                 <?php if ($bills_total > 0 || $bills_found > 0): ?>
                 <br><span style="font-size: 0.85em; color: <?php echo $bills_done ? '#28a745' : '#d63384'; ?>; margin-left: 5px;">
@@ -1706,31 +1706,23 @@ function votecraft_sync_bills($state) {
         return array('error' => 'Daily rate limit hit - try again tomorrow');
     }
 
-    // Expanded keywords to catch more relevant bills
+    // Keywords matching VoteCraft's 6 core issues only
     $keywords = array(
-        // RCV / Voting Reform
-        'ranked choice', 'ranked choice voting', 'instant runoff', 'preferential voting', 'alternative voting', 'final five voting', 'rank the vote', 'rcv', 'local option voting',
-        // Debt / Consumer Finance
-        'student loan', 'student debt', 'predatory lending', 'consumer protection', 'credit card',
-        'payday loan', 'debt collection', 'bankruptcy', 'financial literacy',
-        // Campaign Finance / Citizens United
-        'citizens united', 'campaign finance', 'dark money', 'political spending', 'super pac',
-        'election spending', 'lobbying', 'corporate money', 'disclosure',
-        // Healthcare
-        'medicare', 'medicaid', 'healthcare', 'health care', 'public option', 'prescription drug',
-        'insulin', 'affordable care', 'health insurance', 'mental health',
-        // SCOTUS / Judicial Reform
-        'supreme court', 'judicial term', 'court reform', 'judicial ethics', 'recusal',
-        // News / Media
-        'local journalism', 'press freedom', 'news', 'misinformation',
-        // Additional Warren-style issues
-        'wall street', 'big bank', 'financial regulation', 'consumer bureau', 'cfpb',
-        'antitrust', 'monopoly', 'corporate accountability', 'executive compensation',
-        'tax fairness', 'wealth tax', 'corporate tax', 'minimum wage', 'living wage',
-        'housing', 'affordable housing', 'rent', 'eviction',
-        'climate', 'clean energy', 'environmental', 'pollution',
-        'childcare', 'child care', 'paid leave', 'family leave'
+        // RCV / Voting Reform (9)
+        'ranked choice', 'ranked choice voting', 'instant runoff', 'preferential voting',
+        'alternative voting', 'final five voting', 'rank the vote', 'rcv', 'local option voting',
+        // Debt / Consumer Finance (6)
+        'student loan', 'student debt', 'predatory lending', 'payday loan', 'debt relief', 'debt collection',
+        // Campaign Finance / Citizens United (5)
+        'citizens united', 'campaign finance', 'dark money', 'super pac', 'political spending',
+        // Healthcare (6)
+        'medicare for all', 'universal health', 'public option', 'medicaid expansion', 'single payer', 'drug pricing',
+        // SCOTUS / Judicial Reform (4)
+        'supreme court reform', 'judicial term limits', 'court expansion', 'judicial ethics',
+        // News / Media (3)
+        'local journalism', 'journalism funding', 'news deserts'
     );
+    // Total: ~33 keywords = ~33 API calls per state
 
     // Only bills from last 5 years
     $five_years_ago = date('Y-m-d', strtotime('-5 years'));
@@ -3570,7 +3562,7 @@ function votecraft_reset_congress_sync_progress() {
  * Sync issue-related bills for Congress members
  * Fetches bills for each Congress member and filters by issue keywords
  */
-function votecraft_sync_congress_issue_bills($batch_size = 10) {
+function votecraft_sync_congress_issue_bills($batch_size = 25) {
     global $wpdb;
 
     // Check if we're rate limited
