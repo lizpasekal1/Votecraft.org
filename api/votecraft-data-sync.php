@@ -235,12 +235,13 @@ function votecraft_run_scheduled_batch() {
         return;
     }
 
-    // All 50 states
+    // All 50 states (Massachusetts first for priority testing)
     $states = array(
+        'Massachusetts',
         'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado',
         'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho',
         'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana',
-        'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi',
+        'Maine', 'Maryland', 'Michigan', 'Minnesota', 'Mississippi',
         'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey',
         'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma',
         'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
@@ -983,10 +984,11 @@ function votecraft_sync_admin_page() {
     ));
     $next_scheduled = wp_next_scheduled('votecraft_scheduled_sync');
     $all_states_list = array(
+        'Massachusetts',
         'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado',
         'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho',
         'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana',
-        'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi',
+        'Maine', 'Maryland', 'Michigan', 'Minnesota', 'Mississippi',
         'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey',
         'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma',
         'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
@@ -2018,9 +2020,10 @@ function votecraft_sync_bills($state) {
  */
 function votecraft_get_all_states() {
     return array(
+        'Massachusetts',
         'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
         'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa',
-        'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan',
+        'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Michigan',
         'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire',
         'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio',
         'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
