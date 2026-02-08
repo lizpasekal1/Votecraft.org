@@ -3098,7 +3098,17 @@ function votecraft_lookup_congress_bills_by_issue($name, $keywords, $state = '')
         }
 
         foreach ($keywords as $issueKey => $issueData) {
-            $issueKeywords = $issueData['keywords'];
+            // Handle both formats:
+            // 1) Structured: array('rcv' => array('keywords' => array('ranked choice', ...)))
+            // 2) Flat: array('ranked choice', 'instant runoff', ...)
+            if (is_array($issueData) && isset($issueData['keywords'])) {
+                $issueKeywords = $issueData['keywords'];
+            } elseif (is_string($issueData)) {
+                $issueKeywords = array($issueData);
+            } else {
+                continue;
+            }
+
             foreach ($issueKeywords as $keyword) {
                 $keywordLower = strtolower($keyword);
                 if (strpos($title, $keywordLower) !== false || strpos($policyArea, $keywordLower) !== false) {
