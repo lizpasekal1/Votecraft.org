@@ -645,16 +645,6 @@ function votecraft_sync_admin_menu() {
         'votecraft_sync_admin_page'
     );
 
-    // Add submenu for Issue Keywords
-    add_submenu_page(
-        'tools.php',
-        'VoteCraft Keywords',
-        'VC Keywords',
-        'manage_options',
-        'votecraft-keywords',
-        'votecraft_keywords_admin_page'
-    );
-
     // Add submenu for Bill Associations
     add_submenu_page(
         'tools.php',
@@ -2403,95 +2393,6 @@ function votecraft_get_keywords() {
         return $saved;
     }
     return votecraft_get_default_keywords();
-}
-
-/**
- * Keywords admin page
- */
-function votecraft_keywords_admin_page() {
-    if (!current_user_can('manage_options')) {
-        return;
-    }
-
-    // Handle form submission
-    if (isset($_POST['votecraft_save_keywords']) && check_admin_referer('votecraft_keywords_nonce')) {
-        $keywords = array();
-        $defaults = votecraft_get_default_keywords();
-
-        foreach ($defaults as $issue_id => $issue_data) {
-            $field_name = 'keywords_' . $issue_id;
-            $raw_keywords = isset($_POST[$field_name]) ? sanitize_textarea_field($_POST[$field_name]) : '';
-
-            // Parse keywords from textarea (one per line or comma-separated)
-            $parsed = array_filter(array_map('trim', preg_split('/[\n,]+/', $raw_keywords)));
-
-            $keywords[$issue_id] = array(
-                'title' => $issue_data['title'],
-                'keywords' => $parsed
-            );
-        }
-
-        update_option('votecraft_issue_keywords', $keywords);
-        echo '<div class="notice notice-success is-dismissible"><p>Keywords saved successfully!</p></div>';
-    }
-
-    // Handle reset to defaults
-    if (isset($_POST['votecraft_reset_keywords']) && check_admin_referer('votecraft_keywords_nonce')) {
-        delete_option('votecraft_issue_keywords');
-        echo '<div class="notice notice-info is-dismissible"><p>Keywords reset to defaults.</p></div>';
-    }
-
-    $keywords = votecraft_get_keywords();
-    ?>
-    <div class="wrap">
-        <h1>VoteCraft Issue Keywords</h1>
-        <p>Manage the bill search keywords for each civic issue. These keywords are used to find related legislation when showing representative alignment.</p>
-
-        <form method="post" action="">
-            <?php wp_nonce_field('votecraft_keywords_nonce'); ?>
-
-            <table class="form-table" role="presentation">
-                <?php foreach ($keywords as $issue_id => $issue_data): ?>
-                <tr>
-                    <th scope="row">
-                        <label for="keywords_<?php echo esc_attr($issue_id); ?>">
-                            <?php echo esc_html($issue_data['title']); ?>
-                        </label>
-                    </th>
-                    <td>
-                        <textarea
-                            name="keywords_<?php echo esc_attr($issue_id); ?>"
-                            id="keywords_<?php echo esc_attr($issue_id); ?>"
-                            rows="5"
-                            cols="60"
-                            class="large-text"
-                        ><?php echo esc_textarea(implode("\n", $issue_data['keywords'])); ?></textarea>
-                        <p class="description">Enter one keyword per line, or separate with commas. Keywords are matched against bill titles.</p>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-            </table>
-
-            <p class="submit">
-                <input type="submit" name="votecraft_save_keywords" class="button button-primary" value="Save Keywords">
-                <input type="submit" name="votecraft_reset_keywords" class="button" value="Reset to Defaults" onclick="return confirm('Are you sure you want to reset all keywords to their default values?');">
-            </p>
-        </form>
-
-        <hr>
-
-        <h2>Tips for Good Keywords</h2>
-        <ul>
-            <li><strong>Use phrases</strong>: "ranked choice voting" works better than just "voting"</li>
-            <li><strong>Include bill names</strong>: Add specific bill names like "DISCLOSE Act" or "For the People Act"</li>
-            <li><strong>Be specific</strong>: More specific keywords reduce false positives</li>
-            <li><strong>Test changes</strong>: After saving, visit the vote page with <code>?nocache=1</code> to test</li>
-        </ul>
-
-        <h2>API Endpoint</h2>
-        <p>Keywords are served via: <code><?php echo esc_url(rest_url('votecraft/v1/keywords')); ?></code></p>
-    </div>
-    <?php
 }
 
 // =============================================================================
