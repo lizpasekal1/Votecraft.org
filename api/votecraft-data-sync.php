@@ -3186,18 +3186,18 @@ function votecraft_lookup_openstates_bills_by_issue($legislator_name, $keywords,
 
         foreach ($issueKeywords as $keyword) {
             // First try: Search synced bills/sponsorships tables
+            // Note: subject field stores the search keyword/issue ID, NOT the bill's actual subject,
+            // so we only match against title to avoid circular false positives
             $bills = $wpdb->get_results($wpdb->prepare(
                 "SELECT b.*, s.legislator_name as sponsor_name, s.legislator_id, s.sponsorship_type, s.classification
                  FROM $bills_table b
                  INNER JOIN $sponsorships_table s ON b.id = s.bill_id
                  WHERE b.state = %s
-                 AND (b.title LIKE %s OR b.subject LIKE %s OR b.identifier LIKE %s)
+                 AND b.title LIKE %s
                  AND (s.legislator_id = %s OR s.legislator_name LIKE %s)
                  ORDER BY b.latest_action_date DESC
                  LIMIT 50",
                 $state,
-                '%' . $wpdb->esc_like($keyword) . '%',
-                '%' . $wpdb->esc_like($keyword) . '%',
                 '%' . $wpdb->esc_like($keyword) . '%',
                 $openstates_id,
                 '%' . $wpdb->esc_like($legislator_name) . '%'
@@ -3208,10 +3208,8 @@ function votecraft_lookup_openstates_bills_by_issue($legislator_name, $keywords,
                 // Verify keyword matches as a whole phrase (not partial word like "dark" in "dark-sky")
                 $keywordPattern = '/\b' . preg_quote(strtolower($keyword), '/') . '\b/i';
                 $titleMatches = preg_match($keywordPattern, strtolower($bill->title));
-                $subjectMatches = $bill->subject ? preg_match($keywordPattern, strtolower($bill->subject)) : false;
-                $identifierMatches = preg_match($keywordPattern, strtolower($bill->identifier));
 
-                if (!$titleMatches && !$subjectMatches && !$identifierMatches) {
+                if (!$titleMatches) {
                     continue; // Skip false positive matches
                 }
 
