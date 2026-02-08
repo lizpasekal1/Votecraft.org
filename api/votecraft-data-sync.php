@@ -749,6 +749,23 @@ function votecraft_sync_admin_page() {
         } elseif ($action === 'reset_congress_progress') {
             $result = votecraft_reset_congress_sync_progress();
             echo '<div class="notice notice-success"><p>' . esc_html($result['message']) . '</p></div>';
+        } elseif ($action === 'save_keywords') {
+            $keywords = array();
+            $defaults = votecraft_get_default_keywords();
+            foreach ($defaults as $issue_id => $issue_data) {
+                $field_name = 'keywords_' . $issue_id;
+                $raw_keywords = isset($_POST[$field_name]) ? sanitize_textarea_field($_POST[$field_name]) : '';
+                $parsed = array_filter(array_map('trim', preg_split('/[\n,]+/', $raw_keywords)));
+                $keywords[$issue_id] = array(
+                    'title' => $issue_data['title'],
+                    'keywords' => array_values($parsed)
+                );
+            }
+            update_option('votecraft_issue_keywords', $keywords);
+            echo '<div class="notice notice-success"><p>Keywords saved successfully!</p></div>';
+        } elseif ($action === 'reset_keywords') {
+            delete_option('votecraft_issue_keywords');
+            echo '<div class="notice notice-info"><p>Keywords reset to defaults.</p></div>';
         } elseif ($action === 'enable_congress_scheduled_sync') {
             update_option('votecraft_congress_scheduled_sync_enabled', true);
             // Clear any existing schedule first
@@ -1439,19 +1456,41 @@ function votecraft_sync_admin_page() {
             </div>
         </details>
 
-        <!-- ISSUE KEYWORDS REFERENCE -->
+        <!-- ISSUE KEYWORDS EDITOR -->
+        <?php $vc_keywords = votecraft_get_keywords(); ?>
         <details class="votecraft-accordion">
-            <summary>📝 Issue Keywords Reference</summary>
+            <summary>📝 Issue Keywords Reference <span style="margin-left: auto; font-weight: normal; color: #666;"><?php echo array_sum(array_map(function($d) { return count($d['keywords']); }, $vc_keywords)); ?> keywords across <?php echo count($vc_keywords); ?> issues</span></summary>
             <div class="accordion-content">
-            <p>Bills are filtered to match these keywords:</p>
-            <table class="widefat" style="max-width: 600px;">
-                <tr><td><strong>RCV</strong></td><td>ranked choice, ranked choice voting, instant runoff, preferential voting, rcv, local option voting</td></tr>
-                <tr><td><strong>Debt Reform</strong></td><td>public debt, predatory lending, student debt relief, debt transparency</td></tr>
-                <tr><td><strong>Citizens United</strong></td><td>citizens united, campaign finance reform, dark money, political spending disclosure</td></tr>
-                <tr><td><strong>Healthcare</strong></td><td>universal healthcare, medicare for all, public option, health coverage expansion</td></tr>
-                <tr><td><strong>SCOTUS</strong></td><td>supreme court reform, judicial term limits, court expansion, judicial ethics</td></tr>
-                <tr><td><strong>News Paywalls</strong></td><td>local journalism, news access, press freedom, journalism funding</td></tr>
+            <p>These keywords are used to filter bills from both OpenStates and Congress.gov. Edit below and save, or reset to defaults.</p>
+
+            <form method="post">
+            <?php wp_nonce_field('votecraft_sync'); ?>
+            <table class="widefat" style="max-width: 700px;">
+                <thead>
+                    <tr>
+                        <th style="width: 140px;">Issue</th>
+                        <th>Keywords <span style="font-weight: normal; color: #666;">(one per line or comma-separated)</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($vc_keywords as $issue_id => $issue_data): ?>
+                    <tr>
+                        <td><strong><?php echo esc_html($issue_data['title']); ?></strong><br><span style="color: #666; font-size: 0.85em;"><?php echo count($issue_data['keywords']); ?> keywords</span></td>
+                        <td>
+                            <textarea name="keywords_<?php echo esc_attr($issue_id); ?>" rows="3" style="width: 100%; font-size: 0.9em;"><?php echo esc_textarea(implode(', ', $issue_data['keywords'])); ?></textarea>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
             </table>
+
+            <p style="margin-top: 10px;">
+                <button type="submit" name="votecraft_sync_action" value="save_keywords" class="button button-primary">Save Keywords</button>
+                <button type="submit" name="votecraft_sync_action" value="reset_keywords" class="button" onclick="return confirm('Reset all keywords to defaults?');">Reset to Defaults</button>
+                <span style="margin-left: 15px; font-size: 0.85em; color: #666;">API endpoint: <code><?php echo esc_url(rest_url('votecraft/v1/keywords')); ?></code></span>
+            </p>
+            </form>
+
             </div>
         </details>
 
