@@ -707,11 +707,27 @@ function votecraft_sync_admin_page() {
             votecraft_run_scheduled_batch();
             echo '<div class="notice notice-success"><p>Manual batch sync completed! Check progress below.</p></div>';
         } elseif ($action === 'sync_congress_members') {
-            $result = votecraft_sync_congress_members();
-            echo '<div class="notice notice-' . ($result['success'] ? 'success' : 'error') . '"><p>' . esc_html($result['message']) . '</p></div>';
+            try {
+                $result = votecraft_sync_congress_members();
+                $status = isset($result['success']) ? ($result['success'] ? 'success' : 'error') : 'warning';
+                $msg = isset($result['message']) ? $result['message'] : (isset($result['errors']) ? implode('; ', $result['errors']) : 'Unknown result');
+                echo '<div class="notice notice-' . $status . '"><p>' . esc_html($msg) . '</p></div>';
+            } catch (Exception $e) {
+                echo '<div class="notice notice-error"><p>Congress sync error: ' . esc_html($e->getMessage()) . '</p></div>';
+            } catch (Error $e) {
+                echo '<div class="notice notice-error"><p>Congress sync fatal error: ' . esc_html($e->getMessage()) . ' in ' . esc_html($e->getFile()) . ' line ' . esc_html($e->getLine()) . '</p></div>';
+            }
         } elseif ($action === 'sync_congress_issue_bills') {
-            $result = votecraft_sync_congress_issue_bills();
-            echo '<div class="notice notice-' . ($result['success'] ? 'success' : 'error') . '"><p>' . esc_html($result['message']) . '</p></div>';
+            try {
+                $result = votecraft_sync_congress_issue_bills();
+                $status = isset($result['success']) ? ($result['success'] ? 'success' : 'error') : 'warning';
+                $msg = isset($result['message']) ? $result['message'] : 'Unknown result';
+                echo '<div class="notice notice-' . $status . '"><p>' . esc_html($msg) . '</p></div>';
+            } catch (Exception $e) {
+                echo '<div class="notice notice-error"><p>Bills sync error: ' . esc_html($e->getMessage()) . '</p></div>';
+            } catch (Error $e) {
+                echo '<div class="notice notice-error"><p>Bills sync fatal error: ' . esc_html($e->getMessage()) . ' in ' . esc_html($e->getFile()) . ' line ' . esc_html($e->getLine()) . '</p></div>';
+            }
         } elseif ($action === 'clear_congress_cache') {
             $cache_table = $wpdb->prefix . 'votecraft_cache';
             $deleted = $wpdb->query("DELETE FROM $cache_table WHERE endpoint = 'congress' OR cache_key LIKE 'congress_%'");
