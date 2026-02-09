@@ -36,6 +36,7 @@ const CivicAPI = {
         const url = new URL('https://nominatim.openstreetmap.org/search');
         url.searchParams.append('q', address);
         url.searchParams.append('format', 'json');
+        url.searchParams.append('addressdetails', '1');
         url.searchParams.append('limit', '1');
         url.searchParams.append('countrycodes', 'us');
 
@@ -57,9 +58,13 @@ const CivicAPI = {
         }
 
         console.log('Coordinates:', data[0].lat, data[0].lon);
+        const addr = data[0].address || {};
+        const state = addr.state || '';
+        console.log('Geocoded state:', state);
         return {
             lat: parseFloat(data[0].lat),
-            lng: parseFloat(data[0].lon)
+            lng: parseFloat(data[0].lon),
+            state: state
         };
     },
 
