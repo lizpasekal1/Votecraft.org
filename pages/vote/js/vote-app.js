@@ -879,7 +879,13 @@ class VoteApp {
     // ========== RIGHT PANEL: ISSUES GRID ==========
 
     buildAwarenessChart(data) {
-        if (!data || data.length < 2) return '';
+        if (!data || data.length < 2) {
+            return `<svg viewBox="0 0 130 80" xmlns="http://www.w3.org/2000/svg">
+                <line x1="24" y1="4" x2="24" y2="64" stroke="#ccc" stroke-width="0.5"/>
+                <line x1="24" y1="64" x2="126" y2="64" stroke="#ccc" stroke-width="0.5"/>
+                <text x="75" y="38" text-anchor="middle" font-size="7" fill="#999">No data yet</text>
+            </svg>`;
+        }
         const w = 130, h = 80;
         const padL = 24, padR = 4, padT = 4, padB = 16;
         const chartW = w - padL - padR;
