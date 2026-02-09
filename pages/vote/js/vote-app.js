@@ -411,10 +411,14 @@ class VoteApp {
             this.currentJurisdiction = stateName;
 
             try {
-                const allPeople = await window.CivicAPI.getAllLegislators(stateName);
-                this.localLegislators = [];
+                const [allPeople, congressRaw] = await Promise.all([
+                    window.CivicAPI.getAllLegislators(stateName),
+                    window.CivicAPI.getCongressMembers(null, stateName)
+                ]);
+                const congressParsed = window.CivicAPI.parseRepresentatives({ officials: congressRaw });
+                this.localLegislators = [...congressParsed];
                 this.stateLegislators = window.CivicAPI.parseRepresentatives({ officials: allPeople });
-                this.legislators = [...this.stateLegislators];
+                this.legislators = [...this.localLegislators, ...this.stateLegislators];
                 this.renderReps();
                 this.showLoading(false);
                 this.hasSearched = true;
@@ -451,6 +455,21 @@ class VoteApp {
             const stateLegislators = this.localLegislators.filter(l => l.level === 'state');
             if (stateLegislators.length > 0 && stateLegislators[0].jurisdiction) {
                 this.currentJurisdiction = stateLegislators[0].jurisdiction;
+            }
+
+            // Fetch Congress members if people.geo didn't return any
+            const hasCongressMembers = this.localLegislators.some(l => l.level === 'congress');
+            if (!hasCongressMembers && this.currentJurisdiction) {
+                try {
+                    const congressRaw = await window.CivicAPI.getCongressMembers(address, this.currentJurisdiction);
+                    if (congressRaw.length > 0) {
+                        const congressParsed = window.CivicAPI.parseRepresentatives({ officials: congressRaw });
+                        this.localLegislators = [...congressParsed, ...this.localLegislators];
+                        console.log(`Added ${congressParsed.length} Congress members from local DB`);
+                    }
+                } catch (err) {
+                    console.log('Could not fetch Congress members:', err.message);
+                }
             }
 
             // Show local/federal reps immediately
