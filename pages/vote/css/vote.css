@@ -856,11 +856,12 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 10px 12px;
+    padding: 6px 10px;
     box-sizing: border-box;
     opacity: 0;
     transition: opacity 0.3s ease;
     pointer-events: none;
+    overflow: hidden;
 }
 
 .issue-hero:hover .awareness-chart-overlay {
@@ -868,26 +869,28 @@ body {
 }
 
 .awareness-chart-overlay .chart-header {
-    font-size: 1.3rem;
+    font-size: clamp(0.85rem, 1.2vw, 1.3rem);
     font-weight: 700;
     color: var(--primary);
-    margin-bottom: 4px;
+    margin-bottom: 2px;
+    flex-shrink: 0;
 }
 
 .awareness-chart-overlay svg {
     width: 100%;
     max-width: 95%;
     flex: 1;
-    height: auto;
+    min-height: 0;
 }
 
 .awareness-chart-overlay .chart-footnote {
-    font-size: 0.7rem;
+    font-size: clamp(0.55rem, 0.7vw, 0.7rem);
     color: #94a3b8;
     text-align: center;
-    margin-top: 4px;
-    line-height: 1.3;
+    margin-top: 2px;
+    line-height: 1.2;
     max-width: 95%;
+    flex-shrink: 0;
 }
 
 .issue-card-title {

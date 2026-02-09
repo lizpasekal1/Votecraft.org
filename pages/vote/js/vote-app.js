@@ -149,27 +149,32 @@ class VoteApp {
     }
 
     syncHeights() {
+        const hero = document.getElementById('issue-hero');
+        const mapCard = document.getElementById('issue-map-card');
         const card = this.repAlignmentCard;
-        if (!card || card.style.display === 'none') return;
-        card.style.flex = 'none';
-        card.style.height = '';
-        const h = card.offsetHeight;
-        card.style.flex = '';
-        if (h > 0) {
-            const hero = document.getElementById('issue-hero');
-            const heroW = Math.round(h * 16 / 9);
-            hero.style.height = h + 'px';
-            hero.style.width = heroW + 'px';
-            document.querySelector('.issue-desc-box').style.width = heroW + 'px';
-            document.getElementById('issue-map-card').style.height = h + 'px';
-            if (this.issueMap) this.issueMap.invalidateSize();
-        }
+        if (!hero || !mapCard) return;
+
+        // Reset forced heights so layout can flow naturally
+        hero.style.height = '';
+        mapCard.style.height = '';
+        if (card) card.style.height = '';
+
         requestAnimationFrame(() => {
-            const col = card.parentElement;
-            if (col) card.style.height = col.offsetHeight + 'px';
+            // Use map card's natural height as the reference
+            const mapH = mapCard.offsetHeight;
+            if (mapH > 0) {
+                // Set hero height to match map — width stays as column width
+                hero.style.height = mapH + 'px';
+                hero.style.flex = 'none';
+                if (this.issueMap) this.issueMap.invalidateSize();
+            }
+
+            // Stretch rep card to fill its column
+            if (card && card.parentElement) {
+                card.style.height = card.parentElement.offsetHeight + 'px';
+            }
 
             // Align title left edge with hero left edge
-            const hero = document.getElementById('issue-hero');
             const view = this.issueDetailView;
             if (hero && view && this.issueTitle) {
                 const heroLeft = hero.getBoundingClientRect().left;
