@@ -571,34 +571,52 @@ function votecraft_congress_proxy($request) {
             $url .= '&query=' . urlencode($query);
         }
     } elseif ($endpoint === 'member/bills') {
-        // Get bills sponsored by a member (search by name)
+        // Get bills sponsored by a member
         $name = isset($params['name']) ? $params['name'] : '';
         $chamber = isset($params['chamber']) ? $params['chamber'] : '';
+        $bioguideId = isset($params['bioguideId']) ? $params['bioguideId'] : '';
+        $member = null;
 
-        // First, find the member by name
-        $memberUrl = $baseUrl . '/member?api_key=' . $apiKey . '&format=json&limit=10';
-        if ($name) {
-            $memberUrl .= '&name=' . urlencode($name);
+        if ($bioguideId) {
+            // Direct lookup by bioguideId — skip unreliable name search
+            $memberUrl = $baseUrl . '/member/' . urlencode($bioguideId) . '?api_key=' . $apiKey . '&format=json';
+            $memberResponse = wp_remote_get($memberUrl, array('timeout' => 15));
+            if (is_wp_error($memberResponse)) {
+                return new WP_Error('api_error', 'Failed to fetch Congress member', array('status' => 502));
+            }
+            $memberBody = wp_remote_retrieve_body($memberResponse);
+            $memberData = json_decode($memberBody, true);
+            if (isset($memberData['member'])) {
+                $member = $memberData['member'];
+            }
+        } else {
+            // Fallback: search by name
+            $memberUrl = $baseUrl . '/member?api_key=' . $apiKey . '&format=json&limit=10';
+            if ($name) {
+                $memberUrl .= '&name=' . urlencode($name);
+            }
+            if ($chamber) {
+                $memberUrl .= '&chamber=' . urlencode($chamber);
+            }
+
+            $memberResponse = wp_remote_get($memberUrl, array('timeout' => 15));
+            if (is_wp_error($memberResponse)) {
+                return new WP_Error('api_error', 'Failed to search Congress members', array('status' => 502));
+            }
+
+            $memberBody = wp_remote_retrieve_body($memberResponse);
+            $memberData = json_decode($memberBody, true);
+
+            $members = isset($memberData['members']) ? $memberData['members'] : array();
+            if (!empty($members)) {
+                $member = $members[0];
+            }
         }
-        if ($chamber) {
-            $memberUrl .= '&chamber=' . urlencode($chamber);
-        }
 
-        $memberResponse = wp_remote_get($memberUrl, array('timeout' => 15));
-        if (is_wp_error($memberResponse)) {
-            return new WP_Error('api_error', 'Failed to search Congress members', array('status' => 502));
-        }
-
-        $memberBody = wp_remote_retrieve_body($memberResponse);
-        $memberData = json_decode($memberBody, true);
-
-        $members = isset($memberData['members']) ? $memberData['members'] : array();
-        if (empty($members)) {
+        if (empty($member)) {
             return new WP_REST_Response(array('bills' => array(), 'member' => null), 200);
         }
 
-        // Get the first matching member's bioguide ID
-        $member = $members[0];
         $bioguideId = isset($member['bioguideId']) ? $member['bioguideId'] : null;
 
         if (!$bioguideId) {

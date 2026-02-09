@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 define('VOTECRAFT_SYNC_DB_VERSION', '2.0');
 
 // OpenStates API key
-define('VOTECRAFT_OPENSTATES_API_KEY', 'd2917281-d734-4e26-a557-eeb50ea60f78');
+define('VOTECRAFT_OPENSTATES_API_KEY', '8daa7ff0-13f1-4d79-b93d-691be91b3c10');
 
 // Scheduled sync settings
 define('VOTECRAFT_BATCH_API_CALLS', 80); // Max API calls per batch (500/day ÷ 6 runs = ~83)
@@ -231,7 +231,7 @@ function votecraft_run_scheduled_batch() {
     }
 
     // Check if we've hit daily limit
-    if ($progress['api_calls_today'] >= 450) { // Leave buffer of 50
+    if ($progress['api_calls_today'] >= 200) { // Daily limit (v3 API = 250/day, leave 50 for manual syncs)
         return;
     }
 
@@ -250,7 +250,7 @@ function votecraft_run_scheduled_batch() {
     );
 
     $batch_calls = 0;
-    $max_calls = min(VOTECRAFT_BATCH_API_CALLS, 450 - $progress['api_calls_today']);
+    $max_calls = min(VOTECRAFT_BATCH_API_CALLS, 200 - $progress['api_calls_today']);
 
     // Log start
     $wpdb->insert($log_table, array(
@@ -266,12 +266,17 @@ function votecraft_run_scheduled_batch() {
 
     try {
         $rate_limited = false;
-        while ($batch_calls < $max_calls && $progress['state_index'] < count($states) && !$rate_limited) {
+        while ($progress['state_index'] < count($states) && !$rate_limited) {
             $state = $states[$progress['state_index']];
+
+            // Check call limit only at the START of a new state, not mid-state
+            if ($progress['phase'] === 'legislators' && $batch_calls >= $max_calls) {
+                break; // Don't start a new state if we're over the limit
+            }
 
             if ($progress['phase'] === 'legislators') {
                 // Sync legislators for this state
-                $result = votecraft_sync_legislators_batch($state, $max_calls - $batch_calls);
+                $result = votecraft_sync_legislators_batch($state, 999); // No call limit — finish the state
                 $batch_calls += $result['api_calls'];
                 $synced_count += $result['records'];
 
@@ -285,9 +290,11 @@ function votecraft_run_scheduled_batch() {
                     $progress['phase'] = 'bills';
                     $states_synced[] = $state . ' (legislators)';
                 }
-            } else {
-                // Sync bills for this state
-                $result = votecraft_sync_bills_batch($state, $max_calls - $batch_calls);
+            }
+
+            if ($progress['phase'] === 'bills' && !$rate_limited) {
+                // Always sync bills after legislators — finish the state
+                $result = votecraft_sync_bills_batch($state, 999); // No call limit — finish the state
                 $batch_calls += $result['api_calls'];
                 $synced_count += $result['records'];
 
@@ -301,12 +308,9 @@ function votecraft_run_scheduled_batch() {
                     $progress['phase'] = 'legislators';
                     $progress['state_index']++;
                     $progress['completed_states'][] = $state;
-                    $states_synced[] = $state . ' (bills)';
+                    $states_synced[] = $state . ' (legislators + bills)';
                 }
             }
-
-            // Safety check
-            if ($batch_calls >= $max_calls) break;
         }
 
         // If rate limited, update the log message
@@ -722,37 +726,78 @@ function votecraft_sync_admin_menu() {
 function votecraft_sync_admin_page() {
     global $wpdb;
 
+    // Clear any stuck background sync
+    delete_option('votecraft_pending_bill_sync');
+    wp_clear_scheduled_hook('votecraft_background_bill_sync');
+
     // Handle form submissions
     if (isset($_POST['votecraft_sync_action']) && wp_verify_nonce($_POST['_wpnonce'], 'votecraft_sync')) {
+        echo '<div class="notice notice-warning"><p>DEBUG: Action received = ' . esc_html($_POST['votecraft_sync_action']) . '</p></div>';
         $action = sanitize_text_field($_POST['votecraft_sync_action']);
         $state = isset($_POST['state']) ? sanitize_text_field($_POST['state']) : null;
 
         // Prevent PHP timeout during sync operations
         @set_time_limit(300); // 5 minutes max
 
-        // Show loading message immediately before sync starts
-        echo '<div class="notice notice-info" id="votecraft-sync-loading"><p>Syncing... please wait, this may take a minute.</p></div>';
-        if (ob_get_level()) ob_flush();
-        flush();
+        // Track daily API calls (shared between manual and scheduled syncs)
+        $progress = get_option('votecraft_scheduled_progress', array(
+            'state_index' => 0,
+            'phase' => 'legislators',
+            'api_calls_today' => 0,
+            'last_reset_date' => date('Y-m-d'),
+            'completed_states' => array()
+        ));
+        if ($progress['last_reset_date'] !== date('Y-m-d')) {
+            $progress['api_calls_today'] = 0;
+            $progress['last_reset_date'] = date('Y-m-d');
+        }
 
-        if ($action === 'sync_legislators' && $state) {
+        // Show loading message for sync actions
+        $sync_actions = array('sync_state', 'sync_legislators', 'sync_bills', 'sync_all_legislators', 'sync_all_issue_bills', 'sync_all_states', 'run_batch_now', 'sync_congress_members', 'sync_congress_issue_bills');
+        if (in_array($action, $sync_actions)) {
+            echo '<div class="notice notice-info" id="votecraft-sync-loading"><p>Syncing... please wait, this may take a minute.</p></div>';
+            if (ob_get_level()) ob_flush();
+            flush();
+        }
+
+        // OpenStates sync actions
+        if ($action === 'sync_state' && $state) {
+            // Run legislators first (fast)
+            $leg_result = votecraft_sync_legislators($state);
+            $leg_success = !empty($leg_result['success']);
+            $leg_msg = isset($leg_result['message']) ? $leg_result['message'] : (isset($leg_result['error']) ? $leg_result['error'] : 'Unknown result');
+            echo '<div class="notice notice-' . ($leg_success ? 'success' : 'error') . '"><p>Legislators: ' . esc_html($leg_msg) . '</p></div>';
+            if (ob_get_level()) ob_flush();
+            flush();
+            // Run bills (saves each bill immediately — survives timeouts)
+            $bill_result = votecraft_sync_bills($state);
+            $bill_success = !empty($bill_result['success']);
+            $bill_msg = isset($bill_result['message']) ? $bill_result['message'] : (isset($bill_result['error']) ? $bill_result['error'] : 'Unknown result');
+            echo '<div class="notice notice-' . ($bill_success ? 'success' : 'error') . '"><p>Bills: ' . esc_html($bill_msg) . '</p></div>';
+        } elseif ($action === 'sync_legislators' && $state) {
             $result = votecraft_sync_legislators($state);
-            echo '<div class="notice notice-' . ($result['success'] ? 'success' : 'error') . '"><p>' . esc_html($result['message']) . '</p></div>';
+            $msg = isset($result['message']) ? $result['message'] : (isset($result['error']) ? $result['error'] : 'Unknown result');
+            echo '<div class="notice notice-' . (!empty($result['success']) ? 'success' : 'error') . '"><p>' . esc_html($msg) . '</p></div>';
         } elseif ($action === 'sync_bills' && $state) {
             $result = votecraft_sync_bills($state);
-            echo '<div class="notice notice-' . ($result['success'] ? 'success' : 'error') . '"><p>' . esc_html($result['message']) . '</p></div>';
+            $msg = isset($result['message']) ? $result['message'] : (isset($result['error']) ? $result['error'] : 'Unknown result');
+            echo '<div class="notice notice-' . (!empty($result['success']) ? 'success' : 'error') . '"><p>' . esc_html($msg) . '</p></div>';
         } elseif ($action === 'sync_all_legislators') {
             $result = votecraft_sync_all_legislators();
-            echo '<div class="notice notice-' . ($result['success'] ? 'success' : 'error') . '"><p>' . esc_html($result['message']) . '</p></div>';
+            $msg = isset($result['message']) ? $result['message'] : 'Unknown result';
+            echo '<div class="notice notice-' . (!empty($result['success']) ? 'success' : 'error') . '"><p>' . esc_html($msg) . '</p></div>';
         } elseif ($action === 'sync_all_issue_bills') {
             $result = votecraft_sync_all_issue_bills();
-            echo '<div class="notice notice-' . ($result['success'] ? 'success' : 'error') . '"><p>' . esc_html($result['message']) . '</p></div>';
+            $msg = isset($result['message']) ? $result['message'] : 'Unknown result';
+            echo '<div class="notice notice-' . (!empty($result['success']) ? 'success' : 'error') . '"><p>' . esc_html($msg) . '</p></div>';
         } elseif ($action === 'sync_all_states') {
             $result = votecraft_sync_all_states();
-            echo '<div class="notice notice-' . ($result['success'] ? 'success' : 'error') . '"><p>' . esc_html($result['message']) . '</p></div>';
+            $msg = isset($result['message']) ? $result['message'] : 'Unknown result';
+            echo '<div class="notice notice-' . (!empty($result['success']) ? 'success' : 'error') . '"><p>' . esc_html($msg) . '</p></div>';
+
+        // Scheduled sync controls
         } elseif ($action === 'enable_scheduled_sync') {
             update_option('votecraft_scheduled_sync_enabled', true);
-            // Schedule if not already scheduled
             if (!wp_next_scheduled('votecraft_scheduled_sync')) {
                 wp_schedule_event(time(), 'every_four_hours', 'votecraft_scheduled_sync');
             }
@@ -762,15 +807,17 @@ function votecraft_sync_admin_page() {
             echo '<div class="notice notice-success"><p>Scheduled sync disabled.</p></div>';
         } elseif ($action === 'reset_scheduled_progress') {
             delete_option('votecraft_scheduled_progress');
-            echo '<div class="notice notice-success"><p>Scheduled sync progress has been reset. Will start from Alabama.</p></div>';
+            echo '<div class="notice notice-success"><p>Scheduled sync progress has been reset. Will start from Massachusetts.</p></div>';
         } elseif ($action === 'run_batch_now') {
             update_option('votecraft_scheduled_sync_enabled', true);
             votecraft_run_scheduled_batch();
             echo '<div class="notice notice-success"><p>Manual batch sync completed! Check progress below.</p></div>';
+
+        // Congress sync actions
         } elseif ($action === 'sync_congress_members') {
             try {
                 $result = votecraft_sync_congress_members();
-                $status = isset($result['success']) ? ($result['success'] ? 'success' : 'error') : 'warning';
+                $status = !empty($result['success']) ? 'success' : 'error';
                 $msg = isset($result['message']) ? $result['message'] : (isset($result['errors']) ? implode('; ', $result['errors']) : 'Unknown result');
                 echo '<div class="notice notice-' . $status . '"><p>' . esc_html($msg) . '</p></div>';
             } catch (Exception $e) {
@@ -781,7 +828,7 @@ function votecraft_sync_admin_page() {
         } elseif ($action === 'sync_congress_issue_bills') {
             try {
                 $result = votecraft_sync_congress_issue_bills();
-                $status = isset($result['success']) ? ($result['success'] ? 'success' : 'error') : 'warning';
+                $status = !empty($result['success']) ? 'success' : 'error';
                 $msg = isset($result['message']) ? $result['message'] : 'Unknown result';
                 echo '<div class="notice notice-' . $status . '"><p>' . esc_html($msg) . '</p></div>';
             } catch (Exception $e) {
@@ -797,11 +844,34 @@ function votecraft_sync_admin_page() {
             $member_name = isset($_POST['congress_member_name']) ? sanitize_text_field($_POST['congress_member_name']) : '';
             if ($member_name) {
                 $result = votecraft_refresh_congress_member_cache($member_name);
-                echo '<div class="notice notice-' . ($result['success'] ? 'success' : 'error') . '"><p>' . esc_html($result['message']) . '</p></div>';
+                $msg = isset($result['message']) ? $result['message'] : 'Unknown result';
+                echo '<div class="notice notice-' . (!empty($result['success']) ? 'success' : 'error') . '"><p>' . esc_html($msg) . '</p></div>';
             }
         } elseif ($action === 'reset_congress_progress') {
             $result = votecraft_reset_congress_sync_progress();
-            echo '<div class="notice notice-success"><p>' . esc_html($result['message']) . '</p></div>';
+            $msg = isset($result['message']) ? $result['message'] : 'Progress reset.';
+            echo '<div class="notice notice-success"><p>' . esc_html($msg) . '</p></div>';
+        } elseif ($action === 'enable_congress_scheduled_sync') {
+            update_option('votecraft_congress_scheduled_sync_enabled', true);
+            wp_clear_scheduled_hook('votecraft_congress_daily_sync');
+            wp_clear_scheduled_hook('votecraft_congress_monthly_sync');
+            $tomorrow_6am = strtotime('tomorrow 6:00 AM');
+            wp_schedule_single_event($tomorrow_6am, 'votecraft_congress_daily_sync');
+            echo '<div class="notice notice-success"><p>Congress.gov sync enabled! First run scheduled for ' . wp_date('M j, Y g:i A', $tomorrow_6am) . '.</p></div>';
+        } elseif ($action === 'disable_congress_scheduled_sync') {
+            update_option('votecraft_congress_scheduled_sync_enabled', false);
+            wp_clear_scheduled_hook('votecraft_congress_daily_sync');
+            wp_clear_scheduled_hook('votecraft_congress_monthly_sync');
+            echo '<div class="notice notice-success"><p>Congress.gov sync disabled.</p></div>';
+
+        // Rate limit and keyword controls
+        } elseif ($action === 'clear_rate_limit') {
+            delete_option('votecraft_openstates_rate_limit_date');
+            echo '<div class="notice notice-success"><p>Rate limit cleared. You can sync again.</p></div>';
+        } elseif ($action === 'reset_daily_counter') {
+            $progress['api_calls_today'] = 0;
+            update_option('votecraft_scheduled_progress', $progress);
+            echo '<div class="notice notice-success"><p>Daily API call counter reset to 0.</p></div>';
         } elseif ($action === 'save_keywords') {
             $keywords = array();
             $defaults = votecraft_get_default_keywords();
@@ -819,20 +889,6 @@ function votecraft_sync_admin_page() {
         } elseif ($action === 'reset_keywords') {
             delete_option('votecraft_issue_keywords');
             echo '<div class="notice notice-info"><p>Keywords reset to defaults.</p></div>';
-        } elseif ($action === 'enable_congress_scheduled_sync') {
-            update_option('votecraft_congress_scheduled_sync_enabled', true);
-            // Clear any existing schedule first
-            wp_clear_scheduled_hook('votecraft_congress_daily_sync');
-            wp_clear_scheduled_hook('votecraft_congress_monthly_sync'); // Legacy cleanup
-            // Schedule to start tomorrow at 6 AM (runs daily during sync, then waits 30 days)
-            $tomorrow_6am = strtotime('tomorrow 6:00 AM');
-            wp_schedule_single_event($tomorrow_6am, 'votecraft_congress_daily_sync');
-            echo '<div class="notice notice-success"><p>Congress.gov sync enabled! First run scheduled for ' . wp_date('M j, Y g:i A', $tomorrow_6am) . '. Will run daily until complete, then monthly.</p></div>';
-        } elseif ($action === 'disable_congress_scheduled_sync') {
-            update_option('votecraft_congress_scheduled_sync_enabled', false);
-            wp_clear_scheduled_hook('votecraft_congress_daily_sync');
-            wp_clear_scheduled_hook('votecraft_congress_monthly_sync'); // Legacy cleanup
-            echo '<div class="notice notice-success"><p>Congress.gov sync disabled.</p></div>';
         }
     }
 
@@ -849,7 +905,33 @@ function votecraft_sync_admin_page() {
     $state_bill_count = $wpdb->get_var("SELECT COUNT(*) FROM $bills_table WHERE state != 'Federal' OR state IS NULL");
     $states_with_data = $wpdb->get_col("SELECT DISTINCT state FROM $legislators_table ORDER BY state");
     $states_with_bills = $wpdb->get_col("SELECT DISTINCT state FROM $bills_table ORDER BY state");
+    $congress_states_w_officials = $wpdb->get_var("SELECT COUNT(DISTINCT state) FROM $legislators_table WHERE level = 'congress'");
+    $congress_states_w_bills = $wpdb->get_var("SELECT COUNT(DISTINCT state) FROM $bills_table WHERE state = 'Federal'");
+    $openstates_states_w_officials = $wpdb->get_var("SELECT COUNT(DISTINCT state) FROM $legislators_table WHERE level = 'state' OR level IS NULL");
+    $openstates_states_w_bills = $wpdb->get_var("SELECT COUNT(DISTINCT state) FROM $bills_table WHERE state != 'Federal' AND state IS NOT NULL");
     $recent_syncs = $wpdb->get_results("SELECT * FROM $log_table WHERE sync_type IN ('legislators', 'bills') ORDER BY started_at DESC LIMIT 30");
+
+    // Per-state counts for the stats table
+    $per_state_legs = $wpdb->get_results("SELECT state, COUNT(*) as count FROM $legislators_table WHERE level = 'state' OR level IS NULL GROUP BY state ORDER BY state");
+    $per_state_federal = $wpdb->get_results("SELECT state, COUNT(*) as count FROM $legislators_table WHERE level = 'congress' GROUP BY state ORDER BY state");
+    $per_state_bills = $wpdb->get_results("SELECT state, COUNT(*) as count FROM $bills_table WHERE state != 'Federal' GROUP BY state ORDER BY state");
+    $per_state_data = array();
+    foreach ($per_state_legs as $row) {
+        $per_state_data[$row->state]['legislators'] = (int)$row->count;
+    }
+    foreach ($per_state_federal as $row) {
+        $per_state_data[$row->state]['federal'] = (int)$row->count;
+    }
+    foreach ($per_state_bills as $row) {
+        $per_state_data[$row->state]['bills'] = (int)$row->count;
+    }
+    // Federal bills per state (via sponsorships by congress-level legislators)
+    $sponsorships_table = $wpdb->prefix . 'votecraft_sponsorships';
+    $per_state_fed_bills = $wpdb->get_results("SELECT l.state, COUNT(DISTINCT s.bill_id) as count FROM $sponsorships_table s INNER JOIN $legislators_table l ON s.legislator_id = l.id INNER JOIN $bills_table b ON s.bill_id = b.id WHERE l.level = 'congress' AND b.state = 'Federal' GROUP BY l.state ORDER BY l.state");
+    foreach ($per_state_fed_bills as $row) {
+        $per_state_data[$row->state]['fed_bills'] = (int)$row->count;
+    }
+    $federal_bills_count = (int)$congress_bill_count;
 
     // Congress.gov cache stats
     $cache_table = $wpdb->prefix . 'votecraft_cache';
@@ -865,6 +947,7 @@ function votecraft_sync_admin_page() {
     $congress_cache_newest = $wpdb->get_var(
         "SELECT MAX(created_at) FROM $cache_table WHERE endpoint = 'congress' OR cache_key LIKE 'congress_%'"
     );
+    $openstates_cache_count = $wpdb->get_var("SELECT COUNT(*) FROM $cache_table WHERE endpoint != 'congress' AND cache_key NOT LIKE 'congress_%'");
 
     // Congress sync progress and schedule status
     $congress_sync_progress = get_option('votecraft_congress_sync_progress', array(
@@ -934,11 +1017,13 @@ function votecraft_sync_admin_page() {
         'News Paywalls' => array('local journalism', 'news access', 'press freedom', 'journalism funding')
     );
 
-    // Count bills by issue and state
+    // Count bills by issue and state, split into federal vs state legislator
     $issue_stats = array();
-    $issue_totals = array();
+    $issue_totals_federal = array();
+    $issue_totals_state = array();
     foreach ($issue_keywords as $issue => $keywords) {
-        $issue_totals[$issue] = 0;
+        $issue_totals_federal[$issue] = 0;
+        $issue_totals_state[$issue] = 0;
         $like_clauses = array();
         foreach ($keywords as $kw) {
             $like_clauses[] = $wpdb->prepare("title LIKE %s", '%' . $wpdb->esc_like($kw) . '%');
@@ -953,19 +1038,24 @@ function votecraft_sync_admin_page() {
         );
 
         foreach ($state_counts as $row) {
-            if (!isset($issue_stats[$row->state])) {
-                $issue_stats[$row->state] = array();
+            if ($row->state === 'Federal') {
+                $issue_totals_federal[$issue] += (int) $row->count;
+            } else {
+                if (!isset($issue_stats[$row->state])) {
+                    $issue_stats[$row->state] = array();
+                }
+                $issue_stats[$row->state][$issue] = (int) $row->count;
+                $issue_totals_state[$issue] += (int) $row->count;
             }
-            $issue_stats[$row->state][$issue] = (int) $row->count;
-            $issue_totals[$issue] += (int) $row->count;
         }
     }
 
     // State list for dropdown
     $all_states = array(
+        'Massachusetts',
         'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
         'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa',
-        'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan',
+        'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Michigan',
         'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire',
         'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio',
         'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
@@ -1011,7 +1101,7 @@ function votecraft_sync_admin_page() {
     ?>
     <style>
         .votecraft-accordion {
-            max-width: 900px;
+            max-width: 1200px;
             margin-bottom: 10px;
             border: 1px solid #c3c4c7;
             border-radius: 4px;
@@ -1175,10 +1265,10 @@ function votecraft_sync_admin_page() {
 
                 <div style="background: #fff; padding: 15px; border-radius: 5px; border: 1px solid #ddd;">
                     <h4 style="margin-top: 0;">API Usage Today</h4>
-                    <p><strong>Calls Used:</strong> <?php echo $scheduled_progress['api_calls_today']; ?> / 500</p>
-                    <p><strong>Remaining:</strong> <?php echo max(0, 500 - $scheduled_progress['api_calls_today']); ?></p>
+                    <p><strong>Calls Used:</strong> <?php echo $scheduled_progress['api_calls_today']; ?> / 250</p>
+                    <p><strong>Remaining:</strong> <?php echo max(0, 250 - $scheduled_progress['api_calls_today']); ?></p>
                     <div style="background: #e0e0e0; height: 20px; border-radius: 10px; overflow: hidden;">
-                        <div style="background: <?php echo $scheduled_progress['api_calls_today'] > 400 ? '#ff9800' : '#2196f3'; ?>; height: 100%; width: <?php echo min(100, ($scheduled_progress['api_calls_today'] / 500) * 100); ?>%;"></div>
+                        <div style="background: <?php echo $scheduled_progress['api_calls_today'] > 200 ? '#ff9800' : '#2196f3'; ?>; height: 100%; width: <?php echo min(100, ($scheduled_progress['api_calls_today'] / 250) * 100); ?>%;"></div>
                     </div>
                     <p style="font-size: 0.85em; color: #666;"><strong>Next Run:</strong>
                         <?php echo $next_scheduled ? wp_date('M j, Y g:i A', $next_scheduled) : 'Not scheduled'; ?>
@@ -1193,8 +1283,7 @@ function votecraft_sync_admin_page() {
                 <?php else: ?>
                     <button type="submit" name="votecraft_sync_action" value="enable_scheduled_sync" class="button button-primary">▶ Enable Scheduled Sync</button>
                 <?php endif; ?>
-                <button type="submit" name="votecraft_sync_action" value="run_batch_now" class="button">⚡ Run Batch Now</button>
-                <button type="submit" name="votecraft_sync_action" value="reset_scheduled_progress" class="button" onclick="return confirm('Reset progress? This will start syncing from Alabama again.');">🔄 Reset Progress</button>
+                <button type="submit" name="votecraft_sync_action" value="reset_scheduled_progress" class="button" onclick="return confirm('Resetting will re-sync all 50 states from scratch, using up API calls to re-download data you already have. Are you sure you want to do this?');">🔄 Reset Progress</button>
             </form>
 
             <?php if (!empty($scheduled_progress['completed_states'])): ?>
@@ -1338,8 +1427,7 @@ function votecraft_sync_admin_page() {
                 <?php else: ?>
                     <button type="submit" name="votecraft_sync_action" value="enable_congress_scheduled_sync" class="button button-primary">▶ Enable Sync</button>
                 <?php endif; ?>
-                <button type="submit" name="votecraft_sync_action" value="sync_congress_members" class="button">⚡ Run Batch Now</button>
-                <button type="submit" name="votecraft_sync_action" value="reset_congress_progress" class="button" onclick="return confirm('Reset progress? This will start syncing from the beginning.');">🔄 Reset Progress</button>
+                <button type="submit" name="votecraft_sync_action" value="reset_congress_progress" class="button" onclick="return confirm('Resetting will re-sync all 535 Congress members from scratch, using up API calls to re-download data you already have. Are you sure you want to do this?');">🔄 Reset Progress</button>
                 <button type="submit" name="votecraft_sync_action" value="clear_congress_cache" class="button" onclick="return confirm('Clear all Congress.gov cache?');">🗑️ Clear Cache</button>
             </form>
 
@@ -1387,54 +1475,116 @@ function votecraft_sync_admin_page() {
             <summary>📈 Database Stats <span style="margin-left: auto; font-weight: normal; color: #666;"><?php echo number_format($legislator_count); ?> legislators, <?php echo number_format($bill_count); ?> bills</span></summary>
             <div class="accordion-content">
 
-            <h4 style="margin-top: 0;">🏛️ Congress.gov (Federal)</h4>
-            <table class="widefat" style="max-width: 500px; margin-bottom: 20px;">
+            <table class="widefat" style="margin-bottom: 20px;">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th style="text-align: right;">Number of Officials</th>
+                        <th style="text-align: right;">States w/ Bills</th>
+                        <th style="text-align: right;">Data Cached</th>
+                    </tr>
+                </thead>
                 <tbody>
-                    <tr><td><strong>Members in DB</strong></td><td style="text-align: right;"><?php echo number_format($congress_count); ?></td></tr>
-                    <tr><td><strong>Federal Bills</strong></td><td style="text-align: right;"><?php echo number_format($congress_bill_count); ?></td></tr>
-                    <tr><td><strong>Cached API Responses</strong></td><td style="text-align: right;"><?php echo number_format($congress_cache_count); ?></td></tr>
+                    <tr>
+                        <td><strong>Congress.gov (Federal Officials)</strong></td>
+                        <td style="text-align: right;"><?php echo number_format($congress_count); ?> / 535</td>
+                        <td style="text-align: right;"><?php echo number_format($congress_states_w_bills); ?> / 50</td>
+                        <td style="text-align: right;"><?php echo number_format($congress_cache_count); ?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>OpenStates (Legislators)</strong></td>
+                        <td style="text-align: right;"><?php echo number_format($state_leg_count); ?> / 7,386</td>
+                        <td style="text-align: right;"><?php echo number_format($openstates_states_w_bills); ?> / 50</td>
+                        <td style="text-align: right;"><?php echo number_format($openstates_cache_count); ?></td>
+                    </tr>
                 </tbody>
             </table>
 
-            <h4>🗂️ OpenStates (State)</h4>
-            <table class="widefat" style="max-width: 500px; margin-bottom: 20px;">
-                <tbody>
-                    <tr><td><strong>State Legislators</strong></td><td style="text-align: right;"><?php echo number_format($state_leg_count); ?></td></tr>
-                    <tr><td><strong>State Bills</strong></td><td style="text-align: right;"><?php echo number_format($state_bill_count); ?></td></tr>
-                    <tr><td><strong>States w/ Legislators</strong></td><td style="text-align: right;"><?php echo count($states_with_data); ?></td></tr>
-                    <tr><td><strong>States w/ Bills</strong></td><td style="text-align: right;"><?php echo count($states_with_bills); ?></td></tr>
-                </tbody>
-            </table>
+            <?php if (!empty($per_state_data)): ?>
+            <h4>📊 Per-State Data</h4>
+            <div style="max-height: 400px; overflow-y: auto;">
+                <table class="widefat" style="border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th style="position: sticky; top: 0; background: #f0f0f1; z-index: 1;">State</th>
+                            <th style="position: sticky; top: 0; background: #f0f0f1; z-index: 1; text-align: right;">Federal Officials</th>
+                            <th style="position: sticky; top: 0; background: #f0f0f1; z-index: 1; text-align: right;">Federal Bills</th>
+                            <th style="position: sticky; top: 0; background: #f0f0f1; z-index: 1; text-align: right;">Legislators</th>
+                            <th style="position: sticky; top: 0; background: #f0f0f1; z-index: 1; text-align: right;">Bills</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        ksort($per_state_data);
+                        unset($per_state_data['Federal']);
+                        foreach ($per_state_data as $st => $counts):
+                            $leg_ct = isset($counts['legislators']) ? $counts['legislators'] : 0;
+                            $bill_ct = isset($counts['bills']) ? $counts['bills'] : 0;
+                            $fed_ct = isset($counts['federal']) ? $counts['federal'] : 0;
+                            $fed_bill_ct = isset($counts['fed_bills']) ? $counts['fed_bills'] : 0;
+                        ?>
+                        <tr>
+                            <td><strong><?php echo esc_html($st); ?></strong></td>
+                            <td style="text-align: right;"><?php echo $fed_ct ? number_format($fed_ct) : '-'; ?></td>
+                            <td style="text-align: right;"><?php echo $fed_bill_ct ? number_format($fed_bill_ct) : '-'; ?></td>
+                            <td style="text-align: right;"><?php echo $leg_ct ? number_format($leg_ct) : '-'; ?></td>
+                            <td style="text-align: right;"><?php echo $bill_ct ? number_format($bill_ct) : '-'; ?></td>
+                        </tr>
+                        <?php
+                        endforeach;
+                        $total_legs = $total_bills = $total_feds = $total_fed_bills = 0;
+                        foreach ($per_state_data as $c) {
+                            $total_legs += isset($c['legislators']) ? $c['legislators'] : 0;
+                            $total_bills += isset($c['bills']) ? $c['bills'] : 0;
+                            $total_feds += isset($c['federal']) ? $c['federal'] : 0;
+                            $total_fed_bills += isset($c['fed_bills']) ? $c['fed_bills'] : 0;
+                        }
+                        ?>
+                    </tbody>
+                    <tfoot>
+                        <tr style="font-weight: bold;">
+                            <td style="position: sticky; bottom: 0; background: #f0f0f1; z-index: 1;">Total</td>
+                            <td style="position: sticky; bottom: 0; background: #f0f0f1; z-index: 1; text-align: right;"><?php echo number_format($total_feds); ?></td>
+                            <td style="position: sticky; bottom: 0; background: #f0f0f1; z-index: 1; text-align: right;"><?php echo number_format($total_fed_bills); ?></td>
+                            <td style="position: sticky; bottom: 0; background: #f0f0f1; z-index: 1; text-align: right;"><?php echo number_format($total_legs); ?></td>
+                            <td style="position: sticky; bottom: 0; background: #f0f0f1; z-index: 1; text-align: right;"><?php echo number_format($total_bills); ?></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <?php endif; ?>
 
             </div>
         </details>
 
         <!-- BILLS BY ISSUE -->
-        <?php if (!empty($issue_stats)): ?>
         <details class="votecraft-accordion">
-            <summary>📋 Bills by Issue <span style="margin-left: auto; font-weight: normal; color: #666;"><?php echo number_format(array_sum($issue_totals)); ?> total</span></summary>
+            <summary>📋 Bills by Issue <span style="margin-left: auto; font-weight: normal; color: #666;"><?php echo number_format(array_sum($issue_totals_federal) + array_sum($issue_totals_state)); ?> total</span></summary>
             <div class="accordion-content">
             <p>Count of synced bills matching each issue's keywords:</p>
 
             <!-- National Totals -->
             <h4 style="margin-top: 15px;">National Totals</h4>
-            <table class="widefat" style="max-width: 600px;">
+            <table class="widefat">
                 <thead>
                     <tr>
                         <th>Issue</th>
-                        <th style="text-align: right;">Bills</th>
+                        <th style="text-align: right;">Federal Bills</th>
+                        <th style="text-align: right;">State Legislator Bills</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($issue_totals as $issue => $count): ?>
+                    <?php foreach ($issue_totals_federal as $issue => $fed_count): ?>
                     <tr>
                         <td><strong><?php echo esc_html($issue); ?></strong></td>
-                        <td style="text-align: right;"><?php echo number_format($count); ?></td>
+                        <td style="text-align: right;"><?php echo number_format($fed_count); ?></td>
+                        <td style="text-align: right;"><?php echo number_format($issue_totals_state[$issue]); ?></td>
                     </tr>
                     <?php endforeach; ?>
                     <tr style="background: #f0f0f0; font-weight: bold;">
                         <td>Total (all issues)</td>
-                        <td style="text-align: right;"><?php echo number_format(array_sum($issue_totals)); ?></td>
+                        <td style="text-align: right;"><?php echo number_format(array_sum($issue_totals_federal)); ?></td>
+                        <td style="text-align: right;"><?php echo number_format(array_sum($issue_totals_state)); ?></td>
                     </tr>
                 </tbody>
             </table>
@@ -1446,7 +1596,7 @@ function votecraft_sync_admin_page() {
                     <thead>
                         <tr>
                             <th>State</th>
-                            <?php foreach (array_keys($issue_totals) as $issue): ?>
+                            <?php foreach (array_keys($issue_totals_state) as $issue): ?>
                             <th style="text-align: right; font-size: 0.85em;"><?php echo esc_html($issue); ?></th>
                             <?php endforeach; ?>
                             <th style="text-align: right;"><strong>Total</strong></th>
@@ -1460,7 +1610,7 @@ function votecraft_sync_admin_page() {
                         ?>
                         <tr>
                             <td><strong><?php echo esc_html($state); ?></strong></td>
-                            <?php foreach (array_keys($issue_totals) as $issue): ?>
+                            <?php foreach (array_keys($issue_totals_state) as $issue): ?>
                             <td style="text-align: right;"><?php echo isset($issues[$issue]) ? number_format($issues[$issue]) : '0'; ?></td>
                             <?php endforeach; ?>
                             <td style="text-align: right; font-weight: bold;"><?php echo number_format($state_total); ?></td>
@@ -1471,7 +1621,6 @@ function votecraft_sync_admin_page() {
             </div>
             </div>
         </details>
-        <?php endif; ?>
 
         <!-- MANUAL SYNC -->
         <details class="votecraft-accordion">
@@ -1481,7 +1630,8 @@ function votecraft_sync_admin_page() {
             <h4>🗂️ OpenStates Sync</h4>
             <p style="font-size: 0.9em; color: #666;">
                 <strong>Stats:</strong> <?php echo number_format($state_leg_count); ?> state legislators, <?php echo number_format($state_bill_count); ?> state bills across <?php echo count($states_with_data); ?> states.
-                <strong>Rate limit:</strong> <?php echo votecraft_is_rate_limited() ? '<span style="color: #dc3545;">Daily limit hit — try again tomorrow</span>' : '<span style="color: #28a745;">OK</span>'; ?>
+                <strong>Rate limit:</strong> <?php echo votecraft_is_rate_limited() ? '<span style="color: #dc3545;">Daily limit hit (resets tomorrow)</span>' : '<span style="color: #28a745;">OK</span>'; ?>
+                <strong>Daily calls:</strong> <?php echo $scheduled_progress['api_calls_today']; ?> / 250
             </p>
 
             <h4>Sync Single State</h4>
@@ -1496,34 +1646,21 @@ function votecraft_sync_admin_page() {
                     </select>
                 </p>
                 <p>
+                    <button type="submit" name="votecraft_sync_action" value="sync_state" class="button button-primary">
+                        Sync State (Legislators + Bills)
+                    </button>
+                    <span style="font-size: 0.85em; color: #666;">(~34 API calls)</span>
+                </p>
+                <p>
                     <button type="submit" name="votecraft_sync_action" value="sync_legislators" class="button">
-                        Sync Legislators
+                        Sync Legislators Only
                     </button>
                     <span style="font-size: 0.85em; color: #666;">(1 API call)</span>
                     <button type="submit" name="votecraft_sync_action" value="sync_bills" class="button" style="margin-left: 10px;">
-                        Sync Bills
+                        Sync Bills Only
                     </button>
-                    <span style="font-size: 0.85em; color: #666;">(~33 API calls per state)</span>
+                    <span style="font-size: 0.85em; color: #666;">(~33 API calls)</span>
                 </p>
-            </form>
-
-            <hr style="margin: 20px 0;">
-
-            <h4>Bulk Sync - All States</h4>
-            <p style="font-size: 0.9em; color: #666;"><em>Warning: These sync all 50 states. Uses batched API calls with rate limiting.</em></p>
-            <form method="post" style="display: inline-block; margin-right: 10px;">
-                <?php wp_nonce_field('votecraft_sync'); ?>
-                <button type="submit" name="votecraft_sync_action" value="sync_all_legislators" class="button">
-                    Sync All Legislators (50 States)
-                </button>
-                <span style="font-size: 0.85em; color: #666;">(~50 API calls total)</span>
-            </form>
-            <form method="post" style="display: inline-block;">
-                <?php wp_nonce_field('votecraft_sync'); ?>
-                <button type="submit" name="votecraft_sync_action" value="sync_all_issue_bills" class="button">
-                    Sync Issue-Related Bills (50 States)
-                </button>
-                <span style="font-size: 0.85em; color: #666;">(~1,650 API calls — runs in batches)</span>
             </form>
 
             <hr style="margin: 20px 0;">
@@ -1585,7 +1722,7 @@ function votecraft_sync_admin_page() {
 
             <form method="post">
             <?php wp_nonce_field('votecraft_sync'); ?>
-            <table class="widefat" style="max-width: 700px;">
+            <table class="widefat">
                 <thead>
                     <tr>
                         <th style="width: 140px;">Issue</th>
@@ -1630,20 +1767,6 @@ function votecraft_sync_legislators($state) {
     global $wpdb;
     $table = $wpdb->prefix . 'votecraft_legislators';
     $log_table = $wpdb->prefix . 'votecraft_sync_log';
-
-    // Check if we're already rate limited today
-    if (votecraft_is_rate_limited()) {
-        // Log as rate limited
-        $wpdb->insert($log_table, array(
-            'sync_type' => 'legislators',
-            'state' => $state,
-            'status' => 'error',
-            'error_message' => '⚠️ DAILY RATE LIMIT - Waiting until tomorrow',
-            'started_at' => current_time('mysql'),
-            'completed_at' => current_time('mysql')
-        ));
-        return array('error' => 'Daily rate limit hit - try again tomorrow');
-    }
 
     // Log start
     $wpdb->insert($log_table, array(
@@ -1741,8 +1864,8 @@ function votecraft_sync_legislators($state) {
             $has_more = count($body['results']) === $per_page;
             $page++;
 
-            // Rate limit ourselves - 1.5 second between pages
-            usleep(1500000);
+            // Brief delay between pages
+            usleep(500000); // 0.5 second
 
         } while ($has_more && $page <= 20); // Safety limit
 
@@ -1839,19 +1962,6 @@ function votecraft_sync_bills($state) {
     $sponsorships_table = $wpdb->prefix . 'votecraft_sponsorships';
     $log_table = $wpdb->prefix . 'votecraft_sync_log';
 
-    // Check if we're already rate limited today
-    if (votecraft_is_rate_limited()) {
-        $wpdb->insert($log_table, array(
-            'sync_type' => 'bills',
-            'state' => $state,
-            'status' => 'error',
-            'error_message' => '⚠️ DAILY RATE LIMIT - Waiting until tomorrow',
-            'started_at' => current_time('mysql'),
-            'completed_at' => current_time('mysql')
-        ));
-        return array('error' => 'Daily rate limit hit - try again tomorrow');
-    }
-
     // Keywords matching VoteCraft's 6 core issues only
     $keywords = array(
         // RCV / Voting Reform (9)
@@ -1883,115 +1993,103 @@ function votecraft_sync_bills($state) {
     $log_id = $wpdb->insert_id;
 
     try {
-        $all_bills = array();
+        $count = 0;
         $seen_ids = array();
 
         // Convert state name to OpenStates jurisdiction (2-letter abbreviation)
         $jurisdiction = votecraft_state_to_jurisdiction($state);
 
         foreach ($keywords as $keyword) {
-            // Build URL with proper encoding
-            $params = array(
+            // Build URL — use string concatenation for include params (OpenStates needs repeated include=)
+            $base_params = array(
                 'jurisdiction' => $jurisdiction,
                 'q' => $keyword,
-                'include' => array('sponsorships', 'abstracts'),
                 'per_page' => 20,
                 'sort' => 'latest_action_desc',
                 'created_since' => $five_years_ago,
                 'apikey' => VOTECRAFT_OPENSTATES_API_KEY
             );
-            $url = 'https://v3.openstates.org/bills?' . http_build_query($params);
+            $url = 'https://v3.openstates.org/bills?' . http_build_query($base_params) . '&include=sponsorships&include=abstracts';
 
-            $response = wp_remote_get($url, array('timeout' => 30));
+            $response = wp_remote_get($url, array('timeout' => 15));
 
             if (is_wp_error($response)) {
-                continue; // Skip this keyword on error
+                continue;
             }
 
             $status = wp_remote_retrieve_response_code($response);
             $raw_body = wp_remote_retrieve_body($response);
 
             if ($status === 429) {
-                // Check if daily or per-minute limit
                 $limit_type = votecraft_parse_rate_limit_error($raw_body);
                 if ($limit_type === 'daily') {
                     votecraft_set_rate_limited();
-                    throw new Exception('⚠️ DAILY RATE LIMIT HIT - Syncing paused until tomorrow');
+                    throw new Exception('⚠️ DAILY RATE LIMIT HIT after ' . $count . ' bills. Syncing paused until tomorrow.');
                 }
-                // Per-minute limit - wait 65 seconds
-                sleep(65);
+                // Per-minute limit - skip this keyword
                 continue;
             }
 
             if ($status >= 400) {
-                // Check for rate limit in error body
                 if (strpos($raw_body, 'exceeded limit') !== false && strpos($raw_body, '/day') !== false) {
                     votecraft_set_rate_limited();
-                    throw new Exception('⚠️ DAILY RATE LIMIT HIT - Syncing paused until tomorrow');
+                    throw new Exception('⚠️ DAILY RATE LIMIT HIT after ' . $count . ' bills.');
                 }
-                continue; // Skip on other HTTP errors
+                continue;
             }
 
-            $body = json_decode(wp_remote_retrieve_body($response), true);
+            $body = json_decode($raw_body, true);
             if ($body && isset($body['results'])) {
+                // Save each bill immediately (no batching — survives timeouts)
                 foreach ($body['results'] as $bill) {
-                    if (!isset($seen_ids[$bill['id']])) {
-                        $seen_ids[$bill['id']] = true;
-                        $bill['_keyword'] = $keyword;
-                        $all_bills[] = $bill;
+                    if (isset($seen_ids[$bill['id']])) continue;
+                    $seen_ids[$bill['id']] = true;
+
+                    $latest_action = isset($bill['latest_action_date']) ? $bill['latest_action_date'] : null;
+                    $api_subjects = isset($bill['subject']) && is_array($bill['subject']) ? $bill['subject'] : array();
+                    $api_abstract = '';
+                    if (isset($bill['abstracts']) && is_array($bill['abstracts']) && !empty($bill['abstracts'])) {
+                        $api_abstract = isset($bill['abstracts'][0]['abstract']) ? $bill['abstracts'][0]['abstract'] : '';
                     }
-                }
-            }
 
-            // Rate limit ourselves
-            usleep(750000); // 0.75 second delay
-        }
-
-        // Insert/update bills and sponsorships
-        $count = 0;
-        foreach ($all_bills as $bill) {
-            $latest_action = isset($bill['latest_action_date']) ? $bill['latest_action_date'] : null;
-
-            // Extract actual subjects and abstract from API response
-            $api_subjects = isset($bill['subject']) && is_array($bill['subject']) ? $bill['subject'] : array();
-            $api_abstract = '';
-            if (isset($bill['abstracts']) && is_array($bill['abstracts']) && !empty($bill['abstracts'])) {
-                $api_abstract = $bill['abstracts'][0]['abstract'] ?? '';
-            }
-
-            $wpdb->replace($bills_table, array(
-                'id' => $bill['id'],
-                'identifier' => $bill['identifier'],
-                'title' => $bill['title'],
-                'state' => $state,
-                'session' => isset($bill['session']) ? $bill['session'] : null,
-                'chamber' => isset($bill['from_organization']['classification']) ? $bill['from_organization']['classification'] : null,
-                'classification' => isset($bill['classification']) ? (is_array($bill['classification']) ? implode(', ', $bill['classification']) : $bill['classification']) : null,
-                'subject' => $bill['_keyword'],
-                'issue_id' => $bill['_keyword'],
-                'subjects' => json_encode($api_subjects),
-                'abstract' => $api_abstract,
-                'latest_action_date' => $latest_action,
-                'latest_action_description' => isset($bill['latest_action_description']) ? $bill['latest_action_description'] : null,
-                'openstates_url' => isset($bill['openstates_url']) ? $bill['openstates_url'] : null,
-                'raw_data' => json_encode($bill),
-                'updated_at' => current_time('mysql')
-            ));
-
-            // Sync sponsorships
-            if (isset($bill['sponsorships']) && is_array($bill['sponsorships'])) {
-                foreach ($bill['sponsorships'] as $sponsor) {
-                    $wpdb->replace($sponsorships_table, array(
-                        'bill_id' => $bill['id'],
-                        'legislator_id' => isset($sponsor['person']['id']) ? $sponsor['person']['id'] : null,
-                        'legislator_name' => $sponsor['name'],
-                        'sponsorship_type' => isset($sponsor['primary']) && $sponsor['primary'] ? 'primary' : 'cosponsor',
-                        'classification' => isset($sponsor['classification']) ? $sponsor['classification'] : null
+                    $wpdb->replace($bills_table, array(
+                        'id' => $bill['id'],
+                        'identifier' => $bill['identifier'],
+                        'title' => $bill['title'],
+                        'state' => $state,
+                        'session' => isset($bill['session']) ? $bill['session'] : null,
+                        'chamber' => isset($bill['from_organization']['classification']) ? $bill['from_organization']['classification'] : null,
+                        'classification' => isset($bill['classification']) ? (is_array($bill['classification']) ? implode(', ', $bill['classification']) : $bill['classification']) : null,
+                        'subject' => $keyword,
+                        'issue_id' => $keyword,
+                        'subjects' => json_encode($api_subjects),
+                        'abstract' => $api_abstract,
+                        'latest_action_date' => $latest_action,
+                        'latest_action_description' => isset($bill['latest_action_description']) ? $bill['latest_action_description'] : null,
+                        'openstates_url' => isset($bill['openstates_url']) ? $bill['openstates_url'] : null,
+                        'raw_data' => json_encode($bill),
+                        'updated_at' => current_time('mysql')
                     ));
+
+                    // Save sponsorships immediately too
+                    if (isset($bill['sponsorships']) && is_array($bill['sponsorships'])) {
+                        foreach ($bill['sponsorships'] as $sponsor) {
+                            $wpdb->replace($sponsorships_table, array(
+                                'bill_id' => $bill['id'],
+                                'legislator_id' => isset($sponsor['person']['id']) ? $sponsor['person']['id'] : null,
+                                'legislator_name' => $sponsor['name'],
+                                'sponsorship_type' => isset($sponsor['primary']) && $sponsor['primary'] ? 'primary' : 'cosponsor',
+                                'classification' => isset($sponsor['classification']) ? $sponsor['classification'] : null
+                            ));
+                        }
+                    }
+
+                    $count++;
                 }
             }
 
-            $count++;
+            // Brief delay between keywords
+            usleep(200000); // 0.2 second
         }
 
         // Log success
@@ -2004,9 +2102,10 @@ function votecraft_sync_bills($state) {
         return array('success' => true, 'message' => "Synced $count bills for $state");
 
     } catch (Exception $e) {
-        // Log error
+        // Log error — but $count bills were already saved
         $wpdb->update($log_table, array(
             'status' => 'error',
+            'records_synced' => $count,
             'error_message' => $e->getMessage(),
             'completed_at' => current_time('mysql')
         ), array('id' => $log_id));
@@ -3134,13 +3233,16 @@ function votecraft_lookup_congress_bills($name, $issue_id, $keywords) {
  * @param array $keywords - Keywords array organized by issue
  * @param string $state - Optional state code (e.g., 'MA') to filter results
  */
-function votecraft_lookup_congress_bills_by_issue($name, $keywords, $state = '') {
+function votecraft_lookup_congress_bills_by_issue($name, $keywords, $state = '', $bioguide_id = '') {
     // Use the internal REST API proxy to fetch bills (same as frontend)
     // This ensures caching works and we use the same data source
     $request = new WP_REST_Request('GET', '/votecraft/v1/congress');
     $request->set_param('endpoint', 'member/bills');
     $request->set_param('name', $name);
     $request->set_param('limit', '250');
+    if (!empty($bioguide_id)) {
+        $request->set_param('bioguideId', $bioguide_id);
+    }
     if (!empty($state)) {
         $request->set_param('state', $state);
     }
@@ -3757,9 +3859,12 @@ function votecraft_sync_congress_issue_bills($batch_size = 25) {
     $bills_found = 0;
 
     foreach ($members as $member) {
+        // Extract bioguideId from member id (format: "congress-{bioguideId}")
+        $bioguide_id = str_replace('congress-', '', $member->id);
+
         // Lookup bills for this member using internal REST API
         foreach ($issues as $issue) {
-            $result = votecraft_lookup_congress_bills_by_issue($member->name, $issue['billKeywords'], $member->state);
+            $result = votecraft_lookup_congress_bills_by_issue($member->name, $issue['billKeywords'], $member->state, $bioguide_id);
 
             if ($result['success'] && !empty($result['bills'])) {
                 foreach ($result['bills'] as $bill) {
