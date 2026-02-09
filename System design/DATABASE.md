@@ -2,6 +2,29 @@
 
 This document describes the database setup and data flow for the VoteCraft application.
 
+## Quick Start
+
+VoteCraft is a WordPress-hosted civic engagement tool. Users enter their address, see their legislators (state + federal), pick an issue, and see which bills that legislator sponsors/cosponsors related to that issue.
+
+**Two-part deployment:**
+- **PHP backend** (WordPress plugin) — `api/votecraft-data-sync.php` + `api/openstates-proxy.php` → manually uploaded as ZIP to WordPress
+- **Frontend** (static files) — `pages/vote/` → auto-deploys via GitHub Pages, BUT also hosted on WordPress server at `wp-content/uploads/pages/vote/`, so frontend changes need manual upload too
+- **Cache busting** — version strings in `vote.html` (e.g., `?v=20260209g`) must be bumped whenever JS/CSS files change, or browsers serve stale code
+
+**The frontend makes zero live API calls for bill display.** All data comes from the local WordPress database through the proxy. The proxy falls back to cache, then to live API only if local DB is empty.
+
+## Architecture Decisions
+
+| Decision | Rationale |
+|----------|-----------|
+| Local DB over live API for frontend | Avoids rate limits (OpenStates 250/day, Congress 5K/hour), faster response, works offline |
+| bioguideId over name search for Congress | Congress.gov name search is unreliable — returns wrong members or no results |
+| `chamber` column fallback for senator classification | `current_role` may be null in DB from older syncs — proxy uses `chamber` column ('senate'/'house') to build correct role |
+| Word boundary regex after SQL LIKE | SQL `LIKE '%debt%'` matches "indebted" — PHP `\b` regex eliminates false positives |
+| Separate `issue_id` from `subjects` | `issue_id` = which search keyword found the bill (tracking only); `subjects` = actual API-assigned topics (for matching) |
+| Sponsored + cosponsored bills | Congress proxy fetches both `/sponsored-legislation` and `/cosponsored-legislation`, deduplicates, marks sponsorship type |
+| `people.geo` fallback to state lookup | When OpenStates is rate-limited, geocoder extracts state from Nominatim, then queries local DB for that state's legislators |
+
 ## Overview
 
 VoteCraft uses a WordPress database with custom tables to store:
@@ -364,13 +387,43 @@ The VoteCraft Sync admin page is organized into accordion panels:
 
 ## Key Files
 
-| File | Purpose |
-|------|---------|
-| `api/votecraft-data-sync.php` | Main plugin: sync engine, admin dashboard, bill lookup, keyword management |
-| `api/openstates-proxy.php` | REST API proxy, caching, local DB queries for frontend |
-| `pages/vote/js/vote-app.js` | Frontend application logic |
-| `pages/vote/js/civic-api.js` | Frontend API calls |
-| `pages/vote/js/issues-data.js` | Issue definitions and keywords |
+| File | Purpose | Deploy |
+|------|---------|--------|
+| `api/votecraft-data-sync.php` | Main plugin: sync engine, admin dashboard, bill lookup, keyword management | Manual ZIP upload to WordPress |
+| `api/openstates-proxy.php` | REST API proxy, caching, local DB queries for frontend | Manual ZIP upload to WordPress |
+| `pages/vote/js/vote-app.js` | Frontend: rep lookup, bill display, alignment scoring | GitHub Pages auto + WordPress manual upload |
+| `pages/vote/js/civic-api.js` | Frontend: all API calls (geocode, legislators, bills) | GitHub Pages auto + WordPress manual upload |
+| `pages/vote/js/issues-data.js` | Issue definitions, keywords, manual bill associations | GitHub Pages auto + WordPress manual upload |
+| `pages/vote/css/vote.css` | Frontend styles | GitHub Pages auto + WordPress manual upload |
+| `pages/vote/vote.html` | Frontend HTML shell + cache-busting version strings | GitHub Pages auto + WordPress manual upload |
+
+### Key Functions by File
+
+**vote-app.js:**
+- `lookupReps()` — Address/state search → fetches legislators (people.geo fallback to state lookup)
+- `loadRepAlignment()` — Fetches bills by keyword from local DB, matches to selected legislator
+- `computeAlignmentScore()` — Matches bills to rep by last name in sponsorships (primary + cosponsor)
+- `renderReps()` — Splits legislators into Federal Senators / House / State Senators / State / Executive sections
+
+**civic-api.js:**
+- `geocodeAddress()` — Nominatim geocoder, extracts state from address details
+- `getStateLegislators()` — Calls proxy `?endpoint=people.geo` (lat/lng lookup)
+- `getCongressMembers()` — Calls proxy `?endpoint=people.congress` (local DB only)
+- `getAllLegislators()` — Calls proxy `?endpoint=people` (state jurisdiction)
+- `getBillsBySubject()` — Calls proxy `?endpoint=bills` (keyword search, local DB → cache → live API)
+- `parseRepresentatives()` — Normalizes API data, classifies level (congress/state/executive) using jurisdiction.classification + role title
+
+**openstates-proxy.php:**
+- `votecraft_openstates_proxy()` — Main proxy: routes people.geo, people, people.congress, bills endpoints
+- `votecraft_try_local_db()` — Searches local legislators/bills tables before hitting live API
+- `votecraft_try_local_congress_db()` — Returns Congress members with chamber-based current_role fallback
+- `votecraft_congress_proxy()` — Congress.gov proxy: member lookup (bioguideId preferred), sponsored + cosponsored bills
+
+**votecraft-data-sync.php:**
+- `votecraft_sync_congress_members()` — Batched sync of senators + reps from Congress.gov `/member` endpoint
+- `votecraft_sync_congress_bills_by_issue()` — For each member × issue, fetches sponsored + cosponsored bills, filters by keywords, stores with subjects + abstract
+- `votecraft_sync_state()` — Syncs legislators + bills for one state from OpenStates
+- `votecraft_lookup_congress_bills_by_issue()` — Internal REST call to Congress proxy for bill associations page
 
 ## Common Queries
 
@@ -446,7 +499,30 @@ AND response_data LIKE '%ranked choice%';
 - Use `%s` in `$wpdb->prepare()`, not `%d`
 - Don't use `intval()` on legislator IDs
 
+### Senators showing as "U.S. Representative"
+- The `current_role` column in legislators table may be null (from older sync)
+- The proxy (`votecraft_try_local_congress_db`) falls back to `chamber` column to build correct role
+- If still wrong, check: `SELECT id, name, chamber, current_role FROM wp_votecraft_legislators WHERE level = 'congress' AND chamber = 'senate' LIMIT 5`
+- Fix: re-run Congress member sync, or the proxy fallback handles it
+
+### "No legislators found" on address search
+- `people.geo` endpoint returns empty when OpenStates is rate-limited
+- Frontend falls back to geocoded state → local DB lookup
+- Check browser console for "Geocoded state:" log — if missing, the new fallback code isn't loaded (cache bust needed)
+- Verify legislators exist in DB: `SELECT COUNT(*) FROM wp_votecraft_legislators WHERE state = 'Massachusetts'`
+
+### Browser showing old JS code
+- Cache busting version in `vote.html` must be bumped (e.g., `?v=20260209g` → `?v=20260209h`)
+- User must hard-refresh (Cmd+Shift+R) or clear cache
+- Check browser console for version string in file URLs to confirm which version is loaded
+
 ### Rate limit hit
-- OpenStates: Wait until next day (daily limit)
+- OpenStates: Wait until next day (daily limit of 250 calls)
 - Congress.gov: Wait 1 hour (5,000/hour limit)
 - Check options table for rate limit timestamps
+- Clear rate limit: `DELETE FROM wp_options WHERE option_name LIKE 'votecraft_%rate_limit%'`
+
+### Governors / executive officials not in data
+- OpenStates and Congress.gov only track legislators, not governors
+- Governors appear via Google Civic API (name/party/photo only, no bill data)
+- To associate bills with a governor, use manual bill associations in the admin dashboard
