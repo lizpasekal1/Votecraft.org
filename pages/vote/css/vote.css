@@ -830,6 +830,7 @@ body {
     overflow: hidden;
     flex-shrink: 0;
     position: relative;
+    background: #fff;
 }
 
 .issue-card-image img {
@@ -840,7 +841,7 @@ body {
 }
 
 .issue-card:hover .issue-card-image img {
-    filter: brightness(2.5);
+    opacity: 0;
 }
 
 /* Awareness chart overlay on issue hero image */
