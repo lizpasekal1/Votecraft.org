@@ -860,7 +860,7 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 16px;
+    padding: 10px 12px;
     box-sizing: border-box;
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -872,27 +872,28 @@ body {
 }
 
 .awareness-chart-overlay .chart-header {
-    font-size: 0.8rem;
+    font-size: 1.1rem;
     font-weight: 700;
     color: #334155;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
 .awareness-chart-overlay svg {
     width: 100%;
-    max-width: 320px;
+    max-width: 95%;
+    flex: 1;
     height: auto;
 }
 
 .awareness-chart-overlay .chart-footnote {
-    font-size: 0.55rem;
+    font-size: 0.7rem;
     color: #94a3b8;
     text-align: center;
-    margin-top: 6px;
+    margin-top: 4px;
     line-height: 1.3;
-    max-width: 320px;
+    max-width: 95%;
 }
 
 .issue-card-title {
