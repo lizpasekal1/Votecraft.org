@@ -15,10 +15,11 @@ const ISSUES_CATALOG = [
         heroImage: 'https://votecraft.org/wp-content/uploads/2025/06/rank-the-vote.jpg',
         learnMoreUrl: 'https://votecraft.org/solutions/rank-choice-voting/',
         publicAwareness: [
+            { year: 2016, pct: 9 }, { year: 2018, pct: 24 },
             { year: 2020, pct: 55 }, { year: 2022, pct: 52 },
             { year: 2023, pct: 55 }, { year: 2024, pct: 53 }
         ],
-        chartSource: 'Gallup (2022); Pew Research Center (2023); FairVote/Ipsos (2020); AP-NORC (2024)',
+        chartSource: 'FairVote/Ipsos (2020); Gallup (2022); Pew Research (2023); AP-NORC (2024). Pre-2020 estimates from state ballot measure exit polls.',
         billKeywords: ['ranked choice', 'ranked-choice', 'ranked choice voting', 'instant runoff', 'preferential voting', 'alternative voting', 'final five voting', 'rank the vote', 'rcv', 'local option voting', 'municipal election voting'],
         nonprofits: [
             {
@@ -49,12 +50,15 @@ const ISSUES_CATALOG = [
         heroImage: 'https://votecraft.org/wp-content/uploads/2026/02/end_public-debt-profiteering_feature.jpg',
         learnMoreUrl: 'https://votecraft.org/solutions/debt-profiteering/',
         publicAwareness: [
-            { year: 2018, pct: 48 }, { year: 2019, pct: 48 }, { year: 2020, pct: 53 },
+            { year: 2007, pct: 53 }, { year: 2009, pct: 53 },
+            { year: 2011, pct: 64 }, { year: 2012, pct: 69 },
+            { year: 2013, pct: 72 }, { year: 2015, pct: 64 },
+            { year: 2016, pct: 56 }, { year: 2018, pct: 48 },
+            { year: 2019, pct: 48 }, { year: 2020, pct: 53 },
             { year: 2021, pct: 45 }, { year: 2022, pct: 45 },
             { year: 2023, pct: 57 }, { year: 2024, pct: 56 }
         ],
-        chartLabel: '% saying deficit reduction is a top priority',
-        chartSource: 'Pew Research Center, "Public\'s Top Policy Priorities" surveys (2018-2024)',
+        chartSource: 'Pew Research Center, "Public\'s Top Policy Priorities" surveys (2007-2024)',
         billKeywords: ['public debt', 'predatory lending', 'student debt', 'student loan', 'debt relief', 'debt collection', 'payday loan', 'loan forgiveness', 'borrower', 'consumer financial'],
         nonprofits: [
             {
@@ -85,11 +89,12 @@ const ISSUES_CATALOG = [
         heroImage: 'https://votecraft.org/wp-content/uploads/2025/06/Citizens-united.jpg',
         learnMoreUrl: 'https://votecraft.org/solutions/end-dark-money/',
         publicAwareness: [
-            { year: 2018, pct: 77 }, { year: 2019, pct: 77 },
-            { year: 2020, pct: 66 }, { year: 2023, pct: 72 }
+            { year: 2010, pct: 65 }, { year: 2012, pct: 75 },
+            { year: 2015, pct: 76 }, { year: 2018, pct: 77 },
+            { year: 2019, pct: 77 }, { year: 2020, pct: 66 },
+            { year: 2023, pct: 72 }
         ],
-        chartLabel: '% supporting campaign spending limits',
-        chartSource: 'Pew Research Center (2018, 2019, 2020, 2023)',
+        chartSource: 'Pew Research Center (2010-2023). % supporting campaign spending limits.',
         billKeywords: ['citizens united', 'campaign finance', 'dark money', 'super pac', 'political action committee', 'corporate political', 'campaign spending', 'political contribution', 'money in politics', 'disclose act', 'for the people act', 'freedom to vote', 'democracy for all', 'honest ads', 'foreign money', 'election integrity', 'voter disclosure', 'political spending', 'corporate money'],
         nonprofits: [
             {
@@ -120,11 +125,14 @@ const ISSUES_CATALOG = [
         heroImage: 'https://votecraft.org/wp-content/uploads/2025/06/healthcare1.jpg',
         learnMoreUrl: 'https://votecraft.org/solutions/universal-basic-healthcare/',
         publicAwareness: [
-            { year: 2018, pct: 60 }, { year: 2019, pct: 59 },
-            { year: 2020, pct: 63 }, { year: 2021, pct: 60 }, { year: 2023, pct: 59 }
+            { year: 2000, pct: 64 }, { year: 2002, pct: 62 },
+            { year: 2004, pct: 64 }, { year: 2006, pct: 69 },
+            { year: 2008, pct: 54 }, { year: 2010, pct: 47 },
+            { year: 2012, pct: 44 }, { year: 2014, pct: 42 },
+            { year: 2016, pct: 51 }, { year: 2018, pct: 60 },
+            { year: 2020, pct: 63 }, { year: 2023, pct: 59 }
         ],
-        chartLabel: '% saying govt should ensure healthcare coverage',
-        chartSource: 'Pew Research Center (2018-2023); KFF Health Tracking Polls',
+        chartSource: 'Gallup, "Healthcare System" (2000-2016); Pew Research Center (2018-2023). % saying govt should ensure coverage.',
         billKeywords: ['universal health', 'medicare for all', 'public option', 'medicaid expansion', 'single payer', 'affordable care', 'healthcare for all', 'drug pricing', 'prescription drug', 'health care coverage', 'health insurance'],
         nonprofits: [
             {
@@ -155,12 +163,12 @@ const ISSUES_CATALOG = [
         heroImage: 'https://votecraft.org/wp-content/uploads/2025/06/supreme-court2.jpg',
         learnMoreUrl: 'https://votecraft.org/solutions/supreme-court-reform/',
         publicAwareness: [
-            { year: 2018, pct: 61 }, { year: 2020, pct: 77 },
-            { year: 2021, pct: 63 }, { year: 2022, pct: 67 },
-            { year: 2023, pct: 74 }, { year: 2024, pct: 73 }
+            { year: 2014, pct: 60 }, { year: 2018, pct: 61 },
+            { year: 2020, pct: 77 }, { year: 2021, pct: 63 },
+            { year: 2022, pct: 67 }, { year: 2023, pct: 74 },
+            { year: 2024, pct: 73 }
         ],
-        chartLabel: '% supporting term limits for justices',
-        chartSource: 'AP-NORC (2021-2022); Pew Research (2023); Marquette Law School Poll (2024); Fix the Court/Ipsos (2018, 2020)',
+        chartSource: 'Fix the Court/Ipsos (2014, 2018, 2020); AP-NORC (2021-2022); Pew Research (2023); Marquette Law School (2024). % supporting term limits.',
         billKeywords: ['supreme court', 'judicial term limits', 'court expansion', 'judicial ethics', 'court reform', 'judicial accountability', 'scotus', 'justice term limit'],
         nonprofits: [
             {
@@ -191,12 +199,13 @@ const ISSUES_CATALOG = [
         heroImage: 'https://votecraft.org/wp-content/uploads/2026/02/news_paywall_reform_feature.jpg',
         learnMoreUrl: 'https://votecraft.org/solutions/news-paywall-reform/',
         publicAwareness: [
+            { year: 2013, pct: 5 }, { year: 2014, pct: 10 },
+            { year: 2016, pct: 11 }, { year: 2017, pct: 16 },
             { year: 2019, pct: 16 }, { year: 2020, pct: 20 },
             { year: 2021, pct: 21 }, { year: 2022, pct: 19 },
             { year: 2023, pct: 21 }, { year: 2024, pct: 22 }
         ],
-        chartLabel: '% of Americans who paid for online news',
-        chartSource: 'Reuters Institute Digital News Report (2019-2024)',
+        chartSource: 'Reuters Institute Digital News Report (2013-2024). % who paid for online news.',
         billKeywords: ['local journalism', 'journalism funding', 'local news', 'news deserts', 'journalism tax credit', 'community news', 'newsroom', 'journalism preservation'],
         nonprofits: [
             {
