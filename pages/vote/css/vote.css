@@ -872,11 +872,9 @@ body {
 }
 
 .awareness-chart-overlay .chart-header {
-    font-size: 1.1rem;
+    font-size: 1.3rem;
     font-weight: 700;
-    color: #334155;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    color: var(--primary);
     margin-bottom: 4px;
 }
 
