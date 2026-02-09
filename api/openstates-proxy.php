@@ -222,29 +222,34 @@ function votecraft_try_local_congress_db($state = null) {
         );
     }
 
-    // Format results to match API response
+    // Format results in OpenStates-compatible format
+    // Congress members are synced from Congress.gov so raw_data is NOT in OpenStates format.
+    // Always build normalized response so parseRepresentatives() can identify them correctly.
     $results = array();
     foreach ($legislators as $leg) {
-        $raw = json_decode($leg->raw_data, true);
-        if ($raw) {
-            $results[] = $raw;
-        } else {
-            // Fallback to table fields
-            $results[] = array(
-                'id' => $leg->id,
-                'name' => $leg->name,
-                'party' => $leg->party,
-                'image' => $leg->photo_url,
-                'email' => $leg->email,
-                'current_role' => $leg->current_role ? json_decode($leg->current_role, true) : null,
-                'jurisdiction' => array(
-                    'name' => $leg->state,
-                    'classification' => 'country'
-                ),
-                'level' => 'congress',
-                'source' => 'openstates'
+        // Build current_role from DB or fallback to chamber column
+        $current_role = $leg->current_role ? json_decode($leg->current_role, true) : null;
+        if (!$current_role || empty($current_role['title'])) {
+            $current_role = array(
+                'title' => ($leg->chamber === 'senate') ? 'U.S. Senator' : 'U.S. Representative',
+                'org_classification' => $leg->chamber ?: 'lower'
             );
         }
+
+        $results[] = array(
+            'id' => $leg->id,
+            'name' => $leg->name,
+            'party' => $leg->party,
+            'image' => $leg->photo_url,
+            'email' => $leg->email,
+            'current_role' => $current_role,
+            'jurisdiction' => array(
+                'name' => $leg->state,
+                'classification' => 'country'
+            ),
+            'level' => 'congress',
+            'source' => 'openstates'
+        );
     }
 
     return array(
