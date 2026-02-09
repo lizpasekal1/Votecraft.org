@@ -169,9 +169,17 @@ class VoteApp {
                 if (this.issueMap) this.issueMap.invalidateSize();
             }
 
-            // Stretch rep card to fill its column
+            // Stretch rep card to fill its column, minus 30px
             if (card && card.parentElement) {
-                card.style.height = card.parentElement.offsetHeight + 'px';
+                card.style.height = (card.parentElement.offsetHeight - 30) + 'px';
+                card.style.flex = 'none';
+            }
+
+            // Make top supporters widget 30px shorter
+            const supporters = document.getElementById('top-supporters-widget');
+            if (supporters) {
+                supporters.style.height = (supporters.offsetHeight - 30) + 'px';
+                supporters.style.flex = 'none';
             }
 
             // Align title left edge with hero left edge
