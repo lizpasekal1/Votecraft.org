@@ -139,7 +139,7 @@ Tracks sync operations for monitoring.
   - `/people.geo` — Legislators by lat/lng
   - `/bills` — State legislation (with `include=sponsorships&include=abstracts`)
 - **API Key:** Stored in `VOTECRAFT_OPENSTATES_API_KEY` constant
-- **Rate Limit:** Daily limit tracked in `votecraft_openstates_rate_limit_date` option
+- **Rate Limit:** 250 calls/day, tracked in `votecraft_openstates_rate_limit_date` option (resets at midnight)
 
 **Data extracted from OpenStates bills:**
 - `subject` array → stored in `subjects` column as JSON
@@ -150,13 +150,14 @@ Tracks sync operations for monitoring.
 ### Congress.gov API v3 (Federal Legislators & Bills)
 - **Base URL:** `https://api.congress.gov/v3`
 - **Endpoints used:**
-  - `/member` — Search Congress members by name
+  - `/member` — List Congress members (paginated by chamber)
+  - `/member/{bioguideId}` — Direct member lookup (preferred over name search, which is unreliable)
   - `/member/{bioguideId}/sponsored-legislation` — Bills they sponsor
   - `/member/{bioguideId}/cosponsored-legislation` — Bills they cosponsor
   - `/bill/{congress}/{type}/{number}/subjects` — Bill subjects (legislativeSubjects + policyArea)
   - `/bill/{congress}/{type}/{number}/summaries` — Bill summary text
 - **API Key:** Stored in plugin code
-- **Rate Limit:** 5,000 calls/hour
+- **Rate Limit:** 5,000 calls/hour, tracked in `votecraft_congress_api_usage` option (resets hourly)
 
 **Data extracted from Congress.gov bills:**
 - `policyArea.name` + `legislativeSubjects[].name` → stored in `subjects` column as JSON
@@ -244,21 +245,22 @@ For each state in priority list:
      e. Store bills in wp_votecraft_bills
      f. Store sponsorships in wp_votecraft_sponsorships
 
-Congress.gov Sync (monthly):
+Congress.gov Sync (daily until complete, then waits 30 days):
         ↓
-  1. Fetch all senators and representatives
+  1. Fetch all senators and representatives (batched, 50 per run)
   2. Store in wp_votecraft_legislators (level='congress')
   3. For each member × each issue:
-     a. Fetch sponsored + cosponsored legislation
-     b. Filter by issue keywords (title + policyArea matching)
-     c. For each matched bill:
+     a. Direct lookup by bioguideId (extracted from member id: "congress-{bioguideId}")
+     b. Fetch sponsored + cosponsored legislation
+     c. Filter by issue keywords (title + policyArea matching)
+     d. For each matched bill:
         - Fetch /bill/{congress}/{type}/{number}/subjects
           → legislativeSubjects + policyArea → subjects column (JSON)
         - Fetch /bill/{congress}/{type}/{number}/summaries
           → summary text → abstract column
         - Extract latestAction → action date/description columns
-     d. Store in wp_votecraft_bills (state='Federal')
-     e. Store sponsorships in wp_votecraft_sponsorships
+     e. Store in wp_votecraft_bills (state='Federal')
+     f. Store sponsorships in wp_votecraft_sponsorships
 ```
 
 ## Issue Keywords
@@ -284,10 +286,13 @@ Bills are matched to issues using keyword searches. Keywords are defined in:
 | Option Name | Purpose |
 |-------------|---------|
 | `votecraft_sync_db_version` | Current DB schema version (triggers migrations on change) |
-| `votecraft_openstates_rate_limit_date` | Date when daily rate limit was hit |
-| `votecraft_congress_rate_limit_time` | Timestamp when hourly rate limit was hit |
-| `votecraft_scheduled_sync_enabled` | Whether auto-sync is enabled |
-| `votecraft_congress_sync_progress` | Progress tracker for Congress bill sync batches |
+| `votecraft_openstates_rate_limit_date` | Date (Y-m-d) when daily rate limit was hit |
+| `votecraft_congress_rate_limit_time` | Unix timestamp when hourly rate limit was hit |
+| `votecraft_congress_api_usage` | Array `{calls, hour}` tracking Congress API calls per hour |
+| `votecraft_scheduled_sync_enabled` | Whether OpenStates auto-sync is active (pause/resume) |
+| `votecraft_scheduled_progress` | Progress tracker for OpenStates scheduled sync (current state, phase, completed states, API calls) |
+| `votecraft_congress_scheduled_sync_enabled` | Whether Congress.gov auto-sync is active (pause/resume) |
+| `votecraft_congress_sync_progress` | Progress tracker for Congress member sync batches |
 | `votecraft_congress_bills_sync_progress` | Progress tracker for Congress bills-by-issue sync |
 | `votecraft_excluded_bills` | Manually excluded bill-legislator associations |
 | `votecraft_manual_bill_associations` | Manually added bill-legislator associations |
@@ -319,9 +324,26 @@ Bills are matched to issues using keyword searches. Keywords are defined in:
 | Param | Description |
 |-------|-------------|
 | `endpoint` | "member/bills", "bill/search", "bill", "member" |
-| `name` | Congress member name to search |
+| `name` | Congress member name (fallback search) |
+| `bioguideId` | Direct member lookup by bioguide ID (preferred — bypasses unreliable name search) |
 | `state` | State filter |
 | `limit` | Max bills to return (default 20, max 250 per page) |
+
+## Admin Dashboard Sections
+
+The VoteCraft Sync admin page is organized into accordion panels:
+
+| Section | Description |
+|---------|-------------|
+| **States Count** | Summary table (Federal Officials count, States w/ Bills, Data Cached) + Per-State Data breakdown |
+| **Bills Count** | National Totals (Federal Bills vs State Legislator Bills by issue) |
+| **OpenStates Scheduled Sync** | Progress bar, API Usage Today (250/day), Pause/Resume, Clear Cache |
+| **Congress.gov Scheduled Sync** | Members synced, API Usage This Hour (5,000/hour), Pause/Resume, Clear Cache |
+| **Recent Sync Activity** | Log of recent sync operations |
+| **Manual Sync Controls** | Individual state sync, Congress member/bill sync buttons |
+| **Issue Keywords Editor** | Edit keywords used to match bills to issues |
+
+**Note:** All timestamps are stored in UTC (`gmdate('Y-m-d H:i:s')`) and displayed in local time using `wp_date()`.
 
 ## Key Files
 
