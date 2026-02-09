@@ -90,6 +90,28 @@ function votecraft_parse_congress_rate_limit($response_body, $status_code) {
     return false;
 }
 
+/**
+ * Track Congress.gov API calls with hourly reset
+ */
+function votecraft_track_congress_api_call($count = 1) {
+    $usage = get_option('votecraft_congress_api_usage', array('calls' => 0, 'hour' => ''));
+    $current_hour = gmdate('Y-m-d H');
+    if ($usage['hour'] !== $current_hour) {
+        $usage = array('calls' => 0, 'hour' => $current_hour);
+    }
+    $usage['calls'] += $count;
+    update_option('votecraft_congress_api_usage', $usage);
+    return $usage['calls'];
+}
+
+function votecraft_get_congress_api_calls() {
+    $usage = get_option('votecraft_congress_api_usage', array('calls' => 0, 'hour' => ''));
+    if ($usage['hour'] !== gmdate('Y-m-d H')) {
+        return 0;
+    }
+    return $usage['calls'];
+}
+
 // =============================================================================
 // SCHEDULED SYNC (WP-CRON)
 // =============================================================================
@@ -905,12 +927,13 @@ function votecraft_sync_admin_page() {
     $congress_count = $wpdb->get_var("SELECT COUNT(*) FROM $legislators_table WHERE level = 'congress'");
     $state_leg_count = $wpdb->get_var("SELECT COUNT(*) FROM $legislators_table WHERE level = 'state' OR level IS NULL");
     $bill_count = $wpdb->get_var("SELECT COUNT(*) FROM $bills_table");
+    $sponsorships_table = $wpdb->prefix . 'votecraft_sponsorships';
     $congress_bill_count = $wpdb->get_var("SELECT COUNT(*) FROM $bills_table WHERE state = 'Federal'");
     $state_bill_count = $wpdb->get_var("SELECT COUNT(*) FROM $bills_table WHERE state != 'Federal' OR state IS NULL");
     $states_with_data = $wpdb->get_col("SELECT DISTINCT state FROM $legislators_table ORDER BY state");
     $states_with_bills = $wpdb->get_col("SELECT DISTINCT state FROM $bills_table ORDER BY state");
     $congress_states_w_officials = $wpdb->get_var("SELECT COUNT(DISTINCT state) FROM $legislators_table WHERE level = 'congress'");
-    $congress_states_w_bills = $wpdb->get_var("SELECT COUNT(DISTINCT state) FROM $bills_table WHERE state = 'Federal'");
+    $congress_states_w_bills = $wpdb->get_var("SELECT COUNT(DISTINCT l.state) FROM $sponsorships_table s INNER JOIN $legislators_table l ON s.legislator_id = l.id INNER JOIN $bills_table b ON s.bill_id = b.id WHERE l.level = 'congress' AND b.state = 'Federal'");
     $openstates_states_w_officials = $wpdb->get_var("SELECT COUNT(DISTINCT state) FROM $legislators_table WHERE level = 'state' OR level IS NULL");
     $openstates_states_w_bills = $wpdb->get_var("SELECT COUNT(DISTINCT state) FROM $bills_table WHERE state != 'Federal' AND state IS NOT NULL");
     $recent_syncs = $wpdb->get_results("SELECT * FROM $log_table WHERE sync_type IN ('legislators', 'bills') ORDER BY started_at DESC LIMIT 30");
@@ -930,7 +953,6 @@ function votecraft_sync_admin_page() {
         $per_state_data[$row->state]['bills'] = (int)$row->count;
     }
     // Federal bills per state (via sponsorships by congress-level legislators)
-    $sponsorships_table = $wpdb->prefix . 'votecraft_sponsorships';
     $per_state_fed_bills = $wpdb->get_results("SELECT l.state, COUNT(DISTINCT s.bill_id) as count FROM $sponsorships_table s INNER JOIN $legislators_table l ON s.legislator_id = l.id INNER JOIN $bills_table b ON s.bill_id = b.id WHERE l.level = 'congress' AND b.state = 'Federal' GROUP BY l.state ORDER BY l.state");
     foreach ($per_state_fed_bills as $row) {
         $per_state_data[$row->state]['fed_bills'] = (int)$row->count;
@@ -1420,17 +1442,14 @@ function votecraft_sync_admin_page() {
                         <p style="color: #dc3545; font-weight: bold;">HOURLY RATE LIMIT HIT</p>
                     <?php endif; ?>
                     <p><strong>Current Chamber:</strong> <?php echo ucfirst($congress_sync_progress['chamber']); ?></p>
-                    <p><strong>Members Synced:</strong> <?php echo number_format($congress_sync_progress['total_synced']); ?> / ~535</p>
+                    <p><strong>Members Synced:</strong> <?php echo number_format($congress_sync_progress['total_synced']); ?></p>
                     <p><strong>Status:</strong> <?php echo $congress_sync_progress['completed'] ? '<span style="color: green;">✓ Complete</span>' : '<span style="color: blue;">In Progress</span>'; ?></p>
-                    <div style="background: #e0e0e0; height: 20px; border-radius: 10px; overflow: hidden;">
-                        <div style="background: #4caf50; height: 100%; width: <?php echo min(100, ($congress_sync_progress['total_synced'] / 535) * 100); ?>%;"></div>
-                    </div>
                 </div>
 
                 <div style="background: #fff; padding: 15px; border-radius: 5px; border: 1px solid #ddd;">
                     <h4 style="margin-top: 0;">API Usage This Hour</h4>
                     <?php
-                    $congress_calls = isset($congress_sync_progress['api_calls_today']) ? $congress_sync_progress['api_calls_today'] : 0;
+                    $congress_calls = votecraft_get_congress_api_calls();
                     ?>
                     <?php if (votecraft_is_congress_rate_limited()): ?>
                         <p style="color: #dc3545; font-weight: bold;">HOURLY RATE LIMIT HIT</p>
@@ -1503,7 +1522,7 @@ function votecraft_sync_admin_page() {
 
         <!-- DATABASE STATS -->
         <details class="votecraft-accordion" open>
-            <summary>📈 Database Stats <span style="margin-left: auto; font-weight: normal; color: #666;"><?php echo number_format($legislator_count); ?> legislators, <?php echo number_format($bill_count); ?> bills</span></summary>
+            <summary>📈 States Count <span style="margin-left: auto; font-weight: normal; color: #666;"><?php echo number_format($legislator_count); ?> legislators, <?php echo number_format($bill_count); ?> bills</span></summary>
             <div class="accordion-content">
 
             <table class="widefat" style="margin-bottom: 20px;">
@@ -1518,7 +1537,7 @@ function votecraft_sync_admin_page() {
                 <tbody>
                     <tr>
                         <td><strong>Congress.gov (Federal Officials)</strong></td>
-                        <td style="text-align: right;"><?php echo number_format($congress_count); ?> / 535</td>
+                        <td style="text-align: right;"><?php echo number_format($congress_count); ?></td>
                         <td style="text-align: right;"><?php echo number_format($congress_states_w_bills); ?> / 50</td>
                         <td style="text-align: right;"><?php echo number_format($congress_cache_count); ?></td>
                     </tr>
@@ -1590,7 +1609,7 @@ function votecraft_sync_admin_page() {
 
         <!-- BILLS BY ISSUE -->
         <details class="votecraft-accordion">
-            <summary>📋 Bills by Issue <span style="margin-left: auto; font-weight: normal; color: #666;"><?php echo number_format(array_sum($issue_totals_federal) + array_sum($issue_totals_state)); ?> total</span></summary>
+            <summary>📋 Bills Count <span style="margin-left: auto; font-weight: normal; color: #666;"><?php echo number_format(array_sum($issue_totals_federal) + array_sum($issue_totals_state)); ?> total</span></summary>
             <div class="accordion-content">
             <p>Count of synced bills matching each issue's keywords:</p>
 
@@ -3661,7 +3680,7 @@ function votecraft_sync_congress_members($batch_size = 50) {
     $url .= '&chamber=' . $chamber . '&currentMember=true';
 
     $response = wp_remote_get($url, array('timeout' => 30));
-    $progress['api_calls_today']++;
+    votecraft_track_congress_api_call();
 
     if (is_wp_error($response)) {
         $errors[] = ucfirst($chamber) . ': ' . $response->get_error_message();
@@ -3907,6 +3926,7 @@ function votecraft_sync_congress_issue_bills($batch_size = 25) {
         // Lookup bills for this member using internal REST API
         foreach ($issues as $issue) {
             $result = votecraft_lookup_congress_bills_by_issue($member->name, $issue['billKeywords'], $member->state, $bioguide_id);
+            votecraft_track_congress_api_call(2); // member lookup + bills page
 
             if ($result['success'] && !empty($result['bills'])) {
                 foreach ($result['bills'] as $bill) {
@@ -3939,7 +3959,9 @@ function votecraft_sync_congress_issue_bills($batch_size = 25) {
                     $abstract = '';
                     if ($congress_num && $bill_type && $bill_num) {
                         $subjects = votecraft_fetch_congress_bill_subjects($congress_num, $bill_type, $bill_num);
+                        votecraft_track_congress_api_call();
                         $abstract = votecraft_fetch_congress_bill_summary($congress_num, $bill_type, $bill_num);
+                        votecraft_track_congress_api_call();
                         usleep(100000); // 100ms delay to respect rate limits
                     }
 
