@@ -880,14 +880,14 @@ class VoteApp {
 
     buildAwarenessChart(data) {
         if (!data || data.length < 2) {
-            return `<svg viewBox="0 0 130 80" xmlns="http://www.w3.org/2000/svg">
-                <line x1="24" y1="4" x2="24" y2="64" stroke="#ccc" stroke-width="0.5"/>
-                <line x1="24" y1="64" x2="126" y2="64" stroke="#ccc" stroke-width="0.5"/>
-                <text x="75" y="38" text-anchor="middle" font-size="7" fill="#999">No data yet</text>
+            return `<svg viewBox="0 0 300 160" xmlns="http://www.w3.org/2000/svg">
+                <line x1="40" y1="10" x2="40" y2="130" stroke="#ccc" stroke-width="0.5"/>
+                <line x1="40" y1="130" x2="290" y2="130" stroke="#ccc" stroke-width="0.5"/>
+                <text x="165" y="75" text-anchor="middle" font-size="12" fill="#999">No data yet</text>
             </svg>`;
         }
-        const w = 130, h = 80;
-        const padL = 24, padR = 4, padT = 4, padB = 16;
+        const w = 300, h = 160;
+        const padL = 40, padR = 10, padT = 10, padB = 25;
         const chartW = w - padL - padR;
         const chartH = h - padT - padB;
         const minY = 0, maxY = 100;
@@ -902,20 +902,20 @@ class VoteApp {
         const yTicks = [0, 25, 50, 75, 100];
         const gridLines = yTicks.map(v => {
             const y = padT + chartH - ((v - minY) / (maxY - minY)) * chartH;
-            return `<line x1="${padL}" y1="${y}" x2="${w - padR}" y2="${y}" stroke="#ccc" stroke-width="0.5" stroke-dasharray="2,2"/>
-                    <text x="${padL - 3}" y="${y + 3}" text-anchor="end" font-size="6" fill="#888">${v}%</text>`;
+            return `<line x1="${padL}" y1="${y}" x2="${w - padR}" y2="${y}" stroke="#e2e8f0" stroke-width="0.5" stroke-dasharray="3,3"/>
+                    <text x="${padL - 5}" y="${y + 4}" text-anchor="end" font-size="10" fill="#94a3b8">${v}%</text>`;
         }).join('');
-        const xLabels = [data[0], data[data.length - 1]].map(d => {
+        const xLabels = data.map(d => {
             const x = padL + ((d.year - minX) / (maxX - minX)) * chartW;
-            return `<text x="${x}" y="${h - 2}" text-anchor="middle" font-size="6" fill="#888">${d.year}</text>`;
+            return `<text x="${x}" y="${h - 5}" text-anchor="middle" font-size="10" fill="#94a3b8">${d.year}</text>`;
         }).join('');
         const lastPt = pts[pts.length - 1];
         return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
             ${gridLines}${xLabels}
-            <path d="${area}" fill="rgba(59,130,246,0.15)"/>
-            <path d="${line}" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            ${pts.map(p => `<circle cx="${p.x}" cy="${p.y}" r="2" fill="#3b82f6"/>`).join('')}
-            <text x="${lastPt.x + 3}" y="${lastPt.y + 2}" font-size="7" font-weight="bold" fill="#3b82f6">${lastPt.pct}%</text>
+            <path d="${area}" fill="rgba(59,130,246,0.1)"/>
+            <path d="${line}" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            ${pts.map(p => `<circle cx="${p.x}" cy="${p.y}" r="3" fill="#3b82f6"/>`).join('')}
+            <text x="${lastPt.x}" y="${lastPt.y - 8}" text-anchor="middle" font-size="11" font-weight="bold" fill="#3b82f6">${lastPt.pct}%</text>
         </svg>`;
     }
 
@@ -925,10 +925,6 @@ class VoteApp {
                 <div class="issue-card-image">
                     <img src="${issue.heroImage}" alt="${issue.title}"
                          onerror="this.style.display='none';">
-                    <div class="issue-card-chart-overlay">
-                        <div class="chart-title">Public Awareness</div>
-                        ${this.buildAwarenessChart(issue.publicAwareness)}
-                    </div>
                 </div>
                 <div class="issue-card-title">${issue.title}</div>
             </div>
@@ -984,6 +980,13 @@ class VoteApp {
         this.issueHeroImg.alt = issue.title;
         this.issueDescription.textContent = issue.description;
         this.learnMoreBtn.style.display = issue.learnMoreUrl ? '' : 'none';
+
+        // Render awareness chart
+        const chartContainer = document.getElementById('awareness-chart-container');
+        chartContainer.innerHTML = `
+            <div class="chart-header">Public Awareness of Issue</div>
+            ${this.buildAwarenessChart(issue.publicAwareness)}
+        `;
 
         // Render nonprofits
         this.nonprofitsSection.style.display = '';
