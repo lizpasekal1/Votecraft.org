@@ -164,6 +164,14 @@ Tracks sync operations for monitoring.
 - Summary text (HTML stripped) → stored in `abstract` column
 - `latestAction.actionDate` / `latestAction.text` → stored in action columns
 - Bill type (S/H/HR/etc.) → mapped to `chamber` ("upper"/"lower")
+- `sponsorshipType` → "primary" (from `/sponsored-legislation`) or "cosponsor" (from `/cosponsored-legislation`)
+
+**Sponsorship Coverage:**
+The Congress proxy fetches **both** sponsored and cosponsored legislation for each member:
+- `/member/{bioguideId}/sponsored-legislation` → marked `sponsorshipType: 'primary'`
+- `/member/{bioguideId}/cosponsored-legislation` → marked `sponsorshipType: 'cosponsor'`
+- Both are deduplicated by bill ID, stored in `wp_votecraft_bills`, and linked via `wp_votecraft_sponsorships`
+- Frontend matches bills to legislators by checking ALL sponsorship entries (primary + cosponsor)
 
 ## Data Flow
 
@@ -181,13 +189,18 @@ Returns legislators with their info
 User clicks issue + legislator
         ↓
 Frontend calls /wp-json/votecraft/v1/openstates?endpoint=bills&q=keyword
+  - State legislators: jurisdiction={state name}
+  - Congress members: jurisdiction=Federal
         ↓
-Proxy searches: Local DB (title + subjects + abstract + issue_id)
+Proxy searches: Local DB (title + subjects + abstract)
   → Falls back to Cache → Falls back to Live API
         ↓
 Word boundary validation filters false positives
         ↓
-Frontend filters bills to show ones this legislator sponsors
+Bills returned with sponsorships (primary + cosponsor) attached
+        ↓
+Frontend matches bills where legislator name appears in any sponsorship
+  (computeAlignmentScore checks all sponsorships by last name)
 ```
 
 ### Bill Matching Logic
@@ -196,7 +209,8 @@ Bills are matched to issues using a multi-layer approach:
 
 1. **SQL query** — `LIKE '%keyword%'` against `title`, `subjects`, `abstract` columns; exact match on `issue_id`
 2. **Word boundary validation** — PHP regex `\b` check on results to eliminate partial word matches
-3. **Frontend filtering** — JavaScript RegExp word boundary check on Congress bills
+3. **Sponsorship matching** — Frontend checks if legislator's last name appears in any sponsorship (primary or cosponsor)
+4. **No live API calls** — Both state and federal bill lookups use the local DB through the proxy; no direct Congress.gov or OpenStates calls from the frontend bill display
 
 ```
 Keyword: "ranked choice"
@@ -251,16 +265,19 @@ Congress.gov Sync (daily until complete, then waits 30 days):
   2. Store in wp_votecraft_legislators (level='congress')
   3. For each member × each issue:
      a. Direct lookup by bioguideId (extracted from member id: "congress-{bioguideId}")
-     b. Fetch sponsored + cosponsored legislation
-     c. Filter by issue keywords (title + policyArea matching)
-     d. For each matched bill:
+     b. Fetch sponsored legislation (/sponsored-legislation, up to 1250 bills)
+     c. Fetch cosponsored legislation (/cosponsored-legislation, up to 1250 bills)
+     d. Deduplicate by bill ID across both sets
+     e. Filter by issue keywords (title + policyArea matching)
+     f. For each matched bill:
         - Fetch /bill/{congress}/{type}/{number}/subjects
           → legislativeSubjects + policyArea → subjects column (JSON)
         - Fetch /bill/{congress}/{type}/{number}/summaries
           → summary text → abstract column
         - Extract latestAction → action date/description columns
-     e. Store in wp_votecraft_bills (state='Federal')
-     f. Store sponsorships in wp_votecraft_sponsorships
+     g. Store in wp_votecraft_bills (state='Federal')
+     h. Store sponsorships in wp_votecraft_sponsorships
+        (sponsorship_type = 'primary' or 'cosponsor')
 ```
 
 ## Issue Keywords
