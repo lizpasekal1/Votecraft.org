@@ -445,23 +445,19 @@ class VoteApp {
                 officials: data.results || []
             });
 
-            if (this.localLegislators.length === 0) {
-                this.showLoading(false);
-                this.showError('No legislators found for this location. Please try a different address.');
-                return;
-            }
-
             // Determine the state jurisdiction
             const stateLegislators = this.localLegislators.filter(l => l.level === 'state');
             if (stateLegislators.length > 0 && stateLegislators[0].jurisdiction) {
                 this.currentJurisdiction = stateLegislators[0].jurisdiction;
+            } else if (coords.state) {
+                this.currentJurisdiction = coords.state;
             }
 
-            // Fetch Congress members if people.geo didn't return any
+            // Fetch Congress members from local DB if people.geo didn't return any
             const hasCongressMembers = this.localLegislators.some(l => l.level === 'congress');
             if (!hasCongressMembers && this.currentJurisdiction) {
                 try {
-                    const congressRaw = await window.CivicAPI.getCongressMembers(address, this.currentJurisdiction);
+                    const congressRaw = await window.CivicAPI.getCongressMembers(null, this.currentJurisdiction);
                     if (congressRaw.length > 0) {
                         const congressParsed = window.CivicAPI.parseRepresentatives({ officials: congressRaw });
                         this.localLegislators = [...congressParsed, ...this.localLegislators];
@@ -470,6 +466,35 @@ class VoteApp {
                 } catch (err) {
                     console.log('Could not fetch Congress members:', err.message);
                 }
+            }
+
+            // If people.geo returned nothing but we have a state, fetch all legislators
+            if (this.localLegislators.length === 0 && this.currentJurisdiction) {
+                try {
+                    const [allPeople, congressRaw] = await Promise.all([
+                        window.CivicAPI.getAllLegislators(this.currentJurisdiction),
+                        window.CivicAPI.getCongressMembers(null, this.currentJurisdiction)
+                    ]);
+                    const congressParsed = window.CivicAPI.parseRepresentatives({ officials: congressRaw });
+                    this.localLegislators = [...congressParsed];
+                    this.stateLegislators = window.CivicAPI.parseRepresentatives({ officials: allPeople });
+                    this.legislators = [...this.localLegislators, ...this.stateLegislators];
+                    this.renderReps();
+                    this.showLoading(false);
+                    this.hasSearched = true;
+                    if (this.legislators.length > 0) {
+                        this.selectRep(this.legislators[0]);
+                    }
+                    return;
+                } catch (err) {
+                    console.error('Fallback state lookup failed:', err);
+                }
+            }
+
+            if (this.localLegislators.length === 0) {
+                this.showLoading(false);
+                this.showError('No legislators found for this location. Please try a different address.');
+                return;
             }
 
             // Show local/federal reps immediately
