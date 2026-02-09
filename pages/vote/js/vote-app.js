@@ -983,9 +983,8 @@ class VoteApp {
 
         // Render awareness chart
         const chartContainer = document.getElementById('awareness-chart-container');
-        const chartTitle = issue.chartLabel || 'Public Support';
         chartContainer.innerHTML = `
-            <div class="chart-header">${chartTitle}</div>
+            <div class="chart-header">Public Awareness</div>
             ${this.buildAwarenessChart(issue.publicAwareness)}
             ${issue.chartSource ? `<div class="chart-footnote">${issue.chartSource}</div>` : ''}
         `;
