@@ -2899,7 +2899,8 @@ function votecraft_bill_associations_admin_page() {
                 // Route to correct API based on legislator level
                 if ($lookup_level === 'congress') {
                     // Federal legislator - use Congress.gov API
-                    $all_matched = votecraft_lookup_congress_bills_by_issue($lookup_name, $keywords, $lookup_state);
+                    $bioguide_id = str_replace('congress-', '', $lookup_legislator->id);
+                    $all_matched = votecraft_lookup_congress_bills_by_issue($lookup_name, $keywords, $lookup_state, $bioguide_id);
                     $api_source = 'Congress.gov API';
                 } else {
                     // State legislator - use local database (synced from OpenStates)

@@ -878,12 +878,51 @@ class VoteApp {
 
     // ========== RIGHT PANEL: ISSUES GRID ==========
 
+    buildAwarenessChart(data) {
+        if (!data || data.length < 2) return '';
+        const w = 130, h = 80;
+        const padL = 24, padR = 4, padT = 4, padB = 16;
+        const chartW = w - padL - padR;
+        const chartH = h - padT - padB;
+        const minY = 0, maxY = 100;
+        const minX = data[0].year, maxX = data[data.length - 1].year;
+        const pts = data.map(d => {
+            const x = padL + ((d.year - minX) / (maxX - minX)) * chartW;
+            const y = padT + chartH - ((d.pct - minY) / (maxY - minY)) * chartH;
+            return { x, y, pct: d.pct, year: d.year };
+        });
+        const line = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+        const area = line + ` L${pts[pts.length-1].x},${padT + chartH} L${pts[0].x},${padT + chartH} Z`;
+        const yTicks = [0, 25, 50, 75, 100];
+        const gridLines = yTicks.map(v => {
+            const y = padT + chartH - ((v - minY) / (maxY - minY)) * chartH;
+            return `<line x1="${padL}" y1="${y}" x2="${w - padR}" y2="${y}" stroke="#ccc" stroke-width="0.5" stroke-dasharray="2,2"/>
+                    <text x="${padL - 3}" y="${y + 3}" text-anchor="end" font-size="6" fill="#888">${v}%</text>`;
+        }).join('');
+        const xLabels = [data[0], data[data.length - 1]].map(d => {
+            const x = padL + ((d.year - minX) / (maxX - minX)) * chartW;
+            return `<text x="${x}" y="${h - 2}" text-anchor="middle" font-size="6" fill="#888">${d.year}</text>`;
+        }).join('');
+        const lastPt = pts[pts.length - 1];
+        return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+            ${gridLines}${xLabels}
+            <path d="${area}" fill="rgba(59,130,246,0.15)"/>
+            <path d="${line}" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            ${pts.map(p => `<circle cx="${p.x}" cy="${p.y}" r="2" fill="#3b82f6"/>`).join('')}
+            <text x="${lastPt.x + 3}" y="${lastPt.y + 2}" font-size="7" font-weight="bold" fill="#3b82f6">${lastPt.pct}%</text>
+        </svg>`;
+    }
+
     renderIssuesGrid() {
         this.issuesGrid.innerHTML = window.ISSUES_CATALOG.map(issue => `
             <div class="issue-card" data-issue-id="${issue.id}">
                 <div class="issue-card-image">
                     <img src="${issue.heroImage}" alt="${issue.title}"
                          onerror="this.style.display='none';">
+                    <div class="issue-card-chart-overlay">
+                        <div class="chart-title">Public Awareness</div>
+                        ${this.buildAwarenessChart(issue.publicAwareness)}
+                    </div>
                 </div>
                 <div class="issue-card-title">${issue.title}</div>
             </div>

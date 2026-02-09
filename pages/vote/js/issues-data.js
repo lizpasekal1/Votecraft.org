@@ -14,6 +14,11 @@ const ISSUES_CATALOG = [
         description: 'Ranked Choice Voting lets voters rank candidates by preference, ensuring winners have broad support while reducing vote-splitting and negative campaigning. If no candidate wins a majority, the lowest-ranked is eliminated and those votes transfer until someone earns a majority.',
         heroImage: 'https://votecraft.org/wp-content/uploads/2025/06/rank-the-vote.jpg',
         learnMoreUrl: 'https://votecraft.org/solutions/rank-choice-voting/',
+        publicAwareness: [
+            { year: 2018, pct: 22 }, { year: 2019, pct: 28 }, { year: 2020, pct: 35 },
+            { year: 2021, pct: 39 }, { year: 2022, pct: 45 }, { year: 2023, pct: 52 },
+            { year: 2024, pct: 58 }, { year: 2025, pct: 62 }
+        ],
         billKeywords: ['ranked choice', 'ranked-choice', 'ranked choice voting', 'instant runoff', 'preferential voting', 'alternative voting', 'final five voting', 'rank the vote', 'rcv', 'local option voting', 'municipal election voting'],
         nonprofits: [
             {
@@ -43,6 +48,11 @@ const ISSUES_CATALOG = [
         description: 'Public debt profiteering occurs when financial institutions exploit government borrowing for outsized profits at taxpayer expense, including predatory lending and student loan abuses. Reform efforts aim to increase transparency, cap interest rates, and protect consumers.',
         heroImage: 'https://votecraft.org/wp-content/uploads/2026/02/end_public-debt-profiteering_feature.jpg',
         learnMoreUrl: 'https://votecraft.org/solutions/debt-profiteering/',
+        publicAwareness: [
+            { year: 2018, pct: 40 }, { year: 2019, pct: 44 }, { year: 2020, pct: 55 },
+            { year: 2021, pct: 60 }, { year: 2022, pct: 63 }, { year: 2023, pct: 65 },
+            { year: 2024, pct: 68 }, { year: 2025, pct: 70 }
+        ],
         billKeywords: ['public debt', 'predatory lending', 'student debt', 'student loan', 'debt relief', 'debt collection', 'payday loan', 'loan forgiveness', 'borrower', 'consumer financial'],
         nonprofits: [
             {
@@ -72,6 +82,11 @@ const ISSUES_CATALOG = [
         description: 'The Citizens United v. FEC decision opened the floodgates for unlimited corporate spending in elections through super PACs and dark money. Reform efforts seek to overturn this through constitutional amendments, disclosure requirements, and public campaign financing.',
         heroImage: 'https://votecraft.org/wp-content/uploads/2025/06/Citizens-united.jpg',
         learnMoreUrl: 'https://votecraft.org/solutions/end-dark-money/',
+        publicAwareness: [
+            { year: 2018, pct: 30 }, { year: 2019, pct: 33 }, { year: 2020, pct: 38 },
+            { year: 2021, pct: 42 }, { year: 2022, pct: 48 }, { year: 2023, pct: 50 },
+            { year: 2024, pct: 55 }, { year: 2025, pct: 57 }
+        ],
         billKeywords: ['citizens united', 'campaign finance', 'dark money', 'super pac', 'political action committee', 'corporate political', 'campaign spending', 'political contribution', 'money in politics', 'disclose act', 'for the people act', 'freedom to vote', 'democracy for all', 'honest ads', 'foreign money', 'election integrity', 'voter disclosure', 'political spending', 'corporate money'],
         nonprofits: [
             {
@@ -101,6 +116,11 @@ const ISSUES_CATALOG = [
         description: 'Universal basic healthcare ensures every person has access to essential medical services regardless of income or pre-existing conditions. Proposals range from Medicare for All to public option plans, treating healthcare as a right while controlling costs.',
         heroImage: 'https://votecraft.org/wp-content/uploads/2025/06/healthcare1.jpg',
         learnMoreUrl: 'https://votecraft.org/solutions/universal-basic-healthcare/',
+        publicAwareness: [
+            { year: 2018, pct: 55 }, { year: 2019, pct: 60 }, { year: 2020, pct: 68 },
+            { year: 2021, pct: 72 }, { year: 2022, pct: 70 }, { year: 2023, pct: 73 },
+            { year: 2024, pct: 76 }, { year: 2025, pct: 78 }
+        ],
         billKeywords: ['universal health', 'medicare for all', 'public option', 'medicaid expansion', 'single payer', 'affordable care', 'healthcare for all', 'drug pricing', 'prescription drug', 'health care coverage', 'health insurance'],
         nonprofits: [
             {
@@ -130,6 +150,11 @@ const ISSUES_CATALOG = [
         description: 'Supreme Court reform proposals aim to restore public trust through term limits for justices, expanding the number of seats, binding ethics codes, and increased transparency. These reforms seek to depoliticize the court and ensure it reflects the will of the people.',
         heroImage: 'https://votecraft.org/wp-content/uploads/2025/06/supreme-court2.jpg',
         learnMoreUrl: 'https://votecraft.org/solutions/supreme-court-reform/',
+        publicAwareness: [
+            { year: 2018, pct: 18 }, { year: 2019, pct: 22 }, { year: 2020, pct: 30 },
+            { year: 2021, pct: 38 }, { year: 2022, pct: 50 }, { year: 2023, pct: 52 },
+            { year: 2024, pct: 55 }, { year: 2025, pct: 58 }
+        ],
         billKeywords: ['supreme court', 'judicial term limits', 'court expansion', 'judicial ethics', 'court reform', 'judicial accountability', 'scotus', 'justice term limit'],
         nonprofits: [
             {
@@ -159,6 +184,11 @@ const ISSUES_CATALOG = [
         description: 'News paywalls have created an information divide where access to quality journalism depends on ability to pay. Reform proposals include public funding for local journalism, tax incentives for free civic reporting, and cooperative ownership models.',
         heroImage: 'https://votecraft.org/wp-content/uploads/2026/02/news_paywall_reform_feature.jpg',
         learnMoreUrl: 'https://votecraft.org/solutions/news-paywall-reform/',
+        publicAwareness: [
+            { year: 2018, pct: 12 }, { year: 2019, pct: 15 }, { year: 2020, pct: 20 },
+            { year: 2021, pct: 24 }, { year: 2022, pct: 28 }, { year: 2023, pct: 32 },
+            { year: 2024, pct: 36 }, { year: 2025, pct: 40 }
+        ],
         billKeywords: ['local journalism', 'journalism funding', 'local news', 'news deserts', 'journalism tax credit', 'community news', 'newsroom', 'journalism preservation'],
         nonprofits: [
             {
