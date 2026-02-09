@@ -1483,83 +1483,29 @@ class VoteApp {
             allBills = [];
             const seenIds = new Set();
 
-            // Use Congress.gov for federal legislators
-            if (rep.level === 'congress') {
-                console.log(`Fetching Congress.gov bills for ${rep.name}...`);
+            // Query local DB for bills by keyword
+            // For Congress members, search federal bills; for state legislators, search state bills
+            const billJurisdiction = (rep.level === 'congress') ? 'Federal' : jurisdiction;
+            console.log(`Fetching bills from local DB for ${rep.name} (${billJurisdiction})...`);
+
+            for (let i = 0; i < issue.billKeywords.length; i++) {
+                const keyword = issue.billKeywords[i];
+                // Delay between calls to avoid rate limiting (proxy may hit live API as fallback)
+                if (i > 0) await new Promise(r => setTimeout(r, 500));
                 try {
-                    // Get bills sponsored by this member - fetch up to 1250 bills for 15-year history
-                    // Use full name for better matching (avoids getting wrong person with same last name)
-                    const chamber = rep.office?.toLowerCase().includes('senator') ? 'senate' : 'house';
-                    const memberBills = await window.CivicAPI.getCongressMemberBills(rep.name, chamber, 1250);
-
-                    console.log(`Got ${memberBills.length} sponsored bills from Congress.gov`);
-
-                    // Debug: Show sample bill titles and policy areas
-                    if (memberBills.length > 0) {
-                        console.log('Sample bills (first 5):');
-                        memberBills.slice(0, 5).forEach(b => {
-                            console.log(`  - ${b.billNumber}: ${(b.title || '').substring(0, 80)}... [Policy: ${b.policyArea?.name || 'none'}]`);
-                        });
-                    }
-
-                    // Filter bills by issue keywords with word boundary matching
-                    const keywordPatterns = issue.billKeywords.map(k => {
-                        const escaped = k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                        return new RegExp('\\b' + escaped + '\\b', 'i');
-                    });
-
-                    for (const bill of memberBills) {
-                        const billTitle = bill.title || '';
-                        const policyArea = bill.policyArea?.name || '';
-                        const billId = bill.id || bill.billNumber || bill.title;
-
-                        // Check if bill title or policy area matches any keyword with word boundaries
-                        const matchesKeyword = keywordPatterns.some(pattern =>
-                            pattern.test(billTitle) || pattern.test(policyArea)
-                        );
-
-                        if (matchesKeyword && !seenIds.has(billId)) {
-                            seenIds.add(billId);
-                            console.log(`Matched bill: ${bill.billNumber} - ${billTitle.substring(0, 60)}...`);
-                            // Normalize to match OpenStates format
-                            allBills.push({
-                                id: billId,
-                                identifier: bill.billNumber || bill.number,
-                                title: bill.title,
-                                openstates_url: this.buildCongressGovUrl(bill.type, bill.congress, bill.number),
-                                sponsorships: [{ name: rep.name, primary: true }],
-                                latest_action_date: bill.latestAction?.actionDate || bill.introducedDate
-                            });
+                    console.log(`Fetching bills for "${keyword}" in ${billJurisdiction}...`);
+                    const bills = await window.CivicAPI.getBillsBySubject(
+                        billJurisdiction, keyword, 10
+                    );
+                    console.log(`Got ${bills.length} bills for "${keyword}"`);
+                    for (const bill of bills) {
+                        if (!seenIds.has(bill.id)) {
+                            seenIds.add(bill.id);
+                            allBills.push(bill);
                         }
                     }
-
-                    console.log(`Filtered to ${allBills.length} bills matching issue keywords`);
-                    // Note: Congress.gov /bill endpoint doesn't support keyword search
-                    // We rely on filtering the member's sponsored bills by keywords above
                 } catch (err) {
-                    console.error('Error fetching Congress.gov bills:', err);
-                }
-            } else {
-                // Use OpenStates for state legislators
-                for (let i = 0; i < issue.billKeywords.length; i++) {
-                    const keyword = issue.billKeywords[i];
-                    // Delay between calls to avoid rate limiting
-                    if (i > 0) await new Promise(r => setTimeout(r, 1000));
-                    try {
-                        console.log(`Fetching bills for "${keyword}" in ${jurisdiction}...`);
-                        const bills = await window.CivicAPI.getBillsBySubject(
-                            jurisdiction, keyword, 10
-                        );
-                        console.log(`Got ${bills.length} bills for "${keyword}"`);
-                        for (const bill of bills) {
-                            if (!seenIds.has(bill.id)) {
-                                seenIds.add(bill.id);
-                                allBills.push(bill);
-                            }
-                        }
-                    } catch (err) {
-                        console.error(`Error fetching bills for keyword "${keyword}":`, err);
-                    }
+                    console.error(`Error fetching bills for keyword "${keyword}":`, err);
                 }
             }
 
