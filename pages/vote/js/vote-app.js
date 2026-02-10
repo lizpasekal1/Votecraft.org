@@ -1096,7 +1096,7 @@ class VoteApp {
             return;
         }
 
-        const labels = ['Support Locally', 'Support Nationally', 'Support Globally'];
+        const labels = ['Empower Locally', 'Empower Nationally', 'Empower Globally'];
         this.nonprofitsGrid.innerHTML = issue.nonprofits.map((np, i) => {
             const logoHtml = np.logo
                 ? `<img src="${np.logo}" alt="${np.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'np-initials\\'>${this.getInitials(np.name)}</div>';">`
