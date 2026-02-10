@@ -189,6 +189,17 @@ class VoteApp {
             this.issueDetailView.scrollIntoView({ behavior: 'smooth' });
         });
 
+        // Support overlay
+        this.supportOverlay = document.getElementById('support-overlay');
+        document.getElementById('support-overlay-close').addEventListener('click', () => this.closeSupportOverlay());
+        this.nonprofitsGrid.addEventListener('click', (e) => {
+            const btn = e.target.closest('.btn-donate');
+            if (btn) {
+                e.preventDefault();
+                this.openSupportOverlay(btn);
+            }
+        });
+
         this.viewAllSupportersBtn.addEventListener('click', () => this.openSidebarSupporters());
 
         // Top supporters widget click delegation
@@ -1076,12 +1087,37 @@ class VoteApp {
                 : `<div class="np-initials">${this.getInitials(np.name)}</div>`;
 
             return `
-                <div class="nonprofit-card">
+                <div class="nonprofit-card" data-np-index="${i}">
                     <div class="nonprofit-logo">${logoHtml}</div>
                     <a href="${np.donateUrl}" target="_blank" rel="noopener" class="btn-donate">${labels[i] || 'Donate'}</a>
                 </div>
             `;
         }).join('');
+    }
+
+    openSupportOverlay(btn) {
+        const card = btn.closest('.nonprofit-card');
+        const index = parseInt(card.dataset.npIndex);
+        const np = this.selectedIssue?.nonprofits?.[index];
+        if (!np) return;
+
+        const logoEl = document.getElementById('support-overlay-logo');
+        if (np.logo) {
+            logoEl.innerHTML = `<img src="${np.logo}" alt="${np.name}">`;
+        } else {
+            logoEl.innerHTML = `<div class="np-initials">${this.getInitials(np.name)}</div>`;
+        }
+        document.getElementById('support-overlay-name').textContent = np.name;
+        document.getElementById('support-overlay-desc').textContent = np.description || '';
+        const donateLink = document.getElementById('support-overlay-donate');
+        donateLink.href = np.donateUrl;
+        donateLink.textContent = btn.textContent;
+
+        this.supportOverlay.classList.add('active');
+    }
+
+    closeSupportOverlay() {
+        this.supportOverlay.classList.remove('active');
     }
 
     openLearnMore() {
