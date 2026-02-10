@@ -811,7 +811,7 @@ body {
 /* ========== SUPPORT OVERLAY ========== */
 
 .support-overlay {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
@@ -821,7 +821,8 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
+    padding: 10px 24px 24px;
     transform: translateY(-100%);
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     pointer-events: none;
@@ -834,8 +835,8 @@ body {
 
 .support-overlay-close {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 6px;
+    right: 12px;
     background: none;
     border: none;
     color: #fff;
@@ -853,31 +854,30 @@ body {
 .support-overlay-header {
     max-width: 800px;
     width: 100%;
-    padding: 30px 40px 0;
+    padding: 0 24px 2px;
     text-align: center;
 }
 
 .support-overlay-title {
-    font-size: 2.2rem;
+    font-size: clamp(1.3rem, 2.5vw, 1.8rem);
     font-weight: 700;
     color: #fff;
-    margin: 0 0 8px;
+    margin: 0 0 2px;
 }
 
 .support-overlay-tagline {
-    font-size: clamp(0.85rem, 1vw, 1rem);
+    font-size: clamp(0.85rem, 1.1vw, 1rem);
     color: #fff;
-    opacity: 0.85;
     margin: 0;
-    line-height: 1.45;
+    line-height: 1.4;
 }
 
 .support-overlay-split {
     display: flex;
-    gap: 40px;
+    gap: clamp(16px, 3vw, 40px);
     max-width: 800px;
     width: 100%;
-    padding: 20px 40px 40px;
+    padding: 8px 24px 16px;
     align-items: flex-start;
 }
 
@@ -890,15 +890,15 @@ body {
     flex: 1;
     background: #fff;
     border-radius: 16px;
-    padding: 28px;
+    padding: clamp(20px, 3vw, 32px);
     color: var(--text);
 }
 
 .support-overlay-logo {
-    width: 180px;
+    width: clamp(120px, 15vw, 180px);
     height: auto;
     aspect-ratio: 16 / 9;
-    margin: 0 auto 20px;
+    margin: 0 auto 12px;
     border-radius: 12px;
     overflow: hidden;
     background: rgba(255, 255, 255, 0.1);
@@ -911,10 +911,10 @@ body {
 }
 
 .support-overlay-name {
-    font-size: 1.4rem;
+    font-size: clamp(1rem, 1.5vw, 1.4rem);
     font-weight: 700;
     color: #fff;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .support-overlay-desc {
@@ -924,18 +924,27 @@ body {
 }
 
 .donate-widget-title {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     font-weight: 600;
     text-align: center;
-    margin-bottom: 16px;
+    margin-bottom: 2px;
+}
+
+.donate-widget-subtitle {
+    font-size: 0.85rem;
+    color: #64748b;
+    text-align: center;
+    margin: 0 0 10px;
+    line-height: 1.4;
 }
 
 .donate-widget-desc {
     font-size: 0.75rem;
-    color: #64748b;
+    color: #1e293b;
     text-align: center;
-    margin: 0 0 14px;
-    line-height: 1.4;
+    margin: 0;
+    line-height: 1.5;
+    font-weight: 500;
 }
 
 .donate-freq-toggle {
@@ -943,13 +952,13 @@ body {
     border: 2px solid #e2e8f0;
     border-radius: 8px;
     overflow: hidden;
-    margin-bottom: 16px;
+    margin-bottom: 6px;
 }
 
 .donate-freq-btn {
     flex: 1;
-    padding: 10px;
-    font-size: 0.9rem;
+    padding: 8px;
+    font-size: 0.85rem;
     font-family: inherit;
     font-weight: 600;
     border: none;
@@ -964,11 +973,11 @@ body {
     color: #1e1b4b;
 }
 
-.donate-amounts-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+.donate-amounts-list {
+    display: flex;
+    flex-direction: column;
     gap: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .donate-amount-row {
@@ -1020,27 +1029,26 @@ body {
     display: block;
 }
 
-.donate-amount-row .donate-amount-btn {
-    flex: 0 0 auto;
+.donate-amount-btn,
+.donate-custom-input {
+    width: 90px;
+    min-width: 90px;
+    max-width: 90px;
+    box-sizing: border-box;
+    font-size: 0.95rem;
+    font-family: inherit;
+    background: #f3f4f6;
+    border: 2px solid transparent;
+    border-radius: 24px;
+    padding: 10px 16px;
+    transition: all 0.2s;
 }
 
 .donate-amount-btn {
-    width: 72px;
-    height: 72px;
-    font-size: 1rem;
-    font-family: inherit;
     font-weight: 700;
-    background: #f3f4f6;
-    border: 2px solid transparent;
-    border-radius: 50%;
+    color: #000;
     cursor: pointer;
     text-align: center;
-    transition: all 0.2s;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
 }
 
 .donate-amount-btn:hover {
@@ -1052,26 +1060,34 @@ body {
     background: #eff6ff;
 }
 
-.donate-amount-btn.featured {
-    width: 88px;
-    height: 88px;
-    gap: 0;
-}
-
-.donate-amount-value {
-    font-size: 0.95rem;
-}
-
 .donate-amount-note {
-    font-size: 0.55rem;
+    font-size: 0.8rem;
     font-weight: 400;
-    color: #6b7280;
+    color: var(--right-bg);
+    flex: 1;
+}
+
+.donate-custom-input {
+    color: var(--text);
+}
+
+.donate-custom-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: #fff;
+}
+
+.donate-custom-note {
+    font-size: 0.8rem;
+    color: var(--right-bg);
+    margin: 2px 0 0 24px;
+    line-height: 1.3;
 }
 
 .support-overlay-donate-btn {
     display: block;
     width: 100%;
-    padding: 12px;
+    padding: 10px;
     font-size: 1rem;
     font-family: inherit;
     font-weight: 600;
@@ -1083,6 +1099,7 @@ body {
     text-decoration: none;
     text-align: center;
     transition: all 0.2s;
+    margin-bottom: 12px;
 }
 
 .support-overlay-donate-btn:hover {
@@ -2596,5 +2613,62 @@ body {
         max-width: 100%;
         height: 100%;
         border-radius: 8px;
+    }
+
+    /* Support overlay becomes full-screen popup on mobile */
+    .support-overlay {
+        position: fixed;
+        padding: 0;
+        justify-content: flex-start;
+    }
+
+    .support-overlay-close {
+        top: 12px;
+        right: 12px;
+    }
+
+    .support-overlay-header {
+        padding: 16px 16px 0;
+    }
+
+    .support-overlay-title {
+        font-size: 1.2rem;
+    }
+
+    .support-overlay-tagline {
+        font-size: 0.8rem;
+    }
+
+    .support-overlay-split {
+        flex-direction: column;
+        gap: 16px;
+        padding: 12px 16px 24px;
+    }
+
+    .support-overlay-logo {
+        width: 100px;
+        margin-bottom: 8px;
+    }
+
+    .support-overlay-name {
+        font-size: 1rem;
+    }
+
+    .support-overlay-desc {
+        font-size: 0.85rem;
+    }
+
+    .support-overlay-right {
+        padding: 16px;
+    }
+
+    .donate-widget-title {
+        font-size: 1rem;
+        margin-bottom: 10px;
+    }
+
+    .donate-amount-btn {
+        flex: 0 0 90px;
+        height: auto;
     }
 }
