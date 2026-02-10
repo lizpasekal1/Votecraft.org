@@ -151,37 +151,9 @@ class VoteApp {
     syncHeights() {
         const hero = document.getElementById('issue-hero');
         const mapCard = document.getElementById('issue-map-card');
-        const card = this.repAlignmentCard;
         if (!hero || !mapCard) return;
 
-        // Reset forced heights so layout can flow naturally
-        hero.style.height = '';
-        mapCard.style.height = '';
-        if (card) card.style.height = '';
-
         requestAnimationFrame(() => {
-            // Use map card's natural height as the reference
-            const mapH = mapCard.offsetHeight;
-            if (mapH > 0) {
-                // Set hero height to match map — width stays as column width
-                hero.style.height = mapH + 'px';
-                hero.style.flex = 'none';
-                if (this.issueMap) this.issueMap.invalidateSize();
-            }
-
-            // Stretch rep card to fill its column, minus 30px
-            if (card && card.parentElement) {
-                card.style.height = (card.parentElement.offsetHeight - 30) + 'px';
-                card.style.flex = 'none';
-            }
-
-            // Make top supporters widget 30px shorter
-            const supporters = document.getElementById('top-supporters-widget');
-            if (supporters) {
-                supporters.style.height = (supporters.offsetHeight - 30) + 'px';
-                supporters.style.flex = 'none';
-            }
-
             // Align title left edge with hero left edge
             const view = this.issueDetailView;
             if (hero && view && this.issueTitle) {
@@ -189,6 +161,8 @@ class VoteApp {
                 const viewLeft = view.getBoundingClientRect().left;
                 this.issueTitle.style.marginLeft = (heroLeft - viewLeft) + 'px';
             }
+
+            if (this.issueMap) this.issueMap.invalidateSize();
         });
     }
 
@@ -1092,7 +1066,8 @@ class VoteApp {
             return;
         }
 
-        this.nonprofitsGrid.innerHTML = issue.nonprofits.map(np => {
+        const labels = ['Support Locally', 'Support Nationally', 'Support Globally'];
+        this.nonprofitsGrid.innerHTML = issue.nonprofits.map((np, i) => {
             const logoHtml = np.logo
                 ? `<img src="${np.logo}" alt="${np.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'np-initials\\'>${this.getInitials(np.name)}</div>';">`
                 : `<div class="np-initials">${this.getInitials(np.name)}</div>`;
@@ -1100,7 +1075,7 @@ class VoteApp {
             return `
                 <div class="nonprofit-card">
                     <div class="nonprofit-logo">${logoHtml}</div>
-                    <a href="${np.donateUrl}" target="_blank" rel="noopener" class="btn-donate">Donate</a>
+                    <a href="${np.donateUrl}" target="_blank" rel="noopener" class="btn-donate">${labels[i] || 'Donate'}</a>
                 </div>
             `;
         }).join('');
