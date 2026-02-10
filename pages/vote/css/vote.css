@@ -1755,6 +1755,39 @@ body {
     font-size: 0.85rem;
     font-weight: 700;
     color: #fff;
+    position: relative;
+    cursor: pointer;
+}
+
+.btn-num-tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    color: #1e293b;
+    font-size: 0.75rem;
+    font-weight: 400;
+    padding: 10px 14px;
+    border-radius: 8px;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+}
+
+.btn-num-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #fff;
+}
+
+.btn-donate-num:hover .btn-num-tooltip {
+    display: block;
 }
 
 .btn-donate {
