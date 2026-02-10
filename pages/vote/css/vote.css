@@ -1825,6 +1825,143 @@ body {
     display: block;
 }
 
+/* ===== Bot Challenge Modal ===== */
+.bot-challenge-modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+}
+
+.bot-challenge-modal.active {
+    display: flex;
+}
+
+.bot-challenge-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 36px 32px;
+    max-width: 380px;
+    width: 90%;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.bot-challenge-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    color: #94a3b8;
+}
+
+.bot-challenge-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: var(--text);
+}
+
+.bot-challenge-desc {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin: 0 0 20px;
+}
+
+.bot-emoji-grid {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.bot-emoji-btn {
+    font-size: 2rem;
+    width: 64px;
+    height: 64px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.bot-emoji-btn:hover {
+    border-color: #3b82f6;
+    transform: scale(1.1);
+}
+
+.bot-emoji-btn.bot-correct {
+    border-color: #22c55e;
+    background: #f0fdf4;
+}
+
+.bot-emoji-btn.bot-wrong {
+    border-color: #ef4444;
+    background: #fef2f2;
+    opacity: 0.5;
+}
+
+.bot-math-options {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.bot-math-btn {
+    font-size: 1.2rem;
+    font-weight: 700;
+    width: 64px;
+    height: 64px;
+    border: 2px solid #e2e8f0;
+    border-radius: 50%;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.bot-math-btn:hover {
+    border-color: #3b82f6;
+}
+
+.bot-math-btn.bot-correct {
+    border-color: #22c55e;
+    background: #f0fdf4;
+}
+
+.bot-math-btn.bot-wrong {
+    border-color: #ef4444;
+    background: #fef2f2;
+    opacity: 0.5;
+}
+
+.bot-email-reveal {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--right-bg);
+    text-decoration: none;
+    padding: 10px 28px;
+    background: #eff6ff;
+    border-radius: 24px;
+}
+
+.bot-email-reveal:hover {
+    background: #dbeafe;
+}
+
+.email-me-link {
+    color: #1e293b;
+    text-decoration: none;
+}
+
 .btn-donate {
     display: inline-block;
     padding: 6px 24px;

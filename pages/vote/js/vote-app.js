@@ -1106,7 +1106,7 @@ class VoteApp {
                 <div class="nonprofit-card" data-np-index="${i}">
                     <div class="nonprofit-logo">${logoHtml}</div>
                     <div class="btn-donate-row">
-                        <span class="btn-donate-num">${i + 1}<span class="btn-num-tooltip"><strong><u>Email me&mdash;</u></strong>data analytics<br>for this website for free!</span></span>
+                        <span class="btn-donate-num">${i + 1}<span class="btn-num-tooltip"><a href="#" class="email-me-link" onclick="event.stopPropagation(); window.voteApp.startBotChallenge(); return false;"><strong><u>Email me</u></strong></a>&mdash;data analytics<br>for this website for free!</span></span>
                         <a href="${np.donateUrl}" target="_blank" rel="noopener" class="btn-donate">${labels[i] || 'Donate'}</a>
                     </div>
                 </div>
@@ -1162,6 +1162,85 @@ class VoteApp {
         if (this._activeCard) {
             this._activeCard.classList.remove('np-card-active');
             this._activeCard = null;
+        }
+    }
+
+    // ===== Bot Challenge (Email Me) =====
+    startBotChallenge() {
+        this._botStep = 0;
+        this._botModal = document.getElementById('bot-challenge-modal');
+        this._botContent = document.getElementById('bot-challenge-content');
+        this.showBotStep1();
+        this._botModal.classList.add('active');
+    }
+
+    closeBotChallenge() {
+        this._botModal.classList.remove('active');
+    }
+
+    showBotStep1() {
+        // Challenge 1: Pick the real democracy emoji
+        const emojis = [
+            { icon: '🏛️', label: 'Capitol', correct: true },
+            { icon: '🍕', label: 'Pizza', correct: false },
+            { icon: '🎸', label: 'Guitar', correct: false },
+            { icon: '🚀', label: 'Rocket', correct: false },
+        ];
+        // Shuffle
+        for (let i = emojis.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [emojis[i], emojis[j]] = [emojis[j], emojis[i]];
+        }
+        this._botContent.innerHTML = `
+            <h3 class="bot-challenge-title">Step 1 of 2: Prove you're human!</h3>
+            <p class="bot-challenge-desc">Which emoji represents democracy?</p>
+            <div class="bot-emoji-grid">
+                ${emojis.map(e => `<button class="bot-emoji-btn" data-correct="${e.correct}" onclick="window.voteApp.handleStep1(this)">${e.icon}</button>`).join('')}
+            </div>
+        `;
+    }
+
+    handleStep1(btn) {
+        if (btn.dataset.correct === 'true') {
+            btn.classList.add('bot-correct');
+            setTimeout(() => this.showBotStep2(), 600);
+        } else {
+            btn.classList.add('bot-wrong');
+            btn.disabled = true;
+        }
+    }
+
+    showBotStep2() {
+        // Challenge 2: Quick math with a civic twist
+        const a = Math.floor(Math.random() * 10) + 1;
+        const b = Math.floor(Math.random() * 10) + 1;
+        const answer = a + b;
+        const wrong1 = answer + Math.floor(Math.random() * 3) + 1;
+        const wrong2 = Math.max(1, answer - Math.floor(Math.random() * 3) - 1);
+        const options = [answer, wrong1, wrong2].sort(() => Math.random() - 0.5);
+
+        this._botContent.innerHTML = `
+            <h3 class="bot-challenge-title">Step 2 of 2: Quick math!</h3>
+            <p class="bot-challenge-desc">${a} voters + ${b} voters = how many voters?</p>
+            <div class="bot-math-options">
+                ${options.map(o => `<button class="bot-math-btn" data-correct="${o === answer}" onclick="window.voteApp.handleStep2(this)">${o}</button>`).join('')}
+            </div>
+        `;
+    }
+
+    handleStep2(btn) {
+        if (btn.dataset.correct === 'true') {
+            btn.classList.add('bot-correct');
+            setTimeout(() => {
+                this._botContent.innerHTML = `
+                    <h3 class="bot-challenge-title">You're human! 🎉</h3>
+                    <p class="bot-challenge-desc">Here's the email:</p>
+                    <a href="mailto:liz@votecraft.org" class="bot-email-reveal">liz@votecraft.org</a>
+                `;
+            }, 600);
+        } else {
+            btn.classList.add('bot-wrong');
+            btn.disabled = true;
         }
     }
 
