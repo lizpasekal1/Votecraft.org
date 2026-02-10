@@ -1244,17 +1244,23 @@ class VoteApp {
                     <p class="bot-quote-author">— ${q.author}</p>
                     <h3 class="bot-challenge-title">You're human! 🎉</h3>
                     <p class="bot-challenge-desc">I want to get emailed user journey data from this website.</p>
-                    <p class="bot-challenge-subdesc">It's free because we want you to be able to see what your neighbors care about.</p>
-                    <form class="bot-email-form" onsubmit="window.voteApp.handleEmailSubmit(event)">
-                        <input type="email" class="bot-email-input" placeholder="Enter your email" required>
-                        <button type="submit" class="bot-email-submit">Submit</button>
-                    </form>
+                    <button class="bot-next-btn" onclick="window.voteApp.showEmailPage()">Next</button>
                 `;
             }, 600);
         } else {
             btn.classList.add('bot-wrong');
             btn.disabled = true;
         }
+    }
+
+    showEmailPage() {
+        this._botContent.innerHTML = `
+            <p class="bot-challenge-subdesc">It's free because we want you to be able to see what your neighbors care about.</p>
+            <form class="bot-email-form" onsubmit="window.voteApp.handleEmailSubmit(event)">
+                <input type="email" class="bot-email-input" placeholder="Enter your email" required>
+                <button type="submit" class="bot-email-submit">Submit</button>
+            </form>
+        `;
     }
 
     handleEmailSubmit(e) {
