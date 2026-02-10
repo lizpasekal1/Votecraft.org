@@ -23,6 +23,12 @@ const ISSUES_CATALOG = [
         billKeywords: ['ranked choice', 'ranked-choice', 'ranked choice voting', 'instant runoff', 'preferential voting', 'alternative voting', 'final five voting', 'rank the vote', 'rcv', 'local option voting', 'municipal election voting'],
         nonprofits: [
             {
+                name: 'Common Cause',
+                logo: 'https://www.commoncause.org/ohio/wp-content/uploads/2024/08/OH.png',
+                donateUrl: 'https://www.commoncause.org/donate/',
+                description: 'Nonpartisan grassroots organization dedicated to upholding democratic values.'
+            },
+            {
                 name: 'Rank the Vote',
                 logo: 'https://rankthevote.us/wp-content/uploads/2021/08/4.png',
                 donateUrl: 'https://rankthevote.us/donate/',
@@ -33,12 +39,6 @@ const ISSUES_CATALOG = [
                 logo: 'https://fairvote.org/wp-content/uploads/2022/09/New-web-1024x512.jpg',
                 donateUrl: 'https://www.fairvote.org/donate',
                 description: 'Leading organization for ranked choice voting advocacy and research.'
-            },
-            {
-                name: 'Common Cause',
-                logo: 'https://www.commoncause.org/ohio/wp-content/uploads/2024/08/OH.png',
-                donateUrl: 'https://www.commoncause.org/donate/',
-                description: 'Nonpartisan grassroots organization dedicated to upholding democratic values.'
             }
         ]
     },
