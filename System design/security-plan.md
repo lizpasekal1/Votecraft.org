@@ -204,7 +204,9 @@ When donation processing is added to the vote platform:
 
 ### 8. VoteCraft Coin (VC) — Altruism Currency
 
-**Overview:** VoteCraft Coin (VC) is an altruism-based virtual currency designed to reward and visualize positive civic participation. Instead of being mined through energy or speculation, VC is earned by contributing to community well-being — supporting nonprofits, learning about issues, volunteering, sharing knowledge, or helping others engage in democracy. VC can be spent in the VoteCraft Emporium for games, guides, art, and other digital offerings.
+**Overview:** VoteCraft Coin (VC) is a new altruism-based currency that doesn't replace traditional money or capitalism — it exists alongside the economy as a complementary layer that recognizes forms of value markets often overlook. While dollars reward productivity and exchange, VC highlights contribution, stewardship, and social good — making civic engagement more visible and encouraging actions that strengthen communities without disrupting the financial system.
+
+Instead of being mined through energy or speculation, VC is earned by contributing to community well-being — learning about issues, supporting transparent campaigns, volunteering, sharing knowledge, or helping others engage in democracy. Its purpose isn't just to store value, but to signal trust, participation, and collective care — turning civic action into something tangible, trackable, and shareable. VC can be spent in the VoteCraft Emporium for games, guides, art, and other digital offerings.
 
 **Key properties:**
 - VC is **not a cryptocurrency** — it has no blockchain, no speculative trading, and no monetary exchange value
