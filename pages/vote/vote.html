@@ -151,33 +151,33 @@
                                 </div>
                                 <div class="donate-amounts-grid">
                                     <div class="donate-amount-row">
-                                        <span class="donate-rank">1<span class="donate-rank-tooltip"><strong><u>Email me&mdash;</u></strong>data analytics<br>for this website for free!</span></span>
+                                        <span class="donate-rank">1<span class="donate-rank-tooltip"><a href="#" class="email-me-link" onclick="event.stopPropagation(); window.voteApp.startBotChallenge(); return false;"><strong><u>Email me</u></strong></a>&mdash;data analytics<br>for this website for free!</span></span>
                                         <button class="donate-amount-btn featured" data-amount="12.34">
                                             <span class="donate-amount-value">$12.34</span>
                                             <span class="donate-amount-note">It's as easy as 1-2-3!</span>
                                         </button>
                                     </div>
                                     <div class="donate-amount-row">
-                                        <span class="donate-rank">2<span class="donate-rank-tooltip"><strong><u>Email me&mdash;</u></strong>data analytics<br>for this website for free!</span></span>
+                                        <span class="donate-rank">2<span class="donate-rank-tooltip"><a href="#" class="email-me-link" onclick="event.stopPropagation(); window.voteApp.startBotChallenge(); return false;"><strong><u>Email me</u></strong></a>&mdash;data analytics<br>for this website for free!</span></span>
                                         <button class="donate-amount-btn featured" data-amount="123.45">
                                             <span class="donate-amount-value">$123.45</span>
                                             <span class="donate-amount-note">It's as easy as 1-2-3!</span>
                                         </button>
                                     </div>
                                     <div class="donate-amount-row">
-                                        <span class="donate-rank">3<span class="donate-rank-tooltip"><strong><u>Email me&mdash;</u></strong>data analytics<br>for this website for free!</span></span>
+                                        <span class="donate-rank">3<span class="donate-rank-tooltip"><a href="#" class="email-me-link" onclick="event.stopPropagation(); window.voteApp.startBotChallenge(); return false;"><strong><u>Email me</u></strong></a>&mdash;data analytics<br>for this website for free!</span></span>
                                         <button class="donate-amount-btn" data-amount="25">$25</button>
                                     </div>
                                     <div class="donate-amount-row">
-                                        <span class="donate-rank">4<span class="donate-rank-tooltip"><strong><u>Email me&mdash;</u></strong>data analytics<br>for this website for free!</span></span>
+                                        <span class="donate-rank">4<span class="donate-rank-tooltip"><a href="#" class="email-me-link" onclick="event.stopPropagation(); window.voteApp.startBotChallenge(); return false;"><strong><u>Email me</u></strong></a>&mdash;data analytics<br>for this website for free!</span></span>
                                         <button class="donate-amount-btn" data-amount="50">$50</button>
                                     </div>
                                     <div class="donate-amount-row">
-                                        <span class="donate-rank">5<span class="donate-rank-tooltip"><strong><u>Email me&mdash;</u></strong>data analytics<br>for this website for free!</span></span>
+                                        <span class="donate-rank">5<span class="donate-rank-tooltip"><a href="#" class="email-me-link" onclick="event.stopPropagation(); window.voteApp.startBotChallenge(); return false;"><strong><u>Email me</u></strong></a>&mdash;data analytics<br>for this website for free!</span></span>
                                         <button class="donate-amount-btn" data-amount="150">$150</button>
                                     </div>
                                     <div class="donate-amount-row">
-                                        <span class="donate-rank">6<span class="donate-rank-tooltip"><strong><u>Email me&mdash;</u></strong>data analytics<br>for this website for free!</span></span>
+                                        <span class="donate-rank">6<span class="donate-rank-tooltip"><a href="#" class="email-me-link" onclick="event.stopPropagation(); window.voteApp.startBotChallenge(); return false;"><strong><u>Email me</u></strong></a>&mdash;data analytics<br>for this website for free!</span></span>
                                         <button class="donate-amount-btn" data-amount="250">$250</button>
                                     </div>
                                 </div>
@@ -215,9 +215,17 @@
         </div>
     </div>
 
-    <link rel="stylesheet" href="css/vote.css?v=20260209aag">
+    <!-- Bot Challenge Modal -->
+    <div id="bot-challenge-modal" class="bot-challenge-modal">
+        <div class="bot-challenge-card">
+            <button class="bot-challenge-close" onclick="window.voteApp.closeBotChallenge()">&#x2715;</button>
+            <div id="bot-challenge-content"></div>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="css/vote.css?v=20260209aah">
     <script src="js/issues-data.js?v=20260209zq"></script>
     <script src="js/civic-api.js?v=20260209f"></script>
-    <script src="js/vote-app.js?v=20260209aae"></script>
+    <script src="js/vote-app.js?v=20260209aah"></script>
 </body>
 </html>
