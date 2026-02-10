@@ -172,8 +172,8 @@ body {
 
 .left-panel {
     width: 30%;
-    min-width: 310px;
-    max-width: 450px;
+    min-width: 340px;
+    max-width: 480px;
     background: var(--left-bg);
     color: var(--left-text);
     padding: 24px 16px;
