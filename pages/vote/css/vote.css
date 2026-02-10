@@ -1744,6 +1744,19 @@ body {
     box-shadow: 0 0 16px 4px rgba(239, 68, 68, 0.6);
 }
 
+.btn-donate-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.btn-donate-num {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #fff;
+}
+
 .btn-donate {
     display: inline-block;
     padding: 6px 24px;

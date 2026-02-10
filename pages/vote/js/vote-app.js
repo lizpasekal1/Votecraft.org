@@ -1105,7 +1105,10 @@ class VoteApp {
             return `
                 <div class="nonprofit-card" data-np-index="${i}">
                     <div class="nonprofit-logo">${logoHtml}</div>
-                    <a href="${np.donateUrl}" target="_blank" rel="noopener" class="btn-donate">${labels[i] || 'Donate'}</a>
+                    <div class="btn-donate-row">
+                        <span class="btn-donate-num">${i + 1}</span>
+                        <a href="${np.donateUrl}" target="_blank" rel="noopener" class="btn-donate">${labels[i] || 'Donate'}</a>
+                    </div>
                 </div>
             `;
         }).join('');
