@@ -1103,8 +1103,7 @@ body {
     display: none;
     position: absolute;
     bottom: calc(100% + 10px);
-    left: 50%;
-    transform: translateX(-50%);
+    left: 0;
     background: #fff;
     color: #1e293b;
     font-size: 0.8rem;
@@ -1122,8 +1121,7 @@ body {
     content: '';
     position: absolute;
     top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 24px;
     border: 6px solid transparent;
     border-top-color: #fff;
 }
