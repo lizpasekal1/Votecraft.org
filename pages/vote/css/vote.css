@@ -877,7 +877,7 @@ body {
 .support-overlay-tagline {
     font-size: clamp(0.85rem, 1.1vw, 1rem);
     color: #fff;
-    margin: 0;
+    margin: 0 0 20px;
     line-height: 1.4;
     white-space: nowrap;
 }
