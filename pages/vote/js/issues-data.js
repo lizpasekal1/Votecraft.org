@@ -23,16 +23,16 @@ const ISSUES_CATALOG = [
         billKeywords: ['ranked choice', 'ranked-choice', 'ranked choice voting', 'instant runoff', 'preferential voting', 'alternative voting', 'final five voting', 'rank the vote', 'rcv', 'local option voting', 'municipal election voting'],
         nonprofits: [
             {
-                name: 'FairVote',
-                logo: 'https://fairvote.org/wp-content/uploads/2022/09/New-web-1024x512.jpg',
-                donateUrl: 'https://www.fairvote.org/donate',
-                description: 'Leading organization for ranked choice voting advocacy and research.'
-            },
-            {
                 name: 'Rank the Vote',
                 logo: 'https://rankthevote.us/wp-content/uploads/2021/08/4.png',
                 donateUrl: 'https://rankthevote.us/donate/',
                 description: 'National campaign to adopt RCV for federal elections.'
+            },
+            {
+                name: 'FairVote',
+                logo: 'https://fairvote.org/wp-content/uploads/2022/09/New-web-1024x512.jpg',
+                donateUrl: 'https://www.fairvote.org/donate',
+                description: 'Leading organization for ranked choice voting advocacy and research.'
             },
             {
                 name: 'Common Cause',

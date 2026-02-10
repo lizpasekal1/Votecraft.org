@@ -931,7 +931,7 @@ body {
     gap: clamp(12px, 2vw, 20px);
     align-items: stretch;
     max-width: 1110px;
-    margin: 0 auto 60px;
+    margin: 0 auto 20px;
     flex: 1;
     min-height: 0;
 }
@@ -1393,11 +1393,11 @@ body {
 /* ========== NONPROFITS ========== */
 
 .nonprofits-section {
-    margin: -30px calc(-1 * clamp(16px, 3vw, 40px)) 0;
-    padding: calc(clamp(12px, 2vh, 23px) + 30px) clamp(16px, 3vw, 40px) clamp(20px, 4vh, 52px);
+    margin: 15px calc(-1 * clamp(16px, 3vw, 40px)) 0;
+    padding: calc(clamp(12px, 2vh, 23px) + 20px) clamp(16px, 3vw, 40px) clamp(20px, 4vh, 52px);
     background: #0036a9;
     color: #fff;
-    flex-shrink: 0;
+    flex: 0 0 auto;
 }
 
 .nonprofits-headline {
@@ -1408,11 +1408,11 @@ body {
 }
 
 .nonprofits-subtext {
-    font-size: 0.8rem;
+    font-size: clamp(0.85rem, 1vw, 1rem);
     text-align: center;
     opacity: 0.85;
     margin-bottom: 12px;
-    line-height: 1.4;
+    line-height: 1.45;
 }
 
 .nonprofits-grid {
@@ -1429,7 +1429,7 @@ body {
 
 .nonprofit-logo {
     width: 100%;
-    height: 90px;
+    aspect-ratio: 16 / 9;
     background: rgba(30, 58, 138, 0.6);
     border-radius: 8px;
     overflow: hidden;
