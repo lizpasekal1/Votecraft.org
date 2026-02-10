@@ -865,10 +865,11 @@ body {
 }
 
 .support-overlay-tagline {
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.75);
+    font-size: clamp(0.85rem, 1vw, 1rem);
+    color: #fff;
+    opacity: 0.85;
     margin: 0;
-    line-height: 1.4;
+    line-height: 1.45;
 }
 
 .support-overlay-split {
