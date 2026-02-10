@@ -1139,7 +1139,7 @@ class VoteApp {
         document.getElementById('support-overlay-desc').textContent = np.description || '';
         const donateLink = document.getElementById('support-overlay-donate');
         donateLink.href = np.donateUrl;
-        donateLink.textContent = btn.textContent;
+        donateLink.textContent = 'Support';
 
         // Activate overlay and toggle button state
         this.supportOverlay.classList.add('active');
