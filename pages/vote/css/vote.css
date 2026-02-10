@@ -1001,6 +1001,7 @@ body {
     padding: 10px 14px;
     border-radius: 8px;
     text-align: center;
+    white-space: nowrap;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 10;
 }
@@ -1805,6 +1806,7 @@ body {
     padding: 10px 14px;
     border-radius: 8px;
     text-align: center;
+    white-space: nowrap;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 10;
 }
