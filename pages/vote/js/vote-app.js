@@ -31,7 +31,7 @@ class VoteApp {
         this.loadingScreen = document.getElementById('loading-screen');
         this.errorScreen = document.getElementById('error-screen');
         this.errorText = document.getElementById('error-text');
-        this.backBtn = document.getElementById('back-btn');
+        this.switchIssueBtn = document.getElementById('switch-issue-btn');
 
         // Issue detail elements
         this.issueTitle = document.getElementById('issue-title');
@@ -183,7 +183,11 @@ class VoteApp {
         this.toggleRepsBtn.addEventListener('click', () => this.togglePanel('reps'));
         this.toggleIssuesBtn.addEventListener('click', () => this.togglePanel('issues'));
 
-        this.backBtn.addEventListener('click', () => this.goBack());
+        this.switchIssueBtn.addEventListener('click', (e) => { e.preventDefault(); this.goBack(); });
+
+        document.getElementById('to-top-btn').addEventListener('click', () => {
+            this.issueDetailView.scrollIntoView({ behavior: 'smooth' });
+        });
 
         this.viewAllSupportersBtn.addEventListener('click', () => this.openSidebarSupporters());
 
@@ -1003,7 +1007,6 @@ class VoteApp {
         // Switch views
         this.issuesGridView.style.display = 'none';
         this.issueDetailView.style.display = '';
-        this.backBtn.style.display = '';
 
         // Render content
         this.issueTitle.textContent = issue.title;
@@ -1121,7 +1124,6 @@ class VoteApp {
     goBack() {
         this.closeLearnMore();
         this.issueDetailView.style.display = 'none';
-        this.backBtn.style.display = 'none';
         this.nonprofitsSection.style.display = 'none';
         this.issuesGridView.style.display = '';
         this.selectedIssue = null;
