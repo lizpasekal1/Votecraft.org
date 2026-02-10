@@ -1,7 +1,7 @@
 # VoteCraft User Data Security Plan
 
 **Document owner:** VoteCraft team
-**Last updated:** 2026-02-02
+**Last updated:** 2026-02-10
 **Status:** Active — pre-launch phase (no live users yet)
 **Next review:** Before any user-facing features go live
 
@@ -44,7 +44,7 @@ Civic data is uniquely sensitive. A person's address, political preferences, can
 
 | App | Purpose | Backend | Status |
 |-----|---------|---------|--------|
-| **Vote platform** (planned) | Massachusetts election candidate comparison, nonprofit donation, personalized alignment ranking | TBD | Not yet built |
+| **Vote platform** | Massachusetts election candidate comparison, nonprofit donation, VoteCraft Coin (VC) altruism currency, Emporium, personalized alignment ranking | WordPress backend + GitHub Pages frontend | In development |
 | **MyReps** | Look up elected representatives by address | Static site, third-party APIs (OpenStates, Google Civic) | Live on GitHub Pages |
 | **JokeMaster** | Narrative civic engagement game | Firebase/Firestore | In development |
 | **Scavenger Tours** | Civic education scavenger hunt | Supabase (currently paused) | In development |
@@ -105,6 +105,8 @@ All data handled by VoteCraft falls into one of these categories:
 - **Email addresses** — personally identifiable
 - **Game progress and engagement data** — reveals usage patterns
 - **Reform organization selections** — reveals civic interests
+- **VoteCraft Coin (VC) balances and transaction history** — reveals engagement level and donation patterns
+- **Emporium purchase history** — reveals personal interests
 
 ### Tier 3 — Non-sensitive (basic protection)
 - **Aggregated, anonymized usage statistics** — no individual identification
@@ -200,7 +202,67 @@ When donation processing is added to the vote platform:
 - Provide users with clear receipts and the ability to see/delete their donation history
 - Separate donation data from political preference data in storage
 
-### 8. Data Retention & Deletion
+### 8. VoteCraft Coin (VC) — Altruism Currency
+
+**Overview:** VoteCraft Coin (VC) is an altruism-based virtual currency designed to reward and visualize positive civic participation. Instead of being mined through energy or speculation, VC is earned by contributing to community well-being — supporting nonprofits, learning about issues, volunteering, sharing knowledge, or helping others engage in democracy. VC can be spent in the VoteCraft Emporium for games, guides, art, and other digital offerings.
+
+**Key properties:**
+- VC is **not a cryptocurrency** — it has no blockchain, no speculative trading, and no monetary exchange value
+- VC is earned through verified civic actions (primarily nonprofit donations through VoteCraft)
+- VC is spent exclusively within the VoteCraft Emporium
+- VC balances are stored server-side, not in wallets or client-side storage
+
+**Current earning structure:**
+| Donation Amount | VC Earned | Additional Rewards |
+|----------------|-----------|-------------------|
+| $12.30 | 12 VC | — |
+| $25 | 25 VC | — |
+| $50 | 50 VC | Patron badge |
+| $100 | 100 VC | Patron badge |
+
+**Security requirements:**
+
+**8a. VC Balance Integrity**
+- VC balances must be stored server-side in an authenticated, encrypted data store
+- No client-side manipulation of VC balances — all earning and spending must be validated server-side
+- Every VC transaction (earn or spend) must be logged with timestamp, amount, source action, and user ID
+- VC earning must be tied to verified donation completions (confirmed by payment processor callback), not donation initiation
+- Rate-limiting on VC-earning actions to prevent abuse (e.g., rapid micro-donations to farm VC)
+
+**8b. Patron Badge Security**
+- Patron badges are earned at the $50+ donation tier
+- Badge display on issue pages means other users can see patron status — this is **opt-in** (users choose a profile or anonymous badge)
+- Badge data must not reveal donation amounts, specific nonprofits supported, or any Tier 1 data
+- Badge assignment must be server-validated — no client-side badge creation
+
+**8c. Emporium Transaction Security**
+- All Emporium purchases (spending VC) must be processed server-side
+- Atomic transactions: VC deduction and item delivery must be a single transaction to prevent double-spending
+- Emporium items (games, guides, art) should be delivered through authenticated access, not direct URLs that can be shared
+- Purchase history is Tier 2 data — treat accordingly
+
+**8d. Anti-Abuse Measures**
+- Prevent VC farming through fraudulent donations (e.g., donate-then-chargeback cycles)
+- If a donation is refunded or charged back, the corresponding VC must be revoked
+- Monitor for anomalous VC earning patterns (bulk accounts, automated donations)
+- VC is non-transferable between users to prevent black-market trading
+- VC has no cash-out mechanism — it cannot be converted back to real currency
+
+**8e. Data Classification Impact**
+- VC balances: **Tier 2** (sensitive — reveals engagement level)
+- VC transaction history: **Tier 2** (reveals donation patterns over time)
+- Emporium purchase history: **Tier 2** (reveals personal interests)
+- Patron badge display preference: **Tier 3** (user-controlled public/anonymous choice)
+- Note: The underlying donation that earned VC remains **Tier 1** — VC data must not be cross-referenced to expose donation details to other users
+
+**8f. Transparency**
+- Users must be able to view their full VC balance and transaction history
+- Clearly communicate that VC has no real-world monetary value
+- Publish the VC earning formula so users understand how VC is calculated
+- If the VC system or earning rates change, notify users in advance
+- Users can request deletion of their VC balance and history as part of "delete my data"
+
+### 9. Data Retention & Deletion
 
 - Define retention periods for each data type
 - User addresses: do not store beyond the active session unless user opts in
@@ -263,6 +325,10 @@ Prioritized actions to bring the project to a secure baseline.
 
 ### Before vote platform launch
 
+- [ ] Design and implement server-side VC ledger (balance tracking, transaction log, earn/spend validation)
+- [ ] Implement chargeback/refund VC revocation — VC must be clawed back if underlying donation is reversed
+- [ ] Build Emporium with authenticated access control — no direct URL sharing of purchased content
+- [ ] Implement Patron badge system with opt-in/anonymous toggle
 - [ ] Implement server-side input validation and sanitization
 - [ ] Add CSRF protection to all forms
 - [ ] Upgrade password requirements to 12-character minimum with complexity rules
@@ -290,6 +356,7 @@ All security-related actions taken on this project, in reverse chronological ord
 
 | Date | Action | Details |
 |------|--------|---------|
+| 2026-02-10 | VoteCraft Coin (VC) security section added | Added Section 8 covering VC altruism currency security: balance integrity, patron badges, Emporium transactions, anti-abuse measures, data classification, and transparency requirements. Updated Tier 2 data classification, project overview, remediation checklist, and open questions for security professional. |
 | 2026-02-02 | WordPress API proxy deployed and verified | Installed `votecraft-api` WordPress plugin. OpenStates API calls now route through `votecraft.org/wp-json/votecraft/v1/openstates`. API key is server-side only. Proxy tested successfully — returns legislator data. CORS proxy (`corsproxy.io`) fully replaced. |
 | 2026-02-02 | GitHub token revoked | Old personal access token (`ghp_98jk...`) revoked via GitHub settings. Token was previously embedded in git remote URL. |
 | 2026-02-02 | SSH authentication set up | Generated Ed25519 SSH key, added to GitHub, switched repo remote from HTTPS+token to SSH (`git@github.com:lizpasekal1/Votecraft.org.git`). |
@@ -318,6 +385,9 @@ Currently a static site hosted on GitHub Pages with client-side JavaScript calli
 ### What's Planned
 
 - A vote platform handling political preferences, candidate rankings, and nonprofit donations
+- **VoteCraft Coin (VC)** — an altruism-based virtual currency earned through civic participation (primarily donations), spent in the Emporium for games, guides, and art. Not a cryptocurrency — no blockchain, no cash value, no trading. See Section 8 for full security requirements.
+- **Emporium** — a digital storefront where users spend VC on curated content. Requires authenticated access control and server-side transaction processing.
+- **Patron badges** — public recognition for $50+ donors, displayed on issue pages (opt-in, anonymous option available)
 - This will require a backend, proper auth, encrypted storage, and payment processing
 - The platform must enforce strict data separation between vote/donate activity and user browsing (see Data Separation section above)
 
@@ -397,3 +467,6 @@ These are decisions the team is waiting on professional guidance for:
 - [ ] Should we pursue a formal security audit before launch, or is ongoing review sufficient?
 - [ ] What monitoring/alerting should be in place at launch?
 - [ ] Do we need a data processing agreement with third-party API providers (OpenStates, Google Civic)?
+- [ ] What safeguards are needed to prevent VC farming through donation-chargeback cycles? Should VC earning be delayed until donation settlement?
+- [ ] Does the VC/Emporium system introduce any regulatory requirements (e.g., virtual currency laws, consumer protection for digital goods)?
+- [ ] How should Patron badge visibility be managed to prevent social engineering or targeted harassment of donors?
