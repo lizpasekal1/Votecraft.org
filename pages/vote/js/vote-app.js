@@ -1231,9 +1231,18 @@ class VoteApp {
     handleStep2(btn) {
         if (btn.dataset.correct === 'true') {
             btn.classList.add('bot-correct');
+            const quotes = [
+                { text: 'A computer would deserve to be called intelligent if it could deceive a human into believing that it was human.', author: 'Alan Turing' },
+                { text: "I'm not a robot. I'm a human... probably.", author: 'Elon Musk' },
+                { text: 'The human race has only one really effective weapon, and that is laughter.', author: 'Mark Twain' },
+                { text: "I'm not crazy about reality, but it's still the only place to get a decent meal.", author: 'Groucho Marx' },
+            ];
+            const q = quotes[Math.floor(Math.random() * quotes.length)];
             setTimeout(() => {
                 this._botContent.innerHTML = `
                     <h3 class="bot-challenge-title">You're human! 🎉</h3>
+                    <p class="bot-quote">"${q.text}"</p>
+                    <p class="bot-quote-author">— ${q.author}</p>
                     <p class="bot-challenge-desc">Here's the email:</p>
                     <a href="mailto:liz@votecraft.org" class="bot-email-reveal">liz@votecraft.org</a>
                 `;
