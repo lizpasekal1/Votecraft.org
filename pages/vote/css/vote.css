@@ -2024,6 +2024,25 @@ body {
     margin: 8px 0 0;
 }
 
+.bot-next-btn {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 10px 32px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    font-weight: 600;
+    background: var(--right-bg);
+    color: #fff;
+    border: none;
+    border-radius: 24px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.bot-next-btn:hover {
+    background: #2563eb;
+}
+
 .email-me-link {
     color: #1e293b;
     text-decoration: none;
