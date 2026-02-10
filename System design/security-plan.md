@@ -563,3 +563,7 @@ These are decisions the team is waiting on professional guidance for:
 - [ ] What safeguards are needed to prevent VC farming through donation-chargeback cycles? Should VC earning be delayed until donation settlement?
 - [ ] Does the VC/Emporium system introduce any regulatory requirements (e.g., virtual currency laws, consumer protection for digital goods)?
 - [ ] How should Patron badge visibility be managed to prevent social engineering or targeted harassment of donors?
+- [ ] **Accessibility & inclusion:** How do we ensure VC earning opportunities are available to people who can't donate money? (The planned volunteer/learning paths help, but need concrete design)
+- [ ] **Dispute resolution process:** What is the concrete appeals workflow when VC is revoked? (Steps, timeline, who reviews, escalation path)
+- [ ] **Third-party partner agreements:** When volunteer verification involves partner organizations, what data sharing agreements and verification protocols are needed?
+- [ ] **Jurisdictional considerations:** Which states or countries have specific virtual currency or digital goods regulations beyond SEC that could apply to VC/Emporium?
