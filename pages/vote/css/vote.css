@@ -1153,6 +1153,61 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+.vc-info-panel {
+    position: relative;
+    padding: 16px 0 0;
+}
+
+.vc-info-close {
+    position: absolute;
+    top: 8px;
+    right: 0;
+    background: #000;
+    border: none;
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 700;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    padding: 0;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.vc-info-close:hover {
+    opacity: 1;
+}
+
+.vc-info-text {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #374151;
+    margin: 0 0 10px;
+}
+
+.vc-info-list {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0 0;
+}
+
+.vc-info-list li {
+    font-size: 0.95rem;
+    padding: 6px 0;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.vc-info-list li:last-child {
+    border-bottom: none;
+}
+
 .right-panel-title {
     font-size: 2.2rem;
     font-weight: 700;
