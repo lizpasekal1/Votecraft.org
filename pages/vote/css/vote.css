@@ -172,13 +172,18 @@ body {
 
 .left-panel {
     width: 30%;
-    min-width: 280px;
-    max-width: 420px;
+    min-width: 310px;
+    max-width: 450px;
     background: var(--left-bg);
     color: var(--left-text);
     padding: 24px 16px;
     overflow-y: auto;
     flex-shrink: 0;
+    direction: rtl;
+}
+
+.left-panel > * {
+    direction: ltr;
 }
 
 .sidebar-logo {
@@ -1034,6 +1039,23 @@ body {
     background: #e2e8f0;
 }
 
+.switch-issue-link {
+    display: block;
+    text-align: center;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-top: 8px;
+    text-decoration: none;
+    opacity: 0.85;
+    cursor: pointer;
+}
+
+.switch-issue-link:hover {
+    opacity: 1;
+    text-decoration: underline;
+}
+
 /* Top supporters widget (right half, below alignment card) */
 .top-supporters-widget {
     background: rgba(255, 255, 255, 0.1);
@@ -1471,6 +1493,10 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+.btn-to-top {
+    display: none;
+}
+
 /* ========== LOADING / ERROR ========== */
 
 .loading-overlay {
@@ -1900,6 +1926,20 @@ body {
 
     .nonprofit-card .btn-donate {
         margin-bottom: 30px;
+    }
+
+    .btn-to-top {
+        display: block;
+        margin: 50px auto 0;
+        padding: 8px 0;
+        font-size: 0.85rem;
+        font-family: inherit;
+        font-weight: 500;
+        background: none;
+        color: #fff;
+        border: none;
+        opacity: 0.85;
+        cursor: pointer;
     }
 
     .nonprofits-headline {
