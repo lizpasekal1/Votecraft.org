@@ -1243,14 +1243,29 @@ class VoteApp {
                     <p class="bot-quote">"${q.text}"</p>
                     <p class="bot-quote-author">— ${q.author}</p>
                     <h3 class="bot-challenge-title">You're human! 🎉</h3>
-                    <p class="bot-challenge-desc">Here's the email:</p>
-                    <a href="mailto:liz@votecraft.org" class="bot-email-reveal">liz@votecraft.org</a>
+                    <p class="bot-challenge-desc">I want to get emailed user journey data from this website.</p>
+                    <p class="bot-challenge-subdesc">It's free because we want you to be able to see what your neighbors care about.</p>
+                    <form class="bot-email-form" onsubmit="window.voteApp.handleEmailSubmit(event)">
+                        <input type="email" class="bot-email-input" placeholder="Enter your email" required>
+                        <button type="submit" class="bot-email-submit">Submit</button>
+                    </form>
                 `;
             }, 600);
         } else {
             btn.classList.add('bot-wrong');
             btn.disabled = true;
         }
+    }
+
+    handleEmailSubmit(e) {
+        e.preventDefault();
+        const email = e.target.querySelector('.bot-email-input').value;
+        // For now, show a thank you message. Later can POST to an endpoint.
+        this._botContent.innerHTML = `
+            <h3 class="bot-challenge-title">Thank you! 🎉</h3>
+            <p class="bot-challenge-desc">We'll send user journey data to:</p>
+            <p class="bot-email-confirm">${email}</p>
+        `;
     }
 
     openLearnMore() {
