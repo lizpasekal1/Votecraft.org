@@ -1106,7 +1106,7 @@ class VoteApp {
                 <div class="nonprofit-card" data-np-index="${i}">
                     <div class="nonprofit-logo">${logoHtml}</div>
                     <div class="btn-donate-row">
-                        <span class="btn-donate-num">${i + 1}<span class="btn-num-tooltip"><strong><u>Email me&mdash;</u></strong>data analytics for this website for free!</span></span>
+                        <span class="btn-donate-num">${i + 1}<span class="btn-num-tooltip"><strong><u>Email me&mdash;</u></strong>data analytics<br>for this website for free!</span></span>
                         <a href="${np.donateUrl}" target="_blank" rel="noopener" class="btn-donate">${labels[i] || 'Donate'}</a>
                     </div>
                 </div>
