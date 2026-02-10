@@ -1240,9 +1240,9 @@ class VoteApp {
             const q = quotes[Math.floor(Math.random() * quotes.length)];
             setTimeout(() => {
                 this._botContent.innerHTML = `
-                    <h3 class="bot-challenge-title">You're human! 🎉</h3>
                     <p class="bot-quote">"${q.text}"</p>
                     <p class="bot-quote-author">— ${q.author}</p>
+                    <h3 class="bot-challenge-title">You're human! 🎉</h3>
                     <p class="bot-challenge-desc">Here's the email:</p>
                     <a href="mailto:liz@votecraft.org" class="bot-email-reveal">liz@votecraft.org</a>
                 `;
