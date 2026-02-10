@@ -255,7 +255,98 @@ When donation processing is added to the vote platform:
 - Patron badge display preference: **Tier 3** (user-controlled public/anonymous choice)
 - Note: The underlying donation that earned VC remains **Tier 1** — VC data must not be cross-referenced to expose donation details to other users
 
-**8f. Transparency**
+**8f. What VC is NOT — Legal Disclaimers**
+
+This section is critical for legal protection and must be clearly communicated to users in the platform's terms of service, Emporium, and any VC-related UI.
+
+VoteCraft Coin (VC):
+- **Is not legal tender** — VC is not money and is not recognized as currency by any government
+- **Is not a cryptocurrency or digital asset investment** — there is no blockchain, no mining, no token contract, and no exchange listing
+- **Does not represent shares, equity, dividends, or profit rights** — holding VC confers no ownership stake in VoteCraft or any affiliated entity
+- **Is not redeemable for cash** — VC cannot be converted, sold, or exchanged for real-world currency under any circumstances
+- **Should not be purchased with the expectation of financial return** — VC is earned through civic participation, not purchased as an investment
+- **Has no monetary value outside of VoteCraft** — VC exists solely for use within the VoteCraft Emporium
+
+**Why this matters:** These disclaimers help avoid SEC classification as a security under the Howey Test. If users invest money with the expectation of profit derived from the efforts of others, the instrument may be regulated as a security. VC must be clearly positioned as a loyalty/rewards mechanism, not a financial product.
+
+**Implementation:** These disclaimers must appear in:
+- Terms of Service (required acceptance before earning VC)
+- Emporium storefront (visible on every page)
+- VC info panel in the donate overlay (already partially implemented)
+- Any marketing materials that reference VC
+
+**8g. Earning Rules — Fairness & Transparency**
+
+Clear, published earning rules prevent accusations of manipulation, favoritism, or deceptive practices.
+
+**How VC is earned:**
+- **Nonprofit donations through VoteCraft** — primary earning method. VC amount matches donation in a published ratio (currently 1 VC per $1 donated)
+- **Civic learning activities** (planned) — completing educational modules about issues, candidates, or civic processes
+- **Volunteering verification** (planned) — participating in verified volunteer activities through VoteCraft partner organizations
+- **Community engagement** (planned) — sharing knowledge, helping others engage in democracy through the platform
+
+**Verification standards:**
+- Donation-based VC: verified through payment processor confirmation (Stripe/PayPal webhook callback). VC is not credited until the payment is settled, not just initiated
+- Activity-based VC (planned): verified through completion tracking within the platform (e.g., quiz completion, module progress). Must be tamper-resistant — no client-side self-reporting
+- Volunteer-based VC (planned): verified through partner organization confirmation. Requires a documented verification protocol with each partner
+- All verification methods must be documented and auditable
+
+**VC expiration, revocation, and caps:**
+- **Expiration:** VC does not currently expire. If an expiration policy is introduced, users must be given at least 90 days notice and a minimum 12-month validity period
+- **Revocation:** VC can be revoked in the following circumstances:
+  - Donation chargeback or refund (corresponding VC is clawed back)
+  - Fraudulent activity (fake accounts, automated farming, exploiting bugs)
+  - Terms of service violation
+- **Caps:** No per-user VC balance cap is currently planned. If caps are introduced, they must be announced in advance
+- **Revocation process:** Users must be notified of any VC revocation with a clear reason and an opportunity to dispute
+
+**Fairness safeguards:**
+- The VC earning formula must be publicly documented — no hidden multipliers or secret bonus tiers
+- All users earn VC at the same rate for the same actions — no preferential treatment
+- Changes to earning rates must be announced at least 30 days in advance
+- Historical VC balances are not retroactively adjusted when rates change (grandfathering)
+- An audit trail of all VC policy changes must be maintained in this document
+
+**8h. Ownership & Platform Control**
+
+VoteCraft retains full ownership and control over the VC system:
+- VC is **issued and managed exclusively by VoteCraft** — there is no decentralized governance or external authority over VC
+- VoteCraft reserves the right to **modify, pause, or discontinue** the VC system at any time, with reasonable advance notice to users
+- Users do not "own" VC as property in the traditional financial or legal sense — VC is a **platform benefit**, similar to loyalty points or rewards credits
+- VoteCraft may adjust VC balances, earning rates, or Emporium pricing as needed to maintain system integrity
+- In the event the VC system is discontinued, users will be given a notice period (minimum 90 days) to spend remaining VC in the Emporium before balances are zeroed
+- These terms must be clearly stated in the Terms of Service and accepted by users before they earn or spend VC
+
+**8i. Tax Awareness**
+
+- VoteCraft does not provide tax advice and makes no representations about the tax treatment of VC
+- **Users are responsible for understanding any tax implications of earning or spending VC in their jurisdiction**
+- This disclaimer must appear in the Terms of Service
+- If VC earning is ever tied to activities that could be considered income or prizes (e.g., contests, referral bonuses), consult a tax attorney to determine reporting obligations (e.g., IRS Form 1099 thresholds)
+- Donations made through VoteCraft that earn VC may be tax-deductible depending on the recipient nonprofit's status — VoteCraft should clarify that VC earned does not reduce the deductible amount of the donation
+
+**8j. Anti-Abuse & Ethics Clause**
+
+Because VC is tied to civic action, the system must be protected from exploitation that undermines its mission:
+
+**Prohibited VC-earning behavior:**
+- **Misinformation** — earning VC through activities that deliberately spread false or misleading information about candidates, issues, or civic processes
+- **Harassment** — using VC-earning activities to target, intimidate, or harass individuals, organizations, or communities
+- **Manipulation** — gaming the system through coordinated inauthentic behavior, bot accounts, or exploiting platform vulnerabilities
+- **Bad-faith participation** — completing civic activities (e.g., educational modules) without genuine engagement solely to farm VC
+
+**Enforcement:**
+- VC can be **revoked** for any violation of the ethics clause, with notification to the user and a stated reason
+- Repeated or severe violations may result in account suspension or permanent ban
+- Users may dispute revocation through a defined appeals process (to be established before launch)
+- VoteCraft will maintain a record of all enforcement actions for accountability
+
+**Ethical commitment:**
+- VoteCraft will never design VC-earning activities that incentivize partisan behavior, political donations to specific candidates, or ideological alignment
+- VC earning is tied to **participation and education**, not to holding or expressing specific political views
+- The system must remain a neutral tool for civic engagement, not a mechanism for political influence
+
+**8k. Transparency**
 - Users must be able to view their full VC balance and transaction history
 - Clearly communicate that VC has no real-world monetary value
 - Publish the VC earning formula so users understand how VC is calculated
@@ -356,6 +447,8 @@ All security-related actions taken on this project, in reverse chronological ord
 
 | Date | Action | Details |
 |------|--------|---------|
+| 2026-02-10 | VC ownership, tax, and ethics sections added | Added Section 8h (Ownership & Platform Control), 8i (Tax Awareness), 8j (Anti-Abuse & Ethics Clause). Renumbered Transparency to 8k. |
+| 2026-02-10 | VC legal disclaimers and earning rules added | Added Section 8f (What VC is NOT — legal disclaimers for SEC/Howey Test protection) and Section 8g (Earning Rules — fairness, verification standards, expiration/revocation/caps policy, fairness safeguards). |
 | 2026-02-10 | VoteCraft Coin (VC) security section added | Added Section 8 covering VC altruism currency security: balance integrity, patron badges, Emporium transactions, anti-abuse measures, data classification, and transparency requirements. Updated Tier 2 data classification, project overview, remediation checklist, and open questions for security professional. |
 | 2026-02-02 | WordPress API proxy deployed and verified | Installed `votecraft-api` WordPress plugin. OpenStates API calls now route through `votecraft.org/wp-json/votecraft/v1/openstates`. API key is server-side only. Proxy tested successfully — returns legislator data. CORS proxy (`corsproxy.io`) fully replaced. |
 | 2026-02-02 | GitHub token revoked | Old personal access token (`ghp_98jk...`) revoked via GitHub settings. Token was previously embedded in git remote URL. |
