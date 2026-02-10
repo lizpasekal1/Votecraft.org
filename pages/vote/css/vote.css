@@ -987,20 +987,26 @@ body {
 }
 
 .donate-amount-row .donate-amount-btn {
-    flex: 1;
+    flex: 0 0 auto;
 }
 
 .donate-amount-btn {
-    padding: 14px 12px;
+    width: 72px;
+    height: 72px;
     font-size: 1rem;
     font-family: inherit;
     font-weight: 700;
     background: #f3f4f6;
     border: 2px solid transparent;
-    border-radius: 8px;
+    border-radius: 50%;
     cursor: pointer;
-    text-align: left;
+    text-align: center;
     transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
 }
 
 .donate-amount-btn:hover {
@@ -1013,17 +1019,17 @@ body {
 }
 
 .donate-amount-btn.featured {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    width: 88px;
+    height: 88px;
+    gap: 0;
 }
 
 .donate-amount-value {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
 }
 
 .donate-amount-note {
-    font-size: 0.7rem;
+    font-size: 0.55rem;
     font-weight: 400;
     color: #6b7280;
 }
