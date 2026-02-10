@@ -200,6 +200,22 @@ class VoteApp {
             }
         });
 
+        // Donate frequency toggle
+        this.supportOverlay.querySelectorAll('.donate-freq-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.supportOverlay.querySelectorAll('.donate-freq-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        // Donate amount selection
+        this.supportOverlay.querySelectorAll('.donate-amount-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.supportOverlay.querySelectorAll('.donate-amount-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+            });
+        });
+
         this.viewAllSupportersBtn.addEventListener('click', () => this.openSidebarSupporters());
 
         // Top supporters widget click delegation
