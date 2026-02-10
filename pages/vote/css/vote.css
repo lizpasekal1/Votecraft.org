@@ -837,11 +837,20 @@ body {
     position: absolute;
     top: 6px;
     right: 12px;
-    background: none;
+    background: #000;
     border: none;
     color: #fff;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
+    font-weight: 700;
     cursor: pointer;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    padding: 0;
     opacity: 0.7;
     transition: opacity 0.2s;
     z-index: 1001;
@@ -852,7 +861,7 @@ body {
 }
 
 .support-overlay-header {
-    max-width: 800px;
+    max-width: 1100px;
     width: 100%;
     padding: 0 24px 2px;
     text-align: center;
@@ -870,12 +879,13 @@ body {
     color: #fff;
     margin: 0;
     line-height: 1.4;
+    white-space: nowrap;
 }
 
 .support-overlay-split {
     display: flex;
     gap: clamp(16px, 3vw, 40px);
-    max-width: 800px;
+    max-width: 1100px;
     width: 100%;
     padding: 8px 24px 16px;
     align-items: flex-start;
