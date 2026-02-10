@@ -1102,13 +1102,13 @@ body {
 .patron-callout {
     display: none;
     position: absolute;
-    bottom: calc(100% + 10px);
+    bottom: 100%;
     left: 0;
     background: #fff;
     color: #1e293b;
     font-size: 0.8rem;
     font-weight: 400;
-    padding: 14px 16px;
+    padding: 14px 16px 24px;
     border-radius: 10px;
     text-align: left;
     width: 240px;
@@ -1121,9 +1121,10 @@ body {
     content: '';
     position: absolute;
     top: 100%;
-    left: 24px;
-    border: 6px solid transparent;
-    border-top-color: #fff;
+    left: 0;
+    right: 0;
+    height: 10px;
+    background: transparent;
 }
 
 .patron-tooltip-trigger:hover .patron-callout {
