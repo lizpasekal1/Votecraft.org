@@ -849,12 +849,33 @@ body {
     opacity: 1;
 }
 
+.support-overlay-header {
+    max-width: 800px;
+    width: 100%;
+    padding: 30px 40px 0;
+    text-align: center;
+}
+
+.support-overlay-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 8px;
+}
+
+.support-overlay-tagline {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.75);
+    margin: 0;
+    line-height: 1.4;
+}
+
 .support-overlay-split {
     display: flex;
     gap: 40px;
     max-width: 800px;
     width: 100%;
-    padding: 40px;
+    padding: 20px 40px 40px;
     align-items: flex-start;
 }
 
