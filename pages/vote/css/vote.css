@@ -929,6 +929,14 @@ body {
     margin-bottom: 16px;
 }
 
+.donate-widget-desc {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-align: center;
+    margin: 0 0 14px;
+    line-height: 1.4;
+}
+
 .donate-freq-toggle {
     display: flex;
     border: 2px solid #e2e8f0;
