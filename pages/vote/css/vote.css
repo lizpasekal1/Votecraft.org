@@ -1704,6 +1704,16 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+.btn-donate.donate-active {
+    background: var(--left-bg);
+    color: #fff;
+}
+
+.btn-donate.donate-active:hover {
+    background: var(--left-bg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
 .btn-to-top {
     display: none;
 }
