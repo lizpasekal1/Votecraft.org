@@ -1112,10 +1112,19 @@ class VoteApp {
     }
 
     openSupportOverlay(btn) {
+        // If this button is already active, close the overlay
+        if (btn.classList.contains('donate-active')) {
+            this.closeSupportOverlay();
+            return;
+        }
+
         const card = btn.closest('.nonprofit-card');
         const index = parseInt(card.dataset.npIndex);
         const np = this.selectedIssue?.nonprofits?.[index];
         if (!np) return;
+
+        // Reset any previously active button
+        this.closeSupportOverlay();
 
         const logoEl = document.getElementById('support-overlay-logo');
         if (np.logo) {
@@ -1129,11 +1138,28 @@ class VoteApp {
         donateLink.href = np.donateUrl;
         donateLink.textContent = btn.textContent;
 
+        // Activate overlay and toggle button state
         this.supportOverlay.classList.add('active');
+        this._activeDonateBtn = btn;
+        this._activeDonateOriginalText = btn.textContent;
+        this._activeCard = card;
+        btn.classList.add('donate-active');
+        card.classList.add('np-card-active');
+        btn.textContent = 'Close Support';
     }
 
     closeSupportOverlay() {
         this.supportOverlay.classList.remove('active');
+        if (this._activeDonateBtn) {
+            this._activeDonateBtn.classList.remove('donate-active');
+            this._activeDonateBtn.textContent = this._activeDonateOriginalText;
+            this._activeDonateBtn = null;
+            this._activeDonateOriginalText = null;
+        }
+        if (this._activeCard) {
+            this._activeCard.classList.remove('np-card-active');
+            this._activeCard = null;
+        }
     }
 
     openLearnMore() {
