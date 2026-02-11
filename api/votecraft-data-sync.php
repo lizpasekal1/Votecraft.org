@@ -1760,6 +1760,151 @@ function votecraft_sync_admin_page() {
                 <?php endif; ?>
             </form>
 
+            <hr style="margin: 20px 0;">
+
+            <h4>📦 Bulk CSV Import <span style="font-weight: normal; color: #666; font-size: 0.9em;">(Open States bulk data — no API calls)</span></h4>
+            <p style="font-size: 0.9em; color: #666;">
+                Import bills &amp; sponsorships from <a href="https://open.pluralpolicy.com/data/session-csv/" target="_blank">Open States bulk CSV downloads</a>. Upload the CSV folder to this server first (e.g., via SFTP to <code>wp-content/uploads/votecraft-import/</code>).
+            </p>
+            <p style="font-size: 0.85em; color: #888; font-family: monospace;">
+                ABSPATH: <?php echo esc_html(ABSPATH); ?>
+            </p>
+            <div id="vc-bulk-import-form">
+                <p>
+                    <label><strong>CSV Folder Path:</strong></label><br>
+                    <input type="text" id="vc-bulk-csv-dir" style="width: 100%; font-family: monospace; font-size: 0.9em;"
+                           value="<?php echo esc_attr(ABSPATH . 'wp-content/uploads/votecraft-import/MA/194th/'); ?>">
+                </p>
+                <p style="display: flex; gap: 10px; align-items: center;">
+                    <label>State: <input type="text" id="vc-bulk-state" value="Massachusetts" style="width: 150px;"></label>
+                    <label>Session: <input type="text" id="vc-bulk-session" value="194th" style="width: 80px;"></label>
+                    <button type="button" id="vc-bulk-start" class="button button-primary" onclick="vcBulkImportStart()">
+                        📦 Run Bulk Import
+                    </button>
+                </p>
+                <p style="font-size: 0.85em; color: #666;">
+                    Expected files: <code>*_bills.csv</code>, <code>*_bill_sponsorships.csv</code>, <code>*_bill_abstracts.csv</code> (optional), <code>*_bill_actions.csv</code> (optional), <code>*_bill_sources.csv</code> (optional)
+                </p>
+            </div>
+            <!-- Progress area (hidden until import starts) -->
+            <div id="vc-bulk-progress" style="display:none; margin-top: 15px;">
+                <div style="background: #e0e0e0; border-radius: 4px; overflow: hidden; height: 28px; position: relative;">
+                    <div id="vc-bulk-bar" style="background: #0073aa; height: 100%; width: 0%; transition: width 0.3s;"></div>
+                    <span id="vc-bulk-bar-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 13px; font-weight: bold; color: #333;"></span>
+                </div>
+                <p id="vc-bulk-status" style="margin-top: 8px; font-size: 0.9em; color: #555;"></p>
+                <p id="vc-bulk-errors" style="color: #dc3545; font-size: 0.85em; display: none;"></p>
+            </div>
+            <script>
+            var vcBulkState = {};
+            function vcBulkImportStart() {
+                if (!confirm('Import all bills and sponsorships from this folder?')) return;
+                var dir = document.getElementById('vc-bulk-csv-dir').value;
+                var state = document.getElementById('vc-bulk-state').value;
+                var session = document.getElementById('vc-bulk-session').value;
+                document.getElementById('vc-bulk-start').disabled = true;
+                document.getElementById('vc-bulk-progress').style.display = 'block';
+                document.getElementById('vc-bulk-status').textContent = 'Initializing... scanning CSV files...';
+                document.getElementById('vc-bulk-bar').style.width = '0%';
+                document.getElementById('vc-bulk-bar-text').textContent = '';
+                document.getElementById('vc-bulk-errors').style.display = 'none';
+
+                var fd = new FormData();
+                fd.append('action', 'votecraft_bulk_import_init');
+                fd.append('_nonce', '<?php echo wp_create_nonce("votecraft_bulk_import"); ?>');
+                fd.append('csv_dir', dir);
+                fd.append('bulk_state', state);
+                fd.append('bulk_session', session);
+
+                fetch(ajaxurl, { method: 'POST', body: fd }).then(function(r){ return r.json(); }).then(function(resp) {
+                    if (!resp.success) {
+                        document.getElementById('vc-bulk-status').textContent = 'Error: ' + (resp.data || 'Unknown error');
+                        document.getElementById('vc-bulk-start').disabled = false;
+                        return;
+                    }
+                    vcBulkState = {
+                        dir: dir, state: state, session: session,
+                        bills_total: resp.data.bills_total,
+                        spons_total: resp.data.spons_total,
+                        lookups_file: resp.data.lookups_file,
+                        log_id: resp.data.log_id,
+                        bills_done: 0, spons_done: 0, all_errors: []
+                    };
+                    document.getElementById('vc-bulk-status').textContent =
+                        'Found ' + resp.data.bills_total + ' bills, ' + resp.data.spons_total + ' sponsorships. ' +
+                        'Lookups: ' + resp.data.abstracts_count + ' abstracts, ' + resp.data.actions_count + ' actions, ' + resp.data.sources_count + ' sources. Starting import...';
+                    vcBulkImportChunk('bills', 0);
+                }).catch(function(err) {
+                    document.getElementById('vc-bulk-status').textContent = 'Network error: ' + err.message;
+                    document.getElementById('vc-bulk-start').disabled = false;
+                });
+            }
+
+            function vcBulkImportChunk(phase, offset) {
+                var s = vcBulkState;
+                var total = (phase === 'bills') ? s.bills_total : s.spons_total;
+                var grandTotal = s.bills_total + s.spons_total;
+                var grandDone = s.bills_done + s.spons_done;
+                var pct = grandTotal > 0 ? Math.round((grandDone / grandTotal) * 100) : 0;
+                document.getElementById('vc-bulk-bar').style.width = pct + '%';
+                document.getElementById('vc-bulk-bar-text').textContent = pct + '%';
+                document.getElementById('vc-bulk-status').textContent =
+                    (phase === 'bills' ? '📋 Importing bills: ' : '🤝 Importing sponsorships: ') +
+                    offset + ' / ' + total + '  (overall: ' + grandDone + ' / ' + grandTotal + ')';
+
+                var fd = new FormData();
+                fd.append('action', 'votecraft_bulk_import_chunk');
+                fd.append('_nonce', '<?php echo wp_create_nonce("votecraft_bulk_import"); ?>');
+                fd.append('csv_dir', s.dir);
+                fd.append('bulk_state', s.state);
+                fd.append('bulk_session', s.session);
+                fd.append('phase', phase);
+                fd.append('offset', offset);
+                fd.append('lookups_file', s.lookups_file);
+                fd.append('log_id', s.log_id);
+
+                fetch(ajaxurl, { method: 'POST', body: fd }).then(function(r){ return r.json(); }).then(function(resp) {
+                    if (!resp.success) {
+                        document.getElementById('vc-bulk-status').textContent = 'Error: ' + (resp.data || 'Unknown');
+                        document.getElementById('vc-bulk-start').disabled = false;
+                        return;
+                    }
+                    var d = resp.data;
+                    if (d.errors && d.errors.length) { s.all_errors = s.all_errors.concat(d.errors); }
+
+                    if (phase === 'bills') {
+                        s.bills_done = d.processed;
+                        if (d.done) {
+                            // Bills done, start sponsorships
+                            vcBulkImportChunk('sponsorships', 0);
+                        } else {
+                            vcBulkImportChunk('bills', d.processed);
+                        }
+                    } else {
+                        s.spons_done = d.processed;
+                        if (d.done) {
+                            // All done!
+                            document.getElementById('vc-bulk-bar').style.width = '100%';
+                            document.getElementById('vc-bulk-bar').style.background = '#28a745';
+                            document.getElementById('vc-bulk-bar-text').textContent = '100%';
+                            document.getElementById('vc-bulk-status').innerHTML =
+                                '<strong style="color: #28a745;">✅ Import complete!</strong> Bills: ' + s.bills_done + '. Sponsorships: ' + s.spons_done + '.';
+                            document.getElementById('vc-bulk-start').disabled = false;
+                            if (s.all_errors.length) {
+                                document.getElementById('vc-bulk-errors').style.display = 'block';
+                                document.getElementById('vc-bulk-errors').textContent = 'Errors: ' + s.all_errors.join('; ');
+                            }
+                        } else {
+                            vcBulkImportChunk('sponsorships', d.processed);
+                        }
+                    }
+                }).catch(function(err) {
+                    document.getElementById('vc-bulk-status').textContent = 'Network error: ' + err.message + '. You can retry.';
+                    document.getElementById('vc-bulk-start').disabled = false;
+                });
+            }
+            </script>
+
             </div>
         </details>
 
@@ -4194,4 +4339,242 @@ function votecraft_get_bill_associations_api($request) {
 
 function votecraft_get_excluded_bills_api($request) {
     return new WP_REST_Response(votecraft_get_excluded_bills(), 200);
+}
+
+// =============================================================================
+// BULK CSV IMPORT — AJAX-based with batch SQL (fast, no timeout)
+// =============================================================================
+
+add_action('wp_ajax_votecraft_bulk_import_init', 'votecraft_bulk_import_init_ajax');
+add_action('wp_ajax_votecraft_bulk_import_chunk', 'votecraft_bulk_import_chunk_ajax');
+
+/**
+ * AJAX: Initialize import — count CSV rows, load lookup tables into transient
+ */
+function votecraft_bulk_import_init_ajax() {
+    check_ajax_referer('votecraft_bulk_import', '_nonce');
+    if (!current_user_can('manage_options')) { wp_send_json_error('Unauthorized'); }
+
+    $csv_dir = sanitize_text_field($_POST['csv_dir']);
+    $state = sanitize_text_field($_POST['bulk_state']);
+    $session = sanitize_text_field($_POST['bulk_session']);
+
+    if (empty($csv_dir) || !is_dir($csv_dir)) {
+        wp_send_json_error('Directory not found: ' . $csv_dir);
+    }
+
+    // Count bills
+    $bills_files = glob($csv_dir . '/*_bills.csv');
+    if (empty($bills_files)) { wp_send_json_error('No *_bills.csv found in ' . $csv_dir); }
+    $bills_count = max(0, count(file($bills_files[0])) - 1); // minus header
+
+    // Count sponsorships
+    $spons_files = glob($csv_dir . '/*_bill_sponsorships.csv');
+    $spons_count = 0;
+    if (!empty($spons_files)) { $spons_count = max(0, count(file($spons_files[0])) - 1); }
+
+    // Load lookup tables (abstracts, actions, sources) into a transient
+    $lookups = array('abstracts' => array(), 'latest_actions' => array(), 'sources' => array());
+
+    $abs_files = glob($csv_dir . '/*_bill_abstracts.csv');
+    if (!empty($abs_files)) {
+        $fh = fopen($abs_files[0], 'r');
+        $headers = fgetcsv($fh);
+        while (($row = fgetcsv($fh)) !== false) {
+            $r = array_combine($headers, $row);
+            $lookups['abstracts'][$r['bill_id']] = $r['abstract'];
+        }
+        fclose($fh);
+    }
+
+    $act_files = glob($csv_dir . '/*_bill_actions.csv');
+    if (!empty($act_files)) {
+        $fh = fopen($act_files[0], 'r');
+        $headers = fgetcsv($fh);
+        while (($row = fgetcsv($fh)) !== false) {
+            $r = array_combine($headers, $row);
+            $bid = $r['bill_id'];
+            if (!isset($lookups['latest_actions'][$bid]) || $r['date'] > $lookups['latest_actions'][$bid]['date']) {
+                $lookups['latest_actions'][$bid] = array('date' => $r['date'], 'description' => $r['description']);
+            }
+        }
+        fclose($fh);
+    }
+
+    $src_files = glob($csv_dir . '/*_bill_sources.csv');
+    if (!empty($src_files)) {
+        $fh = fopen($src_files[0], 'r');
+        $headers = fgetcsv($fh);
+        while (($row = fgetcsv($fh)) !== false) {
+            $r = array_combine($headers, $row);
+            if (!isset($lookups['sources'][$r['bill_id']])) {
+                $lookups['sources'][$r['bill_id']] = $r['url'];
+            }
+        }
+        fclose($fh);
+    }
+
+    // Store lookups in a temp file (transients have size limits)
+    $tmp_file = sys_get_temp_dir() . '/votecraft_bulk_lookups_' . md5($csv_dir) . '.json';
+    file_put_contents($tmp_file, json_encode($lookups));
+
+    // Log start
+    global $wpdb;
+    $log_table = $wpdb->prefix . 'votecraft_sync_log';
+    $wpdb->insert($log_table, array('sync_type' => 'bulk_csv_import', 'state' => $state, 'status' => 'running', 'records_synced' => 0, 'started_at' => gmdate('Y-m-d H:i:s')));
+
+    wp_send_json_success(array(
+        'bills_total' => $bills_count,
+        'spons_total' => $spons_count,
+        'lookups_file' => $tmp_file,
+        'log_id' => $wpdb->insert_id,
+        'abstracts_count' => count($lookups['abstracts']),
+        'actions_count' => count($lookups['latest_actions']),
+        'sources_count' => count($lookups['sources']),
+    ));
+}
+
+/**
+ * AJAX: Process one chunk of bills or sponsorships using batch INSERT
+ */
+function votecraft_bulk_import_chunk_ajax() {
+    check_ajax_referer('votecraft_bulk_import', '_nonce');
+    if (!current_user_can('manage_options')) { wp_send_json_error('Unauthorized'); }
+
+    @set_time_limit(120);
+    global $wpdb;
+
+    $csv_dir = sanitize_text_field($_POST['csv_dir']);
+    $state = sanitize_text_field($_POST['bulk_state']);
+    $session = sanitize_text_field($_POST['bulk_session']);
+    $phase = sanitize_text_field($_POST['phase']); // 'bills' or 'sponsorships'
+    $offset = intval($_POST['offset']);
+    $batch_size = 500;
+    $lookups_file = sanitize_text_field($_POST['lookups_file']);
+    $log_id = intval($_POST['log_id']);
+
+    if ($phase === 'bills') {
+        $bills_files = glob($csv_dir . '/*_bills.csv');
+        if (empty($bills_files)) { wp_send_json_error('No bills CSV'); }
+
+        // Load lookups
+        $lookups = json_decode(file_get_contents($lookups_file), true);
+        $abstracts = $lookups['abstracts'];
+        $latest_actions = $lookups['latest_actions'];
+        $sources = $lookups['sources'];
+
+        $fh = fopen($bills_files[0], 'r');
+        $headers = fgetcsv($fh);
+
+        // Skip to offset
+        for ($i = 0; $i < $offset; $i++) { if (fgetcsv($fh) === false) break; }
+
+        $bills_table = $wpdb->prefix . 'votecraft_bills';
+        $imported = 0;
+        $errors = array();
+        $values_list = array();
+        $placeholders_list = array();
+        $now = gmdate('Y-m-d H:i:s');
+
+        while ($imported < $batch_size && ($row = fgetcsv($fh)) !== false) {
+            if (count($row) !== count($headers)) { continue; }
+            $record = array_combine($headers, $row);
+            $bill_id = $record['id'];
+            $chamber = $record['organization_classification'];
+            $classification = str_replace("'", '', trim($record['classification'], "[]'\""));
+            $subjects_raw = isset($record['subject']) ? $record['subject'] : '[]';
+
+            $placeholders_list[] = '(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)';
+            $values_list[] = $bill_id;
+            $values_list[] = $record['identifier'];
+            $values_list[] = $record['title'];
+            $values_list[] = $state;
+            $values_list[] = $session;
+            $values_list[] = $chamber;
+            $values_list[] = $classification;
+            $values_list[] = $subjects_raw;
+            $values_list[] = isset($abstracts[$bill_id]) ? $abstracts[$bill_id] : '';
+            $values_list[] = isset($latest_actions[$bill_id]) ? $latest_actions[$bill_id]['date'] : '';
+            $values_list[] = isset($latest_actions[$bill_id]) ? $latest_actions[$bill_id]['description'] : '';
+            $values_list[] = isset($sources[$bill_id]) ? $sources[$bill_id] : '';
+            $values_list[] = json_encode($record);
+            $values_list[] = $now;
+            $imported++;
+        }
+        $done = feof($fh);
+        fclose($fh);
+
+        if (!empty($placeholders_list)) {
+            $sql = "INSERT INTO $bills_table (id, identifier, title, state, session, chamber, classification, subjects, abstract, latest_action_date, latest_action_description, openstates_url, raw_data, updated_at) VALUES "
+                . implode(', ', $placeholders_list)
+                . " ON DUPLICATE KEY UPDATE identifier=VALUES(identifier), title=VALUES(title), state=VALUES(state), session=VALUES(session), chamber=VALUES(chamber), classification=VALUES(classification), subjects=VALUES(subjects), abstract=VALUES(abstract), latest_action_date=VALUES(latest_action_date), latest_action_description=VALUES(latest_action_description), openstates_url=VALUES(openstates_url), raw_data=VALUES(raw_data), updated_at=VALUES(updated_at)";
+            $result = $wpdb->query($wpdb->prepare($sql, $values_list));
+            if ($result === false) { $errors[] = $wpdb->last_error; }
+        }
+
+        wp_send_json_success(array(
+            'phase' => 'bills',
+            'processed' => $offset + $imported,
+            'batch_imported' => $imported,
+            'done' => $done || $imported < $batch_size,
+            'errors' => $errors,
+        ));
+
+    } elseif ($phase === 'sponsorships') {
+        $spons_files = glob($csv_dir . '/*_bill_sponsorships.csv');
+        if (empty($spons_files)) { wp_send_json_error('No sponsorships CSV'); }
+
+        $fh = fopen($spons_files[0], 'r');
+        $headers = fgetcsv($fh);
+
+        for ($i = 0; $i < $offset; $i++) { if (fgetcsv($fh) === false) break; }
+
+        $spons_table = $wpdb->prefix . 'votecraft_sponsorships';
+        $imported = 0;
+        $errors = array();
+        $values_list = array();
+        $placeholders_list = array();
+
+        while ($imported < $batch_size && ($row = fgetcsv($fh)) !== false) {
+            if (count($row) !== count($headers)) { continue; }
+            $record = array_combine($headers, $row);
+            $sponsorship_type = (strtolower($record['primary']) === 'true') ? 'primary' : 'cosponsor';
+
+            $placeholders_list[] = '(%s, %s, %s, %s, %s)';
+            $values_list[] = $record['bill_id'];
+            $values_list[] = !empty($record['person_id']) ? $record['person_id'] : '';
+            $values_list[] = $record['name'];
+            $values_list[] = $sponsorship_type;
+            $values_list[] = $record['classification'];
+            $imported++;
+        }
+        $done = feof($fh);
+        fclose($fh);
+
+        if (!empty($placeholders_list)) {
+            $sql = "INSERT INTO $spons_table (bill_id, legislator_id, legislator_name, sponsorship_type, classification) VALUES "
+                . implode(', ', $placeholders_list);
+            $result = $wpdb->query($wpdb->prepare($sql, $values_list));
+            if ($result === false) { $errors[] = $wpdb->last_error; }
+        }
+
+        // If done with sponsorships, finalize the log
+        if ($done || $imported < $batch_size) {
+            $log_table = $wpdb->prefix . 'votecraft_sync_log';
+            $bills_count = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}votecraft_bills WHERE state = %s AND session = %s", $state, $session));
+            $spons_count_val = $wpdb->get_var("SELECT COUNT(*) FROM $spons_table WHERE bill_id LIKE 'ocd-bill/%'");
+            $summary = "Bulk import complete. Bills: $bills_count. Sponsorships: $spons_count_val.";
+            $wpdb->update($log_table, array('status' => 'success', 'records_synced' => intval($bills_count) + intval($spons_count_val), 'error_message' => $summary, 'completed_at' => gmdate('Y-m-d H:i:s')), array('id' => $log_id));
+            // Clean up temp file
+            if (file_exists($lookups_file)) { @unlink($lookups_file); }
+        }
+
+        wp_send_json_success(array(
+            'phase' => 'sponsorships',
+            'processed' => $offset + $imported,
+            'batch_imported' => $imported,
+            'done' => $done || $imported < $batch_size,
+            'errors' => $errors,
+        ));
+    }
 }

@@ -1376,13 +1376,41 @@ body {
 .issue-col:nth-child(2) {
 }
 
+.issue-col:nth-child(3) {
+    gap: 16px;
+}
+
+/* State bills panel (under the map) */
+.state-bills-panel {
+    background: #fff;
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    color: var(--text);
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.state-bills-panel .state-bills-title {
+    margin-top: 0;
+    flex-shrink: 0;
+}
+
+.state-bills-panel .alignment-bills {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
 .issue-map-card {
     border-radius: var(--radius);
     overflow: hidden;
     background: #f8f9fa;
     border: 1px solid rgba(255, 255, 255, 0.25);
-    flex: 1;
-    min-height: 0;
+    flex: 0 0 auto;
+    height: 250px;
     isolation: isolate;
 }
 
@@ -1476,66 +1504,78 @@ body {
     text-decoration: underline;
 }
 
-/* Top supporters widget (right half, below alignment card) */
+/* Sponsored bills in alignment card */
+.rep-sponsored-bills {
+    text-align: left;
+    font-size: 0.85rem;
+    color: var(--text);
+    margin-bottom: 8px;
+}
+
+.rep-sponsored-bills .bill-item {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.rep-sponsored-bills .bill-item:last-child {
+    border-bottom: none;
+}
+
+.rep-sponsored-bills .bill-item a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.rep-sponsored-bills .bill-item a:hover {
+    text-decoration: underline;
+}
+
+.sponsored-bills-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 4px 0 8px;
+    text-align: left;
+}
+
+/* State Related Bills title */
+.state-bills-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 4px 0 8px;
+    text-align: center;
+}
+
+/* Top supporters widget (now inside rep-alignment-card) */
 .top-supporters-widget {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 16px;
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+}
+
+.top-supporters-divider {
+    display: none;
 }
 
 .top-supporters-widget .rep-party {
-    color: #fff;
+    color: inherit;
 }
 
-/* Placeholder state: white card matching rep alignment card */
-.top-supporters-widget.placeholder {
-    background: #fff;
-    padding: 24px;
-    color: var(--text);
-}
-
-.top-supporters-widget.placeholder .top-supporters-title {
-    color: var(--primary);
-}
-
+/* Placeholder state (no longer a separate card — kept for compatibility) */
 .top-supporters-widget.placeholder .top-supporter-item {
-    background: var(--background-alt);
-}
-
-.top-supporters-widget.placeholder .top-supporter-photo {
-    background: var(--border);
-    color: var(--text-light);
-}
-
-.top-supporters-widget.placeholder .top-supporter-name {
-    color: var(--text);
-}
-
-.top-supporters-widget.placeholder .top-supporter-detail {
-    color: var(--text-light);
-}
-
-.top-supporters-widget.placeholder .btn-view-all-supporters {
-    background: var(--primary);
-    color: #fff;
-    border-color: var(--primary);
-}
-
-.top-supporters-widget.placeholder .btn-view-all-supporters:hover {
-    background: var(--primary-dark);
+    opacity: 0.5;
 }
 
 .top-supporters-title {
-    font-size: 1.3rem;
+    font-size: 0.95rem;
     font-weight: 700;
-    color: #fff;
-    margin-bottom: 12px;
+    color: var(--primary);
+    margin-top: 16px;
+    margin-bottom: 16px;
     text-align: center;
     letter-spacing: normal;
 }
@@ -1552,7 +1592,7 @@ body {
     align-items: center;
     gap: 10px;
     padding: 8px;
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--background-alt);
     border-radius: 8px;
 }
 
@@ -1562,13 +1602,14 @@ body {
     border-radius: 50%;
     overflow: hidden;
     flex-shrink: 0;
+    background: var(--border);
     background: rgba(255, 255, 255, 0.15);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.75rem;
     font-weight: 600;
-    color: #fff;
+    color: var(--text-light);
 }
 
 .top-supporter-photo img {
@@ -1585,7 +1626,7 @@ body {
 .top-supporter-name {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #fff;
+    color: var(--text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1593,7 +1634,7 @@ body {
 
 .top-supporter-detail {
     font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--text-light);
 }
 
 .top-supporter-count {
@@ -1614,16 +1655,16 @@ body {
     font-size: 0.85rem;
     font-family: inherit;
     font-weight: 600;
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--primary);
     color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--primary);
     border-radius: 24px;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .btn-view-all-supporters:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: var(--primary-dark);
 }
 
 /* Rep alignment card */
