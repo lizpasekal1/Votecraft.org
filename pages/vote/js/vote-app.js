@@ -233,6 +233,16 @@ class VoteApp {
         this.learnMoreClose.addEventListener('click', () => this.closeLearnMore());
         this.repWebsiteClose.addEventListener('click', () => this.closeRepWebsite());
 
+        // Bill links open in new tab (external sites block iframes)
+        document.addEventListener('click', (e) => {
+            const link = e.target.closest('.bill-link');
+            if (link) {
+                e.preventDefault();
+                const url = link.dataset.url || link.href;
+                if (url && url !== '#') window.open(url, '_blank', 'noopener');
+            }
+        });
+
         // Panel expand/collapse
         const expandLeftBtn = document.getElementById('expand-left-btn');
         const expandRightBtn = document.getElementById('expand-right-btn');
@@ -887,6 +897,7 @@ class VoteApp {
         // If issue detail is showing, load alignment and update map
         if (this.selectedIssue) {
             this.loadRepAlignment(legislator, this.selectedIssue);
+            this.loadTopSupporters(this.selectedIssue);
             this.showDistrictOnMap(legislator);
         }
     }
@@ -934,7 +945,9 @@ class VoteApp {
 
         // Clear bills section or show prompt
         if (!this.selectedIssue) {
-            this.repAlignmentBills.innerHTML = '<p class="alignment-prompt">Select an issue above to see bill alignment.</p>';
+            this.repAlignmentBills.innerHTML = '';
+            const sponsoredDiv = document.getElementById('rep-sponsored-bills');
+            if (sponsoredDiv) sponsoredDiv.innerHTML = '';
         }
     }
 
@@ -1068,7 +1081,9 @@ class VoteApp {
             this.repCardPhoto.innerHTML = '<div style="font-size:2rem;">?</div>';
             this.repCardName.textContent = 'Select a representative';
             this.repAlignmentScore.textContent = '';
-            this.repAlignmentBills.innerHTML = '<p class="alignment-prompt">Search for your location and select a representative to see how they align on this issue.</p>';
+            this.repAlignmentBills.innerHTML = '';
+            const sponsoredDiv = document.getElementById('rep-sponsored-bills');
+            if (sponsoredDiv) sponsoredDiv.innerHTML = '';
         }
 
         // Initialize / refresh the Leaflet map, then sync heights
@@ -1464,25 +1479,42 @@ class VoteApp {
             return this.billCache[cacheKey];
         }
 
-        const allBills = [];
-        const seenIds = new Set();
-
-        for (const keyword of issue.billKeywords) {
-            try {
-                const bills = await window.CivicAPI.getBillsBySubject(jurisdiction, keyword, 10);
-                for (const bill of bills) {
-                    if (!seenIds.has(bill.id)) {
-                        seenIds.add(bill.id);
-                        allBills.push(bill);
-                    }
-                }
-            } catch (err) {
-                console.error(`Error fetching bills for keyword "${keyword}":`, err);
-            }
+        // Store the promise immediately so concurrent callers share it
+        if (!this._billCachePromises) this._billCachePromises = {};
+        if (this._billCachePromises[cacheKey]) {
+            return this._billCachePromises[cacheKey];
         }
 
-        this.billCache[cacheKey] = allBills;
-        return allBills;
+        const fetchPromise = (async () => {
+            // Fetch all keywords in parallel
+            const results = await Promise.allSettled(
+                issue.billKeywords.map(keyword =>
+                    window.CivicAPI.getBillsBySubject(jurisdiction, keyword, 10)
+                )
+            );
+
+            const allBills = [];
+            const seenIds = new Set();
+            for (let i = 0; i < results.length; i++) {
+                if (results[i].status === 'fulfilled') {
+                    for (const bill of results[i].value) {
+                        if (!seenIds.has(bill.id)) {
+                            seenIds.add(bill.id);
+                            allBills.push(bill);
+                        }
+                    }
+                } else {
+                    console.error(`Error fetching bills for keyword "${issue.billKeywords[i]}":`, results[i].reason);
+                }
+            }
+
+            this.billCache[cacheKey] = allBills;
+            delete this._billCachePromises[cacheKey];
+            return allBills;
+        })();
+
+        this._billCachePromises[cacheKey] = fetchPromise;
+        return fetchPromise;
     }
 
     renderStanceRepItem(legislator, detail, isOpposed) {
@@ -1563,12 +1595,17 @@ class VoteApp {
 
         supporters.sort((a, b) => b.count - a.count);
 
-        if (supporters.length === 0) {
+        // Exclude the currently selected rep so they don't appear twice
+        const filtered = this.selectedRep
+            ? supporters.filter(s => s.legislator !== this.selectedRep && s.legislator.name !== this.selectedRep.name)
+            : supporters;
+
+        if (filtered.length === 0) {
             this.topSupportersList.innerHTML = '<p class="alignment-prompt">No bill sponsors found among current legislators.</p>';
             return;
         }
 
-        const top2 = supporters.slice(0, 2);
+        const top2 = filtered.slice(0, 2);
         this.topSupportersList.innerHTML = top2.map(s => {
             const leg = s.legislator;
             const photoHtml = leg.photoUrl
@@ -1640,6 +1677,7 @@ class VoteApp {
             });
         }
 
+        this.repAlignmentScore.style.display = '';
         this.repAlignmentScore.textContent = 'Loading alignment...';
         this.repAlignmentBills.innerHTML = '<div class="alignment-loading"><div class="mini-loader"></div>Searching bills...</div>';
 
@@ -1649,7 +1687,7 @@ class VoteApp {
 
         if (!jurisdiction) {
             this.repAlignmentScore.textContent = 'Unable to determine jurisdiction';
-            this.repAlignmentBills.innerHTML = '<p class="alignment-prompt">Could not determine the legislative jurisdiction for this representative.</p>';
+            this.repAlignmentBills.innerHTML = '';
             return;
         }
 
@@ -1768,27 +1806,53 @@ class VoteApp {
     }
 
     renderRepAlignmentCard(rep, alignment) {
+        const sponsoredDiv = document.getElementById('rep-sponsored-bills');
+
+        // Add bill count badge to subtitle
+        const subtitle = this.repCardName.querySelector('.rep-card-subtitle');
+        if (subtitle) {
+            const existing = subtitle.querySelector('.bill-count-badge');
+            if (existing) existing.remove();
+            if (alignment.sponsoredCount > 0) {
+                const badge = document.createElement('span');
+                badge.className = 'bill-count-badge';
+                badge.style.cssText = 'color: #22c55e; font-weight: 600;';
+                badge.innerHTML = ` &middot; ${alignment.sponsoredCount} bill${alignment.sponsoredCount === 1 ? '' : 's'}`;
+                subtitle.appendChild(badge);
+            }
+        }
+
         if (alignment.totalBills === 0) {
             this.repAlignmentScore.textContent = 'No related bills found';
-            this.repAlignmentBills.innerHTML = '<p class="alignment-prompt">No bills matching this issue were found in the current legislative session.</p>';
+            this.repAlignmentBills.innerHTML = '';
+            if (sponsoredDiv) sponsoredDiv.innerHTML = '';
             return;
         }
 
-        // Show sponsorship count if any, otherwise just the bill count
-        if (alignment.sponsoredCount > 0) {
-            this.repAlignmentScore.textContent = `Sponsored ${alignment.sponsoredCount} of ${alignment.totalBills} related bill${alignment.totalBills === 1 ? '' : 's'}`;
+        // Show support status in the alignment card
+        const sponsoredBills = alignment.matchedBills;
+
+        if (sponsoredBills.length === 0) {
+            this.repAlignmentScore.textContent = 'They do not have supported bills for this issue';
+            this.repAlignmentScore.style.display = '';
+            this.repAlignmentScore.style.color = '#ef4444';
         } else {
-            this.repAlignmentScore.textContent = `${alignment.totalBills} related bill${alignment.totalBills === 1 ? '' : 's'} found`;
+            this.repAlignmentScore.textContent = 'They show support for this issue';
+            this.repAlignmentScore.style.display = '';
+            this.repAlignmentScore.style.color = '#22c55e';
         }
 
-        // Show sponsored bills first, then other related bills
-        const sponsoredBills = alignment.matchedBills.slice(0, 5);
-        const otherBills = alignment.allBills
-            ? alignment.allBills.filter(b => !alignment.matchedBills.includes(b)).slice(0, 5 - sponsoredBills.length)
-            : [];
-        const billsToShow = [...sponsoredBills, ...otherBills].slice(0, 5);
+        if (sponsoredDiv) sponsoredDiv.innerHTML = '';
 
-        const billsHtml = billsToShow.map(bill => {
+        // All related bills go under the map — sponsored bills first
+        const allBills = (alignment.allBills || []).slice();
+        allBills.sort((a, b) => {
+            const aSponsored = alignment.matchedBills.includes(a) ? 0 : 1;
+            const bSponsored = alignment.matchedBills.includes(b) ? 0 : 1;
+            return aSponsored - bSponsored;
+        });
+        const allBillsToShow = allBills;
+        const allBillsHtml = allBillsToShow.map(bill => {
             const title = bill.title || bill.identifier || 'Untitled bill';
             const identifier = bill.identifier || '';
             const url = bill.openstates_url || '#';
@@ -1796,13 +1860,12 @@ class VoteApp {
             const sponsorBadge = isSponsored ? ' <span style="color: #22c55e; font-weight: 600;">✓ Sponsor</span>' : '';
             return `
                 <div class="bill-item">
-                    <a href="${url}" target="_blank" rel="noopener">${identifier}</a>${sponsorBadge}
+                    <a href="${url}" class="bill-link" data-url="${url}">${identifier}</a>${sponsorBadge}
                     <div style="font-size:0.8rem; color: var(--text-light); margin-top: 2px;">${title.length > 80 ? title.substring(0, 80) + '...' : title}</div>
                 </div>
             `;
         }).join('');
-
-        this.repAlignmentBills.innerHTML = billsHtml;
+        this.repAlignmentBills.innerHTML = allBillsHtml;
     }
 
     // ========== UTILITY ==========

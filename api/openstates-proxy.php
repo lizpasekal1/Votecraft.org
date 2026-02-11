@@ -357,27 +357,49 @@ function votecraft_try_local_db($endpoint, $params) {
             }
             $bills = array_slice($validated_bills, 0, 20);
 
+            // Batch-fetch all sponsorships in one query
+            $bill_ids = array_map(function($b) { return $b->id; }, $bills);
+            $sponsors_by_bill = array();
+            if (!empty($bill_ids)) {
+                $placeholders = implode(',', array_fill(0, count($bill_ids), '%s'));
+                $sponsor_query = $wpdb->prepare(
+                    "SELECT * FROM $sponsorships_table WHERE bill_id IN ($placeholders)",
+                    ...$bill_ids
+                );
+                $all_sponsors = $wpdb->get_results($sponsor_query);
+                foreach ($all_sponsors as $s) {
+                    $sponsors_by_bill[$s->bill_id][] = array(
+                        'name' => $s->legislator_name,
+                        'primary' => $s->sponsorship_type === 'primary',
+                        'classification' => $s->classification,
+                        'person' => $s->legislator_id ? array('id' => $s->legislator_id) : null
+                    );
+                }
+            }
+
             // Format results and attach sponsorships
             $results = array();
             foreach ($bills as $bill) {
                 $raw = json_decode($bill->raw_data, true);
-                if ($raw) {
-                    // Fetch sponsorships from local DB
-                    $sponsors = $wpdb->get_results($wpdb->prepare(
-                        "SELECT * FROM $sponsorships_table WHERE bill_id = %s",
-                        $bill->id
-                    ));
-                    $raw['sponsorships'] = array();
-                    foreach ($sponsors as $s) {
-                        $raw['sponsorships'][] = array(
-                            'name' => $s->legislator_name,
-                            'primary' => $s->sponsorship_type === 'primary',
-                            'classification' => $s->classification,
-                            'person' => $s->legislator_id ? array('id' => $s->legislator_id) : null
-                        );
-                    }
-                    $results[] = $raw;
+                if (!$raw) {
+                    // Build response from individual columns (bulk CSV imports may not have raw_data)
+                    $raw = array(
+                        'id' => $bill->id,
+                        'identifier' => $bill->identifier,
+                        'title' => $bill->title,
+                        'classification' => array($bill->classification),
+                        'subject' => json_decode($bill->subjects, true) ?: array(),
+                        'abstract' => $bill->abstract ?: '',
+                        'latest_action_date' => $bill->latest_action_date,
+                        'latest_action_description' => $bill->latest_action_description,
+                        'openstates_url' => $bill->openstates_url ?: '',
+                        'session' => $bill->session,
+                        'jurisdiction' => array('name' => $bill->state),
+                        'from_organization' => array('classification' => $bill->chamber),
+                    );
                 }
+                $raw['sponsorships'] = isset($sponsors_by_bill[$bill->id]) ? $sponsors_by_bill[$bill->id] : array();
+                $results[] = $raw;
             }
 
             if (!empty($results)) {
