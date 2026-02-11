@@ -1711,25 +1711,23 @@ class VoteApp {
                 : [jurisdiction];
             console.log(`Fetching bills from local DB for ${rep.name} (${jurisdictions.join(', ')})...`);
 
+            // Fire all keyword+jurisdiction fetches in parallel (local DB, no rate limit needed)
+            const fetchPromises = [];
             for (const billJurisdiction of jurisdictions) {
-                for (let i = 0; i < issue.billKeywords.length; i++) {
-                    const keyword = issue.billKeywords[i];
-                    // Delay between calls to avoid rate limiting (proxy may hit live API as fallback)
-                    if (i > 0) await new Promise(r => setTimeout(r, 500));
-                    try {
-                        console.log(`Fetching bills for "${keyword}" in ${billJurisdiction}...`);
-                        const bills = await window.CivicAPI.getBillsBySubject(
-                            billJurisdiction, keyword, 10
-                        );
-                        console.log(`Got ${bills.length} bills for "${keyword}"`);
-                        for (const bill of bills) {
-                            if (!seenIds.has(bill.id)) {
-                                seenIds.add(bill.id);
-                                allBills.push(bill);
-                            }
-                        }
-                    } catch (err) {
-                        console.error(`Error fetching bills for keyword "${keyword}":`, err);
+                for (const keyword of issue.billKeywords) {
+                    fetchPromises.push(
+                        window.CivicAPI.getBillsBySubject(billJurisdiction, keyword, 10)
+                            .then(bills => ({ bills, keyword, jurisdiction: billJurisdiction }))
+                            .catch(err => { console.error(`Error fetching "${keyword}" in ${billJurisdiction}:`, err); return { bills: [], keyword, jurisdiction: billJurisdiction }; })
+                    );
+                }
+            }
+            const results = await Promise.all(fetchPromises);
+            for (const { bills } of results) {
+                for (const bill of bills) {
+                    if (!seenIds.has(bill.id)) {
+                        seenIds.add(bill.id);
+                        allBills.push(bill);
                     }
                 }
             }
