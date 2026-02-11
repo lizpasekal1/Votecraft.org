@@ -1682,8 +1682,10 @@ class VoteApp {
         this.repAlignmentBills.innerHTML = '<div class="alignment-loading"><div class="mini-loader"></div>Searching bills...</div>';
 
         // Use the state jurisdiction for bill searches
-        // Congress reps use their state's bills as well
-        const jurisdiction = rep.jurisdiction || this.currentJurisdiction;
+        // Congress reps have jurisdiction="United States" — use currentJurisdiction (the state) instead
+        const jurisdiction = (rep.level === 'congress')
+            ? this.currentJurisdiction
+            : (rep.jurisdiction || this.currentJurisdiction);
 
         if (!jurisdiction) {
             this.repAlignmentScore.textContent = 'Unable to determine jurisdiction';
