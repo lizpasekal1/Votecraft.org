@@ -258,23 +258,51 @@ async function loadKeywordsFromAPI() {
 }
 
 /**
+ * Static manual bill associations for federal legislators
+ * Used until federal bills are synced into the database
+ */
+const STATIC_BILL_ASSOCIATIONS = {
+    'Elizabeth Warren': {
+        'rcv': [
+            { id: 'S.3425', title: 'Ranked Choice Voting Act (119th Congress)', url: 'https://www.congress.gov/bill/119th-congress/senate-bill/3425' }
+        ]
+    },
+    'Edward J. Markey': {
+        'rcv': [
+            { id: 'S.3425', title: 'Ranked Choice Voting Act (119th Congress)', url: 'https://www.congress.gov/bill/119th-congress/senate-bill/3425' }
+        ]
+    }
+};
+
+/**
  * Fetch manual bill-legislator associations from WordPress admin
  * Returns an object mapping legislator names to arrays of bills they should show for each issue
+ * Merges with static associations (API overrides static for same legislator+issue)
  */
 async function loadManualAssociations() {
+    // Start with static associations
+    const merged = JSON.parse(JSON.stringify(STATIC_BILL_ASSOCIATIONS));
     try {
         const response = await fetch('https://votecraft.org/wp-json/votecraft/v1/bill-associations');
         if (!response.ok) {
-            return {};
+            window.MANUAL_BILL_ASSOCIATIONS = merged;
+            return merged;
         }
         const associations = await response.json();
-        window.MANUAL_BILL_ASSOCIATIONS = associations;
-        console.log('Loaded manual bill associations:', Object.keys(associations).length, 'legislators');
-        return associations;
+        // Merge API associations into static (API wins on conflicts)
+        for (const [name, issues] of Object.entries(associations)) {
+            if (!merged[name]) merged[name] = {};
+            for (const [issueId, bills] of Object.entries(issues)) {
+                merged[name][issueId] = bills;
+            }
+        }
+        window.MANUAL_BILL_ASSOCIATIONS = merged;
+        console.log('Loaded manual bill associations:', Object.keys(merged).length, 'legislators');
+        return merged;
     } catch (error) {
-        console.log('Could not load manual bill associations:', error.message);
-        window.MANUAL_BILL_ASSOCIATIONS = {};
-        return {};
+        console.log('Could not load manual bill associations, using static:', error.message);
+        window.MANUAL_BILL_ASSOCIATIONS = merged;
+        return merged;
     }
 }
 
