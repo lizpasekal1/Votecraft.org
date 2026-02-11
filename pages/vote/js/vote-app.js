@@ -1702,28 +1702,33 @@ class VoteApp {
             const seenIds = new Set();
 
             // Query local DB for bills by keyword
-            // For Congress members, search federal bills; for state legislators, search state bills
-            const billJurisdiction = (rep.level === 'congress') ? 'Federal' : jurisdiction;
-            console.log(`Fetching bills from local DB for ${rep.name} (${billJurisdiction})...`);
+            // For Congress members, search BOTH federal and state bills
+            // For state legislators, search only state bills
+            const jurisdictions = (rep.level === 'congress')
+                ? ['Federal', jurisdiction]
+                : [jurisdiction];
+            console.log(`Fetching bills from local DB for ${rep.name} (${jurisdictions.join(', ')})...`);
 
-            for (let i = 0; i < issue.billKeywords.length; i++) {
-                const keyword = issue.billKeywords[i];
-                // Delay between calls to avoid rate limiting (proxy may hit live API as fallback)
-                if (i > 0) await new Promise(r => setTimeout(r, 500));
-                try {
-                    console.log(`Fetching bills for "${keyword}" in ${billJurisdiction}...`);
-                    const bills = await window.CivicAPI.getBillsBySubject(
-                        billJurisdiction, keyword, 10
-                    );
-                    console.log(`Got ${bills.length} bills for "${keyword}"`);
-                    for (const bill of bills) {
-                        if (!seenIds.has(bill.id)) {
-                            seenIds.add(bill.id);
-                            allBills.push(bill);
+            for (const billJurisdiction of jurisdictions) {
+                for (let i = 0; i < issue.billKeywords.length; i++) {
+                    const keyword = issue.billKeywords[i];
+                    // Delay between calls to avoid rate limiting (proxy may hit live API as fallback)
+                    if (i > 0) await new Promise(r => setTimeout(r, 500));
+                    try {
+                        console.log(`Fetching bills for "${keyword}" in ${billJurisdiction}...`);
+                        const bills = await window.CivicAPI.getBillsBySubject(
+                            billJurisdiction, keyword, 10
+                        );
+                        console.log(`Got ${bills.length} bills for "${keyword}"`);
+                        for (const bill of bills) {
+                            if (!seenIds.has(bill.id)) {
+                                seenIds.add(bill.id);
+                                allBills.push(bill);
+                            }
                         }
+                    } catch (err) {
+                        console.error(`Error fetching bills for keyword "${keyword}":`, err);
                     }
-                } catch (err) {
-                    console.error(`Error fetching bills for keyword "${keyword}":`, err);
                 }
             }
 
