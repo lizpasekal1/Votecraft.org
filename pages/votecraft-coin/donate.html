@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support VoteCraft — Keep Civic Tools Free</title>
+    <meta name="description" content="Support VoteCraft with a donation. Every dollar keeps civic tools free, independent, and accessible to all.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/vc-coin.css">
+    <style>
+        /* ====== DONATE PAGE — additional styles ====== */
+
+        .donate-hero {
+            min-height: 60vh;
+            padding-top: 80px;
+        }
+
+        .donate-hero .hero-subtitle {
+            max-width: 720px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* "What your support funds" cards */
+        .funds-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        .funds-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px 24px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+        }
+
+        .funds-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(37, 99, 235, 0.3);
+            box-shadow: var(--glow-blue);
+        }
+
+        .funds-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 16px;
+        }
+
+        .funds-icon.icon-blue { color: var(--primary); }
+        .funds-icon.icon-teal { color: var(--teal); }
+        .funds-icon.icon-orange { color: var(--orange); }
+
+        .funds-card h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 12px;
+        }
+
+        .funds-card p {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            line-height: 1.6;
+        }
+
+        /* Donation tiers */
+        .tiers-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto 32px;
+        }
+
+        .tier-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: var(--radius);
+            padding: 28px 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 1px 2px 8px rgba(0, 0, 0, 0.06);
+            transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .tier-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 2px 4px 16px rgba(0, 0, 0, 0.1);
+            border-color: #d1d5db;
+        }
+
+        .tier-card.tier-featured {
+            border-color: var(--teal);
+            box-shadow: 0 4px 16px rgba(20, 204, 176, 0.15);
+        }
+
+        .tier-card.tier-featured::before {
+            content: 'Most Popular';
+            position: absolute;
+            top: 12px;
+            right: -28px;
+            background: var(--teal);
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 4px 36px;
+            transform: rotate(45deg);
+        }
+
+        .tier-amount {
+            font-size: 2.4rem;
+            font-weight: 700;
+            color: var(--teal);
+            margin-bottom: 4px;
+        }
+
+        .tier-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 12px;
+        }
+
+        .tier-reward {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: var(--radius-pill);
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .tier-reward-vc {
+            background: rgba(20, 204, 176, 0.1);
+            color: var(--teal);
+            border: 1px solid rgba(20, 204, 176, 0.25);
+        }
+
+        .tier-reward-badge {
+            background: rgba(243, 43, 68, 0.1);
+            color: var(--orange);
+            border: 1px solid rgba(243, 43, 68, 0.25);
+            margin-left: 6px;
+        }
+
+        .tier-desc {
+            font-size: 0.85rem;
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .tier-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 32px;
+            background: var(--teal);
+            color: #fff;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: inherit;
+            border: none;
+            border-radius: 9999px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+        }
+
+        .tier-btn:hover {
+            background: #10b89a;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(20, 204, 176, 0.3);
+        }
+
+        /* Custom amount card — spans full width */
+        .tier-card-custom {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 24px;
+            flex-wrap: wrap;
+        }
+
+        .tier-card-custom .tier-name {
+            margin-bottom: 0;
+            white-space: nowrap;
+        }
+
+        .custom-input-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .custom-dollar {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--teal);
+        }
+
+        .custom-amount-input {
+            width: 100px;
+            padding: 10px 14px;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: var(--radius);
+            color: #1a1a2e;
+            font-family: inherit;
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .custom-amount-input::placeholder {
+            color: #999;
+            font-weight: 400;
+        }
+
+        .custom-amount-input:focus {
+            border-color: var(--teal);
+        }
+
+        /* Coming soon note */
+        .donate-note {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #999;
+            max-width: 480px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .donate-note a {
+            color: var(--teal);
+            text-decoration: underline;
+        }
+
+        /* VC reward explainer */
+        .vc-explainer {
+            min-height: auto;
+            padding: 56px 24px;
+        }
+
+        .vc-explainer-box {
+            max-width: 640px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: var(--radius);
+            padding: 32px;
+            text-align: center;
+            box-shadow: 1px 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .vc-explainer-box h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 12px;
+        }
+
+        .vc-explainer-box p {
+            font-size: 0.9rem;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .vc-explainer-box p:last-of-type {
+            margin-bottom: 0;
+        }
+
+        .vc-explainer-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--teal);
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            margin-top: 16px;
+            transition: opacity 0.2s;
+        }
+
+        .vc-explainer-link:hover {
+            opacity: 0.8;
+        }
+
+        /* CTA footer tweaks */
+        .donate-cta {
+            min-height: 40vh;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .funds-cards {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .tiers-grid {
+                grid-template-columns: 1fr;
+            }
+            .tier-card-custom {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .tier-amount {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ====== HERO ====== -->
+    <section class="section hero-section donate-hero" id="hero">
+        <div class="particles" id="particles"></div>
+        <div class="hero-content">
+            <div class="coin-container">
+                <div class="coin">
+                    <div class="coin-face coin-front">
+                        <span class="coin-text">VC</span>
+                    </div>
+                    <div class="coin-face coin-back">
+                        <img src="https://votecraft.org/wp-content/uploads/2026/02/votecraft_icon_white.png" alt="VC" style="width: 60%; height: 60%; object-fit: contain;">
+                    </div>
+                </div>
+            </div>
+            <h1 class="hero-title">When you get VC Coin</h1>
+            <p class="hero-subtitle">When you get VC Coin you are also helping us keep our civic demos and research tools free, independent, and accessible to all. No data selling. Just people who care.</p>
+            <div style="margin-top: 28px; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+                <a href="#tiers" class="btn-primary" style="font-size: 1rem;">Support Now</a>
+                <a href="index.html" class="btn-secondary" style="font-size: 1rem;">Get VC Coin</a>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <span>See how your support helps</span>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5v14M5 12l7 7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- ====== DONATION TIERS ====== -->
+    <section class="section section-light" id="tiers">
+        <div class="section-inner">
+            <h2 class="section-title animate-in">Choose your level of support</h2>
+            <p class="section-subtitle animate-in">Every donation earns VoteCraft Coin &mdash; use it in the Emporium</p>
+            <div class="tiers-grid">
+                <div class="tier-card animate-in" data-delay="0">
+                    <div class="tier-amount">$12.30</div>
+                    <div class="tier-name">Civic Starter</div>
+                    <div>
+                        <span class="tier-reward tier-reward-vc">+12 VC</span>
+                    </div>
+                    <p class="tier-desc">Cover a month of API calls. A small act that keeps the data flowing.</p>
+                    <a href="#" class="tier-btn" data-amount="12.30">Donate $12.30</a>
+                </div>
+                <div class="tier-card tier-featured animate-in" data-delay="1">
+                    <div class="tier-amount">$25</div>
+                    <div class="tier-name">Community Builder</div>
+                    <div>
+                        <span class="tier-reward tier-reward-vc">+25 VC</span>
+                    </div>
+                    <p class="tier-desc">Fund a week of full-stack hosting. You're keeping the lights on.</p>
+                    <a href="#" class="tier-btn" data-amount="25">Donate $25</a>
+                </div>
+                <div class="tier-card animate-in" data-delay="2">
+                    <div class="tier-amount">$50</div>
+                    <div class="tier-name">Reform Champion</div>
+                    <div>
+                        <span class="tier-reward tier-reward-vc">+50 VC</span>
+                        <span class="tier-reward tier-reward-badge">Patron Badge</span>
+                    </div>
+                    <p class="tier-desc">Cover a month of hosting and earn your Patron Badge &mdash; displayed on the issues you support.</p>
+                    <a href="#" class="tier-btn" data-amount="50">Donate $50</a>
+                </div>
+                <div class="tier-card animate-in" data-delay="3">
+                    <div class="tier-amount">$100</div>
+                    <div class="tier-name">Democracy Defender</div>
+                    <div>
+                        <span class="tier-reward tier-reward-vc">+100 VC</span>
+                        <span class="tier-reward tier-reward-badge">Patron Badge</span>
+                    </div>
+                    <p class="tier-desc">Fund multiple months of operation. You're making democracy tools possible for everyone.</p>
+                    <a href="#" class="tier-btn" data-amount="100">Donate $100</a>
+                </div>
+                <div class="tier-card tier-card-custom animate-in" data-delay="4">
+                    <div class="tier-name">Choose your own amount</div>
+                    <div class="custom-input-wrap">
+                        <span class="custom-dollar">$</span>
+                        <input type="text" class="custom-amount-input" id="custom-amount" placeholder="0" inputmode="decimal">
+                    </div>
+                    <a href="#" class="tier-btn" id="custom-donate-btn" data-amount="custom">Donate</a>
+                </div>
+            </div>
+            <p class="donate-note animate-in">Payment processing coming soon. For now, reach out to <a href="mailto:support@votecraft.org">support@votecraft.org</a> to donate directly. Safe, secure, and guaranteed &mdash; we will never sell your data.</p>
+        </div>
+    </section>
+
+    <!-- ====== WHAT YOUR SUPPORT FUNDS ====== -->
+    <section class="section" id="funds" style="min-height: auto; padding: 64px 24px;">
+        <div class="section-inner">
+            <h2 class="section-title animate-in">Where your money goes</h2>
+            <p class="section-subtitle animate-in">100% of donations go directly to keeping VoteCraft running</p>
+            <div class="funds-cards">
+                <div class="funds-card animate-in" data-delay="0">
+                    <div class="funds-icon icon-blue">
+                        <svg viewBox="0 0 48 48" fill="none">
+                            <rect x="6" y="14" width="36" height="24" rx="3" stroke="currentColor" stroke-width="2"/>
+                            <path d="M6 20h36" stroke="currentColor" stroke-width="2"/>
+                            <circle cx="24" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                            <path d="M16 10h-6a3 3 0 0 0-3 3v1M38 10h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3>Hosting &amp; Infrastructure</h3>
+                    <p>Servers, domains, SSL certificates, and database hosting that keep VoteCraft online 24/7.</p>
+                </div>
+                <div class="funds-card animate-in" data-delay="1">
+                    <div class="funds-icon icon-teal">
+                        <svg viewBox="0 0 48 48" fill="none">
+                            <path d="M8 12l16-6 16 6v4l-16 6-16-6v-4z" stroke="currentColor" stroke-width="2"/>
+                            <path d="M12 20v10c0 4 5.4 8 12 8s12-4 12-8V20" stroke="currentColor" stroke-width="2"/>
+                            <path d="M24 18v20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3>API &amp; Data Access</h3>
+                    <p>OpenStates and Congress.gov API access that powers real-time legislative tracking for every state.</p>
+                </div>
+                <div class="funds-card animate-in" data-delay="2">
+                    <div class="funds-icon icon-orange">
+                        <svg viewBox="0 0 48 48" fill="none">
+                            <path d="M14 8h20v32H14z" stroke="currentColor" stroke-width="2" fill="none" rx="2"/>
+                            <path d="M20 16h8M20 22h8M20 28h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <circle cx="36" cy="36" r="8" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <path d="M36 32v4l2.5 2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3>Development &amp; Features</h3>
+                    <p>Building new tools, fixing bugs, and expanding coverage so VoteCraft keeps getting better.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== VC COIN EXPLAINER ====== -->
+    <section class="section section-light vc-explainer" id="vc-info">
+        <div class="section-inner">
+            <div class="vc-explainer-box animate-in">
+                <h3>What is VoteCraft Coin?</h3>
+                <p>VC is an altruism-based currency earned through civic action &mdash; donating, learning, volunteering. It has no cash value and can never be traded for real money. Instead, you spend it in the VoteCraft Emporium on civic guides, art packs, games, and more.</p>
+                <p>When you donate to VoteCraft, you earn VC as a thank-you. It's our way of recognizing your contribution to keeping democracy tools alive.</p>
+                <a href="index.html" class="vc-explainer-link">Learn more about VoteCraft Coin &rarr;</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== CTA FOOTER ====== -->
+    <section class="section cta-section donate-cta" id="cta">
+        <div class="section-inner">
+            <div class="cta-coin">
+                <div class="coin coin-small">
+                    <div class="coin-face coin-front">
+                        <span class="coin-text">VC</span>
+                    </div>
+                    <div class="coin-face coin-back">
+                        <img src="https://votecraft.org/wp-content/uploads/2026/02/votecraft_icon_white.png" alt="VC" style="width: 60%; height: 60%; object-fit: contain;">
+                    </div>
+                </div>
+            </div>
+            <h2 class="cta-title animate-in">Every dollar keeps democracy tools free</h2>
+            <p class="cta-subtitle animate-in">No investors. No ads. Just people who care about civic engagement.</p>
+            <div class="cta-buttons animate-in">
+                <a href="../vote/vote.html" class="btn-primary">Explore Issues</a>
+                <a href="index.html" class="btn-secondary">Learn about VC Coin</a>
+            </div>
+        </div>
+    </section>
+
+    <script>
+    (function () {
+        'use strict';
+
+        // ====== SCROLL ANIMATIONS ======
+        const animateObserver = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        const delay = parseInt(entry.target.dataset.delay || '0', 10);
+                        setTimeout(() => {
+                            entry.target.classList.add('visible');
+                        }, delay * 150);
+                        animateObserver.unobserve(entry.target);
+                    }
+                });
+            },
+            { threshold: 0.15 }
+        );
+
+        document.querySelectorAll('.animate-in').forEach((el) => {
+            animateObserver.observe(el);
+        });
+
+        // ====== HERO PARTICLES ======
+        function createHeroParticles() {
+            const container = document.getElementById('particles');
+            if (!container) return;
+            const count = 20;
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = (60 + Math.random() * 40) + '%';
+                particle.style.animationDuration = (8 + Math.random() * 12) + 's';
+                particle.style.animationDelay = Math.random() * 10 + 's';
+                const colors = ['#14CCB0', '#2563eb', '#F32B44'];
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                container.appendChild(particle);
+            }
+        }
+        createHeroParticles();
+
+        // ====== CUSTOM AMOUNT ======
+        const customInput = document.getElementById('custom-amount');
+        const customBtn = document.getElementById('custom-donate-btn');
+
+        if (customInput && customBtn) {
+            customInput.addEventListener('input', () => {
+                const val = customInput.value.replace(/[^0-9.]/g, '');
+                customInput.value = val;
+                if (val && parseFloat(val) > 0) {
+                    customBtn.textContent = 'Donate $' + val;
+                } else {
+                    customBtn.textContent = 'Donate';
+                }
+            });
+        }
+
+        // ====== DONATE BUTTON CLICKS ======
+        document.querySelectorAll('.tier-btn').forEach((btn) => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Placeholder — will wire to Stripe/PayPal later
+                const amount = btn.dataset.amount;
+                if (amount === 'custom') {
+                    const val = customInput ? customInput.value : '';
+                    if (!val || parseFloat(val) <= 0) {
+                        customInput.focus();
+                        return;
+                    }
+                }
+                // For now, scroll to the note about contacting support
+                document.querySelector('.donate-note').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+        });
+    })();
+    </script>
+</body>
+</html>
