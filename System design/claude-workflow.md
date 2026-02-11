@@ -3,12 +3,13 @@
 **Purpose:** This document ensures continuity across Claude sessions. At the start of any new session, ask Claude to read this file and the security plan. Claude should follow this workflow for all VoteCraft work.
 
 **Location of key documents:**
-- This file: `user-data-security/claude-workflow.md`
-- Security plan: `user-data-security/security-plan.md`
+- This file: `System design/claude-workflow.md`
+- Security plan: `System design/security-plan.md`
+- Database design: `System design/DATABASE.md`
 - Vote platform concept: `pages/vote/vote-plan.md`
 
 **How to start a session:** Tell Claude:
-> "Read the files in user-data-security/ and then let's work on [topic]."
+> "Read the files in System design/ and then let's work on [topic]."
 
 ---
 
@@ -31,23 +32,28 @@ Claude must hold these principles in every session. If a proposed feature, archi
 
 Update this section as the project evolves.
 
-**Last updated:** 2026-02-02
+**Last updated:** 2026-02-11
 
 | App | Status | Notes |
 |-----|--------|-------|
-| Vote platform | Not yet built | Concept documented in `pages/vote/vote-plan.md` |
-| MyReps | Live on GitHub Pages | Address lookup for elected reps. Uses third-party APIs with exposed keys. |
+| Vote platform | Live on GitHub Pages + WordPress | Issue exploration, rep alignment, state bill lookup. WordPress backend (PHP proxy + custom DB tables). |
+| VoteCraft Coin page | Live on GitHub Pages | `pages/votecraft-coin/index.html` — explains VC altruism currency, earning, spending, community exchange |
+| Donate page | Live on GitHub Pages (UI only) | `pages/votecraft-coin/donate.html` — donation tiers, placeholder buttons (no payment processor yet) |
+| MyReps | Superseded by Vote platform | Address lookup merged into vote platform's left panel |
 | JokeMaster | In development | Firebase/Firestore backend. Security rules need console verification. |
 | Scavenger Tours | Paused | Supabase project paused due to inactivity. 90-day window to unpause. |
 | Power Plays | In development | Static card game. |
 | RCV Widgets | In development | Static ranked choice voting educational tools. |
 
 **Infrastructure:**
-- Hosting: GitHub Pages (static)
+- Hosting: GitHub Pages (static frontend) + WordPress (PHP backend, MySQL DB)
 - Repository: github.com/lizpasekal1/Votecraft.org (private, SSH auth)
-- No backend server yet — needed before vote platform launch
+- WordPress backend: `votecraft.org` — hosts PHP proxy (`openstates-proxy.php`) and data sync plugin (`votecraft-data-sync.php`)
+- Database: WordPress MySQL with custom tables (prefix `eUZZh_`) for bills, legislators, sponsorships, cache, sync log
+- API sources: OpenStates (state legislators/bills) + Congress.gov (federal)
 - Firebase: project `jokemaster-3ed37` (JokeMaster)
 - Supabase: project `Votecraft_accounts` / `xvtgmjsselzlyjdzwoth` (Scavenger Tours, paused)
+- Frontend auto-deploys via GitHub Pages (`static.yml`); PHP files manually uploaded as ZIPs to WordPress
 
 ---
 
@@ -63,7 +69,7 @@ Claude must follow these rules during all VoteCraft work:
 - Commit files containing secrets (`.env`, credentials, tokens)
 
 **Always:**
-- Read `user-data-security/security-plan.md` at the start of sessions involving security-sensitive work
+- Read `System design/security-plan.md` at the start of sessions involving security-sensitive work
 - Flag any security concern immediately when spotted — don't wait to be asked
 - Update the security plan's audit log when security-related changes are made
 - Update the remediation checklist when items are completed or new issues are found
@@ -91,7 +97,7 @@ Claude must follow these rules during all VoteCraft work:
 - Shared widgets go in `vc-widgets/`
 - Design assets go in `design/`
 - Documentation goes in `docs/` or within each app's `docs/` subfolder
-- Security documents go in `user-data-security/`
+- Design & security documents go in `System design/`
 
 **WordPress deployment:**
 - When modifying any JS or CSS file that will be uploaded to the WordPress server, always increment the cache buster query parameter in the HTML file that references it (e.g., `civic-api.js?v=2` becomes `civic-api.js?v=3`)
@@ -110,7 +116,7 @@ Claude must follow these rules during all VoteCraft work:
 When starting a new session on VoteCraft:
 
 1. **Read this file** to load mission context, project status, and coding standards
-2. **Read the security plan** (`user-data-security/security-plan.md`) if the session involves data handling, new features, or infrastructure
+2. **Read the security plan** (`System design/security-plan.md`) if the session involves data handling, new features, or infrastructure
 3. **Check the remediation checklist** for any blocking items relevant to the current work
 4. **Read the relevant feature doc** (e.g., `pages/vote/vote-plan.md`) if working on a specific feature
 5. **Update this file and the security plan** at the end of the session if project status, security posture, or infrastructure has changed
@@ -123,8 +129,9 @@ These documents must stay current:
 
 | Document | Update when... |
 |----------|---------------|
-| `claude-workflow.md` (this file) | Project status changes, new apps are added, infrastructure changes, coding standards evolve |
-| `security-plan.md` | Security issues are found or fixed, remediation items are completed, new features introduce new data handling |
+| `System design/claude-workflow.md` (this file) | Project status changes, new apps are added, infrastructure changes, coding standards evolve |
+| `System design/security-plan.md` | Security issues are found or fixed, remediation items are completed, new features introduce new data handling |
+| `System design/DATABASE.md` | Database schema changes, new tables, column additions |
 | `pages/vote/vote-plan.md` | Vote platform design decisions are made or changed |
 
 **Who updates:** Claude updates these documents during sessions when changes occur. The VoteCraft team reviews and approves changes.

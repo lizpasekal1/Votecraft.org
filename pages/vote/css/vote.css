@@ -203,9 +203,31 @@ body {
     background: #4b5563;
 }
 
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
 .sidebar-logo {
     display: block;
-    margin-bottom: 16px;
+}
+
+.sidebar-support-link {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #14CCB0;
+    text-decoration: none;
+    padding: 4px 12px;
+    border: 1px solid rgba(20, 204, 176, 0.3);
+    border-radius: 9999px;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.sidebar-support-link:hover {
+    background: rgba(20, 204, 176, 0.1);
+    border-color: #14CCB0;
 }
 
 .sidebar-logo img {
@@ -2523,8 +2545,11 @@ body {
         max-height: 35vh;
     }
 
-    .sidebar-logo {
+    .sidebar-header {
         margin-bottom: 4px;
+    }
+
+    .sidebar-logo {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -2532,6 +2557,11 @@ body {
 
     .sidebar-logo img {
         height: 35px;
+    }
+
+    .sidebar-support-link {
+        font-size: 0.65rem;
+        padding: 3px 8px;
     }
 
     .search-section {

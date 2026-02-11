@@ -449,6 +449,7 @@ All security-related actions taken on this project, in reverse chronological ord
 
 | Date | Action | Details |
 |------|--------|---------|
+| 2026-02-11 | Donate page created (UI only) | Created `pages/votecraft-coin/donate.html` with donation tiers ($12.30/$25/$50/$100/custom). Placeholder buttons only — no payment processor integrated yet. Cross-linked from vote.html sidebar and VC coin index.html. No user data collected or transmitted. |
 | 2026-02-10 | VC ownership, tax, and ethics sections added | Added Section 8h (Ownership & Platform Control), 8i (Tax Awareness), 8j (Anti-Abuse & Ethics Clause). Renumbered Transparency to 8k. |
 | 2026-02-10 | VC legal disclaimers and earning rules added | Added Section 8f (What VC is NOT — legal disclaimers for SEC/Howey Test protection) and Section 8g (Earning Rules — fairness, verification standards, expiration/revocation/caps policy, fairness safeguards). |
 | 2026-02-10 | VoteCraft Coin (VC) security section added | Added Section 8 covering VC altruism currency security: balance integrity, patron badges, Emporium transactions, anti-abuse measures, data classification, and transparency requirements. Updated Tier 2 data classification, project overview, remediation checklist, and open questions for security professional. |
