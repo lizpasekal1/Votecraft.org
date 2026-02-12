@@ -2429,6 +2429,11 @@ body {
 @media (max-width: 520px) {
     .section {
         padding: 48px 16px;
+        min-height: 100dvh;
+    }
+
+    .hero-section {
+        padding-top: 80px;
     }
 
     .emporium-grid {
@@ -2461,5 +2466,29 @@ body {
 
     .modal-overlay {
         padding: 16px;
+    }
+
+    .philosophy-card {
+        padding: 24px 20px;
+    }
+
+    .earn-card {
+        padding: 24px 20px;
+    }
+
+    .exchange-offer-card {
+        padding: 16px;
+    }
+
+    .scroll-indicator {
+        bottom: 20px;
+    }
+
+    .cta-section {
+        min-height: 50dvh;
+    }
+
+    .section-subtitle {
+        margin-bottom: 32px;
     }
 }
