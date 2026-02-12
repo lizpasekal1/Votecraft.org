@@ -1153,7 +1153,8 @@ class VoteApp {
         document.getElementById('support-overlay-name').textContent = np.name;
         document.getElementById('support-overlay-desc').textContent = np.description || '';
         const donateLink = document.getElementById('support-overlay-donate');
-        donateLink.href = np.donateUrl;
+        donateLink.href = 'https://votecraft.org/votecraft-coin/';
+        donateLink.target = '_top';
         donateLink.textContent = 'Support';
 
         // Activate overlay and toggle button state
