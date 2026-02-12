@@ -11,7 +11,6 @@ const ISSUES = [
         heroImage: 'https://votecraft.org/wp-content/uploads/2025/06/rank-the-vote.jpg',
         tags: { contribution: 'Monetary', impact: 'Democracy', effort: 'Supportive' },
         nonprofits: [
-            { name: 'Common Cause', logo: 'https://www.commoncause.org/ohio/wp-content/uploads/2024/08/OH.png', desc: 'Nonpartisan grassroots organization dedicated to upholding democratic values.', donateUrl: 'https://www.commoncause.org/donate/' },
             { name: 'Rank the Vote', logo: 'https://rankthevote.us/wp-content/uploads/2021/08/4.png', desc: 'National campaign to adopt RCV for federal elections.', donateUrl: 'https://rankthevote.us/donate/' },
             { name: 'FairVote', logo: 'https://fairvote.org/wp-content/uploads/2022/09/New-web-1024x512.jpg', desc: 'Leading organization for ranked choice voting advocacy and research.', donateUrl: 'https://www.fairvote.org/donate' }
         ]

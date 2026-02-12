@@ -552,8 +552,8 @@ body {
 }
 
 .coin-back {
-    background: linear-gradient(135deg, #1d4ed8, #3b82f6);
-    box-shadow: 0 0 40px rgba(37, 99, 235, 0.3), inset 0 0 30px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
+    box-shadow: 0 0 40px rgba(30, 58, 138, 0.3), inset 0 0 30px rgba(0, 0, 0, 0.3);
     transform: rotateY(180deg);
 }
 
@@ -1707,7 +1707,7 @@ body {
 .story-arrow {
     display: flex;
     justify-content: center;
-    color: var(--text-muted);
+    color: #fff;
     opacity: 0.4;
 }
 
@@ -1724,7 +1724,7 @@ body {
 
 .story-step-label {
     font-size: 0.7rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.8);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-bottom: 2px;
@@ -1794,7 +1794,7 @@ body {
 
 .exchange-has {
     font-size: 0.8rem;
-    color: var(--text-muted);
+    color: #fff;
 }
 
 .exchange-offer {
@@ -1848,7 +1848,7 @@ body {
 
 .exchange-offer-desc {
     font-size: 0.8rem;
-    color: var(--text-dim);
+    color: #fff;
     line-height: 1.4;
     margin-bottom: 10px;
 }
@@ -1885,7 +1885,7 @@ body {
 .altruism-tags-desc {
     text-align: center;
     font-size: 0.95rem;
-    color: var(--text-dim);
+    color: #fff;
     max-width: 560px;
     margin: 0 auto 32px;
     line-height: 1.6;
@@ -1933,7 +1933,7 @@ body {
 
 .tags-transaction-action {
     font-size: 0.9rem;
-    color: var(--text-dim);
+    color: #fff;
 }
 
 .tags-transaction-tags {
@@ -2123,6 +2123,12 @@ body {
     color: var(--teal);
     max-width: 600px;
     margin: 0 auto;
+}
+
+/* White text overrides for blue sections */
+.stories-section .section-subtitle,
+.exchange-section .section-subtitle {
+    color: #fff;
 }
 
 /* ====== CONTRIBUTOR QUIZ ====== */
@@ -2429,11 +2435,13 @@ body {
 @media (max-width: 520px) {
     .section {
         padding: 48px 16px;
-        min-height: 100dvh;
+        min-height: auto;
     }
 
     .hero-section {
-        padding-top: 80px;
+        padding-top: 24px;
+        min-height: auto;
+        justify-content: flex-start;
     }
 
     .emporium-grid {
