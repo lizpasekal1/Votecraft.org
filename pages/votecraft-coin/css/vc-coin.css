@@ -635,6 +635,15 @@ body {
     50% { transform: translateY(8px); }
 }
 
+.get-app-link {
+    display: inline-block;
+    color: #3b82f6;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 1.1rem;
+    animation: bounce 2s ease-in-out infinite;
+}
+
 /* ====== SECTION 2: PHILOSOPHY ====== */
 
 .philosophy-section {
@@ -1694,7 +1703,7 @@ body {
     margin-bottom: 20px;
 }
 
-.story-avatar-blue { background: rgba(37, 99, 235, 0.2); color: var(--primary); }
+.story-avatar-blue { background: rgba(255, 255, 255, 0.12); color: #fff; }
 .story-avatar-teal { background: rgba(20, 204, 176, 0.2); color: var(--teal); }
 .story-avatar-orange { background: rgba(243, 43, 68, 0.2); color: var(--orange); }
 
@@ -1783,7 +1792,7 @@ body {
     margin: 0 auto 8px;
 }
 
-.exchange-avatar-blue { background: rgba(37, 99, 235, 0.2); color: var(--primary); }
+.exchange-avatar-blue { background: rgba(255, 255, 255, 0.12); color: #fff; }
 .exchange-avatar-teal { background: rgba(20, 204, 176, 0.2); color: var(--teal); }
 
 .exchange-name {
@@ -1807,7 +1816,7 @@ body {
 
 .exchange-offer-card {
     flex: 1;
-    background: rgba(30, 58, 138, 0.6);
+    background: rgba(15, 23, 42, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius);
     padding: 20px;
@@ -1898,7 +1907,7 @@ body {
 }
 
 .tags-transaction {
-    background: rgba(30, 58, 138, 0.6);
+    background: rgba(15, 23, 42, 0.7);
     border: 1px solid rgba(20, 204, 176, 0.3);
     border-radius: var(--radius);
     padding: 20px 24px;
@@ -1996,7 +2005,7 @@ body {
 }
 
 .tags-category {
-    background: rgba(30, 58, 138, 0.6);
+    background: rgba(15, 23, 42, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius);
     padding: 24px 20px;
