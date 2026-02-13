@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>VoteCraft — Learn About an Issue</title>
+    <meta name="description" content="Quick civic education modules that earn you VC. Preview what learning looks like on VoteCraft.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/vc-coin.css?v=20260213u">
+    <style>
+        body {
+            background: var(--bg-darker);
+            color: var(--text);
+            font-family: 'Open Sans', sans-serif;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+        }
+
+        .subpage {
+            max-width: 580px;
+            margin: 0 auto;
+            padding: 24px 20px 48px;
+        }
+
+        .subpage-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 32px;
+            transition: color 0.2s;
+        }
+
+        .subpage-back:hover {
+            color: var(--teal);
+        }
+
+        @media (max-width: 520px) {
+            .subpage {
+                padding: 16px 16px 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="subpage">
+        <a href="../index.html" class="subpage-back" id="back-link">&larr; Back to VoteCraft Coin</a>
+
+        <h3 class="learn-modal-heading">Learn about an issue</h3>
+        <p class="learn-modal-sub">Quick civic education modules that earn you VC</p>
+        <div class="learn-module-preview">
+            <div class="learn-module-topic">Module 1 of 3</div>
+            <div class="learn-module-title">Gerrymandering: How Districts Get Drawn</div>
+            <div class="learn-module-progress">
+                <div class="learn-progress-bar">
+                    <div class="learn-progress-fill"></div>
+                </div>
+                <div class="learn-progress-text">1 of 3 questions</div>
+            </div>
+            <div class="learn-module-question">
+                <div class="learn-module-question-label">Question</div>
+                <div class="learn-module-question-text">What is gerrymandering?</div>
+            </div>
+            <div class="learn-module-options">
+                <div class="learn-module-option">A tax policy for small businesses</div>
+                <div class="learn-module-option">Manipulating district boundaries for political advantage</div>
+                <div class="learn-module-option">A type of voter registration drive</div>
+                <div class="learn-module-option">A federal campaign finance rule</div>
+            </div>
+            <div class="learn-module-reward">Complete this module to earn <span>+5 VC</span></div>
+        </div>
+    </div>
+
+    <script>if (window !== window.top) document.getElementById('back-link').style.display = 'none';</script>
+</body>
+</html>

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>VoteCraft — Security &amp; Trust</title>
+    <meta name="description" content="VoteCraft Coin isn't crypto. Learn how we keep VC safe, transparent, and fair.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/vc-coin.css?v=20260213u">
+    <style>
+        body {
+            background: var(--bg-darker);
+            color: var(--text);
+            font-family: 'Open Sans', sans-serif;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+        }
+
+        .security-page {
+            max-width: 620px;
+            margin: 0 auto;
+            padding: 24px 20px 48px;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .security-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 32px;
+            transition: color 0.2s;
+        }
+
+        .security-back:hover {
+            color: var(--teal);
+        }
+
+        .security-slider {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .security-slider .trust-slider {
+            flex: 1;
+        }
+
+        .security-slider .trust-slide {
+            display: none;
+            animation: trustSlideIn 0.3s ease-out;
+        }
+
+        .security-slider .trust-slide.active {
+            display: block;
+        }
+
+        .security-slider .trust-slider-nav {
+            margin-top: auto;
+            padding-top: 24px;
+        }
+
+        /* Override modal-specific styles for standalone page */
+        .security-slider .trust-slide-title {
+            font-size: clamp(1.5rem, 4vw, 2rem);
+        }
+
+        .security-slider .trust-slide-sub {
+            font-size: 1rem;
+        }
+
+        .security-slider .trust-detail-text {
+            font-size: 0.95rem;
+        }
+
+        .security-slider .trust-slide-icon svg {
+            width: 56px;
+            height: 56px;
+        }
+
+        @media (max-width: 520px) {
+            .security-page {
+                padding: 16px 16px 32px;
+            }
+
+            .security-slider .trust-slide-icon svg {
+                width: 44px;
+                height: 44px;
+            }
+
+            .security-slider .trust-slide-title {
+                font-size: 1.3rem;
+            }
+
+            .security-slider .trust-slide-sub {
+                font-size: 0.85rem;
+            }
+
+            .security-slider .trust-detail-text {
+                font-size: 0.85rem;
+            }
+
+            .security-slider .crypto-vs-cell {
+                font-size: 0.72rem;
+                padding: 6px 8px;
+            }
+
+            .security-slider .crypto-vs-label {
+                font-size: 0.62rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="security-page">
+        <a href="../index.html" class="security-back" id="back-link">&larr; Back to VoteCraft Coin</a>
+
+        <div class="security-slider">
+            <div class="trust-slider" id="trust-slider">
+                <!-- Slide 1: Comparison -->
+                <div class="trust-slide active" data-slide="0">
+                    <div class="trust-slide-icon">
+                        <svg viewBox="0 0 48 48" fill="none" width="48" height="48">
+                            <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2"/>
+                            <path d="M16 24l6 6 10-12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="trust-slide-title">Not crypto.</h3>
+                    <p class="trust-slide-sub">We borrowed the aesthetic, not the problems.</p>
+                    <div class="trust-slide-details">
+                        <div class="trust-detail-row crypto-vs-row">
+                            <div class="crypto-vs-label label-crypto">Crypto</div>
+                            <div class="crypto-vs-label label-vc">VoteCraft</div>
+                        </div>
+                        <div class="trust-detail-row crypto-vs-row">
+                            <div class="crypto-vs-cell cell-crypto">Mined with energy</div>
+                            <div class="crypto-vs-cell cell-vc">Earned through civic action</div>
+                        </div>
+                        <div class="trust-detail-row crypto-vs-row">
+                            <div class="crypto-vs-cell cell-crypto">Traded on exchanges</div>
+                            <div class="crypto-vs-cell cell-vc">Tied to your VoteCraft account</div>
+                        </div>
+                        <div class="trust-detail-row crypto-vs-row">
+                            <div class="crypto-vs-cell cell-crypto">Speculative value</div>
+                            <div class="crypto-vs-cell cell-vc">No cash value — ever</div>
+                        </div>
+                        <div class="trust-detail-row crypto-vs-row">
+                            <div class="crypto-vs-cell cell-crypto">Built on blockchain</div>
+                            <div class="crypto-vs-cell cell-vc">Built on trust</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 2: Transparent Ledger -->
+                <div class="trust-slide" data-slide="1">
+                    <div class="trust-slide-icon icon-teal">
+                        <svg viewBox="0 0 48 48" fill="none" width="48" height="48">
+                            <rect x="6" y="6" width="36" height="36" rx="4" stroke="currentColor" stroke-width="2"/>
+                            <path d="M6 16h36M16 16v26" stroke="currentColor" stroke-width="2"/>
+                            <path d="M22 24h14M22 32h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="trust-slide-title">Transparent Ledger</h3>
+                    <p class="trust-slide-sub">Every VC transaction is logged and auditable</p>
+                    <div class="trust-slide-details">
+                        <div class="trust-detail-row">
+                            <div class="trust-detail-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M13.5 13.5l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+                            <div class="trust-detail-text">See where your VC came from and where it went</div>
+                        </div>
+                        <div class="trust-detail-row">
+                            <div class="trust-detail-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 14V9M10 14V6M14 14V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+                            <div class="trust-detail-text">No hidden minting — total VC supply is public</div>
+                        </div>
+                        <div class="trust-detail-row">
+                            <div class="trust-detail-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M7 10l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                            <div class="trust-detail-text">Transaction history available on your dashboard</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 3: Verified Accounts -->
+                <div class="trust-slide" data-slide="2">
+                    <div class="trust-slide-icon icon-blue">
+                        <svg viewBox="0 0 48 48" fill="none" width="48" height="48">
+                            <circle cx="24" cy="16" r="10" stroke="currentColor" stroke-width="2"/>
+                            <path d="M8 42c0-8.8 7.2-16 16-16s16 7.2 16 16" stroke="currentColor" stroke-width="2"/>
+                            <circle cx="36" cy="34" r="8" fill="var(--bg-darker)" stroke="currentColor" stroke-width="2"/>
+                            <path d="M33 34l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="trust-slide-title">Verified Accounts</h3>
+                    <p class="trust-slide-sub">VC is tied to your VoteCraft identity</p>
+                    <div class="trust-slide-details">
+                        <div class="trust-detail-row">
+                            <div class="trust-detail-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/><path d="M3 18c0-3.9 3.1-7 7-7s7 3.1 7 7" stroke="currentColor" stroke-width="1.5"/></svg></div>
+                            <div class="trust-detail-text">No anonymous wallets — real people, real contributions</div>
+                        </div>
+                        <div class="trust-detail-row">
+                            <div class="trust-detail-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+                            <div class="trust-detail-text">No bots farming coins or fake accounts inflating value</div>
+                        </div>
+                        <div class="trust-detail-row">
+                            <div class="trust-detail-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="5" y="9" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M7 9V6a3 3 0 016 0v3" stroke="currentColor" stroke-width="1.5"/></svg></div>
+                            <div class="trust-detail-text">Your civic identity is protected — only your contributions are visible</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slider Navigation -->
+            <div class="trust-slider-nav">
+                <button class="trust-slider-btn trust-slider-prev" id="trust-slider-prev" disabled>&larr;</button>
+                <div class="trust-slider-dots" id="trust-slider-dots">
+                    <span class="trust-dot active" data-dot="0"></span>
+                    <span class="trust-dot" data-dot="1"></span>
+                    <span class="trust-dot" data-dot="2"></span>
+                </div>
+                <button class="trust-slider-btn trust-slider-next" id="trust-slider-next">&rarr;</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        'use strict';
+
+        const trustSlides = document.querySelectorAll('.trust-slide');
+        const trustDots = document.querySelectorAll('.trust-dot');
+        const trustPrev = document.getElementById('trust-slider-prev');
+        const trustNext = document.getElementById('trust-slider-next');
+        let trustCurrent = 0;
+
+        function goToSlide(index) {
+            trustSlides[trustCurrent].classList.remove('active');
+            trustDots[trustCurrent].classList.remove('active');
+            trustCurrent = index;
+            trustSlides[trustCurrent].classList.add('active');
+            trustDots[trustCurrent].classList.add('active');
+            trustPrev.disabled = trustCurrent === 0;
+            trustNext.disabled = trustCurrent === trustSlides.length - 1;
+        }
+
+        trustPrev.addEventListener('click', () => {
+            if (trustCurrent > 0) goToSlide(trustCurrent - 1);
+        });
+
+        trustNext.addEventListener('click', () => {
+            if (trustCurrent < trustSlides.length - 1) goToSlide(trustCurrent + 1);
+        });
+
+        trustDots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                goToSlide(parseInt(dot.dataset.dot));
+            });
+        });
+
+        // Swipe support for mobile
+        let touchStartX = 0;
+        const slider = document.getElementById('trust-slider');
+
+        slider.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        slider.addEventListener('touchend', (e) => {
+            const diff = touchStartX - e.changedTouches[0].screenX;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0 && trustCurrent < trustSlides.length - 1) {
+                    goToSlide(trustCurrent + 1);
+                } else if (diff < 0 && trustCurrent > 0) {
+                    goToSlide(trustCurrent - 1);
+                }
+            }
+        }, { passive: true });
+    })();
+    </script>
+    <script>if (window !== window.top) document.getElementById('back-link').style.display = 'none';</script>
+
+</body>
+</html>

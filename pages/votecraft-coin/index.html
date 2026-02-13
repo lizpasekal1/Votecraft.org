@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/vc-coin.css?v=20260213i">
+    <link rel="stylesheet" href="css/vc-coin.css?v=20260213u">
 </head>
 <body>
 
@@ -83,8 +83,10 @@
                             <text x="24" y="34" text-anchor="middle" fill="currentColor" font-size="32" font-weight="700">$</text>
                         </svg>
                     </div>
-                    <h3>Dollars reward productivity</h3>
-                    <p>The economy runs on exchange — your time, your work, your output. That system works. But it measures one kind of value.</p>
+                    <div class="philosophy-text">
+                        <h3>Dollars reward productivity</h3>
+                        <p>The economy runs on exchange — your time, your work, your output. That system works. But it measures one kind of value.</p>
+                    </div>
                 </div>
                 <div class="philosophy-card animate-in" data-delay="1">
                     <div class="philosophy-icon icon-blue">
@@ -92,8 +94,10 @@
                             <path d="M24 42s-16-10-16-22a10 10 0 0 1 16-8 10 10 0 0 1 16 8c0 12-16 22-16 22z" stroke="currentColor" stroke-width="2" fill="none"/>
                         </svg>
                     </div>
-                    <h3>VC rewards contribution</h3>
-                    <p>Learning about issues, supporting reform nonprofits, volunteering your time — these matter too. VC makes that visible.</p>
+                    <div class="philosophy-text">
+                        <h3>VC rewards contribution</h3>
+                        <p>Learning about issues, supporting reform nonprofits, volunteering your time — these matter too. VC makes that visible.</p>
+                    </div>
                 </div>
                 <div class="philosophy-card animate-in" data-delay="2">
                     <div class="philosophy-icon icon-red">
@@ -102,8 +106,10 @@
                             <text x="24" y="30" text-anchor="middle" fill="#2563eb" font-size="20" font-weight="700">$</text>
                         </svg>
                     </div>
-                    <h3>Both matter. One was missing.</h3>
-                    <p>VC doesn't replace money — it exists alongside it. A complementary layer that recognizes what markets overlook.</p>
+                    <div class="philosophy-text">
+                        <h3>Both matter. One was missing.</h3>
+                        <p>VC doesn't replace money — it exists alongside it. A complementary layer that recognizes what markets overlook.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -112,7 +118,7 @@
     <!-- ====== COMMUNITY EXCHANGE ====== -->
     <section class="section exchange-section" id="exchange">
         <div class="section-inner">
-            <h2 class="section-title animate-in">Pay it forward with VC</h2>
+            <h2 class="section-title animate-in">Pay it forward <br class="mobile-break">with VC</h2>
             <p class="section-subtitle animate-in">Exchange civic skills and support within the community.</p>
 
             <div class="exchange-demo animate-in">
@@ -226,7 +232,7 @@
             <h2 class="section-title animate-in">How it works</h2>
             <p class="section-subtitle animate-in">Civic action earns VoteCraft Coin — here's how.</p>
             <div class="earn-cards">
-                <div class="earn-card animate-in" data-delay="0" id="support-nonprofit-card" style="cursor:pointer">
+                <div class="earn-card animate-in" data-delay="0" data-popup="pages/nonprofit.html" style="cursor:pointer">
                     <div class="earn-card-glow"></div>
                     <div class="earn-icon">
                         <svg viewBox="0 0 48 48" fill="none">
@@ -238,7 +244,7 @@
                     <p>Donate to civic reform organizations through VoteCraft</p>
                     <div class="earn-amount">+25 VC</div>
                 </div>
-                <div class="earn-card animate-in" data-delay="1" id="learn-issue-card" style="cursor:pointer">
+                <div class="earn-card animate-in" data-delay="1" data-popup="pages/learn.html" style="cursor:pointer">
                     <div class="earn-card-glow"></div>
                     <div class="earn-icon icon-teal">
                         <svg viewBox="0 0 48 48" fill="none">
@@ -251,7 +257,7 @@
                     <p>Complete civic education modules about reform topics</p>
                     <div class="earn-amount amount-teal">+5 VC</div>
                 </div>
-                <div class="earn-card animate-in" data-delay="2" id="contribute-time-card" style="cursor:pointer">
+                <div class="earn-card animate-in" data-delay="2" data-popup="pages/quiz.html" style="cursor:pointer">
                     <div class="earn-card-glow"></div>
                     <div class="earn-icon icon-orange">
                         <svg viewBox="0 0 48 48" fill="none">
@@ -267,7 +273,7 @@
             </div>
 
             <div class="earn-actions animate-in">
-                <button class="not-crypto-btn" id="not-crypto-btn">Not crypto. <span class="not-crypto-btn-sub">See why &rarr;</span></button>
+                <button class="not-crypto-btn" data-popup="pages/security.html">Not crypto. <span class="not-crypto-btn-sub">See why &rarr;</span></button>
             </div>
 
             <!-- Patron Badges (inline) -->
@@ -308,107 +314,6 @@
                     </div>
                 </div>
             </div>
-
-    <!-- Not Crypto Modal -->
-    <div class="modal-overlay" id="not-crypto-modal">
-        <div class="modal-content">
-            <button class="modal-close" id="modal-close" aria-label="Close">&times;</button>
-            <h3 class="not-crypto-heading">Not crypto.</h3>
-            <p class="not-crypto-sub-modal">We borrowed the aesthetic, not the problems.</p>
-            <div class="comparison-table">
-                <div class="comparison-header">
-                    <div class="comparison-col">Crypto</div>
-                    <div class="comparison-vs">vs</div>
-                    <div class="comparison-col col-vc">VoteCraft Coin</div>
-                </div>
-                <div class="comparison-row">
-                    <div class="comparison-cell cell-crypto">Mined with energy</div>
-                    <div class="comparison-divider"></div>
-                    <div class="comparison-cell cell-vc">Earned through civic action</div>
-                </div>
-                <div class="comparison-row">
-                    <div class="comparison-cell cell-crypto">Traded on exchanges</div>
-                    <div class="comparison-divider"></div>
-                    <div class="comparison-cell cell-vc">Spent only in the Emporium</div>
-                </div>
-                <div class="comparison-row">
-                    <div class="comparison-cell cell-crypto">Speculative value</div>
-                    <div class="comparison-divider"></div>
-                    <div class="comparison-cell cell-vc">No cash value — ever</div>
-                </div>
-                <div class="comparison-row">
-                    <div class="comparison-cell cell-crypto">Anonymous</div>
-                    <div class="comparison-divider"></div>
-                    <div class="comparison-cell cell-vc">Tied to your VoteCraft account</div>
-                </div>
-                <div class="comparison-row">
-                    <div class="comparison-cell cell-crypto">Built on blockchain</div>
-                    <div class="comparison-divider"></div>
-                    <div class="comparison-cell cell-vc">Built on trust</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="nonprofit-modal">
-        <div class="modal-content">
-            <button class="modal-close" id="nonprofit-modal-close" aria-label="Close">&times;</button>
-            <h3 class="nonprofit-modal-heading">Support a nonprofit</h3>
-            <p class="nonprofit-modal-sub">Every dollar donated through VoteCraft earns VC</p>
-            <div class="donation-tiers">
-                <div class="donation-row">
-                    <div class="donation-amount">$5</div>
-                    <div class="donation-vc">+5 VC</div>
-                    <div class="donation-desc">Support a local chapter</div>
-                </div>
-                <div class="donation-row">
-                    <div class="donation-amount">$25</div>
-                    <div class="donation-vc">+25 VC</div>
-                    <div class="donation-desc">Fund a civic workshop</div>
-                </div>
-                <div class="donation-row featured">
-                    <div class="donation-amount">$50</div>
-                    <div class="donation-vc">+50 VC</div>
-                    <div class="donation-desc">Sponsor a reform campaign</div>
-                </div>
-                <div class="donation-row">
-                    <div class="donation-amount">$100</div>
-                    <div class="donation-vc">+100 VC</div>
-                    <div class="donation-desc">Champion a cause</div>
-                </div>
-            </div>
-            <p class="nonprofit-modal-note">100% of donations go to vetted civic reform organizations</p>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="learn-modal">
-        <div class="modal-content">
-            <button class="modal-close" id="learn-modal-close" aria-label="Close">&times;</button>
-            <h3 class="learn-modal-heading">Learn about an issue</h3>
-            <p class="learn-modal-sub">Quick civic education modules that earn you VC</p>
-            <div class="learn-module-preview">
-                <div class="learn-module-topic">Module 1 of 3</div>
-                <div class="learn-module-title">Gerrymandering: How Districts Get Drawn</div>
-                <div class="learn-module-progress">
-                    <div class="learn-progress-bar">
-                        <div class="learn-progress-fill"></div>
-                    </div>
-                    <div class="learn-progress-text">1 of 3 questions</div>
-                </div>
-                <div class="learn-module-question">
-                    <div class="learn-module-question-label">Question</div>
-                    <div class="learn-module-question-text">What is gerrymandering?</div>
-                </div>
-                <div class="learn-module-options">
-                    <div class="learn-module-option">A tax policy for small businesses</div>
-                    <div class="learn-module-option">Manipulating district boundaries for political advantage</div>
-                    <div class="learn-module-option">A type of voter registration drive</div>
-                    <div class="learn-module-option">A federal campaign finance rule</div>
-                </div>
-                <div class="learn-module-reward">Complete this module to earn <span>+5 VC</span></div>
-            </div>
-        </div>
-    </div>
 
         </div>
     </section>
@@ -567,104 +472,11 @@
         </div>
     </section>
 
-    <!-- ====== CONTRIBUTOR QUIZ MODAL ====== -->
-    <div class="modal-overlay quiz-modal-overlay" id="quiz-modal">
-        <div class="modal-content quiz-modal-content">
-            <button class="modal-close" id="quiz-modal-close" aria-label="Close">&times;</button>
-            <h3 class="quiz-modal-title">What kind of civic contributor are you?</h3>
-            <p class="quiz-modal-subtitle">Answer 3 quick questions to find your VC earning path</p>
-
-            <div class="quiz-container" id="quiz-container">
-                <!-- Question 1 -->
-                <div class="quiz-step active" data-step="1">
-                    <div class="quiz-progress">
-                        <div class="quiz-progress-bar" style="width: 33%"></div>
-                    </div>
-                    <h3 class="quiz-question">When you see a problem in your community, you usually...</h3>
-                    <div class="quiz-options">
-                        <button class="quiz-option" data-type="doer">
-                            <span class="quiz-option-icon">&#9889;</span>
-                            <span class="quiz-option-text">Jump in and start fixing it</span>
-                        </button>
-                        <button class="quiz-option" data-type="learner">
-                            <span class="quiz-option-icon">&#128218;</span>
-                            <span class="quiz-option-text">Research the root cause first</span>
-                        </button>
-                        <button class="quiz-option" data-type="connector">
-                            <span class="quiz-option-icon">&#127760;</span>
-                            <span class="quiz-option-text">Rally people who can help</span>
-                        </button>
-                        <button class="quiz-option" data-type="supporter">
-                            <span class="quiz-option-icon">&#10084;</span>
-                            <span class="quiz-option-text">Support orgs already working on it</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Question 2 -->
-                <div class="quiz-step" data-step="2">
-                    <div class="quiz-progress">
-                        <div class="quiz-progress-bar" style="width: 66%"></div>
-                    </div>
-                    <h3 class="quiz-question">On a Saturday morning, you'd rather...</h3>
-                    <div class="quiz-options">
-                        <button class="quiz-option" data-type="doer">
-                            <span class="quiz-option-icon">&#128736;</span>
-                            <span class="quiz-option-text">Volunteer at a local event</span>
-                        </button>
-                        <button class="quiz-option" data-type="learner">
-                            <span class="quiz-option-icon">&#9749;</span>
-                            <span class="quiz-option-text">Read about policy and reform ideas</span>
-                        </button>
-                        <button class="quiz-option" data-type="connector">
-                            <span class="quiz-option-icon">&#128172;</span>
-                            <span class="quiz-option-text">Attend a community meeting or forum</span>
-                        </button>
-                        <button class="quiz-option" data-type="supporter">
-                            <span class="quiz-option-icon">&#128177;</span>
-                            <span class="quiz-option-text">Find a great nonprofit and chip in</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Question 3 -->
-                <div class="quiz-step" data-step="3">
-                    <div class="quiz-progress">
-                        <div class="quiz-progress-bar" style="width: 100%"></div>
-                    </div>
-                    <h3 class="quiz-question">What matters most to you about civic engagement?</h3>
-                    <div class="quiz-options">
-                        <button class="quiz-option" data-type="doer">
-                            <span class="quiz-option-icon">&#128170;</span>
-                            <span class="quiz-option-text">Seeing tangible results</span>
-                        </button>
-                        <button class="quiz-option" data-type="learner">
-                            <span class="quiz-option-icon">&#128161;</span>
-                            <span class="quiz-option-text">Understanding how systems work</span>
-                        </button>
-                        <button class="quiz-option" data-type="connector">
-                            <span class="quiz-option-icon">&#129309;</span>
-                            <span class="quiz-option-text">Bringing people together</span>
-                        </button>
-                        <button class="quiz-option" data-type="supporter">
-                            <span class="quiz-option-icon">&#127793;</span>
-                            <span class="quiz-option-text">Helping good work grow</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Results -->
-                <div class="quiz-result" id="quiz-result" hidden>
-                    <div class="quiz-result-icon" id="quiz-result-icon"></div>
-                    <h3 class="quiz-result-title" id="quiz-result-title"></h3>
-                    <p class="quiz-result-desc" id="quiz-result-desc"></p>
-                    <div class="quiz-result-earn">
-                        <h4>Your top VC earning paths:</h4>
-                        <div class="quiz-result-paths" id="quiz-result-paths"></div>
-                    </div>
-                    <button class="btn-secondary quiz-retake" id="quiz-retake">Take it again</button>
-                </div>
-            </div>
+    <!-- ====== IFRAME POPUP MODAL ====== -->
+    <div class="modal-overlay" id="popup-modal">
+        <div class="modal-content popup-modal-content">
+            <button class="modal-close" id="popup-modal-close" aria-label="Close">&times;</button>
+            <iframe id="popup-iframe" src="" frameborder="0"></iframe>
         </div>
     </div>
 
@@ -690,6 +502,6 @@
     </section>
 
 
-    <script src="js/vc-coin.js?v=20260213e"></script>
+    <script src="js/vc-coin.js?v=20260213j"></script>
 </body>
 </html>
