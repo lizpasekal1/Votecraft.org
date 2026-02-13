@@ -198,6 +198,14 @@ body {
     color: #1a1a2e;
 }
 
+.philosophy-section .section-title {
+    color: #F32B44;
+}
+
+.earn-section .section-title {
+    color: #2563eb;
+}
+
 .section-light .section-subtitle {
     color: #555;
 }
@@ -301,15 +309,15 @@ body {
 }
 
 .section-light .not-crypto-btn {
-    background: rgba(0, 0, 0, 0.04);
+    background: #e5e7eb;
     color: #555;
     border-color: #d1d5db;
 }
 
 .section-light .not-crypto-btn:hover {
-    background: rgba(0, 0, 0, 0.07);
-    border-color: var(--teal);
-    color: #1a1a2e;
+    background: #d1d5db;
+    border-color: #999;
+    color: #333;
 }
 
 .section-light .emporium-card {
@@ -685,6 +693,10 @@ body {
 
 .philosophy-icon.icon-red {
     color: var(--orange);
+}
+
+.philosophy-icon.icon-blue {
+    color: #2563eb;
 }
 
 .philosophy-card h3 {
@@ -1201,6 +1213,7 @@ body {
     font-size: clamp(1.3rem, 3vw, 1.8rem);
     font-weight: 700;
     margin-bottom: 6px;
+    color: #fff;
 }
 
 .not-crypto-sub-modal {
@@ -1278,6 +1291,201 @@ body {
     height: 100%;
     min-height: 20px;
     background: var(--border);
+}
+
+/* ====== NONPROFIT DONATION MODAL ====== */
+
+.nonprofit-modal-heading {
+    text-align: center;
+    font-size: clamp(1.3rem, 3vw, 1.8rem);
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: #fff;
+}
+
+.nonprofit-modal-sub {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+}
+
+.donation-tiers {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.donation-row {
+    display: grid;
+    grid-template-columns: 70px 80px 1fr;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    transition: border-color 0.2s;
+}
+
+.donation-row:hover {
+    border-color: var(--teal);
+}
+
+.donation-row.featured {
+    border-color: var(--teal);
+    background: rgba(20, 204, 176, 0.08);
+}
+
+.donation-amount {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.donation-vc {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--teal);
+}
+
+.donation-desc {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+}
+
+.nonprofit-modal-note {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--teal);
+    font-weight: 600;
+}
+
+/* ====== LEARN MODULE MODAL ====== */
+
+.learn-modal-heading {
+    text-align: center;
+    font-size: clamp(1.3rem, 3vw, 1.8rem);
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: #fff;
+}
+
+.learn-modal-sub {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+}
+
+.learn-module-preview {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+}
+
+.learn-module-topic {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #60a5fa;
+    margin-bottom: 8px;
+}
+
+.learn-module-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 12px;
+}
+
+.learn-module-progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.learn-progress-bar {
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.learn-progress-fill {
+    height: 100%;
+    background: #60a5fa;
+    border-radius: 3px;
+    width: 33%;
+}
+
+.learn-progress-text {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+}
+
+.learn-module-question {
+    background: rgba(37, 99, 235, 0.08);
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.learn-module-question-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #60a5fa;
+    margin-bottom: 8px;
+}
+
+.learn-module-question-text {
+    font-size: 0.95rem;
+    color: #fff;
+    line-height: 1.4;
+}
+
+.learn-module-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.learn-module-option {
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.learn-module-option:hover {
+    border-color: #60a5fa;
+    background: rgba(37, 99, 235, 0.08);
+}
+
+.learn-module-reward {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+}
+
+.learn-module-reward span {
+    color: var(--teal);
+    font-weight: 700;
 }
 
 /* ====== SECTION 6: PATRON BADGES ====== */
@@ -1796,6 +2004,7 @@ body {
 
 .exchange-avatar-blue { background: rgba(255, 255, 255, 0.12); color: #fff; }
 .exchange-avatar-teal { background: rgba(20, 204, 176, 0.2); color: var(--teal); }
+.exchange-avatar-red { background: rgba(243, 43, 68, 0.2); color: #F32B44; }
 
 .exchange-name {
     font-weight: 600;
@@ -1810,7 +2019,7 @@ body {
 
 .exchange-offer {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     gap: 16px;
     flex: 1;
     max-width: 600px;
@@ -1818,7 +2027,9 @@ body {
 
 .exchange-offer-card {
     flex: 1;
-    background: rgba(15, 23, 42, 0.7);
+    display: flex;
+    flex-direction: column;
+    background: rgba(15, 23, 42, 0.35);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius);
     padding: 20px;
@@ -1826,11 +2037,11 @@ body {
 }
 
 .exchange-offer-card:first-child {
-    border-color: rgba(20, 204, 176, 0.3);
+    border: 2px solid var(--teal);
 }
 
 .exchange-offer-card:last-child {
-    border-color: rgba(243, 43, 68, 0.3);
+    border: 2px solid #F32B44;
 }
 
 .exchange-offer-card:hover {
@@ -1838,13 +2049,30 @@ body {
     border-color: rgba(20, 204, 176, 0.4);
 }
 
+.exchange-offer-header {
+    margin: -20px -20px 12px -20px;
+    padding: 8px 20px;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    border-radius: var(--radius) var(--radius) 0 0;
+}
+
 .exchange-offer-label {
-    font-size: 0.7rem;
-    font-weight: 600;
+    font-size: 0.65rem;
+    font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--teal);
-    margin-bottom: 8px;
+    color: #2563eb;
+    margin-bottom: 6px;
+}
+
+.exchange-offer-header .exchange-offer-title {
+    color: #2563eb;
+    margin-bottom: 0;
+}
+
+.exchange-offer-card:last-child .exchange-offer-header .exchange-offer-title {
+    color: #F32B44;
 }
 
 .exchange-offer-card:last-child .exchange-offer-label {
@@ -1858,19 +2086,73 @@ body {
 }
 
 .exchange-offer-desc {
-    font-size: 0.8rem;
+    font-size: 0.95rem;
     color: #fff;
     line-height: 1.4;
     margin-bottom: 10px;
 }
 
 .exchange-offer-price {
-    font-size: 0.85rem;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-top: 4px;
+    margin-bottom: 12px;
+    color: #fff;
+    letter-spacing: 0.01em;
+}
+
+.exchange-offer-note {
+    font-size: 0.75rem;
+    font-weight: 400;
+    opacity: 0.7;
+}
+
+.price-pays {
+    color: var(--teal);
+    font-weight: 700;
+}
+
+.price-earns {
+    color: var(--teal);
+    font-weight: 700;
+}
+
+.exchange-offer-tags {
+    display: flex;
+    gap: 6px;
+    margin-top: auto;
+    padding-top: 8px;
+    flex-wrap: wrap;
+}
+
+.exchange-tag {
+    font-size: 0.7rem;
     font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid;
+}
+
+.exchange-tag.tag-teal {
+    background: rgba(20, 204, 176, 0.3);
+    color: #fff;
+    border-color: rgba(20, 204, 176, 0.5);
+}
+
+.exchange-tag.tag-orange {
+    background: rgba(243, 43, 68, 0.3);
+    color: #fff;
+    border-color: rgba(243, 43, 68, 0.5);
+}
+
+.price-dollars {
+    color: #F32B44;
+    font-weight: 700;
 }
 
 .exchange-arrows {
     flex-shrink: 0;
+    align-self: center;
 }
 
 /* ====== ALTRUISM TAGS ====== */
@@ -1909,7 +2191,7 @@ body {
 }
 
 .tags-transaction {
-    background: rgba(15, 23, 42, 0.7);
+    background: rgba(15, 23, 42, 0.35);
     border: 1px solid rgba(20, 204, 176, 0.3);
     border-radius: var(--radius);
     padding: 20px 24px;
@@ -2005,9 +2287,9 @@ body {
 }
 
 .atag-contribution {
-    background: rgba(20, 204, 176, 0.15);
-    color: var(--teal);
-    border-color: rgba(20, 204, 176, 0.35);
+    background: rgba(20, 204, 176, 0.3);
+    color: #fff;
+    border-color: rgba(20, 204, 176, 0.5);
 }
 
 .atag-contribution:hover {
@@ -2015,9 +2297,9 @@ body {
 }
 
 .atag-impact {
-    background: rgba(37, 99, 235, 0.15);
-    color: #60a5fa;
-    border-color: rgba(37, 99, 235, 0.35);
+    background: rgba(37, 99, 235, 0.3);
+    color: #fff;
+    border-color: rgba(37, 99, 235, 0.5);
 }
 
 .atag-impact:hover {
@@ -2025,9 +2307,9 @@ body {
 }
 
 .atag-effort {
-    background: rgba(243, 43, 68, 0.15);
-    color: var(--orange);
-    border-color: rgba(243, 43, 68, 0.35);
+    background: rgba(243, 43, 68, 0.3);
+    color: #fff;
+    border-color: rgba(243, 43, 68, 0.5);
 }
 
 .atag-effort:hover {
@@ -2042,7 +2324,7 @@ body {
 }
 
 .tags-category {
-    background: rgba(15, 23, 42, 0.7);
+    background: rgba(15, 23, 42, 0.35);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius);
     padding: 24px 20px;
@@ -2259,7 +2541,7 @@ body {
     text-align: center;
     font-size: clamp(1.1rem, 2.5vw, 1.4rem);
     font-weight: 600;
-    color: var(--teal);
+    color: #fff;
     max-width: 600px;
     margin: 0 auto;
 }

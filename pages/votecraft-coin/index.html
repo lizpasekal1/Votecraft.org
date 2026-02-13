@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/vc-coin.css?v=20260213f">
+    <link rel="stylesheet" href="css/vc-coin.css?v=20260213i">
 </head>
 <body>
 
@@ -75,7 +75,7 @@
     <!-- ====== SECTION 2: PHILOSOPHY ====== -->
     <section class="section philosophy-section section-light" id="philosophy">
         <div class="section-inner">
-            <h2 class="section-title animate-in">Capitalism +<br class="mobile-break"> Altruism Economy</h2>
+            <h2 class="section-title animate-in">Capitalism +<br class="mobile-break"> <span style="color:#2563eb">Altruism Economy</span></h2>
             <div class="philosophy-cards">
                 <div class="philosophy-card animate-in" data-delay="0">
                     <div class="philosophy-icon icon-red">
@@ -87,7 +87,7 @@
                     <p>The economy runs on exchange — your time, your work, your output. That system works. But it measures one kind of value.</p>
                 </div>
                 <div class="philosophy-card animate-in" data-delay="1">
-                    <div class="philosophy-icon icon-red">
+                    <div class="philosophy-icon icon-blue">
                         <svg viewBox="0 0 48 48" fill="none">
                             <path d="M24 42s-16-10-16-22a10 10 0 0 1 16-8 10 10 0 0 1 16 8c0 12-16 22-16 22z" stroke="currentColor" stroke-width="2" fill="none"/>
                         </svg>
@@ -99,7 +99,7 @@
                     <div class="philosophy-icon icon-red">
                         <svg viewBox="0 0 48 48" fill="none">
                             <path d="M24 42s-16-10-16-22a10 10 0 0 1 16-8 10 10 0 0 1 16 8c0 12-16 22-16 22z" stroke="currentColor" stroke-width="2" fill="none"/>
-                            <text x="24" y="30" text-anchor="middle" fill="currentColor" font-size="20" font-weight="700">$</text>
+                            <text x="24" y="30" text-anchor="middle" fill="#2563eb" font-size="20" font-weight="700">$</text>
                         </svg>
                     </div>
                     <h3>Both matter. One was missing.</h3>
@@ -124,10 +124,16 @@
                     </div>
                     <div class="exchange-offer">
                         <div class="exchange-offer-card">
-                            <div class="exchange-offer-label">Offering</div>
-                            <div class="exchange-offer-title">Voter registration help</div>
-                            <div class="exchange-offer-desc">Rosa speaks Spanish and English — she helps neighbors register to vote</div>
-                            <div class="exchange-offer-price">Earns <span class="ticker-vc">10 VC</span> per session</div>
+                            <div class="exchange-offer-header">
+                                <div class="exchange-offer-label">Offering</div>
+                                <div class="exchange-offer-title">Volunteer &amp; Designer</div>
+                            </div>
+                            <div class="exchange-offer-desc">Rosa can design flyers and volunteer in person</div>
+                            <div class="exchange-offer-price">Earns: <span class="price-earns">$30 + 10 VC</span></div>
+                            <div class="exchange-offer-tags">
+                                <span class="exchange-tag tag-teal">Volunteer</span>
+                                <span class="exchange-tag tag-teal">Design</span>
+                            </div>
                         </div>
                         <div class="exchange-arrows">
                             <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
@@ -136,15 +142,22 @@
                             </svg>
                         </div>
                         <div class="exchange-offer-card">
-                            <div class="exchange-offer-label">Requesting</div>
-                            <div class="exchange-offer-title">Civic info graphic design</div>
-                            <div class="exchange-offer-desc">Rosa needs flyers for a local voter drive event</div>
-                            <div class="exchange-offer-price">Pays <span class="ticker-vc">15 VC</span></div>
+                            <div class="exchange-offer-header">
+                                <div class="exchange-offer-label">Requesting</div>
+                                <div class="exchange-offer-title">Charity Dance Flyer</div>
+                            </div>
+                            <div class="exchange-offer-desc">Andy needs flyers for a local voter drive charity dance</div>
+                            <div class="exchange-offer-price">Pays: <span class="price-pays">$30 + 15 VC</span></div>
+                            <div class="exchange-offer-price">Earns: <span class="price-earns">1 VC</span></div>
+                            <div class="exchange-offer-tags">
+                                <span class="exchange-tag tag-orange">Civic Education</span>
+                                <span class="exchange-tag tag-orange">Helpful</span>
+                            </div>
                         </div>
                     </div>
                     <div class="exchange-person">
-                        <div class="exchange-avatar exchange-avatar-teal">T</div>
-                        <div class="exchange-name">Tyler</div>
+                        <div class="exchange-avatar exchange-avatar-red">A</div>
+                        <div class="exchange-name">Andy</div>
                         <div class="exchange-has">Has: <strong>30 VC</strong></div>
                     </div>
                 </div>
@@ -213,7 +226,7 @@
             <h2 class="section-title animate-in">How it works</h2>
             <p class="section-subtitle animate-in">Civic action earns VoteCraft Coin — here's how.</p>
             <div class="earn-cards">
-                <div class="earn-card animate-in" data-delay="0">
+                <div class="earn-card animate-in" data-delay="0" id="support-nonprofit-card" style="cursor:pointer">
                     <div class="earn-card-glow"></div>
                     <div class="earn-icon">
                         <svg viewBox="0 0 48 48" fill="none">
@@ -225,7 +238,7 @@
                     <p>Donate to civic reform organizations through VoteCraft</p>
                     <div class="earn-amount">+25 VC</div>
                 </div>
-                <div class="earn-card animate-in" data-delay="1">
+                <div class="earn-card animate-in" data-delay="1" id="learn-issue-card" style="cursor:pointer">
                     <div class="earn-card-glow"></div>
                     <div class="earn-icon icon-teal">
                         <svg viewBox="0 0 48 48" fill="none">
@@ -336,6 +349,67 @@
             </div>
         </div>
     </div>
+
+    <div class="modal-overlay" id="nonprofit-modal">
+        <div class="modal-content">
+            <button class="modal-close" id="nonprofit-modal-close" aria-label="Close">&times;</button>
+            <h3 class="nonprofit-modal-heading">Support a nonprofit</h3>
+            <p class="nonprofit-modal-sub">Every dollar donated through VoteCraft earns VC</p>
+            <div class="donation-tiers">
+                <div class="donation-row">
+                    <div class="donation-amount">$5</div>
+                    <div class="donation-vc">+5 VC</div>
+                    <div class="donation-desc">Support a local chapter</div>
+                </div>
+                <div class="donation-row">
+                    <div class="donation-amount">$25</div>
+                    <div class="donation-vc">+25 VC</div>
+                    <div class="donation-desc">Fund a civic workshop</div>
+                </div>
+                <div class="donation-row featured">
+                    <div class="donation-amount">$50</div>
+                    <div class="donation-vc">+50 VC</div>
+                    <div class="donation-desc">Sponsor a reform campaign</div>
+                </div>
+                <div class="donation-row">
+                    <div class="donation-amount">$100</div>
+                    <div class="donation-vc">+100 VC</div>
+                    <div class="donation-desc">Champion a cause</div>
+                </div>
+            </div>
+            <p class="nonprofit-modal-note">100% of donations go to vetted civic reform organizations</p>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="learn-modal">
+        <div class="modal-content">
+            <button class="modal-close" id="learn-modal-close" aria-label="Close">&times;</button>
+            <h3 class="learn-modal-heading">Learn about an issue</h3>
+            <p class="learn-modal-sub">Quick civic education modules that earn you VC</p>
+            <div class="learn-module-preview">
+                <div class="learn-module-topic">Module 1 of 3</div>
+                <div class="learn-module-title">Gerrymandering: How Districts Get Drawn</div>
+                <div class="learn-module-progress">
+                    <div class="learn-progress-bar">
+                        <div class="learn-progress-fill"></div>
+                    </div>
+                    <div class="learn-progress-text">1 of 3 questions</div>
+                </div>
+                <div class="learn-module-question">
+                    <div class="learn-module-question-label">Question</div>
+                    <div class="learn-module-question-text">What is gerrymandering?</div>
+                </div>
+                <div class="learn-module-options">
+                    <div class="learn-module-option">A tax policy for small businesses</div>
+                    <div class="learn-module-option">Manipulating district boundaries for political advantage</div>
+                    <div class="learn-module-option">A type of voter registration drive</div>
+                    <div class="learn-module-option">A federal campaign finance rule</div>
+                </div>
+                <div class="learn-module-reward">Complete this module to earn <span>+5 VC</span></div>
+            </div>
+        </div>
+    </div>
+
         </div>
     </section>
 
@@ -616,6 +690,6 @@
     </section>
 
 
-    <script src="js/vc-coin.js?v=20260213d"></script>
+    <script src="js/vc-coin.js?v=20260213e"></script>
 </body>
 </html>

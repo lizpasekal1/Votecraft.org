@@ -222,6 +222,46 @@
         });
     });
 
+    // ====== NONPROFIT MODAL ======
+
+    const supportNonprofitCard = document.getElementById('support-nonprofit-card');
+    const nonprofitModal = document.getElementById('nonprofit-modal');
+    const nonprofitModalClose = document.getElementById('nonprofit-modal-close');
+
+    supportNonprofitCard.addEventListener('click', () => {
+        nonprofitModal.classList.add('open');
+    });
+
+    nonprofitModalClose.addEventListener('click', () => {
+        nonprofitModal.classList.remove('open');
+    });
+
+    nonprofitModal.addEventListener('click', (e) => {
+        if (e.target === nonprofitModal) {
+            nonprofitModal.classList.remove('open');
+        }
+    });
+
+    // ====== LEARN MODULE MODAL ======
+
+    const learnIssueCard = document.getElementById('learn-issue-card');
+    const learnModal = document.getElementById('learn-modal');
+    const learnModalClose = document.getElementById('learn-modal-close');
+
+    learnIssueCard.addEventListener('click', () => {
+        learnModal.classList.add('open');
+    });
+
+    learnModalClose.addEventListener('click', () => {
+        learnModal.classList.remove('open');
+    });
+
+    learnModal.addEventListener('click', (e) => {
+        if (e.target === learnModal) {
+            learnModal.classList.remove('open');
+        }
+    });
+
     // ====== QUIZ MODAL ======
 
     const contributeTimeCard = document.getElementById('contribute-time-card');
