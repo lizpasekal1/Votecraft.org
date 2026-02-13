@@ -206,13 +206,29 @@
         }
     });
 
+    // ====== LISTING ACCORDIONS ======
+
+    document.querySelectorAll('#stories .exchange-listing').forEach(listing => {
+        listing.addEventListener('click', () => {
+            const wasExpanded = listing.classList.contains('expanded');
+            // Close all others
+            document.querySelectorAll('#stories .exchange-listing.expanded').forEach(el => {
+                el.classList.remove('expanded');
+            });
+            // Toggle clicked one
+            if (!wasExpanded) {
+                listing.classList.add('expanded');
+            }
+        });
+    });
+
     // ====== QUIZ MODAL ======
 
-    const quizTriggerBtn = document.getElementById('quiz-trigger-btn');
+    const contributeTimeCard = document.getElementById('contribute-time-card');
     const quizModal = document.getElementById('quiz-modal');
     const quizModalClose = document.getElementById('quiz-modal-close');
 
-    quizTriggerBtn.addEventListener('click', () => {
+    contributeTimeCard.addEventListener('click', () => {
         quizModal.classList.add('open');
     });
 
@@ -238,6 +254,78 @@
             }
         }
     });
+
+    // ====== INTERACTIVE ALTRUISM TAGS ======
+
+    function initAltruismTags() {
+        const transactionTags = document.getElementById('transaction-tags');
+        const grid = document.getElementById('altruism-tags-grid');
+        if (!transactionTags || !grid) return;
+
+        // Track active tags
+        const activeTags = new Set();
+
+        function renderTransaction() {
+            transactionTags.innerHTML = '';
+            if (activeTags.size === 0) {
+                const hint = document.createElement('span');
+                hint.className = 'tags-empty-hint';
+                hint.textContent = 'Click tags below to add them';
+                transactionTags.appendChild(hint);
+                return;
+            }
+            activeTags.forEach(key => {
+                const [type, name] = key.split('::');
+                const tag = document.createElement('span');
+                tag.className = 'atag atag-' + type + ' atag-removable';
+                tag.textContent = name;
+                tag.dataset.tag = name;
+                tag.dataset.type = type;
+                tag.title = 'Click to remove';
+                transactionTags.appendChild(tag);
+            });
+        }
+
+        function syncCategoryStates() {
+            grid.querySelectorAll('.atag[data-tag]').forEach(el => {
+                const key = el.dataset.type + '::' + el.dataset.tag;
+                el.classList.toggle('atag-active', activeTags.has(key));
+            });
+        }
+
+        // Click category tags to add
+        grid.addEventListener('click', e => {
+            const tag = e.target.closest('.atag[data-tag]');
+            if (!tag) return;
+            const key = tag.dataset.type + '::' + tag.dataset.tag;
+            if (activeTags.has(key)) {
+                activeTags.delete(key);
+            } else {
+                activeTags.add(key);
+            }
+            renderTransaction();
+            syncCategoryStates();
+        });
+
+        // Click transaction tags to remove
+        transactionTags.addEventListener('click', e => {
+            const tag = e.target.closest('.atag[data-tag]');
+            if (!tag) return;
+            const key = tag.dataset.type + '::' + tag.dataset.tag;
+            activeTags.delete(key);
+            renderTransaction();
+            syncCategoryStates();
+        });
+
+        // Pre-populate with 3 default tags
+        activeTags.add('contribution::Volunteer');
+        activeTags.add('impact::Civic Education');
+        activeTags.add('effort::Helpful');
+        renderTransaction();
+        syncCategoryStates();
+    }
+
+    initAltruismTags();
 
     // ====== HERO PARTICLES ======
 

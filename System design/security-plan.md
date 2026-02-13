@@ -449,6 +449,7 @@ All security-related actions taken on this project, in reverse chronological ord
 
 | Date | Action | Details |
 |------|--------|---------|
+| 2026-02-12 | UI polish and iframe navigation fix | Fixed `target="_top"` on support overlay donate link in vote.html and vote-app.js — `target="_blank"` was being blocked when vote.html is loaded inside a WordPress iframe. Darkened container backgrounds on VC Coin page for text readability. No data handling changes. |
 | 2026-02-11 | Donate page created (UI only) | Created `pages/votecraft-coin/donate.html` with donation tiers ($12.30/$25/$50/$100/custom). Placeholder buttons only — no payment processor integrated yet. Cross-linked from vote.html sidebar and VC coin index.html. No user data collected or transmitted. |
 | 2026-02-10 | VC ownership, tax, and ethics sections added | Added Section 8h (Ownership & Platform Control), 8i (Tax Awareness), 8j (Anti-Abuse & Ethics Clause). Renumbered Transparency to 8k. |
 | 2026-02-10 | VC legal disclaimers and earning rules added | Added Section 8f (What VC is NOT — legal disclaimers for SEC/Howey Test protection) and Section 8g (Earning Rules — fairness, verification standards, expiration/revocation/caps policy, fairness safeguards). |

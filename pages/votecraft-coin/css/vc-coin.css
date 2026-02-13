@@ -202,7 +202,6 @@ body {
     color: #555;
 }
 
-.section-light .philosophy-card,
 .section-light .tags-category,
 .section-light .exchange-listing,
 .section-light .badge-toggle-demo {
@@ -211,7 +210,6 @@ body {
     box-shadow: 1px 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-.section-light .philosophy-card:hover,
 .section-light .exchange-listing:hover {
     box-shadow: 2px 4px 16px rgba(0, 0, 0, 0.1);
     border-color: #d1d5db;
@@ -648,28 +646,26 @@ body {
 
 .philosophy-section {
     background: #fafafa;
+    min-height: auto;
+    padding: 48px 24px;
 }
 
 .philosophy-cards {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 24px;
-    margin-bottom: 48px;
 }
 
 .philosophy-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    background: none;
+    border: none;
     padding: 32px 24px;
     text-align: center;
-    transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+    transition: transform 0.3s;
 }
 
 .philosophy-card:hover {
     transform: translateY(-4px);
-    border-color: rgba(37, 99, 235, 0.3);
-    box-shadow: var(--glow-blue);
 }
 
 .philosophy-icon {
@@ -684,6 +680,10 @@ body {
 }
 
 .philosophy-icon.icon-orange {
+    color: var(--orange);
+}
+
+.philosophy-icon.icon-red {
     color: var(--orange);
 }
 
@@ -1206,7 +1206,7 @@ body {
 .not-crypto-sub-modal {
     text-align: center;
     font-size: 0.9rem;
-    color: var(--text-muted);
+    color: var(--text);
     margin-bottom: 28px;
 }
 
@@ -1228,7 +1228,7 @@ body {
 .comparison-col {
     font-size: 0.85rem;
     font-weight: 600;
-    color: var(--text-muted);
+    color: var(--text);
     text-align: center;
 }
 
@@ -1238,7 +1238,7 @@ body {
 
 .comparison-vs {
     font-size: 0.7rem;
-    color: var(--text-muted);
+    color: var(--text-dim);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -1262,7 +1262,7 @@ body {
 
 .cell-crypto {
     background: rgba(239, 68, 68, 0.08);
-    color: var(--text-dim);
+    color: var(--text);
     border: 1px solid rgba(239, 68, 68, 0.15);
 }
 
@@ -1668,6 +1668,8 @@ body {
 
 .stories-section {
     background: #2563eb;
+    min-height: auto;
+    padding: 72px 24px;
 }
 
 .stories-grid {
@@ -1960,11 +1962,46 @@ body {
     font-weight: 600;
     letter-spacing: 0.02em;
     border: 1px solid;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+    cursor: pointer;
+    user-select: none;
 }
 
 .atag:hover {
     transform: translateY(-1px);
+}
+
+/* Active state — tag is already in the transaction */
+.atag.atag-active {
+    opacity: 0.35;
+}
+
+/* Removable tags in the transaction card */
+.atag-removable::after {
+    content: ' \00d7';
+    opacity: 0.5;
+    margin-left: 2px;
+}
+
+.atag-removable:hover {
+    opacity: 0.6;
+}
+
+/* Pop-in animation for newly added tags */
+@keyframes tag-pop-in {
+    from { transform: scale(0.7); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.tags-transaction-tags .atag {
+    animation: tag-pop-in 0.2s ease-out;
+}
+
+/* Empty state hint */
+.tags-empty-hint {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.35);
+    font-style: italic;
 }
 
 .atag-contribution {
@@ -2069,6 +2106,7 @@ body {
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
     margin-bottom: 40px;
+    align-items: start;
 }
 
 .exchange-listing {
@@ -2125,6 +2163,98 @@ body {
     font-weight: 700;
 }
 
+/* Accordion listings */
+.exchange-listing {
+    cursor: pointer;
+}
+
+.exchange-listing-header {
+    position: relative;
+}
+
+.listing-chevron {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    transition: transform 0.3s;
+}
+
+.exchange-listing.expanded .listing-chevron {
+    transform: rotate(180deg);
+}
+
+.listing-accordion {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+}
+
+.exchange-listing.expanded .listing-accordion {
+    max-height: 400px;
+}
+
+.listing-story {
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    margin-top: 12px;
+    display: flex;
+    gap: 12px;
+}
+
+.listing-story-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.listing-story-flow {
+    flex: 1;
+}
+
+.listing-story-step {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.listing-story-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.listing-story-value {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.listing-story-reward {
+    background: rgba(20, 204, 176, 0.1);
+    border-radius: 6px;
+    padding: 6px 10px;
+}
+
+.listing-story-reward .story-vc {
+    color: var(--teal);
+}
+
+.listing-story-arrow {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    padding: 4px 0;
+}
+
 .exchange-tagline {
     text-align: center;
     font-size: clamp(1.1rem, 2.5vw, 1.4rem);
@@ -2132,6 +2262,50 @@ body {
     color: var(--teal);
     max-width: 600px;
     margin: 0 auto;
+}
+
+/* White-themed listing cards in stories section */
+.stories-section .exchange-listing {
+    background: #ffffff;
+    border-color: #e5e7eb;
+    box-shadow: 1px 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.stories-section .exchange-listing:hover {
+    box-shadow: 2px 4px 16px rgba(0, 0, 0, 0.1);
+    border-color: #d1d5db;
+}
+
+.stories-section .exchange-listing-title {
+    color: #1a1a2e;
+}
+
+.stories-section .exchange-listing-meta {
+    color: #999;
+}
+
+.stories-section .listing-chevron {
+    color: #999;
+}
+
+.stories-section .listing-story {
+    border-top-color: #e5e7eb;
+}
+
+.stories-section .listing-story-label {
+    color: #888;
+}
+
+.stories-section .listing-story-value {
+    color: #1a1a2e;
+}
+
+.stories-section .listing-story-arrow {
+    color: #bbb;
+}
+
+.stories-section .listing-story-reward {
+    background: rgba(20, 204, 176, 0.08);
 }
 
 /* White text overrides for blue sections */
@@ -2441,20 +2615,49 @@ body {
     }
 }
 
+.mobile-break { display: none; }
+
 @media (max-width: 520px) {
+    .mobile-break { display: block; }
+
     .section {
         padding: 48px 16px;
         min-height: auto;
     }
 
+    /* Safe area insets for notch/dynamic island */
+    .site-nav {
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+    }
+
+    .site-footer {
+        padding-bottom: max(40px, env(safe-area-inset-bottom));
+    }
+
+    /* Nav */
+    .nav-inner {
+        height: 52px;
+    }
+
+    .nav-wordmark {
+        font-size: 1rem;
+    }
+
+    /* Hero */
     .hero-section {
         padding-top: 24px;
         min-height: auto;
         justify-content: flex-start;
     }
 
-    .emporium-grid {
-        grid-template-columns: 1fr;
+    .hero-title {
+        font-size: 1.8rem;
+    }
+
+    .hero-subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 12px;
     }
 
     .coin {
@@ -2464,6 +2667,129 @@ body {
 
     .coin-text {
         font-size: 2rem;
+    }
+
+    .coin-container {
+        margin-bottom: 24px;
+    }
+
+    /* Philosophy */
+    .philosophy-card {
+        padding: 20px 16px;
+    }
+
+    .philosophy-icon {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 12px;
+    }
+
+    /* Exchange section */
+    .exchange-demo {
+        margin-bottom: 32px;
+    }
+
+    .exchange-avatar {
+        width: 44px;
+        height: 44px;
+        font-size: 1.1rem;
+    }
+
+    .exchange-offer-card {
+        padding: 16px;
+    }
+
+    .exchange-offer-title {
+        font-size: 0.9rem;
+    }
+
+    .exchange-offer-desc {
+        font-size: 0.75rem;
+    }
+
+    /* Altruism tags */
+    .altruism-tags-section {
+        margin-bottom: 32px;
+        padding: 28px 0;
+    }
+
+    .altruism-tags-desc {
+        font-size: 0.85rem;
+        margin-bottom: 24px;
+    }
+
+    .tags-transaction {
+        padding: 16px;
+    }
+
+    .tags-transaction-amount {
+        font-size: 1rem;
+    }
+
+    .tags-transaction-action {
+        font-size: 0.8rem;
+    }
+
+    .tags-category {
+        padding: 16px 14px;
+    }
+
+    /* Bigger touch targets for tag pills on mobile */
+    .atag {
+        padding: 6px 14px;
+        font-size: 0.7rem;
+    }
+
+    /* Earn section */
+    .earn-card {
+        padding: 24px 20px;
+    }
+
+    .earn-icon {
+        width: 44px;
+        height: 44px;
+        margin-bottom: 12px;
+    }
+
+    .earn-actions {
+        margin-top: 20px;
+    }
+
+    /* Badge section */
+    .badge-showcase {
+        gap: 20px;
+    }
+
+    .badge-icon {
+        width: 56px;
+        height: 56px;
+    }
+
+    .badge-toggle-demo {
+        padding: 12px 14px;
+    }
+
+    /* Stories section */
+    .stories-section {
+        padding: 48px 16px;
+    }
+
+    .exchange-listing {
+        padding: 14px;
+    }
+
+    /* Emporium */
+    .emporium-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .emporium-card {
+        padding: 20px 16px;
+    }
+
+    /* CTA */
+    .cta-section {
+        min-height: 50dvh;
     }
 
     .cta-buttons {
@@ -2477,6 +2803,7 @@ body {
         justify-content: center;
     }
 
+    /* Modals */
     .modal-content {
         padding: 28px 20px;
     }
@@ -2485,27 +2812,20 @@ body {
         padding: 16px;
     }
 
-    .philosophy-card {
-        padding: 24px 20px;
+    .quiz-modal-content {
+        padding: 28px 20px;
     }
 
-    .earn-card {
-        padding: 24px 20px;
-    }
-
-    .exchange-offer-card {
-        padding: 16px;
-    }
-
+    /* General */
     .scroll-indicator {
         bottom: 20px;
     }
 
-    .cta-section {
-        min-height: 50dvh;
-    }
-
     .section-subtitle {
         margin-bottom: 32px;
+    }
+
+    .section-title {
+        margin-bottom: 12px;
     }
 }
