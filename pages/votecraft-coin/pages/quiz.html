@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>VoteCraft — Civic Contributor Quiz</title>
+    <meta name="description" content="What kind of civic contributor are you? Answer 3 quick questions to find your VC earning path.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/vc-coin.css?v=20260213u">
+    <style>
+        body {
+            background: var(--bg-darker);
+            color: var(--text);
+            font-family: 'Open Sans', sans-serif;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+        }
+
+        .subpage {
+            max-width: 580px;
+            margin: 0 auto;
+            padding: 24px 20px 48px;
+        }
+
+        .subpage-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 32px;
+            transition: color 0.2s;
+        }
+
+        .subpage-back:hover {
+            color: var(--teal);
+        }
+
+        @media (max-width: 520px) {
+            .subpage {
+                padding: 16px 16px 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="subpage">
+        <a href="../index.html" class="subpage-back" id="back-link">&larr; Back to VoteCraft Coin</a>
+
+        <h3 class="quiz-modal-title">What kind of civic contributor are you?</h3>
+        <p class="quiz-modal-subtitle">Answer 3 quick questions to find your VC earning path</p>
+
+        <div class="quiz-container" id="quiz-container">
+            <!-- Question 1 -->
+            <div class="quiz-step active" data-step="1">
+                <div class="quiz-progress">
+                    <div class="quiz-progress-bar" style="width: 33%"></div>
+                </div>
+                <h3 class="quiz-question">When you see a problem in your community, you usually...</h3>
+                <div class="quiz-options">
+                    <button class="quiz-option" data-type="doer">
+                        <span class="quiz-option-icon">&#9889;</span>
+                        <span class="quiz-option-text">Jump in and start fixing it</span>
+                    </button>
+                    <button class="quiz-option" data-type="learner">
+                        <span class="quiz-option-icon">&#128218;</span>
+                        <span class="quiz-option-text">Research the root cause first</span>
+                    </button>
+                    <button class="quiz-option" data-type="connector">
+                        <span class="quiz-option-icon">&#127760;</span>
+                        <span class="quiz-option-text">Rally people who can help</span>
+                    </button>
+                    <button class="quiz-option" data-type="supporter">
+                        <span class="quiz-option-icon">&#10084;</span>
+                        <span class="quiz-option-text">Support orgs already working on it</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="quiz-step" data-step="2">
+                <div class="quiz-progress">
+                    <div class="quiz-progress-bar" style="width: 66%"></div>
+                </div>
+                <h3 class="quiz-question">On a Saturday morning, you'd rather...</h3>
+                <div class="quiz-options">
+                    <button class="quiz-option" data-type="doer">
+                        <span class="quiz-option-icon">&#128736;</span>
+                        <span class="quiz-option-text">Volunteer at a local event</span>
+                    </button>
+                    <button class="quiz-option" data-type="learner">
+                        <span class="quiz-option-icon">&#9749;</span>
+                        <span class="quiz-option-text">Read about policy and reform ideas</span>
+                    </button>
+                    <button class="quiz-option" data-type="connector">
+                        <span class="quiz-option-icon">&#128172;</span>
+                        <span class="quiz-option-text">Attend a community meeting or forum</span>
+                    </button>
+                    <button class="quiz-option" data-type="supporter">
+                        <span class="quiz-option-icon">&#128177;</span>
+                        <span class="quiz-option-text">Find a great nonprofit and chip in</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="quiz-step" data-step="3">
+                <div class="quiz-progress">
+                    <div class="quiz-progress-bar" style="width: 100%"></div>
+                </div>
+                <h3 class="quiz-question">What matters most to you about civic engagement?</h3>
+                <div class="quiz-options">
+                    <button class="quiz-option" data-type="doer">
+                        <span class="quiz-option-icon">&#128170;</span>
+                        <span class="quiz-option-text">Seeing tangible results</span>
+                    </button>
+                    <button class="quiz-option" data-type="learner">
+                        <span class="quiz-option-icon">&#128161;</span>
+                        <span class="quiz-option-text">Understanding how systems work</span>
+                    </button>
+                    <button class="quiz-option" data-type="connector">
+                        <span class="quiz-option-icon">&#129309;</span>
+                        <span class="quiz-option-text">Bringing people together</span>
+                    </button>
+                    <button class="quiz-option" data-type="supporter">
+                        <span class="quiz-option-icon">&#127793;</span>
+                        <span class="quiz-option-text">Helping good work grow</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="quiz-result" id="quiz-result" hidden>
+                <div class="quiz-result-icon" id="quiz-result-icon"></div>
+                <h3 class="quiz-result-title" id="quiz-result-title"></h3>
+                <p class="quiz-result-desc" id="quiz-result-desc"></p>
+                <div class="quiz-result-earn">
+                    <h4>Your top VC earning paths:</h4>
+                    <div class="quiz-result-paths" id="quiz-result-paths"></div>
+                </div>
+                <button class="btn-secondary quiz-retake" id="quiz-retake">Take it again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        'use strict';
+
+        const quizTypes = {
+            doer: {
+                icon: '&#9889;',
+                title: 'The Civic Doer',
+                desc: 'You lead with action. When something needs fixing, you show up. Volunteering, canvassing, organizing — you turn energy into impact. VC rewards the hands-on work that keeps communities moving.',
+                paths: [
+                    { action: 'Volunteer with partner orgs', vc: '+15 VC/session' },
+                    { action: 'Support reform nonprofits', vc: '+25 VC' },
+                    { action: 'Help with voter registration', vc: '+10 VC' },
+                ],
+            },
+            learner: {
+                icon: '&#128218;',
+                title: 'The Informed Citizen',
+                desc: 'You believe knowledge is power. You dig into policy, understand root causes, and make decisions based on evidence. VC rewards the curiosity that makes democracy smarter.',
+                paths: [
+                    { action: 'Complete civic deep dives', vc: '+5 VC/module' },
+                    { action: 'Share research with community', vc: '+8 VC' },
+                    { action: 'Support reform nonprofits', vc: '+25 VC' },
+                ],
+            },
+            connector: {
+                icon: '&#127760;',
+                title: 'The Community Connector',
+                desc: 'You bring people together. You know that change happens when communities organize, share skills, and lift each other up. VC rewards the social fabric that makes civic action possible.',
+                paths: [
+                    { action: 'Exchange civic skills via VC', vc: '+10-20 VC' },
+                    { action: 'Rally others to support reform', vc: '+15 VC' },
+                    { action: 'Host civic events', vc: '+12 VC' },
+                ],
+            },
+            supporter: {
+                icon: '&#10084;',
+                title: 'The Steady Supporter',
+                desc: 'You believe in putting your resources where your values are. You find the organizations doing the work and fuel their mission. VC rewards the generosity that makes reform possible.',
+                paths: [
+                    { action: 'Donate to reform nonprofits', vc: '+25 VC' },
+                    { action: 'Earn Patron Badge ($50+)', vc: 'Badge + VC' },
+                    { action: 'Learn about the issues you fund', vc: '+5 VC' },
+                ],
+            },
+        };
+
+        let quizAnswers = [];
+        let currentQuizStep = 1;
+
+        function initQuiz() {
+            const container = document.getElementById('quiz-container');
+            if (!container) return;
+
+            container.addEventListener('click', (e) => {
+                const option = e.target.closest('.quiz-option');
+                if (!option) return;
+
+                const type = option.dataset.type;
+                quizAnswers.push(type);
+
+                option.classList.add('selected');
+
+                setTimeout(() => {
+                    currentQuizStep++;
+                    if (currentQuizStep <= 3) {
+                        showQuizStep(currentQuizStep);
+                    } else {
+                        showQuizResult();
+                    }
+                }, 400);
+            });
+
+            const retake = document.getElementById('quiz-retake');
+            if (retake) {
+                retake.addEventListener('click', () => {
+                    quizAnswers = [];
+                    currentQuizStep = 1;
+                    document.getElementById('quiz-result').hidden = true;
+                    document.querySelectorAll('.quiz-step').forEach((s) => s.classList.remove('active'));
+                    document.querySelectorAll('.quiz-option').forEach((o) => o.classList.remove('selected'));
+                    document.querySelector('.quiz-step[data-step="1"]').classList.add('active');
+                });
+            }
+        }
+
+        function showQuizStep(step) {
+            document.querySelectorAll('.quiz-step').forEach((s) => s.classList.remove('active'));
+            const next = document.querySelector(`.quiz-step[data-step="${step}"]`);
+            if (next) next.classList.add('active');
+        }
+
+        function showQuizResult() {
+            const counts = {};
+            quizAnswers.forEach((t) => { counts[t] = (counts[t] || 0) + 1; });
+            const winner = Object.keys(counts).reduce((a, b) => counts[a] >= counts[b] ? a : b);
+            const result = quizTypes[winner];
+
+            document.querySelectorAll('.quiz-step').forEach((s) => s.classList.remove('active'));
+            const resultEl = document.getElementById('quiz-result');
+            resultEl.hidden = false;
+
+            document.getElementById('quiz-result-icon').innerHTML = result.icon;
+            document.getElementById('quiz-result-title').textContent = result.title;
+            document.getElementById('quiz-result-desc').textContent = result.desc;
+
+            const pathsEl = document.getElementById('quiz-result-paths');
+            pathsEl.innerHTML = result.paths
+                .map(
+                    (p) => `
+                <div class="quiz-path">
+                    <span class="quiz-path-action">${p.action}</span>
+                    <span class="quiz-path-vc">${p.vc}</span>
+                </div>
+            `
+                )
+                .join('');
+        }
+
+        initQuiz();
+    })();
+    </script>
+    <script>if (window !== window.top) document.getElementById('back-link').style.display = 'none';</script>
+
+</body>
+</html>

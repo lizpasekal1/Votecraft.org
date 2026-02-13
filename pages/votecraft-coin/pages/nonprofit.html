@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>VoteCraft — Support a Nonprofit</title>
+    <meta name="description" content="Every dollar donated through VoteCraft earns VC. See how donations translate to civic value.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/vc-coin.css?v=20260213u">
+    <style>
+        body {
+            background: var(--bg-darker);
+            color: var(--text);
+            font-family: 'Open Sans', sans-serif;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+        }
+
+        .subpage {
+            max-width: 580px;
+            margin: 0 auto;
+            padding: 24px 20px 48px;
+        }
+
+        .subpage-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 32px;
+            transition: color 0.2s;
+        }
+
+        .subpage-back:hover {
+            color: var(--teal);
+        }
+
+        @media (max-width: 520px) {
+            .subpage {
+                padding: 16px 16px 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="subpage">
+        <a href="../index.html" class="subpage-back" id="back-link">&larr; Back to VoteCraft Coin</a>
+
+        <h3 class="nonprofit-modal-heading">Support a nonprofit</h3>
+        <p class="nonprofit-modal-sub">Every dollar donated through VoteCraft earns VC</p>
+        <div class="donation-tiers">
+            <div class="donation-row">
+                <div class="donation-amount">$5</div>
+                <div class="donation-vc">+5 VC</div>
+                <div class="donation-desc">Support a local chapter</div>
+            </div>
+            <div class="donation-row">
+                <div class="donation-amount">$25</div>
+                <div class="donation-vc">+25 VC</div>
+                <div class="donation-desc">Fund a civic workshop</div>
+            </div>
+            <div class="donation-row featured">
+                <div class="donation-amount">$50</div>
+                <div class="donation-vc">+50 VC</div>
+                <div class="donation-desc">Sponsor a reform campaign</div>
+            </div>
+            <div class="donation-row">
+                <div class="donation-amount">$100</div>
+                <div class="donation-vc">+100 VC</div>
+                <div class="donation-desc">Champion a cause</div>
+            </div>
+        </div>
+        <p class="nonprofit-modal-note">100% of donations go to vetted civic reform organizations</p>
+    </div>
+
+    <script>if (window !== window.top) document.getElementById('back-link').style.display = 'none';</script>
+</body>
+</html>
