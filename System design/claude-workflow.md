@@ -32,13 +32,13 @@ Claude must hold these principles in every session. If a proposed feature, archi
 
 Update this section as the project evolves.
 
-**Last updated:** 2026-02-11
+**Last updated:** 2026-02-12
 
 | App | Status | Notes |
 |-----|--------|-------|
-| Vote platform | Live on GitHub Pages + WordPress | Issue exploration, rep alignment, state bill lookup. WordPress backend (PHP proxy + custom DB tables). |
-| VoteCraft Coin page | Live on GitHub Pages | `pages/votecraft-coin/index.html` — explains VC altruism currency, earning, spending, community exchange |
-| Donate page | Live on GitHub Pages (UI only) | `pages/votecraft-coin/donate.html` — donation tiers, placeholder buttons (no payment processor yet) |
+| Vote platform | Live on GitHub Pages + WordPress | Issue exploration, rep alignment, state bill lookup. WordPress backend (PHP proxy + custom DB tables). **Note:** vote.html is loaded inside an iframe on WordPress — all navigation links must use `target="_top"` to break out of the iframe. |
+| VoteCraft Coin page | Live on GitHub Pages | `pages/votecraft-coin/index.html` — explains VC altruism currency, earning, spending, community exchange. CTA links to donate.html and app.html. |
+| Donate page | Live on GitHub Pages (UI only) | `pages/votecraft-coin/donate.html` — donation tiers, placeholder buttons (no payment processor yet). Cross-linked from vote.html sidebar ("Support Us") and VC coin index.html CTA. |
 | MyReps | Superseded by Vote platform | Address lookup merged into vote platform's left panel |
 | JokeMaster | In development | Firebase/Firestore backend. Security rules need console verification. |
 | Scavenger Tours | Paused | Supabase project paused due to inactivity. 90-day window to unpause. |
