@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/vc-coin.css?v=20260215f">
+    <link rel="stylesheet" href="css/vc-coin.css?v=20260215g">
 </head>
 <body>
 
@@ -326,54 +326,12 @@
 
             <div class="rcv-cards">
                 <div class="rcv-widget animate-in" data-delay="0">
-                    <div class="rcv-demo">
-                        <div class="demo-ballot">
-                            <h3>Next Event Vote</h3>
-                            <p class="ballot-instructions">Tap to rank your choices</p>
-                            <div id="candidate-list" class="candidate-list">
-                                <div class="candidate-item" data-candidate="Pizza and Trivia">
-                                    <span class="rank-badge"></span>
-                                    <span class="candidate-icon">🍕</span>
-                                    <span class="candidate-name">Pizza and Trivia</span>
-                                </div>
-                                <div class="candidate-item" data-candidate="Town Hall Meetup">
-                                    <span class="rank-badge"></span>
-                                    <span class="candidate-icon">🎤</span>
-                                    <span class="candidate-name">Town Hall Meetup</span>
-                                </div>
-                                <div class="candidate-item" data-candidate="Pizza Park Day">
-                                    <span class="rank-badge"></span>
-                                    <span class="candidate-icon">🌳</span>
-                                    <span class="candidate-name">Pizza Park Day</span>
-                                </div>
-                                <div class="candidate-item" data-candidate="History Jam">
-                                    <span class="rank-badge"></span>
-                                    <span class="candidate-icon">📜</span>
-                                    <span class="candidate-name">History Jam</span>
-                                </div>
-                                <div class="candidate-item" data-candidate="Art Walk">
-                                    <span class="rank-badge"></span>
-                                    <span class="candidate-icon">🎨</span>
-                                    <span class="candidate-name">Art Walk</span>
-                                </div>
-                            </div>
-                            <button id="cast-vote-btn" class="rcv-btn-primary">Cast Your Vote! <span class="vc-cost-badge">1 VC</span></button>
-                            <div class="vc-balance-bar">
-                                <span class="vc-balance-label">Your balance</span>
-                                <span class="vc-balance-amount" id="vc-balance">12 VC</span>
-                            </div>
-                        </div>
-                        <div class="demo-results">
-                            <h3>Election Results</h3>
-                            <div id="election-info-container" class="election-info"></div>
-                            <div id="results-display" class="results-display">
-                                <p class="results-placeholder">Cast your vote to see how RCV works!</p>
-                            </div>
-                            <button id="reset-demo-btn" class="rcv-btn-secondary" style="display: none;">Percent Threshold Demo</button>
-                        </div>
-                    </div>
-                    <button id="rcv-mode-btn" class="mode-btn active" hidden></button>
-                    <button id="wta-mode-btn" class="mode-btn" hidden></button>
+                    <iframe id="rcv-iframe"
+                        src="../../widgets/rcv/html/rcv-vc-coin.html"
+                        style="width: 100%; min-height: 420px; border: none; border-radius: 10px; display: block;"
+                        scrolling="no"
+                        loading="lazy">
+                    </iframe>
                 </div>
                 <div class="rcv-card animate-in" data-delay="1">
                     <h3>Community Polls</h3>
@@ -418,7 +376,15 @@
     </section>
 
 
-    <script src="js/rcv-demo.js?v=20260215f"></script>
-    <script src="js/vc-coin.js?v=20260215f"></script>
+    <script>
+    // Auto-resize RCV iframe to fit content
+    window.addEventListener('message', function(e) {
+        if (e.data && e.data.type === 'rcv-resize') {
+            var iframe = document.getElementById('rcv-iframe');
+            if (iframe) iframe.style.height = e.data.height + 'px';
+        }
+    });
+    </script>
+    <script src="js/vc-coin.js?v=20260215g"></script>
 </body>
 </html>
