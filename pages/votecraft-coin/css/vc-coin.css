@@ -36,9 +36,7 @@
     left: 0;
     right: 0;
     z-index: 1000;
-    background: rgba(17, 24, 39, 0.85);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(17, 24, 39, 0.95);
     border-bottom: 1px solid var(--border);
     padding: 0 24px;
     transition: background 0.3s, box-shadow 0.3s;
@@ -741,7 +739,6 @@ body {
     top: 72px;
     right: 24px;
     background: var(--bg-card);
-    backdrop-filter: blur(12px);
     border: 1px solid var(--teal);
     border-radius: var(--radius);
     padding: 12px 20px;
@@ -2100,10 +2097,8 @@ body {
 .rcv-section .section-title,
 .rcv-section .section-subtitle {
     color: #ffffff;
-}
-
-.rcv-section .section-subtitle {
     margin-bottom: 0;
+    max-width: none;
 }
 
 .rcv-cards {
@@ -2142,15 +2137,16 @@ body {
     border-radius: 20px;
     font-size: 0.8rem;
     font-weight: 700;
-    background: rgba(96, 165, 250, 0.15);
-    color: #60a5fa;
-    border: 1px solid rgba(96, 165, 250, 0.3);
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    margin-right: 6px;
 }
 
 .rcv-tag-teal {
-    background: rgba(20, 204, 176, 0.15);
-    color: var(--teal);
-    border-color: rgba(20, 204, 176, 0.3);
+    background: rgba(20, 204, 176, 0.25);
+    color: #ffffff;
+    border-color: rgba(20, 204, 176, 0.4);
 }
 
 /* ====== RCV WIDGET (inline, scoped under .rcv-widget) ====== */

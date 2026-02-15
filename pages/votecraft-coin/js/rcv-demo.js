@@ -46,9 +46,12 @@ class RCVDemo {
     }
 
     updateCastVoteButton() {
-        const hasSelection = this.userRankings.length > 0;
-        this.castVoteBtn.disabled = !hasSelection;
-        this.castVoteBtn.classList.toggle('disabled', !hasSelection);
+        const totalCandidates = this.candidateList.querySelectorAll('.candidate-item').length;
+        const ready = this.votingMode === 'wta'
+            ? this.userRankings.length > 0
+            : this.userRankings.length === totalCandidates;
+        this.castVoteBtn.disabled = !ready;
+        this.castVoteBtn.classList.toggle('disabled', !ready);
     }
 
     updateElectionInfo() {
