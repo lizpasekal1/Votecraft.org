@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/vc-coin.css?v=20260214b">
+    <link rel="stylesheet" href="css/vc-coin.css?v=20260215a">
 </head>
 <body>
 
@@ -325,7 +325,52 @@
             <p class="section-subtitle animate-in">Ranked choice voting features for fairer community decisions</p>
 
             <div class="rcv-cards">
-                <iframe src="https://votecraft.org/wp-content/uploads/widgets/rcv/html/rcv-demo-vc.html" class="rcv-demo-iframe animate-in" id="rcv-demo-iframe" data-delay="0" scrolling="no"></iframe>
+                <div class="rcv-widget animate-in" data-delay="0">
+                    <div class="rcv-demo">
+                        <div class="demo-ballot">
+                            <h3>Next Community Event</h3>
+                            <p class="ballot-instructions">Rank your favorites — tap to choose</p>
+                            <div id="candidate-list" class="candidate-list">
+                                <div class="candidate-item" data-candidate="Town Hall Meetup">
+                                    <span class="rank-badge"></span>
+                                    <span class="candidate-icon">🎤</span>
+                                    <span class="candidate-name">Town Hall Meetup</span>
+                                </div>
+                                <div class="candidate-item" data-candidate="Park Cleanup Day">
+                                    <span class="rank-badge"></span>
+                                    <span class="candidate-icon">🌳</span>
+                                    <span class="candidate-name">Park Cleanup Day</span>
+                                </div>
+                                <div class="candidate-item" data-candidate="Civic Trivia Night">
+                                    <span class="rank-badge"></span>
+                                    <span class="candidate-icon">📚</span>
+                                    <span class="candidate-name">Civic Trivia Night</span>
+                                </div>
+                                <div class="candidate-item" data-candidate="Community Art Walk">
+                                    <span class="rank-badge"></span>
+                                    <span class="candidate-icon">🎨</span>
+                                    <span class="candidate-name">Community Art Walk</span>
+                                </div>
+                                <div class="candidate-item" data-candidate="Voter Registration Drive">
+                                    <span class="rank-badge"></span>
+                                    <span class="candidate-icon">🗳️</span>
+                                    <span class="candidate-name">Voter Registration Drive</span>
+                                </div>
+                            </div>
+                            <button id="cast-vote-btn" class="rcv-btn-primary">Cast Your Vote!</button>
+                        </div>
+                        <div class="demo-results">
+                            <h3>Election Results</h3>
+                            <div id="election-info-container" class="election-info"></div>
+                            <div id="results-display" class="results-display">
+                                <p class="results-placeholder">Cast your vote to see how RCV works!</p>
+                            </div>
+                            <button id="reset-demo-btn" class="rcv-btn-secondary" style="display: none;">Percent Threshold Demo</button>
+                        </div>
+                    </div>
+                    <button id="rcv-mode-btn" class="mode-btn active" hidden></button>
+                    <button id="wta-mode-btn" class="mode-btn" hidden></button>
+                </div>
                 <div class="rcv-card animate-in" data-delay="1">
                     <h3>Community Polls</h3>
                     <p>Spend VC to cast ranked choice votes on platform decisions — which issues to spotlight, which nonprofits to fund next.</p>
@@ -369,6 +414,7 @@
     </section>
 
 
-    <script src="js/vc-coin.js?v=20260214a"></script>
+    <script src="js/rcv-demo.js?v=20260215a"></script>
+    <script src="js/vc-coin.js?v=20260215a"></script>
 </body>
 </html>
