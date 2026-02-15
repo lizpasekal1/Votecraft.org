@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../myreps/css/myreps.css">
-    <link rel="stylesheet" href="../../vc-widgets/rcv/css/rcv.css">
+    <link rel="stylesheet" href="../../widgets/rcv/css/rcv.css">
 </head>
 <body>
     <div class="rcv-page">
@@ -76,49 +76,9 @@
                 <!-- Interactive Demo Section -->
                 <section class="rcv-section rcv-demo-section">
                     <h2>Try It Yourself!</h2>
-                    <p class="section-intro">See how rank choice voting works with this interactive simulation. Drag to rank the candidates, then watch the votes get counted!</p>
+                    <p class="section-intro">See how rank choice voting works with this interactive simulation. Tap candidates to rank them, then watch the votes get counted!</p>
 
-                    <div class="rcv-demo">
-                        <div class="demo-ballot">
-                            <h3>Your Ballot</h3>
-                            <p class="ballot-instructions">Drag candidates to rank them (1 = favorite)</p>
-                            <div id="candidate-list" class="candidate-list">
-                                <div class="candidate-item" data-candidate="Pizza Party" draggable="true">
-                                    <span class="rank-badge">1</span>
-                                    <span class="candidate-icon">🍕</span>
-                                    <span class="candidate-name">Pizza Party</span>
-                                    <span class="drag-handle">⋮⋮</span>
-                                </div>
-                                <div class="candidate-item" data-candidate="Taco Team" draggable="true">
-                                    <span class="rank-badge">2</span>
-                                    <span class="candidate-icon">🌮</span>
-                                    <span class="candidate-name">Taco Team</span>
-                                    <span class="drag-handle">⋮⋮</span>
-                                </div>
-                                <div class="candidate-item" data-candidate="Burger Brigade" draggable="true">
-                                    <span class="rank-badge">3</span>
-                                    <span class="candidate-icon">🍔</span>
-                                    <span class="candidate-name">Burger Brigade</span>
-                                    <span class="drag-handle">⋮⋮</span>
-                                </div>
-                                <div class="candidate-item" data-candidate="Sushi Squad" draggable="true">
-                                    <span class="rank-badge">4</span>
-                                    <span class="candidate-icon">🍣</span>
-                                    <span class="candidate-name">Sushi Squad</span>
-                                    <span class="drag-handle">⋮⋮</span>
-                                </div>
-                            </div>
-                            <button id="cast-vote-btn" class="btn-primary">Cast Your Vote!</button>
-                        </div>
-
-                        <div class="demo-results">
-                            <h3>Election Results</h3>
-                            <div id="results-display" class="results-display">
-                                <p class="results-placeholder">Cast your vote to see how RCV works!</p>
-                            </div>
-                            <button id="reset-demo-btn" class="btn-secondary" style="display: none;">Reset Demo</button>
-                        </div>
-                    </div>
+                    <iframe src="../../widgets/rcv/html/rcv-demo-wp.html" id="rcv-demo-iframe" style="width: 100%; min-height: 480px; border: none; border-radius: 12px;" scrolling="no"></iframe>
                 </section>
 
                 <!-- Resources Section -->
@@ -262,6 +222,15 @@
         </footer>
     </div>
 
-    <script src="../src/js/widgets/rcv-demo.js"></script>
+    <script>
+        const rcvIframe = document.getElementById('rcv-demo-iframe');
+        if (rcvIframe) {
+            window.addEventListener('message', (e) => {
+                if (e.data && e.data.type === 'rcv-resize') {
+                    rcvIframe.style.height = e.data.height + 'px';
+                }
+            });
+        }
+    </script>
 </body>
 </html>

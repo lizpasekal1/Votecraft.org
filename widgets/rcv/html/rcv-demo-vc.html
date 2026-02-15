@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rank Choice Voting Demo - VoteCraft Coin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/rcv-widget.css?v=14">
+    <style>
+        /* ====== VC Coin Dark/Blue Theme Overrides ====== */
+        body {
+            background: transparent;
+            font-family: 'Open Sans', sans-serif;
+            padding: 4px 8px 8px;
+        }
+
+        .voting-mode-toggle {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .mode-btn {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .mode-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        #rcv-mode-btn:hover:not(.active) {
+            background: rgba(16, 185, 129, 0.15);
+        }
+
+        #wta-mode-btn:hover:not(.active) {
+            background: rgba(239, 68, 68, 0.15);
+        }
+
+        .rcv-demo {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            padding: 16px;
+        }
+
+        .demo-ballot h3,
+        .demo-results h3 {
+            color: #ffffff;
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+        }
+
+        .ballot-instructions {
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+
+        .candidate-list {
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .candidate-item {
+            padding: 8px 10px;
+            gap: 8px;
+        }
+
+        .candidate-icon {
+            font-size: 1.1rem;
+        }
+
+        .candidate-name {
+            font-size: 0.85rem;
+        }
+
+        .rank-badge {
+            width: 22px;
+            height: 22px;
+            font-size: 0.75rem;
+        }
+
+        .btn-primary {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+
+        .election-info {
+            min-height: auto;
+        }
+
+        .election-info p {
+            font-size: 0.78rem;
+        }
+
+        .candidate-item {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .candidate-item:hover:not(.locked) {
+            border-color: #60a5fa;
+            box-shadow: 0 2px 8px rgba(96, 165, 250, 0.2);
+        }
+
+        .candidate-item.unranked .rank-badge {
+            background: rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .candidate-item.ranked {
+            border-color: #60a5fa;
+            background: rgba(96, 165, 250, 0.1);
+        }
+
+        .candidate-name {
+            color: #ffffff;
+        }
+
+        .election-info p {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .election-info p strong {
+            color: #ffffff;
+        }
+
+        .results-placeholder {
+            background: rgba(96, 165, 250, 0.15);
+            border-left-color: #60a5fa;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .results-placeholder::before {
+            filter: none;
+        }
+
+        .bar-label {
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .bar-track {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .bar-fill {
+            background: #60a5fa;
+        }
+
+        .round-result h4 {
+            color: #60a5fa;
+        }
+
+        .round-explanation {
+            background: rgba(96, 165, 250, 0.12);
+            border-left-color: #60a5fa;
+        }
+
+        .round-explanation.rcv-success {
+            background: rgba(16, 185, 129, 0.12);
+            border-left-color: #10b981;
+        }
+
+        .round-note {
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .round-explanation.wta-warning {
+            background: rgba(239, 68, 68, 0.12);
+            border-left-color: #ef4444;
+        }
+
+        .round-explanation.wta-warning .round-note {
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .winner-message p {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .vote-split-analysis {
+            background: rgba(245, 158, 11, 0.12);
+            border-color: rgba(245, 158, 11, 0.4);
+        }
+
+        .vote-split-analysis h4 {
+            color: #fbbf24;
+        }
+
+        .vote-split-analysis p,
+        .split-points li {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .split-conclusion {
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+
+        .coalition-bar {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(245, 158, 11, 0.4);
+        }
+
+        .coalition-label {
+            color: #fef3c7;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+        }
+
+        .rcv-note {
+            color: #fbbf24 !important;
+        }
+
+        .btn-primary {
+            background: #60a5fa;
+        }
+
+        .btn-primary:hover {
+            background: #3b82f6;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            border-color: #60a5fa;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+
+        .btn-secondary.rcv-solution-btn {
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            border-color: #60a5fa;
+        }
+
+        .btn-secondary.rcv-solution-btn:hover {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-color: #3b82f6;
+        }
+
+        .round-nav-btn {
+            background: transparent;
+            color: #60a5fa;
+            border-color: #60a5fa;
+        }
+
+        .round-nav-btn:hover {
+            background: #60a5fa;
+            color: #1e3a5f;
+        }
+
+        .round-nav-btn.primary {
+            background: #60a5fa;
+            color: #1e3a5f;
+        }
+
+        .round-nav-btn.primary:hover {
+            background: #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        /* Override base CSS: keep side-by-side at narrower widths */
+        @media (max-width: 700px) {
+            .rcv-demo {
+                grid-template-columns: 1fr 1.5fr;
+            }
+
+            .demo-results {
+                border-top: none;
+                padding-top: 0;
+            }
+        }
+
+        /* Only stack on very narrow screens */
+        @media (max-width: 420px) {
+            .rcv-demo {
+                grid-template-columns: 1fr;
+            }
+
+            .demo-results {
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                padding-top: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="rcv-widget">
+        <div class="rcv-demo">
+            <div class="demo-ballot">
+                <h3>Your Ballot</h3>
+                <p class="ballot-instructions">Tap candidates in order to rank them</p>
+                <div id="candidate-list" class="candidate-list">
+                    <div class="candidate-item" data-candidate="Pi Za Pies">
+                        <span class="rank-badge"></span>
+                        <span class="candidate-icon">🍕</span>
+                        <span class="candidate-name">Pi Za Pies</span>
+                    </div>
+                    <div class="candidate-item" data-candidate="Frank N. Stein">
+                        <span class="rank-badge"></span>
+                        <span class="candidate-icon">🧟</span>
+                        <span class="candidate-name">Frank N. Stein</span>
+                    </div>
+                    <div class="candidate-item" data-candidate="Anita Bath">
+                        <span class="rank-badge"></span>
+                        <span class="candidate-icon">🛁</span>
+                        <span class="candidate-name">Anita Bath</span>
+                    </div>
+                    <div class="candidate-item" data-candidate="Crystal Ball">
+                        <span class="rank-badge"></span>
+                        <span class="candidate-icon">🔮</span>
+                        <span class="candidate-name">Crystal Ball</span>
+                    </div>
+                    <div class="candidate-item" data-candidate="Pete Zah">
+                        <span class="rank-badge"></span>
+                        <span class="candidate-icon">🍕</span>
+                        <span class="candidate-name">Pete Zah</span>
+                    </div>
+                </div>
+                <button id="cast-vote-btn" class="btn-primary">Cast Your Vote!</button>
+            </div>
+
+            <div class="demo-results">
+                <h3>Election Results</h3>
+                <div id="election-info-container" class="election-info"></div>
+                <div id="results-display" class="results-display">
+                    <p class="results-placeholder">Cast your vote to see how RCV works!</p>
+                </div>
+                <button id="reset-demo-btn" class="btn-secondary" style="display: none;">Percent Threshold Demo</button>
+            </div>
+        </div>
+        <button id="rcv-mode-btn" class="mode-btn active" hidden></button>
+        <button id="wta-mode-btn" class="mode-btn" hidden></button>
+    </div>
+
+    <script src="../js/rcv-demo.js?v=10"></script>
+    <script>
+        function sendHeight() {
+            const widget = document.querySelector('.rcv-widget');
+            let height = widget ? widget.offsetHeight : document.body.scrollHeight;
+            height = Math.min(height, 1500);
+            window.parent.postMessage({ type: 'rcv-resize', height: height }, '*');
+        }
+
+        window.addEventListener('load', sendHeight);
+        window.addEventListener('resize', sendHeight);
+        new MutationObserver(sendHeight).observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true
+        });
+
+        setInterval(sendHeight, 200);
+    </script>
+</body>
+</html>
