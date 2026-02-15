@@ -12,8 +12,13 @@ class RCVDemo {
         this.rcvModeBtn = document.getElementById('rcv-mode-btn');
         this.wtaModeBtn = document.getElementById('wta-mode-btn');
 
+        this.vcBalanceEl = document.getElementById('vc-balance');
+
         // Voting mode: 'rcv' or 'wta' (percent threshold)
         this.votingMode = 'rcv';
+
+        // Mock VC balance
+        this.vcBalance = 12;
 
         // Track user's ranking selections
         this.userRankings = [];
@@ -76,36 +81,35 @@ class RCVDemo {
     }
 
     generateSimulatedVoters() {
-        // Generate simulated voters with preferences
-        // Park Cleanup Day + Community Art Walk = "Outdoor Community" coalition (54% split)
-        // Town Hall Meetup = the "indoor" candidate who wins WTA despite minority support
+        // Pizza and Trivia + Pizza Park Day = "Pizza Lovers" coalition (54% split)
+        // Art Walk = the non-pizza event that wins WTA despite minority support
         const voters = [];
 
-        // OUTDOOR COMMUNITY COALITION (combined 54% - but split between two candidates!)
-        // Park Cleanup Day supporters (27 voters) - prefer Community Art Walk as 2nd choice
+        // PIZZA LOVERS COALITION (combined 54% - but split between two candidates!)
+        // Pizza and Trivia supporters (27 voters) - prefer Pizza Park Day as 2nd choice
         for (let i = 0; i < 27; i++) {
-            voters.push(['Park Cleanup Day', 'Community Art Walk', 'Civic Trivia Night', 'Voter Registration Drive', 'Town Hall Meetup']);
+            voters.push(['Pizza and Trivia', 'Pizza Park Day', 'Town Hall Meetup', 'History Jam', 'Art Walk']);
         }
 
-        // Community Art Walk supporters (27 voters) - prefer Park Cleanup Day as 2nd choice
+        // Pizza Park Day supporters (27 voters) - prefer Pizza and Trivia as 2nd choice
         for (let i = 0; i < 27; i++) {
-            voters.push(['Community Art Walk', 'Park Cleanup Day', 'Civic Trivia Night', 'Voter Registration Drive', 'Town Hall Meetup']);
+            voters.push(['Pizza Park Day', 'Pizza and Trivia', 'Town Hall Meetup', 'History Jam', 'Art Walk']);
         }
 
         // OTHER CANDIDATES (combined 45%)
-        // Town Hall Meetup supporters (30 voters) - the "indoor" candidate who wins WTA
+        // Art Walk supporters (30 voters) - wins WTA despite minority support
         for (let i = 0; i < 30; i++) {
-            voters.push(['Town Hall Meetup', 'Civic Trivia Night', 'Voter Registration Drive', 'Park Cleanup Day', 'Community Art Walk']);
+            voters.push(['Art Walk', 'Town Hall Meetup', 'History Jam', 'Pizza and Trivia', 'Pizza Park Day']);
         }
 
-        // Civic Trivia Night supporters (10 voters)
+        // Town Hall Meetup supporters (10 voters)
         for (let i = 0; i < 10; i++) {
-            voters.push(['Civic Trivia Night', 'Town Hall Meetup', 'Voter Registration Drive', 'Park Cleanup Day', 'Community Art Walk']);
+            voters.push(['Town Hall Meetup', 'Art Walk', 'History Jam', 'Pizza and Trivia', 'Pizza Park Day']);
         }
 
-        // Voter Registration Drive supporters (5 voters)
+        // History Jam supporters (5 voters)
         for (let i = 0; i < 5; i++) {
-            voters.push(['Voter Registration Drive', 'Town Hall Meetup', 'Civic Trivia Night', 'Community Art Walk', 'Park Cleanup Day']);
+            voters.push(['History Jam', 'Town Hall Meetup', 'Art Walk', 'Pizza Park Day', 'Pizza and Trivia']);
         }
 
         return voters;
@@ -179,7 +183,7 @@ class RCVDemo {
 
     getUserBallot() {
         // If user hasn't ranked all candidates, fill in remaining randomly
-        const allCandidates = ['Town Hall Meetup', 'Park Cleanup Day', 'Civic Trivia Night', 'Community Art Walk', 'Voter Registration Drive'];
+        const allCandidates = ['Pizza and Trivia', 'Town Hall Meetup', 'Pizza Park Day', 'History Jam', 'Art Walk'];
         const unranked = allCandidates.filter(c => !this.userRankings.includes(c));
         return [...this.userRankings, ...unranked];
     }
@@ -196,6 +200,14 @@ class RCVDemo {
 
         this.castVoteBtn.style.display = 'none';
         this.resetBtn.style.display = 'none';
+
+        // Deduct 1 VC
+        this.vcBalance--;
+        if (this.vcBalanceEl) {
+            this.vcBalanceEl.textContent = this.vcBalance + ' VC';
+            this.vcBalanceEl.classList.add('vc-spent');
+            setTimeout(() => this.vcBalanceEl.classList.remove('vc-spent'), 600);
+        }
 
         // Lock candidates
         const items = this.candidateList.querySelectorAll('.candidate-item');
@@ -222,7 +234,7 @@ class RCVDemo {
     }
 
     async animateElection(ballots) {
-        const candidates = ['Town Hall Meetup', 'Park Cleanup Day', 'Civic Trivia Night', 'Community Art Walk', 'Voter Registration Drive'];
+        const candidates = ['Pizza and Trivia', 'Town Hall Meetup', 'Pizza Park Day', 'History Jam', 'Art Walk'];
         const totalVotes = ballots.length;
         const majorityNeeded = Math.floor(totalVotes / 2) + 1;
 
@@ -361,13 +373,13 @@ class RCVDemo {
             `;
             roundResult.appendChild(winnerMessage);
 
-            // Wait then show explanation if it's the final round with outdoor coalition
+            // Show pizza coalition explanation on the final round
             if (roundData.round === 4) {
                 await this.delay(1200);
                 const explanation = document.createElement('div');
                 explanation.className = 'round-explanation rcv-success';
                 explanation.innerHTML = `
-                    <p class="round-note"><strong>The Outdoor Community United!</strong> When Community Art Walk was eliminated, their votes transferred to Park Cleanup Day. Under Percent Threshold Voting, those votes would split, letting Town Hall Meetup win with just 30%.</p>
+                    <p class="round-note"><strong>Pizza Lovers United!</strong> When Pizza Park Day was eliminated, their votes transferred to Pizza and Trivia. Under Percent Threshold Voting, those votes would split, letting Art Walk win with just 30%.</p>
                 `;
                 roundResult.appendChild(explanation);
             }
@@ -396,8 +408,15 @@ class RCVDemo {
 
         // Show/hide the "Percent Threshold Demo" button based on whether we're at the final round
         if (isLastRound) {
-            // Wait for all animations to complete, then show button
+            // Wait for all animations to complete, then show VC callout + button
             await this.delay(800);
+            const roundResult = document.getElementById('rcv-round-result');
+            if (roundResult) {
+                const vcCallout = document.createElement('div');
+                vcCallout.className = 'vc-post-vote';
+                vcCallout.innerHTML = `<p>You spent <strong>1 VC</strong> to vote. <a href="#earn" class="vc-earn-link">Earn more VC</a></p>`;
+                roundResult.appendChild(vcCallout);
+            }
             this.resetBtn.style.display = 'inline-block';
         } else {
             this.resetBtn.style.display = 'none';
@@ -425,7 +444,7 @@ class RCVDemo {
     }
 
     async animateWTAElection(ballots) {
-        const candidates = ['Town Hall Meetup', 'Park Cleanup Day', 'Civic Trivia Night', 'Community Art Walk', 'Voter Registration Drive'];
+        const candidates = ['Pizza and Trivia', 'Town Hall Meetup', 'Pizza Park Day', 'History Jam', 'Art Walk'];
         const totalVotes = ballots.length;
         const majorityNeeded = Math.floor(totalVotes / 2) + 1;
 
@@ -515,22 +534,22 @@ class RCVDemo {
         // Wait for winner message to be seen, then show vote split analysis
         if (!hasMajority) {
             await this.delay(1200);
-            const outdoorVotes = counts['Park Cleanup Day'] + counts['Community Art Walk'];
-            const outdoorPercent = (outdoorVotes / totalVotes * 100).toFixed(1);
+            const pizzaVotes = counts['Pizza and Trivia'] + counts['Pizza Park Day'];
+            const pizzaPercent = (pizzaVotes / totalVotes * 100).toFixed(1);
 
             const voteSplitDiv = document.createElement('div');
             voteSplitDiv.className = 'vote-split-analysis';
             voteSplitDiv.innerHTML = `
-                <h4>🌳 The Split Vote</h4>
-                <p><strong>If Park Cleanup Day and Community Art Walk were one event, they'd have:</strong></p>
+                <h4>\uD83C\uDF55 The Split Vote</h4>
+                <p><strong>If Pizza and Trivia and Pizza Park Day were one event, they'd have:</strong></p>
                 <div class="coalition-bar">
-                    <div class="coalition-fill" style="width: 0%" data-width="${outdoorPercent}"></div>
-                    <span class="coalition-label">${outdoorVotes} votes (${outdoorPercent}%)</span>
+                    <div class="coalition-fill" style="width: 0%" data-width="${pizzaPercent}"></div>
+                    <span class="coalition-label">${pizzaVotes} votes (${pizzaPercent}%)</span>
                 </div>
                 <ul class="split-points">
-                    <li>That's <strong>${outdoorVotes > winnerVotes ? 'MORE' : 'fewer'}</strong> votes than the winner!</li>
-                    <li>These two similar outdoor events split the community vote.</li>
-                    <li>Most voters want an outdoor event, but their votes got thrown out!</li>
+                    <li>That's <strong>${pizzaVotes > winnerVotes ? 'MORE' : 'fewer'}</strong> votes than the winner!</li>
+                    <li>These two similar pizza events split the community vote.</li>
+                    <li>Most voters want a pizza event, but their votes got thrown out!</li>
                 </ul>
             `;
             roundsContainer.appendChild(voteSplitDiv);
@@ -549,8 +568,15 @@ class RCVDemo {
             roundsContainer.appendChild(explanationDiv);
         }
 
+        // Show VC callout
+        await this.delay(800);
+        const vcCallout = document.createElement('div');
+        vcCallout.className = 'vc-post-vote';
+        vcCallout.innerHTML = `<p>You spent <strong>1 VC</strong> to vote. <a href="#earn" class="vc-earn-link">Earn more VC</a></p>`;
+        roundsContainer.appendChild(vcCallout);
+
         // Wait for animations to complete, then show reset button
-        await this.delay(1200);
+        await this.delay(400);
 
         // Change reset button text to "RCV Solution" for WTA mode
         if (!hasMajority) {
@@ -562,11 +588,11 @@ class RCVDemo {
 
     getCandidateIcon(candidate) {
         const icons = {
+            'Pizza and Trivia': '\uD83C\uDF55',
             'Town Hall Meetup': '\uD83C\uDFA4',
-            'Park Cleanup Day': '\uD83C\uDF33',
-            'Civic Trivia Night': '\uD83D\uDCDA',
-            'Community Art Walk': '\uD83C\uDFA8',
-            'Voter Registration Drive': '\uD83D\uDDF3\uFE0F'
+            'Pizza Park Day': '\uD83C\uDF33',
+            'History Jam': '\uD83D\uDCDC',
+            'Art Walk': '\uD83C\uDFA8'
         };
         return icons[candidate] || '\uD83D\uDC64';
     }
@@ -581,8 +607,12 @@ class RCVDemo {
         // Check if we should switch to WTA mode (when "Percent Threshold Demo" button was clicked after RCV)
         const switchToWTA = !switchToRCV && this.votingMode === 'rcv' && this.resetBtn.style.display !== 'none';
 
-        // Reset rankings
+        // Reset rankings and restore VC balance
         this.userRankings = [];
+        this.vcBalance = 12;
+        if (this.vcBalanceEl) {
+            this.vcBalanceEl.textContent = '12 VC';
+        }
 
         // Re-enable clicking and reset display
         const items = this.candidateList.querySelectorAll('.candidate-item');
