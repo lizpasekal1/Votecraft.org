@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>VoteCraft — Support a Nonprofit</title>
-    <meta name="description" content="Every dollar donated through VoteCraft earns VC. See how donations translate to civic value.">
+    <meta name="description" content="Real journeys from civic action to civic reward. See how people earn VC by supporting reform.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/vc-coin.css?v=20260213u">
+    <link rel="stylesheet" href="../css/vc-coin.css?v=20260213v">
     <style>
         body {
             background: var(--bg-darker);
@@ -32,12 +32,25 @@
             text-decoration: none;
             font-size: 0.85rem;
             font-weight: 600;
-            margin-bottom: 32px;
+            margin-bottom: 24px;
             transition: color 0.2s;
         }
 
         .subpage-back:hover {
             color: var(--teal);
+        }
+
+        .stories-heading {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .stories-sub {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            margin-bottom: 24px;
         }
 
         @media (max-width: 520px) {
@@ -52,33 +65,96 @@
     <div class="subpage">
         <a href="../index.html" class="subpage-back" id="back-link">&larr; Back to VoteCraft Coin</a>
 
-        <h3 class="nonprofit-modal-heading">Support a nonprofit</h3>
-        <p class="nonprofit-modal-sub">Every dollar donated through VoteCraft earns VC</p>
-        <div class="donation-tiers">
-            <div class="donation-row">
-                <div class="donation-amount">$5</div>
-                <div class="donation-vc">+5 VC</div>
-                <div class="donation-desc">Support a local chapter</div>
+        <h3 class="stories-heading">See it in action</h3>
+        <p class="stories-sub">Real journeys from civic action to civic reward</p>
+
+        <div class="exchange-grid">
+            <div class="exchange-listing" data-delay="0">
+                <div class="exchange-listing-header">
+                    <div class="exchange-listing-type type-offer">Offering</div>
+                    <div class="exchange-listing-title">Town hall meeting notes</div>
+                    <div class="exchange-listing-meta">
+                        <span>Alex M.</span>
+                        <span class="exchange-listing-price">10 VC</span>
+                    </div>
+                    <span class="listing-chevron">&#9662;</span>
+                </div>
+                <div class="listing-accordion">
+                    <div class="listing-story">
+                        <div class="listing-story-avatar story-avatar-blue">A</div>
+                        <div class="listing-story-flow">
+                            <div class="listing-story-step"><span class="listing-story-label">Alex cared about</span><span class="listing-story-value">Local Government Transparency</span></div>
+                            <div class="listing-story-arrow">&darr;</div>
+                            <div class="listing-story-step"><span class="listing-story-label">He attended</span><span class="listing-story-value">3 town hall meetings</span></div>
+                            <div class="listing-story-arrow">&darr;</div>
+                            <div class="listing-story-step listing-story-reward"><span class="listing-story-label">He earned</span><span class="listing-story-value story-vc">10 VC</span></div>
+                            <div class="listing-story-arrow">&darr;</div>
+                            <div class="listing-story-step"><span class="listing-story-label">He unlocked</span><span class="listing-story-value">Civic Deep Dive Guide</span></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="donation-row">
-                <div class="donation-amount">$25</div>
-                <div class="donation-vc">+25 VC</div>
-                <div class="donation-desc">Fund a civic workshop</div>
+            <div class="exchange-listing" data-delay="1">
+                <div class="exchange-listing-header">
+                    <div class="exchange-listing-type type-offer">Offering</div>
+                    <div class="exchange-listing-title">Social media graphics for reform orgs</div>
+                    <div class="exchange-listing-meta">
+                        <span>Mia L.</span>
+                        <span class="exchange-listing-price">12 VC</span>
+                    </div>
+                    <span class="listing-chevron">&#9662;</span>
+                </div>
+                <div class="listing-accordion">
+                    <div class="listing-story">
+                        <div class="listing-story-avatar story-avatar-blue">M</div>
+                        <div class="listing-story-flow">
+                            <div class="listing-story-step"><span class="listing-story-label">Mia cared about</span><span class="listing-story-value">Ranked Choice Voting</span></div>
+                            <div class="listing-story-arrow">&darr;</div>
+                            <div class="listing-story-step"><span class="listing-story-label">She supported</span><span class="listing-story-value">FairVote</span></div>
+                            <div class="listing-story-arrow">&darr;</div>
+                            <div class="listing-story-step listing-story-reward"><span class="listing-story-label">She earned</span><span class="listing-story-value story-vc">12 VC</span></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="donation-row featured">
-                <div class="donation-amount">$50</div>
-                <div class="donation-vc">+50 VC</div>
-                <div class="donation-desc">Sponsor a reform campaign</div>
-            </div>
-            <div class="donation-row">
-                <div class="donation-amount">$100</div>
-                <div class="donation-vc">+100 VC</div>
-                <div class="donation-desc">Champion a cause</div>
+            <div class="exchange-listing" data-delay="2">
+                <div class="exchange-listing-header">
+                    <div class="exchange-listing-type type-request">Requesting</div>
+                    <div class="exchange-listing-title">Help canvassing in Spanish</div>
+                    <div class="exchange-listing-meta">
+                        <span>David R.</span>
+                        <span class="exchange-listing-price">15 VC</span>
+                    </div>
+                    <span class="listing-chevron">&#9662;</span>
+                </div>
+                <div class="listing-accordion">
+                    <div class="listing-story">
+                        <div class="listing-story-avatar story-avatar-teal">D</div>
+                        <div class="listing-story-flow">
+                            <div class="listing-story-step"><span class="listing-story-label">David cared about</span><span class="listing-story-value">Immigration Reform</span></div>
+                            <div class="listing-story-arrow">&darr;</div>
+                            <div class="listing-story-step"><span class="listing-story-label">He volunteered with</span><span class="listing-story-value">Community outreach</span></div>
+                            <div class="listing-story-arrow">&darr;</div>
+                            <div class="listing-story-step listing-story-reward"><span class="listing-story-label">He earned</span><span class="listing-story-value story-vc">15 VC</span></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <p class="nonprofit-modal-note">100% of donations go to vetted civic reform organizations</p>
     </div>
 
+    <script>
+    document.querySelectorAll('.exchange-listing').forEach(listing => {
+        listing.addEventListener('click', () => {
+            const wasExpanded = listing.classList.contains('expanded');
+            document.querySelectorAll('.exchange-listing.expanded').forEach(el => {
+                el.classList.remove('expanded');
+            });
+            if (!wasExpanded) listing.classList.add('expanded');
+        });
+    });
+    </script>
     <script>if (window !== window.top) document.getElementById('back-link').style.display = 'none';</script>
+
 </body>
 </html>
