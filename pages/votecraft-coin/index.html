@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/vc-coin.css?v=20260215a">
+    <link rel="stylesheet" href="css/vc-coin.css?v=20260215f">
 </head>
 <body>
 
@@ -322,42 +322,46 @@
     <section class="section rcv-section" id="rcv">
         <div class="section-inner">
             <h2 class="section-title animate-in">VC + RCV</h2>
-            <p class="section-subtitle animate-in">Ranked choice voting features for fairer community decisions</p>
+            <p class="section-subtitle animate-in">Spend your VC on ranked choice community polls</p>
 
             <div class="rcv-cards">
                 <div class="rcv-widget animate-in" data-delay="0">
                     <div class="rcv-demo">
                         <div class="demo-ballot">
-                            <h3>Next Community Event</h3>
-                            <p class="ballot-instructions">Rank your favorites — tap to choose</p>
+                            <h3>Next Event Vote</h3>
+                            <p class="ballot-instructions">Tap to rank your choices</p>
                             <div id="candidate-list" class="candidate-list">
+                                <div class="candidate-item" data-candidate="Pizza and Trivia">
+                                    <span class="rank-badge"></span>
+                                    <span class="candidate-icon">🍕</span>
+                                    <span class="candidate-name">Pizza and Trivia</span>
+                                </div>
                                 <div class="candidate-item" data-candidate="Town Hall Meetup">
                                     <span class="rank-badge"></span>
                                     <span class="candidate-icon">🎤</span>
                                     <span class="candidate-name">Town Hall Meetup</span>
                                 </div>
-                                <div class="candidate-item" data-candidate="Park Cleanup Day">
+                                <div class="candidate-item" data-candidate="Pizza Park Day">
                                     <span class="rank-badge"></span>
                                     <span class="candidate-icon">🌳</span>
-                                    <span class="candidate-name">Park Cleanup Day</span>
+                                    <span class="candidate-name">Pizza Park Day</span>
                                 </div>
-                                <div class="candidate-item" data-candidate="Civic Trivia Night">
+                                <div class="candidate-item" data-candidate="History Jam">
                                     <span class="rank-badge"></span>
-                                    <span class="candidate-icon">📚</span>
-                                    <span class="candidate-name">Civic Trivia Night</span>
+                                    <span class="candidate-icon">📜</span>
+                                    <span class="candidate-name">History Jam</span>
                                 </div>
-                                <div class="candidate-item" data-candidate="Community Art Walk">
+                                <div class="candidate-item" data-candidate="Art Walk">
                                     <span class="rank-badge"></span>
                                     <span class="candidate-icon">🎨</span>
-                                    <span class="candidate-name">Community Art Walk</span>
-                                </div>
-                                <div class="candidate-item" data-candidate="Voter Registration Drive">
-                                    <span class="rank-badge"></span>
-                                    <span class="candidate-icon">🗳️</span>
-                                    <span class="candidate-name">Voter Registration Drive</span>
+                                    <span class="candidate-name">Art Walk</span>
                                 </div>
                             </div>
-                            <button id="cast-vote-btn" class="rcv-btn-primary">Cast Your Vote!</button>
+                            <button id="cast-vote-btn" class="rcv-btn-primary">Cast Your Vote! <span class="vc-cost-badge">1 VC</span></button>
+                            <div class="vc-balance-bar">
+                                <span class="vc-balance-label">Your balance</span>
+                                <span class="vc-balance-amount" id="vc-balance">12 VC</span>
+                            </div>
                         </div>
                         <div class="demo-results">
                             <h3>Election Results</h3>
@@ -374,10 +378,10 @@
                 <div class="rcv-card animate-in" data-delay="1">
                     <h3>Community Polls</h3>
                     <p>Spend VC to cast ranked choice votes on platform decisions — which issues to spotlight, which nonprofits to fund next.</p>
-                    <div class="rcv-tag">Spend VC to vote</div>
+                    <div class="rcv-tag">1 VC per vote</div>
 
-                    <h3 style="margin-top: 18px;">Make Fair Decisions</h3>
-                    <p>Ranked choice voting eliminates vote splitting and ensures the winner truly reflects what the community wants — not just who got lucky.</p>
+                    <h3 style="margin-top: 18px;">Earn More, Vote More</h3>
+                    <p>The more you contribute — supporting nonprofits, volunteering time, staying informed — the more VC you earn and the more polls you can shape.</p>
                     <div class="rcv-tag rcv-tag-teal">No spoiler effect</div>
                 </div>
             </div>
@@ -414,7 +418,7 @@
     </section>
 
 
-    <script src="js/rcv-demo.js?v=20260215a"></script>
-    <script src="js/vc-coin.js?v=20260215a"></script>
+    <script src="js/rcv-demo.js?v=20260215f"></script>
+    <script src="js/vc-coin.js?v=20260215f"></script>
 </body>
 </html>
