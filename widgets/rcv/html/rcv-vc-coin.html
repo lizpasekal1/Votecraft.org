@@ -618,7 +618,469 @@
     }
     const resizeObserver = new ResizeObserver(() => notifyParentSize());
     resizeObserver.observe(document.body);
+
+    /**
+     * Rank Choice Voting Interactive Demo
+     * VC Coin version — community event candidates
+     */
+    class RCVDemo {
+        constructor() {
+            this.candidateList = document.getElementById('candidate-list');
+            this.castVoteBtn = document.getElementById('cast-vote-btn');
+            this.resetBtn = document.getElementById('reset-demo-btn');
+            this.resultsDisplay = document.getElementById('results-display');
+            this.rcvModeBtn = document.getElementById('rcv-mode-btn');
+            this.wtaModeBtn = document.getElementById('wta-mode-btn');
+            this.vcBalanceEl = document.getElementById('vc-balance');
+            this.votingMode = 'rcv';
+            this.vcBalance = 12;
+            this.userRankings = [];
+            this.simulatedVoters = this.generateSimulatedVoters();
+            this.init();
+        }
+
+        init() {
+            this.setupTapToRank();
+            this.castVoteBtn.addEventListener('click', () => this.runElection());
+            this.resetBtn.addEventListener('click', () => this.resetDemo());
+            this.rcvModeBtn.addEventListener('click', () => this.setMode('rcv'));
+            this.wtaModeBtn.addEventListener('click', () => this.setMode('wta'));
+            this.updateElectionInfo();
+            this.updateCastVoteButton();
+        }
+
+        updateCastVoteButton() {
+            const hasSelection = this.userRankings.length > 0;
+            this.castVoteBtn.disabled = !hasSelection;
+            this.castVoteBtn.classList.toggle('disabled', !hasSelection);
+        }
+
+        updateElectionInfo() {
+            const totalVotes = 100;
+            const winningText = this.votingMode === 'rcv'
+                ? 'Majority percent over 50%'
+                : 'Minimum percent threshold over others';
+            document.getElementById('election-info-container').innerHTML =
+                '<p><strong>Total Voters:</strong> ' + totalVotes + ' (including you!)</p>' +
+                '<p><strong>Winning =</strong> ' + winningText + '</p>';
+        }
+
+        updateBallotInstructions() {
+            const instructionsEl = document.querySelector('.ballot-instructions');
+            if (instructionsEl) {
+                instructionsEl.textContent = this.votingMode === 'rcv'
+                    ? 'Tap candidates to rank your votes for them'
+                    : 'Tap one candidate to vote';
+            }
+        }
+
+        setMode(mode) {
+            this.votingMode = mode;
+            this.rcvModeBtn.classList.toggle('active', mode === 'rcv');
+            this.wtaModeBtn.classList.toggle('active', mode === 'wta');
+            this.updateElectionInfo();
+            this.updateBallotInstructions();
+            this.resetDemo();
+        }
+
+        generateSimulatedVoters() {
+            const voters = [];
+            for (let i = 0; i < 27; i++) {
+                voters.push(['Pizza and Trivia', 'Pizza Park Day', 'Town Hall Meetup', 'History Jam', 'Art Walk']);
+            }
+            for (let i = 0; i < 27; i++) {
+                voters.push(['Pizza Park Day', 'Pizza and Trivia', 'Town Hall Meetup', 'History Jam', 'Art Walk']);
+            }
+            for (let i = 0; i < 30; i++) {
+                voters.push(['Art Walk', 'Town Hall Meetup', 'History Jam', 'Pizza and Trivia', 'Pizza Park Day']);
+            }
+            for (let i = 0; i < 10; i++) {
+                voters.push(['Town Hall Meetup', 'Art Walk', 'History Jam', 'Pizza and Trivia', 'Pizza Park Day']);
+            }
+            for (let i = 0; i < 5; i++) {
+                voters.push(['History Jam', 'Town Hall Meetup', 'Art Walk', 'Pizza Park Day', 'Pizza and Trivia']);
+            }
+            return voters;
+        }
+
+        setupTapToRank() {
+            const items = this.candidateList.querySelectorAll('.candidate-item');
+            items.forEach(item => {
+                item.querySelector('.rank-badge').textContent = '';
+                item.classList.add('unranked');
+                item.removeAttribute('draggable');
+                item.addEventListener('click', () => this.handleCandidateClick(item));
+            });
+        }
+
+        handleCandidateClick(item) {
+            if (item.classList.contains('locked')) return;
+            const candidate = item.dataset.candidate;
+            const currentRankIndex = this.userRankings.indexOf(candidate);
+            if (this.votingMode === 'wta') {
+                if (currentRankIndex !== -1) {
+                    this.userRankings = [];
+                } else {
+                    this.userRankings = [candidate];
+                }
+            } else {
+                if (currentRankIndex !== -1) {
+                    this.userRankings = this.userRankings.slice(0, currentRankIndex);
+                } else {
+                    this.userRankings.push(candidate);
+                }
+            }
+            this.updateRankDisplay();
+        }
+
+        updateRankDisplay() {
+            const items = this.candidateList.querySelectorAll('.candidate-item');
+            items.forEach(item => {
+                const candidate = item.dataset.candidate;
+                const rankIndex = this.userRankings.indexOf(candidate);
+                const badge = item.querySelector('.rank-badge');
+                if (rankIndex !== -1) {
+                    badge.textContent = this.votingMode === 'wta' ? '\u2713' : rankIndex + 1;
+                    item.classList.remove('unranked');
+                    item.classList.add('ranked');
+                } else {
+                    badge.textContent = '';
+                    item.classList.remove('ranked');
+                    item.classList.add('unranked');
+                }
+            });
+            this.updateCastVoteButton();
+        }
+
+        getUserBallot() {
+            const allCandidates = ['Pizza and Trivia', 'Town Hall Meetup', 'Pizza Park Day', 'History Jam', 'Art Walk'];
+            const unranked = allCandidates.filter(c => !this.userRankings.includes(c));
+            return [...this.userRankings, ...unranked];
+        }
+
+        runElection() {
+            if (this.userRankings.length === 0) {
+                alert('Please tap at least one candidate to rank them!');
+                return;
+            }
+            const userBallot = this.getUserBallot();
+            const allBallots = [...this.simulatedVoters, userBallot];
+            this.castVoteBtn.style.display = 'none';
+            this.resetBtn.style.display = 'none';
+            this.vcBalance--;
+            if (this.vcBalanceEl) {
+                this.vcBalanceEl.textContent = this.vcBalance + ' VC';
+                this.vcBalanceEl.classList.add('vc-spent');
+                setTimeout(() => this.vcBalanceEl.classList.remove('vc-spent'), 600);
+            }
+            const items = this.candidateList.querySelectorAll('.candidate-item');
+            items.forEach(item => item.classList.add('locked'));
+            if (this.votingMode === 'rcv') {
+                this.animateElection(allBallots);
+            } else {
+                this.animateWTAElection(allBallots);
+            }
+            if (window.innerWidth <= 700) {
+                setTimeout(() => {
+                    const resultsSection = document.querySelector('.demo-results');
+                    if (resultsSection) {
+                        const scrollOffset = resultsSection.offsetTop - 60;
+                        window.parent.postMessage({ type: 'rcv-resize-scroll', scrollTo: scrollOffset }, '*');
+                    }
+                }, 100);
+            }
+        }
+
+        async animateElection(ballots) {
+            const candidates = ['Pizza and Trivia', 'Town Hall Meetup', 'Pizza Park Day', 'History Jam', 'Art Walk'];
+            const totalVotes = ballots.length;
+            const majorityNeeded = Math.floor(totalVotes / 2) + 1;
+            const rounds = this.calculateAllRounds(ballots, candidates, totalVotes, majorityNeeded);
+            this.rcvRounds = rounds;
+            this.currentRoundIndex = 0;
+            this.totalVotes = totalVotes;
+            this.majorityNeeded = majorityNeeded;
+            document.getElementById('election-info-container').innerHTML =
+                '<p><strong>Total Voters:</strong> ' + totalVotes + ' (including you!)</p>' +
+                '<p><strong>Winning =</strong> Majority percent over 50%</p>';
+            this.resultsDisplay.innerHTML = '<div id="round-display"></div><div id="round-nav"></div>';
+            this.showRound(0);
+        }
+
+        calculateAllRounds(ballots, candidates, totalVotes, majorityNeeded) {
+            const rounds = [];
+            let activeCandidates = [...candidates];
+            let currentBallots = ballots.map(b => [...b]);
+            let round = 1;
+            while (activeCandidates.length > 1) {
+                const counts = {};
+                activeCandidates.forEach(c => counts[c] = 0);
+                currentBallots.forEach(ballot => {
+                    for (const choice of ballot) {
+                        if (activeCandidates.includes(choice)) {
+                            counts[choice]++;
+                            break;
+                        }
+                    }
+                });
+                const sortedCandidates = [...activeCandidates].sort((a, b) => counts[b] - counts[a]);
+                const leader = sortedCandidates[0];
+                const leaderVotes = counts[leader];
+                const loser = sortedCandidates[sortedCandidates.length - 1];
+                const roundData = {
+                    round, counts: { ...counts }, sortedCandidates: [...sortedCandidates],
+                    leader, leaderVotes, loser, loserVotes: counts[loser],
+                    isWinner: leaderVotes >= majorityNeeded, activeCandidates: [...activeCandidates]
+                };
+                rounds.push(roundData);
+                if (leaderVotes >= majorityNeeded) break;
+                activeCandidates = activeCandidates.filter(c => c !== loser);
+                round++;
+            }
+            return rounds;
+        }
+
+        async showRound(index) {
+            const roundDisplay = document.getElementById('round-display');
+            const roundNav = document.getElementById('round-nav');
+            const roundData = this.rcvRounds[index];
+            const isLastRound = index === this.rcvRounds.length - 1;
+            let barsHtml = '<div class="round-result" id="rcv-round-result">';
+            roundData.sortedCandidates.forEach(candidate => {
+                const votes = roundData.counts[candidate];
+                const percentage = (votes / this.totalVotes * 100).toFixed(1);
+                const icon = this.getCandidateIcon(candidate);
+                const isWinner = roundData.isWinner && candidate === roundData.leader;
+                const isEliminated = !roundData.isWinner && candidate === roundData.loser;
+                let barClass = '';
+                if (isWinner) barClass = 'winner';
+                else if (isEliminated) barClass = 'eliminated';
+                barsHtml += '<div class="vote-bar ' + barClass + '">' +
+                    '<div class="bar-label"><span>' + icon + ' ' + candidate + '</span>' +
+                    '<span>' + votes + ' votes (' + percentage + '%)</span></div>' +
+                    '<div class="bar-track"><div class="bar-fill" style="width: 0%" data-width="' + percentage + '"></div>' +
+                    (isWinner ? '<span class="winner-badge">WINNER!</span>' : '') +
+                    (isEliminated ? '<span class="eliminated-badge">ELIMINATED</span>' : '') +
+                    '</div></div>';
+            });
+            barsHtml += '</div>';
+            roundDisplay.innerHTML = barsHtml;
+            await this.delay(100);
+            roundDisplay.querySelectorAll('.bar-fill').forEach(bar => {
+                bar.style.width = bar.dataset.width + '%';
+            });
+            const roundResult = document.getElementById('rcv-round-result');
+            await this.delay(1200);
+            if (roundData.isWinner) {
+                const winnerMessage = document.createElement('div');
+                winnerMessage.className = 'winner-message';
+                winnerMessage.innerHTML = '<h3>' + this.getCandidateIcon(roundData.leader) + ' ' + roundData.leader + ' Wins!</h3>' +
+                    '<p>With ' + roundData.leaderVotes + ' votes (' + (roundData.leaderVotes / this.totalVotes * 100).toFixed(1) + '%), a majority!</p>';
+                roundResult.appendChild(winnerMessage);
+                if (roundData.round === 4) {
+                    await this.delay(1200);
+                    const explanation = document.createElement('div');
+                    explanation.className = 'round-explanation rcv-success';
+                    explanation.innerHTML = '<p class="round-note"><strong>Pizza Lovers United!</strong> When Pizza Park Day was eliminated, their votes transferred to Pizza and Trivia. Under Percent Threshold Voting, those votes would split, letting Art Walk win with just 30%.</p>';
+                    roundResult.appendChild(explanation);
+                }
+            } else {
+                const explanation = document.createElement('div');
+                explanation.className = 'round-explanation';
+                explanation.innerHTML = '<p class="round-note"><strong>No winner yet!</strong> ' + this.getCandidateIcon(roundData.loser) + ' <strong>' + roundData.loser + '</strong> is eliminated.</p>' +
+                    '<p class="round-note">Their votes transfer to each voter\'s next candidate choice.</p>';
+                roundResult.appendChild(explanation);
+            }
+            await this.delay(600);
+            let navHtml = '<div class="round-navigation">';
+            if (!isLastRound) {
+                navHtml += '<button class="round-nav-btn primary" id="next-round-btn">Next Round &rarr;</button>';
+            }
+            navHtml += '</div>';
+            roundNav.innerHTML = navHtml;
+            if (isLastRound) {
+                await this.delay(800);
+                const rr = document.getElementById('rcv-round-result');
+                if (rr) {
+                    const vcCallout = document.createElement('div');
+                    vcCallout.className = 'vc-post-vote';
+                    vcCallout.innerHTML = '<p>You spent <strong>1 VC</strong> to vote. <a href="#earn" class="vc-earn-link">Earn more VC</a></p>';
+                    rr.appendChild(vcCallout);
+                }
+                this.resetBtn.style.display = 'inline-block';
+            } else {
+                this.resetBtn.style.display = 'none';
+            }
+            const nextBtn = document.getElementById('next-round-btn');
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    this.currentRoundIndex++;
+                    this.showRound(this.currentRoundIndex);
+                    if (window.innerWidth <= 700) {
+                        setTimeout(() => {
+                            const resultsSection = document.querySelector('.demo-results');
+                            if (resultsSection) {
+                                const scrollOffset = resultsSection.offsetTop - 60;
+                                window.parent.postMessage({ type: 'rcv-resize-scroll', scrollTo: scrollOffset }, '*');
+                            }
+                        }, 100);
+                    }
+                });
+            }
+        }
+
+        async animateWTAElection(ballots) {
+            const candidates = ['Pizza and Trivia', 'Town Hall Meetup', 'Pizza Park Day', 'History Jam', 'Art Walk'];
+            const totalVotes = ballots.length;
+            const majorityNeeded = Math.floor(totalVotes / 2) + 1;
+            const counts = {};
+            candidates.forEach(c => counts[c] = 0);
+            ballots.forEach(ballot => {
+                const firstChoice = ballot[0];
+                if (candidates.includes(firstChoice)) counts[firstChoice]++;
+            });
+            const sortedCandidates = [...candidates].sort((a, b) => counts[b] - counts[a]);
+            const winner = sortedCandidates[0];
+            const winnerVotes = counts[winner];
+            const winnerPercent = (winnerVotes / totalVotes * 100).toFixed(1);
+            document.getElementById('election-info-container').innerHTML =
+                '<p><strong>Total Voters:</strong> ' + totalVotes + ' (including you!)</p>' +
+                '<p><strong>Winning =</strong> Minimum threshold percent</p>';
+            this.resultsDisplay.innerHTML = '<div id="rounds-container"></div>';
+            const roundsContainer = document.getElementById('rounds-container');
+            const hasMajority = winnerVotes >= majorityNeeded;
+            const resultsDiv = document.createElement('div');
+            resultsDiv.className = 'round-result';
+            const barsHtml = sortedCandidates.map(candidate => {
+                const votes = counts[candidate];
+                const percentage = (votes / totalVotes * 100).toFixed(1);
+                const icon = this.getCandidateIcon(candidate);
+                const isWinner = candidate === winner;
+                const winnerClass = isWinner ? (hasMajority ? 'winner' : 'winner wta-no-majority-winner') : '';
+                return '<div class="vote-bar ' + winnerClass + '">' +
+                    '<div class="bar-label"><span>' + icon + ' ' + candidate + '</span>' +
+                    '<span>' + votes + ' votes (' + percentage + '%)</span></div>' +
+                    '<div class="bar-track"><div class="bar-fill" style="width: 0%" data-width="' + percentage + '"></div>' +
+                    (isWinner ? '<span class="winner-badge">WINNER!</span>' : '') +
+                    '</div></div>';
+            }).join('');
+            resultsDiv.innerHTML = barsHtml;
+            roundsContainer.appendChild(resultsDiv);
+            await this.delay(100);
+            resultsDiv.querySelectorAll('.bar-fill').forEach(bar => {
+                bar.style.width = bar.dataset.width + '%';
+            });
+            await this.delay(1200);
+            const winnerMessage = document.createElement('div');
+            winnerMessage.className = hasMajority ? 'winner-message' : 'winner-message wta-no-majority';
+            const othersVotes = totalVotes - winnerVotes;
+            const othersPercent = (othersVotes / totalVotes * 100).toFixed(1);
+            winnerMessage.innerHTML = hasMajority
+                ? '<h3>' + this.getCandidateIcon(winner) + ' ' + winner + ' Wins!</h3>' +
+                  '<p>With ' + winnerVotes + ' votes (' + winnerPercent + '%), ' + winner + ' has a true majority!</p>'
+                : '<h3>' + this.getCandidateIcon(winner) + ' ' + winner + ' Wins!</h3>' +
+                  '<ul class="wta-results-list">' +
+                  '<li>They got ' + winnerVotes + ' votes (' + winnerPercent + '%) a minimum winning percent threshold</li>' +
+                  '<li>They won even though ' + othersVotes + ' voters (' + othersPercent + '%) preferred someone else</li>' +
+                  '</ul>';
+            roundsContainer.appendChild(winnerMessage);
+            if (!hasMajority) {
+                await this.delay(1200);
+                const pizzaVotes = counts['Pizza and Trivia'] + counts['Pizza Park Day'];
+                const pizzaPercent = (pizzaVotes / totalVotes * 100).toFixed(1);
+                const voteSplitDiv = document.createElement('div');
+                voteSplitDiv.className = 'vote-split-analysis';
+                voteSplitDiv.innerHTML = '<h4>\uD83C\uDF55 The Split Vote</h4>' +
+                    '<p><strong>If Pizza and Trivia and Pizza Park Day were one event, they\'d have:</strong></p>' +
+                    '<div class="coalition-bar"><div class="coalition-fill" style="width: 0%" data-width="' + pizzaPercent + '"></div>' +
+                    '<span class="coalition-label">' + pizzaVotes + ' votes (' + pizzaPercent + '%)</span></div>' +
+                    '<ul class="split-points">' +
+                    '<li>That\'s <strong>' + (pizzaVotes > winnerVotes ? 'MORE' : 'fewer') + '</strong> votes than the winner!</li>' +
+                    '<li>These two similar pizza events split the community vote.</li>' +
+                    '<li>Most voters want a pizza event, but their votes got thrown out!</li>' +
+                    '</ul>';
+                roundsContainer.appendChild(voteSplitDiv);
+                await this.delay(300);
+                const coalitionFill = voteSplitDiv.querySelector('.coalition-fill');
+                coalitionFill.style.width = coalitionFill.dataset.width + '%';
+            } else {
+                const explanationDiv = document.createElement('div');
+                explanationDiv.className = 'round-explanation';
+                explanationDiv.innerHTML = '<p class="round-note"><strong>' + this.getCandidateIcon(winner) + ' ' + winner + ' wins with a majority!</strong></p>' +
+                    '<p class="round-note">With ' + winnerVotes + ' votes (' + winnerPercent + '%), they have more than 50% support.</p>';
+                roundsContainer.appendChild(explanationDiv);
+            }
+            await this.delay(800);
+            const vcCallout = document.createElement('div');
+            vcCallout.className = 'vc-post-vote';
+            vcCallout.innerHTML = '<p>You spent <strong>1 VC</strong> to vote. <a href="#earn" class="vc-earn-link">Earn more VC</a></p>';
+            roundsContainer.appendChild(vcCallout);
+            await this.delay(400);
+            if (!hasMajority) {
+                this.resetBtn.textContent = '\u2728 See the RCV Solution';
+                this.resetBtn.classList.add('rcv-solution-btn');
+            }
+            this.resetBtn.style.display = 'inline-block';
+        }
+
+        getCandidateIcon(candidate) {
+            const icons = {
+                'Pizza and Trivia': '\uD83C\uDF55',
+                'Town Hall Meetup': '\uD83C\uDFA4',
+                'Pizza Park Day': '\uD83C\uDF33',
+                'History Jam': '\uD83D\uDCDC',
+                'Art Walk': '\uD83C\uDFA8'
+            };
+            return icons[candidate] || '\uD83D\uDC64';
+        }
+
+        delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+        resetDemo() {
+            const switchToRCV = this.resetBtn.classList.contains('rcv-solution-btn');
+            const switchToWTA = !switchToRCV && this.votingMode === 'rcv' && this.resetBtn.style.display !== 'none';
+            this.userRankings = [];
+            this.vcBalance = 12;
+            if (this.vcBalanceEl) this.vcBalanceEl.textContent = '12 VC';
+            const items = this.candidateList.querySelectorAll('.candidate-item');
+            items.forEach(item => {
+                item.classList.remove('locked', 'ranked');
+                item.classList.add('unranked');
+                item.querySelector('.rank-badge').textContent = '';
+            });
+            this.resetBtn.textContent = 'Percent Threshold Demo';
+            this.resetBtn.classList.remove('rcv-solution-btn');
+            this.castVoteBtn.style.display = 'inline-block';
+            this.resetBtn.style.display = 'none';
+            this.updateCastVoteButton();
+            this.simulatedVoters = this.generateSimulatedVoters();
+            if (switchToRCV) {
+                this.votingMode = 'rcv';
+                this.rcvModeBtn.classList.add('active');
+                this.wtaModeBtn.classList.remove('active');
+            } else if (switchToWTA) {
+                this.votingMode = 'wta';
+                this.wtaModeBtn.classList.add('active');
+                this.rcvModeBtn.classList.remove('active');
+            }
+            this.updateElectionInfo();
+            const placeholderText = this.votingMode === 'rcv'
+                ? 'Cast your vote to see how RCV works!<br><em>This system rewards broad support instead of vote splitting.</em>'
+                : 'Cast your vote to see how Percent Threshold Voting works!<br><em>This is the outdated system most areas still use.</em>';
+            this.resultsDisplay.innerHTML = '<p class="results-placeholder">' + placeholderText + '</p>';
+            if (window.innerWidth <= 700) {
+                setTimeout(() => {
+                    const toggleButtons = document.querySelector('.voting-mode-toggle');
+                    if (toggleButtons) {
+                        const scrollOffset = toggleButtons.offsetTop - 60;
+                        window.parent.postMessage({ type: 'rcv-resize-scroll', scrollTo: scrollOffset }, '*');
+                    }
+                }, 100);
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => { new RCVDemo(); });
     </script>
-    <script src="../../../pages/votecraft-coin/js/rcv-demo.js"></script>
 </body>
 </html>
