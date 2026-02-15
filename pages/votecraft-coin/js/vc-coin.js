@@ -96,17 +96,6 @@
         }
     });
 
-    // ====== RCV DEMO IFRAME RESIZE ======
-
-    const rcvIframe = document.getElementById('rcv-demo-iframe');
-    if (rcvIframe) {
-        window.addEventListener('message', (e) => {
-            if (e.data && e.data.type === 'rcv-resize') {
-                rcvIframe.style.height = e.data.height + 'px';
-            }
-        });
-    }
-
     // ====== LISTING ACCORDIONS ======
 
     document.querySelectorAll('#stories .exchange-listing').forEach(listing => {
