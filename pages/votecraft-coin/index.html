@@ -322,12 +322,12 @@
     <section class="section rcv-section" id="rcv">
         <div class="section-inner">
             <h2 class="section-title animate-in">VC + RCV</h2>
-            <p class="section-subtitle animate-in">Spend your VC on ranked choice community polls</p>
+            <p class="section-subtitle animate-in">Ranked choice voting and other cool features available! Give it a try!</p>
 
             <div class="rcv-cards">
                 <div class="rcv-widget animate-in" data-delay="0">
                     <iframe id="rcv-iframe"
-                        src="../../widgets/rcv/html/rcv-vc-coin.html"
+                        src="rcv-vc-coin.html"
                         style="width: 100%; min-height: 420px; border: none; border-radius: 10px; display: block;"
                         scrolling="no"
                         loading="lazy">
@@ -335,12 +335,12 @@
                 </div>
                 <div class="rcv-card animate-in" data-delay="1">
                     <h3>Community Polls</h3>
-                    <p>Spend VC to cast ranked choice votes on platform decisions — which issues to spotlight, which nonprofits to fund next.</p>
-                    <div class="rcv-tag">1 VC per vote</div>
+                    <p>Create rank choice voting polls for community decisions like which issues to spotlight, which nonprofits to fund next, or events to share!</p>
+                    <div class="rcv-tag">Community</div>
+                    <div class="rcv-tag rcv-tag-teal">Supporter</div>
 
-                    <h3 style="margin-top: 18px;">Earn More, Vote More</h3>
-                    <p>The more you contribute — supporting nonprofits, volunteering time, staying informed — the more VC you earn and the more polls you can shape.</p>
-                    <div class="rcv-tag rcv-tag-teal">No spoiler effect</div>
+                    <h3 style="margin-top: 30px;">Engage your community</h3>
+                    <p>Help educated and engage the public about issues you care about like RCV! Support other nonprofits, volunteering time, staying informed!</p>
                 </div>
             </div>
         </div>
@@ -382,6 +382,14 @@
         if (e.data && e.data.type === 'rcv-resize') {
             var iframe = document.getElementById('rcv-iframe');
             if (iframe) iframe.style.height = e.data.height + 'px';
+        }
+        if (e.data && e.data.type === 'rcv-resize-scroll') {
+            var iframe = document.getElementById('rcv-iframe');
+            if (iframe) {
+                var iframeTop = iframe.getBoundingClientRect().top + window.scrollY;
+                var scrollTarget = iframeTop + (e.data.scrollTo || 0) - 20;
+                window.scrollTo({ top: scrollTarget, behavior: 'smooth' });
+            }
         }
     });
     </script>
