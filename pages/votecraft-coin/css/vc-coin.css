@@ -420,7 +420,9 @@ body {
 .hero-section {
     background: radial-gradient(ellipse at 50% 40%, #1a2744 0%, var(--bg-dark) 70%);
     overflow: hidden;
-    padding-top: 120px;
+    padding-top: 40px;
+    justify-content: flex-start;
+    min-height: auto;
     position: relative;
 }
 
@@ -509,7 +511,7 @@ body {
 }
 
 .hero-red {
-    color: #ef4444;
+    color: #F2295B;
 }
 
 .hero-subtitle {
@@ -3034,9 +3036,60 @@ body {
 /* ====== ALTRUISM TAGS ====== */
 
 .altruism-tags-section {
-    margin-bottom: 56px;
-    padding: 40px 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    margin-top: 48px;
+    margin-bottom: 8px;
+    padding: 32px 0 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* Accordion trigger */
+.tags-accordion-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+    font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+    font-weight: 600;
+    color: var(--text);
+    font-family: inherit;
+    padding: 8px 0;
+    margin-bottom: 0;
+    transition: color 0.2s;
+}
+
+.tags-accordion-trigger:hover {
+    color: var(--teal);
+}
+
+.tags-accordion-trigger em {
+    font-style: normal;
+    color: var(--teal);
+}
+
+.tags-accordion-arrow {
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+    opacity: 0.6;
+}
+
+.tags-accordion-trigger.open .tags-accordion-arrow {
+    transform: rotate(180deg);
+}
+
+/* Accordion body */
+.tags-accordion-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+}
+
+.tags-accordion-body.open {
+    max-height: 800px;
 }
 
 .altruism-tags-heading {
@@ -3422,6 +3475,112 @@ body {
     margin: 0 auto;
 }
 
+/* Payments Strip */
+.payments-strip {
+    margin-top: 48px;
+    text-align: center;
+}
+
+.payments-strip-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 24px;
+}
+
+.payments-flow {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0;
+}
+
+.payments-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 160px;
+    text-align: center;
+}
+
+.payments-step-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #fff;
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.payments-step-icon-pay {
+    background: #fff;
+    color: #2563eb;
+}
+
+.payments-step-icon-vc {
+    background: #fff;
+    color: var(--teal);
+}
+
+.payments-row-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.payments-step-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.payments-step-desc {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.3;
+}
+
+.payments-logos {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
+}
+
+.pay-logo {
+    display: block;
+    flex-shrink: 0;
+}
+
+.payments-connector {
+    display: flex;
+    align-items: center;
+    margin-top: 22px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 520px) {
+    .payments-flow {
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+    }
+    .payments-row {
+        flex: none;
+    }
+    .payments-connector {
+        margin-top: 0;
+    }
+    .payments-connector svg {
+        transform: rotate(90deg);
+    }
+}
+
 /* White-themed listing cards in stories section */
 .stories-section .exchange-listing {
     background: #ffffff;
@@ -3669,7 +3828,11 @@ body {
 
 @media (max-width: 768px) {
     .section {
-        padding: 60px 20px;
+        padding: 48px 16px;
+    }
+
+    .section-inner {
+        padding: 0;
     }
 
     .nav-links {
@@ -3746,6 +3909,7 @@ body {
 
     .exchange-scenario {
         flex-direction: column;
+        gap: 16px;
     }
 
     .exchange-offer {
@@ -3788,168 +3952,346 @@ body {
     .mobile-break { display: block; }
 
     .section {
-        padding: 48px 16px;
+        padding: 36px 14px;
         min-height: auto;
     }
 
-    /* Safe area insets for notch/dynamic island */
-    .site-nav {
-        padding-left: max(16px, env(safe-area-inset-left));
-        padding-right: max(16px, env(safe-area-inset-right));
-    }
-
-    .site-footer {
-        padding-bottom: max(40px, env(safe-area-inset-bottom));
-    }
-
-    /* Nav */
-    .nav-inner {
-        height: 52px;
-    }
-
-    .nav-wordmark {
-        font-size: 1rem;
+    .section-inner {
+        padding: 0;
     }
 
     /* Hero */
     .hero-section {
-        padding-top: 24px;
+        padding-top: 20px;
+        padding-bottom: 32px;
         min-height: auto;
         justify-content: flex-start;
     }
 
     .hero-title {
-        font-size: 1.8rem;
-    }
-
-    .hero-subtitle {
-        font-size: 0.95rem;
+        font-size: 1.6rem;
         margin-bottom: 12px;
     }
 
+    .hero-subtitle {
+        font-size: 0.85rem;
+        margin-bottom: 10px;
+        padding: 0 8px;
+    }
+
+    .get-app-link {
+        font-size: 0.95rem;
+    }
+
     .coin {
-        width: 100px;
-        height: 100px;
+        width: 90px;
+        height: 90px;
     }
 
     .coin-text {
-        font-size: 2rem;
+        font-size: 1.8rem;
     }
 
     .coin-container {
+        margin-bottom: 20px;
+    }
+
+    /* Ticker */
+    .ticker-section {
+        padding: 8px 0;
+    }
+
+    .ticker-item {
+        font-size: 0.8rem;
+        padding: 6px 16px;
+    }
+
+    /* Section headings */
+    .section-title {
+        margin-bottom: 10px;
+        font-size: clamp(1.4rem, 5vw, 1.8rem);
+    }
+
+    .section-subtitle {
         margin-bottom: 24px;
+        font-size: 0.85rem;
+        padding: 0 4px;
     }
 
     /* Philosophy */
+    .philosophy-section {
+        padding: 36px 14px;
+    }
+
     .philosophy-card {
-        padding: 20px 16px;
+        padding: 16px 14px;
         display: flex;
         flex-direction: row;
         align-items: flex-start;
         text-align: left;
-        gap: 16px;
+        gap: 12px;
     }
 
     .philosophy-icon {
-        width: 52px;
-        height: 52px;
-        min-width: 52px;
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
         margin: 0;
     }
 
+    .philosophy-card h3 {
+        font-size: 0.95rem;
+    }
+
+    .philosophy-card p {
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
+
     /* Exchange section */
+    .exchange-section {
+        padding: 36px 14px;
+    }
+
     .exchange-demo {
-        margin-bottom: 32px;
+        margin-bottom: 24px;
+    }
+
+    .exchange-person {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-align: left;
     }
 
     .exchange-avatar {
-        width: 44px;
-        height: 44px;
-        font-size: 1.1rem;
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    .exchange-name {
+        font-size: 0.85rem;
+        margin-bottom: 2px;
+    }
+
+    .exchange-has {
+        font-size: 0.75rem;
     }
 
     .exchange-offer-card {
-        padding: 16px;
+        padding: 14px;
     }
 
     .exchange-offer-header {
-        margin: -16px -16px 12px -16px;
-        padding: 8px 16px;
+        margin: -14px -14px 10px -14px;
+        padding: 6px 14px;
+    }
+
+    .exchange-offer-label {
+        font-size: 0.6rem;
+        margin-bottom: 4px;
     }
 
     .exchange-offer-title {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
 
     .exchange-offer-desc {
         font-size: 0.75rem;
+        margin-bottom: 6px;
+    }
+
+    .exchange-offer-price {
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+    }
+
+    .exchange-tag {
+        font-size: 0.65rem;
+        padding: 3px 8px;
+    }
+
+    .exchange-arrows svg {
+        width: 36px;
+        height: 36px;
+    }
+
+    /* Payments strip */
+    .payments-strip {
+        margin-top: 32px;
+    }
+
+    .payments-flow {
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+    }
+
+    .payments-row {
+        flex: none;
+        flex-direction: row;
+        gap: 12px;
+        width: 100%;
+        max-width: 260px;
+        text-align: left;
+    }
+
+    .payments-row-text {
+        align-items: flex-start;
+    }
+
+    .payments-step-icon {
+        width: 38px;
+        height: 38px;
+        flex-shrink: 0;
+    }
+
+    .payments-step-label {
+        font-size: 0.75rem;
+    }
+
+    .payments-connector {
+        margin-top: 0;
+        padding: 4px 0;
+        margin-left: 18px;
+    }
+
+    .payments-connector svg {
+        transform: rotate(90deg);
+        width: 24px;
+        height: 10px;
+    }
+
+    .payments-logos {
+        gap: 6px;
+    }
+
+    .pay-logo {
+        transform: scale(0.85);
     }
 
     /* Altruism tags */
     .altruism-tags-section {
-        margin-bottom: 32px;
-        padding: 28px 0;
+        margin-top: 32px;
+        margin-bottom: 24px;
+        padding: 24px 0;
+    }
+
+    .tags-accordion-trigger {
+        font-size: 0.85rem;
+        padding: 0;
     }
 
     .altruism-tags-desc {
-        font-size: 0.85rem;
-        margin-bottom: 24px;
+        font-size: 0.8rem;
+        margin-bottom: 20px;
     }
 
     .tags-transaction {
-        padding: 16px;
+        padding: 12px;
+    }
+
+    .tags-transaction-header {
+        gap: 8px;
     }
 
     .tags-transaction-amount {
-        font-size: 1rem;
+        font-size: 0.95rem;
     }
 
     .tags-transaction-action {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
     }
 
     .tags-category {
-        padding: 16px 14px;
+        padding: 14px 12px;
+    }
+
+    .tags-category-label {
+        font-size: 0.75rem;
     }
 
     /* Bigger touch targets for tag pills on mobile */
     .atag {
-        padding: 6px 14px;
+        padding: 7px 14px;
         font-size: 0.7rem;
     }
 
     /* Earn section */
+    .earn-section {
+        padding: 36px 14px;
+    }
+
     .earn-card {
-        padding: 24px 20px;
+        padding: 20px 16px;
+    }
+
+    .earn-card h3 {
+        font-size: 0.95rem;
+    }
+
+    .earn-card p {
+        font-size: 0.8rem;
     }
 
     .earn-icon {
-        width: 44px;
-        height: 44px;
-        margin-bottom: 12px;
+        width: 40px;
+        height: 40px;
+        margin-bottom: 10px;
+    }
+
+    .earn-amount {
+        font-size: 0.85rem;
     }
 
     .earn-actions {
-        margin-top: 20px;
+        margin-top: 16px;
+    }
+
+    .not-crypto-btn {
+        font-size: 0.85rem;
+        padding: 10px 24px;
     }
 
     /* Badge section */
+    .badge-divider {
+        margin: 28px auto;
+    }
+
+    .earn-badge-heading {
+        font-size: 1.1rem;
+    }
+
+    .earn-badge-sub {
+        font-size: 0.85rem;
+    }
+
     .badge-showcase {
-        gap: 20px;
+        gap: 16px;
     }
 
     .badge-icon {
-        width: 56px;
-        height: 56px;
+        width: 52px;
+        height: 52px;
     }
 
     .badge-toggle-demo {
-        padding: 12px 14px;
+        padding: 12px;
+    }
+
+    .badge-preview-name {
+        font-size: 0.85rem;
+    }
+
+    .badge-tags-preview .atag {
+        font-size: 0.65rem;
     }
 
     /* RCV section */
     .rcv-section {
-        padding: 36px 16px;
+        padding: 36px 14px;
     }
 
     .rcv-cards {
@@ -3957,30 +4299,34 @@ body {
         margin-top: 16px;
     }
 
-    .rcv-widget .rcv-demo {
-        padding: 10px;
-        gap: 12px;
+    .rcv-widget iframe {
+        min-height: 380px;
     }
 
     .rcv-card {
-        padding: 8px 4px;
+        padding: 16px 14px;
     }
 
     .rcv-card h3 {
-        font-size: 1rem;
+        font-size: 0.95rem;
     }
 
     .rcv-card p {
-        font-size: 0.9rem;
+        font-size: 0.8rem;
+        line-height: 1.5;
+    }
+
+    .rcv-tag {
+        font-size: 0.65rem;
     }
 
     /* Stories section */
     .stories-section {
-        padding: 48px 16px;
+        padding: 36px 14px;
     }
 
     .exchange-listing {
-        padding: 14px;
+        padding: 12px;
     }
 
     /* Emporium */
@@ -3989,12 +4335,31 @@ body {
     }
 
     .emporium-card {
-        padding: 20px 16px;
+        padding: 18px 14px;
     }
 
     /* CTA */
     .cta-section {
-        min-height: 50dvh;
+        min-height: auto;
+        padding: 48px 14px;
+    }
+
+    .cta-title {
+        font-size: clamp(1.3rem, 5vw, 1.8rem);
+    }
+
+    .cta-subtitle {
+        font-size: 0.85rem;
+        padding: 0 8px;
+    }
+
+    .coin-small {
+        width: 60px;
+        height: 60px;
+    }
+
+    .coin-small .coin-text {
+        font-size: 1.2rem;
     }
 
     .cta-buttons {
@@ -4006,19 +4371,26 @@ body {
     .btn-secondary {
         width: 100%;
         justify-content: center;
+        font-size: 0.9rem;
+        padding: 12px 24px;
     }
 
     /* Modals */
     .modal-content {
-        padding: 28px 20px;
+        padding: 24px 16px;
     }
 
     .modal-overlay {
-        padding: 16px;
+        padding: 12px;
+    }
+
+    .popup-modal-content {
+        width: 100%;
+        max-width: 100%;
     }
 
     .quiz-modal-content {
-        padding: 28px 20px;
+        padding: 24px 16px;
     }
 
     /* Trust Slider Modal */
@@ -4026,39 +4398,39 @@ body {
         min-height: auto;
         max-height: 90vh;
         overflow-y: auto;
-        padding: 24px 16px;
+        padding: 20px 14px;
     }
 
     .trust-slide-icon svg {
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
     }
 
     .trust-slide-title {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
     }
 
     .trust-slide-sub {
-        font-size: 0.8rem;
-        margin-bottom: 16px;
+        font-size: 0.75rem;
+        margin-bottom: 14px;
     }
 
     .trust-slide-details {
-        gap: 8px;
+        gap: 6px;
     }
 
     .trust-detail-row {
-        padding: 10px 12px;
-        gap: 10px;
+        padding: 8px 10px;
+        gap: 8px;
     }
 
     .trust-detail-text {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
     }
 
     .trust-slider-nav {
-        margin-top: 16px;
-        padding-top: 12px;
+        margin-top: 14px;
+        padding-top: 10px;
     }
 
     /* Crypto vs rows mobile */
@@ -4097,28 +4469,20 @@ body {
 
     /* Learn modal mobile */
     .learn-module-preview {
-        padding: 16px;
+        padding: 14px;
     }
 
     .learn-module-title {
-        font-size: 1rem;
+        font-size: 0.95rem;
     }
 
     .learn-module-option {
         padding: 8px 12px;
-        font-size: 0.8rem;
+        font-size: 0.75rem;
     }
 
     /* General */
     .scroll-indicator {
-        bottom: 20px;
-    }
-
-    .section-subtitle {
-        margin-bottom: 32px;
-    }
-
-    .section-title {
-        margin-bottom: 12px;
+        display: none;
     }
 }

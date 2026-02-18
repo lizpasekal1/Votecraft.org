@@ -184,6 +184,18 @@
 
     initAltruismTags();
 
+    // ====== ALTRUISM TAGS ACCORDION ======
+
+    const accordionTrigger = document.getElementById('tags-accordion-trigger');
+    const accordionBody = document.getElementById('tags-accordion-body');
+
+    if (accordionTrigger && accordionBody) {
+        accordionTrigger.addEventListener('click', () => {
+            accordionTrigger.classList.toggle('open');
+            accordionBody.classList.toggle('open');
+        });
+    }
+
     // ====== HERO PARTICLES ======
 
     function createHeroParticles() {

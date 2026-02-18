@@ -1,0 +1,446 @@
+/* ═══════════════════════════════════════════════
+   VoteCraft Sidebar Navigation — Duolingo Style
+   ═══════════════════════════════════════════════ */
+
+/* ─── CSS Custom Properties (overridden by PHP inline) ─── */
+:root {
+    --vc-sidebar-bg: #131f24;
+    --vc-sidebar-text: #afafaf;
+    --vc-sidebar-hover: #ffffff;
+    --vc-sidebar-active: #1b3a4b;
+    --vc-sidebar-active-text: #ffffff;
+    --vc-sidebar-active-border: #47d4a0;
+    --vc-sidebar-width: 80px;
+    --vc-sidebar-expanded: 250px;
+    --vc-sidebar-spacing: 4px;
+}
+
+/* ═══════════════════════════════════════════════
+   Desktop Sidebar — Always Open
+   ═══════════════════════════════════════════════ */
+
+.vc-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: var(--vc-sidebar-expanded);
+    background: var(--vc-sidebar-bg);
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── Collapsed state (icons only) ─── */
+.vc-sidebar.vc-sidebar--collapsed {
+    width: var(--vc-sidebar-width);
+}
+
+#vc-sidebar.vc-sidebar--collapsed .vc-sidebar__label {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    display: none;
+}
+
+#vc-sidebar.vc-sidebar--collapsed .vc-sidebar__link {
+    justify-content: center;
+    padding: 14px 0;
+    gap: 0;
+}
+
+#vc-sidebar.vc-sidebar--collapsed .vc-sidebar__header {
+    justify-content: center;
+    padding: 16px 8px;
+}
+
+#vc-sidebar.vc-sidebar--collapsed .vc-sidebar__logo {
+    display: none !important;
+}
+
+#vc-sidebar.vc-sidebar--collapsed .vc-sidebar__toggle {
+    margin-left: 0;
+}
+
+#vc-sidebar.vc-sidebar--collapsed .vc-sidebar__menu {
+    padding: 8px 6px !important;
+}
+
+.vc-sidebar--collapsed .vc-sidebar__item--active .vc-sidebar__link::before {
+    display: none;
+}
+
+/* ─── Header (logo area) ─── */
+.vc-sidebar__header {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px 10px;
+    flex-shrink: 0;
+}
+
+#vc-sidebar .vc-sidebar__logo,
+#vc-sidebar a.vc-sidebar__logo:link,
+#vc-sidebar a.vc-sidebar__logo:visited {
+    display: flex;
+    align-items: center;
+    text-decoration: none !important;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+#vc-sidebar .vc-sidebar__logo:hover {
+    opacity: 0.8;
+}
+
+.vc-sidebar__logo img {
+    height: 44px;
+    width: auto;
+    object-fit: contain;
+}
+
+/* Toggle button — always visible for close/open */
+#vc-sidebar .vc-sidebar__toggle,
+.vc-sidebar .vc-sidebar__toggle {
+    display: block;
+    background: none;
+    border: none;
+    color: var(--vc-sidebar-text) !important;
+    cursor: pointer;
+    padding: 8px;
+    margin-left: auto;
+    font-size: 20px;
+    line-height: 1;
+    transition: color 0.15s;
+}
+
+#vc-sidebar .vc-sidebar__toggle:hover {
+    color: var(--vc-sidebar-hover);
+}
+
+#vc-sidebar .vc-sidebar__toggle .dashicons {
+    color: inherit;
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+}
+
+/* ─── Menu List ─── */
+#vc-sidebar .vc-sidebar__menu {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 8px 12px !important;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* ─── Menu Item ─── */
+#vc-sidebar .vc-sidebar__item {
+    margin: 0 0 var(--vc-sidebar-spacing) !important;
+    padding: 0 !important;
+    list-style: none;
+}
+
+/* ─── Link — Duolingo style (high specificity to override theme + visited) ─── */
+#vc-sidebar .vc-sidebar__link,
+#vc-sidebar a.vc-sidebar__link,
+#vc-sidebar a.vc-sidebar__link:link,
+#vc-sidebar a.vc-sidebar__link:visited {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 16px;
+    color: var(--vc-sidebar-text) !important;
+    text-decoration: none !important;
+    border-radius: 14px;
+    border: 2px solid transparent;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    position: relative;
+    white-space: nowrap;
+}
+
+/* Hover — subtle highlight */
+#vc-sidebar .vc-sidebar__link:hover,
+#vc-sidebar a.vc-sidebar__link:hover {
+    color: var(--vc-sidebar-hover) !important;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Active state — rounded pill with tinted bg + colored border */
+#vc-sidebar .vc-sidebar__item--active .vc-sidebar__link,
+#vc-sidebar .vc-sidebar__item--active a.vc-sidebar__link:link,
+#vc-sidebar .vc-sidebar__item--active a.vc-sidebar__link:visited {
+    color: var(--vc-sidebar-active-text) !important;
+    background: var(--vc-sidebar-active);
+    border-color: var(--vc-sidebar-active-border);
+}
+
+/* ─── Icon (force color inherit over theme styles) ─── */
+#vc-sidebar .vc-sidebar__icon,
+#vc-sidebar .dashicons {
+    color: inherit !important;
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+/* ─── Custom uploaded icon (img) ─── */
+#vc-sidebar img.vc-sidebar__icon--custom {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    flex-shrink: 0;
+    mix-blend-mode: screen;
+}
+
+.vc-mobile-tabs__item img.vc-mobile-tabs__icon--custom {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    mix-blend-mode: screen;
+}
+
+/* ─── Label — always visible, uppercase, bold ─── */
+.vc-sidebar__label {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ─── Sublabel — shows current subpage title under parent ─── */
+#vc-sidebar .vc-sidebar__sublabel {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--vc-sidebar-active-text);
+    opacity: 0.7;
+    text-transform: uppercase;
+    letter-spacing: normal;
+    margin-top: 4px;
+    padding: 0 16px 6px 60px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+#vc-sidebar.vc-sidebar--collapsed .vc-sidebar__sublabel {
+    display: none;
+}
+
+/* ─── Content Push — matches sidebar width ─── */
+.vc-has-sidebar .elementor {
+    margin-left: var(--vc-sidebar-expanded);
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.vc-has-sidebar.vc-sidebar-collapsed .elementor {
+    margin-left: var(--vc-sidebar-width);
+}
+
+/* Also push the WP admin bar if present */
+.vc-has-sidebar #wpadminbar {
+    left: var(--vc-sidebar-expanded);
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.vc-has-sidebar.vc-sidebar-collapsed #wpadminbar {
+    left: var(--vc-sidebar-width);
+}
+
+/* ─── Mobile Hamburger Toggle (floating) ─── */
+.vc-mobile-toggle {
+    display: none;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 100000;
+    background: var(--vc-sidebar-bg);
+    color: var(--vc-sidebar-hover);
+    border: none;
+    border-radius: 12px;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.vc-mobile-toggle .dashicons {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+}
+
+/* ─── Mobile Overlay ─── */
+.vc-sidebar__overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99998;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.vc-sidebar__overlay.vc-sidebar__overlay--visible {
+    display: block;
+    opacity: 1;
+}
+
+/* ─── Mobile Bottom Tab Bar ─── */
+.vc-mobile-tabs {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 99997;
+    background: var(--vc-sidebar-bg);
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    padding: 8px 4px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.vc-mobile-tabs__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    color: var(--vc-sidebar-text);
+    text-decoration: none;
+    padding: 6px 8px;
+    border-radius: 10px;
+    transition: color 0.15s, background 0.15s;
+    min-width: 0;
+    flex: 1;
+}
+
+.vc-mobile-tabs__item .dashicons {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+}
+
+.vc-mobile-tabs__label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 64px;
+}
+
+.vc-mobile-tabs__item:hover,
+.vc-mobile-tabs__item--active {
+    color: var(--vc-sidebar-active-text);
+}
+
+.vc-mobile-tabs__item--active {
+    background: var(--vc-sidebar-active);
+    border-radius: 12px;
+}
+
+/* ═══════════════════════════════════════════════
+   Responsive — Mobile (<=768px)
+   ═══════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    /* Sidebar becomes a slide-in drawer */
+    .vc-sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Open state */
+    .vc-sidebar.vc-sidebar--open {
+        transform: translateX(0);
+    }
+
+    /* Show close button in drawer */
+    .vc-sidebar.vc-sidebar--open .vc-sidebar__toggle {
+        display: block;
+    }
+
+    .vc-sidebar.vc-sidebar--open .vc-sidebar__header {
+        justify-content: space-between;
+    }
+
+    /* No content push on mobile */
+    .vc-has-sidebar .elementor {
+        margin-left: 0;
+    }
+
+    .vc-has-sidebar #wpadminbar {
+        left: 0;
+    }
+
+    /* Show hamburger */
+    .vc-mobile-toggle {
+        display: flex;
+    }
+
+    /* Hide hamburger when drawer is open */
+    .vc-sidebar.vc-sidebar--open ~ .vc-mobile-toggle {
+        display: none;
+    }
+
+    /* Bottom tabs: show if body has tabs mode class */
+    body.vc-mobile-tabs #vc-mobile-tabs {
+        display: flex;
+    }
+
+    /* Add bottom padding for tab bar */
+    body.vc-mobile-tabs .elementor {
+        padding-bottom: 72px;
+    }
+
+    /* Drawer mode: no tab bar */
+    body.vc-mobile-drawer #vc-mobile-tabs {
+        display: none;
+    }
+}
+
+/* ═══════════════════════════════════════════════
+   Elementor Editor Guard
+   ═══════════════════════════════════════════════ */
+
+.elementor-editor-active .vc-sidebar,
+.elementor-editor-active .vc-mobile-toggle,
+.elementor-editor-active .vc-mobile-tabs,
+.elementor-editor-active .vc-sidebar__overlay {
+    display: none !important;
+}
+
+.elementor-editor-active.vc-has-sidebar .elementor {
+    margin-left: 0 !important;
+}
+
+/* ─── Scrollbar styling ─── */
+.vc-sidebar__menu::-webkit-scrollbar {
+    width: 4px;
+}
+
+.vc-sidebar__menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.vc-sidebar__menu::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+}
+
+.vc-sidebar__menu::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}

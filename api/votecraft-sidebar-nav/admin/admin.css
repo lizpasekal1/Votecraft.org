@@ -1,0 +1,129 @@
+/* VoteCraft Sidebar Nav — Admin Settings Styles */
+
+.vc-menu-table {
+    margin-top: 10px;
+    max-width: 900px;
+}
+
+.vc-menu-table th {
+    padding: 10px 12px;
+    font-weight: 600;
+}
+
+.vc-menu-table td {
+    padding: 8px 12px;
+    vertical-align: middle;
+}
+
+.vc-menu-row {
+    background: #fff;
+}
+
+.vc-menu-row:nth-child(even) {
+    background: #f9f9f9;
+}
+
+/* Drag handle */
+.vc-drag-handle {
+    cursor: grab;
+    text-align: center;
+    color: #999;
+    width: 30px;
+}
+
+.vc-drag-handle:active {
+    cursor: grabbing;
+}
+
+.vc-drag-handle .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+/* Sortable placeholder row */
+.vc-sortable-placeholder {
+    background: #e8f0fe;
+    height: 50px;
+}
+
+/* Row being dragged */
+.ui-sortable-helper {
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.vc-row-num {
+    font-weight: 600;
+    color: #666;
+    text-align: center;
+}
+
+.vc-icon-toggle {
+    margin-bottom: 6px;
+}
+
+.vc-icon-toggle label {
+    margin-right: 10px;
+    font-size: 12px;
+}
+
+.vc-icon-select {
+    width: 130px;
+    vertical-align: middle;
+}
+
+.vc-custom-icon-preview {
+    vertical-align: middle;
+    margin-left: 6px;
+}
+
+.vc-custom-icon-remove {
+    color: #a00;
+    margin-left: 4px;
+}
+
+.vc-icon-preview {
+    vertical-align: middle;
+    margin-left: 6px;
+    font-size: 20px;
+    color: #333;
+}
+
+.vc-remove-row {
+    min-width: 30px;
+    text-align: center;
+    padding: 2px 8px;
+    color: #a00;
+}
+
+.vc-remove-row:hover {
+    color: #dc3232;
+    border-color: #dc3232;
+}
+
+/* Page selector */
+.vc-page-selector {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fff;
+    max-width: 500px;
+}
+
+.vc-page-selector label {
+    display: block;
+    padding: 4px 0;
+    cursor: pointer;
+}
+
+.vc-page-selector label:hover {
+    background: #f0f6ff;
+}
+
+.vc-page-selector .description {
+    color: #888;
+    font-size: 12px;
+}
