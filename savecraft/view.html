@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SaveCraft – Shared List</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #F8F9FA;
+      color: #202124;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      background: #fff;
+      border-bottom: 1px solid #E0E0E0;
+      padding: 0 28px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo { font-size: 20px; font-weight: 700; color: #5C4EFA; letter-spacing: -0.02em; }
+    .logo span { font-weight: 400; color: #80868B; font-size: 14px; margin-left: 10px; }
+
+    .btn-install {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      background: #5C4EFA;
+      color: white;
+      border: none;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .btn-install:hover { background: #4A3DD4; }
+
+    /* Main */
+    .main { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+
+    .shared-by {
+      font-size: 14px;
+      color: #80868B;
+      margin-bottom: 6px;
+    }
+
+    .list-title {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: #202124;
+    }
+
+    /* Cards grid */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .cards-grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #E0E0E0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      min-height: 80px;
+      text-decoration: none;
+      color: inherit;
+      transition: box-shadow 0.2s, transform 0.1s;
+    }
+
+    .card:hover {
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      transform: translateY(-1px);
+    }
+
+    .card-thumb {
+      width: 130px;
+      flex-shrink: 0;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card-placeholder {
+      width: 130px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.9);
+    }
+
+    .placeholder-Music  { background: linear-gradient(135deg, #EC4899, #F9A8D4); }
+    .placeholder-Shows  { background: linear-gradient(135deg, #8B5CF6, #C4B5FD); }
+    .placeholder-Books  { background: linear-gradient(135deg, #10B981, #6EE7B7); }
+    .placeholder-Movies { background: linear-gradient(135deg, #3B82F6, #93C5FD); }
+    .placeholder-Games  { background: linear-gradient(135deg, #F59E0B, #FCD34D); }
+    .placeholder-Memes  { background: linear-gradient(135deg, #EF4444, #FCA5A5); }
+    .placeholder-other  { background: linear-gradient(135deg, #6B7280, #9CA3AF); }
+
+    .card-body {
+      flex: 1;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-domain {
+      font-size: 12px;
+      color: #80868B;
+    }
+
+    .card-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      width: fit-content;
+    }
+
+    .badge-Music  { background: #FCE7F3; color: #BE185D; }
+    .badge-Shows  { background: #EDE9FE; color: #6D28D9; }
+    .badge-Books  { background: #D1FAE5; color: #065F46; }
+    .badge-Movies { background: #DBEAFE; color: #1E40AF; }
+    .badge-Games  { background: #FEF3C7; color: #92400E; }
+    .badge-Memes  { background: #FEE2E2; color: #991B1B; }
+
+    /* Empty / error */
+    .message {
+      text-align: center;
+      padding: 80px 24px;
+      color: #80868B;
+    }
+    .message h2 { font-size: 20px; color: #202124; margin-bottom: 8px; }
+
+    /* Install banner */
+    .install-banner {
+      background: #EBE8FD;
+      border: 1px solid #C4B5FD;
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+
+    .install-banner p {
+      font-size: 14px;
+      color: #4A3DD4;
+      font-weight: 500;
+    }
+
+    .install-banner small {
+      display: block;
+      font-weight: 400;
+      color: #6D5EE8;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="logo">
+      SaveCraft
+      <span>Shared list</span>
+    </div>
+    <a class="btn-install" id="btn-install" href="https://chromewebstore.google.com" target="_blank">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Get SaveCraft
+    </a>
+  </header>
+
+  <main class="main" id="main">
+    <div class="message"><h2>Loading...</h2></div>
+  </main>
+
+  <script>
+    const CAT_EMOJI = { Music: '🎵', Shows: '📺', Books: '📚', Movies: '🎬', Games: '🎮', Memes: '🤣' };
+
+    function getDomain(url) {
+      try { return new URL(url).hostname.replace('www.', ''); }
+      catch { return url; }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function renderCard(item) {
+      const domain = getDomain(item.url);
+      const letter = domain[0]?.toUpperCase() || '?';
+      const cat = item.category || 'other';
+      const emoji = CAT_EMOJI[cat] || '🔗';
+
+      const thumb = item.imageUrl
+        ? `<img class="card-thumb" src="${escapeHtml(item.imageUrl)}" alt=""
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+           <div class="card-placeholder placeholder-${cat}" style="display:none;">${letter}</div>`
+        : `<div class="card-placeholder placeholder-${cat}">${letter}</div>`;
+
+      return `
+        <a class="card" href="${escapeHtml(item.url)}" target="_blank" rel="noopener">
+          ${thumb}
+          <div class="card-body">
+            <div class="card-title">${escapeHtml(item.title || domain)}</div>
+            <div class="card-domain">${escapeHtml(domain)}</div>
+            <span class="card-badge badge-${cat}">${emoji} ${cat}</span>
+          </div>
+        </a>`;
+    }
+
+    function render() {
+      const main = document.getElementById('main');
+      const hash = location.hash.slice(1);
+
+      if (!hash) {
+        main.innerHTML = `<div class="message"><h2>No list data found</h2><p>This link may be missing data. Ask the sender to reshare.</p></div>`;
+        return;
+      }
+
+      let payload;
+      try {
+        payload = JSON.parse(decodeURIComponent(escape(atob(hash))));
+      } catch {
+        main.innerHTML = `<div class="message"><h2>Couldn't read this list</h2><p>The link may be corrupted. Ask the sender to reshare.</p></div>`;
+        return;
+      }
+
+      const { title, items } = payload;
+      if (!items || !items.length) {
+        main.innerHTML = `<div class="message"><h2>This list is empty</h2></div>`;
+        return;
+      }
+
+      main.innerHTML = `
+        <div class="install-banner">
+          <div>
+            <p>Save any of these to your own SaveCraft library</p>
+            <small>Get the free Chrome extension to save and organize your media lists</small>
+          </div>
+          <a class="btn-install" href="https://chromewebstore.google.com" target="_blank">Get SaveCraft →</a>
+        </div>
+        <div class="list-title">${escapeHtml(title || 'Shared List')}</div>
+        <div class="cards-grid">${items.map(renderCard).join('')}</div>
+      `;
+    }
+
+    render();
+  </script>
+</body>
+</html>
