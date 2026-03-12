@@ -4,20 +4,11 @@
 
 Power Plays is a card game for 2–6 players inspired by Uno.
 
-Players match cards by color or symbol to get rid of their hand. Along the way, they use power cards, lobby for influence, and occasionally vote to shift momentum.
+Players match cards by color or symbol to get rid of their hand. Cards represent the people and interests you're indebted to — the more cards you hold, the more obligations weigh you down. Getting rid of all your cards means you've cleared your debts and earned your freedom.
 
-**The goal is simple: be the first player to play all your cards.**
+Along the way, players use power cards, counter each other's moves to earn **Lobby Cards**, and call **"Power!"** when down to one card.
 
----
-
-## Card Colors (Power Systems)
-
-| Color | System | Theme |
-|-------|--------|-------|
-| Blue | Legislative | Voting, group effects, collective power |
-| Yellow | Executive | Speed, skips, reversals, direct action |
-| Red | Judicial | Blocking, reversing, canceling effects |
-| Green | Federal Reserve | Trading hands, discards, indirect influence |
+**The goal: be the first to play all your cards AND have the most Lobby Cards.**
 
 ---
 
@@ -27,20 +18,20 @@ Players match cards by color or symbol to get rid of their hand. Along the way, 
 2. Deal 7 cards to each player.
 3. Place the remaining cards face down as the **Draw Pile**.
 4. Flip the top card to start the **Play Pile**.
-5. Each player draws 1 black **Lobbying Card** and keeps it secret:
-   - **Bill** (Legislative-focused)
-   - **Court Case** (Judicial-focused)
+5. Each player chooses 1 **Lobby Card** type:
+   - **Bill** (Legislative)
+   - **Court Case** (Judicial)
 
 ---
 
-## Lobbying Cards (Black Cards)
+## Lobby Cards (Black Cards)
 
-Each player has one hidden agenda for the round.
+Each Lobby Card can be used once on your turn to **change the active color** to any color you choose. Using it counts as your entire turn (no play or draw). The card stays in your hand after use — it still counts toward your end-game total.
 
-- **Bill Lobby Card** — Can be activated once when playing a Blue (Legislative) card.
-- **Court Case Lobby Card** — Can be activated once when playing a Red (Judicial) card.
+In addition to changing the color, each type has a bonus:
 
-When revealed, the card gives a one-time bonus, then is discarded.
+- **Bill** (Legislative): You also choose to either draw 1 card yourself, or force any opponent to draw 1 card.
+- **Court Case** (Judicial): You also choose which player skips their next turn, and all other players are banned from playing Vote cards for one round.
 
 ---
 
@@ -64,17 +55,41 @@ If you cannot play, draw one card.
 
 ---
 
-## Action Cards (Examples)
+## Action Cards
 
-| Card | Effect |
-|------|--------|
-| Skip | Next player loses their turn |
-| Reverse | Change play direction |
-| Draw 2 | Target player draws two cards |
-| Swap Hands (Green) | Trade hands with another player |
-| Block (Red) | Cancel the last action |
+### Motion (Reverse)
+Reverses the direction of play. If the targeted player counters with any motion card they earn one **Lobby Card**; if they use a **Blue Legislative Motion** the counter player earns two **Lobby Cards**.
 
-*(Exact card list can vary in prototype.)*
+### Veto (Skip)
+Skip the next player's turn. If the targeted player counters with any veto card they earn one **Lobby Card**; if they use a **Yellow Executive Veto** the counter player earns two **Lobby Cards**.
+
+### Inflation (Draw Two)
+The next player draws two cards. If the targeted player counters with any inflation card they earn one **Lobby Card** if they use a **Federal Reserve Inflation Draw Two** (Green), the counter player earns two **Lobby Cards**.
+
+### Vote (Wild)
+The player changes the current color to whatever they want. All players vote (see Vote Card rules below). The vote winner earns a **Lobby Card**.
+
+### Gratuities (Give 1)
+The player gives one card from their hand to another player. If the current player held **two copies** of the card they gave away, they earn a **Lobby Card**. If the receiving player counters with any gratuities card they earn one **Lobby Card**, if they use a **Judicial Gratuities** (Red), the counter player earns two **Lobby Cards**.
+
+---
+
+## Countering
+
+Countering is not an interrupt — it happens **on your turn**. When an action card targets you, you can respond by playing any version of that action type **onto the discard pile** as your normal play. This cancels the original effect and earns you Lobby Cards.
+
+Standard matching rules still apply — the counter card must be a legal play on the pile.
+
+| Action Played | Counter Card (play on your turn) | Result |
+|---------------|----------------------------------|--------|
+| Motion (Reverse) | Any Motion card | Reverse canceled, you earn 1 Lobby Card |
+| Motion (Reverse) | Blue Motion (Legislative) | Reverse canceled, you earn 2 Lobby Cards |
+| Veto (Skip) | Any Veto card | Skip canceled, you earn 1 Lobby Card |
+| Veto (Skip) | Yellow Veto (Executive) | Skip canceled, you earn 2 Lobby Cards |
+| Inflation (Draw Two) | Any Inflation card | Draw canceled, you earn 1 Lobby Card |
+| Inflation (Draw Two) | Green Inflation (Federal Reserve) | Draw canceled, you earn 2 Lobby Cards |
+| Gratuities (Give 1) | Any Gratuities card | Give canceled, you earn 1 Lobby Card |
+| Gratuities (Give 1) | Red Gratuities (Judicial) | Give canceled, you earn 2 Lobby Cards |
 
 ---
 
@@ -91,45 +106,29 @@ When a **Vote Card** is played:
 
 ### Vote Outcome
 
-- The player with the highest number wins the vote.
+- The player with the highest number wins the vote and earns a **Lobby Card**.
 - **If tied:**
   - Tie goes to the player with fewer cards.
-  - If still tied, no one wins.
-
-### Reward for Winning a Vote
-
-- If the winning player has a **Bill Lobby Card**, they gain another Bill Lobby Card.
-- If the winning player has a **Court Case Lobby Card**, they gain another Court Case Lobby Card.
-- If they have already used their Lobby Card this round, the reward is saved for the next round.
-
-*This represents successful lobbying.*
+  - If still tied, no one wins the Lobby Card.
 
 ---
 
-## Using Lobbying Cards
+## Using Lobby Cards
 
-On a turn when you play:
-- A **Blue card** → you may reveal a Bill Lobby Card
-- A **Red card** → you may reveal a Court Case Lobby Card
+On your turn, instead of playing or drawing, you may use one **unused** Lobby Card to **change the active color** to any color you choose.
 
-When revealed:
-- Apply the bonus written on the card
-- Discard the Lobby Card after use
-
----
-
-## Calling "Power"
-
-When you have **one card left**, you must say **"Power!"**
-
-If another player catches you before your next turn, draw two cards.
+- The Lobby Card is marked as used but stays in your hand (it still counts at the end).
+- Each Lobby Card can only be used once.
+- You do not play or draw a card when using a Lobby Card — it is your entire turn.
 
 ---
 
 ## Winning the Game
 
-- The first player to play their final card wins the round.
-- **Optional:** Play multiple rounds and reset Lobby Cards each round.
+The game has two winners, determined when a player plays their final card:
+
+- **Power Winner:** The first player to play all their cards.
+- **Plays Winner:** The player with the most Lobby Cards when the Power Winner is reached. This can be the same person.
 
 ---
 

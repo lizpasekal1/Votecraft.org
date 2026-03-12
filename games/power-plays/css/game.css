@@ -313,7 +313,24 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
     color: var(--text-gold);
+}
+
+.info-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 215, 0, 0.5);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-gold);
     margin-left: auto;
+    margin-right: 8px;
+}
+
+.info-btn:hover {
+    background: rgba(255, 215, 0, 0.2);
+    border-color: var(--text-gold);
 }
 
 .pause-btn:hover {
@@ -405,27 +422,6 @@ body {
     opacity: 0.7;
 }
 
-.power-badge {
-    background: var(--text-gold);
-    color: var(--bg-primary);
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 0.7rem;
-    font-weight: bold;
-    animation: pulse 1s infinite;
-}
-
-.challenge-btn {
-    padding: 4px 12px;
-    font-size: 0.75rem;
-    border: none;
-    border-radius: 15px;
-    background: var(--color-red);
-    color: white;
-    cursor: pointer;
-    margin-top: 4px;
-}
-
 /* Center Area */
 #center-area {
     flex: 1;
@@ -470,13 +466,23 @@ body {
 
 /* Player Area */
 #player-area {
+    position: relative;
     padding: var(--spacing-sm) var(--spacing-md);
     background: rgba(0, 0, 0, 0.2);
     flex-shrink: 0;
     overflow: visible;
 }
 
+.player-hand-info {
+    text-align: center;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: -4px;
+}
+
 #player-hand {
+    position: relative;
+    z-index: 1;
     display: flex;
     justify-content: center;
     align-items: flex-end;
@@ -517,12 +523,6 @@ body {
     transform: scale(1.05);
 }
 
-#power-button {
-    background: var(--text-gold);
-    color: var(--bg-primary);
-    animation: pulse 1s infinite;
-}
-
 .turn-box {
     background: #F9C80E;
     color: #000;
@@ -554,6 +554,39 @@ body {
 }
 
 .skip-btn:hover {
+    background: #333;
+}
+
+.use-lobby-btn {
+    background: #1a1a1a;
+    color: #ffd700;
+    border: 1px solid #ffd700;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.use-lobby-btn:hover {
+    background: #333;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+}
+
+.undo-btn {
+    background: #000;
+    color: #F9C80E;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.undo-btn:hover {
     background: #333;
 }
 
@@ -706,10 +739,48 @@ body {
 }
 
 /* Game Over Modal */
-.winner-name {
-    font-size: 2rem;
-    color: var(--text-gold);
+.game-over-winners {
     margin: var(--spacing-md) 0;
+}
+
+.game-over-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.game-over-row:last-child {
+    border-bottom: none;
+}
+
+.game-over-label {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.game-over-name {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--text-gold);
+}
+
+#lobby-card-summary {
+    margin: var(--spacing-md) 0;
+    font-size: 0.9rem;
+}
+
+.lobby-summary-row {
+    padding: 3px 0;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.lobby-summary-highlight {
+    font-weight: bold;
+    color: var(--text-gold);
 }
 
 #play-again-btn {
@@ -1204,6 +1275,125 @@ body {
     color: var(--text-gold);
 }
 
+/* ==================== INFO MODAL ==================== */
+.info-modal {
+    text-align: left;
+    max-width: 600px;
+    max-height: 95vh;
+    padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md);
+}
+
+.info-modal .modal-title {
+    text-align: center;
+    font-size: 1.4rem;
+    letter-spacing: 1px;
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.info-section {
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.info-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: var(--spacing-sm);
+}
+
+.info-section h3 {
+    color: var(--text-gold);
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: var(--spacing-sm);
+}
+
+.info-section p {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0 0 var(--spacing-xs);
+}
+
+.info-section ul {
+    list-style: none;
+    padding: 0;
+    margin: var(--spacing-xs) 0 0;
+}
+
+.info-section li {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.85);
+    padding: 3px 0 3px 16px;
+    position: relative;
+}
+
+.info-section li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--text-gold);
+}
+
+.info-section ul.no-arrow li::before {
+    content: none;
+}
+
+.info-section ul.no-arrow li {
+    padding-left: 32px;
+}
+
+.card-symbol {
+    position: absolute;
+    left: 0;
+    color: var(--text-gold);
+    font-size: 0.8rem;
+    font-weight: bold;
+    width: 28px;
+    text-align: center;
+}
+
+.card-symbol-lg {
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+.info-section li strong {
+    color: #fff;
+}
+
+
+.info-section .color-blue { color: var(--color-blue); font-weight: bold; }
+.info-section .color-yellow { color: var(--color-yellow); font-weight: bold; }
+.info-section .color-red { color: var(--color-red); font-weight: bold; }
+.info-section .color-green { color: var(--color-green); font-weight: bold; }
+
+.info-modal {
+    position: relative;
+}
+
+.info-close-x {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 8px;
+    transition: color 0.2s ease;
+}
+
+.info-close-x:hover {
+    color: #fff;
+}
+
 /* Lobby Card Indicator (on opponent cards) */
 .lobby-indicator {
     font-size: 1rem;
@@ -1211,4 +1401,47 @@ body {
     padding: 2px 8px;
     background: rgba(0, 0, 0, 0.5);
     border-radius: 10px;
+}
+
+/* Lobby card display above player hand */
+#player-lobby-display {
+    position: absolute;
+    top: -15px;
+    z-index: 0;
+    display: flex;
+}
+
+#player-lobby-display .hand-lobby-card + .hand-lobby-card {
+    margin-left: -20px;
+}
+
+.hand-lobby-card {
+    width: 45px;
+    height: 65px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+    border: 2px solid #ffd700;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.hand-lobby-icon {
+    font-size: 1.2rem;
+}
+
+.hand-lobby-label {
+    font-size: 0.45rem;
+    font-weight: bold;
+    color: #ffd700;
+    letter-spacing: 1px;
+    margin-top: 2px;
+}
+
+.hand-lobby-used {
+    opacity: 0.4;
+    border-color: #666;
 }

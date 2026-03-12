@@ -10,8 +10,8 @@
     <title>Power Plays - Card Game</title>
 
     <!-- Styles -->
-    <link rel="stylesheet" href="css/game.css?v=61">
-    <link rel="stylesheet" href="css/cards.css?v=59">
+    <link rel="stylesheet" href="css/game.css?v=86">
+    <link rel="stylesheet" href="css/cards.css?v=62">
 </head>
 <body>
 
@@ -58,6 +58,7 @@
         <!-- Header -->
         <header class="game-header">
             <span class="header-title">POWER PLAYS</span>
+            <button id="info-btn" class="info-btn" title="Game Rules">ℹ</button>
             <button id="pause-btn" class="pause-btn" title="Pause/Resume Game">⏸</button>
         </header>
 
@@ -87,14 +88,16 @@
 
             <!-- Player Area (bottom) -->
             <section id="player-area">
+                <div id="player-hand-info" class="player-hand-info"></div>
                 <div id="player-hand">
                     <!-- Player's cards will be rendered here -->
                 </div>
                 <div class="player-controls">
-                    <button id="power-button" class="control-btn hidden">POWER!</button>
                     <div id="turn-box" class="turn-box">
                         <span id="turn-text">Player 1's Turn</span>
                         <button id="skip-btn" class="skip-btn hidden">SKIP ME</button>
+                        <button id="use-lobby-btn" class="use-lobby-btn hidden">USE LOBBY</button>
+                        <button id="undo-btn" class="undo-btn hidden">UNDO</button>
                     </div>
                 </div>
             </section>
@@ -144,30 +147,39 @@
 
         <!-- Game Over Modal -->
         <div id="game-over-modal" class="modal hidden">
-            <h2 class="modal-title">🎉 Game Over!</h2>
-            <div class="winner-name">Player 1</div>
-            <p>wins the game!</p>
+            <h2 class="modal-title">Game Over!</h2>
+            <div class="game-over-winners">
+                <div class="game-over-row">
+                    <span class="game-over-label">Power Winner</span>
+                    <span class="game-over-name" id="power-winner-name"></span>
+                </div>
+                <div class="game-over-row">
+                    <span class="game-over-label">Plays Winner</span>
+                    <span class="game-over-name" id="plays-winner-name"></span>
+                </div>
+            </div>
+            <div id="lobby-card-summary"></div>
             <button id="play-again-btn">Play Again</button>
         </div>
 
         <!-- Lobby Card Picker Modal -->
         <div id="lobby-picker-modal" class="modal hidden">
-            <h2 class="modal-title">Choose Your Secret Lobby Card</h2>
-            <p class="modal-subtitle">This card stays hidden until you choose to reveal it</p>
+            <h2 class="modal-title">Choose Your Lobby Card</h2>
+            <p class="modal-subtitle">Both change the active color — but each has a bonus</p>
             <div class="lobby-options">
                 <button class="lobby-card-btn" data-lobby="bill">
                     <div class="lobby-icon">📜</div>
                     <div class="lobby-name">Bill</div>
                     <div class="lobby-type">Legislative</div>
-                    <div class="lobby-desc">Activate when playing BLUE</div>
-                    <div class="lobby-bonus">Bonus: Draw 1 card</div>
+                    <div class="lobby-desc">Change color + draw/force draw</div>
+                    <div class="lobby-bonus">Draw 1 yourself or make an opponent draw 1</div>
                 </button>
                 <button class="lobby-card-btn" data-lobby="court_case">
                     <div class="lobby-icon">⚖️</div>
                     <div class="lobby-name">Court Case</div>
                     <div class="lobby-type">Judicial</div>
-                    <div class="lobby-desc">Activate when playing RED</div>
-                    <div class="lobby-bonus">Bonus: Opponent discards 1</div>
+                    <div class="lobby-desc">Change color + skip + vote ban</div>
+                    <div class="lobby-bonus">Skip a player's turn + ban Vote cards for one round</div>
                 </button>
             </div>
         </div>
@@ -183,18 +195,61 @@
             </div>
         </div>
 
+        <!-- Info / Rules Modal -->
+        <div id="info-modal" class="modal info-modal hidden">
+            <button id="info-close-btn" class="info-close-x">&times;</button>
+            <h2 class="modal-title">Quick Reference</h2>
+
+            <div class="info-section">
+                <h3>Action Cards</h3>
+                <ul class="no-arrow">
+                    <li><span class="card-symbol"><svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24" width="18px" fill="#ffd700"><path d="M0 0h24v24H0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></span> <strong>Vote</strong> — State the color; all players vote with their highest number card in that color. The winner earns a lobby card.</li>
+                    <li><span class="card-symbol"><svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24" width="18px" fill="#ffd700"><path d="M0 0h24v24H0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.69L18.31 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/></svg></span> <strong>Veto</strong> — Skip the next player's turn</li>
+                    <li><span class="card-symbol"><svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24" width="18px" fill="#ffd700"><path d="M0 0h24v24H0z" fill="none"/><path d="M7.11 8.53L5.7 7.11C4.8 8.27 4.24 9.61 4.07 11h2.02c.14-.87.49-1.72 1.02-2.47zM6.09 13H4.07c.17 1.39.72 2.73 1.62 3.89l1.41-1.42c-.52-.75-.87-1.59-1.01-2.47zm1.01 5.32c1.16.9 2.51 1.44 3.9 1.61V17.9c-.87-.15-1.71-.49-2.46-1.03L7.1 18.32zM13 4.07V1L8.45 5.55 13 10V6.09c2.84.48 5 2.94 5 5.91s-2.16 5.43-5 5.91v2.02c3.95-.49 7-3.85 7-7.93s-3.05-7.44-7-7.93z"/></svg></span> <strong>Motion</strong> — Reverse play direction</li>
+                    <li><span class="card-symbol">+2</span> <strong>Inflation</strong> — Next player draws 2</li>
+                    <li><span class="card-symbol">🎁</span> <strong>Gratuities</strong> — Give 1 card from your hand to any player</li>
+                </ul>
+            </div>
+
+            <div class="info-section">
+                <h3>Countering</h3>
+                <p>Play the same action type to cancel that action on you and earn lobby cards:</p>
+                <ul>
+                    <li><strong>Veto</strong> — counter with any Veto (<strong>+1</strong>), or <span class="color-yellow">yellow Executive Veto</span> (<strong>+2</strong>)</li>
+                    <li><strong>Motion</strong> — counter with any Motion (<strong>+1</strong>), or <span class="color-blue">blue Legislative Motion</span> (<strong>+2</strong>)</li>
+                    <li><strong>Inflation</strong> — counter with any Inflation (<strong>+1</strong>), or <span class="color-green">green Fed Reserve Inflation</span> (<strong>+2</strong>)</li>
+                    <li><strong>Gratuities</strong> — counter with any Gratuities (<strong>+1</strong>), or <span class="color-red">red Judicial Gratuities</span> (<strong>+2</strong>)</li>
+                </ul>
+            </div>
+
+            <div class="info-section">
+                <h3>Lobby Cards</h3>
+                <p>Uses your whole turn. Changes the active color + a bonus:</p>
+                <ul>
+                    <li><strong>Bill</strong> — Draw 1 yourself OR force an opponent to draw 1</li>
+                    <li><strong>Court Case</strong> — Choose a player to skip their turn + ban all Vote cards for one round</li>
+                </ul>
+            </div>
+
+            <div class="info-section">
+                <h3>Winning</h3>
+                <p><strong>Power winner:</strong> the first to play all their cards.<br><strong>Plays winner:</strong> the player with the most lobby cards when the power winner is reached. This can be the same person.</p>
+            </div>
+
+        </div>
+
     </div>
 
     <!-- Scripts (load in order due to dependencies) -->
-    <script src="js/constants.js?v=33"></script>
-    <script src="js/deck.js?v=33"></script>
-    <script src="js/player.js?v=33"></script>
-    <script src="js/state.js?v=33"></script>
-    <script src="js/actions.js?v=33"></script>
-    <script src="js/vote.js?v=33"></script>
-    <script src="js/ai.js?v=33"></script>
-    <script src="js/ui.js?v=36"></script>
-    <script src="js/game.js?v=35"></script>
+    <script src="js/constants.js?v=44"></script>
+    <script src="js/deck.js?v=40"></script>
+    <script src="js/player.js?v=45"></script>
+    <script src="js/state.js?v=41"></script>
+    <script src="js/actions.js?v=43"></script>
+    <script src="js/vote.js?v=40"></script>
+    <script src="js/ai.js?v=44"></script>
+    <script src="js/ui.js?v=58"></script>
+    <script src="js/game.js?v=50"></script>
 
 </body>
 </html>

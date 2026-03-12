@@ -15,7 +15,7 @@ class Card {
     constructor(color, type, value = null) {
         this.id = generateCardId();
         this.color = color;      // 'blue', 'yellow', 'red', 'green', or null for wild
-        this.type = type;        // 'number', 'skip', 'reverse', 'draw2', 'swap', 'block', 'vote'
+        this.type = type;        // 'number', 'motion', 'veto', 'inflation', 'give1', 'vote'
         this.value = value;      // 0-9 for numbers, null for actions
     }
 

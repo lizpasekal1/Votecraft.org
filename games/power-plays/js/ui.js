@@ -51,13 +51,16 @@ class UIManager {
             directionIndicator: document.getElementById('direction-indicator'),
 
             // Player hand
+            playerHandInfo: document.getElementById('player-hand-info'),
             playerHand: document.getElementById('player-hand'),
-            powerButton: document.getElementById('power-button'),
             turnText: document.getElementById('turn-text'),
             skipBtn: document.getElementById('skip-btn'),
+            useLobbyBtn: document.getElementById('use-lobby-btn'),
+            undoBtn: document.getElementById('undo-btn'),
 
             // Status
             messageDisplay: document.getElementById('message-display'),
+            infoBtn: document.getElementById('info-btn'),
             pauseButton: document.getElementById('pause-btn'),
 
             // Modals
@@ -68,7 +71,9 @@ class UIManager {
             passPlayModal: document.getElementById('pass-play-modal'),
             gameOverModal: document.getElementById('game-over-modal'),
             lobbyPickerModal: document.getElementById('lobby-picker-modal'),
-            lobbyActivateModal: document.getElementById('lobby-activate-modal')
+            lobbyActivateModal: document.getElementById('lobby-activate-modal'),
+            infoModal: document.getElementById('info-modal'),
+            infoCloseBtn: document.getElementById('info-close-btn')
         };
     }
 
@@ -82,11 +87,18 @@ class UIManager {
         // Draw pile click
         this.elements.drawPile?.addEventListener('click', () => this.handleDrawClick());
 
-        // Power button
-        this.elements.powerButton?.addEventListener('click', () => this.handlePowerClick());
-
         // Skip button
         this.elements.skipBtn?.addEventListener('click', () => this.handleEndTurnClick());
+
+        // Use Lobby Card button
+        this.elements.useLobbyBtn?.addEventListener('click', () => this.handleUseLobbyClick());
+
+        // Undo button
+        this.elements.undoBtn?.addEventListener('click', () => this.handleUndoClick());
+
+        // Info button
+        this.elements.infoBtn?.addEventListener('click', () => this.showModal('infoModal'));
+        this.elements.infoCloseBtn?.addEventListener('click', () => this.hideModal('infoModal'));
 
         // Pause button
         this.elements.pauseButton?.addEventListener('click', () => this.handlePauseClick());
@@ -145,8 +157,6 @@ class UIManager {
      * Main render function
      */
     render() {
-        const state = this.game.state;
-
         this.renderOpponents();
         this.renderPlayPile();
         this.renderDrawPile();
@@ -159,18 +169,15 @@ class UIManager {
 
     /**
      * Render opponent hands
-     * Positions: 2P = top, 3P = left/top, 4P = left/top/right
      */
     renderOpponents() {
         const state = this.game.state;
-        const currentPlayer = state.getCurrentPlayer();
         const opponents = state.players.filter(p => p.index !== 0);
         const playerCount = state.players.length;
 
         this.elements.opponentArea.innerHTML = '';
 
         opponents.forEach(opponent => {
-            // Determine position class based on player count
             let positionClass = '';
             if (playerCount === 3) {
                 positionClass = opponent.index === 1 ? 'position-left' : 'position-top';
@@ -186,28 +193,13 @@ class UIManager {
 
             const isCurrent = state.currentPlayerIndex === opponent.index;
 
-            const lobbyIndicator = this.renderLobbyIndicator(opponent);
-
             opponentEl.innerHTML = `
                 <div class="opponent-name ${isCurrent ? 'current-turn' : ''}">${opponent.name}</div>
                 <div class="opponent-cards">
                     ${this.renderCardBacks(opponent.handSize())}
                 </div>
-                <div class="opponent-count">${opponent.handSize()} cards</div>
-                ${lobbyIndicator}
-                ${opponent.hasCalledPower && opponent.handSize() === 1 ? '<div class="power-badge">POWER!</div>' : ''}
+                <div class="opponent-count">${opponent.handSize()} cards | ${opponent.lobbyCards.length + opponent.earnedLobbyCards} lobby card${(opponent.lobbyCards.length + opponent.earnedLobbyCards) !== 1 ? 's' : ''}</div>
             `;
-
-            // Challenge button for Power!
-            if (opponent.canBeCaughtForPower() && currentPlayer.isHuman) {
-                const challengeBtn = document.createElement('button');
-                challengeBtn.className = 'challenge-btn';
-                challengeBtn.textContent = 'Catch!';
-                challengeBtn.addEventListener('click', () => {
-                    this.game.challengePower(0, opponent.index);
-                });
-                opponentEl.appendChild(challengeBtn);
-            }
 
             this.elements.opponentArea.appendChild(opponentEl);
         });
@@ -258,9 +250,13 @@ class UIManager {
      */
     renderPlayerHand() {
         const state = this.game.state;
-        const player = state.getPlayer(0); // Human player is always index 0 in single player
+        const player = state.getPlayer(0);
         const isMyTurn = state.currentPlayerIndex === 0;
         const topCard = state.getTopCard();
+
+        // Update hand info text
+        const totalLobby = player.lobbyCards.length + player.earnedLobbyCards;
+        this.elements.playerHandInfo.textContent = `${player.handSize()} cards | ${totalLobby} lobby card${totalLobby !== 1 ? 's' : ''}`;
 
         this.elements.playerHand.innerHTML = '';
         this.elements.playerHand.classList.toggle('my-turn', isMyTurn);
@@ -278,6 +274,41 @@ class UIManager {
 
             this.elements.playerHand.appendChild(cardEl);
         });
+
+        // Render lobby card(s) above the draw pile
+        this.renderPlayerLobbyCard(player);
+    }
+
+    /**
+     * Render player's lobby card above the hand on the left
+     */
+    renderPlayerLobbyCard(player) {
+        const playerArea = document.getElementById('player-area');
+        let container = document.getElementById('player-lobby-display');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'player-lobby-display';
+            playerArea.appendChild(container);
+        }
+        container.innerHTML = '';
+        player.lobbyCards.forEach(lc => {
+            const lobbyEl = document.createElement('div');
+            lobbyEl.className = `hand-lobby-card${lc.used ? ' hand-lobby-used' : ''}`;
+            const info = LOBBY_CARDS[lc.type];
+            lobbyEl.innerHTML = `<div class="hand-lobby-label">${lc.used ? 'USED' : 'LOBBY'}</div><div class="hand-lobby-icon">${info.icon}</div>`;
+            lobbyEl.title = `${info.name} — ${info.bonus}${lc.used ? ' (Used)' : ''}`;
+            container.appendChild(lobbyEl);
+        });
+
+        // Position above the first card
+        const firstCard = this.elements.playerHand.querySelector('.card-wrapper');
+        if (firstCard) {
+            requestAnimationFrame(() => {
+                const areaRect = playerArea.getBoundingClientRect();
+                const cardRect = firstCard.getBoundingClientRect();
+                container.style.left = (cardRect.left - areaRect.left) + 'px';
+            });
+        }
     }
 
     /**
@@ -315,12 +346,18 @@ class UIManager {
             `;
         }
 
+        const actionLabel = card.type !== CARD_TYPES.NUMBER && card.type !== CARD_TYPES.VOTE
+            ? CARD_NAMES[card.type] || ''
+            : '';
+
+        const themeLabel = actionLabel || branchName;
+
         return `
             <div class="card ${colorClass} ${playableClass} ${typeClass}" data-card-id="${card.id}">
                 ${card.color ? '<div class="card-oval"></div>' : ''}
                 ${card.color ? `<div class="card-icon">${branchIcon}</div>` : ''}
                 <div class="card-center">${symbol}</div>
-                ${card.color ? `<div class="card-theme">${branchName}</div>` : ''}
+                ${card.color && themeLabel ? `<div class="card-theme">${themeLabel}</div>` : ''}
             </div>
         `;
     }
@@ -332,12 +369,19 @@ class UIManager {
         const state = this.game.state;
         const currentPlayer = state.getCurrentPlayer();
         const isMyTurn = state.currentPlayerIndex === 0;
-
-        // Update the turn text
         this.elements.turnText.textContent = `${currentPlayer.name}'s Turn`;
 
         // Show skip button only on player's turn
         this.elements.skipBtn.classList.toggle('hidden', !isMyTurn);
+
+        // Show lobby card button if player has unused lobby cards and it's their turn
+        const humanPlayer = state.getPlayer(0);
+        const canUseLobby = isMyTurn && humanPlayer.canUseLobbyCard();
+        this.elements.useLobbyBtn.classList.toggle('hidden', !canUseLobby);
+
+        // Show undo button when a snapshot exists (human made a move they can take back)
+        const canUndo = this.game.undoSnapshot !== null;
+        this.elements.undoBtn.classList.toggle('hidden', !canUndo);
     }
 
     /**
@@ -361,15 +405,6 @@ class UIManager {
      * Update button visibility
      */
     updateButtons() {
-        const state = this.game.state;
-        const player = state.getPlayer(0);
-        const isMyTurn = state.currentPlayerIndex === 0;
-
-        // Power button
-        const showPower = isMyTurn && player.handSize() === 1 && !player.hasCalledPower;
-        this.elements.powerButton.classList.toggle('hidden', !showPower);
-
-        // End turn button is always visible (shows whose turn it is)
     }
 
     /**
@@ -389,7 +424,7 @@ class UIManager {
             return;
         }
 
-        // For cards that need additional input
+        // Vote cards need color selection
         if (card.type === CARD_TYPES.VOTE) {
             this.selectedCardIndex = cardIndex;
             this.promptColorChoice().then(color => {
@@ -401,11 +436,16 @@ class UIManager {
             return;
         }
 
-        if (card.type === CARD_TYPES.SWAP) {
+        // Give 1 (Gratuities) needs target and card selection
+        if (card.type === CARD_TYPES.GIVE_1) {
             this.selectedCardIndex = cardIndex;
-            this.promptTargetPlayer(state.getOtherPlayers(), 'Choose player to swap with').then(target => {
-                if (target) {
-                    this.game.playCard(0, cardIndex, { targetPlayerIndex: target.index });
+            this.promptGive1(player, state.getOtherPlayers()).then(result => {
+                if (result) {
+                    const giveCardIndex = player.findCardIndex(result.card.id);
+                    this.game.playCard(0, cardIndex, {
+                        targetPlayerIndex: result.targetPlayer.index,
+                        giveCardIndex: giveCardIndex
+                    });
                 }
                 this.selectedCardIndex = null;
             });
@@ -428,18 +468,29 @@ class UIManager {
     }
 
     /**
-     * Handle Power button click
-     */
-    handlePowerClick() {
-        this.game.callPower(0);
-        this.elements.powerButton.classList.add('hidden');
-    }
-
-    /**
      * Handle end turn click
      */
     handleEndTurnClick() {
         this.game.endTurn(0);
+    }
+
+    /**
+     * Handle Use Lobby Card click — prompts color choice then uses lobby card
+     */
+    async handleUseLobbyClick() {
+        const state = this.game.state;
+        if (state.currentPlayerIndex !== 0) return;
+        const player = state.getPlayer(0);
+        if (!player.canUseLobbyCard()) return;
+
+        await this.game.useLobbyCardForColor(player);
+    }
+
+    /**
+     * Handle undo button click
+     */
+    async handleUndoClick() {
+        await this.game.undo();
     }
 
     /**
@@ -459,9 +510,6 @@ class UIManager {
      * Handle keyboard shortcuts
      */
     handleKeyPress(e) {
-        if (e.key === 'p' || e.key === 'P') {
-            this.handlePowerClick();
-        }
         if (e.key === 'd' || e.key === 'D') {
             this.handleDrawClick();
         }
@@ -532,6 +580,102 @@ class UIManager {
     }
 
     /**
+     * Prompt for Give 1 (Gratuities) — select target player then card to give
+     */
+    async promptGive1(player, otherPlayers) {
+        // Step 1: Choose target player
+        const targetPlayer = await this.promptTargetPlayer(
+            otherPlayers,
+            'Choose a player to give a card to'
+        );
+        if (!targetPlayer) return null;
+
+        // Step 2: Choose card to give (from hand, excluding the Gratuities card being played)
+        return new Promise(resolve => {
+            const modal = this.elements.voteModal; // Reuse vote modal for card selection
+            const container = modal.querySelector('.vote-options');
+            modal.querySelector('.modal-title').textContent = 'Choose a card to give away';
+            container.innerHTML = '';
+
+            // Show all cards except the Gratuities being played
+            const giveableCards = player.hand.filter(c => c.type !== CARD_TYPES.GIVE_1);
+
+            if (giveableCards.length === 0) {
+                container.innerHTML = '<p>No cards to give!</p>';
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'vote-pass-btn';
+                cancelBtn.textContent = 'Cancel';
+                cancelBtn.addEventListener('click', () => {
+                    this.hideModal('voteModal');
+                    resolve(null);
+                });
+                container.appendChild(cancelBtn);
+            } else {
+                giveableCards.forEach(card => {
+                    const cardWrapper = document.createElement('div');
+                    cardWrapper.className = 'vote-card-option';
+                    cardWrapper.innerHTML = this.createCardElement(card, { faceUp: true });
+                    cardWrapper.addEventListener('click', () => {
+                        this.hideModal('voteModal');
+                        resolve({ targetPlayer, card });
+                    });
+                    container.appendChild(cardWrapper);
+                });
+            }
+
+            this.showModal('voteModal');
+        });
+    }
+
+    /**
+     * Prompt counter opportunity for human player
+     */
+    promptCounterOpportunity(player, pendingAction, counterCard) {
+        return new Promise(resolve => {
+            const actionNames = {
+                motion: 'Motion (Skip)',
+                veto: 'Veto (Reverse)',
+                inflation: 'Inflation (Draw 2)',
+                give1: 'Gratuities (Give 1)'
+            };
+
+            const actionName = actionNames[pendingAction.type] || pendingAction.type;
+            const sourceName = this.game.state.getPlayer(pendingAction.sourceIndex).name;
+            const counterName = `${counterCard.color.toUpperCase()} ${CARD_NAMES[counterCard.type]}`;
+
+            // Use the target picker modal for the counter prompt
+            const modal = this.elements.targetPickerModal;
+            const container = modal.querySelector('.target-options');
+            modal.querySelector('.modal-title').textContent =
+                `${sourceName} played ${actionName}! Counter with ${counterName}?`;
+
+            container.innerHTML = '';
+
+            const counterBtn = document.createElement('button');
+            counterBtn.className = 'target-btn';
+            counterBtn.style.background = '#4CAF50';
+            counterBtn.textContent = `Counter! (earn Lobby Card)`;
+            counterBtn.addEventListener('click', () => {
+                this.hideModal('targetPickerModal');
+                resolve(true);
+            });
+            container.appendChild(counterBtn);
+
+            const acceptBtn = document.createElement('button');
+            acceptBtn.className = 'target-btn';
+            acceptBtn.style.background = '#f44336';
+            acceptBtn.textContent = 'Accept the action';
+            acceptBtn.addEventListener('click', () => {
+                this.hideModal('targetPickerModal');
+                resolve(false);
+            });
+            container.appendChild(acceptBtn);
+
+            this.showModal('targetPickerModal');
+        });
+    }
+
+    /**
      * Prompt for vote card selection
      */
     promptVoteCard(player, color) {
@@ -575,7 +719,6 @@ class UIManager {
      */
     async showVoteResults(result) {
         this.showMessage(result.message, 3000);
-        // Could add more elaborate vote reveal animation here
     }
 
     /**
@@ -594,30 +737,36 @@ class UIManager {
     /**
      * Show Power! call animation
      */
-    showPowerCallAnimation(playerIndex) {
-        this.showMessage('POWER!', 1500);
-        // Could add more elaborate animation
-    }
-
     /**
      * Highlight playable card (after draw)
      */
     highlightPlayableCard(card) {
-        // Card is already highlighted via playable class in render
         this.showMessage('You can play this card!', 2000);
     }
 
     /**
-     * Show game over screen
+     * Show game over screen — includes Lobby Card count
      */
-    showGameOverScreen(winner) {
+    showGameOverScreen(powerWinner, playsWinner) {
         return new Promise(resolve => {
-            const modal = this.elements.gameOverModal;
-            modal.querySelector('.winner-name').textContent = winner.name;
+            // Set winner names
+            document.getElementById('power-winner-name').textContent = powerWinner.name;
+            document.getElementById('plays-winner-name').textContent = playsWinner ? playsWinner.name : 'None';
+
+            // Build lobby card summary for all players
+            const players = this.game.state.players;
+            const summaryEl = document.getElementById('lobby-card-summary');
+            let summaryHtml = '';
+            players.forEach(p => {
+                const isPlaysWinner = playsWinner && p.index === playsWinner.index;
+                const totalLobby = p.lobbyCards.length + p.earnedLobbyCards;
+                summaryHtml += `<div class="lobby-summary-row${isPlaysWinner ? ' lobby-summary-highlight' : ''}">`;
+                summaryHtml += `${p.name}: ${totalLobby} Lobby Card${totalLobby !== 1 ? 's' : ''}`;
+                summaryHtml += `</div>`;
+            });
+            summaryEl.innerHTML = summaryHtml;
 
             this.showModal('gameOverModal');
-
-            // Auto-resolve after showing
             setTimeout(resolve, 500);
         });
     }
@@ -641,7 +790,6 @@ class UIManager {
             let isHumanPlayer = playerIndex === 0;
 
             if (isHumanPlayer) {
-                // For human player, find the selected card in hand or use center of hand area
                 const selectedCard = this.elements.playerHand.querySelector('.card-wrapper.selected .card') ||
                                     this.elements.playerHand.querySelector('.card-wrapper:hover .card');
 
@@ -650,13 +798,11 @@ class UIManager {
                     startX = cardRect.left;
                     startY = cardRect.top;
                 } else {
-                    // Fallback to center of player hand area
                     const handRect = this.elements.playerHand.getBoundingClientRect();
                     startX = handRect.left + handRect.width / 2 - 30;
                     startY = handRect.top;
                 }
             } else {
-                // For opponents, start from their area
                 const opponentEl = document.querySelector(`.opponent[data-player-index="${playerIndex}"]`);
                 if (!opponentEl) {
                     resolve();
@@ -675,8 +821,6 @@ class UIManager {
             flyingCard.style.width = 'var(--card-width, 60px)';
             flyingCard.style.height = 'var(--card-height, 90px)';
 
-            // Human player: show the actual card face immediately
-            // Opponent: start with card back, flip to reveal
             if (isHumanPlayer) {
                 flyingCard.innerHTML = this.createCardElement(card, { faceUp: true });
                 flyingCard.classList.add('player-card-fly');
@@ -686,10 +830,8 @@ class UIManager {
 
             document.body.appendChild(flyingCard);
 
-            // Animate position using CSS transition
             flyingCard.style.transition = 'left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), top 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
 
-            // Trigger animation after a frame
             requestAnimationFrame(() => {
                 if (isHumanPlayer) {
                     flyingCard.classList.add('animate');
@@ -700,7 +842,6 @@ class UIManager {
                 flyingCard.style.left = `${endX}px`;
                 flyingCard.style.top = `${endY}px`;
 
-                // For opponents, swap to card face halfway through
                 if (!isHumanPlayer) {
                     setTimeout(() => {
                         flyingCard.innerHTML = this.createCardElement(card, { faceUp: true });
@@ -708,11 +849,9 @@ class UIManager {
                 }
             });
 
-            // Clean up after animation
             const animDuration = isHumanPlayer ? 450 : 550;
             setTimeout(() => {
                 flyingCard.remove();
-                // Add landing effect to play pile
                 const pileCard = playPileEl.querySelector('.card');
                 if (pileCard) {
                     pileCard.classList.add('play-pile-landing');
@@ -758,20 +897,19 @@ class UIManager {
     // ==================== LOBBY CARD UI METHODS ====================
 
     /**
-     * Prompt player to choose their lobby card at game start
+     * Prompt player to choose their lobby card type at game start
      */
     promptLobbyCardChoice(player) {
         return new Promise(resolve => {
             const modal = this.elements.lobbyPickerModal;
             if (!modal) {
-                // Fallback if modal doesn't exist - random choice
                 resolve(Math.random() < 0.5 ? LOBBY_TYPES.BILL : LOBBY_TYPES.COURT_CASE);
                 return;
             }
 
             const titleEl = modal.querySelector('.modal-title');
             if (titleEl) {
-                titleEl.textContent = `${player.name}, choose your secret Lobby Card`;
+                titleEl.textContent = `${player.name}, choose your Lobby Card`;
             }
 
             const billBtn = modal.querySelector('[data-lobby="bill"]');
@@ -795,33 +933,36 @@ class UIManager {
     }
 
     /**
-     * Prompt player to activate their lobby card
+     * Prompt Bill bonus choice: draw yourself or force opponent to draw
      */
-    promptLobbyActivation(player, lobbyType) {
+    promptBillChoice() {
         return new Promise(resolve => {
             const modal = this.elements.lobbyActivateModal;
             if (!modal) {
-                // Fallback - auto activate
                 resolve(true);
                 return;
             }
 
-            const lobbyInfo = LOBBY_CARDS[lobbyType];
             const titleEl = modal.querySelector('.modal-title');
             const descEl = modal.querySelector('.lobby-description');
             const bonusEl = modal.querySelector('.lobby-bonus');
 
-            if (titleEl) titleEl.textContent = `Activate ${lobbyInfo.name}?`;
-            if (descEl) descEl.textContent = lobbyInfo.description;
-            if (bonusEl) bonusEl.textContent = `Bonus: ${lobbyInfo.bonus}`;
+            if (titleEl) titleEl.textContent = 'Bill Bonus';
+            if (descEl) descEl.textContent = 'Choose your legislative action:';
+            if (bonusEl) bonusEl.textContent = '';
 
             const yesBtn = modal.querySelector('.lobby-yes-btn');
             const noBtn = modal.querySelector('.lobby-no-btn');
+
+            if (yesBtn) yesBtn.textContent = 'Draw 1 Card';
+            if (noBtn) noBtn.textContent = 'Opponent Draws 1';
 
             const cleanup = () => {
                 this.hideModal('lobbyActivateModal');
                 yesBtn?.removeEventListener('click', handleYes);
                 noBtn?.removeEventListener('click', handleNo);
+                if (yesBtn) yesBtn.textContent = 'Yes, Reveal!';
+                if (noBtn) noBtn.textContent = 'No, Keep Hidden';
             };
 
             const handleYes = () => { cleanup(); resolve(true); };
@@ -832,15 +973,6 @@ class UIManager {
 
             this.showModal('lobbyActivateModal');
         });
-    }
-
-    /**
-     * Show lobby card reveal animation
-     */
-    async showLobbyCardReveal(player, lobbyType) {
-        const lobbyInfo = LOBBY_CARDS[lobbyType];
-        this.showMessage(`${player.name} reveals ${lobbyInfo.icon} ${lobbyInfo.name}!`, 2500);
-        return new Promise(resolve => setTimeout(resolve, 1000));
     }
 
     /**
@@ -861,13 +993,9 @@ class UIManager {
      */
     getBranchIcon(color) {
         const icons = {
-            // Legislative (Blue) - Capitol building with columns
             [COLORS.BLUE]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M200-280v-280h80v280h-80Zm240 0v-280h80v280h-80ZM80-120v-80h800v80H80Zm600-160v-280h80v280h-80ZM80-640v-80l400-200 400 200v80H80Zm178-80h444-444Zm0 0h444L480-830 258-720Z"/></svg>`,
-            // Executive (Yellow) - President/person figure
             [COLORS.YELLOW]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M185-80q-17 0-29.5-12.5T143-122v-105q0-90 56-159t144-88q-40 28-62 70.5T259-312v190q0 11 3 22t10 20h-87Zm147 0q-17 0-29.5-12.5T290-122v-190q0-70 49.5-119T459-480h189q70 0 119 49t49 119v64q0 70-49 119T648-80H332Zm148-484q-66 0-112-46t-46-112q0-66 46-112t112-46q66 0 112 46t46 112q0 66-46 112t-112 46Z"/></svg>`,
-            // Judicial (Red) - Scales of justice
             [COLORS.RED]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M80-120v-80h360v-447q-26-9-45-28t-28-45H240l120 280q0 50-41 85t-99 35q-58 0-99-35t-41-85l120-280h-80v-80h247q12-35 43-57.5t70-22.5q39 0 70 22.5t43 57.5h247v80h-80l120 280q0 50-41 85t-99 35q-58 0-99-35t-41-85l120-280H593q-9 26-28 45t-45 28v447h360v80H80Zm585-320h150l-75-174-75 174Zm-520 0h150l-75-174-75 174Zm335-280q17 0 28.5-11.5T520-760q0-17-11.5-28.5T480-800q-17 0-28.5 11.5T440-760q0 17 11.5 28.5T480-720Z"/></svg>`,
-            // Fed Reserve (Green) - Money/bank note
             [COLORS.GREEN]: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M600-320h160v-160h-60v100H600v60Zm-120-40q50 0 85-35t35-85q0-50-35-85t-85-35q-50 0-85 35t-35 85q0 50 35 85t85 35ZM200-480h60v-100h100v-60H200v160ZM80-200v-560h800v560H80Zm80-80h640v-400H160v400Zm0 0v-400 400Z"/></svg>`
         };
         return icons[color] || '';

@@ -16,33 +16,39 @@ const COLOR_LIST = [COLORS.BLUE, COLORS.YELLOW, COLORS.RED, COLORS.GREEN];
 // Card types
 const CARD_TYPES = {
     NUMBER: 'number',
-    SKIP: 'skip',
-    REVERSE: 'reverse',
-    DRAW_2: 'draw2',
-    SWAP: 'swap',
-    BLOCK: 'block',
-    VOTE: 'vote'
+    MOTION: 'motion',       // Reverse
+    VETO: 'veto',           // Skip
+    INFLATION: 'inflation', // Draw Two (was DRAW_2)
+    GIVE_1: 'give1',        // Gratuities — give one card to another player
+    VOTE: 'vote'            // Wild — choose color, all players vote
 };
 
 // Visual symbols for action cards
 const CARD_SYMBOLS = {
-    [CARD_TYPES.SKIP]: '⊘',
-    [CARD_TYPES.REVERSE]: '⟲',
-    [CARD_TYPES.DRAW_2]: '+2',
-    [CARD_TYPES.SWAP]: '⇄',
-    [CARD_TYPES.BLOCK]: '🛡',
+    [CARD_TYPES.MOTION]: '⟲',
+    [CARD_TYPES.VETO]: '⊘',
+    [CARD_TYPES.INFLATION]: '+2',
+    [CARD_TYPES.GIVE_1]: '🎁',
     [CARD_TYPES.VOTE]: 'VOTE'
 };
 
 // Card display names
 const CARD_NAMES = {
     [CARD_TYPES.NUMBER]: '',
-    [CARD_TYPES.SKIP]: 'Skip',
-    [CARD_TYPES.REVERSE]: 'Reverse',
-    [CARD_TYPES.DRAW_2]: 'Draw 2',
-    [CARD_TYPES.SWAP]: 'Swap',
-    [CARD_TYPES.BLOCK]: 'Block',
+    [CARD_TYPES.MOTION]: 'Motion',
+    [CARD_TYPES.VETO]: 'Veto',
+    [CARD_TYPES.INFLATION]: 'Inflation',
+    [CARD_TYPES.GIVE_1]: 'Gratuities',
     [CARD_TYPES.VOTE]: 'Vote'
+};
+
+// Counter map — which color + type counters each action
+// Countering happens ON YOUR TURN by playing the matching color version
+const COUNTER_MAP = {
+    [CARD_TYPES.MOTION]:    { color: COLORS.BLUE,   type: CARD_TYPES.MOTION },
+    [CARD_TYPES.VETO]:      { color: COLORS.YELLOW, type: CARD_TYPES.VETO },
+    [CARD_TYPES.INFLATION]: { color: COLORS.GREEN,  type: CARD_TYPES.INFLATION },
+    [CARD_TYPES.GIVE_1]:    { color: COLORS.RED,    type: CARD_TYPES.GIVE_1 }
 };
 
 // Civic theme descriptions for each color
@@ -108,11 +114,10 @@ const DECK_COMPOSITION = {
     },
     // Action cards per color
     actions: {
-        [CARD_TYPES.SKIP]: 2,
-        [CARD_TYPES.REVERSE]: 2,
-        [CARD_TYPES.DRAW_2]: 2,
-        [CARD_TYPES.SWAP]: 1,
-        [CARD_TYPES.BLOCK]: 1
+        [CARD_TYPES.MOTION]: 2,
+        [CARD_TYPES.VETO]: 2,
+        [CARD_TYPES.INFLATION]: 2,
+        [CARD_TYPES.GIVE_1]: 1
     },
     // Wild cards (no color)
     wilds: {
@@ -137,6 +142,7 @@ const GAME_PHASES = {
     VOTING: 'voting',
     COLOR_SELECT: 'color-select',
     TARGET_SELECT: 'target-select',
+    COUNTER_OPPORTUNITY: 'counter-opportunity',
     PASS_PLAY_TRANSITION: 'pass-play-transition',
     GAME_OVER: 'game-over'
 };
@@ -156,25 +162,30 @@ const AI_DIFFICULTY = {
 
 // Lobbying Card types (Black cards)
 const LOBBY_TYPES = {
-    BILL: 'bill',           // Legislative-focused (activates with Blue)
-    COURT_CASE: 'court_case' // Judicial-focused (activates with Red)
+    BILL: 'bill',
+    COURT_CASE: 'court_case',
+    EARNED: 'earned'  // Generic earned lobby card
 };
 
 // Lobbying Card definitions
 const LOBBY_CARDS = {
     [LOBBY_TYPES.BILL]: {
         name: 'Bill',
-        activatesOn: COLORS.BLUE,
-        description: 'Legislative lobbying - activate when playing a Blue card',
+        description: 'Change active color + draw 1 card yourself or force an opponent to draw 1.',
         icon: '📜',
-        bonus: 'Draw 1 card and play again'
+        bonus: 'Draw or force draw'
     },
     [LOBBY_TYPES.COURT_CASE]: {
         name: 'Court Case',
-        activatesOn: COLORS.RED,
-        description: 'Judicial lobbying - activate when playing a Red card',
+        description: 'Change active color + choose a player to skip their next turn.',
         icon: '⚖️',
-        bonus: 'Force any opponent to discard 1 card'
+        bonus: 'Skip a player'
+    },
+    [LOBBY_TYPES.EARNED]: {
+        name: 'Lobby Card',
+        description: 'Change active color. Uses your whole turn.',
+        icon: '⭐',
+        bonus: 'Change active color'
     }
 };
 
@@ -183,6 +194,6 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         COLORS, COLOR_LIST, CARD_TYPES, CARD_SYMBOLS, CARD_NAMES,
         COLOR_THEMES, COLOR_VALUES, DECK_COMPOSITION, GAME_CONFIG,
-        GAME_PHASES, GAME_MODES, AI_DIFFICULTY
+        GAME_PHASES, GAME_MODES, AI_DIFFICULTY, COUNTER_MAP
     };
 }

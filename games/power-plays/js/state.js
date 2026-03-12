@@ -38,6 +38,13 @@ class GameState {
         // Vote state
         this.activeVote = null;
 
+        // Pending action for counter mechanic
+        // { type, sourceIndex, targetIndex, card, giveCard, giveTargetIndex }
+        this.pendingAction = null;
+
+        // Vote ban (from Court Case lobby card)
+        this.voteBanTurnsLeft = 0;
+
         // History for potential undo/replay
         this.turnHistory = [];
         this.turnNumber = 0;
@@ -290,7 +297,9 @@ class GameState {
             skipNext: this.skipNext,
             lastAction: this.lastAction,
             activeVote: this.activeVote,
-            turnNumber: this.turnNumber
+            pendingAction: this.pendingAction,
+            turnNumber: this.turnNumber,
+            voteBanTurnsLeft: this.voteBanTurnsLeft
         };
     }
 
@@ -312,7 +321,9 @@ class GameState {
         state.skipNext = data.skipNext;
         state.lastAction = data.lastAction;
         state.activeVote = data.activeVote;
+        state.pendingAction = data.pendingAction || null;
         state.turnNumber = data.turnNumber;
+        state.voteBanTurnsLeft = data.voteBanTurnsLeft || 0;
         return state;
     }
 }

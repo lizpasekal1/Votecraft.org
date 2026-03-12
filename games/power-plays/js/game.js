@@ -15,6 +15,9 @@ class PowerPlaysGame {
         this.ui = null; // Set after DOM ready
         this.isPaused = false;
 
+        // Undo support
+        this.undoSnapshot = null;
+
         // Event listeners
         this.listeners = {};
     }
@@ -99,11 +102,9 @@ class PowerPlaysGame {
     async dealLobbyCards() {
         for (const player of this.state.players) {
             if (player.isHuman) {
-                // Human player chooses their lobby card
                 const lobbyType = await this.ui.promptLobbyCardChoice(player);
                 player.addLobbyCard(lobbyType);
             } else {
-                // AI gets a random lobby card
                 const lobbyType = Math.random() < 0.5 ? LOBBY_TYPES.BILL : LOBBY_TYPES.COURT_CASE;
                 player.addLobbyCard(lobbyType);
             }
@@ -130,24 +131,19 @@ class PowerPlaysGame {
         const hasVoteCard = humanPlayer.hand.some(card => card.type === CARD_TYPES.VOTE);
 
         if (!hasVoteCard) {
-            // Find a vote card in the draw pile
             const voteCardIndex = this.state.drawPile.findIndex(card => card.type === CARD_TYPES.VOTE);
 
             if (voteCardIndex !== -1) {
-                // Swap: take vote card from draw pile, put a non-vote card back
                 const voteCard = this.state.drawPile.splice(voteCardIndex, 1)[0];
                 const nonVoteCard = humanPlayer.hand.find(card => card.type !== CARD_TYPES.VOTE);
 
                 if (nonVoteCard) {
-                    // Remove non-vote card from hand and add to draw pile
-                    humanPlayer.removeCard(nonVoteCard);
+                    humanPlayer.removeCard(humanPlayer.findCardIndex(nonVoteCard.id));
                     this.state.drawPile.push(nonVoteCard);
-
-                    // Add vote card to hand
                     humanPlayer.addCards([voteCard]);
                     humanPlayer.sortHand();
 
-                    // Shuffle draw pile so the swapped card isn't predictably on top
+                    // Shuffle draw pile
                     for (let i = this.state.drawPile.length - 1; i > 0; i--) {
                         const j = Math.floor(Math.random() * (i + 1));
                         [this.state.drawPile[i], this.state.drawPile[j]] =
@@ -162,13 +158,10 @@ class PowerPlaysGame {
      * Set up initial play pile
      */
     setupPlayPile() {
-        // Draw until we get a non-action card to start
         let startCard = this.state.drawCards(1)[0];
 
         while (startCard.isAction()) {
-            // Put action card back and reshuffle
             this.state.drawPile.unshift(startCard);
-            // Shuffle draw pile
             for (let i = this.state.drawPile.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [this.state.drawPile[i], this.state.drawPile[j]] =
@@ -190,14 +183,51 @@ class PowerPlaysGame {
 
         state.turnNumber++;
 
+        // Clear undo when human's next turn starts (undo window is over)
+        if (player.isHuman && player.index === 0) {
+            this.clearUndo();
+        }
+
+        // Check if this player is marked to skip (from Court Case)
+        if (player.skipNextTurn) {
+            player.skipNextTurn = false;
+            this.ui.showMessage(`${player.name} skips their turn! (Court Case)`, 1500);
+            this.ui.render();
+            await new Promise(r => setTimeout(r, 1200));
+            await this.advanceToNextTurn();
+            return;
+        }
+
         // Reset turn-based state
         player.resetTurnState();
+
+        // Decrement vote ban counter
+        if (this.state.voteBanTurnsLeft > 0) {
+            this.state.voteBanTurnsLeft--;
+        }
 
         // Emit turn started
         this.emit('turnStarted', {
             playerIndex: player.index,
             playerName: player.name
         });
+
+        // ─── Counter opportunity check ───
+        if (state.pendingAction && state.pendingAction.targetIndex === player.index) {
+            const handled = await this.handleCounterOpportunity(player, state.pendingAction);
+            // handled.countered = true/false
+            // handled.turnEnds = true if the player's turn should end (motion/inflation not countered)
+
+            state.pendingAction = null;
+
+            if (handled.turnEnds) {
+                // Player's turn is over (they were skipped or drew cards)
+                this.ui.render();
+                await this.advanceToNextTurn();
+                return;
+            }
+            // Otherwise player keeps their turn (either countered or veto/give1 that doesn't skip)
+        }
 
         // Handle pass & play transition for local multiplayer
         if (state.mode === GAME_MODES.LOCAL_MULTIPLAYER && player.isHuman) {
@@ -211,7 +241,75 @@ class PowerPlaysGame {
         if (!player.isHuman && !this.isPaused) {
             await this.ai.takeTurn(player.index);
         }
-        // Human players interact via UI
+    }
+
+    /**
+     * Handle counter opportunity for the current player
+     * Returns { countered: bool, turnEnds: bool }
+     */
+    async handleCounterOpportunity(player, pendingAction) {
+        const counterCard = this.actionResolver.getCounterCard(player, pendingAction);
+
+        let willCounter = false;
+
+        if (counterCard) {
+            if (player.isHuman) {
+                // Show counter opportunity to human
+                willCounter = await this.ui.promptCounterOpportunity(
+                    player, pendingAction, counterCard
+                );
+            } else {
+                // AI decides
+                willCounter = this.ai.shouldCounter(player, pendingAction, counterCard, this.state);
+            }
+        }
+
+        if (willCounter && counterCard) {
+            // Play the counter card onto the pile
+            const cardIndex = player.findCardIndex(counterCard.id);
+            player.removeCard(cardIndex);
+
+            // Add counter card to play pile
+            this.state.playCard(counterCard);
+
+            // Animate counter card play
+            await this.ui.animateCardPlay(counterCard, player.index);
+
+            // Apply counter effects
+            this.actionResolver.applyCounter(pendingAction, player, counterCard);
+
+            this.ui.render();
+
+            // Check win condition after counter play
+            if (player.handSize() === 0) {
+                await this.endGame(player);
+                return { countered: true, turnEnds: true };
+            }
+
+            // Counter succeeded — player keeps their turn
+            return { countered: true, turnEnds: false };
+        }
+
+        // No counter — apply the original action
+        this.actionResolver.applyPendingAction(pendingAction);
+
+        // Veto ends the target's turn (skip)
+        if (pendingAction.type === 'veto') {
+            return { countered: false, turnEnds: true };
+        }
+
+        // Inflation: player draws but keeps their turn
+        if (pendingAction.type === 'inflation') {
+            return { countered: false, turnEnds: false };
+        }
+
+        // Motion in 2-player acts as skip
+        if (pendingAction.type === 'motion' && this.state.players.length === 2) {
+            return { countered: false, turnEnds: true };
+        }
+
+        // Motion (multi-player) and Give 1 don't end the turn
+        return { countered: false, turnEnds: false };
     }
 
     /**
@@ -227,6 +325,11 @@ class PowerPlaysGame {
         if (!validation.valid) {
             this.emit('invalidPlay', { reason: validation.reason });
             return false;
+        }
+
+        // Save undo snapshot for human player
+        if (playerIndex === 0) {
+            this.saveUndoSnapshot();
         }
 
         // Remove card from hand
@@ -247,8 +350,8 @@ class PowerPlaysGame {
 
         // Pause on vote cards so players can see them
         if (card.type === CARD_TYPES.VOTE) {
-            this.ui.render(); // Show the vote card on the pile
-            await new Promise(resolve => setTimeout(resolve, 1500)); // 1.5 second pause
+            this.ui.render();
+            await new Promise(resolve => setTimeout(resolve, 1500));
         }
 
         // Resolve card effects
@@ -260,14 +363,6 @@ class PowerPlaysGame {
             card: card.toJSON(),
             result
         });
-
-        // Check if player can activate a lobby card
-        if (card.color && player.canActivateLobby(card.color)) {
-            const lobbyActivated = await this.handleLobbyActivation(player, card.color);
-            if (lobbyActivated) {
-                // Lobby card effects are handled, may affect game flow
-            }
-        }
 
         // Check win condition
         if (player.handSize() === 0) {
@@ -296,10 +391,14 @@ class PowerPlaysGame {
             return false;
         }
 
+        // Save undo snapshot for human player
+        if (playerIndex === 0) {
+            this.saveUndoSnapshot();
+        }
+
         // Draw a card
         const drawnCards = state.drawCards(1);
         if (drawnCards.length === 0) {
-            // Deck is empty even after reshuffle
             return false;
         }
 
@@ -322,13 +421,14 @@ class PowerPlaysGame {
         });
 
         // Check if drawn card can be played
-        if (drawnCard.canPlayOn(state.getTopCard(), state.activeColor)) {
+        const canPlayDrawn = drawnCard.canPlayOn(state.getTopCard(), state.activeColor) &&
+            !(drawnCard.type === CARD_TYPES.VOTE && state.voteBanTurnsLeft > 0);
+        if (canPlayDrawn) {
             if (player.isHuman) {
-                // Human can choose to play or keep
                 this.ui.highlightPlayableCard(drawnCard);
             } else {
-                // AI plays if beneficial
-                const playableCards = player.getPlayableCards(state.getTopCard(), state.activeColor);
+                const voteBan = state.voteBanTurnsLeft > 0;
+                const playableCards = player.getPlayableCards(state.getTopCard(), state.activeColor, voteBan);
                 if (playableCards.length > 0) {
                     const cardToPlay = this.ai.selectCardToPlay(player, playableCards, state);
                     const cardIdx = player.findCardIndex(cardToPlay.id);
@@ -338,7 +438,6 @@ class PowerPlaysGame {
             }
         }
 
-        // If human, render and wait for their action
         if (player.isHuman) {
             this.ui.render();
             return true;
@@ -355,7 +454,8 @@ class PowerPlaysGame {
     async advanceToNextTurn() {
         const state = this.state;
 
-        // Handle skip
+        // Note: skipNext is no longer used for motion/inflation (handled by pendingAction)
+        // but kept for edge cases
         if (state.skipNext) {
             state.advancePlayer();
             state.skipNext = false;
@@ -373,132 +473,134 @@ class PowerPlaysGame {
     }
 
     /**
-     * Handle lobby card activation opportunity
+     * Use a lobby card to change the active color (takes the player's whole turn)
      */
-    async handleLobbyActivation(player, cardColor) {
-        const lobbyType = player.getActivatableLobbyType(cardColor);
-        if (!lobbyType) return false;
+    async useLobbyCardForColor(player) {
+        if (!player.canUseLobbyCard()) return false;
 
-        let shouldActivate = false;
-
+        // Save undo snapshot for human player
         if (player.isHuman) {
-            // Prompt human player
-            shouldActivate = await this.ui.promptLobbyActivation(player, lobbyType);
+            this.saveUndoSnapshot();
+        }
+
+        let chosenColor;
+        if (player.isHuman) {
+            chosenColor = await this.ui.promptColorChoice();
         } else {
-            // AI decides whether to activate
-            shouldActivate = this.ai.shouldActivateLobby(player, lobbyType, this.state);
+            chosenColor = this.ai.chooseBestColor(player, this.state);
         }
 
-        if (shouldActivate) {
-            return await this.activateLobbyCard(player, lobbyType);
-        }
+        const lobbyType = player.useLobbyCard();
+        this.state.activeColor = chosenColor;
 
-        return false;
-    }
-
-    /**
-     * Activate a lobby card and apply its effect
-     */
-    async activateLobbyCard(player, lobbyType) {
-        // Mark the lobby card as used
-        player.useLobbyCard(lobbyType);
-
-        // Emit event
         this.emit('lobbyCardActivated', {
             playerIndex: player.index,
-            lobbyType: lobbyType
+            color: chosenColor
         });
 
-        // Show animation
-        await this.ui.showLobbyCardReveal(player, lobbyType);
+        this.ui.showMessage(`${player.name} used a Lobby Card! Color changed to ${chosenColor.toUpperCase()}.`, 2000);
 
-        // Apply bonus based on lobby type
+        // Apply type-specific bonus
         if (lobbyType === LOBBY_TYPES.BILL) {
-            // Bill bonus: Draw 1 card and play again
-            const drawnCard = this.state.drawCards(1)[0];
-            if (drawnCard) {
-                player.addCards(drawnCard);
-                this.ui.showMessage(`${player.name} activated Bill! Drew 1 card.`);
-            }
-            // Note: "play again" effect would need additional turn handling
-            // For simplicity, we just give the draw bonus
+            await this.applyBillBonus(player);
         } else if (lobbyType === LOBBY_TYPES.COURT_CASE) {
-            // Court Case bonus: Force any opponent to discard 1 card
-            let targetPlayer;
-            if (player.isHuman) {
-                targetPlayer = await this.ui.promptTargetPlayer(
-                    this.state.getOtherPlayers(),
-                    'Choose a player to discard a card'
-                );
-            } else {
-                // AI picks player with most cards
-                const others = this.state.getOtherPlayers();
-                others.sort((a, b) => b.handSize() - a.handSize());
-                targetPlayer = others[0];
-            }
-
-            if (targetPlayer && targetPlayer.handSize() > 0) {
-                // Remove a random card from their hand
-                const discardIndex = Math.floor(Math.random() * targetPlayer.handSize());
-                const discarded = targetPlayer.removeCard(discardIndex);
-                this.ui.showMessage(`${player.name} activated Court Case! ${targetPlayer.name} discarded a card.`);
-            }
+            await this.applyCourtCaseBonus(player);
         }
 
         this.ui.render();
+        await this.advanceToNextTurn();
         return true;
     }
 
     /**
-     * Call Power!
+     * Bill bonus: draw 1 card yourself or force an opponent to draw 1
      */
-    callPower(playerIndex) {
-        const player = this.state.getPlayer(playerIndex);
-
-        if (player.callPower()) {
-            this.emit('powerCalled', { playerIndex, playerName: player.name });
-            this.ui.showPowerCallAnimation(playerIndex);
-            return true;
+    async applyBillBonus(player) {
+        let drawSelf;
+        if (player.isHuman) {
+            drawSelf = await this.ui.promptBillChoice();
+        } else {
+            // AI: force opponent to draw if anyone is close to winning
+            const others = this.state.getOtherPlayers();
+            drawSelf = !others.some(p => p.handSize() <= 3);
         }
-        return false;
+
+        if (drawSelf) {
+            const drawn = this.state.drawCards(1);
+            if (drawn.length > 0) {
+                player.addCards(drawn);
+                this.ui.showMessage(`${player.name} drew 1 card from Bill!`, 1500);
+            }
+        } else {
+            let target;
+            if (player.isHuman) {
+                target = await this.ui.promptTargetPlayer(
+                    this.state.getOtherPlayers(),
+                    'Choose a player to draw 1 card'
+                );
+            } else {
+                const others = this.state.getOtherPlayers();
+                others.sort((a, b) => a.handSize() - b.handSize());
+                target = others[0];
+            }
+            if (target) {
+                const drawn = this.state.drawCards(1);
+                if (drawn.length > 0) {
+                    target.addCards(drawn);
+                    this.ui.showMessage(`${target.name} forced to draw 1 card from Bill!`, 1500);
+                }
+            }
+        }
     }
 
     /**
-     * Challenge a player for not calling Power!
+     * Court Case bonus: choose a player to skip their next turn + ban Vote cards for one round
      */
-    challengePower(challengerIndex, targetIndex) {
-        const target = this.state.getPlayer(targetIndex);
-
-        if (target.canBeCaughtForPower()) {
-            // Target was caught - draw penalty cards
-            const penaltyCards = this.state.drawCards(GAME_CONFIG.POWER_PENALTY_CARDS);
-            target.addCards(penaltyCards);
-
-            this.emit('powerChallengeSuccess', {
-                challenger: challengerIndex,
-                target: targetIndex,
-                penaltyCards: penaltyCards.length
-            });
-
-            this.ui.render();
-            return true;
+    async applyCourtCaseBonus(player) {
+        let target;
+        if (player.isHuman) {
+            target = await this.ui.promptTargetPlayer(
+                this.state.getOtherPlayers(),
+                'Choose a player to skip their next turn'
+            );
+        } else {
+            const others = this.state.getOtherPlayers();
+            others.sort((a, b) => a.handSize() - b.handSize());
+            target = others[0];
+        }
+        if (target) {
+            target.skipNextTurn = true;
+            this.ui.showMessage(`${target.name} skips next turn! Vote cards banned for 1 round.`, 2000);
         }
 
-        return false;
+        // Ban Vote cards for one full round (number of players = turns in a round)
+        this.state.voteBanTurnsLeft = this.state.players.length;
     }
 
     /**
-     * End the game
+     * End the game — two winners: Power (emptied hand) and Plays (most Lobby Cards)
      */
-    async endGame(winner) {
+    async endGame(powerWinner) {
         this.state.phase = GAME_PHASES.GAME_OVER;
 
-        this.emit('gameOver', {
-            winner: winner.index,
-            winnerName: winner.name
+        // Find Plays winner — most total Lobby Cards
+        const players = this.state.players;
+        let maxLobby = -1;
+        let playsWinner = null;
+        players.forEach(p => {
+            const total = p.lobbyCards.length + p.earnedLobbyCards;
+            if (total > maxLobby) {
+                maxLobby = total;
+                playsWinner = p;
+            }
         });
 
-        await this.ui.showGameOverScreen(winner);
+        this.emit('gameOver', {
+            powerWinner: powerWinner.index,
+            playsWinner: playsWinner ? playsWinner.index : null
+        });
+
+        await this.ui.showGameOverScreen(powerWinner, playsWinner);
     }
 
     /**
@@ -511,6 +613,38 @@ class PowerPlaysGame {
 
         await this.advanceToNextTurn();
         return true;
+    }
+
+    /**
+     * Save a snapshot of the current state for undo (human turn only)
+     */
+    saveUndoSnapshot() {
+        this.undoSnapshot = this.state.toJSON();
+    }
+
+    /**
+     * Restore the saved snapshot (undo the human's last action)
+     */
+    async undo() {
+        if (!this.undoSnapshot) return false;
+
+        const snapshot = this.undoSnapshot;
+        this.undoSnapshot = null;
+
+        // Restore state
+        this.state = GameState.fromJSON(snapshot);
+
+        this.ui.showMessage('Move undone!', 1000);
+        this.ui.render();
+
+        return true;
+    }
+
+    /**
+     * Clear undo snapshot (e.g. when it's no longer valid)
+     */
+    clearUndo() {
+        this.undoSnapshot = null;
     }
 
     // Event system
