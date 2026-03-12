@@ -188,31 +188,19 @@ class VoteManager {
     }
 
     /**
-     * Apply reward for winning a vote
-     * Winner gains another lobby card matching their existing type
+     * Apply reward for winning a vote — winner earns a Lobby Card
      */
     applyVoteReward(winnerIndex) {
         const state = this.game.state;
         const winner = state.getPlayer(winnerIndex);
 
-        // Find the type of lobby card the winner has (used or unused)
-        let rewardType = null;
-
-        if (winner.lobbyCards.some(lc => lc.type === LOBBY_TYPES.BILL)) {
-            rewardType = LOBBY_TYPES.BILL;
-        } else if (winner.lobbyCards.some(lc => lc.type === LOBBY_TYPES.COURT_CASE)) {
-            rewardType = LOBBY_TYPES.COURT_CASE;
-        }
-
-        if (rewardType) {
-            winner.addLobbyCard(rewardType);
-            this.game.ui.showMessage(`${winner.name} gained a ${LOBBY_CARDS[rewardType].name} lobby card!`);
-        }
+        // Winner earns a generic Lobby Card (used for win condition tiebreaker)
+        winner.earnLobbyCard();
+        this.game.ui.showMessage(`${winner.name} won the vote and earned a Lobby Card!`);
 
         state.recordAction({
             action: 'vote_won',
-            winner: winnerIndex,
-            lobbyCardRewarded: rewardType
+            winner: winnerIndex
         });
     }
 

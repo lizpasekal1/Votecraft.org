@@ -11,10 +11,11 @@ class Player {
         this.name = name;
         this.isHuman = isHuman;
         this.hand = [];
-        this.hasCalledPower = false;
         // Lobbying cards (secret until revealed)
         this.lobbyCards = [];
         this.usedLobbyThisTurn = false;
+        // Earned Lobby Cards — from countering, voting, etc. (used for win condition)
+        this.earnedLobbyCards = 0;
     }
 
     /**
@@ -23,10 +24,6 @@ class Player {
     addCards(cards) {
         const toAdd = Array.isArray(cards) ? cards : [cards];
         this.hand.push(...toAdd);
-        // Reset Power! call when gaining cards
-        if (toAdd.length > 0) {
-            this.hasCalledPower = false;
-        }
     }
 
     /**
@@ -53,8 +50,11 @@ class Player {
     /**
      * Get all playable cards given the current game state
      */
-    getPlayableCards(topCard, activeColor) {
-        return this.hand.filter(card => card.canPlayOn(topCard, activeColor));
+    getPlayableCards(topCard, activeColor, voteBan = false) {
+        return this.hand.filter(card => {
+            if (voteBan && card.type === CARD_TYPES.VOTE) return false;
+            return card.canPlayOn(topCard, activeColor);
+        });
     }
 
     /**
@@ -156,38 +156,18 @@ class Player {
     }
 
     /**
-     * Check if player should call Power! (has exactly 1 card)
+     * Earn a Lobby Card (from countering, winning votes, etc.)
      */
-    shouldCallPower() {
-        return this.hand.length === 1 && !this.hasCalledPower;
+    earnLobbyCard() {
+        this.earnedLobbyCards++;
+        this.lobbyCards.push({ type: LOBBY_TYPES.EARNED, used: false });
     }
 
-    /**
-     * Call Power!
-     */
-    callPower() {
-        if (this.hand.length === 1) {
-            this.hasCalledPower = true;
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Check if player can be caught for not calling Power!
-     */
-    canBeCaughtForPower() {
-        return this.hand.length === 1 && !this.hasCalledPower;
-    }
-
-    /**
-     * Clear hand (for game reset)
-     */
     clearHand() {
         this.hand = [];
-        this.hasCalledPower = false;
-        this.lobbyCards = [];
         this.usedLobbyThisTurn = false;
+        // Lobby cards persist forever — they're kept but can only be used once
+        // earnedLobbyCards also persists across rounds
     }
 
     // ==================== LOBBY CARD METHODS ====================
@@ -203,51 +183,20 @@ class Player {
     }
 
     /**
-     * Check if player has an unused lobby card of a specific type
+     * Check if player can use a lobby card (has any unused)
      */
-    hasUnusedLobbyCard(lobbyType) {
-        return this.lobbyCards.some(lc => lc.type === lobbyType && !lc.used);
+    canUseLobbyCard() {
+        return this.lobbyCards.some(lc => !lc.used);
     }
 
     /**
-     * Check if player can activate a lobby card for the given color
+     * Use a lobby card — marks one unused card as used, returns its type
      */
-    canActivateLobby(cardColor) {
-        if (this.usedLobbyThisTurn) return false;
-
-        // Bill activates on Blue
-        if (cardColor === COLORS.BLUE && this.hasUnusedLobbyCard(LOBBY_TYPES.BILL)) {
-            return true;
-        }
-        // Court Case activates on Red
-        if (cardColor === COLORS.RED && this.hasUnusedLobbyCard(LOBBY_TYPES.COURT_CASE)) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Get the lobby card type that can be activated for a color
-     */
-    getActivatableLobbyType(cardColor) {
-        if (cardColor === COLORS.BLUE && this.hasUnusedLobbyCard(LOBBY_TYPES.BILL)) {
-            return LOBBY_TYPES.BILL;
-        }
-        if (cardColor === COLORS.RED && this.hasUnusedLobbyCard(LOBBY_TYPES.COURT_CASE)) {
-            return LOBBY_TYPES.COURT_CASE;
-        }
-        return null;
-    }
-
-    /**
-     * Use (reveal and discard) a lobby card
-     */
-    useLobbyCard(lobbyType) {
-        const lobbyCard = this.lobbyCards.find(lc => lc.type === lobbyType && !lc.used);
+    useLobbyCard() {
+        const lobbyCard = this.lobbyCards.find(lc => !lc.used);
         if (lobbyCard) {
             lobbyCard.used = true;
-            this.usedLobbyThisTurn = true;
-            return true;
+            return lobbyCard.type;
         }
         return false;
     }
@@ -321,9 +270,9 @@ class Player {
             name: this.name,
             isHuman: this.isHuman,
             hand: this.hand.map(card => card.toJSON()),
-            hasCalledPower: this.hasCalledPower,
             lobbyCards: this.lobbyCards,
-            usedLobbyThisTurn: this.usedLobbyThisTurn
+            usedLobbyThisTurn: this.usedLobbyThisTurn,
+            earnedLobbyCards: this.earnedLobbyCards
         };
     }
 
@@ -333,9 +282,9 @@ class Player {
     static fromJSON(data) {
         const player = new Player(data.index, data.name, data.isHuman);
         player.hand = data.hand.map(cardData => Card.fromJSON(cardData));
-        player.hasCalledPower = data.hasCalledPower;
         player.lobbyCards = data.lobbyCards || [];
         player.usedLobbyThisTurn = data.usedLobbyThisTurn || false;
+        player.earnedLobbyCards = data.earnedLobbyCards || 0;
         return player;
     }
 }

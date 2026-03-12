@@ -7,7 +7,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="screen-orientation" content="landscape">
   <title>Power Plays - Rules</title>
-  <link rel="stylesheet" href="../css/rules.css?v=3">
+  <link rel="stylesheet" href="../css/rules.css?v=4">
 </head>
 <body>
 
@@ -31,39 +31,15 @@
     <div class="card-content">
       <h2>Overview</h2>
       <p>Match cards by <strong>color</strong> or <strong>symbol</strong> to empty your hand.</p>
-      <p>Use power cards, lobby for influence, and vote to shift momentum.</p>
+      <p>Cards represent the people and interests you're indebted to — the more you hold, the more obligations weigh you down.</p>
+      <p>Use action cards, counter moves to earn <strong>Lobby Cards</strong>, and race to empty your hand.</p>
       <div class="highlight-box">
-        <strong>Goal:</strong> Be the first player to play all your cards.
+        <strong>Goal:</strong> Two winners — <strong>Power winner</strong> (first to empty hand) and <strong>Plays winner</strong> (most lobby cards).
       </div>
     </div>
   </section>
 
-  <!-- Card 3: Card Colors -->
-  <section class="rule-card">
-    <div class="card-content">
-      <h2>Card Colors (Power Systems)</h2>
-      <div class="color-grid">
-        <div class="color-card blue">
-          <span class="title">🔵 BLUE</span>
-          <span class="desc">Legislative — Voting, group effects</span>
-        </div>
-        <div class="color-card yellow">
-          <span class="title">🟡 YELLOW</span>
-          <span class="desc">Executive — Speed, skips, reversals</span>
-        </div>
-        <div class="color-card red">
-          <span class="title">🔴 RED</span>
-          <span class="desc">Judicial — Blocking, canceling</span>
-        </div>
-        <div class="color-card green">
-          <span class="title">🟢 GREEN</span>
-          <span class="desc">Federal Reserve — Trading, discards</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Card 4: Setup -->
+  <!-- Card 3: Setup -->
   <section class="rule-card">
     <div class="card-content">
       <h2>Setup</h2>
@@ -87,7 +63,7 @@
     </div>
   </section>
 
-  <!-- Card 5: On Your Turn -->
+  <!-- Card 4: On Your Turn -->
   <section class="rule-card">
     <div class="card-content">
       <h2>On Your Turn</h2>
@@ -113,30 +89,56 @@
     </div>
   </section>
 
-  <!-- Card 6: Action Cards -->
+  <!-- Card 5: Action Cards -->
   <section class="rule-card">
     <div class="card-content">
       <h2>Action Cards</h2>
       <div class="action-list">
         <div class="action-item">
-          <span class="name">Skip</span>
-          <span>Next player loses their turn</span>
+          <span class="name">Vote</span>
+          <span>State the color; all players vote with their highest number card in that color. The winner earns a lobby card.</span>
         </div>
         <div class="action-item">
-          <span class="name">Reverse</span>
-          <span>Change play direction</span>
+          <span class="name">Veto</span>
+          <span>Skip the next player's turn</span>
         </div>
         <div class="action-item">
-          <span class="name">Draw 2</span>
-          <span>Target draws two cards</span>
+          <span class="name">Motion</span>
+          <span>Reverse play direction</span>
         </div>
         <div class="action-item">
-          <span class="name">Swap Hands</span>
-          <span>Trade hands with another player</span>
+          <span class="name">Inflation</span>
+          <span>Next player draws 2</span>
         </div>
         <div class="action-item">
-          <span class="name">Block</span>
-          <span>Cancel the last action</span>
+          <span class="name">Gratuities</span>
+          <span>Give 1 card from your hand to any player</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Card 6: Countering -->
+  <section class="rule-card">
+    <div class="card-content">
+      <h2>Countering</h2>
+      <p>Play the same action type to cancel that action on you and earn lobby cards:</p>
+      <div class="action-list" style="font-size: 0.85em;">
+        <div class="action-item">
+          <span class="name" style="color: #FFC107;">Veto</span>
+          <span>Any Veto (<strong>+1</strong>), or <span style="color: #FFC107;">yellow Executive Veto</span> (<strong>+2</strong>)</span>
+        </div>
+        <div class="action-item">
+          <span class="name" style="color: #2196F3;">Motion</span>
+          <span>Any Motion (<strong>+1</strong>), or <span style="color: #2196F3;">blue Legislative Motion</span> (<strong>+2</strong>)</span>
+        </div>
+        <div class="action-item">
+          <span class="name" style="color: #4CAF50;">Inflation</span>
+          <span>Any Inflation (<strong>+1</strong>), or <span style="color: #4CAF50;">green Fed Reserve Inflation</span> (<strong>+2</strong>)</span>
+        </div>
+        <div class="action-item">
+          <span class="name" style="color: #f44336;">Gratuities</span>
+          <span>Any Gratuities (<strong>+1</strong>), or <span style="color: #f44336;">red Judicial Gratuities</span> (<strong>+2</strong>)</span>
         </div>
       </div>
     </div>
@@ -145,86 +147,71 @@
   <!-- Card 7: Vote Card -->
   <section class="rule-card">
     <div class="card-content">
-      <h2>Vote Card (Wild)</h2>
+      <h2>Vote Card</h2>
       <ol>
-        <li>Acts as a <strong>Wild</strong> — choose the active color</li>
-        <li>All players vote with a card of that color</li>
+        <li>State the color</li>
+        <li>All players vote with their highest number card in that color</li>
         <li>Highest number wins (actions = 0)</li>
         <li>Reveal votes simultaneously</li>
       </ol>
       <div class="highlight-box">
-        <strong>Tie?</strong> Player with fewer cards wins. Still tied? No one wins.
+        <strong>Winner earns a Lobby Card.</strong><br>
+        Tie? Player with fewer cards wins. Still tied? No one wins.
       </div>
     </div>
   </section>
 
-  <!-- Card 8: Vote Rewards -->
+  <!-- Card 8: Lobbying Cards -->
   <section class="rule-card">
     <div class="card-content">
-      <h2>Vote Rewards</h2>
-      <p>Win a vote? Gain another Lobby Card matching yours:</p>
-      <div class="color-grid">
-        <div class="color-card black">
-          <span class="title">Have BILL?</span>
-          <span class="desc">+1 Bill Lobby Card</span>
-        </div>
-        <div class="color-card black">
-          <span class="title">Have COURT CASE?</span>
-          <span class="desc">+1 Court Case Card</span>
-        </div>
-      </div>
-      <div class="highlight-box success">
-        This represents <strong>successful lobbying</strong>.
-      </div>
-    </div>
-  </section>
-
-  <!-- Card 9: Using Lobby Cards -->
-  <section class="rule-card">
-    <div class="card-content">
-      <h2>Using Lobbying Cards</h2>
-      <p>Reveal your Lobby Card when you play a matching color:</p>
+      <h2>Lobby Cards</h2>
+      <p>Uses your whole turn. Changes the active color + a bonus:</p>
       <div class="action-list">
         <div class="action-item">
-          <span class="name" style="color: #2196F3;">Play BLUE</span>
-          <span>→ Reveal Bill Lobby Card</span>
+          <span class="name">Bill</span>
+          <span>Draw 1 yourself OR force an opponent to draw 1</span>
         </div>
         <div class="action-item">
-          <span class="name" style="color: #f44336;">Play RED</span>
-          <span>→ Reveal Court Case Card</span>
+          <span class="name">Court Case</span>
+          <span>Choose a player to skip their turn + ban all Vote cards for one round</span>
         </div>
       </div>
-      <div class="highlight-box">
-        Apply the bonus, then discard the Lobby Card.
-      </div>
     </div>
   </section>
 
-  <!-- Card 10: Calling Power -->
+  <!-- Card 9: Earning Lobby Cards -->
   <section class="rule-card">
     <div class="card-content">
-      <h2>Calling "POWER!"</h2>
-      <p style="font-size: 1.2em; text-align: center; margin: 20px 0;">
-        When you have <strong>ONE CARD LEFT</strong>...
-      </p>
-      <p style="font-size: 2em; text-align: center; color: #ffd700; margin: 15px 0;">
-        Say "POWER!"
-      </p>
-      <div class="highlight-box warning">
-        <strong>Caught?</strong> If another player catches you before your next turn, draw 2 cards.
+      <h2>Earning Lobby Cards</h2>
+      <p>You earn a Lobby Card when you:</p>
+      <ul style="list-style: none; padding: 0; font-size: 1.05em;">
+        <li>🛡️ <strong>Counter</strong> an action card</li>
+        <li>🗳️ <strong>Win a vote</strong></li>
+        <li>🎁 Play <strong>Gratuities</strong> with a duplicate card</li>
+      </ul>
+      <div class="highlight-box success">
+        Lobby Cards represent your <strong>accumulated influence</strong> and persist across rounds.
       </div>
     </div>
   </section>
 
-  <!-- Card 11: Winning -->
+  <!-- Card 10: Winning -->
   <section class="rule-card">
     <div class="card-content">
       <h2>Winning the Game</h2>
-      <p style="font-size: 1.3em; text-align: center; margin: 20px 0;">
-        First player to play their <strong>final card</strong> wins!
-      </p>
+      <p>The game ends when a player plays their final card.</p>
+      <div class="action-list" style="font-size: 1.05em;">
+        <div class="action-item">
+          <span class="name">Power Winner</span>
+          <span>The first player to play all their cards</span>
+        </div>
+        <div class="action-item">
+          <span class="name">Plays Winner</span>
+          <span>The player with the most lobby cards when the power winner is reached</span>
+        </div>
+      </div>
       <div class="highlight-box">
-        <strong>Optional:</strong> Play multiple rounds. Reset Lobby Cards each round.
+        This can be the same person!
       </div>
     </div>
   </section>
@@ -234,11 +221,11 @@
     <div class="card-content">
       <h2>What This Teaches</h2>
       <ul style="list-style: none; padding: 0; font-size: 1.1em;">
-        <li>⚖️ Collective vs individual power</li>
-        <li>⏱️ Timing matters</li>
-        <li>💰 Influence can be built and spent</li>
-        <li>📜 Rules can be shaped, not just followed</li>
-        <li>🤫 Quiet strategy beats loud moves</li>
+        <li>Collective vs individual power</li>
+        <li>Timing matters</li>
+        <li>Influence can be built and spent</li>
+        <li>Rules can be shaped, not just followed</li>
+        <li>Quiet strategy beats loud moves</li>
       </ul>
       <p style="text-align: center; margin-top: 20px; color: #ffd700;">
         Now you're ready to play!

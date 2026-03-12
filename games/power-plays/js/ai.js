@@ -32,8 +32,9 @@ class AIController {
         // Simulate thinking
         await this.delay(this.getThinkingDelay());
 
-        // Get playable cards
-        const playableCards = player.getPlayableCards(topCard, activeColor);
+        // Get playable cards (respect vote ban)
+        const voteBan = state.voteBanTurnsLeft > 0;
+        const playableCards = player.getPlayableCards(topCard, activeColor, voteBan);
 
         if (playableCards.length > 0) {
             // Choose a card to play
@@ -42,22 +43,17 @@ class AIController {
 
             // Get target info if needed
             let targetInfo = null;
-            if (chosenCard.type === CARD_TYPES.SWAP) {
-                targetInfo = { targetPlayerIndex: this.selectSwapTarget(player, state) };
+            if (chosenCard.type === CARD_TYPES.GIVE_1) {
+                targetInfo = this.selectGive1Target(player, state);
             } else if (chosenCard.type === CARD_TYPES.VOTE) {
                 targetInfo = { color: this.selectColorForVote(player) };
             }
 
             // Play the card
             await this.game.playCard(playerIndex, cardIndex, targetInfo);
-
-            // Check if should call Power!
-            if (player.handSize() === 1 && !player.hasCalledPower) {
-                await this.delay(300);
-                if (this.shouldCallPower(state)) {
-                    this.game.callPower(playerIndex);
-                }
-            }
+        } else if (this.shouldUseLobbyCard(player, state)) {
+            // Use a lobby card to change color instead of drawing
+            await this.game.useLobbyCardForColor(player);
         } else {
             // Must draw
             await this.game.drawCard(playerIndex);
@@ -107,7 +103,7 @@ class AIController {
 
         // Action card evaluations
         switch (card.type) {
-            case CARD_TYPES.DRAW_2:
+            case CARD_TYPES.INFLATION:
                 score += 20;
                 // Extra value if next player has few cards
                 if (nextPlayer.handSize() <= 2) {
@@ -115,8 +111,8 @@ class AIController {
                 }
                 break;
 
-            case CARD_TYPES.SKIP:
-            case CARD_TYPES.REVERSE:
+            case CARD_TYPES.MOTION:
+            case CARD_TYPES.VETO:
                 score += 10;
                 // Better when next player is close to winning
                 if (nextPlayer.handSize() <= 3) {
@@ -124,21 +120,13 @@ class AIController {
                 }
                 break;
 
-            case CARD_TYPES.SWAP:
-                // Only valuable if we have more cards than someone else
-                const minOtherHand = Math.min(
-                    ...state.getOtherPlayers().map(p => p.handSize())
-                );
-                if (player.handSize() > minOtherHand + 2) {
-                    score += 25;
-                } else {
-                    score -= 10; // Don't swap if we'd be worse off
+            case CARD_TYPES.GIVE_1:
+                // Good for getting rid of cards, especially bad ones
+                score += 8;
+                // Better if we have many cards
+                if (player.handSize() > 5) {
+                    score += 5;
                 }
-                break;
-
-            case CARD_TYPES.BLOCK:
-                // Save block cards for defense
-                score -= 5;
                 break;
 
             case CARD_TYPES.VOTE:
@@ -164,7 +152,6 @@ class AIController {
 
         // Hard mode: consider keeping variety
         if (state.aiDifficulty === AI_DIFFICULTY.HARD) {
-            // Prefer not to empty a color completely
             if (card.color && colorCounts[card.color] === 1) {
                 score -= 3;
             }
@@ -174,22 +161,51 @@ class AIController {
     }
 
     /**
-     * Select target for Swap Hands
+     * Select target and card for Give 1 (Gratuities)
      */
-    selectSwapTarget(player, state) {
+    selectGive1Target(player, state) {
         const others = state.getOtherPlayers();
 
-        // Target player with fewest cards
+        // Target player closest to winning (fewest cards)
         others.sort((a, b) => a.handSize() - b.handSize());
+        const targetPlayer = others[0];
 
-        return others[0].index;
+        // Give away the least useful card (highest value of our most abundant color,
+        // or an action card we don't need)
+        let cardToGive = null;
+
+        // Prefer giving action cards that aren't very useful
+        const actionCards = player.hand.filter(c => c.type !== CARD_TYPES.NUMBER && c.type !== CARD_TYPES.VOTE);
+        if (actionCards.length > 1) {
+            cardToGive = actionCards[0];
+        }
+
+        // Fallback: give the highest number card (least strategic value)
+        if (!cardToGive) {
+            const numberCards = player.hand.filter(c => c.type === CARD_TYPES.NUMBER);
+            if (numberCards.length > 0) {
+                numberCards.sort((a, b) => b.value - a.value);
+                cardToGive = numberCards[0];
+            }
+        }
+
+        // Last resort: give any card that isn't a vote
+        if (!cardToGive) {
+            cardToGive = player.hand.find(c => c.type !== CARD_TYPES.VOTE) || player.hand[0];
+        }
+
+        const giveCardIndex = player.findCardIndex(cardToGive.id);
+
+        return {
+            targetPlayerIndex: targetPlayer.index,
+            giveCardIndex: giveCardIndex
+        };
     }
 
     /**
      * Select color when playing Vote card
      */
     selectColorForVote(player) {
-        // Choose the color where we have the highest card
         let bestColor = COLOR_LIST[0];
         let bestValue = -1;
 
@@ -208,75 +224,74 @@ class AIController {
     }
 
     /**
-     * Decide whether to call Power!
+     * Decide whether to counter an action
      */
-    shouldCallPower(state) {
+    shouldCounter(player, pendingAction, counterCard, state) {
         const difficulty = state.aiDifficulty;
 
-        // Easy: sometimes forget
-        if (difficulty === AI_DIFFICULTY.EASY) {
-            return Math.random() > 0.3; // 30% chance to forget
+        // Always counter inflation (draw 2) and motion (skip) — they're harmful
+        if (pendingAction.type === 'inflation' || pendingAction.type === 'motion') {
+            if (difficulty === AI_DIFFICULTY.EASY) {
+                return Math.random() < 0.6; // Easy sometimes doesn't counter
+            }
+            return true; // Medium and Hard always counter
         }
 
-        // Medium and Hard: always call
-        return true;
-    }
-
-    /**
-     * Decide whether to challenge another player's Power! call
-     */
-    shouldChallengePower(targetPlayer, state) {
-        // Only challenge if target hasn't called Power! and has 1 card
-        if (!targetPlayer.canBeCaughtForPower()) {
-            return false;
-        }
-
-        const difficulty = state.aiDifficulty;
-
-        // Easy: rarely catches
-        if (difficulty === AI_DIFFICULTY.EASY) {
-            return Math.random() < 0.2;
-        }
-
-        // Medium: catches half the time
-        if (difficulty === AI_DIFFICULTY.MEDIUM) {
+        // Veto: counter if direction change is bad for us
+        if (pendingAction.type === 'veto') {
+            if (difficulty === AI_DIFFICULTY.HARD) {
+                // Check if the player after us (in reversed direction) is close to winning
+                const nextPlayer = state.getPlayerAtOffset(1);
+                return nextPlayer.handSize() <= 3;
+            }
             return Math.random() < 0.5;
         }
 
-        // Hard: almost always catches
-        return Math.random() < 0.9;
+        // Give 1: counter to return the card
+        if (pendingAction.type === 'give1') {
+            if (difficulty === AI_DIFFICULTY.EASY) {
+                return Math.random() < 0.4;
+            }
+            return true; // Medium/Hard always counter gifts
+        }
+
+        return false;
     }
 
     /**
-     * Decide whether to activate a lobby card
+     * Decide whether AI should use a lobby card to change color
      */
-    shouldActivateLobby(player, lobbyType, state) {
-        const difficulty = state.aiDifficulty;
+    shouldUseLobbyCard(player, state) {
+        if (!player.canUseLobbyCard()) return false;
+        const topCard = state.getTopCard();
+        const voteBan = state.voteBanTurnsLeft > 0;
+        // Use lobby card if AI can't play anything
+        const canPlay = player.hand.some(c => {
+            if (voteBan && c.type === CARD_TYPES.VOTE) return false;
+            return c.canPlayOn(topCard, state.activeColor);
+        });
+        if (canPlay) return false;
+        // Only use if there's a color with multiple playable cards
+        return COLOR_LIST.some(color => {
+            const count = player.hand.filter(c => c.color === color).length;
+            return count >= 2;
+        });
+    }
 
-        // Easy: random decision
-        if (difficulty === AI_DIFFICULTY.EASY) {
-            return Math.random() < 0.5;
-        }
-
-        // Medium: usually activate
-        if (difficulty === AI_DIFFICULTY.MEDIUM) {
-            return Math.random() < 0.8;
-        }
-
-        // Hard: strategic decision based on game state
-        // Use Bill (draw bonus) when hand is small
-        if (lobbyType === LOBBY_TYPES.BILL) {
-            return player.handSize() <= 3;
-        }
-
-        // Use Court Case when opponent is close to winning
-        if (lobbyType === LOBBY_TYPES.COURT_CASE) {
-            const others = state.getOtherPlayers();
-            const anyCloseToWinning = others.some(p => p.handSize() <= 2);
-            return anyCloseToWinning;
-        }
-
-        return true;
+    /**
+     * Choose the best color for lobby card (most cards of that color)
+     */
+    chooseBestColor(player, state) {
+        let bestColor = COLOR_LIST[0];
+        let bestCount = 0;
+        COLOR_LIST.forEach(color => {
+            const count = player.hand.filter(c => c.color === color).length;
+            if (count > bestCount) {
+                bestCount = count;
+                bestColor = color;
+            }
+        });
+        return bestColor;
     }
 
     /**
