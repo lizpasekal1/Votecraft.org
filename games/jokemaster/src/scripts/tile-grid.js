@@ -253,10 +253,14 @@ function renderBuildingTile(tileState) {
     const characterName = character ? character.name : 'unknown';
     const buildingId = `building-${characterName.replace(/[^a-zA-Z0-9]+/g, '-')}`;
 
-    // Generate D3 building SVG container
+    // Generate D3 building SVG container with touch overlay for mobile
     const buildingHTML = `
-        <div class="d3-building-container" data-character="${characterName}">
+        <div class="d3-building-container" data-character="${characterName}"
+             onclick="handleTileClick(${position.x}, ${position.y}, true)">
             <svg id="${buildingId}" width="120" height="190" viewBox="0 0 120 190"></svg>
+            <div class="building-touch-overlay"
+                 onclick="handleTileClick(${position.x}, ${position.y}, true)"
+                 ontouchend="event.preventDefault(); handleTileClick(${position.x}, ${position.y}, true)"></div>
         </div>
     `;
 

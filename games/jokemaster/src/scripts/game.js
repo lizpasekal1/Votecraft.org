@@ -32,7 +32,7 @@ const characters = [
         position: { x: 1, y: 2 },
         location: "Columbia University Lab",
         locationDesc: "A leading cognitive psychology researcher specializing in the neuroscience of humor and laughter.",
-        dialogue: "Welcome, Rain. I study the psychology of humor and laughter. Your comedic techniques are fascinating from a scientific perspective. Let's see if you can make me laugh while I analyze why.",
+        dialogue: "Nice to meet you, Rain. I hear you're working on a big project. What's in it for the sciences?",
         favor: 50,
         likes: ["observational", "clever", "self-deprecating"],
         dislikes: ["crude", "controversial"],
@@ -100,7 +100,7 @@ const jokeCards = [
     {
         id: 1,
         type: "Self-Deprecating",
-        setup: "I tried to start a world-changing movement once before. Turns out, I couldn't even get my roommate to recycle.",
+        setup: "Honestly? I failed chemistry twice, so this project is my way of finally giving something back to science — from a safe distance.",
         tags: ["self-deprecating", "observational"],
         energy: 1,
         strategyHint: "Safe opener. Works well with humble personalities and grassroots organizers.",
@@ -112,7 +112,7 @@ const jokeCards = [
     {
         id: 2,
         type: "Tech Humor",
-        setup: "My project is like a startup: overpromised, underfunded, and one pivot away from selling artisanal coffee subscriptions.",
+        setup: "We're building tools that could change how people access research. Think of it as open-source, but with more begging for funding.",
         tags: ["tech", "self-deprecating", "ambitious"],
         energy: 2,
         strategyHint: "Resonates with tech entrepreneurs. Shows you understand the startup world.",
@@ -125,7 +125,7 @@ const jokeCards = [
     {
         id: 3,
         type: "Political",
-        setup: "They say change comes from within. I say it comes from filling out the right grant applications and knowing whose calls to return.",
+        setup: "My project has great chemistry — and unlike my lab partner in college, it actually shows up.",
         tags: ["political", "observational"],
         energy: 2,
         strategyHint: "For insiders who understand how the system really works. Can backfire with idealists.",
@@ -137,7 +137,7 @@ const jokeCards = [
     {
         id: 4,
         type: "Wholesome",
-        setup: "You know what's harder than changing the world? Convincing my mom I'm doing something practical with my life. But here we are!",
+        setup: "I figure if I can make science cool enough for my little cousin to put down TikTok for five minutes, that's a Nobel Prize right there.",
         tags: ["wholesome", "self-deprecating"],
         energy: 1,
         strategyHint: "Humanizing and relatable. Builds trust with community-focused people.",
@@ -386,7 +386,7 @@ function initGame() {
     gameState.recruitedComedians = new Set();
     gameState.artifacts = new Set();
     updateFundingDisplay();
-    renderOverworld();
+    dispatchRenderOverworld();
 }
 
 // Helper function to get or create persistent letter for a tile
@@ -397,6 +397,16 @@ function getLetterForTile(x, y) {
         gameState.tileLetters[tileKey] = letters.charAt(Math.floor(Math.random() * letters.length));
     }
     return gameState.tileLetters[tileKey];
+}
+
+// Dispatch to override if available, otherwise use built-in renderOverworld
+function dispatchRenderOverworld() {
+    console.log('[dispatchRenderOverworld] override exists:', typeof window.renderOverworldOverride === 'function');
+    if (typeof window.renderOverworldOverride === 'function') {
+        window.renderOverworldOverride();
+    } else {
+        renderOverworld();
+    }
 }
 
 // Render Overworld
@@ -753,7 +763,7 @@ function addCharacterCalloutListeners() {
 
 // Handle Tile Click - pathfinding and animated movement
 function handleTileClick(targetX, targetY, isCharacter) {
-    // If clicking a character, try to approach it
+    // If clicking a character, walk to it first, then enter conversation
     if (isCharacter) {
         const character = characters.find(c => c.position.x === targetX && c.position.y === targetY);
         if (!character) return;
@@ -764,19 +774,16 @@ function handleTileClick(targetX, targetY, isCharacter) {
             if (!isLabCharacter) return;
         }
 
-        const dx = Math.abs(gameState.playerPosition.x - targetX);
-        const dy = Math.abs(gameState.playerPosition.y - targetY);
-
-        // If already adjacent, start conversation
-        if (dx <= 1 && dy <= 1) {
-            approachCharacter(targetX, targetY);
-            return;
-        }
-
-        // Otherwise, try to move next to the character
+        // Find path to adjacent tile
         const path = findPath(gameState.playerPosition.x, gameState.playerPosition.y, targetX, targetY, true);
         if (path && path.length > 0) {
-            animateMovement(path);
+            // Walk to building, then enter conversation on arrival
+            animateMovement(path, function() {
+                approachCharacter(targetX, targetY);
+            });
+        } else {
+            // Already adjacent — still enter conversation
+            approachCharacter(targetX, targetY);
         }
         return;
     }
@@ -864,8 +871,11 @@ function findPath(startX, startY, endX, endY, stopBeforeEnd) {
 }
 
 // Animate movement along path with smooth gliding
-function animateMovement(path) {
-    if (path.length === 0) return;
+function animateMovement(path, onComplete) {
+    if (path.length === 0) {
+        if (onComplete) onComplete();
+        return;
+    }
 
     // Hide Rain callout when starting to walk
     if (!gameState.hasStartedWalking) {
@@ -892,12 +902,15 @@ function animateMovement(path) {
                 // Keep Lab callout visible and updated during tutorial
                 showTutorialLabCallout();
             }
+
+            // Fire completion callback (e.g. enter building)
+            if (onComplete) onComplete();
             return;
         }
 
         gameState.playerPosition.x = path[index].x;
         gameState.playerPosition.y = path[index].y;
-        renderOverworld();
+        dispatchRenderOverworld();
 
         index++;
     }, 500); // Move every 500ms - slower so you can see the movement
@@ -982,7 +995,7 @@ function movePlayer(dx, dy) {
     gameState.playerPosition.x = newX;
     gameState.playerPosition.y = newY;
 
-    renderOverworld();
+    dispatchRenderOverworld();
 }
 
 // Exit Conversation
@@ -1018,7 +1031,7 @@ function exitConversation() {
             }
 
             // Return to overworld
-            renderOverworld();
+            dispatchRenderOverworld();
 
             // Fade in
             setTimeout(() => {
@@ -1634,7 +1647,7 @@ async function nextCharacter() {
     if (gameState.completedCharacters.size >= characters.length) {
         endGame(true);
     } else {
-        renderOverworld();
+        dispatchRenderOverworld();
     }
 }
 
@@ -1793,7 +1806,7 @@ window.onload = async function() {
         } else {
             // Otherwise render the overworld
             updateFundingDisplay();
-            renderOverworld();
+            dispatchRenderOverworld();
         }
     } else {
         // No saved state, start fresh

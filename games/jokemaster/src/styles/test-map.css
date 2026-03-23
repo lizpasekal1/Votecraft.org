@@ -146,7 +146,8 @@ body.city-page .map-grid {
     height: min(75vw, var(--available-height));
     max-width: min(75vw, var(--available-height));
     max-height: min(75vw, var(--available-height));
-    padding-bottom: 30px;
+    padding-top: 25px;
+    padding-bottom: 15px;
 }
 
 /* Fade-in animation for page load */
@@ -459,7 +460,7 @@ body.city-page .overworld-container {
     color: white;
     font-family: 'Cinzel', serif;
     font-weight: 700;
-    font-size: 55px;
+    font-size: 46px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -529,6 +530,7 @@ body.city-page .overworld-container {
         height: 114px;
         transform: translateX(-50%) scale(0.6);
         transform-origin: bottom center;
+        bottom: -24px;
     }
 
     .d3-building-container svg {
@@ -1537,14 +1539,14 @@ body.city-page .overworld-container {
         gap: 12px;
     }
 
-    /* Make circles 10% larger on mobile while keeping letters same size */
+    /* Make circles larger on mobile while keeping letters same size */
     .map-tile.walkable {
-        transform: scale(0.308);
-        font-size: 41px;
+        transform: scale(0.39);
+        font-size: 34px;
     }
 
     .map-tile.walkable:hover {
-        transform: scale(0.363);
+        transform: scale(0.44);
     }
 
     .conversation-area {
@@ -1588,10 +1590,12 @@ body.city-page .overworld-container {
 
     body.city-page .map-grid {
         --available-height: calc(var(--vh, 1vh) * 100 - 200px);
-        width: min(85vw, var(--available-height));
-        height: min(85vw, var(--available-height));
-        max-width: min(85vw, var(--available-height));
-        max-height: min(85vw, var(--available-height));
+        width: min(95vw, var(--available-height));
+        height: min(95vw, var(--available-height));
+        max-width: min(95vw, var(--available-height));
+        max-height: min(95vw, var(--available-height));
+        padding-top: 25px;
+        padding-bottom: 15px;
     }
 }
 
@@ -1687,12 +1691,12 @@ body.city-page .overworld-container {
     }
 
     .map-tile.walkable {
-        transform: scale(0.308);
-        font-size: 36px;
+        transform: scale(0.39);
+        font-size: 30px;
     }
 
     .map-tile.walkable:hover {
-        transform: scale(0.363);
+        transform: scale(0.44);
     }
 
     /* Make sound icon 30% smaller on mobile */
@@ -1893,6 +1897,8 @@ body.city-page .overworld-container {
         height: min(calc(100vw - 10px), var(--available-height));
         max-width: calc(100vw - 10px);
         max-height: min(calc(100vw - 10px), var(--available-height));
+        padding-top: 20px;
+        padding-bottom: 10px;
     }
 
     /* Mobile conversation mode - override map centering styles */
@@ -2721,12 +2727,30 @@ body.word-mode .map-tile.walkable:hover {
         opacity: 0;
     }
     70% {
-        transform: scale(0.32);
+        transform: scale(0.29);
         opacity: 1;
     }
     100% {
-        transform: scale(0.25);
+        transform: scale(0.22);
         opacity: 1;
+    }
+}
+
+/* Mobile - dots end at mobile scale */
+@media (max-width: 768px) {
+    @keyframes tilePop {
+        0% {
+            transform: scale(0);
+            opacity: 0;
+        }
+        70% {
+            transform: scale(0.46);
+            opacity: 1;
+        }
+        100% {
+            transform: scale(0.39);
+            opacity: 1;
+        }
     }
 }
 
@@ -2979,7 +3003,7 @@ body.word-mode .map-tile.walkable:hover {
 /* Mobile - smaller bounce from bottom */
 @media (max-width: 768px) {
     .d3-building-container.animate-in {
-        transform: translateX(-50%) scaleY(0);
+        transform: translateX(-50%) scale(0);
         transform-origin: bottom center;
     }
 
@@ -2990,21 +3014,21 @@ body.word-mode .map-tile.walkable:hover {
 
     @keyframes buildingBounceInMobile {
         0% {
-            transform: translateX(-50%) scaleY(0);
+            transform: translateX(-50%) scale(0, 0);
             opacity: 0;
         }
         50% {
-            transform: translateX(-50%) scaleY(0.69);
+            transform: translateX(-50%) scale(0.69);
             opacity: 1;
         }
         70% {
-            transform: translateX(-50%) scaleY(0.54);
+            transform: translateX(-50%) scale(0.54);
         }
         85% {
-            transform: translateX(-50%) scaleY(0.63);
+            transform: translateX(-50%) scale(0.63);
         }
         100% {
-            transform: translateX(-50%) scaleY(0.6);
+            transform: translateX(-50%) scale(0.6);
             opacity: 1;
         }
     }
