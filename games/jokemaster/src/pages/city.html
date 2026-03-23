@@ -12,8 +12,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../styles/styles.css">
-    <link rel="stylesheet" href="../styles/icons.css">
+    <link rel="stylesheet" href="../styles/styles.css?v=20260322d">
+    <link rel="stylesheet" href="../styles/icons.css?v=20260321a">
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body class="city-page">
@@ -85,10 +85,97 @@
     <script src="../scripts/icons.js"></script>
     <script src="../scripts/sound-toggle.js"></script>
     <script src="../scripts/d3-buildings.js"></script>
+    <script src="../scripts/tile-grid.js"></script>
 
     <script>
         // Flag to prevent game.js from auto-loading character conversations
         window.forceCityMap = true;
+
+        // Persistent TileGrid instance — created once, reused on re-renders
+        let persistentTileGrid = null;
+
+        /**
+         * Render overworld using TileGrid component system
+         */
+        function renderOverworldWithTileGrid() {
+            // Create TileGrid only on first render to preserve letters
+            if (!persistentTileGrid) {
+                persistentTileGrid = new TileGrid(6, 6);
+                // Populate grid from mapLayout and characters
+                if (typeof mapLayout !== 'undefined' && typeof characters !== 'undefined') {
+                    persistentTileGrid.populateFromLayout(mapLayout, characters, {});
+                }
+            }
+
+            const tileGrid = persistentTileGrid;
+
+            // Update player position from gameState
+            if (typeof gameState !== 'undefined') {
+                tileGrid.setPlayerPosition(gameState.playerPosition.x, gameState.playerPosition.y);
+            }
+
+            // Generate the tile grid HTML
+            const mapHTML = renderTileGrid(tileGrid);
+
+            const html = `
+                <div class="overworld-container">
+                    <div class="map-title">NEW YORK</div>
+                    <div class="map-container">
+                        <div class="compass-rose"></div>
+                        <div class="map-grid" id="tileGridContainer">
+                            ${mapHTML}
+                            <div class="callout-template rain-callout" id="rainCallout" style="display: none;">
+                                <div class="callout-arrow arrow-bottom pos-center"></div>
+                                <div class="callout-content">
+                                    Tap a dot space to move Rain on the map.
+                                </div>
+                            </div>
+                            <div class="callout-template location-callout" id="locationCallout" style="display: none;">
+                                <div class="callout-arrow" id="locationCalloutArrow"></div>
+                                <div class="callout-content" id="locationCalloutContent"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('conversationArea').innerHTML = html;
+
+            // Initialize after DOM is ready
+            requestAnimationFrame(() => {
+                const container = document.getElementById('tileGridContainer');
+                if (container) {
+                    setupTileClickHandlers(tileGrid, container);
+                }
+                // Render D3 buildings
+                initializeBuildings(tileGrid);
+
+                // Add explicit touch handlers for buildings (mobile fix)
+                document.querySelectorAll('.map-tile.character').forEach(tile => {
+                    const x = parseInt(tile.dataset.x);
+                    const y = parseInt(tile.dataset.y);
+                    tile.addEventListener('touchend', function(e) {
+                        e.preventDefault();
+                        handleTileClick(x, y, true);
+                    });
+                });
+
+                // Position callouts
+                requestAnimationFrame(() => {
+                    if (typeof positionRainCallout === 'function') {
+                        positionRainCallout();
+                    }
+                    if (typeof addCharacterCalloutListeners === 'function') {
+                        addCharacterCalloutListeners();
+                    }
+                });
+            });
+
+            // Initialize Material Design icons
+            if (typeof initMaterialIcons === 'function') {
+                initMaterialIcons();
+            }
+        }
 
         // Get city name from URL parameter
         function getCityFromURL() {
@@ -261,26 +348,28 @@
 
             // Load game.js dynamically after Firebase is ready
             const gameScript = document.createElement('script');
-            gameScript.src = '../scripts/game.js';
+            gameScript.src = '../scripts/game.js?v=20260322b';
             gameScript.onload = function() {
+                // Override game.js renderOverworld to use TileGrid
+                window.renderOverworldOverride = function() {
+                    renderOverworldWithTileGrid();
+                };
+
                 // Force game state to overworld mode
                 if (typeof gameState !== 'undefined') {
                     gameState.mode = 'overworld';
                     gameState.tutorialStep = 1;
                     gameState.hasStartedWalking = true;
-                    // Set player to center position if they haven't started walking yet
                     if (!gameState.hasStartedWalking) {
                         gameState.playerPosition = { x: 2, y: 2 };
                     }
                 }
 
-                // Once game.js is loaded, render the overworld (flat map)
-                if (typeof renderOverworld === 'function') {
-                    renderOverworld();
+                // Render using TileGrid system
+                renderOverworldWithTileGrid();
 
-                    // Trigger the intro animation sequence
-                    setTimeout(() => animateMapAndBuildings(), 100);
-                }
+                // Trigger the intro animation sequence
+                setTimeout(() => animateMapAndBuildings(), 100);
             };
             document.body.appendChild(gameScript);
         });

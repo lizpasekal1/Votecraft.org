@@ -12,8 +12,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../styles/test-map.css">
-    <link rel="stylesheet" href="../styles/icons.css">
+    <link rel="stylesheet" href="../styles/test-map.css?v=20260322a">
+    <link rel="stylesheet" href="../styles/icons.css?v=20260321a">
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body class="city-page">
@@ -773,8 +773,18 @@
 
             // Load game.js dynamically after Firebase is ready
             const gameScript = document.createElement('script');
-            gameScript.src = '../scripts/game.js';
+            gameScript.src = '../scripts/game.js?v=20260322a';
             gameScript.onload = function() {
+                // Override game.js renderOverworld so movement uses TileGrid in Normal/Tutorial mode
+                window.renderOverworldOverride = function() {
+                    if (wordSearchState.mode === 'normal' || wordSearchState.mode === 'tutorial') {
+                        renderOverworldWithTileGrid();
+                    } else {
+                        renderOverworld();
+                        setupTileDataAttributes();
+                    }
+                };
+
                 // Force game state to overworld mode
                 if (typeof gameState !== 'undefined') {
                     gameState.mode = 'overworld';

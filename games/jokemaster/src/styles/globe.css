@@ -1,12 +1,41 @@
+/* Lock globe page to viewport - no scrolling */
+html {
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    height: 100%;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+    touch-action: none;
+    overscroll-behavior: none;
+}
+
+body .game-container {
+    height: 100%;
+    min-height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+    touch-action: none;
+}
+
 /* Override game-content max-width for globe page */
 body .game-content {
     max-width: 100%;
-    overflow: visible;
+    overflow: hidden;
+    padding-bottom: 0;
 }
 
 /* Ensure header and buttons are above the globe */
 body .game-header {
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
     z-index: 1000;
 }
 
