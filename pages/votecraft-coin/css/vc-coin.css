@@ -3033,6 +3033,70 @@ body {
     align-self: center;
 }
 
+/* Story flow inside exchange cards */
+.story-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.story-step {
+    padding: 4px 0;
+}
+
+.story-step-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 2px;
+}
+
+.story-step-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.story-arrow {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 0.9rem;
+    line-height: 1;
+    padding-left: 2px;
+}
+
+.story-earned {
+    background: rgba(20, 204, 176, 0.15);
+    border: 1px solid rgba(20, 204, 176, 0.4);
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-top: 2px;
+}
+
+.story-earned .story-step-label {
+    color: #14ccb0;
+}
+
+.story-earned .story-step-value {
+    color: #14ccb0;
+    font-weight: 700;
+}
+
+.story-earned-red {
+    background: rgba(243, 43, 68, 0.15);
+    border-color: rgba(243, 43, 68, 0.4);
+}
+
+.story-earned-red .story-step-label {
+    color: #F32B44;
+}
+
+.story-earned-red .story-step-value {
+    color: #F32B44;
+}
+
 /* ====== ALTRUISM TAGS ====== */
 
 .altruism-tags-section {

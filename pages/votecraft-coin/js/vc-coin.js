@@ -30,25 +30,27 @@
 
     // ====== PATRON BADGE TOGGLE ======
 
-    let badgeShowName = true;
+    if (badgeToggle && badgeName) {
+        let badgeShowName = true;
 
-    badgeToggle.addEventListener('click', () => {
-        badgeShowName = !badgeShowName;
-        badgeToggle.classList.toggle('active', badgeShowName);
+        badgeToggle.addEventListener('click', () => {
+            badgeShowName = !badgeShowName;
+            badgeToggle.classList.toggle('active', badgeShowName);
 
-        if (badgeShowName) {
-            badgeName.textContent = 'Alex M.';
-            badgeName.classList.remove('anonymous');
-            badgeToggle.querySelector('.toggle-label').textContent = 'Show my name';
-        } else {
-            badgeName.textContent = 'Anonymous Patron';
-            badgeName.classList.add('anonymous');
-            badgeToggle.querySelector('.toggle-label').textContent = 'Stay anonymous';
-        }
-    });
+            if (badgeShowName) {
+                badgeName.textContent = 'Alex M.';
+                badgeName.classList.remove('anonymous');
+                badgeToggle.querySelector('.toggle-label').textContent = 'Show my name';
+            } else {
+                badgeName.textContent = 'Anonymous Patron';
+                badgeName.classList.add('anonymous');
+                badgeToggle.querySelector('.toggle-label').textContent = 'Stay anonymous';
+            }
+        });
 
-    // Initialize toggle as active (showing name)
-    badgeToggle.classList.add('active');
+        // Initialize toggle as active (showing name)
+        badgeToggle.classList.add('active');
+    }
 
     // ====== SOCIAL PROOF TICKER (infinite scroll) ======
 
