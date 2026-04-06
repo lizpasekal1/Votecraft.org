@@ -8,8 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/vc-coin.css?v=20260331a">
-    <link rel="stylesheet" href="css/vc-coin-demo.css?v=20260331l">
+    <link rel="stylesheet" href="css/vc-coin.css?v=20260406b">
+    <link rel="stylesheet" href="css/vc-coin-demo.css?v=20260406c">
 </head>
 <body>
 
@@ -129,25 +129,30 @@
                     <div class="path-card-header">
                         <div class="path-icon path-icon-game">
                             <svg viewBox="0 0 48 48" fill="none" width="24" height="24">
-                                <rect x="6" y="14" width="36" height="20" rx="6" stroke="currentColor" stroke-width="2"/>
-                                <path d="M16 24h6M19 21v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                <circle cx="30" cy="22" r="1.5" fill="currentColor"/>
-                                <circle cx="33" cy="25" r="1.5" fill="currentColor"/>
+                                <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
+                                <circle cx="16" cy="16" r="2.5" fill="currentColor"/>
+                                <circle cx="32" cy="16" r="2.5" fill="currentColor"/>
+                                <circle cx="24" cy="24" r="2.5" fill="currentColor"/>
+                                <circle cx="16" cy="32" r="2.5" fill="currentColor"/>
+                                <circle cx="32" cy="32" r="2.5" fill="currentColor"/>
                             </svg>
                         </div>
                         <span class="path-label">Game first</span>
                     </div>
                     <div class="path-flow">
-                        <div class="path-step">Pick a game you want</div>
+                        <div class="path-step">Pick a game or digit asset</div>
                         <div class="path-arrow">↓</div>
                         <div class="path-step">Choose a nonprofit to pair it with</div>
                         <div class="path-arrow">↓</div>
-                        <div class="path-step path-step-highlight">Your payment goes to both</div>
+                        <div class="path-step path-step-highlight">Bundled secure donation with discounts</div>
+                        <div class="path-arrow">↓</div>
+                        <div class="path-step path-step-vc">Earn VC coin + two altruism tags</div>
                     </div>
                 </div>
 
                 <!-- OR Divider -->
                 <div class="paths-or">
+
                     <div class="paths-or-line"></div>
                     <span class="paths-or-text">or</span>
                     <div class="paths-or-line"></div>
@@ -158,7 +163,7 @@
                     <div class="path-card-header">
                         <div class="path-icon path-icon-nonprofit">
                             <svg viewBox="0 0 48 48" fill="none" width="24" height="24">
-                                <path d="M24 40s-16-10-16-22a10 10 0 0 1 16-8 10 10 0 0 1 16 8c0 12-16 22-16 22z" stroke="currentColor" stroke-width="2" fill="none"/>
+                                <path d="M24 40s-16-10-16-22a10 10 0 0 1 16-8 10 10 0 0 1 16 8c0 12-16 22-16 22z" stroke="currentColor" stroke-width="3" fill="none"/>
                             </svg>
                         </div>
                         <span class="path-label">Cause first</span>
@@ -166,9 +171,11 @@
                     <div class="path-flow">
                         <div class="path-step">Pick a nonprofit to support</div>
                         <div class="path-arrow">↓</div>
-                        <div class="path-step">Get a game as a gift with your donation</div>
+                        <div class="path-step">Choose a game or asset to pair it with</div>
                         <div class="path-arrow">↓</div>
-                        <div class="path-step path-step-highlight">Your payment goes to both</div>
+                        <div class="path-step path-step-highlight">Bundled secure donation with discounts</div>
+                        <div class="path-arrow">↓</div>
+                        <div class="path-step path-step-vc">Earn VC coin + two altruism tags</div>
                     </div>
                 </div>
 
@@ -242,7 +249,25 @@
 
                 <!-- STEP 3: Pick a donation amount -->
                 <div class="demo-step demo-step-hidden" id="step-3-donation">
+                    <div class="demo-split-slider demo-split-slider-hidden" id="split-slider">
+                        <div class="demo-split-slider-label">Adjust your split</div>
+                        <div class="demo-split-slider-row">
+                            <span class="demo-split-slider-end" id="split-label-left">Game dev</span>
+                            <input type="range" min="10" max="90" value="70" class="demo-split-range" id="split-range">
+                            <span class="demo-split-slider-end" id="split-label-right">Nonprofit</span>
+                        </div>
+                        <div class="demo-split-slider-values">
+                            <span id="split-dev-pct">70%</span>
+                            <span class="demo-split-slider-vc">VoteCraft 5%</span>
+                            <span id="split-np-pct">25%</span>
+                        </div>
+                        <div class="demo-split-slider-amounts">
+                            <span id="split-dev-amt">—</span>
+                            <span id="split-np-amt">—</span>
+                        </div>
+                    </div>
                     <div class="demo-cards-grid demo-donation-grid" id="donation-cards"></div>
+                    <button class="demo-split-confirm" id="split-confirm">Continue</button>
                 </div>
 
                 <!-- STEP 4: Summary -->
@@ -281,7 +306,7 @@
                                 <span class="demo-summary-vc-amount" id="summary-vc">+12 VC</span>
                                 <span class="demo-summary-vc-label">bonus earned</span>
                             </div>
-                            <div class="demo-summary-vc-hint">Spend on games: 100 VC = $1 off (max 200 VC per purchase). Cash out: 500 VC minimum at 50% value.</div>
+                            <div class="demo-summary-vc-hint">Spend on games: 100 VC = $1 off (max 200 VC per purchase).<br>Cash out: 500 VC minimum at 50% value.</div>
                         </div>
                         <div class="demo-summary-tags-block">
                             <div class="demo-summary-tags-label">Your altruism tags</div>
@@ -299,8 +324,8 @@
     <!-- ====== SECTION 5: ALTRUISM TAGS SHOWCASE ====== -->
     <section class="section tags-showcase-section section-blue" id="tags">
         <div class="section-inner">
-            <h2 class="section-title animate-in">Every purchase leaves a <em class="tags-em">mark</em></h2>
-            <p class="section-subtitle animate-in">Every purchase earns you two altruism tags tied to the cause you supported. They build your civic identity over time.</p>
+            <h2 class="section-title animate-in">Earn altruism tags</h2>
+            <p class="section-subtitle animate-in">Every purchase earns you two altruism tags tied to the causes you support. They help build your civic identity over time.</p>
 
             <div class="tags-showcase-grid animate-in">
 
@@ -368,17 +393,13 @@
     <!-- ====== SECTION 6: WHAT YOU EARN ====== -->
     <section class="section section-light earn-summary-section" id="earn-summary">
         <div class="section-inner">
-            <h2 class="section-title animate-in">What you get</h2>
+            <h2 class="section-title animate-in">What you get and support</h2>
 
             <div class="earn-summary-grid">
 
                 <div class="earn-summary-card animate-in" data-delay="0">
                     <div class="earn-summary-icon earn-summary-icon-orange">
-                        <svg viewBox="0 0 48 48" fill="none">
-                            <path d="M8 12h32M8 12l4-4M8 12l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <rect x="10" y="18" width="28" height="18" rx="3" stroke="currentColor" stroke-width="2"/>
-                            <path d="M16 27h6M26 27h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m387-412 35-114-92-74h114l36-112 36 112h114l-93 74 35 114-92-71-93 71ZM240-40v-309q-38-42-59-96t-21-115q0-134 93-227t227-93q134 0 227 93t93 227q0 61-21 115t-59 96v309l-240-80-240 80Zm410-350q70-70 70-170t-70-170q-70-70-170-70t-170 70q-70 70-70 170t70 170q70 70 170 70t170-70ZM320-159l160-41 160 41v-124q-35 20-75.5 31.5T480-240q-44 0-84.5-11.5T320-283v124Zm160-62Z"/></svg>
                     </div>
                     <h3>Two altruism tags</h3>
                     <p>Tags reflect the cause you supported and build your civic profile across VoteCraft.</p>
@@ -390,12 +411,7 @@
 
                 <div class="earn-summary-card animate-in" data-delay="1">
                     <div class="earn-summary-icon earn-summary-icon-blue">
-                        <svg viewBox="0 0 48 48" fill="none">
-                            <rect x="6" y="8" width="36" height="28" rx="4" stroke="currentColor" stroke-width="2"/>
-                            <path d="M6 18h36" stroke="currentColor" stroke-width="2"/>
-                            <path d="M16 28h8M28 28h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            <path d="M34 36l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M342.5-257.5Q360-275 360-300t-17.5-42.5Q325-360 300-360t-42.5 17.5Q240-325 240-300t17.5 42.5Q275-240 300-240t42.5-17.5Zm0-360Q360-635 360-660t-17.5-42.5Q325-720 300-720t-42.5 17.5Q240-685 240-660t17.5 42.5Q275-600 300-600t42.5-17.5Zm180 180Q540-455 540-480t-17.5-42.5Q505-540 480-540t-42.5 17.5Q420-505 420-480t17.5 42.5Q455-420 480-420t42.5-17.5Zm180 180Q720-275 720-300t-17.5-42.5Q685-360 660-360t-42.5 17.5Q600-325 600-300t17.5 42.5Q635-240 660-240t42.5-17.5Zm0-360Q720-635 720-660t-17.5-42.5Q685-720 660-720t-42.5 17.5Q600-685 600-660t17.5 42.5Q635-600 660-600t42.5-17.5ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z"/></svg>
                     </div>
                     <h3>Selected game</h3>
                     <p>Get the game you want. Part of your payment goes to the developer, part to the cause — one transaction covers both.</p>
@@ -409,8 +425,8 @@
                         </svg>
                     </div>
                     <h3>VC coin bonus</h3>
-                    <p>Every purchase drops extra VC into your wallet. Use it as a discount on your next one.</p>
-                    <div class="earn-summary-amount">+10–20 VC</div>
+                    <p>Every donation earns VC at 10 VC per $1. Spend on games (100 VC = $1 off) or cash out at 50% value.</p>
+                    <div class="earn-summary-amount">+100–500 VC</div>
                 </div>
 
             </div><!-- /.earn-summary-grid -->
@@ -451,7 +467,7 @@
         </div>
     </section>
 
-    <script src="js/vc-coin.js?v=20260331a"></script>
-    <script src="js/vc-coin-demo.js?v=20260331n"></script>
+    <script src="js/vc-coin.js?v=20260406b"></script>
+    <script src="js/vc-coin-demo.js?v=20260406b"></script>
 </body>
 </html>

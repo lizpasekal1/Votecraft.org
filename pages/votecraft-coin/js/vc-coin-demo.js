@@ -54,7 +54,8 @@
         step: 1,
         selectedGame: null,
         selectedNonprofit: null,
-        selectedDonation: null
+        selectedDonation: null,
+        splitDevPct: 70 // game-first only: % to developer (rest minus 5% VC goes to nonprofit)
     };
 
     // ====== DOM REFS ======
@@ -203,10 +204,18 @@
         var np = NONPROFITS[state.selectedNonprofit];
         var donation = state.selectedDonation;
 
-        var total    = GAME_PRICE + donation;
-        var vcAmt    = donation * 0.05;
-        var causeAmt = donation * 0.95;
-        var vcBonus  = donation * 10;
+        var total     = donation;
+        var remainder = donation - GAME_PRICE;
+        var vcAmt     = remainder * 0.05;
+        var devAmt, causeAmt;
+        if (state.path === 'game') {
+            devAmt   = remainder * (state.splitDevPct / 100);
+            causeAmt = remainder * ((95 - state.splitDevPct) / 100);
+        } else {
+            causeAmt = remainder * 0.95;
+            devAmt   = 0;
+        }
+        var vcBonus   = donation * 10;
 
         function setText(id, text) {
             var el = document.getElementById(id);
@@ -222,9 +231,14 @@
         }
 
         setText('summary-pay-label', state.path === 'nonprofit' ? 'You donate' : 'You pay');
-        setText('summary-total-price', fmt(donation));
+        setText('summary-total-price', fmt(total));
         setText('summary-game-name', game.name);
-        setHTML('summary-game-share', '<s class="summary-was-price">' + fmt(REGULAR_PRICE) + '</s> ' + fmt(GAME_PRICE));
+        var gameTotal = GAME_PRICE + devAmt;
+        if (devAmt > 0) {
+            setHTML('summary-game-share', '<span class="summary-dev-tip">(incl. ' + fmt(devAmt) + ' dev tip)</span> ' + fmt(gameTotal));
+        } else {
+            setHTML('summary-game-share', '<s class="summary-was-price">' + fmt(REGULAR_PRICE) + '</s> ' + fmt(GAME_PRICE));
+        }
         setText('summary-nonprofit-name', np.name);
         setText('summary-cause-share', fmt(causeAmt));
         setText('summary-vc-share', fmt(vcAmt));
@@ -243,12 +257,24 @@
         }
 
         // Distribution bar (3 segments, proportional to total)
-        var gamePct  = Math.round(GAME_PRICE / total * 100);
+        var gamePct  = Math.round(gameTotal / total * 100);
         var vcPct    = Math.round(vcAmt / total * 100);
         var causePct = 100 - gamePct - vcPct;
         setStyle('summary-fill-game',     'width', gamePct  + '%');
         setStyle('summary-fill-cause',    'width', causePct + '%');
         setStyle('summary-fill-platform', 'width', vcPct    + '%');
+
+        // Bar segment order: primary recipient first
+        var fillGame  = document.getElementById('summary-fill-game');
+        var fillCause = document.getElementById('summary-fill-cause');
+        if (fillGame && fillCause) {
+            var barParent = fillGame.parentNode;
+            if (state.path === 'nonprofit') {
+                barParent.insertBefore(fillCause, fillGame);
+            } else {
+                barParent.insertBefore(fillGame, fillCause);
+            }
+        }
 
         setHTML('summary-tags',
             '<span class="atag atag-' + np.tag1.type + ' atag-summary">' + np.tag1.name + '</span>' +
@@ -264,6 +290,8 @@
         state.selectedGame = null;
         state.selectedNonprofit = null;
         state.selectedDonation = null;
+        state.splitDevPct = 70;
+        hideSlider();
 
         document.querySelectorAll('.demo-toggle-btn').forEach(function (btn) {
             btn.classList.toggle('demo-toggle-active', btn.dataset.path === newPath);
@@ -284,6 +312,62 @@
         setPath(btn.dataset.path);
     }
 
+    // ====== SPLIT SLIDER ======
+
+    var splitSlider = document.getElementById('split-slider');
+    var splitRange  = document.getElementById('split-range');
+    var splitConfirm = document.getElementById('split-confirm');
+
+    function updateSliderDisplay() {
+        var devPct = parseInt(splitRange.value, 10);
+        var npPct  = 95 - devPct; // 5% always to VoteCraft
+        var donation = state.selectedDonation;
+        var remainder = donation - GAME_PRICE;
+        var devAmt = remainder * (devPct / 100);
+        var npAmt  = remainder * (npPct / 100);
+
+        document.getElementById('split-dev-pct').textContent = devPct + '%';
+        document.getElementById('split-np-pct').textContent = npPct + '%';
+        document.getElementById('split-dev-amt').textContent = fmt(devAmt);
+        document.getElementById('split-np-amt').textContent = fmt(npAmt);
+
+        // Fill track color up to thumb position
+        var min = parseInt(splitRange.min, 10);
+        var max = parseInt(splitRange.max, 10);
+        var pct = ((devPct - min) / (max - min)) * 100;
+        splitRange.style.background = 'linear-gradient(to right, #2563eb 0%, #2563eb ' + pct + '%, #14ccb0 ' + pct + '%, #14ccb0 100%)';
+    }
+
+    function showSlider() {
+        if (splitSlider) {
+            splitRange.value = 70;
+            state.splitDevPct = 70;
+            splitSlider.classList.remove('demo-split-slider-hidden');
+            updateSliderDisplay();
+        }
+    }
+
+    function hideSlider() {
+        if (splitSlider) splitSlider.classList.add('demo-split-slider-hidden');
+    }
+
+    if (splitRange) {
+        splitRange.addEventListener('input', function () {
+            state.splitDevPct = parseInt(splitRange.value, 10);
+            updateSliderDisplay();
+        });
+    }
+
+    if (splitConfirm) {
+        splitConfirm.addEventListener('click', function () {
+            hideSlider();
+            state.step++;
+            renderStep();
+        });
+    }
+
+    // ====== CARD CLICK ======
+
     function handleCardClick(e) {
         var card = e.target.closest('.demo-pick-card');
         if (!card) return;
@@ -301,6 +385,11 @@
             state.selectedNonprofit = card.dataset.nonprofit;
         } else if (card.dataset.donation) {
             state.selectedDonation = parseInt(card.dataset.donation, 10);
+            // Game-first: show slider instead of advancing
+            if (state.path === 'game') {
+                showSlider();
+                return;
+            }
         }
 
         state.step++;
@@ -312,6 +401,8 @@
         state.selectedGame = null;
         state.selectedNonprofit = null;
         state.selectedDonation = null;
+        state.splitDevPct = 70;
+        hideSlider();
         demoShell.querySelectorAll('.demo-pick-card.demo-pick-card-selected').forEach(function (c) {
             c.classList.remove('demo-pick-card-selected');
         });
@@ -326,15 +417,19 @@
         var targetStep = parseInt(stepEl.dataset.step, 10);
         if (targetStep >= state.step) return; // can only go back
 
+        hideSlider();
+
         if (targetStep === 1) {
             state.selectedGame = null;
             state.selectedNonprofit = null;
             state.selectedDonation = null;
+            state.splitDevPct = 70;
             demoShell.querySelectorAll('.demo-pick-card.demo-pick-card-selected').forEach(function (c) {
                 c.classList.remove('demo-pick-card-selected');
             });
         } else if (targetStep === 2) {
             state.selectedDonation = null;
+            state.splitDevPct = 70;
             if (state.path === 'game') {
                 state.selectedNonprofit = null;
             } else {
@@ -345,6 +440,7 @@
             });
         } else if (targetStep === 3) {
             state.selectedDonation = null;
+            state.splitDevPct = 70;
             demoShell.querySelectorAll('#donation-cards .demo-pick-card-selected').forEach(function (c) {
                 c.classList.remove('demo-pick-card-selected');
             });
@@ -366,7 +462,7 @@
 
     // ====== INIT ======
 
-    renderPickCards('game-cards', GAMES, 'game');
+    renderPickCards('game-cards', GAMES, 'game', true);
     renderPickCards('game-cards-secondary', GAMES, 'game', true);
     renderPickCards('nonprofit-cards', NONPROFITS, 'nonprofit');
     renderPickCards('nonprofit-cards-primary', NONPROFITS, 'nonprofit');
