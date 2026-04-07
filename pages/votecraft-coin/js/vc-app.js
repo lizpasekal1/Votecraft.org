@@ -238,6 +238,28 @@ function switchPanelTab(tabName) {
 
 document.addEventListener('DOMContentLoaded', function () {
 
+    // Mobile bottom sheets
+    var donateBtn = document.getElementById('mobileDonateBtn');
+    var getVcBtn = document.getElementById('mobileGetVcBtn');
+    var sheetOverlay = document.getElementById('bottomSheetOverlay');
+    var sheetDonate = document.getElementById('bottomSheetDonate');
+    var sheetGetVc = document.getElementById('bottomSheetGetVc');
+
+    function openSheet(sheet) {
+        if (sheetOverlay) sheetOverlay.classList.add('open');
+        if (sheet) sheet.classList.add('open');
+    }
+
+    function closeSheets() {
+        if (sheetOverlay) sheetOverlay.classList.remove('open');
+        if (sheetDonate) sheetDonate.classList.remove('open');
+        if (sheetGetVc) sheetGetVc.classList.remove('open');
+    }
+
+    if (donateBtn) donateBtn.addEventListener('click', function () { openSheet(sheetDonate); });
+    if (getVcBtn) getVcBtn.addEventListener('click', function () { openSheet(sheetGetVc); });
+    if (sheetOverlay) sheetOverlay.addEventListener('click', closeSheets);
+
     // Hamburger menu
     var hamburger = document.getElementById('hamburgerBtn');
     var sidebar = document.getElementById('sidebar');
