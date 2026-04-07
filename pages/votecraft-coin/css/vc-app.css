@@ -1839,11 +1839,14 @@ body[data-theme="dark"] .legal-disclaimer {
         -webkit-overflow-scrolling: touch;
         scroll-snap-type: x mandatory;
         gap: 12px;
-        padding-bottom: 8px;
-        scrollbar-width: none;
+        padding-bottom: 12px;
+        scrollbar-width: thin;
+        scrollbar-color: var(--border) transparent;
     }
 
-    #featuredNonprofits::-webkit-scrollbar { display: none; }
+    #featuredNonprofits::-webkit-scrollbar { height: 4px; }
+    #featuredNonprofits::-webkit-scrollbar-track { background: transparent; }
+    #featuredNonprofits::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
     #featuredNonprofits .asset-row {
         flex-shrink: 0;
