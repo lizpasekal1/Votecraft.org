@@ -1847,10 +1847,11 @@ body[data-theme="dark"] .legal-disclaimer {
         z-index: 299;
     }
 
-    .bottom-sheet-overlay.open { display: block; }
+    .bottom-sheet-overlay { display: none !important; }
+    .bottom-sheet-overlay.open { display: block !important; }
 
     .bottom-sheet {
-        display: block;
+        display: block !important;
         position: fixed;
         bottom: -100%;
         left: 0;
