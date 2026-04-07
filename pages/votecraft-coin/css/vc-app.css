@@ -1714,10 +1714,12 @@ body[data-theme="dark"] .legal-disclaimer {
 
 /* ====== RESPONSIVE ====== */
 
-/* Hidden on large desktop */
-.mobile-cta-bar,
-.bottom-sheet-overlay,
-.bottom-sheet { display: none; }
+/* Hidden on large desktop, shown via media query */
+.mobile-cta-bar { display: none; }
+.bottom-sheet-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 299; }
+.bottom-sheet { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg); border-radius: 16px 16px 0 0; padding: 24px 20px; z-index: 300; max-height: 80vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.3s ease; }
+.bottom-sheet-overlay.open { display: block; }
+.bottom-sheet.open { transform: translateY(0); }
 
 /* Hamburger button (hidden on desktop) */
 .hamburger-btn {
@@ -1876,50 +1878,10 @@ body[data-theme="dark"] .legal-disclaimer {
         color: #fff;
     }
 
-    /* Bottom sheet */
-    .bottom-sheet-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.4);
-        z-index: 299;
-    }
-
-    .bottom-sheet-overlay { display: none !important; }
-    .bottom-sheet-overlay.open { display: block !important; }
-
-    .bottom-sheet {
-        display: block !important;
-        position: fixed;
-        bottom: -100%;
-        left: 0;
-        right: 0;
-        background: var(--bg);
-        border-radius: 16px 16px 0 0;
-        padding: 24px 20px;
-        padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
-        z-index: 300;
-        max-height: 80vh;
-        overflow-y: auto;
-        transition: bottom 0.3s ease;
-    }
-
-    .bottom-sheet.open { bottom: 0; }
-
-    .bottom-sheet-handle {
-        width: 40px;
-        height: 4px;
-        background: var(--border);
-        border-radius: 2px;
-        margin: 0 auto 16px;
-    }
-
-    .bottom-sheet-title {
-        font-size: 18px;
-        font-weight: 700;
-        margin-bottom: 16px;
-        text-align: center;
-    }
+    /* Bottom sheets — enable on mobile/tablet */
+    .bottom-sheet { display: block; transform: translateY(100%); }
+    .bottom-sheet.open { transform: translateY(0); }
+    .bottom-sheet { padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
 }
 
 @media (max-width: 600px) {
