@@ -38,7 +38,8 @@ The game is discounted from its regular price of $5.00 as an incentive to donate
 
 ## Earning VC
 
-Users earn VC based on their donation amount at a rate of **10 VC per $1 donated**.
+### Through Donations (bonus rate)
+Users earn VC as a bonus at a rate of **10 VC per $1 donated**.
 
 | Donation | VC Earned |
 |---|---|
@@ -46,6 +47,16 @@ Users earn VC based on their donation amount at a rate of **10 VC per $1 donated
 | $20 | 200 VC |
 | $30 | 300 VC |
 | $50 | 500 VC |
+
+### Through Direct Purchase (full value rate)
+Users can buy VC directly at a rate of **100 VC per $1** (1,000 VC per $10). Direct purchases also earn 1 Civic Education tag per $10.
+
+| Purchase | VC Earned | Tags |
+|---|---|---|
+| $10 | 1,000 VC | 1 Civic Education |
+| $20 | 2,000 VC | 2 Civic Education |
+| $30 | 3,000 VC | 3 Civic Education |
+| $50 | 5,000 VC | 5 Civic Education |
 
 ---
 
@@ -55,7 +66,7 @@ VC can be redeemed in two ways:
 
 ### Option A — Spend on VoteCraft Games (full value)
 - **Rate:** 100 VC = $1.00 off
-- **Cap:** Maximum 200 VC (= $2.00 off) per purchase
+- **Cap:** Maximum 400 VC (= $4.00 off) per purchase
 - **Minimum:** No minimum
 - **Why capped:** Prevents users from getting games fully free; ensures repeat engagement
 

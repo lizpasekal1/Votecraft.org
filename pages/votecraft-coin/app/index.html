@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoteCraft</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/vc-coin.css?v=20260407a">
+    <link rel="stylesheet" href="../css/vc-app.css?v=20260407a">
+</head>
+<body>
+
+    <!-- ============ TOP BAR ============ -->
+    <header class="topbar">
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </button>
+        <div class="topbar-tagline">Building a Capitalism + Altruism Economy</div>
+        <div class="topbar-right">
+            <button class="topbar-icon-btn" id="themeToggle" aria-label="Toggle dark mode">
+                <svg class="theme-icon-light" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#374151" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                <svg class="theme-icon-dark" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#374151" stroke-width="2" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+            </button>
+            <button class="topbar-icon-btn" aria-label="Help">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#374151" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r=".5" fill="#374151"/></svg>
+            </button>
+            <div class="topbar-avatar" id="topbarAvatar">A</div>
+        </div>
+    </header>
+
+    <!-- ============ DASHBOARD GRID ============ -->
+    <div class="dashboard">
+
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- ======== LEFT SIDEBAR ======== -->
+        <nav class="sidebar" id="sidebar">
+            <a class="sidebar-logo" href="https://votecraft.org/vote/votecraft-coin/">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1222.5 278.5" class="sidebar-logo-svg"><defs><style>.vc-logo-text{fill:#1d1d1b;font-family:ProximaNova-Bold,'Proxima Nova',sans-serif;font-size:150px;font-weight:700;}</style></defs><path fill="#1d1d1b" d="M209.39,242.52c14.38-7.88,26.78-18.34,36.87-31.1,9.74-12.32,16.92-26.24,21.34-41.38,4.42-15.14,5.85-30.74,4.27-46.37-1.64-16.18-6.48-31.68-14.36-46.05-.8-1.46-1.63-2.9-2.49-4.33l-10.32,18.7c5,10.6,8.12,21.84,9.31,33.49,1.35,13.32.13,26.61-3.64,39.52s-9.89,24.78-18.19,35.28c-8.59,10.86-19.17,19.78-31.43,26.5-12.26,6.72-25.46,10.84-39.24,12.24-13.32,1.35-26.62.13-39.52-3.64-12.91-3.77-24.78-9.89-35.28-18.19-3.94-3.11-7.62-6.49-11.03-10.11l-13.11,12.26c4.02,4.27,8.36,8.25,13.01,11.93,12.32,9.74,26.24,16.92,41.38,21.34,15.14,4.42,30.74,5.85,46.37,4.27,16.18-1.64,31.68-6.48,46.05-14.36ZM69.81,71.72c8.59-10.86,19.17-19.78,31.43-26.5,12.26-6.72,25.46-10.84,39.24-12.24,13.32-1.35,26.61-.13,39.52,3.64,12.91,3.77,24.78,9.89,35.28,18.19,3,2.37,5.85,4.9,8.55,7.57l13.11-12.27c-3.31-3.31-6.82-6.44-10.53-9.37-12.32-9.74-26.24-16.92-41.38-21.34-15.14-4.42-30.74-5.85-46.37-4.27-16.18,1.64-31.68,6.48-46.05,14.36-14.38,7.88-26.78,18.34-36.87,31.1-9.74,12.32-16.92,26.24-21.34,41.38-4.42,15.14-5.85,30.74-4.27,46.37,1.64,16.18,6.48,31.68,14.36,46.05.3.55.61,1.1.92,1.64l10.52-19.06c-4.2-9.7-6.86-19.91-7.93-30.45-1.35-13.32-.13-26.61,3.64-39.52,3.77-12.91,9.89-24.78,18.19-35.28Z"/><path fill="#1d1d1b" d="M257.78,41.42l-83.63,78.23-36.38-66.37c-.99-1.81-3.59-1.81-4.58,0L39.4,223.23c-1.44,2.61,1.9,5.21,4.08,3.17l83.63-78.23,36.38,66.37c.99,1.81,3.59,1.81,4.58,0l93.79-169.96c1.44-2.61-1.9-5.21-4.08-3.17Z"/><text class="vc-logo-text" transform="translate(314.5 186.55)"><tspan x="0" y="0">V</tspan><tspan x="99.6" y="0">O</tspan><tspan x="210.75" y="0">TECRAFT</tspan></text></svg>
+            </a>
+            <a class="sidebar-item active" href="index.html">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg>
+                <span>Home</span>
+            </a>
+            <a class="sidebar-item" href="explore.html">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                <span>Explore</span>
+            </a>
+            <a class="sidebar-item" href="games.html">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="20" height="20" fill="currentColor"><path d="M342.5-257.5Q360-275 360-300t-17.5-42.5Q325-360 300-360t-42.5 17.5Q240-325 240-300t17.5 42.5Q275-240 300-240t42.5-17.5Zm0-360Q360-635 360-660t-17.5-42.5Q325-720 300-720t-42.5 17.5Q240-685 240-660t17.5 42.5Q275-600 300-600t42.5-17.5Zm180 180Q540-455 540-480t-17.5-42.5Q505-540 480-540t-42.5 17.5Q420-505 420-480t17.5 42.5Q455-420 480-420t42.5-17.5Zm180 180Q720-275 720-300t-17.5-42.5Q685-360 660-360t-42.5 17.5Q600-325 600-300t17.5 42.5Q635-240 660-240t42.5-17.5Zm0-360Q720-635 720-660t-17.5-42.5Q685-720 660-720t-42.5 17.5Q600-685 600-660t17.5 42.5Q635-600 660-600t42.5-17.5ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z"/></svg>
+                <span>Games</span>
+            </a>
+            <a class="sidebar-item" href="transactions.html">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                <span>Transactions</span>
+            </a>
+            <a class="sidebar-item" href="tags.html">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="20" height="20" fill="currentColor"><path d="m387-412 35-114-92-74h114l36-112 36 112h114l-93 74 35 114-92-71-93 71ZM240-40v-309q-38-42-59-96t-21-115q0-134 93-227t227-93q134 0 227 93t93 227q0 61-21 115t-59 96v309l-240-80-240 80Z"/></svg>
+                <span>Altruism Tags</span>
+            </a>
+            <a class="sidebar-item" href="profile.html">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>Profile</span>
+            </a>
+        </nav>
+
+        <!-- ======== MAIN CONTENT ======== -->
+        <main class="main-content" id="mainContent">
+
+            <div class="home-hero">
+                <div class="coin-container home-coin-size">
+                    <div class="coin">
+                        <div class="coin-face coin-front">
+                            <span class="coin-text">VC</span>
+                        </div>
+                        <div class="coin-face coin-back">
+                            <img src="https://votecraft.org/wp-content/uploads/2026/02/votecraft_icon_white.png" alt="VC" style="width:60%;height:60%;object-fit:contain;">
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h1 class="main-title">Support. Acknowledge. Grow.</h1>
+                    <div class="balance-big" id="balanceBig">42 VC</div>
+                </div>
+            </div>
+
+            <div class="accordion-list">
+                <div class="accordion-item">
+                    <button class="accordion-trigger">
+                        <div class="asset-icon asset-icon-teal">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z"/></svg>
+                        </div>
+                        <div class="asset-info">
+                            <div class="asset-name">Nonprofits Supported</div>
+                            <div class="asset-sub">Causes you've donated to</div>
+                        </div>
+                        <div class="asset-value">3</div>
+                        <span class="accordion-arrow">›</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p>You've supported 3 nonprofit organizations through bundled donations. Each donation earns you VC coin and altruism tags tied to the cause.</p>
+                        <a href="explore.html" class="accordion-link-btn">Explore nonprofits →</a>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-trigger">
+                        <div class="asset-icon asset-icon-blue">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="20" height="20" fill="#fff"><path d="M342.5-257.5Q360-275 360-300t-17.5-42.5Q325-360 300-360t-42.5 17.5Q240-325 240-300t17.5 42.5Q275-240 300-240t42.5-17.5Zm0-360Q360-635 360-660t-17.5-42.5Q325-720 300-720t-42.5 17.5Q240-685 240-660t17.5 42.5Q275-600 300-600t42.5-17.5Zm180 180Q540-455 540-480t-17.5-42.5Q505-540 480-540t-42.5 17.5Q420-505 420-480t17.5 42.5Q455-420 480-420t42.5-17.5Zm180 180Q720-275 720-300t-17.5-42.5Q685-360 660-360t-42.5 17.5Q600-325 600-300t17.5 42.5Q635-240 660-240t42.5-17.5Zm0-360Q720-635 720-660t-17.5-42.5Q685-720 660-720t-42.5 17.5Q600-685 600-660t17.5 42.5Q635-600 660-600t42.5-17.5ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z"/></svg>
+                        </div>
+                        <div class="asset-info">
+                            <div class="asset-name">Games Supported</div>
+                            <div class="asset-sub">Indie games you've backed</div>
+                        </div>
+                        <div class="asset-value">2</div>
+                        <span class="accordion-arrow">›</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p>You own 2 VoteCraft games. Every game purchase is bundled with a nonprofit donation, supporting both indie developers and civic causes.</p>
+                        <a href="games.html" class="accordion-link-btn">Browse games →</a>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-trigger">
+                        <div class="asset-icon asset-icon-orange">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="20" height="20" fill="#fff"><path d="m387-412 35-114-92-74h114l36-112 36 112h114l-93 74 35 114-92-71-93 71ZM240-40v-309q-38-42-59-96t-21-115q0-134 93-227t227-93q134 0 227 93t93 227q0 61-21 115t-59 96v309l-240-80-240 80Zm410-350q70-70 70-170t-70-170q-70-70-170-70t-170 70q-70 70-70 170t70 170q70 70 170 70t170-70ZM320-159l160-41 160 41v-124q-35 20-75.5 31.5T480-240q-44 0-84.5-11.5T320-283v124Zm160-62Z"/></svg>
+                        </div>
+                        <div class="asset-info">
+                            <div class="asset-name">Tags Earned</div>
+                            <div class="asset-sub">Your civic identity</div>
+                        </div>
+                        <div class="asset-value">8</div>
+                        <span class="accordion-arrow">›</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p>You've earned 8 altruism tags across your donations. Tags are permanent, build your civic profile, and can unlock discounts with partnered organizations.</p>
+                        <a href="tags.html" class="accordion-link-btn">View all tags →</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onboarding -->
+            <div class="onboarding-card">
+                <div class="onboarding-header">
+                    <span class="onboarding-check">&checkmark;</span>
+                    <span class="onboarding-title">Get started</span>
+                    <span class="onboarding-progress">1 of 3</span>
+                </div>
+                <div class="onboarding-steps">
+                    <div class="onboarding-step done">
+                        <span class="step-check">&checkmark;</span>
+                        <span>Account created</span>
+                    </div>
+                    <div class="onboarding-step">
+                        <span class="step-circle"></span>
+                        <span>Pick a nonprofit to support</span>
+                        <span class="step-arrow">&rarr;</span>
+                    </div>
+                    <div class="onboarding-step">
+                        <span class="step-circle"></span>
+                        <span>Choose a game or asset to pair</span>
+                        <span class="step-arrow">&rarr;</span>
+                    </div>
+                      <div class="onboarding-step">
+                        <span class="step-circle"></span>
+                        <span>Make a bundled secure donation and earn VC Coin</span>
+                        <span class="step-arrow">&rarr;</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-footer-divider" style="margin-top:24px;"></div>
+
+            <!-- Watchlist -->
+            <div class="home-section-header">
+                <h2 class="section-title">Watchlist</h2>
+                <a class="section-arrow-btn" href="explore.html">&rarr;</a>
+            </div>
+            <div class="watchlist-empty" id="watchlistEmpty">
+                <div class="watchlist-empty-circles">
+                    <div class="wl-circle wl-circle-yellow"></div>
+                    <div class="wl-circle wl-circle-blue"></div>
+                    <div class="wl-circle wl-circle-gray"></div>
+                    <div class="wl-circle wl-circle-plus">+</div>
+                </div>
+                <div class="watchlist-empty-title">Build your watchlist</div>
+                <div class="watchlist-empty-desc">Keep track of causes you care about by adding nonprofits to your watchlist</div>
+                <a class="watchlist-add-btn" href="explore.html">Add to watchlist</a>
+            </div>
+            <div class="asset-list" id="watchlistItems" hidden></div>
+
+            <div class="main-footer-divider" style="margin-top:24px;"></div>
+
+            <!-- Featured Nonprofits -->
+            <div class="home-section-header">
+                <h2 class="section-title">Bundled Reciprocity</h2>
+                <a class="section-arrow-btn" href="explore.html">&rarr;</a>
+            </div>
+            <p class="section-subtitle">Bundle your support with game — Gratitude VC</p>
+            <div class="asset-list" id="featuredNonprofits"></div>
+            <a class="explore-all-btn" href="explore.html">Explore all nonprofits</a>
+
+            <div class="main-footer-divider" style="margin-top:24px;"></div>
+
+            <!-- Earn Altruism Tags -->
+            <div class="home-section-header">
+                <h2 class="section-title">Earn altruism tags</h2>
+                <a class="section-arrow-btn" href="profile.html">&rarr;</a>
+            </div>
+            <p class="section-subtitle">Every donation earns you two tags tied to the cause you support</p>
+            <div class="tags-preview-grid">
+                <div class="tag-preview-card">
+                    <span class="tag-pill tag-impact">Voting Rights</span>
+                    <span class="tag-pill tag-contribution">Organizer</span>
+                </div>
+                <div class="tag-preview-card">
+                    <span class="tag-pill tag-impact">Finance Reform</span>
+                    <span class="tag-pill tag-effort">Advocate</span>
+                </div>
+                <div class="tag-preview-card">
+                    <span class="tag-pill tag-impact">Good Governance</span>
+                    <span class="tag-pill tag-effort">Civic Action</span>
+                </div>
+            </div>
+
+            <div class="main-footer">
+                <div class="main-footer-divider"></div>
+                <div class="main-footer-links">
+                    <a href="legal.html" class="main-footer-link">Legal & Privacy</a>
+                    <a href="#" class="main-footer-link">Disclosures</a>
+                    <a href="#" class="main-footer-link">Accessibility Statement</a>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- ======== RIGHT PANEL ======== -->
+        <aside class="right-panel" id="rightPanel">
+
+            <!-- Default: Donate panel -->
+            <div class="panel-section" id="panel-donate">
+                <div class="panel-tabs">
+                    <button class="panel-tab active" data-panel-tab="donate">Donate</button>
+                    <button class="panel-tab" data-panel-tab="earn">Get</button>
+                    <button class="panel-tab" data-panel-tab="redeem">Redeem</button>
+                </div>
+
+                <!-- Donate tab content -->
+                <div class="panel-tab-content active" id="panelDonate">
+                    <div class="panel-amount-input">
+                        <span class="panel-amount-value" id="panelAmountValue">0</span>
+                        <span class="panel-amount-currency">USD</span>
+                    </div>
+
+                    <div class="panel-amount-presets">
+                        <button class="panel-preset active" data-amount="10">$10</button>
+                        <button class="panel-preset" data-amount="25">$25</button>
+                        <button class="panel-preset" data-amount="50">$50</button>
+                        <input type="number" class="panel-preset-input" id="panelCustomAmount" placeholder="Other" min="1">
+                    </div>
+
+                    <div class="panel-field" id="panelNonprofitField">
+                        <div class="panel-field-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="20" height="20" fill="#374151"><path d="M220-464 64-620l156-156 156 156-156 156ZM360-80v-200q-61-5-121-14.5T120-320l20-80q84 23 168.5 31.5T480-360q87 0 171.5-8.5T820-400l20 80q-59 16-119 25.5T600-280v200H360ZM220-576l44-44-44-44-44 44 44 44Zm175-139q-35-35-35-85t35-85q35-35 85-35t85 35q35 35 35 85t-35 85q-35 35-85 35t-85-35Zm28.5 291.5Q400-447 400-480t23.5-56.5Q447-560 480-560t56.5 23.5Q560-513 560-480t-23.5 56.5Q513-400 480-400t-56.5-23.5Zm85-348Q520-783 520-800t-11.5-28.5Q497-840 480-840t-28.5 11.5Q440-817 440-800t11.5 28.5Q463-760 480-760t28.5-11.5ZM682-480l-68-120 68-120h136l68 120-68 120H682Zm46-80h44l22-40-22-40h-44l-22 40 22 40Zm-508-60Zm260-180Zm270 200Z"/></svg></div>
+                        <div class="panel-field-info">
+                            <div class="panel-field-label">Choose to bundle a</div>
+                            <div class="panel-field-value" id="panelNonprofitName">Nonprofit and Game</div>
+                        </div>
+                        <div class="panel-field-arrow">&rsaquo;</div>
+                    </div>
+
+                    <div class="panel-field">
+                        <div class="panel-field-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="20" height="20" fill="#374151"><path d="M160-280v80h640v-80H160Zm0-440h88q-5-9-6.5-19t-1.5-21q0-50 35-85t85-35q30 0 55.5 15.5T460-826l20 26 20-26q18-24 44-39t56-15q50 0 85 35t35 85q0 11-1.5 21t-6.5 19h88q33 0 56.5 23.5T880-640v440q0 33-23.5 56.5T800-120H160q-33 0-56.5-23.5T80-200v-440q0-33 23.5-56.5T160-720Zm0 320h640v-240H596l84 114-64 46-136-184-136 184-64-46 82-114H160v240Zm228.5-331.5Q400-743 400-760t-11.5-28.5Q377-800 360-800t-28.5 11.5Q320-777 320-760t11.5 28.5Q343-720 360-720t28.5-11.5ZM600-720q17 0 28.5-11.5T640-760q0-17-11.5-28.5T600-800q-17 0-28.5 11.5T560-760q0 17 11.5 28.5T600-720Z"/></svg></div>
+                        <div class="panel-field-info">
+                            <div class="panel-field-label">Fund with</div>
+                            <div class="panel-field-value">Your Donation</div>
+                        </div>
+                        <div class="panel-field-arrow">&rsaquo;</div>
+                    </div>
+                    <div class="panel-field">
+                        <div class="panel-field-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="20" height="20" fill="#374151"><path d="M160-280v80h640v-80H160Zm0-440h88q-5-9-6.5-19t-1.5-21q0-50 35-85t85-35q30 0 55.5 15.5T460-826l20 26 20-26q18-24 44-39t56-15q50 0 85 35t35 85q0 11-1.5 21t-6.5 19h88q33 0 56.5 23.5T880-640v440q0 33-23.5 56.5T800-120H160q-33 0-56.5-23.5T80-200v-440q0-33 23.5-56.5T160-720Zm0 320h640v-240H596l84 114-64 46-136-184-136 184-64-46 82-114H160v240Zm228.5-331.5Q400-743 400-760t-11.5-28.5Q377-800 360-800t-28.5 11.5Q320-777 320-760t11.5 28.5Q343-720 360-720t28.5-11.5ZM600-720q17 0 28.5-11.5T640-760q0-17-11.5-28.5T600-800q-17 0-28.5 11.5T560-760q0 17 11.5 28.5T600-720Z"/></svg></div>
+                        <div class="panel-field-info">
+                            <div class="panel-field-label">Receive Gratitudes</div>
+                            <div class="panel-field-value">Get VC and Altruism tags</div>
+                        </div>
+                        <div class="panel-field-arrow">&rsaquo;</div>
+                    </div>
+
+                    <div class="panel-amount-vc" id="panelAmountVc">With this donation you get: <strong>100 VC</strong></div>
+                    <button class="panel-primary-btn" id="panelDonateBtn" disabled>Continue to donation</button>
+                </div>
+
+                <!-- Earn tab content -->
+                <div class="panel-tab-content" id="panelEarn">
+                    <div class="panel-earn-header">Every $10 = 1,000 VC + 1 tag.</div>
+                    <div class="panel-earn-desc">Purchase VC directly for use later and get civic tags.</div>
+
+                    <div class="panel-amount-input">
+                        <span class="panel-amount-value has-value" id="panelEarnValue">30</span>
+                        <span class="panel-amount-currency">USD</span>
+                    </div>
+                    <div class="panel-amount-presets panel-earn-presets">
+                        <button class="panel-preset" data-earn="10">$10</button>
+                        <button class="panel-preset" data-earn="20">$20</button>
+                        <button class="panel-preset active" data-earn="30">$30</button>
+                        <button class="panel-preset" data-earn="50">$50</button>
+                    </div>
+            
+        
+
+                    <div class="panel-field">
+                        <div class="panel-field-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="20" height="20" fill="#374151"><path d="M160-280v80h640v-80H160Zm0-440h88q-5-9-6.5-19t-1.5-21q0-50 35-85t85-35q30 0 55.5 15.5T460-826l20 26 20-26q18-24 44-39t56-15q50 0 85 35t35 85q0 11-1.5 21t-6.5 19h88q33 0 56.5 23.5T880-640v440q0 33-23.5 56.5T800-120H160q-33 0-56.5-23.5T80-200v-440q0-33 23.5-56.5T160-720Zm0 320h640v-240H596l84 114-64 46-136-184-136 184-64-46 82-114H160v240Zm228.5-331.5Q400-743 400-760t-11.5-28.5Q377-800 360-800t-28.5 11.5Q320-777 320-760t11.5 28.5Q343-720 360-720t28.5-11.5ZM600-720q17 0 28.5-11.5T640-760q0-17-11.5-28.5T600-800q-17 0-28.5 11.5T560-760q0 17 11.5 28.5T600-720Z"/></svg></div>
+                        <div class="panel-field-info">
+                            <div class="panel-field-label">Receive Gratitudes</div>
+                            <div class="panel-field-value">Get VC and Altruism tags</div>
+                        </div>
+                        <div class="panel-field-arrow">&rsaquo;</div>
+            
+                    </div>
+                    <div class="panel-earn-tag-preview">
+                        <span class="panel-earn-vc-inline" id="panelEarnVcInline">3,000 VC +</span>
+                        <span class="tag-pill tag-impact">Civic Education <span class="panel-earn-tag-count" id="panelEarnTagCount">&times;3</span></span>
+                    </div>
+
+                    <button class="panel-primary-btn" id="panelEarnBtn">Buy 3,000 VC</button>
+                </div>
+
+                <!-- Redeem tab content -->
+                <div class="panel-tab-content" id="panelRedeem">
+                    <div class="panel-info-text">Spend on games: 100 VC = $1 off (max 400 VC per purchase). Cash out: 500 VC minimum at 50% value.</div>
+                </div>
+            </div>
+
+            <div class="panel-divider"></div>
+
+            <!-- Quick actions -->
+            <div class="panel-actions">
+                <a class="panel-action-row" href="explore.html">
+                    <div class="panel-action-icon panel-action-blue">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z"/></svg>
+                    </div>
+                    <span>Support a Cause</span>
+                    <span class="panel-action-arrow">&rsaquo;</span>
+                </a>
+                <a class="panel-action-row" href="games.html">
+                    <div class="panel-action-icon panel-action-teal">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="18" height="18" fill="#fff"><path d="M342.5-257.5Q360-275 360-300t-17.5-42.5Q325-360 300-360t-42.5 17.5Q240-325 240-300t17.5 42.5Q275-240 300-240t42.5-17.5Zm0-360Q360-635 360-660t-17.5-42.5Q325-720 300-720t-42.5 17.5Q240-685 240-660t17.5 42.5Q275-600 300-600t42.5-17.5Zm180 180Q540-455 540-480t-17.5-42.5Q505-540 480-540t-42.5 17.5Q420-505 420-480t17.5 42.5Q455-420 480-420t42.5-17.5Zm180 180Q720-275 720-300t-17.5-42.5Q685-360 660-360t-42.5 17.5Q600-325 600-300t17.5 42.5Q635-240 660-240t42.5-17.5Zm0-360Q720-635 720-660t-17.5-42.5Q685-720 660-720t-42.5 17.5Q600-685 600-660t17.5 42.5Q635-600 660-600t42.5-17.5ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z"/></svg>
+                    </div>
+                    <span>Support a Game</span>
+                    <span class="panel-action-arrow">&rsaquo;</span>
+                </a>
+                  <button class="panel-action-row">
+                    <div class="panel-action-icon panel-action-purple">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                    </div>
+                    <span>Send a game as a gift</span>
+                    <span class="panel-action-arrow">&rsaquo;</span>
+                </button>
+                <a class="panel-action-row" href="cashout.html">
+                    <div class="panel-action-icon panel-action-green">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                    </div>
+                    <span>Cash Out VC</span>
+                    <span class="panel-action-arrow">&rsaquo;</span>
+                </a>
+    
+            </div>
+        </aside>
+
+    </div>
+
+    <script src="../js/vc-app.js?v=20260407a"></script>
+    <script src="../js/vc-coin.js?v=20260407a"></script>
+</body>
+</html>
