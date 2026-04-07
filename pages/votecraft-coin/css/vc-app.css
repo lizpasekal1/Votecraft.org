@@ -1812,7 +1812,7 @@ body[data-theme="dark"] .legal-disclaimer {
 
     /* Accordion */
     .accordion-trigger { padding: 12px 0; }
-    .accordion-content { padding: 0 0 12px 40px; }
+    .accordion-content { padding: 0 0 0 40px; }
     .accordion-item.open .accordion-content { padding: 0 0 12px 40px; }
 
     /* Asset rows */
