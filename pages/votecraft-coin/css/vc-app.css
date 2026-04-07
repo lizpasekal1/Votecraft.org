@@ -1711,6 +1711,11 @@ body[data-theme="dark"] .legal-disclaimer {
 
 /* ====== RESPONSIVE ====== */
 
+/* Hidden on desktop */
+.mobile-cta-bar,
+.bottom-sheet-overlay,
+.bottom-sheet { display: none; }
+
 /* Hamburger button (hidden on desktop) */
 .hamburger-btn {
     display: none;
@@ -1874,4 +1879,87 @@ body[data-theme="dark"] .legal-disclaimer {
 
     /* Footer */
     .main-footer-links { flex-direction: column; gap: 8px; }
+
+    /* Mobile bottom CTA bar */
+    .mobile-cta-bar {
+        display: flex;
+        gap: 12px;
+        padding: 12px 16px;
+        padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--bg);
+        border-top: 1px solid var(--border);
+        z-index: 150;
+    }
+
+    .mobile-cta-btn {
+        flex: 1;
+        padding: 14px 0;
+        border-radius: var(--radius-pill);
+        font-size: 15px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        border: none;
+        text-align: center;
+    }
+
+    .mobile-cta-btn-outline {
+        background: var(--bg);
+        color: var(--primary);
+        border: 2px solid var(--border);
+    }
+
+    .mobile-cta-btn-fill {
+        background: var(--primary);
+        color: #fff;
+    }
+
+    .main-content { padding-bottom: 100px; }
+
+    /* Bottom sheet */
+    .bottom-sheet-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 299;
+    }
+
+    .bottom-sheet-overlay.open { display: block; }
+
+    .bottom-sheet {
+        position: fixed;
+        bottom: -100%;
+        left: 0;
+        right: 0;
+        background: var(--bg);
+        border-radius: 16px 16px 0 0;
+        padding: 24px 20px;
+        padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+        z-index: 300;
+        max-height: 80vh;
+        overflow-y: auto;
+        transition: bottom 0.3s ease;
+    }
+
+    .bottom-sheet.open { bottom: 0; }
+
+    .bottom-sheet-handle {
+        width: 40px;
+        height: 4px;
+        background: var(--border);
+        border-radius: 2px;
+        margin: 0 auto 16px;
+    }
+
+    .bottom-sheet-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 16px;
+        text-align: center;
+    }
 }

@@ -371,6 +371,49 @@
 
     </div>
 
+    <!-- Mobile CTA bar -->
+    <div class="mobile-cta-bar">
+        <button class="mobile-cta-btn mobile-cta-btn-outline" id="mobileDonateBtn">Donate</button>
+        <button class="mobile-cta-btn mobile-cta-btn-fill" id="mobileGetVcBtn">Get VC</button>
+    </div>
+
+    <!-- Bottom sheets -->
+    <div class="bottom-sheet-overlay" id="bottomSheetOverlay"></div>
+    <div class="bottom-sheet" id="bottomSheetDonate">
+        <div class="bottom-sheet-handle"></div>
+        <div class="bottom-sheet-title">Donate</div>
+        <div class="panel-amount-input">
+            <span class="panel-amount-value" id="mobileAmountValue">10</span>
+            <span class="panel-amount-currency">USD</span>
+        </div>
+        <div class="panel-amount-presets" style="margin-bottom:16px;">
+            <button class="panel-preset active" data-mobile-amount="10">$10</button>
+            <button class="panel-preset" data-mobile-amount="25">$25</button>
+            <button class="panel-preset" data-mobile-amount="50">$50</button>
+        </div>
+        <div class="panel-amount-vc" style="margin-top:0;">With this donation you get: <strong>100 VC</strong></div>
+        <button class="panel-primary-btn" style="margin-top:8px;">Continue to donation</button>
+    </div>
+    <div class="bottom-sheet" id="bottomSheetGetVc">
+        <div class="bottom-sheet-handle"></div>
+        <div class="bottom-sheet-title">Get VC</div>
+        <div class="panel-amount-input">
+            <span class="panel-amount-value has-value">30</span>
+            <span class="panel-amount-currency">USD</span>
+        </div>
+        <div class="panel-amount-presets" style="margin-bottom:16px;">
+            <button class="panel-preset" data-mobile-earn="10">$10</button>
+            <button class="panel-preset" data-mobile-earn="20">$20</button>
+            <button class="panel-preset active" data-mobile-earn="30">$30</button>
+            <button class="panel-preset" data-mobile-earn="50">$50</button>
+        </div>
+        <div class="panel-earn-tag-preview" style="margin-bottom:16px;">
+            <span class="panel-earn-vc-inline">3,000 VC +</span>
+            <span class="tag-pill tag-impact">Civic Education <span class="panel-earn-tag-count">&times;3</span></span>
+        </div>
+        <button class="panel-primary-btn">Buy 3,000 VC</button>
+    </div>
+
     <script src="../js/vc-app.js?v=20260407a"></script>
     <script src="../js/vc-coin.js?v=20260407a"></script>
 </body>
