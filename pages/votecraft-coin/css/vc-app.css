@@ -1831,6 +1831,36 @@ body[data-theme="dark"] .legal-disclaimer {
     .panel-field { margin: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
     .panel-divider { margin-left: 0 !important; margin-right: 0 !important; }
 
+    /* Bundled Reciprocity rows — two lines on mobile */
+    #featuredNonprofits .asset-row {
+        flex-wrap: wrap;
+    }
+
+    #featuredNonprofits .asset-info {
+        flex: 1 1 calc(100% - 60px);
+    }
+
+    #featuredNonprofits .paired-game-plus {
+        order: 10;
+        margin-left: 48px;
+    }
+
+    #featuredNonprofits .asset-paired-game {
+        order: 11;
+        margin-left: 0;
+    }
+
+    #featuredNonprofits .asset-donate-btn {
+        order: 12;
+        margin-left: auto;
+    }
+
+    #featuredNonprofits .asset-vc-hint {
+        order: 13;
+    }
+
+    .np-category-badge { display: none !important; }
+
     /* Constrain all children */
     .accordion-list, .asset-list, .onboarding-card, .watchlist-empty,
     .tags-preview-grid, .tag-earning-info, .badges-grid, .milestone-list,
