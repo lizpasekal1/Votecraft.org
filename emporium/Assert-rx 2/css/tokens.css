@@ -1,0 +1,15 @@
+:root {
+  --bg: #fffaf0;
+  --surface: #f5f0e6;
+  --text: #1a1410;
+  --text-muted: #6b6560;
+  --accent: #015f4d;
+  --accent-hover: #014d3e;
+  --border: #c4c0b9;
+  --radius: 12px;
+  --top-bar-height: 56px;
+  --progress-height: 4px;
+  --bottom-nav-height: 68px;
+  --font: 'Newherotrial 1', Arial, sans-serif;
+  --font-heading: 'Newspirittrial', Georgia, sans-serif;
+}

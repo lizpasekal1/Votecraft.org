@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Assert-rx — Sessions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="app">
+  <header class="top-bar">
+    <button id="btn-back" class="btn-icon" hidden aria-label="Back">
+      <span class="material-symbols-outlined">arrow_back</span>
+    </button>
+    <span class="wordmark">ASSERT-Rx</span>
+    <div class="top-bar-spacer"></div>
+  </header>
+  <main id="main">
+    <div id="view-list" class="page">
+      <div class="screen-header"><h2>My Sessions</h2></div>
+      <div id="sessions-list" class="sessions-list"></div>
+    </div>
+    <div id="view-detail" class="page" hidden>
+      <div class="screen-header">
+        <h2 id="detail-name"></h2>
+        <p id="detail-date" class="screen-subtitle"></p>
+      </div>
+      <div id="detail-timeline" class="timeline"></div>
+    </div>
+  </main>
+  <nav class="bottom-nav">
+    <a href="app.html" class="nav-tab"><span class="material-symbols-outlined">home</span><span class="nav-label">Practice</span></a>
+    <a href="audio.html" class="nav-tab"><span class="material-symbols-outlined">record_voice_over</span><span class="nav-label">Audio</span></a>
+    <a href="sessions.html" class="nav-tab active"><span class="material-symbols-outlined">history</span><span class="nav-label">Sessions</span></a>
+    <a href="about.html" class="nav-tab"><span class="material-symbols-outlined">info</span><span class="nav-label">About</span></a>
+  </nav>
+</div>
+<script src="js/sessions-page.js"></script>
+</body>
+</html>
