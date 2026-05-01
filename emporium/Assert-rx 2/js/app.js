@@ -1,4 +1,5 @@
-// ─── DATA ─────────────────────────────────────────────────────────────────────
+// --- data
+
 const scenarios = [
   {
     id: 'requests', name: 'Requests',
@@ -11,7 +12,7 @@ const scenarios = [
         suggestions: {
           direct: [{ text: 'Getting a clear yes or no answer', rating: 9 }, { text: 'Not feeling dismissed or rushed', rating: 7 }, { text: 'Keeping the relationship intact', rating: 6 }],
           gentle: [{ text: 'Being heard and taken seriously', rating: 9 }, { text: 'Finding a solution that works for both of us', rating: 8 }, { text: 'Not creating tension or awkwardness', rating: 6 }],
-          firm: [{ text: 'Getting exactly what I asked for', rating: 10 }, { text: 'Not being talked out of my request', rating: 8 }, { text: 'Setting a clear precedent for the future', rating: 7 }],
+          firm:   [{ text: 'Getting exactly what I asked for', rating: 10 }, { text: 'Not being talked out of my request', rating: 8 }, { text: 'Setting a clear precedent for the future', rating: 7 }],
         },
       },
       { name: 'What do you want to ask for?', prompt: 'State your request in one or two sentences. Be specific — what exactly do you want, and by when?', suggestions: { direct: 'I need you to send me the updated report by Thursday at noon so I can review it before the meeting.', gentle: 'Would it be possible for you to get me the report by Thursday? That would give me time to look it over.', firm: 'I need the report by Thursday. That\'s the deadline I\'m working with.' } },
@@ -33,7 +34,7 @@ const scenarios = [
         suggestions: {
           direct: [{ text: 'My time and personal space', rating: 10 }, { text: 'Being treated with basic respect', rating: 9 }, { text: 'Not having to justify my limits to others', rating: 7 }],
           gentle: [{ text: 'Feeling emotionally safe in this relationship', rating: 10 }, { text: 'Maintaining connection without losing myself', rating: 8 }, { text: 'Not feeling guilty for having needs', rating: 7 }],
-          firm: [{ text: 'My self-respect and mental health', rating: 10 }, { text: 'Making clear what I will not tolerate', rating: 9 }, { text: 'Following through consistently', rating: 8 }],
+          firm:   [{ text: 'My self-respect and mental health', rating: 10 }, { text: 'Making clear what I will not tolerate', rating: 9 }, { text: 'Following through consistently', rating: 8 }],
         },
       },
       { name: 'What do you want to ask for?', prompt: 'State your boundary clearly. What behavior are you asking to change, and what are you asking them to do instead?', suggestions: { direct: 'I need you to stop dropping by unannounced. If you want to visit, please text me first and wait for a yes.', gentle: 'I really value our time together, but I need a bit more notice before visits. Could we start checking in first?', firm: 'Going forward, all visits need to be planned in advance. I won\'t be opening the door for unannounced drop-ins.' } },
@@ -55,7 +56,7 @@ const scenarios = [
         suggestions: {
           direct: [{ text: 'Being heard and taken seriously', rating: 9 }, { text: 'Not having my perspective dismissed', rating: 8 }, { text: 'Reaching a decision I can stand behind', rating: 8 }],
           gentle: [{ text: 'Maintaining mutual respect throughout', rating: 10 }, { text: 'Finding common ground where possible', rating: 8 }, { text: 'Preserving the relationship after the disagreement', rating: 7 }],
-          firm: [{ text: 'Sticking to my position without caving', rating: 10 }, { text: 'Not letting pressure or guilt change my view', rating: 9 }, { text: 'Being honest even if it creates friction', rating: 8 }],
+          firm:   [{ text: 'Sticking to my position without caving', rating: 10 }, { text: 'Not letting pressure or guilt change my view', rating: 9 }, { text: 'Being honest even if it creates friction', rating: 8 }],
         },
       },
       { name: 'What do you want to ask for?', prompt: 'What are you asking them to do, acknowledge, or reconsider? Be specific about what a good outcome looks like.', suggestions: { direct: 'I\'m asking you to seriously consider my perspective before we make a final decision — not just dismiss it.', gentle: 'I\'d love for us to take a step back and look at this from both angles before we move forward.', firm: 'I need you to hear my position fully before we go any further. I won\'t move on until that happens.' } },
@@ -77,7 +78,7 @@ const scenarios = [
         suggestions: {
           direct: [{ text: 'Practical support, not just sympathy', rating: 9 }, { text: 'Being asked how I\'m doing and actually heard', rating: 8 }, { text: 'Space to talk without being given advice', rating: 7 }],
           gentle: [{ text: 'Feeling less alone in what I\'m going through', rating: 10 }, { text: 'Someone checking in on me regularly', rating: 8 }, { text: 'Knowing I can ask for help without judgment', rating: 7 }],
-          firm: [{ text: 'Concrete help, not vague offers', rating: 10 }, { text: 'Follow-through on what people say they\'ll do', rating: 9 }, { text: 'Not having to ask more than once', rating: 8 }],
+          firm:   [{ text: 'Concrete help, not vague offers', rating: 10 }, { text: 'Follow-through on what people say they\'ll do', rating: 9 }, { text: 'Not having to ask more than once', rating: 8 }],
         },
       },
       { name: 'What do you want to ask for?', prompt: 'Say what you need directly. What specific thing are you asking for?', suggestions: { direct: 'I need help with the kids on Tuesday evening. Can you take pickup and dinner so I can have a few hours to myself?', gentle: 'I\'m running on empty and I could really use a break. Would you be able to cover Tuesday evening for me?', firm: 'I need Tuesday evening to myself. I\'m asking you to handle everything that night — no exceptions.' } },
@@ -99,7 +100,7 @@ const scenarios = [
         suggestions: {
           direct: [{ text: 'Understanding exactly what they meant', rating: 10 }, { text: 'Not reacting to something that wasn\'t meant how I took it', rating: 9 }, { text: 'Getting specific information, not vague reassurance', rating: 7 }],
           gentle: [{ text: 'Making sure I didn\'t misread the tone or intent', rating: 9 }, { text: 'Feeling safe enough to ask without seeming defensive', rating: 8 }, { text: 'Clarifying before things get more complicated', rating: 7 }],
-          firm: [{ text: 'Getting a straight answer, not a runaround', rating: 10 }, { text: 'Knowing where I stand clearly', rating: 9 }, { text: 'Not letting ambiguity become an excuse later', rating: 8 }],
+          firm:   [{ text: 'Getting a straight answer, not a runaround', rating: 10 }, { text: 'Knowing where I stand clearly', rating: 9 }, { text: 'Not letting ambiguity become an excuse later', rating: 8 }],
         },
       },
       { name: 'What do you want to ask for?', prompt: 'What specific clarification are you asking for? Frame it as a question, not an accusation.', suggestions: { direct: 'When you said that, did you mean my work isn\'t meeting expectations, or that you want me to do it differently going forward?', gentle: 'I want to make sure I understood you correctly. When you said that, were you saying you were disappointed, or just flagging something for the future?', firm: 'I need you to be specific. What exactly did you mean by that, and what do you want me to do with it?' } },
@@ -121,7 +122,7 @@ const scenarios = [
         suggestions: {
           direct: [{ text: 'The outcome I most care about getting right', rating: 10 }, { text: 'Not feeling like I gave up everything', rating: 8 }, { text: 'A solution we can both actually commit to', rating: 7 }],
           gentle: [{ text: 'Both people feeling respected in the outcome', rating: 10 }, { text: 'The relationship staying strong after this', rating: 9 }, { text: 'Not holding resentment over what I concede', rating: 7 }],
-          firm: [{ text: 'My core position not being completely abandoned', rating: 10 }, { text: 'Getting something real, not just symbolic', rating: 9 }, { text: 'Clear terms so this doesn\'t come up again', rating: 8 }],
+          firm:   [{ text: 'My core position not being completely abandoned', rating: 10 }, { text: 'Getting something real, not just symbolic', rating: 9 }, { text: 'Clear terms so this doesn\'t come up again', rating: 8 }],
         },
       },
       { name: 'What do you want to ask for?', prompt: 'What would a fair compromise look like from your side? Name your ideal version — the deal you\'d actually accept.', suggestions: { direct: 'I\'d like us to split the difference — I\'ll adjust my end by 30%, but I need you to meet me halfway with equal movement on yours.', gentle: 'What if we each took the piece we care about most and let the other decide the rest? That way we both get something that matters.', firm: 'Here\'s what I\'m willing to agree to: you get X, I get Y, and we don\'t revisit this for at least six months.' } },
@@ -134,18 +135,9 @@ const scenarios = [
   },
 ];
 
-// ─── SKILL ICONS ──────────────────────────────────────────────────────────────
-var SKILL_ICONS = [
-  'emoji_objects',
-  'chat',
-  'handshake',
-  'psychology',
-  'back_hand',
-  'favorite',
-];
+const SKILL_ICONS = ['emoji_objects', 'chat', 'handshake', 'psychology', 'back_hand', 'favorite'];
 
-// ─── SKILL IMAGES ─────────────────────────────────────────────────────────────
-var SKILL_IMAGES = [
+const SKILL_IMAGES = [
   'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=600&q=80',
   'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=600&q=80',
   'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&q=80',
@@ -154,9 +146,8 @@ var SKILL_IMAGES = [
   'https://images.unsplash.com/photo-1474631245212-32dc3c8310c6?w=600&q=80',
 ];
 
-// ─── SKILL DESCRIPTIONS (shown on prompt screen) ──────────────────────────────
-// Step 0 uses scenario-specific skill.prompt. Steps 1-5 use these.
-var SKILL_DESCS = [
+// Step 0 uses scenario-specific skill.prompt; steps 1–5 use these.
+const SKILL_DESCS = [
   null,
   'Being specific about what you want gives the other person a clear target — and keeps you from settling for less.',
   'Knowing your limits before the conversation keeps you from giving too much — or walking away from something reasonable.',
@@ -165,18 +156,22 @@ var SKILL_DESCS = [
   'Connecting your answer to your values gives it weight and helps you hold your position.',
 ];
 
-// ─── STATE ────────────────────────────────────────────────────────────────────
-var _state = {
+const SKILL1_TASK = 'Add and rank what is important to you in this situation.';
+
+// --- state
+
+let _state = {
   screen: 'grid',
   scenario: null,
   step: 0,
-  answers: ['','','','','',''],
+  answers: ['', '', '', '', '', ''],
   suggestionIndex: -1,
   audioStep: 0,
   audioScenario: null,
   activeSession: null,
 };
-var _listeners = [];
+
+const _listeners = [];
 
 function getState() {
   return Object.assign({}, _state, { answers: _state.answers.slice() });
@@ -184,229 +179,221 @@ function getState() {
 
 function setState(patch) {
   Object.assign(_state, patch);
-  var snap = getState();
-  _listeners.forEach(function(fn) { fn(snap); });
+  const snap = getState();
+  _listeners.forEach(fn => fn(snap));
 }
 
 function subscribe(fn) {
   _listeners.push(fn);
 }
 
-// ─── STORAGE ──────────────────────────────────────────────────────────────────
-var SESSIONS_KEY = 'assertrx_sessions';
+// --- storage
+
+const SESSIONS_KEY = 'assertrx_sessions';
 
 function loadSessions() {
-  try { return JSON.parse(localStorage.getItem(SESSIONS_KEY)) || []; } catch(e) { return []; }
+  try { return JSON.parse(localStorage.getItem(SESSIONS_KEY)) || []; } catch (e) { return []; }
 }
 
 function saveSession(session) {
-  var all = loadSessions();
+  const all = loadSessions();
   all.unshift(session);
   localStorage.setItem(SESSIONS_KEY, JSON.stringify(all));
 }
 
-function deleteSession(id) {
-  var all = loadSessions().filter(function(s) { return s.id !== id; });
-  localStorage.setItem(SESSIONS_KEY, JSON.stringify(all));
-}
-
 function updateSessionAnswers(id, answers) {
-  var all = loadSessions();
-  var s = all.find(function(s) { return s.id === id; });
-  if (s) { s.answers = answers; localStorage.setItem(SESSIONS_KEY, JSON.stringify(all)); }
+  const all = loadSessions();
+  const session = all.find(s => s.id === id);
+  if (session) {
+    session.answers = answers;
+    localStorage.setItem(SESSIONS_KEY, JSON.stringify(all));
+  }
 }
 
-// ─── AUDIO ────────────────────────────────────────────────────────────────────
-var _audioProfile = localStorage.getItem('assertrx_voice') || 'young-female';
+// --- audio
 
-function isSupported() { return 'speechSynthesis' in window; }
+function speechSupported() { return 'speechSynthesis' in window; }
 
 function stopAudio() {
-  if (isSupported()) window.speechSynthesis.cancel();
+  if (speechSupported()) window.speechSynthesis.cancel();
 }
 
 function speak(text) {
   stopAudio();
-  if (!isSupported()) return;
-  var u = new SpeechSynthesisUtterance(text);
+  if (!speechSupported()) return;
+  const u = new SpeechSynthesisUtterance(text);
   u.rate = 0.92;
   window.speechSynthesis.speak(u);
 }
 
-// ─── ROUTER ───────────────────────────────────────────────────────────────────
-var FLOW_SCREENS = ['prompt','response','saved','timeline','audio-gate','audio','completion'];
-var NO_BACK = ['onboarding','grid'];
+// --- router
 
-subscribe(function(state) {
-  // Show/hide screens
-  document.querySelectorAll('[data-screen]').forEach(function(el) {
+const FLOW_SCREENS = ['prompt', 'response', 'saved', 'timeline', 'audio-gate', 'audio', 'completion'];
+const NO_BACK = ['onboarding', 'grid'];
+
+subscribe(state => {
+  document.querySelectorAll('[data-screen]').forEach(el => {
     el.classList.toggle('active', el.dataset.screen === state.screen);
   });
 
-  // Progress bar
-  var bar = document.getElementById('progress-bar');
-  var fill = document.getElementById('progress-fill');
+  const bar = document.getElementById('progress-bar');
+  const fill = document.getElementById('progress-fill');
   if (bar && fill) {
-    var inFlow = state.screen === 'prompt' || state.screen === 'response';
+    const inFlow = state.screen === 'prompt' || state.screen === 'response';
     bar.hidden = !inFlow;
     if (inFlow) {
-      var pct = ((state.step + (state.screen === 'response' ? 0.5 : 0)) / 6) * 100;
+      const pct = ((state.step + (state.screen === 'response' ? 0.5 : 0)) / 6) * 100;
       fill.style.width = pct + '%';
     }
   }
 
-  // Back button
-  var btnBack = document.getElementById('btn-back');
-  if (btnBack) btnBack.hidden = NO_BACK.indexOf(state.screen) !== -1;
+  const btnBack = document.getElementById('btn-back');
+  if (btnBack) btnBack.hidden = NO_BACK.includes(state.screen);
 
-  // Exit button
-  var btnExit = document.getElementById('btn-exit');
-  if (btnExit) btnExit.hidden = FLOW_SCREENS.indexOf(state.screen) === -1;
+  const btnExit = document.getElementById('btn-exit');
+  if (btnExit) btnExit.hidden = !FLOW_SCREENS.includes(state.screen);
 
-  // Bottom nav
-  var nav = document.getElementById('bottom-nav');
-  if (nav) nav.hidden = FLOW_SCREENS.indexOf(state.screen) !== -1;
+  const nav = document.getElementById('bottom-nav');
+  if (nav) nav.hidden = FLOW_SCREENS.includes(state.screen);
 });
 
-// ─── GRID ─────────────────────────────────────────────────────────────────────
-var _selectedScenario = null;
+// --- grid
 
-var grid = document.getElementById('scenario-grid');
+let _selectedScenario = null;
+
+const grid = document.getElementById('scenario-grid');
 if (grid) {
-  grid.innerHTML = scenarios.map(function(s) {
-    return '<div class="scenario-card" data-id="' + s.id + '" role="button" tabindex="0">' +
-      '<img src="' + s.image + '" alt="' + s.name + '" class="card-img" loading="lazy">' +
-      '<div class="card-overlay"><span class="card-name">' + s.name + '</span></div>' +
-      '</div>';
-  }).join('');
+  grid.innerHTML = scenarios.map(s =>
+    `<div class="scenario-card" data-id="${s.id}" role="button" tabindex="0">` +
+    `<img src="${s.image}" alt="${s.name}" class="card-img" loading="lazy">` +
+    `<div class="card-overlay"><span class="card-name">${s.name}</span></div>` +
+    `</div>`
+  ).join('');
 
-  grid.addEventListener('click', function(e) {
-    var card = e.target.closest('.scenario-card');
+  grid.addEventListener('click', e => {
+    const card = e.target.closest('.scenario-card');
     if (!card) return;
-    var s = scenarios.find(function(sc) { return sc.id === card.dataset.id; });
+    const s = scenarios.find(sc => sc.id === card.dataset.id);
     if (s) openSheet(s);
   });
 }
 
 function openSheet(s) {
   _selectedScenario = s;
-  var t = document.getElementById('sheet-title');
-  var d = document.getElementById('sheet-desc');
-  if (t) t.textContent = s.name;
-  if (d) d.textContent = s.description;
-  var sheet = document.getElementById('bottom-sheet');
-  var backdrop = document.getElementById('backdrop');
-  if (sheet) sheet.classList.add('open');
-  if (backdrop) backdrop.classList.add('visible');
+  const title = document.getElementById('sheet-title');
+  const desc = document.getElementById('sheet-desc');
+  if (title) title.textContent = s.name;
+  if (desc) desc.textContent = s.description;
+  document.getElementById('bottom-sheet').classList.add('open');
+  document.getElementById('backdrop').classList.add('visible');
 }
 
 function closeSheet() {
-  var sheet = document.getElementById('bottom-sheet');
-  var backdrop = document.getElementById('backdrop');
-  if (sheet) sheet.classList.remove('open');
-  if (backdrop) backdrop.classList.remove('visible');
+  document.getElementById('bottom-sheet').classList.remove('open');
+  document.getElementById('backdrop').classList.remove('visible');
   _selectedScenario = null;
 }
 
 document.getElementById('backdrop').addEventListener('click', closeSheet);
-document.getElementById('btn-start-practice').addEventListener('click', function() {
+
+document.getElementById('btn-start-practice').addEventListener('click', () => {
   if (!_selectedScenario) return;
-  var s = _selectedScenario;
+  const s = _selectedScenario;
   closeSheet();
-  setState({ screen: 'prompt', scenario: s, step: 0, answers: ['','','','','',''], suggestionIndex: -1 });
+  setState({ screen: 'prompt', scenario: s, step: 0, answers: ['', '', '', '', '', ''], suggestionIndex: -1 });
 });
 
-// ─── FLOW — SKILL 1 HELPERS ───────────────────────────────────────────────────
+// --- skill 1 helpers
+
 function setSlider(field, value) {
-  var sl = document.querySelector('.slider-group[data-field="' + field + '"] .rating-slider');
-  var vl = document.querySelector('.slider-group[data-field="' + field + '"] .slider-value');
-  if (sl) sl.value = value;
-  if (vl) vl.textContent = String(value);
+  const slider = document.querySelector(`.slider-group[data-field="${field}"] .rating-slider`);
+  const label  = document.querySelector(`.slider-group[data-field="${field}"] .slider-value`);
+  if (slider) slider.value = value;
+  if (label)  label.textContent = String(value);
 }
 
 function getSliderValue(field) {
-  var sl = document.querySelector('.slider-group[data-field="' + field + '"] .rating-slider');
-  return sl ? sl.value : '0';
+  const slider = document.querySelector(`.slider-group[data-field="${field}"] .rating-slider`);
+  return slider ? slider.value : '0';
 }
 
 function resetPriority() {
-  [0,1,2].forEach(function(i) {
-    var inp = document.getElementById('s1-text-' + i);
-    if (inp) inp.value = '';
+  [0, 1, 2].forEach(i => {
+    const input = document.getElementById(`s1-text-${i}`);
+    if (input) input.value = '';
     setSlider(i, 0);
-    var chk = document.querySelector('.skill1-check[data-field="' + i + '"]');
-    if (chk) chk.classList.remove('confirmed');
+    const check = document.querySelector(`.skill1-check[data-field="${i}"]`);
+    if (check) check.classList.remove('confirmed');
   });
 }
 
 function readPriority() {
-  return [0,1,2].map(function(i) {
-    var text = (document.getElementById('s1-text-' + i) || {}).value;
-    text = text ? text.trim() : '';
-    var rating = getSliderValue(i);
-    return text ? text + ' — ' + rating + '/10' : '';
+  return [0, 1, 2].map(i => {
+    const text = (document.getElementById(`s1-text-${i}`)?.value || '').trim();
+    return text ? `${text} — ${getSliderValue(i)}/10` : '';
   }).filter(Boolean).join('\n');
 }
 
 function fillPriorityFromAnswer(answer) {
-  answer.split('\n').forEach(function(line, i) {
-    var m = line.match(/^(.+) — (\d+)\/\d+$/);
-    var inp = document.getElementById('s1-text-' + i);
-    if (inp) inp.value = m ? m[1] : line;
+  answer.split('\n').forEach((line, i) => {
+    const m = line.match(/^(.+) — (\d+)\/\d+$/);
+    const input = document.getElementById(`s1-text-${i}`);
+    if (input) input.value = m ? m[1] : line;
     if (m) setSlider(i, m[2]);
   });
 }
 
 function fillPriorityFromSuggestion(entries) {
-  entries.forEach(function(entry, i) {
-    var chk = document.querySelector('.skill1-check[data-field="' + i + '"]');
-    if (chk && chk.classList.contains('confirmed')) return;
-    var inp = document.getElementById('s1-text-' + i);
-    if (inp) inp.value = entry.text;
+  entries.forEach((entry, i) => {
+    const check = document.querySelector(`.skill1-check[data-field="${i}"]`);
+    if (check?.classList.contains('confirmed')) return;
+    const input = document.getElementById(`s1-text-${i}`);
+    if (input) input.value = entry.text;
     setSlider(i, entry.rating);
   });
 }
 
-// ─── FLOW — RENDER ────────────────────────────────────────────────────────────
-var _prevKey = null;
+// --- render
+
+let _prevKey = null;
 
 function renderPrompt(state) {
   if (!state.scenario) return;
-  var skill = state.scenario.skills[state.step];
-  var img = document.getElementById('prompt-image');
+  const skill = state.scenario.skills[state.step];
+  const img = document.getElementById('prompt-image');
   if (img) { img.src = SKILL_IMAGES[state.step] || state.scenario.image; img.alt = state.scenario.name; }
-  var lbl = document.getElementById('prompt-skill-label');
-  if (lbl) lbl.textContent = state.scenario.name + ': Skill ' + (state.step + 1) + ' of 6';
-  var name = document.getElementById('prompt-skill-name');
+  const lbl = document.getElementById('prompt-skill-label');
+  if (lbl) lbl.textContent = `${state.scenario.name}: Skill ${state.step + 1} of 6`;
+  const name = document.getElementById('prompt-skill-name');
   if (name) name.textContent = skill.name;
-  var q = document.getElementById('prompt-question');
+  const q = document.getElementById('prompt-question');
   if (q) q.textContent = state.step === 0 ? skill.prompt : SKILL_DESCS[state.step];
 }
 
 function renderResponse(state) {
   if (!state.scenario) return;
-  var skill = state.scenario.skills[state.step];
-  var isStep0 = state.step === 0;
+  const skill = state.scenario.skills[state.step];
+  const isStep0 = state.step === 0;
 
-  var lbl = document.getElementById('response-skill-label');
-  if (lbl) lbl.textContent = state.scenario.name + ': Skill ' + (state.step + 1) + ' of 6';
-  var prmt = document.getElementById('response-prompt');
-  if (prmt) prmt.textContent = isStep0 ? 'Add and rank what is important to you in this situation.' : skill.prompt;
+  const lbl = document.getElementById('response-skill-label');
+  if (lbl) lbl.textContent = `${state.scenario.name}: Skill ${state.step + 1} of 6`;
+  const prmt = document.getElementById('response-prompt');
+  if (prmt) prmt.textContent = isStep0 ? SKILL1_TASK : skill.prompt;
 
-  var fields = document.getElementById('skill1-fields');
-  var textarea = document.getElementById('response-textarea');
+  const fields = document.getElementById('skill1-fields');
+  const textarea = document.getElementById('response-textarea');
   if (fields) fields.hidden = !isStep0;
   if (textarea) textarea.hidden = isStep0;
 
   if (isStep0) {
-    var key = 'r0-' + state.scenario.id;
+    const key = `r0-${state.scenario.id}`;
     if (_prevKey !== key) {
       _prevKey = key;
       if (state.answers[0]) fillPriorityFromAnswer(state.answers[0]);
       else resetPriority();
     }
   } else {
-    _prevKey = 'r' + state.step;
+    _prevKey = `r${state.step}`;
     if (textarea && textarea.value !== state.answers[state.step]) {
       textarea.value = state.answers[state.step] || '';
     }
@@ -415,258 +402,277 @@ function renderResponse(state) {
 }
 
 function syncTonePicker(idx) {
-  document.querySelectorAll('.tone-btn').forEach(function(btn) {
+  document.querySelectorAll('.tone-btn').forEach(btn => {
     btn.classList.toggle('active', Number(btn.dataset.tone) === idx);
   });
 }
 
-// ─── FLOW — EVENTS ────────────────────────────────────────────────────────────
-document.getElementById('btn-answer').addEventListener('click', function() {
+// --- flow events
+
+document.getElementById('btn-answer').addEventListener('click', () => {
   setState({ screen: 'response' });
 });
 
-document.getElementById('btn-next-step').addEventListener('click', function() {
+document.getElementById('btn-next-step').addEventListener('click', () => {
   _prevKey = null;
-  var s = getState();
-  var answers = s.answers.slice();
+  const s = getState();
+  const answers = s.answers.slice();
 
   if (s.step === 0) {
     answers[0] = readPriority();
   } else {
-    var ta = document.getElementById('response-textarea');
+    const ta = document.getElementById('response-textarea');
     answers[s.step] = ta ? ta.value.trim() : '';
   }
 
   if (s.step < 5) {
-    setState({ answers: answers, screen: 'prompt', step: s.step + 1, suggestionIndex: -1 });
+    setState({ answers, screen: 'prompt', step: s.step + 1, suggestionIndex: -1 });
   } else {
-    var session = {
-      id: s.scenario.id + '-' + Date.now(),
+    const session = {
+      id: `${s.scenario.id}-${Date.now()}`,
       scenarioId: s.scenario.id,
       scenarioName: s.scenario.name,
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      answers: answers,
+      answers,
     };
     saveSession(session);
-    setState({ answers: answers, activeSession: session, screen: 'saved' });
+    setState({ answers, activeSession: session, screen: 'saved' });
   }
 });
 
-document.querySelector('.tone-picker').addEventListener('click', function(e) {
-  var btn = e.target.closest('.tone-btn');
+document.querySelector('.tone-picker').addEventListener('click', e => {
+  const btn = e.target.closest('.tone-btn');
   if (!btn) return;
-  var idx = Number(btn.dataset.tone);
-  var s = getState();
-  var answers = s.answers.slice();
-  var isActive = s.suggestionIndex === idx && btn.classList.contains('active');
+  const idx = Number(btn.dataset.tone);
+  const s = getState();
+  const answers = s.answers.slice();
+  const isActive = s.suggestionIndex === idx && btn.classList.contains('active');
 
   if (isActive) {
-    if (s.step === 0) { resetPriority(); answers[0] = ''; }
-    else { var ta2 = document.getElementById('response-textarea'); if (ta2) ta2.value = ''; answers[s.step] = ''; }
-    setState({ suggestionIndex: -1, answers: answers });
+    if (s.step === 0) {
+      resetPriority();
+      answers[0] = '';
+    } else {
+      const ta = document.getElementById('response-textarea');
+      if (ta) ta.value = '';
+      answers[s.step] = '';
+    }
+    setState({ suggestionIndex: -1, answers });
     syncTonePicker(-1);
     return;
   }
 
-  var skill = s.scenario && s.scenario.skills[s.step];
+  const skill = s.scenario?.skills[s.step];
   if (!skill) return;
-  var toneKey = ['direct','gentle','firm'][idx];
-  var sug = skill.suggestions[toneKey];
+  const toneKey = ['direct', 'gentle', 'firm'][idx];
+  const suggestion = skill.suggestions[toneKey];
 
-  if (s.step === 0 && Array.isArray(sug)) {
-    fillPriorityFromSuggestion(sug);
+  if (s.step === 0 && Array.isArray(suggestion)) {
+    fillPriorityFromSuggestion(suggestion);
     answers[0] = readPriority();
   } else {
-    var ta3 = document.getElementById('response-textarea');
-    if (ta3) ta3.value = sug;
-    answers[s.step] = sug;
+    const ta = document.getElementById('response-textarea');
+    if (ta) ta.value = suggestion;
+    answers[s.step] = suggestion;
   }
-  setState({ suggestionIndex: idx, answers: answers });
+  setState({ suggestionIndex: idx, answers });
   syncTonePicker(idx);
 });
 
-document.getElementById('response-textarea').addEventListener('input', function(e) {
-  var s = getState();
+document.getElementById('response-textarea').addEventListener('input', e => {
+  const s = getState();
   if (s.step === 0) return;
-  var answers = s.answers.slice();
+  const answers = s.answers.slice();
   answers[s.step] = e.target.value;
-  setState({ answers: answers });
+  setState({ answers });
 });
 
-document.querySelectorAll('.rating-slider').forEach(function(slider) {
+document.querySelectorAll('.rating-slider').forEach(slider => {
   slider.value = 0;
-  slider.addEventListener('input', function() {
-    var group = slider.closest('.slider-group');
-    var val = group && group.querySelector('.slider-value');
-    if (val) val.textContent = slider.value;
-    var f = group && group.dataset.field;
-    if (f != null) {
-      var chk = document.querySelector('.skill1-check[data-field="' + f + '"]');
-      if (chk) chk.classList.add('confirmed');
+  slider.addEventListener('input', () => {
+    const group = slider.closest('.slider-group');
+    const label = group?.querySelector('.slider-value');
+    if (label) label.textContent = slider.value;
+    const field = group?.dataset.field;
+    if (field != null) {
+      const check = document.querySelector(`.skill1-check[data-field="${field}"]`);
+      if (check) check.classList.add('confirmed');
     }
   });
 });
 
-document.getElementById('skill1-fields').addEventListener('click', function(e) {
-  var btn = e.target.closest('.skill1-check');
+document.getElementById('skill1-fields').addEventListener('click', e => {
+  const btn = e.target.closest('.skill1-check');
   if (btn) btn.classList.toggle('confirmed');
 });
 
-// ─── FLOW — BACK NAV ─────────────────────────────────────────────────────────
+// --- back nav
+
 function handleBack(state) {
   switch (state.screen) {
-    case 'response': _prevKey = null; setState({ screen: 'prompt' }); break;
+    case 'response':
+      _prevKey = null;
+      setState({ screen: 'prompt' });
+      break;
     case 'prompt':
       if (state.step === 0) setState({ screen: 'grid', scenario: null, step: 0 });
       else setState({ screen: 'response', step: state.step - 1 });
       break;
-    case 'saved': setState({ screen: 'response', step: 5 }); break;
-    case 'timeline': setState({ screen: 'saved' }); break;
+    case 'saved':      setState({ screen: 'response', step: 5 }); break;
+    case 'timeline':   setState({ screen: 'saved' }); break;
     case 'audio-gate': setState({ screen: 'timeline' }); break;
-    case 'audio': setState({ screen: 'audio-gate' }); break;
+    case 'audio':      setState({ screen: 'audio-gate' }); break;
     case 'completion': setState({ screen: 'timeline' }); break;
   }
 }
 
-document.getElementById('btn-back').addEventListener('click', function() {
+document.getElementById('btn-back').addEventListener('click', () => {
   stopAudio();
   handleBack(getState());
 });
 
-document.getElementById('btn-exit').addEventListener('click', function() {
+document.getElementById('btn-exit').addEventListener('click', () => {
   stopAudio();
-  setState({ screen: 'grid', scenario: null, step: 0, answers: ['','','','','',''], activeSession: null });
+  setState({ screen: 'grid', scenario: null, step: 0, answers: ['', '', '', '', '', ''], activeSession: null });
 });
 
-// ─── TIMELINE ─────────────────────────────────────────────────────────────────
-function esc(str) {
-  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
+// --- timeline
+
+function escHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/\n/g, '<br>');
 }
 
 function renderTimeline(state) {
-  var scenario = state.scenario;
-  if (!scenario) return;
-  var nameEl = document.getElementById('timeline-scenario-name');
-  if (nameEl) nameEl.textContent = scenario.name;
-  var container = document.getElementById('timeline-nodes');
+  if (!state.scenario) return;
+  const nameEl = document.getElementById('timeline-scenario-name');
+  if (nameEl) nameEl.textContent = state.scenario.name;
+  const container = document.getElementById('timeline-nodes');
   if (!container) return;
-  var answers = (state.activeSession && state.activeSession.answers) || state.answers;
-  container.innerHTML = scenario.skills.map(function(skill, i) {
-    var side = i % 2 === 0 ? 'right' : 'left';
-    var ans = answers[i] || '';
-    return '<div class="timeline-node ' + side + '">' +
-      '<div class="timeline-card" data-index="' + i + '">' +
-        '<div class="timeline-card-header">' +
-          '<span class="material-symbols-outlined timeline-icon">' + SKILL_ICONS[i] + '</span>' +
-          '<p class="timeline-skill">' + skill.name + '</p>' +
-        '</div>' +
-        '<p class="timeline-answer" id="ans-' + i + '">' + (esc(ans) || '<em style="color:#a8c5bc">No answer recorded</em>') + '</p>' +
-        '<div class="timeline-edit" id="edit-area-' + i + '" hidden>' +
-          '<textarea class="timeline-textarea" id="edit-ta-' + i + '" rows="3">' + esc(ans) + '</textarea>' +
-          '<div class="timeline-edit-actions">' +
-            '<button class="btn-save-edit" data-index="' + i + '">Save</button>' +
-            '<button class="btn-cancel-edit" data-index="' + i + '">Cancel</button>' +
-          '</div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="timeline-dot"></div>' +
-    '</div>';
+  const answers = state.activeSession?.answers || state.answers;
+  container.innerHTML = state.scenario.skills.map((skill, i) => {
+    const side = i % 2 === 0 ? 'right' : 'left';
+    const ans = answers[i] || '';
+    return `<div class="timeline-node ${side}">
+      <div class="timeline-card" data-index="${i}">
+        <div class="timeline-card-header">
+          <span class="material-symbols-outlined timeline-icon">${SKILL_ICONS[i]}</span>
+          <p class="timeline-skill">${skill.name}</p>
+        </div>
+        <p class="timeline-answer" id="ans-${i}">${escHtml(ans) || '<em class="timeline-empty">No answer recorded</em>'}</p>
+        <div class="timeline-edit" id="edit-area-${i}" hidden>
+          <textarea class="timeline-textarea" id="edit-ta-${i}" rows="3">${escHtml(ans)}</textarea>
+          <div class="timeline-edit-actions">
+            <button class="btn-save-edit" data-index="${i}">Save</button>
+            <button class="btn-cancel-edit" data-index="${i}">Cancel</button>
+          </div>
+        </div>
+      </div>
+      <div class="timeline-dot"></div>
+    </div>`;
   }).join('');
 }
 
-document.getElementById('btn-unlock-audio').addEventListener('click', function() {
-  // payment flow placeholder
-});
-
-document.getElementById('btn-view-plan').addEventListener('click', function() {
+document.getElementById('btn-view-plan').addEventListener('click', () => {
   setState({ screen: 'timeline' });
 });
 
-document.getElementById('btn-start-audio').addEventListener('click', function() {
+document.getElementById('btn-start-audio').addEventListener('click', () => {
   setState({ screen: 'audio-gate' });
 });
 
-document.getElementById('timeline-nodes').addEventListener('click', function(e) {
-  var save = e.target.closest('.btn-save-edit');
-  var cancel = e.target.closest('.btn-cancel-edit');
-  var card = e.target.closest('.timeline-card');
+document.getElementById('timeline-nodes').addEventListener('click', e => {
+  const save   = e.target.closest('.btn-save-edit');
+  const cancel = e.target.closest('.btn-cancel-edit');
+  const card   = e.target.closest('.timeline-card');
+
   if (save) {
     e.stopPropagation();
-    var i = Number(save.dataset.index);
-    var ta = document.getElementById('edit-ta-' + i);
+    const i = Number(save.dataset.index);
+    const ta = document.getElementById(`edit-ta-${i}`);
     if (!ta) return;
-    var val = ta.value.trim();
-    var st = getState();
-    var answers = ((st.activeSession && st.activeSession.answers) || st.answers).slice();
+    const val = ta.value.trim();
+    const st = getState();
+    const answers = (st.activeSession?.answers || st.answers).slice();
     answers[i] = val;
-    if (st.activeSession && st.activeSession.id) { updateSessionAnswers(st.activeSession.id, answers); st.activeSession.answers = answers; }
-    var ansEl = document.getElementById('ans-' + i);
-    if (ansEl) ansEl.innerHTML = esc(val) || '<em>No answer</em>';
+    if (st.activeSession?.id) {
+      updateSessionAnswers(st.activeSession.id, answers);
+      st.activeSession.answers = answers;
+    }
+    const ansEl = document.getElementById(`ans-${i}`);
+    if (ansEl) ansEl.innerHTML = escHtml(val) || '<em class="timeline-empty">No answer</em>';
     toggleEdit(i, false);
   } else if (cancel) {
     e.stopPropagation();
     toggleEdit(Number(cancel.dataset.index), false);
   } else if (card && !e.target.closest('.timeline-edit')) {
-    var idx = Number(card.dataset.index);
-    var ea = document.getElementById('edit-area-' + idx);
-    if (ea && ea.hidden) toggleEdit(idx, true);
+    const idx = Number(card.dataset.index);
+    const editArea = document.getElementById(`edit-area-${idx}`);
+    if (editArea?.hidden) toggleEdit(idx, true);
   }
 });
 
 function toggleEdit(i, open) {
-  var ansEl = document.getElementById('ans-' + i);
-  var ea = document.getElementById('edit-area-' + i);
-  if (ansEl) ansEl.hidden = open;
-  if (ea) ea.hidden = !open;
-  if (open) { var ta = document.getElementById('edit-ta-' + i); if (ta) ta.focus(); }
+  const ansEl   = document.getElementById(`ans-${i}`);
+  const editArea = document.getElementById(`edit-area-${i}`);
+  if (ansEl)    ansEl.hidden     = open;
+  if (editArea) editArea.hidden  = !open;
+  if (open) document.getElementById(`edit-ta-${i}`)?.focus();
 }
 
-// ─── AUDIO SCREEN ─────────────────────────────────────────────────────────────
+// --- audio screen
+
 function renderAudio(state) {
-  var script = state.audioScenario && state.audioScenario.audioScript;
+  const script = state.audioScenario?.audioScript;
   if (!script) return;
-  var counter = document.getElementById('audio-counter');
-  var stmt = document.getElementById('audio-statement');
-  var nextBtn = document.getElementById('btn-next-audio');
-  var playBtn = document.getElementById('btn-play-statement');
-  if (counter) counter.textContent = (state.audioStep + 1) + ' / ' + script.length;
-  if (stmt) stmt.textContent = script[state.audioStep];
-  var lbl = nextBtn && nextBtn.querySelector('.btn-label');
+  const counter = document.getElementById('audio-counter');
+  const stmt    = document.getElementById('audio-statement');
+  const nextBtn = document.getElementById('btn-next-audio');
+  const playBtn = document.getElementById('btn-play-statement');
+  if (counter) counter.textContent = `${state.audioStep + 1} / ${script.length}`;
+  if (stmt)    stmt.textContent = script[state.audioStep];
+  const lbl = nextBtn?.querySelector('.btn-label');
   if (lbl) lbl.textContent = state.audioStep < script.length - 1 ? 'Next' : 'Finish';
-  if (playBtn) playBtn.hidden = !isSupported();
-  if (isSupported()) speak(script[state.audioStep]);
+  if (playBtn) playBtn.hidden = !speechSupported();
+  if (speechSupported()) speak(script[state.audioStep]);
 }
 
-document.getElementById('btn-play-statement').addEventListener('click', function() {
-  var s = getState();
-  var script = s.audioScenario && s.audioScenario.audioScript;
+document.getElementById('btn-play-statement').addEventListener('click', () => {
+  const s = getState();
+  const script = s.audioScenario?.audioScript;
   if (script) speak(script[s.audioStep]);
 });
 
-document.getElementById('btn-next-audio').addEventListener('click', function() {
+document.getElementById('btn-next-audio').addEventListener('click', () => {
   stopAudio();
-  var s = getState();
-  var script = s.audioScenario && s.audioScenario.audioScript;
+  const s = getState();
+  const script = s.audioScenario?.audioScript;
   if (!script) return;
   if (s.audioStep < script.length - 1) setState({ audioStep: s.audioStep + 1 });
   else setState({ screen: 'completion' });
 });
 
-// ─── COMPLETION ───────────────────────────────────────────────────────────────
-document.getElementById('btn-try-another').addEventListener('click', function() {
-  setState({ screen: 'grid', scenario: null, step: 0, answers: ['','','','','',''], activeSession: null });
-});
-document.getElementById('btn-redo').addEventListener('click', function() {
-  setState({ screen: 'prompt', step: 0, answers: ['','','','','',''], suggestionIndex: -1, activeSession: null });
+// --- completion
+
+document.getElementById('btn-try-another').addEventListener('click', () => {
+  setState({ screen: 'grid', scenario: null, step: 0, answers: ['', '', '', '', '', ''], activeSession: null });
 });
 
-// ─── SUBSCRIBE ────────────────────────────────────────────────────────────────
-subscribe(function(state) {
-  if (state.screen === 'prompt') renderPrompt(state);
+document.getElementById('btn-redo').addEventListener('click', () => {
+  setState({ screen: 'prompt', step: 0, answers: ['', '', '', '', '', ''], suggestionIndex: -1, activeSession: null });
+});
+
+// --- subscriptions
+
+subscribe(state => {
+  if (state.screen === 'prompt')   renderPrompt(state);
   if (state.screen === 'response') renderResponse(state);
   if (state.screen === 'timeline') renderTimeline(state);
-  if (state.screen === 'audio') renderAudio(state);
+  if (state.screen === 'audio')    renderAudio(state);
 });
 
-// ─── BOOT ─────────────────────────────────────────────────────────────────────
 setState({ screen: 'grid' });
