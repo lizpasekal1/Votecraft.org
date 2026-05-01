@@ -9,9 +9,9 @@
   --accent-muted: #a8c5bc;
   --border: #c4c0b9;
   --radius: 12px;
-  --top-bar-height: 56px;
+  --top-bar-height: calc(50px + env(safe-area-inset-top));
+  --bottom-nav-height: calc(51px + env(safe-area-inset-bottom));
   --progress-height: 4px;
-  --bottom-nav-height: 68px;
   --font: 'Newherotrial 1', Arial, sans-serif;
   --font-heading: 'Newspirittrial', Georgia, sans-serif;
 }
