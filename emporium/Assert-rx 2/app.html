@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Assert-rx</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="app">
+
+  <div id="progress-bar" class="progress-bar" hidden>
+    <div id="progress-fill" class="progress-fill"></div>
+  </div>
+
+  <header class="top-bar">
+    <button id="btn-back" class="btn-icon" hidden aria-label="Back">
+      <span class="material-symbols-outlined">arrow_back</span>
+    </button>
+    <span class="wordmark">ASSERT-Rx</span>
+    <button id="btn-exit" class="btn-icon" hidden aria-label="Exit">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+  </header>
+
+  <main id="main">
+
+    <!-- Onboarding -->
+    <section data-screen="onboarding" class="screen screen-onboarding">
+      <div class="onboarding-inner">
+        <h1 class="onboarding-title">Assert-rx</h1>
+        <p class="onboarding-sub">Practice asserting yourself — in real situations, one skill at a time.</p>
+        <div class="onboarding-steps">
+          <div class="onboarding-step">
+            <span class="material-symbols-outlined">grid_view</span>
+            <p>Pick a scenario</p>
+          </div>
+          <div class="onboarding-step">
+            <span class="material-symbols-outlined">edit_note</span>
+            <p>Work through 6 skills</p>
+          </div>
+          <div class="onboarding-step">
+            <span class="material-symbols-outlined">record_voice_over</span>
+            <p>Practice out loud</p>
+          </div>
+        </div>
+        <button id="btn-get-started" class="btn-primary">Get Started</button>
+      </div>
+    </section>
+
+    <!-- Grid -->
+    <section data-screen="grid" class="screen screen-grid">
+      <div class="screen-header"><h2>Choose a scenario</h2></div>
+      <div id="scenario-grid" class="scenario-grid"></div>
+    </section>
+
+    <!-- Prompt -->
+    <section data-screen="prompt" class="screen screen-prompt">
+      <div class="skill-image-wrap">
+        <img id="prompt-image" src="" alt="" class="skill-image">
+        <div class="skill-image-overlay"></div>
+      </div>
+      <div class="prompt-content">
+        <p id="prompt-skill-label" class="skill-label"></p>
+        <div class="prompt-text-group">
+          <h2 id="prompt-skill-name" class="skill-name"></h2>
+          <p id="prompt-question" class="prompt-question"></p>
+        </div>
+        <button id="btn-answer" class="btn-primary">Answer <span class="material-symbols-outlined">arrow_forward</span></button>
+      </div>
+    </section>
+
+    <!-- Response -->
+    <section data-screen="response" class="screen screen-response">
+      <div class="response-inner">
+        <p id="response-skill-label" class="skill-label"></p>
+        <p id="response-prompt" class="response-prompt"></p>
+        <p id="response-task" class="response-task" hidden></p>
+        <div class="autofill-group">
+          <p class="autofill-hint">Tap to autofill an example. Responses are editable!</p>
+          <div class="tone-picker">
+            <button class="tone-btn" data-tone="0">Direct</button>
+            <button class="tone-btn" data-tone="1">Gentle</button>
+            <button class="tone-btn" data-tone="2">Firm</button>
+          </div>
+        </div>
+        <!-- Skill 1 priority fields -->
+        <div id="skill1-fields" class="skill1-fields" hidden>
+          <div class="skill1-row">
+            <div class="skill1-input-wrap">
+              <input id="s1-text-0" class="skill1-input" type="text" placeholder="What matters to you…">
+              <button class="skill1-check" data-field="0"><span class="material-symbols-outlined">check</span></button>
+            </div>
+            <div class="slider-group" data-field="0">
+              <div class="slider-wrap"><input type="range" class="rating-slider" min="0" max="10" value="0"></div>
+              <span class="slider-value">0</span>
+            </div>
+          </div>
+          <div class="skill1-row">
+            <div class="skill1-input-wrap">
+              <input id="s1-text-1" class="skill1-input" type="text" placeholder="What matters to you…">
+              <button class="skill1-check" data-field="1"><span class="material-symbols-outlined">check</span></button>
+            </div>
+            <div class="slider-group" data-field="1">
+              <div class="slider-wrap"><input type="range" class="rating-slider" min="0" max="10" value="0"></div>
+              <span class="slider-value">0</span>
+            </div>
+          </div>
+          <div class="skill1-row">
+            <div class="skill1-input-wrap">
+              <input id="s1-text-2" class="skill1-input" type="text" placeholder="What matters to you…">
+              <button class="skill1-check" data-field="2"><span class="material-symbols-outlined">check</span></button>
+            </div>
+            <div class="slider-group" data-field="2">
+              <div class="slider-wrap"><input type="range" class="rating-slider" min="0" max="10" value="0"></div>
+              <span class="slider-value">0</span>
+            </div>
+          </div>
+        </div>
+        <textarea id="response-textarea" class="response-textarea" placeholder="Write your response…"></textarea>
+      </div>
+      <div class="response-footer">
+        <button id="btn-next-step" class="btn-primary">Next <span class="material-symbols-outlined">arrow_forward</span></button>
+      </div>
+    </section>
+
+    <!-- Saved -->
+    <section data-screen="saved" class="screen screen-saved">
+      <div class="saved-inner">
+        <h1 class="saved-title">Great work.</h1>
+        <p class="saved-sub">Your plan is now saved!</p>
+        <button id="btn-view-plan" class="btn-primary">View my plan</button>
+      </div>
+    </section>
+
+    <!-- Timeline -->
+    <section data-screen="timeline" class="screen screen-timeline">
+      <div class="screen-header">
+        <h2>Your Plan</h2>
+        <p id="timeline-scenario-name" class="screen-subtitle"></p>
+      </div>
+      <div id="timeline-nodes" class="timeline"></div>
+      <div class="timeline-footer">
+        <button id="btn-start-audio" class="btn-primary">
+          <span class="material-symbols-outlined">record_voice_over</span>
+          Start Audio Practice
+        </button>
+      </div>
+    </section>
+
+    <!-- Audio Gate -->
+    <section data-screen="audio-gate" class="screen screen-audio-gate">
+      <div class="audio-gate-inner">
+        <span class="material-symbols-outlined audio-gate-icon">record_voice_over</span>
+        <h1 class="audio-gate-title">Audio Practice</h1>
+        <p class="audio-gate-sub">Practice your assertive responses out loud in a realistic back-and-forth conversation.</p>
+        <button id="btn-unlock-audio" class="btn-primary">Unlock paid audio practice</button>
+        <a href="sessions.html" class="btn-secondary">See my saved plans</a>
+      </div>
+    </section>
+
+    <!-- Audio -->
+    <section data-screen="audio" class="screen screen-audio">
+      <div class="audio-inner" style="display:flex;flex-direction:column;align-items:center;gap:24px;padding:40px 24px;width:100%;">
+        <p class="audio-instruction">Listen, then respond out loud</p>
+        <div id="audio-counter" class="audio-counter">1 / 10</div>
+        <div id="audio-statement" class="audio-statement"></div>
+        <button id="btn-play-statement" class="btn-icon-lg" aria-label="Replay">
+          <span class="material-symbols-outlined">volume_up</span>
+        </button>
+        <button id="btn-next-audio" class="btn-primary">
+          <span class="btn-label">Next</span>
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Completion -->
+    <section data-screen="completion" class="screen screen-completion">
+      <div class="completion-inner">
+        <h1 class="completion-title">You did it.</h1>
+        <p class="completion-sub">Your session has been saved.</p>
+        <div class="completion-actions">
+          <button id="btn-try-another" class="btn-primary">Try another scenario</button>
+          <a href="sessions.html" class="btn-secondary">View sessions</a>
+          <button id="btn-redo" class="btn-secondary">Redo this one</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <nav id="bottom-nav" class="bottom-nav">
+    <a href="app.html" class="nav-tab active">
+      <span class="material-symbols-outlined">home</span>
+      <span class="nav-label">Practice</span>
+    </a>
+    <a href="audio.html" class="nav-tab">
+      <span class="material-symbols-outlined">record_voice_over</span>
+      <span class="nav-label">Audio</span>
+    </a>
+    <a href="sessions.html" class="nav-tab">
+      <span class="material-symbols-outlined">history</span>
+      <span class="nav-label">Sessions</span>
+    </a>
+    <a href="about.html" class="nav-tab">
+      <span class="material-symbols-outlined">info</span>
+      <span class="nav-label">About</span>
+    </a>
+  </nav>
+
+  <div id="backdrop" class="backdrop"></div>
+  <div id="bottom-sheet" class="bottom-sheet">
+    <div class="sheet-handle"></div>
+    <h2 id="sheet-title" class="sheet-title"></h2>
+    <p id="sheet-desc" class="sheet-desc"></p>
+    <button id="btn-start-practice" class="btn-primary">Start Practice</button>
+  </div>
+
+</div>
+<script src="js/app.js"></script>
+</body>
+</html>

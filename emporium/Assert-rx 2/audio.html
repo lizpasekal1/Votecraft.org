@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Assert-rx — Audio Practice</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="app">
+  <header class="top-bar">
+    <button id="btn-back" class="btn-icon" hidden aria-label="Back">
+      <span class="material-symbols-outlined">arrow_back</span>
+    </button>
+    <span class="wordmark">ASSERT-Rx</span>
+    <div class="top-bar-spacer"></div>
+  </header>
+  <main id="main">
+    <!-- Select view -->
+    <div id="view-select" class="page">
+      <div class="screen-header">
+        <h2>Audio Practice</h2>
+        <p class="screen-subtitle">Choose a scenario to practice out loud</p>
+      </div>
+      <div class="voice-picker-section">
+        <p class="voice-picker-heading">Voice</p>
+        <div id="voice-picker" class="voice-picker"></div>
+      </div>
+      <div id="audio-select-list" class="audio-select-list"></div>
+    </div>
+    <!-- Practice view -->
+    <div id="view-practice" class="page" hidden>
+      <div class="view-practice">
+        <p class="audio-instruction">Listen, then respond out loud</p>
+        <div id="ap-counter" class="audio-counter"></div>
+        <div id="ap-statement" class="audio-statement"></div>
+        <button id="ap-play" class="btn-icon-lg" aria-label="Replay">
+          <span class="material-symbols-outlined">volume_up</span>
+        </button>
+        <button id="ap-next" class="btn-primary">
+          <span id="ap-next-label">Next</span>
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+  </main>
+  <nav class="bottom-nav">
+    <a href="app.html" class="nav-tab"><span class="material-symbols-outlined">home</span><span class="nav-label">Practice</span></a>
+    <a href="audio.html" class="nav-tab active"><span class="material-symbols-outlined">record_voice_over</span><span class="nav-label">Audio</span></a>
+    <a href="sessions.html" class="nav-tab"><span class="material-symbols-outlined">history</span><span class="nav-label">Sessions</span></a>
+    <a href="about.html" class="nav-tab"><span class="material-symbols-outlined">info</span><span class="nav-label">About</span></a>
+  </nav>
+</div>
+<script src="js/audio-page.js"></script>
+</body>
+</html>
