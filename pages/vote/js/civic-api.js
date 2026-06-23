@@ -8,12 +8,6 @@
 const CivicAPI = {
     // OpenStates API - proxied through WordPress REST API (key is server-side only)
     OPENSTATES_PROXY: 'https://votecraft.org/wp-json/votecraft/v1/openstates',
-
-    /**
-     * Convert "Last, First Middle" format to "First Middle Last"
-     * @param {string} name - Name in any format
-     * @returns {string} - Name in "First Last" format
-     */
     normalizeNameDisplay(name) {
         if (!name) return '';
         // Check if name is in "Last, First" format
@@ -26,12 +20,6 @@ const CivicAPI = {
         }
         return name;
     },
-
-    /**
-     * Geocode an address using OpenStreetMap Nominatim (free, CORS-enabled)
-     * @param {string} address - Full address to geocode
-     * @returns {Promise<{lat: number, lng: number}>} - Coordinates
-     */
     async geocodeAddress(address) {
         const url = new URL('https://nominatim.openstreetmap.org/search');
         url.searchParams.append('q', address);
@@ -40,45 +28,28 @@ const CivicAPI = {
         url.searchParams.append('limit', '1');
         url.searchParams.append('countrycodes', 'us');
 
-        console.log('Geocoding address:', address);
-
         const response = await fetch(url);
-
-        console.log('Geocode response status:', response.status);
 
         if (!response.ok) {
             throw new Error('Failed to geocode address');
         }
 
         const data = await response.json();
-        console.log('Geocode data:', data);
 
         if (!data || data.length === 0) {
             throw new Error('Address not found. Please enter a valid US street address (e.g., 123 Main St, City, State).');
         }
 
-        console.log('Coordinates:', data[0].lat, data[0].lon);
         const addr = data[0].address || {};
         const state = addr.state || '';
-        console.log('Geocoded state:', state);
         return {
             lat: parseFloat(data[0].lat),
             lng: parseFloat(data[0].lon),
             state: state
         };
     },
-
-    /**
-     * Get state legislators for a location using OpenStates API
-     * @param {number} lat - Latitude
-     * @param {number} lng - Longitude
-     * @returns {Promise<object>} - Legislators data
-     */
     async getStateLegislators(lat, lng) {
         const url = `${this.OPENSTATES_PROXY}?endpoint=people.geo&lat=${lat}&lng=${lng}`;
-
-        console.log('Fetching legislators for:', lat, lng);
-        console.log('URL:', url);
 
         let response;
         try {
@@ -88,8 +59,6 @@ const CivicAPI = {
             throw new Error('Network error fetching legislators. Please try again.');
         }
 
-        console.log('Response status:', response.status);
-
         if (!response.ok) {
             const error = await response.json().catch(() => ({}));
             console.error('API error:', error);
@@ -97,19 +66,9 @@ const CivicAPI = {
         }
 
         const data = await response.json();
-        console.log('Legislators data:', data);
         return data;
     },
-
-    /**
-     * Get Congress members - tries local DB first (synced from OpenStates)
-     * Returns US Senators, US Representatives
-     * @param {string} address - Full address to look up
-     * @param {string} state - Optional state name or abbreviation for local lookup
-     * @returns {Promise<Array>} - Array of Congress members
-     */
     async getCongressMembers(address, state = null) {
-        console.log('Fetching Congress members for:', address, state);
 
         // Try local proxy first (serves from synced database)
         try {
@@ -123,7 +82,6 @@ const CivicAPI = {
             if (proxyResponse.ok) {
                 const proxyData = await proxyResponse.json();
                 const cacheHeader = proxyResponse.headers.get('X-VoteCraft-Cache');
-                console.log('Congress members from proxy:', proxyData.results?.length || 0, 'cache:', cacheHeader);
 
                 if (proxyData.results && proxyData.results.length > 0) {
                     // Data is already in normalized format from local DB
@@ -131,19 +89,11 @@ const CivicAPI = {
                 }
             }
         } catch (proxyError) {
-            console.log('Proxy not available for Congress members:', proxyError.message);
         }
 
         // No fallback - Congress data is synced from OpenStates
-        console.log('No Congress members in local database. Run sync from WordPress admin.');
         return [];
     },
-
-    /**
-     * Convert state abbreviation to full name
-     * @param {string} abbrev - State abbreviation (e.g., "MA")
-     * @returns {string} - Full state name (e.g., "Massachusetts")
-     */
     stateAbbrevToName(abbrev) {
         const states = {
             'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
@@ -162,13 +112,6 @@ const CivicAPI = {
         };
         return states[abbrev.toUpperCase()] || abbrev;
     },
-
-    /**
-     * Get all legislators for a jurisdiction (state or federal)
-     * @param {string} jurisdiction - Jurisdiction name (e.g., "Massachusetts")
-     * @param {number} perPage - Results per page (default 300 to get all)
-     * @returns {Promise<Array>} - Array of legislator objects
-     */
     async getAllLegislators(jurisdiction) {
         // Check sessionStorage cache first
         const cacheKey = `legislators_${jurisdiction}`;
@@ -176,7 +119,6 @@ const CivicAPI = {
             const cached = sessionStorage.getItem(cacheKey);
             if (cached) {
                 const data = JSON.parse(cached);
-                console.log(`Cache hit: ${data.length} legislators for ${jurisdiction}`);
                 return data;
             }
         } catch (e) { /* ignore storage errors */ }
@@ -184,8 +126,6 @@ const CivicAPI = {
         const allResults = [];
         let page = 1;
         let maxPage = 1;
-
-        console.log('Fetching all legislators for:', jurisdiction);
 
         try {
             do {
@@ -206,11 +146,8 @@ const CivicAPI = {
                 const results = data.results || [];
                 allResults.push(...results);
                 maxPage = data.pagination?.max_page || 1;
-                console.log(`Page ${page}/${maxPage}: ${results.length} legislators (${allResults.length} total)`);
                 page++;
             } while (page <= maxPage);
-
-            console.log(`All legislators: ${allResults.length} found`);
 
             // Cache results in sessionStorage
             try {
@@ -223,13 +160,6 @@ const CivicAPI = {
             return allResults;
         }
     },
-
-    /**
-     * Get representatives for an address (main entry point)
-     * Fetches both Congress (from OpenStates) and state legislators
-     * @param {string} address - Full address to look up
-     * @returns {Promise<object>} - Representatives in normalized format
-     */
     async getRepresentatives(address) {
         // Step 1: Geocode the address
         const coords = await this.geocodeAddress(address);
@@ -244,8 +174,6 @@ const CivicAPI = {
         const stateOfficials = stateLegislators.results || [];
         const allOfficials = [...congressMembers, ...stateOfficials];
 
-        console.log(`Combined ${congressMembers.length} Congress + ${stateOfficials.length} state = ${allOfficials.length} total officials`);
-
         // Return in a format compatible with the app
         return {
             officials: allOfficials,
@@ -254,18 +182,9 @@ const CivicAPI = {
             source: 'combined'
         };
     },
-
-    /**
-     * Parse representatives into app format
-     * Handles both Google Civic (already normalized) and OpenStates (needs parsing)
-     * @param {object} data - Raw API response
-     * @returns {Array} - Normalized representative array
-     */
     parseRepresentatives(data) {
         // OpenStates returns 'results', our wrapper returns 'officials'
         const people = data.officials || data.results || [];
-
-        console.log('Parsing representatives:', people);
 
         if (people.length === 0) {
             return [];
@@ -344,14 +263,6 @@ const CivicAPI = {
             };
         });
     },
-
-    /**
-     * Get recent bills sponsored by a legislator
-     * @param {string} jurisdiction - State name (e.g., "California")
-     * @param {string} sponsorName - Legislator's last name
-     * @param {number} limit - Max bills to return (default 5)
-     * @returns {Promise<Array>} - Array of bills
-     */
     async getBillsBySponsor(jurisdiction, sponsorName, limit = 5) {
         const params = new URLSearchParams({
             endpoint: 'bills',
@@ -363,11 +274,8 @@ const CivicAPI = {
         });
         const url = `${this.OPENSTATES_PROXY}?${params.toString()}`;
 
-        console.log(`  Bills API URL: ${url}`);
-
         try {
             const response = await fetch(url);
-            console.log(`  Bills API response status: ${response.status}`);
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -375,75 +283,12 @@ const CivicAPI = {
                 return [];
             }
             const data = await response.json();
-            console.log(`  Bills API returned ${data.results?.length || 0} results`);
             return data.results || [];
         } catch (error) {
             console.error('Error fetching bills:', error);
             return [];
         }
     },
-
-    /**
-     * Get recent bills for multiple legislators
-     * @param {Array} legislators - Array of legislator objects
-     * @param {number} billsPerLegislator - Max bills per legislator
-     * @returns {Promise<Array>} - Array of bills with legislator info
-     */
-    async getBillsForLegislators(legislators, billsPerLegislator = 5) {
-        const allBills = [];
-        const seenBillIds = new Set();
-
-        // Get state legislators only
-        const stateLegislators = legislators.filter(l => l.level === 'state');
-        console.log(`Total legislators: ${legislators.length}, State legislators: ${stateLegislators.length}`);
-        console.log('State legislators:', stateLegislators.map(l => ({ name: l.name, level: l.level, jurisdiction: l.jurisdiction })));
-
-        for (const legislator of stateLegislators) {
-            // Use person ID for sponsor search (more reliable than name matching)
-            const sponsorId = legislator.id || legislator.name;
-
-            console.log(`Fetching bills for ${legislator.name} (${sponsorId}) in ${legislator.jurisdiction}`);
-
-            if (!legislator.jurisdiction) {
-                console.log('  Skipping - no jurisdiction');
-                continue;
-            }
-
-            const bills = await this.getBillsBySponsor(
-                legislator.jurisdiction,
-                sponsorId,
-                billsPerLegislator
-            );
-
-            console.log(`  Found ${bills.length} bills for ${legislator.name}`);
-
-            // Add bills to the list, avoiding duplicates
-            for (const bill of bills) {
-                if (seenBillIds.has(bill.id)) continue;
-
-                seenBillIds.add(bill.id);
-                allBills.push({
-                    ...bill,
-                    sponsorLegislator: legislator
-                });
-            }
-        }
-
-        // Sort by latest action date
-        allBills.sort((a, b) =>
-            new Date(b.latest_action_date) - new Date(a.latest_action_date)
-        );
-
-        return allBills.slice(0, 8); // Return top 8 most recent
-    },
-
-    /**
-     * Get bills by subject/topic
-     * @param {string} jurisdiction - State name
-     * @param {string} subject - Topic to search for (e.g., "education", "healthcare")
-     * @param {number} limit - Max bills to return
-     * @returns {Promise<Array>} - Array of bills
-     */
     async getBillsBySubject(jurisdiction, subject, limit = 10) {
         const params = new URLSearchParams({
             endpoint: 'bills',
@@ -455,15 +300,12 @@ const CivicAPI = {
         });
         const url = `${this.OPENSTATES_PROXY}?${params.toString()}`;
 
-        console.log(`Bills API: ${url}`);
         const maxRetries = 3;
         for (let attempt = 0; attempt < maxRetries; attempt++) {
             try {
                 const response = await fetch(url);
-                console.log(`Bills API response: ${response.status}`);
                 if (response.status === 429) {
                     const delay = Math.pow(2, attempt + 1) * 1000;
-                    console.warn(`Rate limited (429), retrying in ${delay}ms... (attempt ${attempt + 1}/${maxRetries})`);
                     await new Promise(r => setTimeout(r, delay));
                     continue;
                 }
@@ -472,7 +314,6 @@ const CivicAPI = {
                     return [];
                 }
                 const data = await response.json();
-                console.log(`Bills API returned ${(data.results || []).length} results`);
                 return data.results || [];
             } catch (error) {
                 console.error('Error fetching bills by subject:', error);
@@ -482,60 +323,6 @@ const CivicAPI = {
         console.error('Bills by subject: max retries exceeded after all attempts');
         return [];
     },
-
-    /**
-     * Extract vote records for legislators from bills
-     * @param {Array} bills - Array of bills with votes included
-     * @param {Array} legislators - Array of legislator objects
-     * @returns {Array} - Vote records grouped by legislator
-     */
-    extractVoteRecords(bills, legislators) {
-        const voteRecords = [];
-
-        for (const bill of bills) {
-            if (!bill.votes || bill.votes.length === 0) continue;
-
-            for (const vote of bill.votes) {
-                // Check if any of our legislators voted on this
-                const individualVotes = vote.votes || [];
-
-                for (const legislator of legislators) {
-                    if (legislator.level !== 'state') continue;
-
-                    const lastName = legislator.name.split(' ').pop().toLowerCase();
-
-                    const theirVote = individualVotes.find(v => {
-                        const voterName = (v.voter_name || '').toLowerCase();
-                        return voterName.includes(lastName) || lastName.includes(voterName);
-                    });
-
-                    if (theirVote) {
-                        voteRecords.push({
-                            legislator: legislator,
-                            bill: {
-                                identifier: bill.identifier,
-                                title: bill.title,
-                                url: bill.openstates_url
-                            },
-                            vote: theirVote.option, // yea, nay, abstain, etc.
-                            voteDate: vote.start_date,
-                            motion: vote.motion_text,
-                            result: vote.result
-                        });
-                    }
-                }
-            }
-        }
-
-        // Sort by date, most recent first
-        voteRecords.sort((a, b) => new Date(b.voteDate) - new Date(a.voteDate));
-
-        return voteRecords.slice(0, 12); // Return top 12 vote records
-    },
-
-    /**
-     * State elections websites - official Secretary of State sites
-     */
     STATE_ELECTIONS_WEBSITES: {
         'Alabama': 'https://sos.alabama.gov/alabama-votes',
         'Alaska': 'https://www.elections.alaska.gov/',
@@ -589,12 +376,6 @@ const CivicAPI = {
         'Wisconsin': 'https://elections.wi.gov/',
         'Wyoming': 'https://sos.wyo.gov/Elections/'
     },
-
-    /**
-     * Get the official elections website for a state
-     * @param {string} stateName - Full state name (e.g., "California")
-     * @returns {string|null} - URL or null if not found
-     */
     getStateElectionsWebsite(stateName) {
         if (!stateName) return null;
         // Try direct match first
@@ -610,27 +391,6 @@ const CivicAPI = {
         }
         return null;
     },
-
-    /**
-     * Available bill subjects/topics for filtering
-     */
-    BILL_SUBJECTS: [
-        { id: 'education', label: 'Education', emoji: '📚' },
-        { id: 'healthcare', label: 'Healthcare', emoji: '🏥' },
-        { id: 'taxes', label: 'Taxes', emoji: '💰' },
-        { id: 'environment', label: 'Environment', emoji: '🌿' },
-        { id: 'housing', label: 'Housing', emoji: '🏠' },
-        { id: 'transportation', label: 'Transportation', emoji: '🚗' },
-        { id: 'public safety', label: 'Public Safety', emoji: '🛡️' },
-        { id: 'elections', label: 'Elections', emoji: '🗳️' }
-    ],
-
-    /**
-     * Get legislative district boundaries from Census Bureau TIGERweb
-     * @param {number} lat - Latitude
-     * @param {number} lng - Longitude
-     * @returns {Promise<object>} - GeoJSON features for districts
-     */
     async getDistrictBoundaries(lat, lng) {
         const results = {
             congressional: null,
@@ -692,55 +452,8 @@ const CivicAPI = {
             }
         });
 
-        console.log('District boundaries fetched:', results);
         return results;
     },
-
-    /**
-     * Get all congressional districts for a state
-     * @param {string} stateFips - State FIPS code (e.g., "17" for Illinois)
-     * @returns {Promise<Array>} - Array of district features with geometry
-     */
-    async getAllCongressionalDistricts(stateFips) {
-        const baseUrl = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Legislative/MapServer';
-
-        // Layer 0 = 119th Congressional Districts
-        const url = `${baseUrl}/0/query?` + new URLSearchParams({
-            where: `STATE='${stateFips}'`,
-            outFields: '*',
-            returnGeometry: true,
-            f: 'geojson'
-        });
-
-        try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                console.error('Failed to fetch state congressional districts');
-                return [];
-            }
-
-            const data = await response.json();
-            if (data.features && data.features.length > 0) {
-                // Sort by district number
-                return data.features.sort((a, b) => {
-                    const numA = parseInt(a.properties.CD119FP || a.properties.BASENAME || '0');
-                    const numB = parseInt(b.properties.CD119FP || b.properties.BASENAME || '0');
-                    return numA - numB;
-                });
-            }
-            return [];
-        } catch (error) {
-            console.error('Error fetching state congressional districts:', error);
-            return [];
-        }
-    },
-
-    /**
-     * Get state boundary from Census TIGERweb using a lat/lng point
-     * @param {number} lat - Latitude
-     * @param {number} lng - Longitude
-     * @returns {Promise<object|null>} - GeoJSON feature for the state
-     */
     async getStateBoundary(lat, lng) {
         const baseUrl = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer';
 
@@ -792,13 +505,6 @@ const CivicAPI = {
 
     // Congress.gov API proxy
     CONGRESS_GOV_PROXY: 'https://votecraft.org/wp-json/votecraft/v1/congress',
-
-    /**
-     * Search bills on Congress.gov by keyword
-     * @param {string} query - Search query (e.g., "ranked choice voting")
-     * @param {number} limit - Max results (default 20)
-     * @returns {Promise<Array>} - Array of bills
-     */
     async searchCongressBills(query, limit = 20) {
         const params = new URLSearchParams({
             endpoint: 'bill/search',
@@ -806,8 +512,6 @@ const CivicAPI = {
             limit: limit.toString()
         });
         const url = `${this.CONGRESS_GOV_PROXY}?${params.toString()}`;
-
-        console.log('Congress.gov bill search:', query);
 
         try {
             const response = await fetch(url);
@@ -822,14 +526,6 @@ const CivicAPI = {
             return [];
         }
     },
-
-    /**
-     * Get bills sponsored by a Congress member
-     * @param {string} memberName - Member's last name (e.g., "Warren")
-     * @param {string} chamber - "senate" or "house"
-     * @param {number} limit - Max results (default 50)
-     * @returns {Promise<Array>} - Array of sponsored bills
-     */
     async getCongressMemberBills(memberName, chamber = null, limit = 50) {
         const params = new URLSearchParams({
             endpoint: 'member/bills',
@@ -845,8 +541,6 @@ const CivicAPI = {
         }
         const url = `${this.CONGRESS_GOV_PROXY}?${params.toString()}`;
 
-        console.log('Congress.gov member bills:', memberName);
-
         try {
             const response = await fetch(url);
             if (!response.ok) {
@@ -860,15 +554,6 @@ const CivicAPI = {
             return [];
         }
     },
-
-    /**
-     * Get bills from Congress.gov matching issue keywords
-     * Used for federal legislators (Congress members)
-     * @param {Array} keywords - Array of search keywords
-     * @param {string} sponsorName - Optional sponsor name to filter by
-     * @param {number} limit - Max results per keyword
-     * @returns {Promise<Array>} - Array of bills with sponsorship info
-     */
     async getCongressBillsByIssue(keywords, sponsorName = null, limit = 20) {
         const allBills = [];
         const seenIds = new Set();

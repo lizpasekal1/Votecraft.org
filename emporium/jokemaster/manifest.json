@@ -1,0 +1,22 @@
+{
+  "name": "JokeMaster",
+  "short_name": "JokeMaster",
+  "description": "Fund your dream project through the power of comedy",
+  "start_url": "/src/pages/jokemaster.html",
+  "display": "standalone",
+  "background_color": "#6B8EC3",
+  "theme_color": "#8B2635",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

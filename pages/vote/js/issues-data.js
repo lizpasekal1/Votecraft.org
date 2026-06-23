@@ -1,10 +1,4 @@
-/**
- * VoteCraft Issues Catalog
- *
- * Static data for the 6 civic reform issues.
- * Bill keywords are used to search the OpenStates API for related legislation.
- * Nonprofits are organizations working on each issue.
- */
+
 
 const ISSUES_CATALOG = [
     {
@@ -231,16 +225,10 @@ const ISSUES_CATALOG = [
 ];
 
 window.ISSUES_CATALOG = ISSUES_CATALOG;
-
-/**
- * Fetch keywords from WordPress admin dashboard (if available)
- * Falls back to static keywords if API is unavailable
- */
 async function loadKeywordsFromAPI() {
     try {
         const response = await fetch('https://votecraft.org/wp-json/votecraft/v1/keywords');
         if (!response.ok) {
-            console.log('Keywords API not available, using static keywords');
             return;
         }
         const apiKeywords = await response.json();
@@ -249,18 +237,11 @@ async function loadKeywordsFromAPI() {
         for (const issue of ISSUES_CATALOG) {
             if (apiKeywords[issue.id] && Array.isArray(apiKeywords[issue.id])) {
                 issue.billKeywords = apiKeywords[issue.id];
-                console.log(`Updated keywords for ${issue.id}:`, issue.billKeywords.length, 'keywords');
             }
         }
     } catch (error) {
-        console.log('Could not load keywords from API, using static keywords:', error.message);
     }
 }
-
-/**
- * Static manual bill associations for federal legislators
- * Used until federal bills are synced into the database
- */
 const STATIC_BILL_ASSOCIATIONS = {
     'Elizabeth Warren': {
         'rcv': [
@@ -273,12 +254,6 @@ const STATIC_BILL_ASSOCIATIONS = {
         ]
     }
 };
-
-/**
- * Fetch manual bill-legislator associations from WordPress admin
- * Returns an object mapping legislator names to arrays of bills they should show for each issue
- * Merges with static associations (API overrides static for same legislator+issue)
- */
 async function loadManualAssociations() {
     // Start with static associations
     const merged = JSON.parse(JSON.stringify(STATIC_BILL_ASSOCIATIONS));
@@ -297,19 +272,12 @@ async function loadManualAssociations() {
             }
         }
         window.MANUAL_BILL_ASSOCIATIONS = merged;
-        console.log('Loaded manual bill associations:', Object.keys(merged).length, 'legislators');
         return merged;
     } catch (error) {
-        console.log('Could not load manual bill associations, using static:', error.message);
         window.MANUAL_BILL_ASSOCIATIONS = merged;
         return merged;
     }
 }
-
-/**
- * Fetch excluded bills from WordPress admin
- * Returns an object mapping legislator names to issue IDs to arrays of excluded bill IDs
- */
 async function loadExcludedBills() {
     try {
         const response = await fetch('https://votecraft.org/wp-json/votecraft/v1/excluded-bills');
@@ -318,10 +286,8 @@ async function loadExcludedBills() {
         }
         const excluded = await response.json();
         window.EXCLUDED_BILLS = excluded;
-        console.log('Loaded excluded bills:', Object.keys(excluded).length, 'legislators');
         return excluded;
     } catch (error) {
-        console.log('Could not load excluded bills:', error.message);
         window.EXCLUDED_BILLS = {};
         return {};
     }

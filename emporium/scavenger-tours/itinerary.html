@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>My Itinerary - VoteCraft Tour</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Leaflet CSS for route maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="./css/scavenger-tours.css?v=26">
+
+    <style>
+        /* Itinerary-specific styles */
+        .itinerary-item {
+            display: flex;
+            align-items: stretch;
+            margin-bottom: 0.75rem;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+        }
+
+        .itinerary-card {
+            background: #1f2937;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            flex: 1;
+            max-width: calc(100% - 36px);
+        }
+
+        .itinerary-item.dragging {
+            opacity: 0.5;
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .itinerary-item.drag-over {
+            border: 2px dashed #4269FF;
+            background: rgba(66, 105, 255, 0.1);
+        }
+
+        .itinerary-item.visited {
+            opacity: 0.7;
+        }
+
+        .itinerary-item.visited .item-name {
+            text-decoration: line-through;
+            color: #9ca3af;
+        }
+
+        .itinerary-header {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            padding-left: 0;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        .itinerary-header:hover {
+            background: #374151;
+        }
+
+        .drag-handle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            flex-shrink: 0;
+            touch-action: none;
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .stop-number {
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+            color: white;
+        }
+
+        .right-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            margin-left: 0.5rem;
+            align-self: stretch;
+        }
+
+        .checkbox-container {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #22c55e;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            margin-bottom: 0.5rem;
+        }
+
+        .checkbox-container:hover {
+            border-color: #22c55e;
+        }
+
+        .checkbox-container.checked {
+            background: #22c55e;
+            border-color: #22c55e;
+        }
+
+        .itinerary-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .itinerary-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #111827;
+        }
+
+        .itinerary-item.open .itinerary-details {
+            max-height: 800px;
+        }
+
+        .itinerary-item.open .chevron-icon {
+            transform: rotate(180deg);
+        }
+
+        .chevron-icon {
+            transition: transform 0.2s ease;
+        }
+
+        .directions-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: opacity 0.15s ease;
+        }
+
+        .directions-btn:hover {
+            opacity: 0.85;
+        }
+
+        .progress-bar-bg {
+            background: #374151;
+            border-radius: 9999px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.3s ease;
+        }
+
+        .drag-hint {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Touch device improvements */
+        /* Mobile optimizations */
+        @media (max-width: 430px) {
+            .itinerary-header {
+                padding: 0.625rem 0.5rem 0.625rem 0;
+            }
+
+            .right-controls {
+                gap: 0.125rem;
+                margin-left: 0.375rem;
+            }
+
+            .checkbox-container {
+                width: 16px;
+                height: 16px;
+                margin-bottom: 0.375rem;
+            }
+
+            .itinerary-content h3 {
+                font-size: 0.875rem;
+                margin-bottom: 0.125rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 180px;
+            }
+
+            .itinerary-content p {
+                font-size: 0.75rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 180px;
+            }
+
+            .chevron-icon {
+                width: 18px;
+                height: 18px;
+            }
+        }
+
+        /* Inline Directions Styles */
+        .directions-section {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #374151;
+        }
+
+        .directions-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .directions-header h4 {
+            color: #9ca3af;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .directions-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .directions-content.open {
+            max-height: 700px;
+        }
+
+        .directions-loading-inline {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: #0d1117;
+            border-radius: 0.5rem;
+        }
+
+        .spinner-small {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #374151;
+            border-top-color: #4269FF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .route-summary-inline {
+            display: flex;
+            gap: 1.5rem;
+            padding: 0.75rem 1rem;
+            background: #0d1117;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .route-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .route-stat-value {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .route-stat-label {
+            font-size: 0.6875rem;
+            color: #6b7280;
+        }
+
+        .route-instructions-inline {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #0d1117;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+        }
+
+        .route-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.625rem 0.5rem;
+            border-bottom: 1px solid #1f2937;
+        }
+
+        .route-step:last-child {
+            border-bottom: none;
+        }
+
+        .route-step-number {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #374151;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .route-step-text {
+            font-size: 0.8125rem;
+            color: #d1d5db;
+            line-height: 1.4;
+        }
+
+        .route-step-distance {
+            font-size: 0.6875rem;
+            color: #6b7280;
+            margin-top: 0.125rem;
+        }
+
+        .next-stop-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.25rem 0.625rem;
+            background: rgba(66, 105, 255, 0.2);
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            color: #93c5fd;
+            max-width: 200px;
+        }
+
+        .next-stop-badge .next-stop-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .last-stop-message {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: rgba(34, 197, 94, 0.1);
+            border-radius: 0.5rem;
+            color: #86efac;
+            font-size: 0.875rem;
+        }
+
+        /* Hide default routing machine controls */
+        .leaflet-routing-container {
+            display: none;
+        }
+
+        /* Route Map Styles */
+        .route-map-container {
+            margin-top: 0.75rem;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            background: #f5f5f5;
+        }
+
+        .route-map {
+            height: 200px;
+            width: 100%;
+            border-radius: 0.5rem;
+        }
+
+        /* Compact zoom controls for route maps */
+        .route-map .leaflet-control-zoom {
+            margin: 8px !important;
+            border-radius: 6px !important;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
+        }
+
+        .route-map .leaflet-control-zoom a {
+            width: 28px !important;
+            height: 28px !important;
+            line-height: 28px !important;
+            font-size: 14px !important;
+        }
+
+        /* Remove from itinerary button */
+        .remove-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            margin-top: 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            color: #ef4444;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .remove-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .remove-radio {
+            width: 14px;
+            height: 14px;
+            border: 2px solid #ef4444;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .remove-radio-inner {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: transparent;
+        }
+
+        .remove-btn:hover .remove-radio-inner {
+            background: #ef4444;
+        }
+
+        /* Removed section */
+        .removed-section {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px dashed #374151;
+        }
+
+        .removed-section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .removed-section-header h3 {
+            color: #9ca3af;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .removed-item {
+            background: #1f2937;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.6;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .removed-item-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .removed-item h4 {
+            color: #9ca3af;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: line-through;
+        }
+
+        .removed-item p {
+            color: #6b7280;
+            font-size: 0.75rem;
+        }
+
+        .restore-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            color: #22c55e;
+            border: 1px solid #22c55e;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .restore-btn:hover {
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        /* Thumbnail image - edge-to-edge on left side */
+        .itinerary-thumbnail-wrapper {
+            flex-shrink: 0;
+            align-self: stretch;
+            margin: -1rem;
+            margin-right: 0.75rem;
+        }
+
+        .itinerary-thumbnail {
+            width: 60px;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 0.75rem 0 0 0.75rem;
+        }
+
+        /* Drag signifier - outside container on left */
+        .drag-signifier {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            flex-shrink: 0;
+            gap: 0.125rem;
+            padding: 1rem 0.5rem 0 0;
+            width: 36px;
+        }
+
+        .drag-signifier .stop-number {
+            width: 20px;
+            height: 20px;
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+
+        .drag-signifier .drag-handle {
+            width: 20px;
+            height: 16px;
+            color: #6b7280;
+        }
+
+        .drag-signifier .drag-handle svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        @media (max-width: 430px) {
+            .itinerary-thumbnail {
+                width: 50px;
+            }
+
+            .itinerary-thumbnail-wrapper {
+                margin: -0.625rem;
+                margin-right: 0.5rem;
+            }
+
+            .itinerary-card {
+                max-width: calc(100% - 32px);
+            }
+
+            .drag-signifier {
+                padding: 0.625rem 0.375rem 0 0;
+                width: 32px;
+            }
+
+            .drag-signifier .stop-number {
+                width: 18px;
+                height: 18px;
+                font-size: 0.6875rem;
+            }
+
+            .drag-signifier .drag-handle {
+                width: 18px;
+                height: 14px;
+            }
+
+            .drag-signifier .drag-handle svg {
+                width: 14px;
+                height: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Page transition overlay -->
+    <div class="page-transition-overlay" id="page-overlay"></div>
+    <script>
+        // Fade out overlay to reveal page
+        requestAnimationFrame(() => {
+            document.getElementById('page-overlay').classList.add('fade-out');
+        });
+
+        // Intercept link clicks for fade transition
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a[href]');
+            if (link && link.href && !link.href.startsWith('javascript:') && !link.target) {
+                e.preventDefault();
+                const overlay = document.getElementById('page-overlay');
+                overlay.classList.remove('fade-out');
+                overlay.classList.add('fade-in');
+                setTimeout(() => {
+                    window.location.href = link.href;
+                }, 300);
+            }
+        });
+    </script>
+    <div id="app" class="max-w-2xl mx-auto bg-black min-h-screen">
+        <!-- Top Bar -->
+        <div class="top-bar bg-white px-4 py-2 shadow-sm sticky top-0 z-30 relative">
+            <!-- Back Button (absolute left) -->
+            <a href="scavenger-tours.html" id="back-link" class="btn-back absolute left-4 top-1/2 -translate-y-1/2 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <!-- Centered Logo -->
+            <div class="flex items-center justify-center gap-2 py-1">
+                <div class="logo-icon w-10 h-10 rounded-full flex items-center justify-center" style="background: #4269FF;">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                    </svg>
+                </div>
+                <div class="logo-text text-xl font-bold">
+                    <span class="text-gray-800">My</span>
+                    <span style="color: #4269FF;">Itinerary</span>
+                </div>
+            </div>
+            <!-- Menu Button (absolute right) -->
+            <button id="btn-menu" class="btn-menu absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 rounded-lg">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="px-4 pt-4 pb-24">
+            <!-- Progress Section -->
+            <div id="progress-section" class="mb-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span id="progress-text" class="text-white text-sm font-semibold">Progress: 0</span>
+                    <span class="text-gray-400 text-sm">Tap to ✅</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div id="progress-bar" class="progress-bar-fill" style="width: 0%; background: #22c55e;"></div>
+                </div>
+            </div>
+
+            <!-- Drag Hint -->
+            <div class="drag-hint">
+                <svg class="w-4 h-4" style="color: #4269FF;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16"/>
+                </svg>
+                <span class="text-sm" style="color: #4269FF;">Drag to reorder your route</span>
+            </div>
+
+            <!-- Itinerary List -->
+            <div id="itinerary-list"></div>
+        </div>
+    </div>
+
+    <!-- Modals Container -->
+    <div id="modals"></div>
+
+    <!-- Leaflet JS for route maps -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+    <!-- Location Data -->
+    <script src="./js/scavenger-tours-data.js?v=37"></script>
+
+    <!-- Shared Nav Component -->
+    <script src="./js/nav-component.js?v=8"></script>
+
+    <!-- Page JavaScript -->
+    <script>
+    (function() {
+        'use strict';
+
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const tourId = urlParams.get('tour') || 'civic-sampler';
+
+        // Update back link
+        document.getElementById('back-link').href = `scavenger-tours.html?tour=${tourId}`;
+
+        // Get tour data
+        const tourData = ALL_TOURS[tourId] || CIVIC_SAMPLER_TOUR;
+
+        // LocalStorage key (per tour)
+        const STORAGE_KEY = `votecraft_itinerary_${tourId}`;
+
+        // Get itinerary from localStorage
+        function getItinerary() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                if (data) {
+                    return JSON.parse(data);
+                }
+            } catch (e) {
+                console.error('Error reading itinerary:', e);
+            }
+            // Default: all stops in original order
+            return {
+                tourId: tourId,
+                order: tourData.map(loc => loc.id),
+                visited: [],
+                removed: []
+            };
+        }
+
+        // Save itinerary to localStorage
+        function saveItinerary(itinerary) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(itinerary));
+            } catch (e) {
+                console.error('Error saving itinerary:', e);
+            }
+        }
+
+        // Drag and drop state
+        let draggedItem = null;
+        let draggedIndex = null;
+
+        // Toggle visited state
+        window.toggleVisited = function(stopId, event) {
+            event.stopPropagation();
+            const itinerary = getItinerary();
+            const visitedIndex = itinerary.visited.indexOf(stopId);
+
+            if (visitedIndex === -1) {
+                itinerary.visited.push(stopId);
+            } else {
+                itinerary.visited.splice(visitedIndex, 1);
+            }
+
+            saveItinerary(itinerary);
+            renderItinerary();
+        };
+
+        // Toggle accordion - only one open at a time
+        window.toggleAccordion = function(stopId) {
+            const item = document.querySelector(`[data-stop-id="${stopId}"]`);
+            if (item) {
+                const isOpening = !item.classList.contains('open');
+                // Close all other open accordions
+                document.querySelectorAll('.itinerary-item.open').forEach(openItem => {
+                    if (openItem !== item) {
+                        openItem.classList.remove('open');
+                    }
+                });
+                // Toggle the clicked item
+                item.classList.toggle('open');
+            }
+        };
+
+        // Remove from itinerary
+        window.removeFromItinerary = function(stopId, event) {
+            event.stopPropagation();
+            const itinerary = getItinerary();
+
+            // Remove from order
+            const orderIndex = itinerary.order.indexOf(stopId);
+            if (orderIndex > -1) {
+                itinerary.order.splice(orderIndex, 1);
+            }
+
+            // Remove from visited if present
+            const visitedIndex = itinerary.visited.indexOf(stopId);
+            if (visitedIndex > -1) {
+                itinerary.visited.splice(visitedIndex, 1);
+            }
+
+            // Add to removed if not already there
+            if (!itinerary.removed) {
+                itinerary.removed = [];
+            }
+            if (!itinerary.removed.includes(stopId)) {
+                itinerary.removed.push(stopId);
+            }
+
+            saveItinerary(itinerary);
+            renderItinerary();
+        };
+
+        // Restore to itinerary
+        window.restoreToItinerary = function(stopId, event) {
+            event.stopPropagation();
+            const itinerary = getItinerary();
+
+            // Remove from removed array
+            const removedIndex = itinerary.removed.indexOf(stopId);
+            if (removedIndex > -1) {
+                itinerary.removed.splice(removedIndex, 1);
+            }
+
+            // Add back to order at the end
+            if (!itinerary.order.includes(stopId)) {
+                itinerary.order.push(stopId);
+            }
+
+            saveItinerary(itinerary);
+            renderItinerary();
+        };
+
+        // Track loaded directions to avoid re-fetching
+        const loadedDirections = {};
+
+        // Get directions to next stop (inline accordion)
+        window.getDirectionsToNext = function(currentStopId, event) {
+            event.stopPropagation();
+
+            const itinerary = getItinerary();
+            const orderedIds = itinerary.order && itinerary.order.length > 0
+                ? itinerary.order
+                : tourData.map(loc => loc.id);
+
+            const currentIndex = orderedIds.indexOf(currentStopId);
+            const directionsContainer = document.getElementById(`directions-${currentStopId}`);
+
+            // Toggle open/closed
+            if (directionsContainer.classList.contains('open')) {
+                directionsContainer.classList.remove('open');
+                return;
+            }
+
+            directionsContainer.classList.add('open');
+
+            // If already loaded, don't refetch
+            if (loadedDirections[currentStopId]) {
+                return;
+            }
+
+            // Get current and next locations
+            const currentLocation = tourData.find(l => l.id === currentStopId);
+            const nextStopId = orderedIds[currentIndex + 1];
+            const nextLocation = tourData.find(l => l.id === nextStopId);
+
+            if (!nextLocation) {
+                return; // Last stop, no directions needed
+            }
+
+            // Show loading
+            directionsContainer.innerHTML = `
+                <div class="directions-loading-inline">
+                    <div class="spinner-small"></div>
+                    <span class="text-gray-400 text-sm">Calculating route...</span>
+                </div>
+            `;
+
+            // Fetch route from OSRM
+            const fromCoords = currentLocation.coordinates;
+            const toCoords = nextLocation.coordinates;
+            const url = `https://router.project-osrm.org/route/v1/foot/${fromCoords[1]},${fromCoords[0]};${toCoords[1]},${toCoords[0]}?overview=full&steps=true&geometries=polyline`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code !== 'Ok' || !data.routes || !data.routes[0]) {
+                        throw new Error('Route not found');
+                    }
+
+                    const route = data.routes[0];
+                    const distance = route.distance;
+                    const duration = route.duration;
+                    const steps = route.legs[0].steps;
+                    const geometry = route.geometry;
+
+                    // Decode the polyline to get route coordinates
+                    const routeCoords = decodePolyline(geometry);
+
+                    // Get theme color for this stop
+                    const themeColor = currentLocation.civicTheme ? currentLocation.civicTheme.color : '#4269FF';
+
+                    // Build instructions HTML
+                    const instructionsHtml = steps
+                        .filter(step => step.maneuver.type !== 'arrive')
+                        .slice(0, 8)
+                        .map((step, i) => `
+                            <div class="route-step">
+                                <div class="route-step-number">${i + 1}</div>
+                                <div>
+                                    <div class="route-step-text">${formatInstruction(step)}</div>
+                                    <div class="route-step-distance">${formatDistance(step.distance)}</div>
+                                </div>
+                            </div>
+                        `).join('');
+
+                    const mapContainerId = `route-map-${currentStopId}`;
+
+                    directionsContainer.innerHTML = `
+                        <div class="route-summary-inline">
+                            <div class="route-stat">
+                                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                                </svg>
+                                <div>
+                                    <div class="route-stat-value">${formatDistance(distance)}</div>
+                                    <div class="route-stat-label">Distance</div>
+                                </div>
+                            </div>
+                            <div class="route-stat">
+                                <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <div>
+                                    <div class="route-stat-value">${formatTime(duration)}</div>
+                                    <div class="route-stat-label">Walking</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="route-instructions-inline">
+                            ${instructionsHtml}
+                            <div class="route-step" style="background: rgba(34, 197, 94, 0.1);">
+                                <div class="route-step-number" style="background: #22c55e;">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="route-step-text" style="color: #86efac;">Arrive at ${nextLocation.name}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="route-map-container">
+                            <div id="${mapContainerId}" class="route-map"></div>
+                        </div>
+                    `;
+
+                    // Initialize the map after DOM is updated
+                    setTimeout(() => {
+                        initRouteMap(mapContainerId, routeCoords, fromCoords, toCoords, themeColor);
+                    }, 100);
+
+                    loadedDirections[currentStopId] = true;
+                })
+                .catch(error => {
+                    console.error('Routing error:', error);
+                    directionsContainer.innerHTML = `
+                        <div class="text-gray-400 text-sm p-3">
+                            Could not calculate route.
+                            <button onclick="openExternalMaps(${toCoords[0]}, ${toCoords[1]})" class="text-blue-400 underline ml-1">
+                                Open in Maps
+                            </button>
+                        </div>
+                    `;
+                });
+        };
+
+        // Format OSRM instruction
+        function formatInstruction(step) {
+            const maneuver = step.maneuver;
+            let instruction = '';
+
+            switch (maneuver.type) {
+                case 'depart':
+                    instruction = `Head ${maneuver.modifier || 'straight'}`;
+                    break;
+                case 'turn':
+                    instruction = `Turn ${maneuver.modifier}`;
+                    break;
+                case 'new name':
+                case 'continue':
+                    instruction = `Continue ${maneuver.modifier ? maneuver.modifier : 'straight'}`;
+                    break;
+                case 'end of road':
+                    instruction = `At end of road, turn ${maneuver.modifier}`;
+                    break;
+                default:
+                    instruction = maneuver.modifier ? `${maneuver.type} ${maneuver.modifier}` : maneuver.type;
+            }
+
+            if (step.name && step.name !== '') {
+                instruction += ` onto ${step.name}`;
+            }
+
+            return instruction.charAt(0).toUpperCase() + instruction.slice(1);
+        }
+
+        // Format distance
+        function formatDistance(meters) {
+            if (meters < 100) {
+                return Math.round(meters) + ' m';
+            }
+            if (meters < 1000) {
+                return Math.round(meters / 10) * 10 + ' m';
+            }
+            const miles = meters / 1609.34;
+            return miles.toFixed(1) + ' mi';
+        }
+
+        // Format time
+        function formatTime(seconds) {
+            const minutes = Math.round(seconds / 60);
+            if (minutes < 60) {
+                return minutes + ' min';
+            }
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            return `${hours}h ${mins}m`;
+        }
+
+        // Decode polyline (Google Polyline Algorithm)
+        function decodePolyline(encoded) {
+            const points = [];
+            let index = 0, lat = 0, lng = 0;
+
+            while (index < encoded.length) {
+                let b, shift = 0, result = 0;
+                do {
+                    b = encoded.charCodeAt(index++) - 63;
+                    result |= (b & 0x1f) << shift;
+                    shift += 5;
+                } while (b >= 0x20);
+                const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+                lat += dlat;
+
+                shift = 0;
+                result = 0;
+                do {
+                    b = encoded.charCodeAt(index++) - 63;
+                    result |= (b & 0x1f) << shift;
+                    shift += 5;
+                } while (b >= 0x20);
+                const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+                lng += dlng;
+
+                points.push([lat / 1e5, lng / 1e5]);
+            }
+            return points;
+        }
+
+        // Store map instances
+        const routeMaps = {};
+
+        // Initialize route map
+        function initRouteMap(containerId, routeCoords, fromCoords, toCoords, themeColor) {
+            // Clean up existing map if any
+            if (routeMaps[containerId]) {
+                routeMaps[containerId].remove();
+            }
+
+            const map = L.map(containerId, {
+                zoomControl: true,
+                dragging: true,
+                touchZoom: true,
+                scrollWheelZoom: true,
+                doubleClickZoom: true,
+                boxZoom: false,
+                keyboard: false,
+                attributionControl: false
+            });
+
+            // Add tile layer - using Voyager for better street name visibility
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                maxZoom: 19
+            }).addTo(map);
+
+            // Draw route polyline with shadow for visibility
+            L.polyline(routeCoords, {
+                color: '#000',
+                weight: 7,
+                opacity: 0.3
+            }).addTo(map);
+            const polyline = L.polyline(routeCoords, {
+                color: themeColor,
+                weight: 5,
+                opacity: 1
+            }).addTo(map);
+
+            // Add start marker (green)
+            L.circleMarker([fromCoords[0], fromCoords[1]], {
+                radius: 8,
+                fillColor: '#22c55e',
+                color: '#fff',
+                weight: 2,
+                fillOpacity: 1
+            }).addTo(map);
+
+            // Add end marker (red)
+            L.circleMarker([toCoords[0], toCoords[1]], {
+                radius: 8,
+                fillColor: '#ef4444',
+                color: '#fff',
+                weight: 2,
+                fillOpacity: 1
+            }).addTo(map);
+
+            // Fit bounds to route
+            map.fitBounds(polyline.getBounds(), { padding: [20, 20] });
+
+            routeMaps[containerId] = map;
+        }
+
+        // Fallback to external maps
+        window.openExternalMaps = function(lat, lng) {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const url = isIOS
+                ? `maps://maps.apple.com/?daddr=${lat},${lng}&dirflg=w`
+                : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`;
+            window.open(url, '_blank');
+        };
+
+        // Drag handlers
+        function handleDragStart(e) {
+            draggedItem = this;
+            draggedIndex = parseInt(this.dataset.index);
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', this.dataset.stopId);
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            document.querySelectorAll('.itinerary-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+            draggedItem = null;
+            draggedIndex = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragEnter(e) {
+            this.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.stopPropagation();
+            e.preventDefault();
+
+            this.classList.remove('drag-over');
+
+            if (draggedItem !== this) {
+                const dropIndex = parseInt(this.dataset.index);
+                const itinerary = getItinerary();
+
+                // Reorder array
+                const movedId = itinerary.order.splice(draggedIndex, 1)[0];
+                itinerary.order.splice(dropIndex, 0, movedId);
+
+                saveItinerary(itinerary);
+                renderItinerary();
+            }
+
+            return false;
+        }
+
+        // Touch drag support
+        let touchStartY = 0;
+        let touchCurrentItem = null;
+        let touchClone = null;
+        let touchStartIndex = null;
+
+        function handleTouchStart(e) {
+            const handle = e.target.closest('.drag-handle') || e.target.closest('.drag-signifier');
+            if (!handle) return;
+
+            touchCurrentItem = this;
+            touchStartIndex = parseInt(this.dataset.index);
+            touchStartY = e.touches[0].clientY;
+
+            // Create visual clone
+            touchClone = this.cloneNode(true);
+            touchClone.style.position = 'fixed';
+            touchClone.style.zIndex = '1000';
+            touchClone.style.width = this.offsetWidth + 'px';
+            touchClone.style.opacity = '0.9';
+            touchClone.style.pointerEvents = 'none';
+            touchClone.style.transform = 'scale(1.02)';
+            touchClone.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.3)';
+            document.body.appendChild(touchClone);
+
+            this.classList.add('dragging');
+
+            updateTouchClonePosition(e.touches[0].clientY);
+        }
+
+        function handleTouchMove(e) {
+            if (!touchCurrentItem) return;
+            e.preventDefault();
+
+            const touch = e.touches[0];
+            updateTouchClonePosition(touch.clientY);
+
+            // Find item under touch
+            const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            const itemBelow = elemBelow ? elemBelow.closest('.itinerary-item') : null;
+
+            document.querySelectorAll('.itinerary-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+
+            if (itemBelow && itemBelow !== touchCurrentItem) {
+                itemBelow.classList.add('drag-over');
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (!touchCurrentItem) return;
+
+            // Find drop target
+            const touch = e.changedTouches[0];
+            const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            const dropTarget = elemBelow ? elemBelow.closest('.itinerary-item') : null;
+
+            if (dropTarget && dropTarget !== touchCurrentItem) {
+                const dropIndex = parseInt(dropTarget.dataset.index);
+                const itinerary = getItinerary();
+
+                const movedId = itinerary.order.splice(touchStartIndex, 1)[0];
+                itinerary.order.splice(dropIndex, 0, movedId);
+
+                saveItinerary(itinerary);
+                renderItinerary();
+            }
+
+            // Cleanup
+            if (touchClone) {
+                touchClone.remove();
+                touchClone = null;
+            }
+
+            document.querySelectorAll('.itinerary-item').forEach(item => {
+                item.classList.remove('dragging', 'drag-over');
+            });
+
+            touchCurrentItem = null;
+            touchStartIndex = null;
+        }
+
+        function updateTouchClonePosition(y) {
+            if (touchClone) {
+                const rect = touchCurrentItem.getBoundingClientRect();
+                touchClone.style.left = rect.left + 'px';
+                touchClone.style.top = (y - touchClone.offsetHeight / 2) + 'px';
+            }
+        }
+
+        // Render itinerary
+        function renderItinerary() {
+            const itinerary = getItinerary();
+            const listContainer = document.getElementById('itinerary-list');
+
+            // Use custom order or default to all tour stops
+            let orderedIds = itinerary.order && itinerary.order.length > 0
+                ? itinerary.order
+                : tourData.map(loc => loc.id);
+
+            // Ensure all tour stops are included (in case new ones were added)
+            const allTourIds = tourData.map(loc => loc.id);
+            allTourIds.forEach(id => {
+                if (!orderedIds.includes(id)) {
+                    orderedIds.push(id);
+                }
+            });
+
+            // Filter to only valid stops that aren't removed
+            const removedSet = new Set(itinerary.removed || []);
+            orderedIds = orderedIds.filter(id => tourData.some(loc => loc.id === id) && !removedSet.has(id));
+
+            // Update progress
+            const visitedCount = orderedIds.filter(id => itinerary.visited.includes(id)).length;
+            document.getElementById('progress-text').textContent = `Progress: ${visitedCount}`;
+            document.getElementById('progress-bar').style.width = `${(visitedCount / orderedIds.length) * 100}%`;
+
+            // Render items
+            let html = '';
+            orderedIds.forEach((stopId, index) => {
+                const location = tourData.find(l => l.id === stopId);
+                if (!location) return;
+
+                const isVisited = itinerary.visited.includes(stopId);
+                const theme = location.civicTheme;
+                const themeColor = theme ? theme.color : '#22c55e';
+                const isLastStop = index === orderedIds.length - 1;
+                const nextStopId = orderedIds[index + 1];
+                const nextLocation = nextStopId ? tourData.find(l => l.id === nextStopId) : null;
+
+                html += `
+                <div class="itinerary-item ${isVisited ? 'visited' : ''}" data-stop-id="${stopId}" data-index="${index}" draggable="true">
+                    <div class="drag-signifier">
+                        <div class="stop-number">${index + 1}</div>
+                        <div class="drag-handle">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="itinerary-card">
+                        <div class="itinerary-header">
+                            <div class="itinerary-thumbnail-wrapper">
+                                <img src="${location.image}" alt="${location.name}" class="itinerary-thumbnail" referrerpolicy="no-referrer" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2256%22 height=%2256%22><rect fill=%22%23374151%22 width=%2256%22 height=%2256%22/></svg>'">
+                            </div>
+                            <div class="itinerary-content" onclick="toggleAccordion(${stopId})">
+                            <h3 class="item-name text-white font-semibold mb-1">${location.name}</h3>
+                            <p class="text-gray-400 text-sm">${location.location}</p>
+                        </div>
+                        <div class="right-controls">
+                            <div class="checkbox-container ${isVisited ? 'checked' : ''}" onclick="toggleVisited(${stopId}, event)">
+                                ${isVisited ? `
+                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                ` : ''}
+                            </div>
+                            <svg class="chevron-icon w-5 h-5 text-gray-400" onclick="toggleAccordion(${stopId})" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="itinerary-details">
+                        <div class="p-4 border-t border-gray-800">
+                            <p class="text-gray-300 text-sm mb-4">${location.description.split(/(?<=[.!?])\s/)[0]}</p>
+
+                            <!-- Directions Section -->
+                            <div class="directions-section" style="margin-top: 0; padding-top: 0; border-top: none;">
+                                ${isLastStop ? `
+                                    <div class="last-stop-message">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        <span>Final stop - you made it!</span>
+                                    </div>
+                                ` : `
+                                    <button onclick="getDirectionsToNext(${stopId}, event)"
+                                            class="directions-btn w-full justify-center text-white text-sm" style="background: #22c55e;">
+                                        Directions to Next Location
+                                    </button>
+                                    <div id="directions-${stopId}" class="directions-content mt-3"></div>
+                                `}
+                            </div>
+
+                            <!-- View Details Button -->
+                            <a href="location-detail.html?id=${stopId}&tour=${tourId}"
+                               class="directions-btn w-full justify-center text-white text-sm border border-gray-600 hover:bg-gray-700 mt-1">
+                                Location Activities
+                            </a>
+
+                            <!-- Remove from Itinerary Button -->
+                            <button onclick="removeFromItinerary(${stopId}, event)" class="remove-btn">
+                                <span class="remove-radio"><span class="remove-radio-inner"></span></span>
+                                Remove from itinerary
+                            </button>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                `;
+            });
+
+            // Render removed items section
+            const removedIds = itinerary.removed || [];
+            if (removedIds.length > 0) {
+                html += `
+                <div class="removed-section">
+                    <div class="removed-section-header">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        <h3>Removed from itinerary</h3>
+                    </div>
+                `;
+
+                removedIds.forEach(stopId => {
+                    const location = tourData.find(l => l.id === stopId);
+                    if (!location) return;
+
+                    html += `
+                    <div class="removed-item">
+                        <div class="removed-item-content">
+                            <h4>${location.name}</h4>
+                            <p>${location.location}</p>
+                        </div>
+                        <button onclick="restoreToItinerary(${stopId}, event)" class="restore-btn">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Restore
+                        </button>
+                    </div>
+                    `;
+                });
+
+                html += `</div>`;
+            }
+
+            listContainer.innerHTML = html;
+
+            // Attach drag event listeners
+            document.querySelectorAll('.itinerary-item').forEach(item => {
+                // Mouse drag
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+                item.addEventListener('dragover', handleDragOver);
+                item.addEventListener('dragenter', handleDragEnter);
+                item.addEventListener('dragleave', handleDragLeave);
+                item.addEventListener('drop', handleDrop);
+
+                // Touch drag
+                item.addEventListener('touchstart', handleTouchStart, { passive: false });
+                item.addEventListener('touchmove', handleTouchMove, { passive: false });
+                item.addEventListener('touchend', handleTouchEnd);
+            });
+        }
+
+        // Initial render
+        renderItinerary();
+
+        // Navigation handled by nav-component.js
+    })();
+    </script>
+</body>
+</html>

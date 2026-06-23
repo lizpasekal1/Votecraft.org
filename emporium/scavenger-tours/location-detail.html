@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Detail - VoteCraft Tour</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="./css/scavenger-tours.css?v=31">
+</head>
+<body>
+    <!-- Page transition overlay -->
+    <div class="page-transition-overlay" id="page-overlay"></div>
+    <script>
+        // Fade out overlay to reveal page
+        requestAnimationFrame(() => {
+            document.getElementById('page-overlay').classList.add('fade-out');
+        });
+
+        // Intercept link clicks for fade transition
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a[href]');
+            if (link && link.href && !link.href.startsWith('javascript:') && !link.target) {
+                e.preventDefault();
+                const overlay = document.getElementById('page-overlay');
+                overlay.classList.remove('fade-out');
+                overlay.classList.add('fade-in');
+                setTimeout(() => {
+                    window.location.href = link.href;
+                }, 300);
+            }
+        });
+    </script>
+    <div id="app" class="max-w-2xl mx-auto bg-black min-h-screen">
+        <!-- Top Bar -->
+        <div id="header" class="top-bar bg-white px-4 py-2 shadow-sm sticky top-0 z-30 relative">
+            <!-- Back Button (absolute left) -->
+            <a href="scavenger-tours.html" id="back-link" class="btn-back absolute left-4 top-1/2 -translate-y-1/2 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <!-- Centered Logo -->
+            <div class="flex items-center justify-center gap-2 py-1">
+                <div id="header-icon" class="logo-icon w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+                    </svg>
+                </div>
+                <div class="logo-text text-xl font-bold">
+                    <span class="text-gray-800">VoteCraft</span>
+                    <span id="header-accent" class="text-blue-500">Tours</span>
+                </div>
+            </div>
+            <!-- Menu Button (absolute right) -->
+            <button id="btn-menu" class="btn-menu absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 rounded-lg">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Hero Image -->
+        <div id="hero-image" class="relative w-full h-48 bg-gray-800 overflow-hidden">
+            <img id="hero-img" src="" alt="" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="px-4 pt-4 pb-24">
+            <!-- Location Title -->
+            <h1 id="location-name" class="text-white text-2xl font-bold leading-tight mb-2">Loading...</h1>
+            <p id="location-address" class="text-gray-400 text-sm mb-4"></p>
+
+            <!-- Description -->
+            <p id="location-description" class="text-gray-300 text-sm leading-relaxed mb-2">
+                <span id="description-text"></span>
+            </p>
+
+            <!-- Read More Link -->
+            <p id="read-more-link" class="text-blue-400 cursor-pointer hover:text-blue-300 text-sm font-medium hidden mb-2" onclick="toggleDescriptionMore()">READ MORE ›</p>
+
+            <!-- Description More (accordion) -->
+            <div id="description-more-container" class="overflow-hidden transition-all duration-300 ease-in-out" style="max-height: 0;">
+                <p id="description-more-text" class="text-gray-300 text-sm leading-relaxed mb-4"></p>
+            </div>
+
+            <div id="description-spacer" class="mb-2"></div>
+
+            <!-- Learn More Fact -->
+            <div id="learn-more-section" class="bg-gray-900 border-l-4 rounded-r-lg p-4 mb-4 hidden">
+                <div class="flex items-start gap-3">
+                    <div class="text-yellow-400 flex-shrink-0 mt-0.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-white text-sm font-semibold mb-1">Did You Know?</p>
+                        <p id="learn-more-text" class="text-gray-300 text-sm"></p>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Soundtrack Section -->
+            <div class="song-ballot rounded-xl p-4">
+                <h2 class="text-white text-lg font-bold mb-2 text-center">
+                    RCV the Tune
+                    <span class="rcv-info-icon" onclick="toggleRcvInfo(event)">i</span>
+                    <div id="rcv-info-popup" class="rcv-info-popup">
+                        <div class="rcv-popup-title">We support<br>Ranked Choice Voting!</div>
+                        <div class="rcv-popup-tagline">This song voting demos the process.</div>
+                        <ul class="rcv-popup-list">
+                            <li>RCV allows you to rank candidates in order of preference</li>
+                            <li>If no one gets over 50%, the lowest candidate is eliminated</li>
+                            <li>Votes transfer to each voter's next choice</li>
+                            <li>The process repeats until a majority winner is found</li>
+                            <li>RCV avoids split-vote outcomes</li>
+                        </ul>
+                    </div>
+                </h2>
+                <p class="ballot-instructions text-gray-400 text-sm mb-4 text-center">Tap ? to rank choice vote on these songs as the feature for this location</p>
+
+                <!-- Songs List -->
+                <div id="songs-container" class="song-list"></div>
+
+                <!-- Submit Button -->
+                <button id="submit-votes-btn" class="w-full mt-4 py-3 rounded-xl font-bold text-white transition-all" disabled style="background: #374151; opacity: 0.5; cursor: not-allowed;">
+                    Submit Votes
+                </button>
+                <p id="submit-message" class="text-center text-gray-400 text-sm mt-3" style="display: none;">
+                    Results display at your tour's end
+                </p>
+            </div>
+
+            <!-- Back to Map Button (outside RCV container) -->
+            <a id="back-to-map-btn" href="itinerary.html" class="w-full mt-4 py-3 rounded-xl font-bold text-white text-center block transition-all" style="display: none; background: #3b82f6;">
+                Back to Map
+            </a>
+
+            <style>
+                .song-ballot {
+                    background: white;
+                    border: 1px solid #e5e7eb;
+                }
+                .song-ballot h2 {
+                    color: #1f2937;
+                }
+                .song-ballot .ballot-instructions {
+                    color: #6b7280;
+                }
+                .ballot-instructions {
+                    color: #9ca3af;
+                }
+                .song-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                }
+                .song-item {
+                    background: #1f2937;
+                    border: 2px solid #374151;
+                    border-radius: 8px;
+                    padding: 8px 12px;
+                    transition: all 0.2s;
+                    cursor: pointer;
+                }
+                .song-item:hover {
+                    border-color: #6b7280;
+                    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.05);
+                }
+                .song-play-btn {
+                    width: 32px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.3s ease;
+                    flex-shrink: 0;
+                    cursor: pointer;
+                }
+                .song-play-btn:hover {
+                    filter: brightness(1.3);
+                }
+                .song-play-btn .pause-icon {
+                    display: none;
+                }
+                .song-item.playing .song-play-btn .play-icon {
+                    display: none;
+                }
+                .song-item.playing .song-play-btn .pause-icon {
+                    display: block;
+                }
+                .song-content {
+                    max-height: 0;
+                    overflow: hidden;
+                    transition: max-height 0.3s ease;
+                }
+                .song-item.expanded .song-content {
+                    max-height: 280px;
+                }
+                .vote-btn {
+                    width: 32px;
+                    height: 32px;
+                    min-width: 32px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 700;
+                    font-size: 0.9rem;
+                    flex-shrink: 0;
+                    border: none;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .vote-btn:hover {
+                    transform: scale(1.1);
+                }
+                .vote-btn:active {
+                    transform: scale(0.95);
+                }
+                .song-title {
+                    font-weight: 600;
+                    font-size: 0.85rem;
+                    color: white;
+                    line-height: 1.2;
+                }
+                .song-artist {
+                    font-weight: 400;
+                    font-size: 0.75rem;
+                    color: #9ca3af;
+                    line-height: 1.2;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                .song-artist::before {
+                    content: ' - ';
+                }
+                .song-item .flex-1 {
+                    min-width: 0;
+                    min-height: 44px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                }
+                @media (max-width: 768px) {
+                    .song-artist {
+                        display: -webkit-box;
+                        margin-top: 2px;
+                    }
+                    .song-artist::before {
+                        content: '';
+                    }
+                }
+                .song-player {
+                    border-radius: 6px;
+                    overflow: hidden;
+                    height: 166px;
+                }
+                .song-reason {
+                    font-size: 0.75rem;
+                    color: #9ca3af;
+                    font-style: italic;
+                    line-height: 1.4;
+                }
+                .vote-count-badge {
+                    font-size: 0.65rem;
+                    padding: 2px 6px;
+                    border-radius: 10px;
+                    font-weight: 600;
+                }
+                #submit-votes-btn:not(:disabled):hover {
+                    opacity: 0.9;
+                }
+                .rcv-info-icon {
+                    cursor: pointer;
+                    color: white;
+                    background: #8b5cf6;
+                    border-radius: 50%;
+                    width: 18px;
+                    height: 18px;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    vertical-align: middle;
+                    position: relative;
+                    margin-left: 6px;
+                    margin-bottom: 2px;
+                    font-size: 13px;
+                    font-weight: 700;
+                    font-style: italic;
+                    font-family: Georgia, serif;
+                }
+                .rcv-info-icon:hover {
+                    background: #a78bfa;
+                }
+                .rcv-info-popup {
+                    display: none;
+                    position: absolute;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    top: 100%;
+                    margin-top: 12px;
+                    background: white;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 8px;
+                    padding: 12px;
+                    font-size: 0.85rem;
+                    font-weight: 400;
+                    color: black;
+                    width: 280px;
+                    max-width: 90vw;
+                    z-index: 10;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    line-height: 1.5;
+                }
+                .rcv-info-popup::before {
+                    content: '';
+                    position: absolute;
+                    top: -8px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    border-left: 8px solid transparent;
+                    border-right: 8px solid transparent;
+                    border-bottom: 8px solid white;
+                }
+                .rcv-info-popup::after {
+                    content: '';
+                    position: absolute;
+                    top: -9px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    border-left: 9px solid transparent;
+                    border-right: 9px solid transparent;
+                    border-bottom: 9px solid #e5e7eb;
+                    z-index: -1;
+                }
+                .rcv-info-popup.show {
+                    display: block;
+                }
+                .rcv-popup-title {
+                    font-weight: 700;
+                    font-size: 0.95rem;
+                    color: #1f2937;
+                    margin-bottom: 4px;
+                }
+                .rcv-popup-tagline {
+                    font-size: 0.8rem;
+                    color: #6b7280;
+                    margin-bottom: 10px;
+                    font-style: italic;
+                }
+                .rcv-popup-list {
+                    margin: 0;
+                    padding: 0;
+                    list-style: none;
+                    text-align: left;
+                }
+                .rcv-popup-list li {
+                    position: relative;
+                    padding-left: 16px;
+                    margin-bottom: 6px;
+                    font-size: 0.8rem;
+                    color: #374151;
+                    line-height: 1.4;
+                }
+                .rcv-popup-list li:last-child {
+                    margin-bottom: 0;
+                }
+                .rcv-popup-list li::before {
+                    content: '•';
+                    position: absolute;
+                    left: 0;
+                    color: #3b82f6;
+                    font-weight: bold;
+                    font-size: 1.4rem;
+                    line-height: 1;
+                }
+                h2 {
+                    position: relative;
+                }
+            </style>
+
+            <!-- Social Actions -->
+            <div class="mt-6 flex items-center justify-center gap-6">
+                <button id="like-button" onclick="toggleLikeLocation()" class="flex items-center gap-2 text-white hover:text-red-400 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                    </svg>
+                    <span id="like-count" class="font-semibold">Like</span>
+                </button>
+                <button class="flex items-center gap-2 text-white hover:text-blue-400 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                    </svg>
+                    <span class="font-semibold">Share</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals Container -->
+    <div id="modals"></div>
+
+    <!-- Widget Modal -->
+    <div id="widget-modal" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden">
+        <div class="max-w-2xl mx-auto h-full flex flex-col">
+            <div class="bg-gray-900 px-4 py-3 flex items-center justify-between shadow-sm">
+                <h2 id="widget-title" class="text-white font-bold">Explore Data</h2>
+                <button onclick="closeWidgetModal()" class="text-white hover:bg-gray-800 p-2 rounded-full">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4">
+                <div class="bg-gray-800 rounded-xl p-6 text-center">
+                    <div class="text-6xl mb-4">
+                        <svg class="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <p class="text-white text-lg font-bold mb-2">Interactive Widget</p>
+                    <p id="widget-description" class="text-gray-400 text-sm mb-4">Loading widget...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Location Data -->
+    <script src="./js/scavenger-tours-data.js?v=38"></script>
+
+    <!-- Shared Nav Component -->
+    <script src="./js/nav-component.js?v=8"></script>
+
+    <!-- Page JavaScript -->
+    <script>
+    (function() {
+        'use strict';
+
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const locationId = parseInt(urlParams.get('id'));
+        const tourId = urlParams.get('tour') || 'civic-sampler';
+
+        // Widget titles
+        const widgetTitles = {
+            'rcv-demo': 'Ranked Choice Voting',
+            'healthcare-cost': 'Healthcare Costs',
+            'voter-turnout': 'Voter Participation',
+            'housing-cost': 'Housing Affordability',
+            'immigration-data': 'Immigration Statistics',
+            'wealth-inequality': 'Wealth Distribution',
+            'climate-impact': 'Climate Projections',
+            'student-debt': 'Student Debt Crisis',
+            'healthcare-compare': 'Healthcare Comparison',
+            'life-expectancy': 'Life Expectancy',
+            'mental-health': 'Mental Health',
+            'voting-timeline': 'Voting Rights Timeline',
+            'voter-suppression': 'Voter Suppression',
+            'media-trust': 'Media Trust',
+            'press-freedom': 'Press Freedom',
+            'news-deserts': 'Local News Crisis',
+            'misinformation': 'Misinformation',
+            'scotus-approval': 'SCOTUS Approval',
+            'court-expansion': 'Court Expansion',
+            'judicial-terms': 'Judicial Terms',
+            'ethics-reform': 'Ethics Reform'
+        };
+
+        // Find the location data
+        const tourData = ALL_TOURS[tourId] || CIVIC_SAMPLER_TOUR;
+        const location = tourData.find(p => p.id === locationId);
+
+        if (!location) {
+            document.getElementById('location-name').textContent = 'Location not found';
+            return;
+        }
+
+        const theme = location.civicTheme;
+        const themeColor = theme ? theme.color : '#22c55e';
+
+        // Update header accent color
+        document.getElementById('header-icon').style.background = themeColor;
+        document.getElementById('header-accent').style.color = themeColor;
+
+        // Update back link to preserve tour context
+        document.getElementById('back-link').href = `scavenger-tours.html?tour=${tourId}`;
+
+        // Hero image
+        if (location.image) {
+            document.getElementById('hero-img').src = location.image;
+            document.getElementById('hero-img').alt = location.name;
+        } else {
+            // Hide hero section if no image
+            document.getElementById('hero-image').style.display = 'none';
+        }
+
+        // Location details
+        document.getElementById('location-name').textContent = location.name;
+        document.getElementById('location-address').textContent = location.location;
+        document.getElementById('description-text').textContent = location.description;
+
+        // Description "Read More" accordion
+        if (location.descriptionMore) {
+            document.getElementById('read-more-link').classList.remove('hidden');
+            document.getElementById('description-more-text').textContent = location.descriptionMore;
+        }
+
+        // Toggle description more accordion
+        let descriptionExpanded = false;
+        window.toggleDescriptionMore = function() {
+            const container = document.getElementById('description-more-container');
+            const link = document.getElementById('read-more-link');
+            descriptionExpanded = !descriptionExpanded;
+
+            if (descriptionExpanded) {
+                container.style.maxHeight = container.scrollHeight + 'px';
+                link.textContent = 'READ LESS ‹';
+            } else {
+                container.style.maxHeight = '0';
+                link.textContent = 'READ MORE ›';
+            }
+        };
+
+        // Learn more section
+        if (location.learnMore) {
+            const learnMoreSection = document.getElementById('learn-more-section');
+            learnMoreSection.classList.remove('hidden');
+            learnMoreSection.style.borderColor = themeColor;
+            document.getElementById('learn-more-text').textContent = location.learnMore;
+        }
+
+
+        // Likes
+        document.getElementById('like-count').textContent = location.likes;
+
+        // Get songs array (support both new array format and legacy single song)
+        let songs = [];
+        if (location.songs && location.songs.length > 0) {
+            songs = location.songs;
+        } else if (location.soundcloudUrl) {
+            // Legacy format - create single song from old fields
+            songs = [{
+                title: extractSongTitle(location.soundcloudUrl),
+                url: location.soundcloudUrl,
+                reason: location.songReason || ''
+            }];
+        }
+
+        // Make data globally accessible for onclick handlers
+        window.vcSongs = songs;
+        window.vcTourId = tourId;
+        window.vcLocationId = locationId;
+        window.vcLocationName = location.name;
+        window.vcThemeColor = themeColor;
+
+        // Helper to extract song title from SoundCloud URL
+        function extractSongTitle(url) {
+            if (!url) return 'Unknown Song';
+            const parts = url.split('/');
+            const slug = parts[parts.length - 1];
+            // Convert slug to title case
+            return slug.replace(/-/g, ' ').replace(/\d+$/, '').trim()
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
+
+        // Ranking storage key
+        const RANKINGS_KEY = `votecraft_song_rankings_${tourId}_${locationId}`;
+
+        // Get user's rankings (array of song indices in rank order)
+        function getUserRankings() {
+            try {
+                const data = localStorage.getItem(RANKINGS_KEY);
+                return data ? JSON.parse(data) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        // Get the rank of a specific song (1, 2, 3) or null if unranked
+        function getSongRank(songIndex) {
+            const rankings = getUserRankings();
+            const position = rankings.indexOf(songIndex);
+            return position >= 0 ? position + 1 : null;
+        }
+
+        // ===== SAVE SONG FUNCTIONALITY =====
+        const SAVED_SONGS_KEY = 'votecraft_saved_songs';
+
+        function getSavedSongs() {
+            try {
+                return JSON.parse(localStorage.getItem(SAVED_SONGS_KEY) || '[]');
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function isSongSaved(songUrl) {
+            const saved = getSavedSongs();
+            return saved.some(s => s.url === songUrl);
+        }
+        window.getSavedSongs = getSavedSongs;
+        window.isSongSaved = isSongSaved;
+
+        function toggleSaveSong(index) {
+            // Use global window variables for reliable access
+            const song = window.vcSongs[index];
+            if (!song) {
+                console.error('Song not found at index:', index);
+                return;
+            }
+            const artist = window.getArtistFromUrl(song.url);
+            const saved = window.getSavedSongs();
+            const existingIndex = saved.findIndex(s => s.url === song.url);
+
+            if (existingIndex >= 0) {
+                // Remove from saved
+                saved.splice(existingIndex, 1);
+            } else {
+                // Add to saved
+                saved.push({
+                    title: song.title,
+                    artist: artist || '',
+                    url: song.url,
+                    tourId: window.vcTourId,
+                    locationId: window.vcLocationId,
+                    locationName: window.vcLocationName
+                });
+            }
+
+            localStorage.setItem(SAVED_SONGS_KEY, JSON.stringify(saved));
+            window.updateSaveButton(index, song.url);
+        }
+
+        function updateSaveButton(index, songUrl) {
+            const btn = document.querySelector(`.save-song-btn[data-index="${index}"]`);
+            if (btn) {
+                const isSaved = window.isSongSaved(songUrl);
+                const color = window.vcThemeColor || '#3B82F6';
+                btn.innerHTML = isSaved
+                    ? `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
+                    : `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`;
+                btn.style.color = isSaved ? color : '#6b7280';
+            }
+        }
+
+        window.toggleSaveSong = toggleSaveSong;
+        window.updateSaveButton = updateSaveButton;
+
+        // ===== LIKE LOCATION FUNCTIONALITY =====
+        const LIKES_KEY = 'votecraft_likes';
+
+        function getLikedLocations() {
+            try {
+                return JSON.parse(localStorage.getItem(LIKES_KEY) || '[]');
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function isLocationLiked() {
+            const liked = getLikedLocations();
+            return liked.some(l => l.tourId === tourId && l.locationId === locationId);
+        }
+
+        function toggleLikeLocation() {
+            const liked = getLikedLocations();
+            const existingIndex = liked.findIndex(l => l.tourId === tourId && l.locationId === locationId);
+
+            if (existingIndex >= 0) {
+                // Remove from liked
+                liked.splice(existingIndex, 1);
+            } else {
+                // Add to liked
+                liked.push({
+                    tourId: tourId,
+                    locationId: locationId,
+                    locationName: location.name,
+                    likedAt: new Date().toISOString()
+                });
+            }
+
+            localStorage.setItem(LIKES_KEY, JSON.stringify(liked));
+            updateLikeButton();
+        }
+
+        function updateLikeButton() {
+            const btn = document.getElementById('like-button');
+            const isLiked = isLocationLiked();
+            const heartSvg = btn.querySelector('svg');
+
+            if (isLiked) {
+                heartSvg.setAttribute('fill', 'currentColor');
+                btn.classList.add('text-red-400');
+                btn.classList.remove('text-white');
+            } else {
+                heartSvg.setAttribute('fill', 'none');
+                btn.classList.remove('text-red-400');
+                btn.classList.add('text-white');
+            }
+        }
+
+        window.toggleLikeLocation = toggleLikeLocation;
+
+        function toggleRanking(songIndex) {
+            let rankings = getUserRankings();
+            const existingPosition = rankings.indexOf(songIndex);
+
+            if (existingPosition >= 0) {
+                // Already ranked - remove it and shift others down
+                rankings.splice(existingPosition, 1);
+            } else {
+                // Not ranked - add to next available position
+                if (rankings.length < songs.length) {
+                    rankings.push(songIndex);
+                }
+            }
+
+            localStorage.setItem(RANKINGS_KEY, JSON.stringify(rankings));
+            renderSongs();
+        }
+
+        // Render songs with ranking
+        function renderSongs() {
+            const container = document.getElementById('songs-container');
+            const rankings = getUserRankings();
+            const embedColor = themeColor.replace('#', '');
+
+            if (songs.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm text-center">No songs available</p>';
+                return;
+            }
+
+            // Extract artist name from SoundCloud URL
+            function getArtistFromUrl(url) {
+                try {
+                    const match = url.match(/soundcloud\.com\/([^\/]+)/);
+                    if (match && match[1]) {
+                        return match[1]
+                            .replace(/-/g, ' ')
+                            .replace(/official|music$/gi, '')
+                            .trim()
+                            .split(' ')
+                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                            .join(' ');
+                    }
+                } catch (e) {}
+                return '';
+            }
+            window.getArtistFromUrl = getArtistFromUrl;
+
+            // Helper to detect URL type and create embed
+            function getEmbedInfo(url) {
+                // YouTube URL patterns
+                const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+                if (youtubeMatch) {
+                    return {
+                        type: 'youtube',
+                        videoId: youtubeMatch[1],
+                        embedUrl: `https://www.youtube.com/embed/${youtubeMatch[1]}?rel=0&enablejsapi=1&origin=${window.location.origin}`,
+                        height: 200
+                    };
+                }
+                // SoundCloud URL
+                const encodedUrl = encodeURIComponent(url);
+                return {
+                    type: 'soundcloud',
+                    videoId: null,
+                    embedUrl: `https://w.soundcloud.com/player/?url=${encodedUrl}&color=%23${embedColor}&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&show_artwork=true&visual=true`,
+                    height: 166
+                };
+            }
+
+            // Store song info globally for play/pause control
+            window.songData = {};
+
+            let html = '';
+            songs.forEach((song, index) => {
+                const rank = getSongRank(index);
+                const isRanked = rank !== null;
+                const embed = getEmbedInfo(song.url);
+                const artist = getArtistFromUrl(song.url);
+                const songIsSaved = isSongSaved(song.url);
+                // Store song info globally for play/pause control
+                window.songData[index] = { type: embed.type, videoId: embed.videoId };
+
+                html += `
+                <div class="song-item" data-index="${index}">
+                    <!-- Title and Rank -->
+                    <div class="flex items-center gap-3" onclick="toggleSongExpand(${index})">
+                        <!-- Rank Badge -->
+                        <div class="vote-btn" onclick="rankSong(${index}); event.stopPropagation();"
+                             style="background: ${isRanked ? themeColor : 'white'}; color: ${isRanked ? 'white' : themeColor}; border: 2px solid ${themeColor};">
+                            ${isRanked ? rank : '?'}
+                        </div>
+                        <!-- Song Title and Artist -->
+                        <div class="flex-1">
+                            <span class="song-title">${song.title}</span>
+                            ${artist ? `<span class="song-artist">${artist}</span>` : ''}
+                        </div>
+                        <!-- Play/Pause Icon -->
+                        <div class="song-play-btn" style="color: ${themeColor};" onclick="playSong(${index}); event.stopPropagation();">
+                            <svg class="play-icon w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                            <svg class="pause-icon w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <!-- Collapsible Content -->
+                    <div class="song-content">
+                        <!-- Music Player -->
+                        <div class="song-player mb-2 mt-3">
+                            <iframe id="player-${index}" width="100%" height="${embed.height}" scrolling="no" frameborder="no" allow="autoplay; encrypted-media"
+                                    src="${embed.embedUrl}" ${embed.type === 'youtube' ? 'allowfullscreen' : ''}></iframe>
+                        </div>
+                        <!-- Song Reason with Save Button -->
+                        ${song.reason ? `
+                        <div class="flex items-start gap-3 mt-2">
+                            <p class="song-reason flex-1">${song.reason}</p>
+                            <button class="save-song-btn p-2 transition-all flex-shrink-0 rounded-lg hover:bg-gray-700/50" data-index="${index}"
+                                    style="color: ${songIsSaved ? themeColor : '#6b7280'};"
+                                    onclick="window.toggleSaveSong(${index}); event.stopPropagation();"
+                                    title="${songIsSaved ? 'Remove from saved' : 'Save song'}">
+                                ${songIsSaved
+                                    ? `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
+                                    : `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
+                                }
+                            </button>
+                        </div>
+                        ` : `
+                        <div class="flex items-center justify-end gap-2 mt-2">
+                            <span class="text-gray-400 text-sm">Save this song</span>
+                            <button class="save-song-btn p-2 transition-all rounded-lg hover:bg-gray-700/50" data-index="${index}"
+                                    style="color: ${songIsSaved ? themeColor : '#6b7280'};"
+                                    onclick="window.toggleSaveSong(${index}); event.stopPropagation();"
+                                    title="${songIsSaved ? 'Remove from saved' : 'Save song'}">
+                                ${songIsSaved
+                                    ? `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
+                                    : `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`
+                                }
+                            </button>
+                        </div>
+                        `}
+                    </div>
+                </div>
+                `;
+            });
+
+            container.innerHTML = html;
+
+            // Update submit button visibility and styling
+            updateSubmitButton(rankings);
+        }
+
+        // Enable/disable submit button based on rankings
+        function updateSubmitButton(rankings) {
+            const submitBtn = document.getElementById('submit-votes-btn');
+            if (rankings.length > 0) {
+                submitBtn.disabled = false;
+                submitBtn.style.background = themeColor;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.style.background = '#374151';
+                submitBtn.style.opacity = '0.5';
+                submitBtn.style.cursor = 'not-allowed';
+            }
+        }
+
+        // Track if votes have been submitted
+        let votesSubmitted = false;
+
+        // Handle submit votes
+        function submitVotes() {
+            const submitBtn = document.getElementById('submit-votes-btn');
+            const submitMsg = document.getElementById('submit-message');
+            const backToMapBtn = document.getElementById('back-to-map-btn');
+
+            if (votesSubmitted) {
+                // User tapped again - reset to original state
+                votesSubmitted = false;
+                submitBtn.textContent = 'Submit Votes';
+                submitBtn.style.background = themeColor;
+                submitMsg.style.display = 'none';
+                backToMapBtn.style.display = 'none';
+                return;
+            }
+
+            const rankings = getUserRankings();
+            if (rankings.length === 0) return;
+
+            // Get the ranked songs in order
+            const rankedSongs = rankings.map((songIndex, i) => ({
+                rank: i + 1,
+                song: songs[songIndex]
+            }));
+
+            // Show confirmation - stays green until tapped again
+            votesSubmitted = true;
+            submitBtn.textContent = 'Votes Submitted!';
+            submitBtn.style.background = '#22c55e';
+            submitMsg.style.display = 'block';
+
+            // Show back to map button
+            backToMapBtn.href = `itinerary.html?tour=${tourId}`;
+            backToMapBtn.style.display = 'block';
+        }
+
+        // Attach submit button handler
+        document.getElementById('submit-votes-btn').addEventListener('click', submitVotes);
+
+        // Global rank function
+        window.rankSong = function(index) {
+            toggleRanking(index);
+        };
+
+        // Toggle song expand/collapse
+        window.toggleSongExpand = function(index) {
+            const songItem = document.querySelector(`.song-item[data-index="${index}"]`);
+            if (songItem) {
+                songItem.classList.toggle('expanded');
+            }
+        };
+
+        // Track currently playing song
+        let currentlyPlaying = null;
+
+        // Detect if on mobile/iOS
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+        // Helper to send commands to SoundCloud iframe
+        function soundcloudCommand(iframe, command) {
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage(`{"method":"${command}"}`, '*');
+            }
+        }
+
+        // Helper to send YouTube postMessage commands
+        function youtubeCommand(iframe, command) {
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage(JSON.stringify({
+                    event: 'command',
+                    func: command,
+                    args: []
+                }), '*');
+            }
+        }
+
+        // Helper to control YouTube playback
+        function youtubeControl(iframe, videoId, shouldPlay) {
+            if (!iframe || !videoId) return;
+
+            if (shouldPlay) {
+                // On mobile, autoplay won't work - user must tap video
+                // On desktop, reload with autoplay
+                if (!isMobile) {
+                    iframe.src = `https://www.youtube.com/embed/${videoId}?rel=0&enablejsapi=1&playsinline=1&autoplay=1`;
+                }
+                // Apply saved volume after a short delay for player to load
+                setTimeout(() => applyVolumeToIframe(iframe, 'youtube'), 500);
+            } else {
+                // Pause using postMessage (works on both mobile and desktop)
+                youtubeCommand(iframe, 'pauseVideo');
+            }
+        }
+
+        // Helper to apply saved volume to an iframe
+        function applyVolumeToIframe(iframe, type) {
+            if (!iframe || !iframe.contentWindow) return;
+            const volume = parseInt(localStorage.getItem('votecraft_volume') || '80');
+
+            if (type === 'youtube') {
+                iframe.contentWindow.postMessage(JSON.stringify({
+                    event: 'command',
+                    func: 'setVolume',
+                    args: [volume]
+                }), '*');
+            } else if (type === 'soundcloud') {
+                iframe.contentWindow.postMessage(JSON.stringify({
+                    method: 'setVolume',
+                    value: volume
+                }), '*');
+            }
+        }
+
+        // Play/pause song toggle
+        window.playSong = function(index) {
+            const songItem = document.querySelector(`.song-item[data-index="${index}"]`);
+            const iframe = document.getElementById(`player-${index}`);
+            const songInfo = window.songData[index] || { type: 'soundcloud', videoId: null };
+
+            if (currentlyPlaying === index) {
+                // Currently playing this song - pause it and collapse
+                if (songInfo.type === 'youtube') {
+                    youtubeControl(iframe, songInfo.videoId, false);
+                } else {
+                    soundcloudCommand(iframe, 'pause');
+                }
+                songItem.classList.remove('playing');
+                songItem.classList.remove('expanded');
+                currentlyPlaying = null;
+            } else {
+                // Stop any other playing song first
+                if (currentlyPlaying !== null) {
+                    const prevIframe = document.getElementById(`player-${currentlyPlaying}`);
+                    const prevItem = document.querySelector(`.song-item[data-index="${currentlyPlaying}"]`);
+                    const prevInfo = window.songData[currentlyPlaying] || { type: 'soundcloud', videoId: null };
+                    if (prevInfo.type === 'youtube') {
+                        youtubeControl(prevIframe, prevInfo.videoId, false);
+                    } else {
+                        soundcloudCommand(prevIframe, 'pause');
+                    }
+                    if (prevItem) {
+                        prevItem.classList.remove('playing');
+                        prevItem.classList.remove('expanded');
+                    }
+                }
+
+                // Expand if not already expanded
+                if (!songItem.classList.contains('expanded')) {
+                    songItem.classList.add('expanded');
+                    // Wait for expansion animation, then play
+                    setTimeout(() => {
+                        if (songInfo.type === 'youtube') {
+                            youtubeControl(iframe, songInfo.videoId, true);
+                        } else {
+                            soundcloudCommand(iframe, 'play');
+                            applyVolumeToIframe(iframe, 'soundcloud');
+                        }
+                    }, 350);
+                } else {
+                    // Already expanded, play immediately
+                    if (songInfo.type === 'youtube') {
+                        youtubeControl(iframe, songInfo.videoId, true);
+                    } else {
+                        soundcloudCommand(iframe, 'play');
+                        applyVolumeToIframe(iframe, 'soundcloud');
+                    }
+                }
+                songItem.classList.add('playing');
+                currentlyPlaying = index;
+            }
+        };
+
+        // Listen for SoundCloud widget events (when user clicks directly on widget)
+        window.addEventListener('message', function(event) {
+            // Check if it's a SoundCloud widget message
+            if (event.origin && event.origin.includes('soundcloud.com')) {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.method === 'play') {
+                        // Find which iframe sent this message
+                        const iframes = document.querySelectorAll('[id^="player-"]');
+                        iframes.forEach((iframe) => {
+                            const idx = parseInt(iframe.id.replace('player-', ''));
+                            if (iframe.contentWindow === event.source) {
+                                // This iframe started playing - pause all others
+                                if (currentlyPlaying !== null && currentlyPlaying !== idx) {
+                                    const prevIframe = document.getElementById(`player-${currentlyPlaying}`);
+                                    const prevItem = document.querySelector(`.song-item[data-index="${currentlyPlaying}"]`);
+                                    const prevInfo = window.songData[currentlyPlaying] || { type: 'soundcloud', videoId: null };
+                                    if (prevInfo.type === 'youtube') {
+                                        youtubeControl(prevIframe, prevInfo.videoId, false);
+                                    } else {
+                                        soundcloudCommand(prevIframe, 'pause');
+                                    }
+                                    if (prevItem) {
+                                        prevItem.classList.remove('playing');
+                                    }
+                                }
+                                // Update current playing state
+                                const songItem = document.querySelector(`.song-item[data-index="${idx}"]`);
+                                if (songItem) {
+                                    songItem.classList.add('playing');
+                                }
+                                currentlyPlaying = idx;
+                            }
+                        });
+                    } else if (data.method === 'pause' || data.method === 'finish') {
+                        // Find which iframe paused/finished
+                        const iframes = document.querySelectorAll('[id^="player-"]');
+                        iframes.forEach((iframe) => {
+                            const idx = parseInt(iframe.id.replace('player-', ''));
+                            if (iframe.contentWindow === event.source && currentlyPlaying === idx) {
+                                const songItem = document.querySelector(`.song-item[data-index="${idx}"]`);
+                                if (songItem) {
+                                    songItem.classList.remove('playing');
+                                }
+                                currentlyPlaying = null;
+                            }
+                        });
+                    }
+                } catch (e) {
+                    // Not a JSON message, ignore
+                }
+            }
+        });
+
+        // Toggle RCV info popup
+        window.toggleRcvInfo = function(event) {
+            event.stopPropagation();
+            const popup = document.getElementById('rcv-info-popup');
+            popup.classList.toggle('show');
+        };
+
+        // Close popup when clicking outside
+        document.addEventListener('click', function(e) {
+            const popup = document.getElementById('rcv-info-popup');
+            if (popup && !e.target.closest('.rcv-info-icon')) {
+                popup.classList.remove('show');
+            }
+        });
+
+        // Initial render
+        renderSongs();
+
+        // Initialize like button state
+        updateLikeButton();
+
+        // Update page title
+        document.title = `${location.name} - VoteCraft Tour`;
+
+        // Widget modal functions
+        window.showWidgetModal = function(widgetName) {
+            document.getElementById('widget-title').textContent = widgetTitles[widgetName] || 'Explore Data';
+            document.getElementById('widget-description').textContent = `The ${widgetTitles[widgetName] || widgetName} widget will be embedded here.`;
+            document.getElementById('widget-modal').classList.remove('hidden');
+        };
+
+        window.closeWidgetModal = function() {
+            document.getElementById('widget-modal').classList.add('hidden');
+        };
+    })();
+    </script>
+</body>
+</html>

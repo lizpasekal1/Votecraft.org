@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dragon Ranking — VoteCraft</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/dragon-demo.css">
+</head>
+<body>
+  <canvas id="particle-canvas"></canvas>
+
+  <!-- The dragon follows the mouse — absolutely positioned -->
+  <svg id="dragon-svg" viewBox="0 0 400 700" preserveAspectRatio="xMidYMid meet"></svg>
+
+  <div class="page-container">
+    <div class="manuscript-page">
+      <div class="tagline">Pure layout in JavaScript,<br>bypassing DOM measurements and reflow</div>
+      <div class="manuscript-body" id="manuscript-body"></div>
+    </div>
+  </div>
+
+  <script src="js/dragon-demo.js"></script>
+</body>
+</html>

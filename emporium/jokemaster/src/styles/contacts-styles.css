@@ -1,0 +1,604 @@
+.contacts-page {
+    padding: 20px 15px 40px;
+    max-width: min(90vw, 768px);
+    margin: 0 auto;
+}
+
+.contacts-title {
+    font-family: 'Cinzel', serif;
+    color: #ffffff;
+    font-size: clamp(28px, 5vw, 36px);
+    text-align: center;
+    margin-bottom: 20px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.contacts-intro {
+    padding: 20px;
+
+}
+
+.intro-text {
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.8;
+    margin: 0;
+    text-align: center;
+}
+
+/* Cities List */
+.cities-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 30px;
+}
+
+/* Cities Divider */
+.cities-divider {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin: 20px 0;
+    padding: 0 10px;
+}
+
+.divider-line {
+    flex: 1;
+    height: 1px;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.divider-text {
+    font-family: 'Cinzel', serif;
+    color: rgba(0, 0, 0, 0.7);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* City Item */
+.city-item {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.city-item:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+/* Locked City Item */
+.city-item.locked {
+    background: rgba(200, 200, 200, 0.6);
+    opacity: 0.7;
+}
+
+.city-item.locked:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.city-item.locked .city-header {
+    cursor: default;
+    background: rgba(150, 150, 150, 0.1);
+}
+
+.city-item.locked .city-header:hover {
+    background: rgba(150, 150, 150, 0.1);
+}
+
+.city-item.locked .city-name,
+.city-item.locked .city-country {
+    color: #888;
+}
+
+/* City Header */
+.city-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 20px;
+    cursor: pointer;
+    background: linear-gradient(135deg, rgba(201, 169, 97, 0.1) 0%, rgba(166, 137, 68, 0.05) 100%);
+    transition: background 0.3s ease;
+}
+
+.city-header:hover {
+    background: linear-gradient(135deg, rgba(201, 169, 97, 0.15) 0%, rgba(166, 137, 68, 0.1) 100%);
+}
+
+.city-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.city-emoji {
+    font-size: 36px;
+    line-height: 1;
+}
+
+.city-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.city-name {
+    font-family: 'Cinzel', serif;
+    color: var(--burgundy);
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+/* Green dot for current city */
+.current-city-dot {
+    width: 10px;
+    height: 10px;
+    background: #22c55e;
+    border-radius: 50%;
+    margin-left: 8px;
+    box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+}
+
+.city-country {
+    color: var(--faded-ink);
+    font-size: 13px;
+    font-style: italic;
+}
+
+.city-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.city-count {
+    font-family: 'Cinzel', serif;
+    color: var(--burgundy);
+    font-size: 14px;
+    font-weight: 600;
+    background: rgba(139, 69, 19, 0.1);
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+.city-lock-icon {
+    font-size: 20px;
+    opacity: 0.6;
+}
+
+.city-chevron {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+}
+
+.city-chevron svg {
+    fill: var(--burgundy);
+}
+
+.city-item.open .city-chevron {
+    transform: rotate(180deg);
+}
+
+/* City Contacts Dropdown */
+.city-contacts {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.4s ease;
+    padding: 0 20px;
+    background: rgba(0, 0, 0, 0.15);
+}
+
+.city-item.open .city-contacts {
+    max-height: 1000px;
+    padding: 15px 20px 20px;
+}
+
+/* Travel to City Button */
+.travel-to-city-btn {
+    width: 100%;
+    padding: 12px 20px;
+    margin-bottom: 15px;
+    background: linear-gradient(135deg, rgba(201, 169, 97, 0.9) 0%, rgba(166, 137, 68, 0.9) 100%);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.travel-to-city-btn:hover {
+    background: linear-gradient(135deg, rgba(201, 169, 97, 1) 0%, rgba(166, 137, 68, 1) 100%);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+}
+
+.travel-to-city-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Contact Card inside City */
+.contact-card {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+    margin-bottom: 12px;
+}
+
+.contact-card:last-child {
+    margin-bottom: 0;
+}
+
+.contact-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.contact-card.completed {
+    position: relative;
+}
+
+.contact-portrait {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(201, 169, 97, 0.2) 0%, rgba(166, 137, 68, 0.2) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+
+.contact-info {
+    flex: 1;
+}
+
+.contact-name {
+    font-family: 'Cinzel', serif;
+    color: var(--burgundy);
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 3px;
+    letter-spacing: 0.5px;
+}
+
+
+.contact-role {
+    color: var(--faded-ink);
+    font-size: 13px;
+    font-style: italic;
+    margin-bottom: 5px;
+}
+
+.contact-details {
+    color: var(--ink);
+    font-size: 12px;
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
+
+.contact-status {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.contact-status.pending {
+    background: rgba(107, 44, 62, 0.15);
+    color: var(--burgundy);
+}
+
+.contact-status.completed {
+    background: rgba(45, 106, 106, 0.2);
+    color: var(--teal);
+}
+
+/* Contact Plus Icon */
+.contact-plus-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    background: var(--teal);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.contact-plus-icon:hover {
+    background: #236060;
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+.contact-plus-icon svg {
+    width: 20px;
+    height: 20px;
+    fill: white;
+}
+
+/* Interaction Details Popup */
+.interaction-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.interaction-popup-overlay.show {
+    display: flex;
+}
+
+.interaction-popup {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.popup-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    color: var(--burgundy);
+    font-size: 28px;
+    line-height: 28px;
+    text-align: center;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.popup-close:hover {
+    opacity: 1;
+}
+
+.popup-icon {
+    font-size: 48px;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.popup-title {
+    font-family: 'Cinzel', serif;
+    color: var(--burgundy);
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+.popup-section {
+    margin-bottom: 20px;
+}
+
+.popup-section:last-child {
+    margin-bottom: 0;
+}
+
+.popup-section-title {
+    font-family: 'Cinzel', serif;
+    color: var(--teal);
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.popup-text {
+    font-family: 'Crimson Text', serif;
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.popup-joke-types {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.joke-type-tag {
+    display: inline-block;
+    padding: 6px 12px;
+    background: rgba(201, 169, 97, 0.2);
+    border-radius: 12px;
+    font-family: 'Crimson Text', serif;
+    font-size: 14px;
+    color: var(--burgundy);
+    font-weight: 600;
+}
+
+.popup-funding {
+    font-family: 'Cinzel', serif;
+    color: var(--teal);
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+/* Referral Container with Parchment Style */
+.popup-referral-container {
+    background: linear-gradient(135deg, #f4e8d0 0%, #e8d7b8 100%);
+    border: 2px solid rgba(139, 69, 19, 0.3);
+    border-radius: 12px;
+    padding: 25px;
+    margin-top: 25px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.popup-referral-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(139, 69, 19, 0.02) 2px,
+            rgba(139, 69, 19, 0.02) 3px
+        );
+    border-radius: 12px;
+    pointer-events: none;
+}
+
+.popup-referral-quote {
+    font-family: 'Crimson Text', serif;
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.7;
+    font-style: italic;
+    margin-bottom: 20px;
+    position: relative;
+    padding-left: 20px;
+}
+
+.popup-referral-quote::before {
+    content: '"';
+    position: absolute;
+    left: 0;
+    top: -5px;
+    font-size: 48px;
+    color: rgba(139, 69, 19, 0.3);
+    font-family: Georgia, serif;
+    line-height: 1;
+}
+
+.popup-referral-btn {
+    width: 100%;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, var(--burgundy) 0%, #6b2c2c 100%);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.popup-referral-btn:hover {
+    background: linear-gradient(135deg, #6b2c2c 0%, var(--burgundy) 100%);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+}
+
+.popup-referral-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .city-emoji {
+        font-size: 30px;
+    }
+
+    .city-name {
+        font-size: 18px;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 430px) {
+    .city-name {
+        font-size: 16px;
+        white-space: nowrap;
+    }
+
+    .city-header {
+        padding: 14px 15px;
+    }
+
+    .city-info {
+        gap: 10px;
+    }
+
+    .city-emoji {
+        font-size: 28px;
+    }
+
+    .city-country {
+        font-size: 12px;
+    }
+
+    .contact-portrait {
+        width: 50px;
+        height: 50px;
+        font-size: 25px;
+    }
+
+    .contact-name {
+        font-size: 15px;
+    }
+
+    .contact-role {
+        font-size: 12px;
+    }
+
+    .contact-details {
+        font-size: 11px;
+    }
+}

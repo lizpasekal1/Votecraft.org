@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#8B2635">
+    <link rel="manifest" href="/manifest.json">
+    <title>Joke Master</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/styles.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--parchment);
+            font-family: 'Cinzel', serif;
+        }
+
+        .landing-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--parchment);
+            opacity: 1;
+            transition: opacity 2s ease;
+            z-index: 1000;
+        }
+
+        .landing-container.fade-out {
+            opacity: 0;
+        }
+
+        /* Next page preloaded underneath for crossfade effect */
+        .next-page-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            opacity: 0;
+            transition: opacity 2s ease;
+            z-index: 999;
+        }
+
+        .next-page-container.fade-in {
+            opacity: 1;
+        }
+
+        .landing-title {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(48px, 12vw, 96px);
+            font-weight: 700;
+            color: #000000;
+            text-align: center;
+            margin-bottom: 40px;
+            letter-spacing: 4px;
+            margin: 0;
+        }
+
+        .play-button {
+            background: #000000;
+            color: #ffffff;
+            font-family: 'Cinzel', serif;
+            font-size: clamp(18px, 4vw, 24px);
+            font-weight: 600;
+            padding: 20px 60px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            margin-top: 30px;
+        }
+
+        .play-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .play-button:active {
+            transform: scale(0.98);
+        }
+
+        /* Mobile optimization */
+        @media (max-width: 768px) {
+            .landing-container {
+                padding: 20px;
+                padding-bottom: 100px;
+            }
+
+            .landing-title {
+                margin: 0;
+            }
+
+            .play-button {
+                margin-top: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="landing-container" id="landingContainer">
+        <h1 class="landing-title">JOKE MASTER</h1>
+        <button class="play-button" id="playButton">Play Demo</button>
+    </div>
+
+    <script>
+        document.getElementById('playButton').addEventListener('click', function() {
+            const container = document.getElementById('landingContainer');
+            container.classList.add('fade-out');
+
+            // Navigate after 2 second fade
+            setTimeout(function() {
+                window.location.href = 'globe.html';
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

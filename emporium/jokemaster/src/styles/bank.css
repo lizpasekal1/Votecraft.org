@@ -1,0 +1,583 @@
+/* Bank Page - Your Comedy Arsenal */
+
+.bank-page {
+    padding: 15px 15px 30px;
+    max-width: min(90vw, 768px);
+    margin: 0 auto;
+}
+
+.bank-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(28px, 5vw, 36px);
+    font-weight: 700;
+    color: #ffffff;
+    text-align: center;
+    margin-bottom: 20px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Arsenal Sections */
+.arsenal-section {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.section-title {
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--burgundy);
+    margin: 0 0 10px 0;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.section-description {
+    font-family: 'Crimson Text', serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink);
+    margin-bottom: 15px;
+}
+
+/* Energy Section */
+.energy-meter {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.energy-bar {
+    width: 150px;
+    height: 20px;
+    background: rgba(139, 111, 71, 0.2);
+    border: 2px solid var(--copper);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.energy-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold) 0%, #FFD700 100%);
+    border-radius: 8px;
+    transition: width 0.3s ease;
+    box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.3);
+}
+
+.energy-text {
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--burgundy);
+    white-space: nowrap;
+}
+
+.energy-tips {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.tip-item {
+    font-family: 'Crimson Text', serif;
+    font-size: 14px;
+    color: var(--ink);
+    padding-left: 5px;
+    opacity: 0.85;
+}
+
+/* Comedians Grid */
+.comedian-count,
+.artifact-count {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--copper);
+}
+
+.comedians-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.comedian-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.comedian-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.comedian-card.recruited {
+    background: linear-gradient(135deg, #FFE5B4 0%, #FFEFD5 100%);
+    box-shadow: 0 4px 12px rgba(201, 169, 97, 0.5);
+}
+
+.comedian-card.locked {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.comedian-card.locked:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.comedian-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.comedian-emoji {
+    font-size: 32px;
+    line-height: 1;
+}
+
+.comedian-info {
+    flex: 1;
+}
+
+.comedian-name {
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--burgundy);
+    margin: 0 0 4px 0;
+}
+
+.comedian-style {
+    font-family: 'Crimson Text', serif;
+    font-size: 13px;
+    color: var(--copper);
+    font-style: italic;
+}
+
+.comedian-location {
+    font-family: 'Crimson Text', serif;
+    font-size: 12px;
+    color: var(--ink);
+    opacity: 0.7;
+    margin-bottom: 8px;
+}
+
+.comedian-description {
+    font-family: 'Crimson Text', serif;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink);
+    margin-bottom: 10px;
+}
+
+.comedian-bonus {
+    background: rgba(139, 111, 71, 0.1);
+    border-radius: 6px;
+    padding: 8px;
+    margin-bottom: 10px;
+}
+
+.bonus-label {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--copper);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.bonus-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.bonus-tag {
+    font-family: 'Crimson Text', serif;
+    font-size: 11px;
+    background: var(--parchment);
+    color: var(--burgundy);
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--copper);
+}
+
+.comedian-cost {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    color: var(--copper);
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.recruit-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--burgundy) 0%, var(--copper) 100%);
+    color: var(--parchment);
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.recruit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(107, 44, 62, 0.4);
+}
+
+.recruit-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.recruited-badge {
+    background: var(--gold);
+    color: var(--ink);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+
+/* Artifacts Grid */
+.artifacts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.artifact-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 15px;
+    position: relative;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.artifact-card.found {
+    background: linear-gradient(135deg, #E0F2F1 0%, #B2DFDB 100%);
+    box-shadow: 0 4px 12px rgba(45, 106, 106, 0.5);
+}
+
+.artifact-card.locked {
+    opacity: 0.5;
+}
+
+.artifact-rarity {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+}
+
+.artifact-rarity.common {
+    background: #E0E0E0;
+    color: #616161;
+}
+
+.artifact-rarity.uncommon {
+    background: #B3E5FC;
+    color: #01579B;
+}
+
+.artifact-rarity.rare {
+    background: #FFE082;
+    color: #F57F17;
+}
+
+.artifact-emoji {
+    font-size: 40px;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.artifact-name {
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--burgundy);
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.artifact-description {
+    font-family: 'Crimson Text', serif;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink);
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.artifact-effect {
+    background: rgba(139, 111, 71, 0.1);
+    border-radius: 6px;
+    padding: 8px;
+    margin-bottom: 10px;
+}
+
+.effect-label {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--copper);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.effect-description {
+    font-family: 'Crimson Text', serif;
+    font-size: 12px;
+    color: var(--ink);
+}
+
+.artifact-location {
+    font-family: 'Crimson Text', serif;
+    font-size: 12px;
+    color: var(--copper);
+    text-align: center;
+    font-style: italic;
+}
+
+.found-badge {
+    background: var(--teal);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+
+/* Modal */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-overlay.show {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--parchment);
+    border: 3px solid var(--burgundy);
+    border-radius: 15px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--burgundy);
+    cursor: pointer;
+    z-index: 1;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.modal-close:hover {
+    background: rgba(107, 44, 62, 0.1);
+}
+
+.modal-body {
+    padding: 30px;
+}
+
+.modal-comedian-emoji {
+    font-size: 60px;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.modal-comedian-name {
+    font-family: 'Cinzel', serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--burgundy);
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.modal-comedian-style {
+    font-family: 'Crimson Text', serif;
+    font-size: 16px;
+    color: var(--copper);
+    text-align: center;
+    font-style: italic;
+    margin-bottom: 20px;
+}
+
+.modal-section {
+    margin-bottom: 20px;
+}
+
+.modal-section-title {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--burgundy);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.modal-section-content {
+    font-family: 'Crimson Text', serif;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ink);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+.modal-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.modal-btn-primary {
+    background: linear-gradient(135deg, var(--burgundy) 0%, var(--copper) 100%);
+    color: var(--parchment);
+}
+
+.modal-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(107, 44, 62, 0.4);
+}
+
+.modal-btn-primary:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.modal-btn-secondary {
+    background: white;
+    color: var(--burgundy);
+    border: 2px solid var(--burgundy);
+}
+
+.modal-btn-secondary:hover {
+    background: var(--parchment);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .bank-page {
+        padding: 15px;
+    }
+
+    .arsenal-section {
+        padding: 15px;
+    }
+
+    .comedians-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .artifacts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .energy-meter {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .energy-bar {
+        width: 100%;
+    }
+}
+
+@media (max-width: 430px) {
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .comedian-card,
+    .artifact-card {
+        padding: 12px;
+    }
+}
