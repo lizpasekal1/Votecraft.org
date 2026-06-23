@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#8B2635">
+    <link rel="manifest" href="/manifest.json">
+    <title>Project - Joke Master</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/styles.css">
+    <link rel="stylesheet" href="../styles/goal-styles.css">
+    <link rel="stylesheet" href="../styles/icons.css">
+    <style>
+        /* Force consistent footer sizing */
+        .action-icons {
+            gap: clamp(12px, 4vw, 28px) !important;
+            padding: 10px clamp(8px, 2vw, 15px) !important;
+        }
+        .icon-circle {
+            width: clamp(28px, 6vw, 36px) !important;
+            height: clamp(28px, 6vw, 36px) !important;
+        }
+        .icon-circle svg {
+            width: clamp(24px, 5vw, 30px) !important;
+            height: clamp(24px, 5vw, 30px) !important;
+        }
+        .icon-label {
+            font-size: clamp(8px, 1.5vw, 10px) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-content">
+            <header class="game-header">
+                <div class="header-banner">
+                    <div class="header-main">
+                        <div class="header-money" id="headerMoney">£0 FUNDING</div>
+                        <div class="header-laugh-energy" id="headerLaughEnergy">😂 3/10</div>
+                        <div class="header-collected" id="headerCollected">0 collected</div>
+                    </div>
+                    <div class="header-title">JOKE MASTER</div>
+                </div>
+            </header>
+
+            <main class="project-page">
+                <h1 class="project-title">Adventure</h1>
+
+                <div class="story-section">
+                    <h2 class="section-title">GAME GOALS</h2>
+                    <p class="story-text">
+                       In the heart of the Planet, Rain dreams of making a difference. 
+                       Armed with wit and charm, Rain must win over the city’s most influential 
+                       residents—one conversation at a time. Every joke could build trust, unlock 
+                       funding, or quietly ruin everything. As Rain, choose wisely, read the room, and navigate 
+                        where timing is everything....
+                    </p>
+    
+                </div>
+
+                <div class="project-selection">
+                    <p class="selection-description">
+                        Select your visionary project to improve:
+                    </p>
+
+                    <div class="project-categories">
+                        <div class="project-category">
+                            <h3 class="category-title accordion-header">Community Life</h3>
+                            <div class="project-options accordion-content">
+                                <div class="project-option" data-project="eco-wellness-housing">
+                                    <div class="option-icon">🏘️</div>
+                                    <h3 class="option-title">Eco-Wellness Housing</h3>
+                                    <p class="option-description">
+                                        Affordable housing designed and developed to integrate community wellness, 
+                                        green spaces, and sustainable energy.
+                                    </p>
+                                    <button class="select-project-btn">Select Project</button>
+                                </div>
+
+                                <div class="project-option" data-project="gaming-gym-centers">
+                                    <div class="option-icon">🎮</div>
+                                    <h3 class="option-title">Gaming Gym Centers</h3>
+                                    <p class="option-description">
+                                        Fitness centers that blend fun physical exercise-machines and
+                                        immersive community gaming, allowing members to level up in both worlds.
+                                    </p>
+                                    <button class="select-project-btn">Select Project</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="project-category">
+                            <h3 class="category-title accordion-header">Systems of Power</h3>
+                            <div class="project-options accordion-content">
+                                <div class="project-option" data-project="democracy-upgrade">
+                                    <div class="option-icon">🗳️</div>
+                                    <h3 class="option-title">Democracy Upgrade</h3>
+                                    <p class="option-description">
+                                        A civic platform empowering citizens through ranked-choice voting,
+                                        anti-corruption reforms, fair redistricting, and public policy innovation.
+                                    </p>
+                                    <button class="select-project-btn">Select Project</button>
+                                </div>
+
+                                <div class="project-option" data-project="universal-healthcare">
+                                    <div class="option-icon">🏥</div>
+                                    <h3 class="option-title">Universal Basic Healthcare</h3>
+                                    <p class="option-description">
+                                       A universal healthcare platform that ensures basic medical support for all residents, 
+                                       including preventive and mental health services.
+                                    </p>
+                                    <button class="select-project-btn">Select Project</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <div class="action-icons">
+            <div class="action-icon active">
+                <div class="icon-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960">
+                        <path d="M160-120q-33 0-56.5-23.5T80-200v-440q0-33 23.5-56.5T160-720h160v-80q0-33 23.5-56.5T400-880h160q33 0 56.5 23.5T640-800v80h160q33 0 56.5 23.5T880-640v440q0 33-23.5 56.5T800-120H160Zm240-600h160v-80H400v80Zm400 360H600v80H360v-80H160v160h640v-160Zm-360 0h80v-80h-80v80Zm-280-80h200v-80h240v80h200v-200H160v200Zm320 40Z"/>
+                    </svg>
+                </div>
+                <div class="icon-label">GOAL</div>
+            </div>
+            <div class="action-icon" onclick="window.location.href='contacts.html'">
+                <div class="icon-circle">👤</div>
+                <div class="icon-label">CONTACTS</div>
+            </div>
+            <div class="action-icon" onclick="window.location.href='globe.html'">
+                <div class="icon-circle">🌍</div>
+                <div class="icon-label">GLOBE</div>
+            </div>
+            <div class="action-icon" onclick="window.location.href='your-jokes.html'">
+                <div class="icon-circle">🎭</div>
+                <div class="icon-label">JOKES</div>
+            </div>
+            <div class="action-icon" onclick="window.location.href='bank.html'">
+                <div class="icon-circle">£</div>
+                <div class="icon-label">BANK</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+    <!-- Firebase config and database helper -->
+    <script src="../scripts/firebase-config.js"></script>
+    <script src="../scripts/database.js"></script>
+
+    <script src="../scripts/goal.js"></script>
+    <script src="../scripts/icons.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add fade-in animation to body
+            document.body.classList.add('page-fade-in');
+
+            initializeFirebase();
+        });
+    </script>
+</body>
+</html>

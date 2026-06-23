@@ -1,0 +1,17 @@
+/* Material Design Flat Icons */
+
+/* SVG icon styling - all white, no circles */
+.icon-circle svg {
+    width: clamp(24px, 5vw, 30px) !important;
+    height: clamp(24px, 5vw, 30px) !important;
+    fill: white !important;
+    transition: fill 0.2s ease;
+}
+
+.action-icon:hover .icon-circle svg {
+    fill: white !important;
+}
+
+.action-icon.active .icon-circle svg {
+    fill: var(--gold) !important;
+}

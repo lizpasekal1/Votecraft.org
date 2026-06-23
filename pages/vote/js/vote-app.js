@@ -1,13 +1,5 @@
-/**
- * VoteCraft Vote Page Application
- *
- * Two-panel interface combining representative lookup with
- * civic reform issue exploration and nonprofit alignment.
- */
-
 class VoteApp {
     constructor() {
-        // DOM elements
         this.addressInput = document.getElementById('address-input');
         this.lookupBtn = document.getElementById('lookup-btn');
         this.toggleRepsBtn = document.getElementById('toggle-reps');
@@ -33,7 +25,6 @@ class VoteApp {
         this.errorText = document.getElementById('error-text');
         this.switchIssueBtn = document.getElementById('switch-issue-btn');
 
-        // Issue detail elements
         this.issueTitle = document.getElementById('issue-title');
         this.issueHeroImg = document.getElementById('issue-hero-img');
         this.issueDescription = document.getElementById('issue-description');
@@ -52,12 +43,10 @@ class VoteApp {
         this.learnMoreIframe = document.getElementById('learn-more-iframe');
         this.learnMoreClose = document.getElementById('learn-more-close');
 
-        // Rep website modal
         this.repWebsiteModal = document.getElementById('rep-website-modal');
         this.repWebsiteIframe = document.getElementById('rep-website-iframe');
         this.repWebsiteClose = document.getElementById('rep-website-close');
 
-        // State
         this.legislators = [];
         this.selectedRep = null;
         this.selectedIssue = null;
@@ -75,8 +64,6 @@ class VoteApp {
         this.renderIssuesSidebar();
         this.showPlaceholderReps();
     }
-
-    // ========== MAP ==========
 
     initMap() {
         if (this.issueMap) {
@@ -165,8 +152,6 @@ class VoteApp {
             if (this.issueMap) this.issueMap.invalidateSize();
         });
     }
-
-    // ========== EVENTS ==========
 
     bindEvents() {
         this.lookupBtn.addEventListener('click', () => {
@@ -336,15 +321,11 @@ class VoteApp {
             if (stanceRep && !stanceRep.classList.contains('placeholder')) {
                 e.stopPropagation();
                 const index = parseInt(stanceRep.dataset.index);
-                console.log('Clicked stance rep item, index:', index, 'legislators count:', this.legislators.length);
                 if (!isNaN(index) && index >= 0 && this.legislators[index]) {
                     this.selectRep(this.legislators[index]);
-                    // Scroll the rep alignment card into view on mobile
                     if (window.innerWidth <= 900 && this.repAlignmentCard) {
                         setTimeout(() => this.repAlignmentCard.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
                     }
-                } else {
-                    console.warn('Invalid index or legislator not found:', index);
                 }
                 return;
             }
@@ -375,8 +356,6 @@ class VoteApp {
             this.repsPanel.style.display = 'none';
         }
     }
-
-    // ========== REP LOOKUP ==========
 
     resetSearch() {
         this.addressInput.value = '';
@@ -489,10 +468,9 @@ class VoteApp {
                     if (congressRaw.length > 0) {
                         const congressParsed = window.CivicAPI.parseRepresentatives({ officials: congressRaw });
                         this.localLegislators = [...congressParsed, ...this.localLegislators];
-                        console.log(`Added ${congressParsed.length} Congress members from local DB`);
                     }
                 } catch (err) {
-                    console.log('Could not fetch Congress members:', err.message);
+                    // Congress fallback unavailable
                 }
             }
 
@@ -579,10 +557,7 @@ class VoteApp {
                             const localScore = dataScore(localLeg);
                             // Compare data - keep the one with more info
                             if (stateScore > localScore) {
-                                console.log('Replacing duplicate with better data:', localLeg.name, `(score ${localScore})`, '->', l.name, `(score ${stateScore})`);
                                 this.localLegislators[localIdx] = l;
-                            } else {
-                                console.log('Skipping duplicate (local has more data):', l.name, `(state: ${stateScore}, local: ${localScore})`);
                             }
                             return false;
                         }
@@ -613,8 +588,6 @@ class VoteApp {
             this.showError(error.message || 'Unable to find legislators. Please check the address and try again.');
         }
     }
-
-    // ========== LEFT PANEL: REPRESENTATIVES ==========
 
     showPlaceholderReps() {
         const federalSenatorPlaceholders = [
@@ -873,7 +846,6 @@ class VoteApp {
     selectRep(legislator) {
         this.selectedRep = legislator;
         const index = this.legislators.indexOf(legislator);
-        console.log('selectRep called:', legislator.name, 'index:', index);
 
         // Update visual selection in reps panel
         document.querySelectorAll('.rep-item').forEach(item => {
@@ -950,8 +922,6 @@ class VoteApp {
             if (sponsoredDiv) sponsoredDiv.innerHTML = '';
         }
     }
-
-    // ========== RIGHT PANEL: ISSUES GRID ==========
 
     buildAwarenessChart(data) {
         if (!data || data.length < 2) {
@@ -1034,8 +1004,6 @@ class VoteApp {
             return html;
         }).join('');
     }
-
-    // ========== RIGHT PANEL: ISSUE DETAIL ==========
 
     showIssueDetail(issueId) {
         const issue = window.ISSUES_CATALOG.find(i => i.id === issueId);
@@ -1181,7 +1149,6 @@ class VoteApp {
         }
     }
 
-    // ===== Bot Challenge (Email Me) =====
     startBotChallenge() {
         this._botStep = 0;
         this._botModal = document.getElementById('bot-challenge-modal');
@@ -1337,8 +1304,6 @@ class VoteApp {
         this.renderIssuesSidebar();
     }
 
-    // ========== SIDEBAR STANCE ACCORDION ==========
-
     toggleStance(issueId, stance) {
         const issue = window.ISSUES_CATALOG.find(i => i.id === issueId);
         if (!issue) return;
@@ -1417,63 +1382,6 @@ class VoteApp {
         listEl.innerHTML = supporters.map(s => this.renderStanceRepItem(s.legislator, `${s.count} bill${s.count === 1 ? '' : 's'}`, false)).join('');
     }
 
-    async loadIssueOpposed(issue) {
-        const listEl = document.getElementById(`stance-list-${issue.id}`);
-        if (!listEl) return;
-
-        listEl.style.display = '';
-
-        // Show placeholders if no location searched
-        if (!this.currentJurisdiction || this.legislators.length === 0) {
-            this.renderStancePlaceholders(listEl);
-            return;
-        }
-
-        listEl.innerHTML = '<div class="stance-loading"><div class="mini-loader"></div>Finding opposition...</div>';
-
-        const jurisdiction = this.currentJurisdiction;
-
-        // Fetch bills (reuses billCache — now includes votes)
-        const allBills = await this.fetchIssueBills(issue, jurisdiction);
-
-        if (allBills.length === 0) {
-            listEl.innerHTML = '<div class="stance-empty">No related bills found in current session.</div>';
-            return;
-        }
-
-        // Find legislators who voted nay on related bills
-        const opposedMap = {};
-        for (const bill of allBills) {
-            if (!bill.votes || bill.votes.length === 0) continue;
-            for (const vote of bill.votes) {
-                const individualVotes = vote.votes || [];
-                for (const leg of this.legislators) {
-                    const lastName = leg.name.split(' ').pop().toLowerCase();
-                    const theirVote = individualVotes.find(v => {
-                        const voterName = (v.voter_name || '').toLowerCase();
-                        return voterName.includes(lastName) || lastName.includes(voterName);
-                    });
-                    if (theirVote && theirVote.option === 'nay') {
-                        const key = leg.id || leg.name;
-                        if (!opposedMap[key]) {
-                            opposedMap[key] = { legislator: leg, count: 0 };
-                        }
-                        opposedMap[key].count++;
-                    }
-                }
-            }
-        }
-
-        const opposed = Object.values(opposedMap).sort((a, b) => b.count - a.count);
-
-        if (opposed.length === 0) {
-            listEl.innerHTML = '<div class="stance-empty">No nay votes found on related bills.</div>';
-            return;
-        }
-
-        listEl.innerHTML = opposed.map(o => this.renderStanceRepItem(o.legislator, `${o.count} nay vote${o.count === 1 ? '' : 's'}`, true)).join('');
-    }
-
     async fetchIssueBills(issue, jurisdiction) {
         const cacheKey = `${issue.id}_${jurisdiction}`;
         if (this.billCache[cacheKey]) {
@@ -1542,8 +1450,6 @@ class VoteApp {
             </div>
         `;
     }
-
-    // ========== TOP SUPPORTERS WIDGET (Right Panel) ==========
 
     async loadTopSupporters(issue) {
         const myVersion = ++this._topSupportersVersion;
@@ -1645,8 +1551,6 @@ class VoteApp {
         this.loadIssueSupporters(this.selectedIssue);
     }
 
-    // ========== REP ALIGNMENT ==========
-
     async loadRepAlignment(rep, issue) {
         // Show loading state in alignment card
         this.repAlignmentCard.classList.remove('placeholder');
@@ -1698,8 +1602,6 @@ class VoteApp {
         const cacheKey = `${issue.id}_${jurisdiction}_${rep.level || 'state'}`;
         let allBills = this.billCache[cacheKey];
 
-        console.log(`loadRepAlignment: ${rep.name}, level=${rep.level}, office=${rep.office}, jurisdiction=${jurisdiction}`);
-
         if (!allBills) {
             allBills = [];
             const seenIds = new Set();
@@ -1710,9 +1612,7 @@ class VoteApp {
             const jurisdictions = (rep.level === 'congress')
                 ? ['Federal', jurisdiction]
                 : [jurisdiction];
-            console.log(`Fetching bills from local DB for ${rep.name} (${jurisdictions.join(', ')})...`);
-
-            // Fire all keyword+jurisdiction fetches in parallel (local DB, no rate limit needed)
+            // Fire all keyword+jurisdiction fetches in parallel
             const fetchPromises = [];
             for (const billJurisdiction of jurisdictions) {
                 for (const keyword of issue.billKeywords) {
@@ -1740,7 +1640,6 @@ class VoteApp {
         const manualAssociations = window.MANUAL_BILL_ASSOCIATIONS || {};
         if (manualAssociations[rep.name] && manualAssociations[rep.name][issue.id]) {
             const manualBills = manualAssociations[rep.name][issue.id];
-            console.log(`Adding ${manualBills.length} manually associated bills for ${rep.name} on ${issue.id}`);
 
             for (const manualBill of manualBills) {
                 // Check if bill already exists in list
@@ -1778,9 +1677,6 @@ class VoteApp {
                     return normalizedBillId === normalizedExcId;
                 });
             });
-            if (beforeCount !== allBills.length) {
-                console.log(`Filtered ${beforeCount - allBills.length} excluded bills for ${rep.name} on ${issue.id}`);
-            }
         }
 
         // Compute alignment
@@ -1874,8 +1770,6 @@ class VoteApp {
         this.repAlignmentBills.innerHTML = allBillsHtml;
     }
 
-    // ========== UTILITY ==========
-
     showLoading(show) {
         if (show) {
             this.loadingScreen.classList.add('active');
@@ -1917,28 +1811,6 @@ class VoteApp {
             .substring(0, 2);
     }
 
-    /**
-     * Build a proper Congress.gov website URL for a bill
-     * @param {string} type - Bill type (HR, S, HRES, SRES, HJRES, SJRES, HCONRES, SCONRES)
-     * @param {number} congress - Congress number (e.g., 118)
-     * @param {number} number - Bill number
-     * @returns {string} - Website URL
-     */
-    buildCongressGovUrl(type, congress, number) {
-        // Map bill type codes to URL-friendly names
-        const typeMap = {
-            'HR': 'house-bill',
-            'S': 'senate-bill',
-            'HRES': 'house-resolution',
-            'SRES': 'senate-resolution',
-            'HJRES': 'house-joint-resolution',
-            'SJRES': 'senate-joint-resolution',
-            'HCONRES': 'house-concurrent-resolution',
-            'SCONRES': 'senate-concurrent-resolution'
-        };
-        const typeName = typeMap[(type || '').toUpperCase()] || 'bill';
-        return `https://www.congress.gov/bill/${congress}th-congress/${typeName}/${number}`;
-    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

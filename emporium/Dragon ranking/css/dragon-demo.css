@@ -1,0 +1,146 @@
+/* ── Reset & Base ────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: #1a1410;
+  font-family: 'Cormorant Garamond', 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* ── Particle canvas (above page, below dragon) ──────── */
+#particle-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* ── Dragon SVG — follows mouse ──────────────────────── */
+#dragon-svg {
+  position: fixed;
+  width: 180px;
+  height: auto;
+  z-index: 15;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 24px rgba(0,0,0,0.4));
+  /* start offscreen */
+  left: -200px;
+  top: -200px;
+  /* smooth fluid follow */
+  will-change: transform;
+}
+
+/* ── Centering wrapper ───────────────────────────────── */
+.page-container {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px 60px;
+  min-height: 100vh;
+}
+
+/* ── The manuscript "page" ───────────────────────────── */
+.manuscript-page {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E"),
+    linear-gradient(175deg, #f5ecd7 0%, #e8dcc4 40%, #ddd0b5 100%);
+  color: #2c1e10;
+  padding: 48px 56px 60px;
+  border-radius: 4px;
+  box-shadow:
+    0 2px 40px rgba(0,0,0,0.5),
+    inset 0 0 80px rgba(139,109,63,0.12);
+}
+
+/* Burned edges */
+.manuscript-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 12px solid transparent;
+  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cfilter id='b'%3E%3CfeTurbulence baseFrequency='0.04' numOctaves='5'/%3E%3CfeColorMatrix values='0 0 0 0 0.15 0 0 0 0 0.1 0 0 0 0 0.05 0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='40' height='40' filter='url(%23b)'/%3E%3C/svg%3E") 14 fill;
+  pointer-events: none;
+  z-index: 2;
+  mix-blend-mode: multiply;
+}
+
+/* ── Tagline ─────────────────────────────────────────── */
+.tagline {
+  text-align: center;
+  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #6b5230;
+  margin-bottom: 28px;
+  line-height: 1.6;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+}
+
+/* ── Manuscript body ─────────────────────────────────── */
+.manuscript-body {
+  font-size: 16px;
+  line-height: 1.78;
+  color: #2c1e10;
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  columns: 2;
+  column-gap: 36px;
+  column-rule: 1px solid rgba(139,109,63,0.15);
+}
+
+/* ── Drop cap ────────────────────────────────────────── */
+.drop-cap {
+  float: left;
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 92px;
+  font-weight: 900;
+  line-height: 0.75;
+  color: #1a3a5c;
+  margin: 4px 8px 0 -4px;
+  padding-top: 6px;
+  text-shadow:
+    1px 1px 0 #c41e3a,
+    2px 2px 0 rgba(196,30,58,0.3);
+  -webkit-text-stroke: 0.5px #8b0000;
+}
+
+/* ── Scorch marks ────────────────────────────────────── */
+.scorch {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(60,30,10,0.15) 0%, rgba(80,40,10,0.05) 40%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── Custom cursor (hidden, dragon IS the cursor) ────── */
+.page-container:hover ~ #dragon-svg {
+  opacity: 1;
+}
+
+/* ── Responsive ──────────────────────────────────────── */
+@media (max-width: 600px) {
+  .manuscript-page {
+    padding: 28px 24px 36px;
+  }
+  .manuscript-body {
+    columns: 1;
+  }
+  .tagline {
+    font-size: 11px;
+  }
+  .drop-cap {
+    font-size: 64px;
+  }
+  #dragon-svg {
+    width: 120px;
+  }
+}

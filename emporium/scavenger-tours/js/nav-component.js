@@ -1,0 +1,296 @@
+/**
+ * VoteCraft Scavenger Tours - Shared Navigation Component
+ * Include this file on all pages that need the nav drawer
+ */
+
+(function() {
+    'use strict';
+
+    // Get current tour from URL or default
+    function getCurrentTourId() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('tour') || 'civic-sampler';
+    }
+
+    // Icons
+    const navIcons = {
+        x: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>`,
+        map: `<svg class="nav-menu-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+        </svg>`,
+        itinerary: `<svg class="nav-menu-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+        </svg>`,
+        user: `<svg class="nav-menu-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+        </svg>`,
+        chevron: `<svg class="accordion-chevron w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+        </svg>`,
+        check: `<svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+        </svg>`,
+        shop: `<svg class="nav-menu-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+        </svg>`,
+        settings: `<svg class="nav-menu-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>`,
+        switch: `<svg class="nav-menu-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+        </svg>`
+    };
+
+    // Ensure modals container exists
+    function getModalsContainer() {
+        let container = document.getElementById('modals');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'modals';
+            document.body.appendChild(container);
+        }
+        return container;
+    }
+
+    // Show navigation drawer
+    window.showTourMenu = function() {
+        const currentTourId = getCurrentTourId();
+        const modalsContainer = getModalsContainer();
+
+        modalsContainer.innerHTML = `
+            <div class="nav-drawer-overlay" onclick="closeDrawer()"></div>
+            <nav class="nav-drawer" role="navigation" aria-label="Tour selection">
+                <div class="nav-drawer-top">
+                    <button class="nav-drawer-close" onclick="closeDrawer()" aria-label="Close menu">
+                        ${navIcons.x}
+                    </button>
+                </div>
+
+                <div class="nav-drawer-content">
+                    <div class="nav-menu-list">
+                        <!-- Tour Map -->
+                        <a href="scavenger-tours.html?tour=${currentTourId}" class="nav-menu-item">
+                            ${navIcons.map}
+                            <span>Tour Map</span>
+                        </a>
+
+                        <!-- Itinerary -->
+                        <a href="itinerary.html?tour=${currentTourId}" class="nav-menu-item">
+                            ${navIcons.itinerary}
+                            <span>Itinerary</span>
+                        </a>
+
+                        <!-- Account -->
+                        <a href="profile.html?tour=${currentTourId}" class="nav-menu-item">
+                            ${navIcons.user}
+                            <span>Account</span>
+                        </a>
+
+                        <!-- Switch Tour -->
+                        <a href="tour-select.html" class="nav-menu-item">
+                            ${navIcons.switch}
+                            <span>Switch Tour</span>
+                        </a>
+
+                        <!-- Settings Accordion -->
+                        <div class="accordion" id="settings-accordion">
+                            <button class="accordion-trigger nav-menu-item" onclick="toggleNavAccordion('settings-accordion')" aria-expanded="false">
+                                ${navIcons.settings}
+                                <span class="flex-1 text-left">Settings</span>
+                                ${navIcons.chevron}
+                            </button>
+
+                            <div class="accordion-content">
+                                <div class="accordion-item" style="justify-content: space-between;">
+                                    <span class="text-white text-sm">Volume</span>
+                                    <input type="range" id="volume-slider" min="0" max="100" value="80"
+                                           class="w-24 h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                           onchange="setVolume(this.value)" oninput="setVolume(this.value)">
+                                </div>
+                                <div class="accordion-item" style="justify-content: space-between;">
+                                    <span class="text-white text-sm">Notifications</span>
+                                    <div id="notifications-toggle" class="w-10 h-6 bg-gray-600 rounded-full relative cursor-pointer" onclick="toggleNotifications()">
+                                        <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item" style="justify-content: space-between;">
+                                    <span class="text-white text-sm">Offline Mode</span>
+                                    <div id="offline-toggle" class="w-10 h-6 bg-gray-600 rounded-full relative cursor-pointer" onclick="toggleOfflineMode()">
+                                        <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Emporium Accordion -->
+                        <div class="accordion" id="emporium-accordion">
+                            <button class="accordion-trigger nav-menu-item" onclick="toggleNavAccordion('emporium-accordion')" aria-expanded="false">
+                                ${navIcons.shop}
+                                <span class="flex-1 text-left">Emporium</span>
+                                ${navIcons.chevron}
+                            </button>
+
+                            <div class="accordion-content">
+                                <div class="accordion-item" style="flex-direction: column; align-items: stretch; gap: 12px;">
+                                    <span class="text-gray-300 text-sm text-center">Are you sure you want to</span>
+                                    <a href="https://votecraft.org/emporium/"
+                                       class="block text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                                        Exit the tour
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-drawer-footer">
+                </div>
+            </nav>
+        `;
+
+        // Trigger animation after DOM update
+        requestAnimationFrame(() => {
+            document.querySelector('.nav-drawer-overlay').classList.add('open');
+            document.querySelector('.nav-drawer').classList.add('open');
+            document.body.classList.add('drawer-open');
+
+            // Initialize volume slider
+            const savedVolume = localStorage.getItem('votecraft_volume') || '80';
+            const volumeSlider = document.getElementById('volume-slider');
+            if (volumeSlider) {
+                volumeSlider.value = savedVolume;
+            }
+
+            // Initialize notifications toggle state
+            const notificationsOn = localStorage.getItem('votecraft_notifications') !== 'false';
+            const notifToggle = document.getElementById('notifications-toggle');
+            if (notifToggle && notificationsOn) {
+                notifToggle.classList.add('active');
+                notifToggle.style.backgroundColor = '#3B82F6';
+                const dot = notifToggle.querySelector('div');
+                if (dot) dot.style.transform = 'translateX(16px)';
+            }
+
+            // Initialize offline toggle state
+            const offlineMode = localStorage.getItem('votecraft_offline_mode') === 'true';
+            const toggle = document.getElementById('offline-toggle');
+            if (toggle && offlineMode) {
+                toggle.classList.add('active');
+                toggle.style.backgroundColor = '#3B82F6';
+                const dot = toggle.querySelector('div');
+                if (dot) dot.style.transform = 'translateX(16px)';
+            }
+        });
+    };
+
+    // Close drawer
+    window.closeDrawer = function() {
+        const overlay = document.querySelector('.nav-drawer-overlay');
+        const drawer = document.querySelector('.nav-drawer');
+        if (overlay) overlay.classList.remove('open');
+        if (drawer) drawer.classList.remove('open');
+        document.body.classList.remove('drawer-open');
+
+        setTimeout(() => {
+            const modalsContainer = document.getElementById('modals');
+            if (modalsContainer) modalsContainer.innerHTML = '';
+        }, 300);
+    };
+
+    // Toggle accordion
+    window.toggleNavAccordion = function(accordionId) {
+        const accordion = document.getElementById(accordionId);
+        if (!accordion) return;
+
+        const trigger = accordion.querySelector('.accordion-trigger');
+        const isOpen = accordion.classList.contains('open');
+
+        accordion.classList.toggle('open');
+        if (trigger) trigger.setAttribute('aria-expanded', !isOpen);
+    };
+
+    // Select tour from nav
+    window.selectTourFromNav = function(tourId) {
+        closeDrawer();
+        // Navigate to map page with new tour and show welcome screen
+        setTimeout(() => {
+            window.location.href = `scavenger-tours.html?tour=${tourId}&welcome=1`;
+        }, 300);
+    };
+
+    // Set volume
+    window.setVolume = function(value) {
+        localStorage.setItem('votecraft_volume', value);
+
+        // Apply volume to any HTML audio elements
+        const audioElements = document.querySelectorAll('audio');
+        audioElements.forEach(audio => {
+            audio.volume = value / 100;
+        });
+
+        // Apply volume to YouTube iframes via postMessage API
+        const iframes = document.querySelectorAll('iframe');
+        iframes.forEach(iframe => {
+            const src = iframe.src || '';
+
+            if (src.includes('youtube.com')) {
+                // YouTube IFrame API - setVolume expects 0-100
+                iframe.contentWindow.postMessage(JSON.stringify({
+                    event: 'command',
+                    func: 'setVolume',
+                    args: [parseInt(value)]
+                }), '*');
+            } else if (src.includes('soundcloud.com')) {
+                // SoundCloud Widget API - setVolume expects 0-100
+                iframe.contentWindow.postMessage(JSON.stringify({
+                    method: 'setVolume',
+                    value: parseInt(value)
+                }), '*');
+            }
+        });
+    };
+
+    // Toggle notifications
+    window.toggleNotifications = function() {
+        const toggle = document.getElementById('notifications-toggle');
+        if (!toggle) return;
+
+        const isOn = toggle.classList.toggle('active');
+        const dot = toggle.querySelector('div');
+        if (dot) {
+            dot.style.transform = isOn ? 'translateX(16px)' : 'translateX(0)';
+        }
+        toggle.style.backgroundColor = isOn ? '#3B82F6' : '#4B5563';
+
+        // Save preference
+        localStorage.setItem('votecraft_notifications', isOn ? 'true' : 'false');
+    };
+
+    // Toggle offline mode
+    window.toggleOfflineMode = function() {
+        const toggle = document.getElementById('offline-toggle');
+        if (!toggle) return;
+
+        const isOn = toggle.classList.toggle('active');
+        const dot = toggle.querySelector('div');
+        if (dot) {
+            dot.style.transform = isOn ? 'translateX(16px)' : 'translateX(0)';
+        }
+        toggle.style.backgroundColor = isOn ? '#3B82F6' : '#4B5563';
+
+        // Save preference
+        localStorage.setItem('votecraft_offline_mode', isOn ? 'true' : 'false');
+    };
+
+    // Auto-attach to menu button if it exists
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuBtn = document.getElementById('btn-menu');
+        if (menuBtn && !menuBtn._navAttached) {
+            menuBtn.addEventListener('click', showTourMenu);
+            menuBtn._navAttached = true;
+        }
+    });
+})();

@@ -1,164 +1,117 @@
-# Vote — Massachusetts Elections
+# Vote Page — Architecture & Roadmap
 
-## Overview
+## Status
 
-A civic education platform for Massachusetts elections. Users explore candidates, see how they align with nonprofit reform organizations, rank candidates based on personal priorities, and donate to civic reform nonprofits — unlocking VoteCraft engagement content along the way.
+The current implementation is a **national representative lookup + civic issue explorer**. The original plan (Massachusetts candidate-comparison tool) is the next phase of development. Both are documented here.
+
+> **Note:** This codebase was built with AI assistance (Claude). Logic and data decisions were human-directed, but a developer should verify behavior rather than assume correctness. The bill keyword lists, issue selection, dedup scoring, and proxy architecture were all intentional choices — don't refactor them without understanding why they're there.
+
+---
+
+## What's Currently Built
+
+A two-panel interface at `pages/vote/vote.html`:
+
+- **Left panel** — Search by address or state name → shows your U.S. Senators, House Rep, state senators, state house members, and executive officials
+- **Right panel** — Six civic reform issues displayed as a grid; selecting one shows a hero image, public awareness chart, bill sponsorship data for the selected rep, a map of their district, and nonprofit donate buttons
+
+### How it works end-to-end
+
+```
+User types address/state
+    → Nominatim (OpenStreetMap) geocodes it to lat/lng + state name
+    → OpenStates geo API returns state legislators for that point
+    → VoteCraft WordPress proxy returns Congress members from local DB
+    → Both lists are merged and deduplicated
+    → User selects a rep + an issue
+    → Bill keywords for that issue are queried against OpenStates (state) and Congress.gov (federal)
+    → Sponsorships are matched against the rep's last name
+    → "Supports" / "No supported bills" shown on the alignment card
+```
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `vote.html` | Layout and static HTML. JS/CSS loaded at bottom. |
+| `js/vote-app.js` | Main app class (`VoteApp`). All UI logic lives here. |
+| `js/civic-api.js` | API client. Geocoding, legislator lookups, bill searches, district boundary fetches. |
+| `js/issues-data.js` | Static data for the 6 issues: descriptions, hero images, bill keywords, nonprofits. Also fetches keyword overrides and manual bill associations from the WordPress admin. |
+| `css/vote.css` | All styles. |
+
+### Key architecture decisions
+
+**WordPress proxy for API keys**
+OpenStates and Congress.gov API keys are never exposed client-side. All calls go through `https://votecraft.org/wp-json/votecraft/v1/openstates` and `.../congress`, which proxy requests server-side.
+
+**Local DB for Congress members**
+Congress members are synced into the WordPress database on a schedule rather than fetched live. This avoids rate limits and keeps page load fast. If the local DB is empty, the Congress section returns nothing — run the sync from the WordPress admin.
+
+**Deduplication scoring**
+When a full state legislator list loads in the background, it's merged with the address-specific results. Duplicates are resolved by a `dataScore` that weights photo availability heavily — the record with more complete data wins.
+
+**Bill keyword lists**
+Each issue in `issues-data.js` has a `billKeywords` array. These are queried in parallel against OpenStates. Keywords can be overridden from the WordPress admin at `/wp-json/votecraft/v1/keywords` without a code deploy.
+
+**Manual bill associations**
+Some federal bills don't surface through keyword search. `STATIC_BILL_ASSOCIATIONS` in `issues-data.js` hardcodes known bill-legislator links. These can also be managed from the WordPress admin.
+
+**District map**
+Uses Leaflet + Census TIGERweb to draw the selected rep's district boundary. US Senators show the full state boundary. Falls back to a centered point if the boundary fetch fails.
+
+### The 6 issues (intentional scope)
+
+Ranked Choice Voting, Public Debt Profiteering, Ending Citizens United, Universal Basic Healthcare, Supreme Court Reform, News Paywall Reform. These were chosen because they are structural/systemic reforms with documented cross-partisan public support. Don't swap them out without revisiting the nonprofit partnerships and bill keyword lists.
+
+---
+
+## Future: Massachusetts Candidate Comparison Tool
+
+The original vision — still planned, not yet built.
+
+### Overview
+
+A civic education tool for Massachusetts elections. Users explore candidates, see how they align with reform nonprofits, personalize their ranking by issue priority, and donate to reform organizations — not candidates.
 
 The platform operates as civic education, not candidate endorsement. Donations flow to nonprofit organizations (not candidates), keeping VoteCraft in the 501(c)(3) lane.
 
----
+### Three pages planned
 
-## Page 1: Interactive Intro & Explainer
+**Page 1 — Interactive Intro**
+A quick under-one-minute experience:
+1. User picks reform issues they care about
+2. Gets a token budget
+3. Sees candidate alignment levels
+4. Allocates tokens to reform orgs
+5. Sees what happens when reform orgs are funded vs. not
 
-### Purpose
-Set expectations before users dive in. Explain how money, alignment, and participation actually work in democracy.
+**Page 2 — Detailed List View**
+All candidates listed with expandable sections: positions on key issues, nonprofit alignment scores, past polling, voter engagement. Donate button per nonprofit. External link to candidate's own donation page.
 
-### Key Messages
-- Under capitalism, candidates need funding — often from wealthy donors or corporations — unless they commit to small public donations
-- Perfect alignment with any candidate is unlikely; think ~50%, not 100%
-- Civic engagement = votes **and** dollars — but "dollars" here means supporting the organizations fighting for reform, not just individual candidates
-- Even small donations to reform orgs amplify your voice and influence the system
-- Change happens through participation, even if the system isn't perfect
+**Page 3 — Column Overview**
+Side-by-side quick comparison with alignment scores visible at a glance.
 
-### Interactive "What-If" Mini-Game
-A snappy, under-one-minute experience:
+### Personalized alignment ranking
 
-1. **Pick your issues** — Users select reform issues they care about (ranked choice voting, campaign finance reform, voter access, etc.)
-2. **Get a token budget** — Users receive a small allocation of tokens
-3. **See candidate alignment** — Candidates appear at varying alignment levels with the reform orgs championing those issues
-4. **Allocate tokens** — Users distribute tokens across reform organizations
-5. **See the impact** — Side-by-side: what happens when reform orgs are funded vs. unfunded, how that shifts the landscape candidates operate in
+The core differentiating feature:
+1. User selects which reform orgs and issues matter to them
+2. User weights priorities (drag-to-rank or sliders)
+3. Each candidate gets a score based on public data: voting records, statements, questionnaire responses, nonprofit endorsements
+4. Results framed as "here's how they align with *your* priorities" — never as a recommendation
 
-### Takeaways for the User
-- Partial alignment is normal
-- Supporting reform organizations shapes the environment all candidates operate in
-- They leave feeling empowered, not overwhelmed
+### Data sources for candidate alignment
 
----
+- Voting records on reform-related bills (public legislative data)
+- Candidate questionnaires — identical, sent to all; publish all responses, note non-responses
+- Public statements from candidate websites, debates, press
+- Nonprofit endorsements from 501(c)(4) orgs (reported as fact)
 
-## Page 2: Detailed List View
-
-A deep-dive experience for users who want thorough candidate information.
-
-### Layout
-- All candidates listed, starting with incumbents
-- Each candidate has an expandable section
-
-### Expandable Sections per Candidate
-- **Positions on key issues** — Where they stand on reform topics
-- **Nonprofit alignment** — How this candidate aligns with each partner nonprofit's mission (based on public data: voting records, public statements, questionnaire responses)
-- **Past polling data** — Historical performance and trends
-- **Voter engagement** — How they interact with constituents
-
-### Features
-- **Nonprofit donate button** — Donate to partner reform organizations (not candidates)
-- **Candidate donate link** — Simple external link to the candidate's own donation page (separate from VoteCraft engagement system)
-- **Engagement unlock** — Donating to reform orgs or exploring candidates unlocks VoteCraft content
-- **Ranking tool** — Personalized candidate alignment ranking (see below)
-
----
-
-## Page 3: Column-Based Overview
-
-A quick-comparison experience for users who want a snapshot.
-
-### Layout
-- Candidates displayed in neat, side-by-side columns
-- Clean, scannable format for fast comparison
-- Nonprofit alignment scores visible at a glance per candidate
-
-### Features
-- **Nonprofit donate button** — Same as detailed view
-- **Candidate donate link** — Simple external link
-- **Engagement unlock** — Same VoteCraft content unlocks as the detailed view
-- **Ranking tool** — Same personalized ranking system
-
----
-
-## Shared Features (Both Views)
-
-### Personalized Candidate-Nonprofit Alignment Ranking
-
-The core differentiating feature. Users see how candidates rank based on *their own priorities*.
-
-**How it works:**
-
-1. **Select organizations/issues** — User picks which reform orgs and issues matter to them (e.g., Rank the Vote, FairVote, campaign finance reform, voter access)
-2. **Weight priorities** — User ranks or weights these via drag-to-rank or simple sliders ("RCV reform matters most to me, campaign finance second")
-3. **See personalized alignment** — Each candidate gets a score based on the user's weighted priorities, calculated from public data:
-   - Voting records on reform legislation
-   - Public statements and positions
-   - Questionnaire responses (sent to all candidates equally)
-   - Published endorsements from 501(c)(4) orgs (displayed as fact, not recommendation)
-4. **View ranked results** — "Based on what you care about, here's how candidates align" — framed as informational, not a recommendation
-
-**Key principles:**
-- The user drives the ranking — the platform surfaces data, not opinions
-- Methodology is transparent and applied uniformly to all candidates
-- All candidates are treated equally (no selective presentation)
-- Framing: "here's how they align with *your* priorities" — never "vote for this person"
-
-### Donation + Engagement Model
-
-**Donations go to nonprofit reform organizations, not candidates.**
-
-Partner organizations (examples):
-- Rank the Vote (501(c)(3)) — ranked choice voting advocacy
-- FairVote — electoral reform
-- Other civic reform nonprofits aligned with VoteCraft's mission
-
-**How donations work:**
-- Users donate to partner nonprofits through VoteCraft (or via embedded partner donation forms)
-- Donations are tax-deductible (for 501(c)(3) partners)
-- Donating unlocks VoteCraft engagement content (civic-themed games or interactive tools)
-- Under IRS quid pro quo rules, if the content's value is insubstantial (under ~$13.60/user), no special disclosure is needed
-- For donations over $75 where content has measurable value, disclose the fair market value of the content received
-
-**Candidate donation links exist separately:**
-- Simple external links to each candidate's own donation page
-- Not tied to VoteCraft engagement unlocks
-- No money passes through VoteCraft for candidate donations
-
-### VoteCraft Engagement Content
-- Civic-themed games or interactive tools unlocked through nonprofit donations or candidate exploration
-- Tied to supporting reform, not specific candidates
-- Examples: Power Plays card game access, civic trivia, deeper "what-if" simulations
-
----
-
-## Data Sources & Maintenance
-
-### Candidate Alignment Data
-- **Voting records** — Public legislative records on reform-related bills
-- **Candidate questionnaires** — Identical questionnaires sent to all candidates; publish all responses and note non-responses
-- **Public statements** — Documented positions from candidate websites, debates, press
-- **Nonprofit endorsements** — Published endorsements from 501(c)(4) organizations (reported as fact)
-
-### Ongoing Updates
-- Add new candidates as they enter the race throughout the year
-- Update positions and polling data regularly
-- Maintain transparency on data sources and methodology
-
----
-
-## Legal Framework
+### Legal framework
 
 | Area | Approach |
-|------|----------|
-| Donation model | Donations to 501(c)(3) / 501(c)(4) nonprofits, not candidates |
-| Content unlocks | Legal under IRS quid pro quo rules; content value likely qualifies as insubstantial |
-| Candidate info | Educational voter guide — no endorsements, uniform treatment |
-| Alignment scores | Based on public data, transparent methodology, user-driven weighting |
-| Candidate donation links | External links only — VoteCraft doesn't process or bundle candidate donations |
-
----
-
-## Summary
-
-| Page | Purpose | Style |
-|------|---------|-------|
-| Intro / Explainer | Educate & set expectations | Interactive "what-if" mini-game |
-| Detailed List View | Deep dive per candidate | Expandable sections with nonprofit alignment |
-| Column Overview | Quick comparison | Side-by-side columns with alignment scores |
-
-All three pages share: personalized candidate-nonprofit alignment ranking, nonprofit donation buttons, candidate external links, and VoteCraft engagement unlocks.
+|------|---------|
+| Donation model | To 501(c)(3) / 501(c)(4) nonprofits, not candidates |
+| Content unlocks | IRS quid pro quo rules; content value qualifies as insubstantial |
+| Candidate info | Educational voter guide — no endorsements, uniform treatment of all candidates |
+| Alignment scores | Public data, transparent methodology, user-driven weighting |
+| Candidate donation links | External links only — VoteCraft never processes candidate donations |

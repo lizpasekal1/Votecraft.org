@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -----------------------------------------------------------------------
+    // JokeMaster
+    // -----------------------------------------------------------------------
+
+    // Game state — each user can only read/write their own document
+    match /gameStates/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Joke votes — keyed as {userId}_{jokeId}
+    match /jokeVotes/{voteId} {
+      allow read, write: if request.auth != null &&
+                           voteId.matches('^' + request.auth.uid + '_.*');
+    }
+
+    // -----------------------------------------------------------------------
+    // SaveCraft — curated library (public read, admin-console write only)
+    // -----------------------------------------------------------------------
+
+    match /curated_items/{doc} {
+      allow read:  if true;
+      allow write: if false;  // edit via Firebase console only
+    }
+
+    match /curated_genres/{doc} {
+      allow read:  if true;
+      allow write: if false;  // edit via Firebase console only
+    }
+
+  }
+}
