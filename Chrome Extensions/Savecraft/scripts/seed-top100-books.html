@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SaveCraft — Seed Top 100 Books</title>
+<style>
+  body { font-family: monospace; max-width: 700px; margin: 40px auto; padding: 20px; background: #111; color: #ddd; }
+  h1 { color: #7C6FF5; }
+  button { background: #7C6FF5; color: #fff; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  input { background: #222; border: 1px solid #555; color: #ddd; padding: 8px; width: 100%; margin: 6px 0; box-sizing: border-box; border-radius: 4px; }
+  #log { margin-top: 20px; background: #1a1a1a; border: 1px solid #333; padding: 12px; border-radius: 6px; max-height: 400px; overflow-y: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.5; }
+  .ok { color: #4ade80; } .err { color: #f87171; } .info { color: #60a5fa; }
+</style>
+</head>
+<body>
+<h1>SaveCraft — Seed Top 100 Books</h1>
+
+<p>Sign in with your Firebase account, then click Seed.</p>
+<input id="email" type="email" placeholder="Email">
+<input id="pass" type="password" placeholder="Password">
+<button id="btn">Seed Top 100 Books</button>
+<div id="log"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyArJ6pkXUDbZf4jcxRita0qcdr-hT46kI8",
+  authDomain: "votecraft-789.firebaseapp.com",
+  projectId: "votecraft-789",
+  storageBucket: "votecraft-789.firebasestorage.app",
+  messagingSenderId: "695587861498",
+  appId: "1:695587861498:web:bee0d248a59ffc05b56a79"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const logEl = document.getElementById('log');
+function log(msg, cls) { logEl.innerHTML += `<span class="${cls||''}">${msg}\n</span>`; logEl.scrollTop = logEl.scrollHeight; }
+
+const BOOKS = [
+  { rank: 1,  title: "My Brilliant Friend", author: "Elena Ferrante", url: "https://en.wikipedia.org/wiki/My_Brilliant_Friend", notes: "Two girls grow up in a poor Naples neighborhood, forging a fierce, complicated friendship that spans decades. The first volume of Ferrante's Neapolitan novels — intimate, addictive, and devastating." },
+  { rank: 2,  title: "The Warmth of Other Suns", author: "Isabel Wilkerson", url: "https://en.wikipedia.org/wiki/The_Warmth_of_Other_Suns", notes: "The epic story of the Great Migration, told through three people who left the Jim Crow South for a chance at a different life. Narrative nonfiction at its most powerful." },
+  { rank: 3,  title: "Wolf Hall", author: "Hilary Mantel", url: "https://en.wikipedia.org/wiki/Wolf_Hall", notes: "Thomas Cromwell's rise to power in Henry VIII's court, told with visceral immediacy. Mantel makes Tudor politics feel as tense and alive as a thriller." },
+  { rank: 4,  title: "The Known World", author: "Edward P. Jones", url: "https://en.wikipedia.org/wiki/The_Known_World", notes: "A Black farmer in antebellum Virginia owns slaves himself. Jones traces the moral and human wreckage of this paradox with quiet, devastating prose." },
+  { rank: 5,  title: "The Corrections", author: "Jonathan Franzen", url: "https://en.wikipedia.org/wiki/The_Corrections", notes: "A Midwestern family unravels as three adult children and their aging parents collide over one last Christmas together. A sprawling, darkly funny American novel." },
+  { rank: 6,  title: "2666", author: "Roberto Bolaño", url: "https://en.wikipedia.org/wiki/2666_(novel)", notes: "Five loosely connected narratives spiral around the unsolved murders of women in a Mexican border city. Bolaño's posthumous masterpiece — vast, haunting, and relentless." },
+  { rank: 7,  title: "The Underground Railroad", author: "Colson Whitehead", url: "https://en.wikipedia.org/wiki/The_Underground_Railroad_(novel)", notes: "The Underground Railroad is reimagined as an actual railroad beneath the soil. Cora's escape from slavery becomes a harrowing journey through the horrors of American history." },
+  { rank: 8,  title: "Austerlitz", author: "W.G. Sebald", url: "https://en.wikipedia.org/wiki/Austerlitz_(novel)", notes: "A man slowly uncovers his forgotten childhood as a Jewish refugee sent to England on the Kindertransport. Sebald blurs memory, history, and photography into something wholly original." },
+  { rank: 9,  title: "Never Let Me Go", author: "Kazuo Ishiguro", url: "https://en.wikipedia.org/wiki/Never_Let_Me_Go_(novel)", notes: "Students at an idyllic English boarding school gradually discover the terrible purpose they were created for. A quiet, heartbreaking meditation on mortality and what it means to be human." },
+  { rank: 10, title: "Gilead", author: "Marilynne Robinson", url: "https://en.wikipedia.org/wiki/Gilead_(novel)", notes: "An aging minister in small-town Iowa writes a letter to his young son, reflecting on faith, regret, and grace. Robinson's prose is luminous and deeply spiritual." },
+  { rank: 11, title: "The Brief Wondrous Life of Oscar Wao", author: "Junot Díaz", url: "https://en.wikipedia.org/wiki/The_Brief_Wondrous_Life_of_Oscar_Wao", notes: "An overweight Dominican nerd in New Jersey chases love while a family curse shadows three generations. Díaz mixes Spanglish, sci-fi references, and Caribbean history into something electric." },
+  { rank: 12, title: "All the Light We Cannot See", author: "Anthony Doerr", url: "https://en.wikipedia.org/wiki/All_the_Light_We_Cannot_See", notes: "A blind French girl and a German orphan boy — their paths converge in occupied Saint-Malo during World War II. Beautifully crafted and deeply humane." },
+  { rank: 13, title: "The Goldfinch", author: "Donna Tartt", url: "https://en.wikipedia.org/wiki/The_Goldfinch_(novel)", notes: "A boy survives a terrorist bombing at the Met and steals a small Dutch painting that haunts the rest of his life. A Dickensian epic of loss, art, and obsession." },
+  { rank: 14, title: "Life of Pi", author: "Yann Martel", url: "https://en.wikipedia.org/wiki/Life_of_Pi", notes: "A teenage boy is stranded on a lifeboat in the Pacific Ocean with a Bengal tiger. A dazzling story about faith, survival, and the power of storytelling itself." },
+  { rank: 15, title: "Middlesex", author: "Jeffrey Eugenides", url: "https://en.wikipedia.org/wiki/Middlesex_(novel)", notes: "Three generations of a Greek-American family lead to Cal, who discovers at fourteen that he is intersex. An exuberant novel about identity, immigration, and reinvention." },
+  { rank: 16, title: "The Road", author: "Cormac McCarthy", url: "https://en.wikipedia.org/wiki/The_Road", notes: "A father and son walk through a scorched, ashen America after an unnamed catastrophe. Stripped-down prose that makes the bond between parent and child feel sacred." },
+  { rank: 17, title: "The Overstory", author: "Richard Powers", url: "https://en.wikipedia.org/wiki/The_Overstory", notes: "Nine Americans whose lives are changed by trees converge in a story about activism, ecology, and what we owe the natural world. Sprawling and urgent." },
+  { rank: 18, title: "Fun Home", author: "Alison Bechdel", url: "https://en.wikipedia.org/wiki/Fun_Home", notes: "A graphic memoir about Bechdel's closeted father, a funeral home director and literature teacher. Funny, literary, and emotionally devastating — a landmark in comics." },
+  { rank: 19, title: "The Years", author: "Annie Ernaux", url: "https://en.wikipedia.org/wiki/The_Years_(Ernaux_novel)", notes: "Ernaux replaces 'I' with 'she' and 'we' to tell the story of postwar France through collective memory. A radical autobiography that captures how time reshapes us all." },
+  { rank: 20, title: "H Is for Hawk", author: "Helen Macdonald", url: "https://en.wikipedia.org/wiki/H_Is_for_Hawk", notes: "After her father's sudden death, Macdonald trains a wild goshawk as a way through grief. A memoir about loss, wildness, and the strange consolation of nature." },
+  { rank: 21, title: "A Brief History of Seven Killings", author: "Marlon James", url: "https://en.wikipedia.org/wiki/A_Brief_History_of_Seven_Killings", notes: "The attempted assassination of Bob Marley becomes the spark for an epic about Jamaican politics, gang violence, and the CIA. Explosive, polyphonic, and unforgettable." },
+  { rank: 22, title: "Postwar", author: "Tony Judt", url: "https://en.wikipedia.org/wiki/Postwar_(book)", notes: "A sweeping history of Europe from 1945 to 2005. Judt traces how a shattered continent rebuilt itself into something new — essential reading for understanding the modern world." },
+  { rank: 23, title: "Trust", author: "Hernan Diaz", url: "https://en.wikipedia.org/wiki/Trust_(Diaz_novel)", notes: "Four competing narratives circle the story of a wealthy 1920s financier and his wife. A brilliantly constructed puzzle about who gets to tell the story of power." },
+  { rank: 24, title: "Stay True", author: "Hua Hsu", url: "https://en.wikipedia.org/wiki/Stay_True_(book)", notes: "A memoir about friendship, identity, and the murder of Hsu's best friend during college in 1990s Berkeley. Tender, searching, and achingly honest." },
+  { rank: 25, title: "Heavy", author: "Kiese Laymon", url: "https://en.wikipedia.org/wiki/Heavy_(memoir)", notes: "Laymon writes to his mother about body, race, abuse, and the weight of being Black in Mississippi. Raw, fearless, and profoundly personal." },
+  { rank: 26, title: "Demon Copperhead", author: "Barbara Kingsolver", url: "https://en.wikipedia.org/wiki/Demon_Copperhead", notes: "David Copperfield retold in Appalachian Virginia during the opioid crisis. A big-hearted, furious novel about poverty, foster care, and survival against the odds." },
+  { rank: 27, title: "Veronica", author: "Mary Gaitskill", url: "https://en.wikipedia.org/wiki/Veronica_(novel)", notes: "An aging former model remembers her friendship with Veronica, a sharp-tongued older woman who died of AIDS. Gaitskill writes about beauty and cruelty with unflinching precision." },
+  { rank: 28, title: "The Great Believers", author: "Rebecca Makkai", url: "https://en.wikipedia.org/wiki/The_Great_Believers", notes: "Dual timelines follow the AIDS crisis in 1980s Chicago and its lasting aftermath decades later. A novel about community, loss, and the friends who stay." },
+  { rank: 29, title: "We the Animals", author: "Justin Torres", url: "https://en.wikipedia.org/wiki/We_the_Animals_(novel)", notes: "Three brothers grow up wild and poor with a volatile Puerto Rican father and a white mother. Brief, lyrical, and devastating — every sentence counts." },
+  { rank: 30, title: "Far from the Tree", author: "Andrew Solomon", url: "https://en.wikipedia.org/wiki/Far_from_the_Tree:_Parents,_Children,_and_the_Search_for_Identity", notes: "A monumental exploration of families whose children are profoundly different from their parents — deaf, dwarf, autistic, transgender. Empathetic, exhaustive, and deeply moving." },
+  { rank: 31, title: "The Friend", author: "Sigrid Nunez", url: "https://en.wikipedia.org/wiki/The_Friend_(Nunez_novel)", notes: "A writer inherits a Great Dane after her mentor's suicide. A slim, quietly devastating novel about grief, friendship, and the consolation of animals." },
+  { rank: 32, title: "The New Jim Crow", author: "Michelle Alexander", url: "https://en.wikipedia.org/wiki/The_New_Jim_Crow", notes: "Mass incarceration as a system of racial control in America. Alexander's argument is meticulous and damning — a book that reshaped the national conversation." },
+  { rank: 33, title: "The Copenhagen Trilogy", author: "Tove Ditlevsen", url: "https://en.wikipedia.org/wiki/The_Copenhagen_Trilogy", notes: "Three memoirs spanning Ditlevsen's childhood in working-class Copenhagen through her literary ambitions and descent into addiction. Shockingly modern and painfully honest." },
+  { rank: 34, title: "Secondhand Time", author: "Svetlana Alexievich", url: "https://en.wikipedia.org/wiki/Secondhand_Time", notes: "Oral histories from ordinary people navigating the collapse of the Soviet Union. Alexievich gives voice to an entire civilization's disorientation and grief." },
+  { rank: 35, title: "The Passage of Power", author: "Robert A. Caro", url: "https://en.wikipedia.org/wiki/The_Passage_of_Power", notes: "The fourth volume of Caro's LBJ biography covers the vice presidency and JFK's assassination. Political biography as high drama — riveting and meticulously researched." },
+  { rank: 36, title: "Olive Kitteridge", author: "Elizabeth Strout", url: "https://en.wikipedia.org/wiki/Olive_Kitteridge", notes: "Interconnected stories revolve around a retired math teacher in coastal Maine — blunt, difficult, and achingly human. Strout finds grace in ordinary, imperfect lives." },
+  { rank: 37, title: "Exit West", author: "Mohsin Hamid", url: "https://en.wikipedia.org/wiki/Exit_West", notes: "Doors begin appearing around the world that transport people to other countries. A fable about migration, love, and the impossible choice to leave everything behind." },
+  { rank: 38, title: "Septology", author: "Jon Fosse", url: "https://en.wikipedia.org/wiki/Septology", notes: "An aging painter in western Norway contemplates his life, his art, and his faith in a single flowing sentence across seven parts. Nobel Prize-winning and hypnotic." },
+  { rank: 39, title: "A Manual for Cleaning Women", author: "Lucia Berlin", url: "https://en.wikipedia.org/wiki/A_Manual_for_Cleaning_Women", notes: "Short stories drawn from Berlin's chaotic life — laundromats, hospitals, addiction, motherhood. Funny, raw, and alive in every sentence. A posthumous rediscovery." },
+  { rank: 40, title: "The Story of the Lost Child", author: "Elena Ferrante", url: "https://en.wikipedia.org/wiki/The_Story_of_the_Lost_Child", notes: "The final Neapolitan novel brings Elena and Lila into middle age. Decades of friendship, rivalry, and Naples itself converge in a shattering conclusion." },
+  { rank: 41, title: "When We Cease to Understand the World", author: "Benjamín Labatut", url: "https://en.wikipedia.org/wiki/When_We_Cease_to_Understand_the_World", notes: "True stories of scientific genius blurred with fiction — Schwarzschild, Heisenberg, Grothendieck pushed to the edge of sanity by what they discovered." },
+  { rank: 42, title: "The Emperor of All Maladies", author: "Siddhartha Mukherjee", url: "https://en.wikipedia.org/wiki/The_Emperor_of_All_Maladies", notes: "A 'biography' of cancer spanning thousands of years. Mukherjee makes the science compelling and the human stories unforgettable. Pulitzer Prize-winning." },
+  { rank: 43, title: "Pastoralia", author: "George Saunders", url: "https://en.wikipedia.org/wiki/Pastoralia", notes: "Short stories set in absurd, late-capitalist America — theme park cavemen, motivational seminars gone wrong. Saunders is funny and heartbreaking in equal measure." },
+  { rank: 44, title: "Frederick Douglass: Prophet of Freedom", author: "David W. Blight", url: "https://en.wikipedia.org/wiki/Frederick_Douglass:_Prophet_of_Freedom", notes: "The definitive biography of the escaped slave who became America's greatest abolitionist voice. Blight's research is staggering and Douglass's story is monumental." },
+  { rank: 45, title: "The Human Stain", author: "Philip Roth", url: "https://en.wikipedia.org/wiki/The_Human_Stain", notes: "A classics professor is undone by a false accusation of racism while hiding a secret about his own racial identity. Roth at his most provocative and layered." },
+  { rank: 46, title: "On Beauty", author: "Zadie Smith", url: "https://en.wikipedia.org/wiki/On_Beauty", notes: "Two feuding academic families — one liberal, one conservative — collide in a university town. Smith riffs on E.M. Forster with wit, warmth, and sharp cultural commentary." },
+  { rank: 47, title: "Bel Canto", author: "Ann Patchett", url: "https://en.wikipedia.org/wiki/Bel_Canto_(novel)", notes: "Terrorists take hostages at a diplomatic party, but an opera singer's voice transforms captors and captives alike. A novel about music, connection, and unlikely love." },
+  { rank: 48, title: "The Sellout", author: "Paul Beatty", url: "https://en.wikipedia.org/wiki/The_Sellout_(novel)", notes: "A Black man from a fictional L.A. neighborhood tries to reinstate slavery and segregation — and ends up before the Supreme Court. A blistering, Booker Prize-winning satire." },
+  { rank: 49, title: "Lincoln in the Bardo", author: "George Saunders", url: "https://en.wikipedia.org/wiki/Lincoln_in_the_Bardo", notes: "Abraham Lincoln visits the crypt of his dead son Willie while ghosts trapped in a cemetery tell their stories. Formally daring, deeply moving, and unlike anything else." },
+  { rank: 50, title: "Americanah", author: "Chimamanda Ngozi Adichie", url: "https://en.wikipedia.org/wiki/Americanah", notes: "A young Nigerian woman navigates race, love, and identity in America and returns home to a changed Lagos. Sharp, funny, and unapologetically honest about how the world sees Blackness." },
+  { rank: 51, title: "Life After Life", author: "Kate Atkinson", url: "https://en.wikipedia.org/wiki/Life_After_Life_(novel)", notes: "Ursula Todd is born, dies, and is born again, living different versions of the 20th century. A dazzling novel about fate, choice, and the lives we might have lived." },
+  { rank: 52, title: "Pachinko", author: "Min Jin Lee", url: "https://en.wikipedia.org/wiki/Pachinko_(novel)", notes: "Four generations of a Korean family in Japan, from the 1910s to the 1980s. An epic about identity, belonging, and the immigrant experience across a century." },
+  { rank: 53, title: "The Amazing Adventures of Kavalier & Clay", author: "Michael Chabon", url: "https://en.wikipedia.org/wiki/The_Amazing_Adventures_of_Kavalier_%26_Clay", notes: "Two Jewish cousins create a hit comic book superhero in 1940s New York. Chabon's Pulitzer winner is a love letter to imagination, escapism, and golden-age comics." },
+  { rank: 54, title: "The Night Watch", author: "Sarah Waters", url: "https://en.wikipedia.org/wiki/The_Night_Watch_(Waters_novel)", notes: "Four Londoners' intertwined lives unfold in reverse, from 1947 back to the Blitz. Waters reveals how wartime secrets shaped everything that came after." },
+  { rank: 55, title: "The Sympathizer", author: "Viet Thanh Nguyen", url: "https://en.wikipedia.org/wiki/The_Sympathizer", notes: "A communist double agent flees to Los Angeles after the fall of Saigon. A darkly funny, blistering novel about war, identity, and the American dream's blind spots." },
+  { rank: 56, title: "The Orphan Master's Son", author: "Adam Johnson", url: "https://en.wikipedia.org/wiki/The_Orphan_Master%27s_Son", notes: "A North Korean orphan reinvents himself through one identity after another in a surreal, brutal regime. Pulitzer Prize-winning and wildly inventive." },
+  { rank: 57, title: "Beloved", author: "Toni Morrison", url: "https://en.wikipedia.org/wiki/Beloved_(novel)", notes: "A formerly enslaved woman is haunted by the ghost of the daughter she killed to save from slavery. Morrison's masterpiece — searing, poetic, and essential American literature." },
+  { rank: 58, title: "Citizen: An American Lyric", author: "Claudia Rankine", url: "https://en.wikipedia.org/wiki/Citizen:_An_American_Lyric", notes: "A genre-defying blend of poetry, essay, and image that catalogs the everyday racism Black Americans endure. Rankine turns microaggressions into a devastating accumulation." },
+  { rank: 59, title: "Between the World and Me", author: "Ta-Nehisi Coates", url: "https://en.wikipedia.org/wiki/Between_the_World_and_Me", notes: "A letter from a father to his son about what it means to live in a Black body in America. Urgent, angry, and achingly personal." },
+  { rank: 60, title: "The Savage Detectives", author: "Roberto Bolaño", url: "https://en.wikipedia.org/wiki/The_Savage_Detectives", notes: "Two young poets vanish into the Mexican desert, and dozens of voices piece together what happened. Bolaño's sprawling love letter to literature and lost youth." },
+  { rank: 61, title: "A Visit from the Goon Squad", author: "Jennifer Egan", url: "https://en.wikipedia.org/wiki/A_Visit_from_the_Goon_Squad", notes: "Interconnected stories follow a group of musicians and music industry people across decades. Time is the goon — Egan's Pulitzer winner is formally inventive and deeply human." },
+  { rank: 62, title: "Small Things Like These", author: "Claire Keegan", url: "https://en.wikipedia.org/wiki/Small_Things_Like_These", notes: "A coal merchant in 1980s Ireland discovers the dark secrets of a local convent. A slim, morally charged novella about courage and complicity." },
+  { rank: 63, title: "Say Nothing", author: "Patrick Radden Keefe", url: "https://en.wikipedia.org/wiki/Say_Nothing_(book)", notes: "The disappearance of a Belfast mother in 1972 opens a gripping account of the Troubles, the IRA, and the price of political violence. True crime meets history." },
+  { rank: 64, title: "Erasure", author: "Percival Everett", url: "https://en.wikipedia.org/wiki/Erasure_(novel)", notes: "A Black intellectual novelist writes a deliberately stereotypical 'ghetto' novel as satire — then it becomes a massive hit. A wickedly funny takedown of racial expectations in publishing." },
+  { rank: 65, title: "Evicted", author: "Matthew Desmond", url: "https://en.wikipedia.org/wiki/Evicted_(book)", notes: "Eight families in Milwaukee fight to keep a roof over their heads. Desmond reveals how eviction perpetuates poverty — essential, Pulitzer Prize-winning nonfiction." },
+  { rank: 66, title: "Behind the Beautiful Forevers", author: "Katherine Boo", url: "https://en.wikipedia.org/wiki/Behind_the_Beautiful_Forevers", notes: "Life in a Mumbai slum next to a luxury hotel, told with novelistic detail. Boo spent years reporting this — the result is heartbreaking and unforgettable." },
+  { rank: 67, title: "Hateship, Friendship, Courtship, Loveship, Marriage", author: "Alice Munro", url: "https://en.wikipedia.org/wiki/Hateship,_Friendship,_Courtship,_Loveship,_Marriage", notes: "Short stories from the Nobel laureate who could fit a lifetime into twenty pages. Munro's characters are ordinary people harboring extraordinary inner lives." },
+  { rank: 68, title: "Random Family", author: "Adrian Nicole LeBlanc", url: "https://en.wikipedia.org/wiki/Random_Family", notes: "A decade of reporting follows two women in the Bronx through love, drugs, prison, and poverty. Immersive nonfiction that reads like a novel and changes how you see America." },
+  { rank: 69, title: "Sing, Unburied, Sing", author: "Jesmyn Ward", url: "https://en.wikipedia.org/wiki/Sing,_Unburied,_Sing", notes: "A road trip through Mississippi becomes a reckoning with ghosts, addiction, and the weight of Black Southern history. Ward's prose is lyrical and haunting." },
+  { rank: 70, title: "The Love Songs of W.E.B. Du Bois", author: "Honorée Fanonne Jeffers", url: "https://en.wikipedia.org/wiki/The_Love_Songs_of_W.E.B._Du_Bois", notes: "A young woman traces her family's history from pre-colonial Africa through slavery to modern Georgia. An epic debut that spans centuries of Black American experience." },
+  { rank: 71, title: "A Gentleman in Moscow", author: "Amor Towles", url: "https://en.wikipedia.org/wiki/A_Gentleman_in_Moscow", notes: "A Russian count is sentenced to house arrest in a luxury hotel for decades. Witty, warm, and deeply civilized — a novel about finding freedom within constraints." },
+  { rank: 72, title: "Cloud Atlas", author: "David Mitchell", url: "https://en.wikipedia.org/wiki/Cloud_Atlas_(novel)", notes: "Six nested stories span from the 19th century to a post-apocalyptic future. Mitchell's ambitious structure reveals how souls and stories echo across time." },
+  { rank: 73, title: "The Plot Against America", author: "Philip Roth", url: "https://en.wikipedia.org/wiki/The_Plot_Against_America", notes: "What if Charles Lindbergh defeated FDR in 1940 and brought fascism to America? Roth's alternate history is terrifyingly plausible and deeply personal." },
+  { rank: 74, title: "The Nickel Boys", author: "Colson Whitehead", url: "https://en.wikipedia.org/wiki/The_Nickel_Boys", notes: "Two boys endure abuse at a Jim Crow-era reform school in Florida, based on a true story. Whitehead's restrained prose makes the horror even more devastating." },
+  { rank: 75, title: "Normal People", author: "Sally Rooney", url: "https://en.wikipedia.org/wiki/Normal_People", notes: "Two Irish teenagers circle each other from secondary school through university, unable to stay together or apart. Rooney captures intimacy and class with precision." },
+  { rank: 76, title: "The Immortal Life of Henrietta Lacks", author: "Rebecca Skloot", url: "https://en.wikipedia.org/wiki/The_Immortal_Life_of_Henrietta_Lacks", notes: "A poor Black tobacco farmer's cells were taken without consent and became one of medicine's most important tools. Science, race, and ethics collide in this riveting true story." },
+  { rank: 77, title: "The Secret History", author: "Donna Tartt", url: "https://en.wikipedia.org/wiki/The_Secret_History", notes: "A group of classics students at an elite Vermont college commit a murder and slowly unravel. A dark, intoxicating campus novel that launched a genre." },
+  { rank: 78, title: "The Power", author: "Naomi Alderman", url: "https://en.wikipedia.org/wiki/The_Power_(Alderman_novel)", notes: "Women develop the ability to deliver electric shocks, and the global power structure flips overnight. A thought experiment about gender and violence that crackles with energy." },
+  { rank: 79, title: "The Ministry for the Future", author: "Kim Stanley Robinson", url: "https://en.wikipedia.org/wiki/The_Ministry_for_the_Future", notes: "A near-future novel about how humanity might actually survive climate change. Robinson mixes policy, economics, and human drama into something surprisingly hopeful." },
+  { rank: 80, title: "Shuggie Bain", author: "Douglas Stuart", url: "https://en.wikipedia.org/wiki/Shuggie_Bain", notes: "A boy in 1980s Glasgow loves his mother fiercely as she battles alcoholism and poverty. Stuart's Booker Prize-winning debut is tender, brutal, and deeply felt." },
+  { rank: 81, title: "The Last Samurai", author: "Helen DeWitt", url: "https://en.wikipedia.org/wiki/The_Last_Samurai_(novel)", notes: "A single mother raises a prodigy in London, using Kurosawa's Seven Samurai as a surrogate father. Intellectually dazzling and emotionally surprising — a cult classic." },
+  { rank: 82, title: "Nickel and Dimed", author: "Barbara Ehrenreich", url: "https://en.wikipedia.org/wiki/Nickel_and_Dimed", notes: "Ehrenreich goes undercover working minimum-wage jobs across America. A searing exposé of what it actually takes to survive on the bottom rung of the economy." },
+  { rank: 83, title: "The Fifth Season", author: "N.K. Jemisin", url: "https://en.wikipedia.org/wiki/The_Fifth_Season_(novel)", notes: "On a continent wracked by apocalyptic seismic events, a woman with the power to control earthquakes searches for her daughter. Hugo Award-winning and genre-redefining." },
+  { rank: 84, title: "A Thousand Splendid Suns", author: "Khaled Hosseini", url: "https://en.wikipedia.org/wiki/A_Thousand_Splendid_Suns", notes: "Two Afghan women from different generations are bound together by war, loss, and an abusive husband. Hosseini writes about resilience and love under impossible circumstances." },
+  { rank: 85, title: "The Vegetarian", author: "Han Kang", url: "https://en.wikipedia.org/wiki/The_Vegetarian", notes: "A South Korean woman's refusal to eat meat triggers a chain of increasingly disturbing events. Han Kang's slim, unsettling novel probes the violence beneath social conformity." },
+  { rank: 86, title: "Flights", author: "Olga Tokarczuk", url: "https://en.wikipedia.org/wiki/Flights_(novel)", notes: "A fragmentary novel about travel, the human body, and restlessness. Tokarczuk's Nobel Prize-winning work moves between centuries and continents like a restless mind." },
+  { rank: 87, title: "Bleeding Edge", author: "Thomas Pynchon", url: "https://en.wikipedia.org/wiki/Bleeding_Edge", notes: "A fraud investigator in post-9/11 New York stumbles into a conspiracy involving the deep web. Pynchon brings his paranoid maximalism to the dot-com era." },
+  { rank: 88, title: "The Kindly Ones", author: "Jonathan Littell", url: "https://en.wikipedia.org/wiki/The_Kindly_Ones_(Littell_novel)", notes: "A former Nazi SS officer narrates his experience of the Eastern Front and the Holocaust. Deeply controversial, deliberately repulsive, and impossible to forget." },
+  { rank: 89, title: "The Morning Star", author: "Karl Ove Knausgaard", url: "https://en.wikipedia.org/wiki/The_Morning_Star_(novel)", notes: "A mysterious new star appears in the sky over Norway, and ordinary lives begin to unravel. Knausgaard moves from autofiction to something stranger and more apocalyptic." }
+];
+
+async function seedAll() {
+  const email = document.getElementById('email').value;
+  const pass = document.getElementById('pass').value;
+  if (!email || !pass) { log('Enter email and password first.', 'err'); return; }
+  log('Signing in...', 'info');
+  await firebase.auth().signInWithEmailAndPassword(email, pass);
+  log('Signed in as ' + firebase.auth().currentUser.email, 'ok');
+
+  const allWrites = BOOKS.map(b => ({
+    col: 'curated_items',
+    docId: `top-100-books-cur-top100b-${b.rank}`,
+    data: {
+      id: `cur-top100b-${b.rank}`,
+      title: `${b.title} — ${b.author}`,
+      url: b.url,
+      imageUrl: null,
+      notes: b.notes,
+      genre: 'Top 100',
+      category: 'Books'
+    }
+  }));
+
+  log(`Seeding ${allWrites.length} books...`, 'info');
+  const BATCH_SIZE = 50;
+  for (let i = 0; i < allWrites.length; i += BATCH_SIZE) {
+    const slice = allWrites.slice(i, i + BATCH_SIZE);
+    const batch = db.batch();
+    for (const w of slice) {
+      const ref = db.collection(w.col).doc(w.docId);
+      batch.set(ref, w.data);
+    }
+    await batch.commit();
+    log(`  ${Math.min(i + BATCH_SIZE, allWrites.length)} / ${allWrites.length} written`, 'ok');
+  }
+
+  log('', '');
+  log('Done! Books added to curated_items under Top 100 > Books.', 'ok');
+  log('Clear savecraft_curated_data cache to see them immediately.', 'info');
+}
+
+document.getElementById('btn').addEventListener('click', async () => {
+  const btn = document.getElementById('btn');
+  btn.disabled = true;
+  logEl.textContent = '';
+  try { await seedAll(); } catch (e) { log('Error: ' + e.message, 'err'); btn.disabled = false; }
+});
+</script>
+</body>
+</html>

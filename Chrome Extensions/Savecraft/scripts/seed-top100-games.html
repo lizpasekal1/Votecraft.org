@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SaveCraft — Seed Top 100 Games</title>
+<style>
+  body { font-family: monospace; max-width: 700px; margin: 40px auto; padding: 20px; background: #111; color: #ddd; }
+  h1 { color: #7C6FF5; }
+  button { background: #7C6FF5; color: #fff; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  #log { margin-top: 20px; background: #1a1a1a; border: 1px solid #333; padding: 12px; border-radius: 6px; max-height: 400px; overflow-y: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.5; }
+  .ok { color: #4ade80; } .err { color: #f87171; } .info { color: #60a5fa; }
+  .warning { background: #332200; border: 1px solid #aa5500; border-radius: 6px; padding: 12px; margin-bottom: 20px; color: #ffaa00; }
+</style>
+</head>
+<body>
+<h1>SaveCraft — Seed Top 100 Games</h1>
+
+<p>Sign in with your Firebase account, then click Seed.</p>
+<input id="email" type="email" placeholder="Email">
+<input id="pass" type="password" placeholder="Password">
+<button id="btn">Seed Top 100 Games</button>
+<div id="log"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyArJ6pkXUDbZf4jcxRita0qcdr-hT46kI8",
+  authDomain: "votecraft-789.firebaseapp.com",
+  projectId: "votecraft-789",
+  storageBucket: "votecraft-789.firebasestorage.app",
+  messagingSenderId: "695587861498",
+  appId: "1:695587861498:web:bee0d248a59ffc05b56a79"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const logEl = document.getElementById('log');
+function log(msg, cls) { logEl.innerHTML += `<span class="${cls||''}">${msg}\n</span>`; logEl.scrollTop = logEl.scrollHeight; }
+
+const GAMES = [
+  { rank: 1,   title: "Counter-Strike 2",            appId: 730,     notes: "Valve's legendary tactical shooter rebuilt on Source 2. Precise gunplay and team strategy make it the gold standard of competitive FPS." },
+  { rank: 2,   title: "Dota 2",                      appId: 570,     notes: "The deepest MOBA ever made. Two teams of five clash in complex, high-stakes matches where every decision matters." },
+  { rank: 3,   title: "PUBG: BATTLEGROUNDS",          appId: 578080,  notes: "The game that launched the battle royale genre. 100 players drop onto an island and fight to be the last one standing." },
+  { rank: 4,   title: "Apex Legends",                 appId: 1172470, notes: "Fast-paced battle royale with unique character abilities. Fluid movement and team-based tactics set it apart." },
+  { rank: 5,   title: "Rust",                         appId: 252490,  notes: "Brutal multiplayer survival where you start with nothing and build empires. Trust no one — other players are the real danger." },
+  { rank: 6,   title: "Bongo Cat",                    appId: 3419430, notes: "An adorable virtual pet that sits on your screen and plays instruments along with your keyboard and mouse inputs." },
+  { rank: 7,   title: "Delta Force",                  appId: 2507950, notes: "Large-scale tactical military shooter with massive maps, destructible environments, and intense squad-based combat." },
+  { rank: 8,   title: "Wallpaper Engine",             appId: 431960,  notes: "Turn your desktop into a canvas with animated, interactive wallpapers. Huge Steam Workshop library with millions of creations." },
+  { rank: 9,   title: "FiveM",                        appId: 2676230, notes: "Multiplayer modification framework for GTA V. Thousands of custom servers with roleplay, racing, and community-made game modes." },
+  { rank: 10,  title: "ARC Raiders",                  appId: 1808500, notes: "Co-op third-person shooter set on a future Earth invaded by machines. Team up with friends to scavenge, craft, and fight back." },
+  { rank: 11,  title: "Grand Theft Auto V Legacy",    appId: 271590,  notes: "Rockstar's open-world crime epic. Three protagonists, a sprawling city, and GTA Online's endless multiplayer chaos." },
+  { rank: 12,  title: "War Thunder",                  appId: 236390,  notes: "Massive vehicular combat across air, land, and sea. Hundreds of historically accurate tanks, planes, and ships from multiple eras." },
+  { rank: 13,  title: "Overwatch 2",                  appId: 2357570, notes: "Blizzard's colorful team-based hero shooter. Each character has unique abilities that create dynamic, fast-paced matches." },
+  { rank: 14,  title: "Stardew Valley",               appId: 413150,  notes: "Charming farming sim where you inherit a rundown farm and build a new life. Fish, mine, befriend villagers, and fall in love." },
+  { rank: 15,  title: "Terraria",                     appId: 105600,  notes: "2D sandbox adventure with incredible depth. Dig, fight, explore, and build in a procedurally generated world full of secrets." },
+  { rank: 16,  title: "Geometry Dash",                appId: 322170,  notes: "Rhythm-based platformer with one-touch controls and punishing difficulty. Jump and fly through obstacle courses synced to music." },
+  { rank: 17,  title: "Grand Theft Auto V Enhanced",  appId: 3240220, notes: "The definitive version of GTA V with upgraded visuals, faster loading, and enhanced GTA Online experience." },
+  { rank: 18,  title: "Mewgenics",                    appId: 686060,  notes: "From the creator of Super Meat Boy and The Binding of Isaac. A bizarre cat-collecting roguelike full of weird surprises." },
+  { rank: 19,  title: "NARAKA: BLADEPOINT",           appId: 1203220, notes: "Melee-focused battle royale inspired by martial arts. Grappling hooks, parkour, and sword combat create thrilling close-range fights." },
+  { rank: 20,  title: "HELLDIVERS 2",                 appId: 553850,  notes: "Cooperative third-person shooter where you spread democracy across the galaxy. Chaotic, hilarious friendly fire and orbital strikes." },
+  { rank: 21,  title: "Monster Hunter Wilds",         appId: 2246340, notes: "The latest in Capcom's beloved series. Track and hunt massive creatures across vast open ecosystems with friends." },
+  { rank: 22,  title: "Warframe",                     appId: 230410,  notes: "Free-to-play co-op action with space ninjas. Incredibly fluid movement, deep customization, and constant free updates for over a decade." },
+  { rank: 23,  title: "Tom Clancy's Rainbow Six Siege X", appId: 359550, notes: "Tactical team shooter focused on destructible environments and gadget-based strategy. Every round is a tense puzzle of angles and intel." },
+  { rank: 24,  title: "Dead by Daylight",             appId: 381210,  notes: "Asymmetric horror where four survivors try to escape one killer. Iconic horror characters from movies and original creations." },
+  { rank: 25,  title: "Limbus Company",               appId: 1973530, notes: "Dark narrative RPG from Project Moon. Manage a team of sinners through surreal battles with gorgeous art and deep lore." },
+  { rank: 26,  title: "tModLoader",                   appId: 1281930, notes: "The ultimate Terraria modding platform. Access thousands of community mods that add new bosses, items, biomes, and total overhauls." },
+  { rank: 27,  title: "VRChat",                       appId: 438100,  notes: "The largest social VR platform. Create avatars, explore user-built worlds, and hang out with people from around the globe." },
+  { rank: 28,  title: "Team Fortress 2",              appId: 440,     notes: "Valve's timeless class-based shooter. Nine distinct characters, endless hat collecting, and some of the best multiplayer ever made." },
+  { rank: 29,  title: "Euro Truck Simulator 2",       appId: 227300,  notes: "Haul cargo across a detailed recreation of Europe. Surprisingly meditative — the open road, your truck, and a good podcast." },
+  { rank: 30,  title: "EA SPORTS FC 26",              appId: 3405690, notes: "The latest in the world's biggest football simulation. Updated rosters, refined gameplay, and all the major leagues and tournaments." },
+  { rank: 31,  title: "Marvel Rivals",                appId: 2767030, notes: "Team-based hero shooter featuring Marvel characters. Combine iconic superpowers with teammates for devastating team-up attacks." },
+  { rank: 32,  title: "Hearts of Iron IV",            appId: 394360,  notes: "Grand strategy set in World War II. Command entire nations, manage economies, research technology, and direct armies across the globe." },
+  { rank: 33,  title: "Heartopia",                    appId: 4025700, notes: "Cozy multiplayer life sim where you build a home, farm, craft, and explore a whimsical world with friends." },
+  { rank: 34,  title: "Baldur's Gate 3",              appId: 1086940, notes: "Larian's masterpiece RPG built on D&D 5th Edition. Incredible freedom of choice, deep companions, and a world that reacts to everything." },
+  { rank: 35,  title: "Battlefield 6",                appId: 2807960, notes: "Large-scale multiplayer warfare with massive maps, vehicles, and destructible environments. All-out military chaos at its finest." },
+  { rank: 36,  title: "Palworld",                     appId: 1623730, notes: "Open-world survival crafting with collectible creatures. Build bases, explore, and put your Pals to work in surprisingly dark ways." },
+  { rank: 37,  title: "ELDEN RING NIGHTREIGN",        appId: 2622380, notes: "A co-op roguelike spinoff set in the Elden Ring universe. Team up with two others to survive compressed, ever-changing sessions." },
+  { rank: 38,  title: "DayZ",                         appId: 221100,  notes: "Hardcore open-world survival in a post-apocalyptic landscape. Scavenge, survive the elements, and decide whether to trust strangers." },
+  { rank: 39,  title: "Crosshair X",                  appId: 1366800, notes: "Customizable crosshair overlay for any game. Choose from hundreds of designs or create your own for pixel-perfect aim." },
+  { rank: 40,  title: "Where Winds Meet",             appId: 3564740, notes: "Open-world wuxia RPG set in ancient China. Master martial arts, explore a living world, and forge your own path through history." },
+  { rank: 41,  title: "Football Manager 26",          appId: 3551340, notes: "The definitive football management sim. Scout players, set tactics, manage egos, and lead your club to glory across decades." },
+  { rank: 42,  title: "Sid Meier's Civilization VI",   appId: 289070,  notes: "Build an empire from the stone age to the space age. One more turn becomes one more hour in this legendary strategy game." },
+  { rank: 43,  title: "Don't Starve Together",        appId: 322330,  notes: "Gothic survival crafting with friends. Explore a dark, hand-drawn wilderness full of strange creatures and constant danger." },
+  { rank: 44,  title: "R.E.P.O.",                     appId: 3241660, notes: "Co-op horror where you repossess haunted items from terrifying locations. Teamwork and chaos in equal measure." },
+  { rank: 45,  title: "Red Dead Redemption 2",        appId: 1174180, notes: "Rockstar's epic Western. A stunning open world, unforgettable story of loyalty and outlaws, and the most detailed game world ever built." },
+  { rank: 46,  title: "RimWorld",                     appId: 294100,  notes: "AI-driven colony sim where every colonist has a story. Build, survive, and watch your settlement spiral into beautiful chaos." },
+  { rank: 47,  title: "Cyberpunk 2077",               appId: 1091500, notes: "CD Projekt Red's open-world RPG set in a neon-soaked dystopia. Deep story, incredible city design, and satisfying combat." },
+  { rank: 48,  title: "The Sims 4",                   appId: 1222670, notes: "Build homes, create characters, and play with life. The ultimate sandbox for storytelling, architecture, and simulated drama." },
+  { rank: 49,  title: "Project Zomboid",              appId: 108600,  notes: "The ultimate zombie survival sim. Extremely detailed crafting, base building, and a world that slowly falls apart around you." },
+  { rank: 50,  title: "ELDEN RING",                   appId: 1245620, notes: "FromSoftware and George R.R. Martin's open-world masterpiece. Punishing combat, breathtaking exploration, and cryptic lore in every corner." },
+  { rank: 51,  title: "PEAK",                         appId: 3527290, notes: "Competitive multiplayer climbing game. Race other players to the summit using skill, strategy, and creative routes." },
+  { rank: 52,  title: "Call of Duty",                 appId: 1938090, notes: "The flagship military FPS franchise. Fast-paced multiplayer, battle royale, and zombies modes keep millions playing worldwide." },
+  { rank: 53,  title: "ARK: Survival Ascended",       appId: 2399830, notes: "Dinosaur survival remastered in Unreal Engine 5. Tame prehistoric creatures, build massive bases, and survive a hostile island." },
+  { rank: 54,  title: "Street Fighter 6",             appId: 1364780, notes: "Capcom's fighting game renaissance. Gorgeous visuals, the innovative Drive system, and a welcoming World Tour mode for newcomers." },
+  { rank: 55,  title: "Warhammer 40K: Space Marine 2", appId: 2183900, notes: "Hack and blast through endless hordes of Tyranids as a mighty Space Marine. Visceral third-person action in the grim dark future." },
+  { rank: 56,  title: "Slay the Spire",               appId: 646570,  notes: "The deckbuilding roguelike that defined the genre. Craft the perfect card deck as you climb a spire full of deadly encounters." },
+  { rank: 57,  title: "Garry's Mod",                  appId: 4000,    notes: "The ultimate physics sandbox. Build contraptions, play community game modes, or just mess around — the only limit is your imagination." },
+  { rank: 58,  title: "NBA 2K26",                     appId: 3472040, notes: "The premier basketball simulation. Realistic gameplay, deep career mode, and online competition with updated rosters and presentation." },
+  { rank: 59,  title: "Total War: WARHAMMER III",     appId: 1142710, notes: "Epic fantasy strategy combining real-time battles with turn-based empire management. Command dragons, daemons, and legendary lords." },
+  { rank: 60,  title: "Mount & Blade II: Bannerlord", appId: 261550,  notes: "Medieval sandbox where you rise from nobody to king. Lead armies, siege castles, trade goods, and forge a dynasty." },
+  { rank: 61,  title: "Kingdom Come: Deliverance II", appId: 1771300, notes: "Historically grounded medieval RPG with no magic or fantasy. Realistic swordfighting, deep quests, and a living 15th-century Bohemia." },
+  { rank: 62,  title: "Shadowverse: Worlds Beyond",   appId: 2584990, notes: "Strategic digital card game with stunning anime art. Unique class mechanics and a generous free-to-play model." },
+  { rank: 63,  title: "Farming Simulator 25",         appId: 2300320, notes: "Authentic agricultural simulation with real-world machinery. Plant, harvest, raise livestock, and manage your farm empire." },
+  { rank: 64,  title: "Arena Breakout: Infinite",     appId: 2073620, notes: "Tactical extraction shooter where every raid is high stakes. Gear up, loot valuable items, and extract before others take you down." },
+  { rank: 65,  title: "BeamNG.drive",                 appId: 284160,  notes: "Soft-body physics driving simulator with the most realistic vehicle damage ever. Crash, race, and experiment with incredible car physics." },
+  { rank: 66,  title: "The Elder Scrolls V: Skyrim Special Edition", appId: 489830, notes: "Bethesda's legendary open-world RPG. Dragon-shouting, dungeon-crawling, and endless adventure in a frozen Nordic land." },
+  { rank: 67,  title: "Hunt: Showdown 1896",          appId: 594650,  notes: "Tense PvPvE bounty hunting in a dark, swampy bayou. Track monsters, fight other hunters, and extract with the bounty alive." },
+  { rank: 68,  title: "Left 4 Dead 2",                appId: 550,     notes: "Valve's iconic co-op zombie shooter. Four survivors, endless hordes, and an AI Director that keeps every run unpredictable." },
+  { rank: 69,  title: "The Binding of Isaac: Rebirth", appId: 250900, notes: "Roguelike dungeon crawler with dark humor and endless replayability. Hundreds of items create wildly different runs every time." },
+  { rank: 70,  title: "It Takes Two",                 appId: 1426210, notes: "Award-winning co-op adventure for two players. Every level introduces new mechanics as a couple works to save their relationship." },
+  { rank: 71,  title: "Fallout 4",                    appId: 377160,  notes: "Post-apocalyptic open-world RPG set in the ruins of Boston. Build settlements, explore the wasteland, and shape the Commonwealth's future." },
+  { rank: 72,  title: "Crusader Kings III",           appId: 1158310, notes: "Medieval dynasty simulator where the drama is the gameplay. Marry, scheme, wage war, and try to keep your bloodline on the throne." },
+  { rank: 73,  title: "Age of Empires II: Definitive Edition", appId: 813780, notes: "The real-time strategy classic, remastered. Build civilizations, command armies, and relive one of gaming's greatest competitive experiences." },
+  { rank: 74,  title: "Valheim",                      appId: 892970,  notes: "Viking survival crafting in a stunning procedural world. Build longhouses, sail the seas, and slay mythological bosses with friends." },
+  { rank: 75,  title: "PAYDAY 2",                     appId: 218620,  notes: "Co-op heist shooter where you plan and execute daring robberies. Go loud or stay stealthy — your crew, your call." },
+  { rank: 76,  title: "Black Myth: Wukong",           appId: 2358720, notes: "Stunning action RPG based on Journey to the West. Play as the Monkey King in a gorgeous reimagining of Chinese mythology." },
+  { rank: 77,  title: "Core Keeper",                  appId: 1621690, notes: "Underground sandbox adventure for up to eight players. Mine, farm, build, and fight bosses in a massive procedural cavern." },
+  { rank: 78,  title: "eFootball",                    appId: 1665460, notes: "Konami's free-to-play football game. Build your dream team and compete online with refined, simulation-style soccer gameplay." },
+  { rank: 79,  title: "Yu-Gi-Oh! Master Duel",        appId: 1449850, notes: "The definitive digital Yu-Gi-Oh experience. Build decks from thousands of cards and duel players worldwide in ranked matches." },
+  { rank: 80,  title: "Monster Hunter: World",        appId: 582010,  notes: "Hunt massive creatures in lush ecosystems. Craft weapons from your kills, master 14 weapon types, and take on epic elder dragons." },
+  { rank: 81,  title: "Satisfactory",                 appId: 526870,  notes: "First-person factory building on an alien planet. Design elaborate production lines, automate everything, and optimize to perfection." },
+  { rank: 82,  title: "Forza Horizon 5",              appId: 1551360, notes: "Open-world racing across a vibrant recreation of Mexico. Hundreds of cars, stunning visuals, and endless events on and off road." },
+  { rank: 83,  title: "Resident Evil 4",              appId: 2050650, notes: "Capcom's masterful remake of the survival horror classic. Tense combat, clever puzzles, and a village full of nightmares." },
+  { rank: 84,  title: "Factorio",                     appId: 427520,  notes: "Build and maintain sprawling automated factories on an alien planet. Endlessly satisfying optimization that will consume your free time." },
+  { rank: 85,  title: "Squad",                        appId: 393380,  notes: "Realistic 50v50 military shooter emphasizing communication and teamwork. Build bases, coordinate squads, and execute real tactics." },
+  { rank: 86,  title: "7 Days to Die",                appId: 251570,  notes: "Zombie survival with a looming horde every seventh night. Scavenge, craft, build defenses, and pray your base holds up." },
+  { rank: 87,  title: "Tabletop Simulator",           appId: 286160,  notes: "Play thousands of board games, card games, and tabletop RPGs online. A virtual table where any game is possible." },
+  { rank: 88,  title: "Black Desert",                 appId: 582660,  notes: "Action-oriented MMORPG with stunning graphics and deep combat. Life skills, trading, node wars, and one of the best character creators ever." },
+  { rank: 89,  title: "ARK: Survival Evolved",        appId: 346110,  notes: "Survive on an island of dinosaurs. Tame, breed, and ride prehistoric beasts while building your way to the top of the food chain." },
+  { rank: 90,  title: "Oxygen Not Included",          appId: 457140,  notes: "Space-colony sim where you manage duplicants underground. Balance oxygen, food, temperature, and stress in an adorable, complex survival puzzle." },
+  { rank: 91,  title: "Banana",                       appId: 2923300, notes: "Click the banana. That's it. A surprisingly addictive clicker that became a Steam phenomenon." },
+  { rank: 92,  title: "Football Manager 2024",        appId: 2252570, notes: "Deep football management with updated databases and refined match engine. Scout, sign, and develop players to build your dynasty." },
+  { rank: 93,  title: "Counter-Strike: Source",        appId: 240,    notes: "The classic tactical shooter that bridged CS 1.6 and CS:GO. Still beloved for its physics, community servers, and nostalgic gameplay." },
+  { rank: 94,  title: "Russian Fishing 4",            appId: 766570,  notes: "Realistic fishing simulation across beautiful Russian waterways. Hundreds of fish species, detailed tackle, and serene open-world exploration." },
+  { rank: 95,  title: "Soundpad",                     appId: 629520,  notes: "Play sound effects through your microphone in any voice chat. A soundboard tool beloved by streamers and pranksters alike." },
+  { rank: 96,  title: "IdleOn - The Idle RPG",         appId: 1476970, notes: "Massive idle MMO-RPG with multiple characters progressing simultaneously. Surprisingly deep systems beneath the idle surface." },
+  { rank: 97,  title: "Eternal Return",               appId: 1049590, notes: "Anime-styled battle royale MOBA hybrid. Craft gear from the map, level up abilities, and outlast other players in fast rounds." },
+  { rank: 98,  title: "Deep Rock Galactic",           appId: 548430,  notes: "Co-op dwarven space mining at its finest. Dig tunnels, fight alien bugs, and rock and stone with friends in procedural caves." },
+  { rank: 99,  title: "Hades",                        appId: 1145360, notes: "Supergiant's roguelike masterpiece. Fight your way out of the underworld with tight combat, incredible storytelling, and a cast you'll love." },
+  { rank: 100, title: "Civilization VII",             appId: 3241660, notes: "The latest entry in the legendary strategy series. Guide your civilization through the ages and leave your mark on history." }
+];
+
+async function seedAll() {
+  const email = document.getElementById('email').value;
+  const pass = document.getElementById('pass').value;
+  if (!email || !pass) { log('Enter email and password first.', 'err'); return; }
+  log('Signing in...', 'info');
+  await firebase.auth().signInWithEmailAndPassword(email, pass);
+  log('Signed in as ' + firebase.auth().currentUser.email, 'ok');
+
+  const allWrites = GAMES.map(g => ({
+    col: 'curated_items',
+    docId: `top-100-games-cur-top100g-${g.rank}`,
+    data: {
+      id: `cur-top100g-${g.rank}`,
+      title: g.title,
+      url: `https://store.steampowered.com/app/${g.appId}`,
+      imageUrl: null,
+      notes: g.notes,
+      genre: 'Top 100',
+      category: 'Games'
+    }
+  }));
+
+  log(`Seeding ${allWrites.length} games...`, 'info');
+  const BATCH_SIZE = 50;
+  for (let i = 0; i < allWrites.length; i += BATCH_SIZE) {
+    const slice = allWrites.slice(i, i + BATCH_SIZE);
+    const batch = db.batch();
+    for (const w of slice) {
+      const ref = db.collection(w.col).doc(w.docId);
+      batch.set(ref, w.data);
+    }
+    await batch.commit();
+    log(`  ${Math.min(i + BATCH_SIZE, allWrites.length)} / ${allWrites.length} written`, 'ok');
+  }
+
+  log('', '');
+  log('Done! 100 games added to curated_items under Top 100 > Games.', 'ok');
+  log('Now revert Firestore rules to: allow write: if false', 'info');
+  log('Users will see the games after their 24hr cache expires (or clear savecraft_curated_data).', 'info');
+}
+
+document.getElementById('btn').addEventListener('click', async () => {
+  const btn = document.getElementById('btn');
+  btn.disabled = true;
+  logEl.textContent = '';
+  try { await seedAll(); } catch (e) { log('Error: ' + e.message, 'err'); btn.disabled = false; }
+});
+</script>
+</body>
+</html>
