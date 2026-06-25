@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SaveCraft</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="header">
+    <span class="logo">SaveCraft</span>
+    <button id="btn-open-library" class="btn-library">Open Library →</button>
+  </div>
+
+  <div class="content">
+    <div id="unsaveable-msg" class="unsaveable-msg hidden">
+      This page can't be saved (browser internal page).
+    </div>
+
+    <div id="page-preview" class="page-preview">
+      <div class="page-title" id="page-title">Loading...</div>
+      <div class="page-domain" id="page-domain"></div>
+    </div>
+
+    <div class="section-label">Category</div>
+    <div class="cat-grid">
+      <button class="cat-btn" data-cat="Music">🎵<br>Music</button>
+      <button class="cat-btn" data-cat="Shows">📺<br>Shows</button>
+      <button class="cat-btn" data-cat="Books">📚<br>Books</button>
+      <button class="cat-btn" data-cat="Movies">🎬<br>Movies</button>
+      <button class="cat-btn" data-cat="Games">🎮<br>Games</button>
+      <button class="cat-btn" data-cat="Memes">🤣<br>Memes</button>
+    </div>
+
+    <button id="btn-save" class="btn-save">Save Page</button>
+    <div id="saved-msg" class="saved-msg hidden">✅ Saved to SaveCraft!</div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

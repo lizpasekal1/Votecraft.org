@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sponsored Statements — SaveCraft</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f0f13;
+      color: #e8e8f0;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .page {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 60px 24px 80px;
+    }
+
+    /* Header */
+    .header {
+      margin-bottom: 56px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #7C6FF5;
+      background: rgba(124, 111, 245, 0.12);
+      border: 1px solid rgba(124, 111, 245, 0.3);
+      border-radius: 20px;
+      padding: 5px 12px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 36px;
+      font-weight: 700;
+      line-height: 1.2;
+      color: #fff;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      font-size: 17px;
+      color: rgba(232, 232, 240, 0.6);
+      max-width: 520px;
+    }
+
+    /* Sections */
+    .section {
+      margin-bottom: 48px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #7C6FF5;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    p {
+      font-size: 15px;
+      color: rgba(232, 232, 240, 0.7);
+      margin-bottom: 12px;
+    }
+
+    p:last-child { margin-bottom: 0; }
+
+    /* Divider */
+    .divider {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      margin: 48px 0;
+    }
+
+    /* Pricing */
+    .pricing-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .pricing-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 24px 28px;
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .pricing-card.featured {
+      background: rgba(124, 111, 245, 0.08);
+      border-color: rgba(124, 111, 245, 0.35);
+    }
+
+    .pricing-left {
+      flex: 1;
+    }
+
+    .pricing-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .pricing-desc {
+      font-size: 13px;
+      color: rgba(232, 232, 240, 0.55);
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .pricing-right {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .pricing-price {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+
+    .pricing-period {
+      font-size: 12px;
+      color: rgba(232, 232, 240, 0.4);
+    }
+
+    .featured-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #7C6FF5;
+      background: rgba(124, 111, 245, 0.15);
+      border-radius: 6px;
+      padding: 2px 7px;
+      margin-bottom: 6px;
+    }
+
+    /* What you get */
+    .features-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .features-list li {
+      font-size: 15px;
+      color: rgba(232, 232, 240, 0.7);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .features-list li::before {
+      content: '';
+      display: block;
+      width: 18px;
+      height: 18px;
+      background: rgba(124, 111, 245, 0.15);
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 2px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%237C6FF5' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    /* CTA */
+    .cta-box {
+      background: rgba(124, 111, 245, 0.08);
+      border: 1px solid rgba(124, 111, 245, 0.25);
+      border-radius: 16px;
+      padding: 32px;
+      text-align: center;
+    }
+
+    .cta-box h2 {
+      margin-bottom: 8px;
+    }
+
+    .cta-box p {
+      margin-bottom: 20px;
+    }
+
+    .btn-contact {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #7C6FF5;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 12px 24px;
+      border-radius: 24px;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+
+    .btn-contact:hover { background: #6a5de0; }
+
+    /* Wordmark */
+    .wordmark {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 32px;
+      font-size: 15px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: -0.01em;
+    }
+
+    .wordmark span { color: #7C6FF5; }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <div class="wordmark"><span>SaveCraft</span> × VoteCraft</div>
+
+    <div class="header">
+      <div class="badge">⚡ Sponsored Statements</div>
+      <h1>Culture and civic life,<br>side by side.</h1>
+      <p class="subtitle">A Sponsored Statement is a single sentence — written by you, reviewed by us — that connects your organization's mission to the content your audience already loves.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Why it exists</div>
+      <h2>Advertising that respects the reader</h2>
+      <p>SaveCraft curates the films, books, music, and shows that shape culture. VoteCraft exists to connect culture to civic participation. Sponsored Statements let mission-aligned organizations speak directly to that intersection — without banners, autoplay, or interruption.</p>
+      <p>Your statement appears once, inline, beneath a curated list your audience chose to explore. It's not an ad. It's a position.</p>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section">
+      <div class="section-label">What's included</div>
+      <h2>One placement. Full context.</h2>
+      <ul class="features-list">
+        <li>Your one-sentence statement, displayed below every item in a curated list</li>
+        <li>A "Your Sponsored Statement" tag linking to your site or this page</li>
+        <li>Reviewed and approved by VoteCraft editorial before going live</li>
+        <li>Exclusive per list — only one sponsor per curated collection</li>
+        <li>Monthly reporting on impressions and click-throughs</li>
+      </ul>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section">
+      <div class="section-label">Pricing</div>
+      <h2>Simple, transparent tiers</h2>
+      <div class="pricing-grid">
+
+        <div class="pricing-card">
+          <div class="pricing-left">
+            <div class="pricing-name">Single List</div>
+            <div class="pricing-desc">One Sponsored Statement on one curated list. Ideal for campaigns tied to a specific topic — film, books, music, or games.</div>
+          </div>
+          <div class="pricing-right">
+            <div class="pricing-price">$10</div>
+            <div class="pricing-period">/ month</div>
+          </div>
+        </div>
+
+        <div class="pricing-card featured">
+          <div class="pricing-left">
+            <div class="featured-tag">Most popular</div>
+            <div class="pricing-name">Category Sponsor</div>
+            <div class="pricing-desc">Your statement appears across all lists in a category (e.g., all Movie lists, all Book lists). Best for organizations with a broad cultural mission.</div>
+          </div>
+          <div class="pricing-right">
+            <div class="pricing-price">$50</div>
+            <div class="pricing-period">/ month</div>
+          </div>
+        </div>
+
+        <div class="pricing-card">
+          <div class="pricing-left">
+            <div class="pricing-name">VoteCraft Partner</div>
+            <div class="pricing-desc">Full platform sponsorship — every curated list, co-branded editorial content, and a featured placement in VoteCraft's civic engagement tools.</div>
+          </div>
+          <div class="pricing-right">
+            <div class="pricing-price">$100+</div>
+            <div class="pricing-period">/ month</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="cta-box">
+      <h2>Interested in a placement?</h2>
+      <p>We work with nonprofits, advocacy organizations, civic tech companies, and mission-driven brands. All statements are reviewed for alignment with VoteCraft's values before going live.</p>
+      <a class="btn-contact" href="mailto:hello@votecraft.com">Get in touch →</a>
+    </div>
+
+  </div>
+</body>
+</html>

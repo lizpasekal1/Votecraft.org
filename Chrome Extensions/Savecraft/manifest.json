@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "SaveCraft",
+  "version": "1.0",
+  "description": "Your personal media library. Save movies, shows, music, books, and games you want to experience.",
+  "permissions": ["storage", "contextMenus", "activeTab", "tabs"],
+  "host_permissions": ["https://api.microlink.io/*", "https://firestore.googleapis.com/*", "https://itunes.apple.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "SaveCraft"
+  },
+  "web_accessible_resources": [{
+    "resources": ["app/rs-logo.png", "app/steam-logo.png"],
+    "matches": ["<all_urls>"]
+  }],
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
