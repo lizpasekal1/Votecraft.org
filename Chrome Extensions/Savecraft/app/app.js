@@ -82,6 +82,12 @@ let CURATED_ITEMS = {};
 
 const _FIREBASE_PROJECT = 'votecraft-789';
 const _FIREBASE_API_KEY = 'AIzaSyArJ6pkXUDbZf4jcxRita0qcdr-hT46kI8';
+const _CURATED_CACHE_VERSION = 5;
+
+const _CAT_NORMALIZE = {
+  'Movies': 'Movie', 'Books': 'Book', 'Games': 'Game',
+  'Shows': 'Show', 'Musicians': 'Musician', 'Music': 'Music Album', 'Music Albums': 'Music Album',
+};
 
 async function _loadCuratedFromFirestore() {
   const base = `https://firestore.googleapis.com/v1/projects/${_FIREBASE_PROJECT}/databases/(default)/documents/curated_items`;
@@ -108,9 +114,10 @@ async function _loadCuratedFromFirestore() {
   const result = {};
   for (const doc of allDocs) {
     const f = doc.fields;
-    const genre    = fv(f.genre);
-    const category = fv(f.category);
-    if (!genre || !category) continue;
+    const genre = fv(f.genre);
+    const rawCat = fv(f.category);
+    if (!genre || !rawCat) continue;
+    const category = _CAT_NORMALIZE[rawCat] || rawCat;
     const item = { id: fv(f.id), title: fv(f.title), url: fv(f.url), imageUrl: fv(f.imageUrl), notes: fv(f.notes) };
     if (!result[genre])           result[genre] = {};
     if (!result[genre][category]) result[genre][category] = [];
@@ -123,12 +130,12 @@ async function _getCuratedItems() {
   return new Promise(resolve => {
     chrome.storage.local.get({ savecraft_curated_data: null }, async cached => {
       const c = cached.savecraft_curated_data;
-      if (c?.data && Date.now() - (c.fetchedAt || 0) < 24 * 60 * 60 * 1000) {
+      if (c?.data && c?.version === _CURATED_CACHE_VERSION && Date.now() - (c.fetchedAt || 0) < 24 * 60 * 60 * 1000) {
         return resolve(c.data);
       }
       try {
         const fresh = await _loadCuratedFromFirestore();
-        chrome.storage.local.set({ savecraft_curated_data: { data: fresh, fetchedAt: Date.now() } });
+        chrome.storage.local.set({ savecraft_curated_data: { data: fresh, fetchedAt: Date.now(), version: _CURATED_CACHE_VERSION } });
         resolve(fresh);
       } catch {
         resolve(c?.data || {});
@@ -258,6 +265,31 @@ function removeItem(id) {
   return new Promise(resolve => chrome.storage.sync.remove(`item_${id}`, resolve));
 }
 
+async function autoSaveMusician(artistName) {
+  if (!artistName) return;
+  if (state.items.find(i => i.category === 'Musician' && i.title === artistName)) return;
+  let curated = null;
+  for (const genre of Object.keys(CURATED_ITEMS)) {
+    curated = (CURATED_ITEMS[genre]['Musician'] || []).find(m => m.title === artistName);
+    if (curated) break;
+  }
+  const musician = {
+    id: `item_${Date.now()}`,
+    title: artistName,
+    category: 'Musician',
+    author: null,
+    url: curated?.url || '',
+    imageUrl: curated?.imageUrl || null,
+    notes: null,
+    savedAt: Date.now(),
+    curated: false,
+    done: false,
+    folderId: null,
+  };
+  state.items.push(musician);
+  await persistItem(musician);
+}
+
 function persistHiddenCurated() {
   return new Promise(resolve => chrome.storage.sync.set({ savecraft_hidden_curated: [...state.hiddenCurated] }, resolve));
 }
@@ -382,6 +414,17 @@ function getFilteredSortedItems() {
     const name = rest.slice(colonIdx + 1);
     const relatedCats = cat === 'Musician' ? ['Musician', 'Music Album'] : [cat];
     items = items.filter(i => relatedCats.includes(i.category) && i.author === name);
+    if (cat === 'Musician') {
+      const existingIds = new Set(items.map(i => i.id));
+      for (const genre of Object.keys(CURATED_ITEMS)) {
+        (CURATED_ITEMS[genre]['Music Album'] || [])
+          .filter(i => i.notes === name && !state.hiddenCurated.has(i.id) && !existingIds.has(i.id))
+          .forEach(i => {
+            const override = state.curatedOverrides[i.id] || {};
+            items.push({ ...i, ...override, category: 'Music Album', curated: true, done: false, savedAt: 0, folderId: null });
+          });
+      }
+    }
   } else if (CATEGORIES.includes(state.view)) {
     items = items.filter(i => i.category === state.view);
   } else {
@@ -518,8 +561,11 @@ function renderSidebar() {
     const countLabel = count > 0 ? `<span class="sidebar-count">${count}</span>` : '';
     const arrow = isCollapsed ? '▶' : '▼';
 
+    const musicAlbumActive = isCuratedGenre
+      ? state.view === `genre:${curatedGenreBase}:Music Album`
+      : state.view === 'Music Album';
     const permanentSubfolders = cat === 'Musician' ? `
-      <div class="sidebar-item sidebar-subfolder ${state.view === 'Music Album' ? 'active' : ''}"
+      <div class="sidebar-item sidebar-subfolder ${musicAlbumActive ? 'active' : ''}"
            data-view="Music Album" data-permanent="true">
         <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M500-360q42 0 71-29t29-71v-220h120v-80H560v220q-13-10-28-15t-32-5q-42 0-71 29t-29 71q0 42 29 71t71 29ZM320-240q-33 0-56.5-23.5T240-320v-480q0-33 23.5-56.5T320-880h480q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H320Zm0-80h480v-480H320v480ZM160-80q-33 0-56.5-23.5T80-160v-560h80v560h560v80H160Zm160-720v480-480Z"/></svg> Music Albums
       </div>
@@ -596,7 +642,12 @@ function renderSidebar() {
   // Subfolder view-switching
   sidebar.querySelectorAll('.sidebar-subfolder').forEach(el => {
     el.addEventListener('click', () => {
-      state.view = el.dataset.view;
+      if (isCuratedGenre && el.dataset.permanent) {
+        state.view = `genre:${curatedGenreBase}:${el.dataset.view}`;
+      } else {
+        state.view = el.dataset.view;
+      }
+      persistViewState();
       renderSidebar();
       renderGrid();
     });
@@ -1200,7 +1251,16 @@ function renderAuthorPage() {
   worksGrid.querySelectorAll('.card').forEach(card => {
     card.addEventListener('click', e => {
       if (e.target.closest('.card-action-btn') || e.target.closest('.card-author-link')) return;
-      const item = state.items.find(i => i.id === card.dataset.id);
+      let item = state.items.find(i => i.id === card.dataset.id);
+      if (!item) {
+        for (const genre of Object.keys(CURATED_ITEMS)) {
+          for (const c of Object.keys(CURATED_ITEMS[genre])) {
+            const found = CURATED_ITEMS[genre][c].find(i => i.id === card.dataset.id);
+            if (found) { item = { ...found, category: c, curated: true }; break; }
+          }
+          if (item) break;
+        }
+      }
       if (item) openDetailModal(item);
     });
   });
@@ -1254,8 +1314,15 @@ function renderCard(item) {
     <div class="card" data-id="${item.id}">
       ${imageSection}
       <div class="card-body">
-        ${item.author ? `<button class="card-author-link" data-author="${escapeHtml(item.author)}" data-category="${escapeHtml(item.category)}">${escapeHtml(item.author)}</button>` : ''}
-        <div class="card-title">${escapeHtml(item.title || '')}</div>
+        ${(() => {
+          const aName = item.author || (item.curated && item.category === 'Music Album' ? item.notes : null);
+          const aCat  = item.author ? item.category : 'Musician';
+          return aName ? `<button class="card-author-link" data-author="${escapeHtml(aName)}" data-category="${escapeHtml(aCat)}">${escapeHtml(aName)}</button>` : '';
+        })()}
+        ${item.curated && item.category === 'Musician'
+          ? `<button class="card-author-link card-title" data-author="${escapeHtml(item.title)}" data-category="Musician">${escapeHtml(item.title || '')}</button>`
+          : `<div class="card-title">${escapeHtml(item.title || '')}</div>`
+        }
         <div class="card-meta">
           ${folderLabel}
           <span class="card-badge badge-${catClass(item.category)}" style="margin-left:auto">${item.category}</span>
@@ -1670,7 +1737,17 @@ function openDetailModal(item) {
   }
   updateDetailActions();
   const initSaved = !!state.items.find(i => i.id === item.id);
-  document.getElementById('detail-title').innerHTML = `<span class="detail-title-text">${escapeHtml(item.title || '')}${item.author ? `<span class="detail-title-sep"> | </span><button class="detail-author-link" data-author="${escapeHtml(item.author)}" data-category="${escapeHtml(item.category)}">${escapeHtml(item.author)}</button>` : ''}</span><button class="detail-bookmark-btn${initSaved ? ' detail-bookmark-btn--saved' : ''}" id="detail-bookmark-btn" title="Save to My Saves">${initSaved ? BOOKMARK_FILLED : BOOKMARK_OUTLINE}</button>`;
+  const _detailAuthorName = item.author
+    || (item.curated && item.category === 'Music Album' ? item.notes : null);
+  const _detailAuthorCat = item.author ? item.category : 'Musician';
+  const _isCuratedMusician = item.curated && item.category === 'Musician';
+  const _titleHtml = _isCuratedMusician
+    ? `<button class="detail-author-link" data-author="${escapeHtml(item.title)}" data-category="Musician">${escapeHtml(item.title || '')}</button>`
+    : escapeHtml(item.title || '');
+  const _authorHtml = !_isCuratedMusician && _detailAuthorName
+    ? `<span class="detail-title-sep"> | </span><button class="detail-author-link" data-author="${escapeHtml(_detailAuthorName)}" data-category="${escapeHtml(_detailAuthorCat)}">${escapeHtml(_detailAuthorName)}</button>`
+    : '';
+  document.getElementById('detail-title').innerHTML = `<span class="detail-title-text">${_titleHtml}${_authorHtml}</span><button class="detail-bookmark-btn${initSaved ? ' detail-bookmark-btn--saved' : ''}" id="detail-bookmark-btn" title="Save to My Saves">${initSaved ? BOOKMARK_FILLED : BOOKMARK_OUTLINE}</button>`;
 
   document.getElementById('detail-bookmark-btn').addEventListener('click', async () => {
     const liveItem = state.items.find(i => i.id === item.id);
@@ -1751,6 +1828,9 @@ function openDetailModal(item) {
       liveItem = { ...item, curated: false, savedAt: Date.now() };
       state.items.push(liveItem);
       await persistItem(liveItem);
+      if (liveItem.category === 'Music Album') {
+        await autoSaveMusician(liveItem.notes || liveItem.author);
+      }
     }
     return liveItem;
   }
@@ -1894,9 +1974,11 @@ function openDetailModal(item) {
 
   document.getElementById('detail-modal-overlay').classList.add('open');
 
-  document.querySelector('.detail-author-link')?.addEventListener('click', () => {
-    closeDetailModal();
-    navigateToAuthor(item.author, item.category);
+  document.querySelectorAll('.detail-author-link').forEach(el => {
+    el.addEventListener('click', () => {
+      closeDetailModal();
+      navigateToAuthor(el.dataset.author, el.dataset.category);
+    });
   });
 }
 

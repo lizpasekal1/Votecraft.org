@@ -31,10 +31,13 @@ savecraft/
 │   ├── popup.html              — Quick-save widget (shown when clicking toolbar icon)
 │   ├── popup.css
 │   └── popup.js
-└── app/
-    ├── index.html              — Full library page (opens as a new tab)
-    ├── app.js                  — All library logic: state, rendering, storage, modals (~2500+ lines)
-    └── app.css                 — All library styles
+├── app/
+│   ├── index.html              — Full library page (opens as a new tab)
+│   ├── app.js                  — All library logic: state, rendering, storage, modals (~2700+ lines)
+│   └── app.css                 — All library styles
+└── Documentation/
+    ├── savecraft-overview.md   — This file
+    └── session-context.md      — Technical reference for AI assistants
 ```
 
 ---
@@ -45,8 +48,8 @@ savecraft/
 
 **Storage:**
 - `chrome.storage.sync` — user's personal saves, folders, authors, settings, Kanban config (syncs across the user's Chrome devices automatically, up to ~100KB total)
-- `chrome.storage.local` — curated item image cache (larger, device-only)
-- Firestore (read-only) — curated item data fetched at startup via a direct REST call to the `curated_items` collection
+- `chrome.storage.local` — curated item cache (larger, device-only; 24-hour TTL)
+- Firestore (read-only at runtime) — curated item data fetched at startup via REST from the `curated_items` collection in project `votecraft-789`
 
 **No build step.** Editing a `.js` or `.css` file and refreshing the extension in `chrome://extensions` is all that's needed to see changes.
 
@@ -66,7 +69,7 @@ Categories use **singular names** in storage and the Add Item dropdown, and **pl
 | Show | Shows |
 | Visual Art | Visual Art |
 
-The `Music Album` category is not shown as a top-level sidebar entry. Instead, a permanent **Music Albums** subfolder appears under **Musicians** in the sidebar.
+The `Music Album` category is not shown as a top-level sidebar entry. Instead, a permanent **Music Albums** subfolder appears under **Musicians** in the sidebar. This subfolder also works in Curated SaveCraft mode, navigating to the curated music album list for the selected genre.
 
 ---
 
@@ -82,18 +85,21 @@ Right-clicking any page or link shows **Save to SaveCraft → [category]**. The 
 Opens as a new tab. Contains:
 - **Left sidebar** — category navigation plus a "My Saves Queue" entry that switches to the Kanban view. Musicians has a permanent Music Albums subfolder.
 - **Main grid** — responsive card grid of saved items with cover images, filtered by the selected category/search
-- **Curated section** — when a user is browsing a category, Votecraft-curated recommendations are shown below personal saves (fetched from Firestore, read-only)
+- **Curated SaveCraft** — a separate sidebar mode surfacing Votecraft-curated recommendations from Firestore, organized by genre and category
 - **Kanban board** — "My Saves Queue" view with four columns: In Queue, In Progress, My Review, Done
 
 ### Author / Artist Profile Pages
 Every author name on a card or in a detail modal is a clickable link. Clicking it navigates to a dedicated **author profile page** for that person within that category:
 
 - **Profile header** — photo, name, bio, website link, Edit Profile button
-- **Works grid** — all saved items by that author in that category. For **Musician** profiles, Music Album items by the same artist are also shown.
+- **Works grid** — all saved items by that author in that category. For **Musician** profiles, Music Album items by the same artist are also shown — including curated albums from Firestore where the artist name matches.
 - **Edit Profile modal** — lets the user set a photo URL, bio, and website for the author
 - Author profiles are stored in `chrome.storage.sync` under keys `author_<id>`
 - Navigating to an author auto-creates a stub profile if one doesn't exist yet
 - The URL view format is `author:<category>:<name>` (e.g. `author:Musician:Gorillaz`)
+
+### Auto-Save Musician
+When a user queues or saves any **Music Album** item for the first time, the artist is automatically added to their **Musicians** saves. The `autoSaveMusician()` function pulls the artist's iTunes URL and cover art from the curated Firestore data if available.
 
 ### Fetch Albums (iTunes Integration)
 On a **Musician** author profile page, a **Fetch Albums** button queries the iTunes Search API and presents a selectable list of that artist's albums to bulk-import as Music Album items.
@@ -106,18 +112,20 @@ On a **Musician** author profile page, a **Fetch Albums** button queries the iTu
 - Each imported album is created as a `Music Album` item with cover art (600×600), iTunes URL, and genre (stored in Notes)
 
 ### iTunes Autosuggest (Add Modal)
-When adding a new item with category **Music Album**, typing in the Author field triggers a live iTunes search (debounced 600ms). A dropdown appears below showing matching albums with cover art, artist name, and year. Clicking a suggestion auto-fills:
-- **Title** (if the field is empty)
-- **Image URL** (if empty) — 600×600 cover art
-- **URL** (if empty) — iTunes album page
+When adding a new item with category **Music Album**, typing in the Author field triggers a live iTunes search (debounced 600ms). A dropdown appears below showing matching albums with cover art, artist name, and year. Clicking a suggestion auto-fills Title, Image URL, and URL if those fields are currently empty.
 
-### Curated vs. Personal Items
-- **Curated items** (from Firestore) have IDs prefixed with `cur-`. They are read-only.
-- Users can **bookmark** a curated item to save a personal copy. Once saved, they can add notes, edit, and delete it.
-- Dismissing a curated item from the grid hides it permanently in that category.
+### Curated SaveCraft
+A separate browsing mode (toggled via the sidebar options menu) that surfaces Votecraft-curated recommendations from Firestore:
+
+- **Genre picker** — genres like Top 100, Classic, Jazz, Pop, etc.
+- **Category drilldown** — clicking a genre shows categories; clicking a category shows curated items
+- **Musicians** — 100 top artists (from iTunes charts), each card's name links to their author profile page
+- **Music Albums** — 2,444 albums from those artists, each showing the artist name as a clickable link; the Music Albums subfolder under Musicians navigates to this view
+- **Clicking a musician card** opens the detail popup; clicking the musician's name navigates to their profile
+- **Curated cache** — data is cached in `chrome.storage.local` for 24 hours; cache is versioned so bumping `_CURATED_CACHE_VERSION` in `app.js` forces a fresh fetch
 
 ### Item Detail Modal
-Clicking a card opens a detail modal showing cover image, bookmark toggle, title, summary, author (clickable → author page), platform tags, notes, and queue status controls.
+Clicking a card opens a detail modal showing cover image, bookmark toggle, title, author link (clickable → author page), platform tags, notes, and queue status controls. For curated albums, the artist name is a clickable link in the title area.
 
 ### Add / Edit Modal
 - **Author** field (wider, first) + **Title** field side by side
@@ -173,6 +181,19 @@ The search bar and sort dropdown in the header filter both the grid view and the
 }
 ```
 
+### Curated Item (Firestore `curated_items` document)
+```js
+{
+  id: string,          // 'itunes_<collectionId>' or 'artist_itunes_<artistId>' or 'cur-*'
+  title: string,
+  category: string,    // stored as plural in Firestore ('Movies', 'Music Album'), normalized on load
+  genre: string,       // e.g. 'Top 100', 'Classic', 'Jazz'
+  url: string | null,
+  imageUrl: string | null,
+  notes: string | null, // for Music Album entries: the artist name
+}
+```
+
 ### Other `chrome.storage.sync` keys
 | Key | Contents |
 |-----|----------|
@@ -188,9 +209,9 @@ The search bar and sort dropdown in the header filter both the grid view and the
 
 | API | Used for | Auth required |
 |-----|----------|---------------|
-| iTunes Search API (`itunes.apple.com`) | Fetch Albums modal, Add modal autosuggest | None — free, public |
+| iTunes Search API (`itunes.apple.com`) | Fetch Albums modal, Add modal autosuggest, curated data population | None — free, public |
 | Microlink (`api.microlink.io`) | Fetch og:image for right-click saves | None |
-| Firestore REST | Curated item data | None (read-only public collection) |
+| Firestore REST (`firestore.googleapis.com`) | Curated item data (read-only at runtime) | None for reads; Firebase Auth required for writes |
 
 Both `itunes.apple.com` and `api.microlink.io` are declared in `manifest.json` under `host_permissions`.
 
@@ -201,7 +222,8 @@ Both `itunes.apple.com` and `api.microlink.io` are declared in `manifest.json` u
 - The extension page URL is `chrome-extension://<extension-id>/app/index.html`. Open DevTools on it like any webpage (F12 while the library tab is active).
 - To inspect the background service worker: go to `chrome://extensions` → find SaveCraft → click **"service worker"** link.
 - To wipe all saved data during testing: open the library → DevTools console → `chrome.storage.sync.clear()` then reload.
-- Curated data is cached in `chrome.storage.local`. To force a fresh fetch: `chrome.storage.local.clear()` then reload.
+- Curated data is cached in `chrome.storage.local`. To force a fresh fetch from Firestore, bump `_CURATED_CACHE_VERSION` in `app.js` and refresh the extension.
+- Firestore writes (for populating curated data) require temporarily setting `allow write: if true` on the `curated_items` rule in Firebase Console → Firestore → Rules. Always revert after.
 
 ---
 
@@ -210,7 +232,7 @@ Both `itunes.apple.com` and `api.microlink.io` are declared in `manifest.json` u
 | Phase | Status | Description |
 |-------|--------|-------------|
 | Phase 1 | ✅ Active | Core extension — personal saves, curated recommendations, Kanban, author pages, iTunes integration |
-| Phase 2 | Planned | Spotify integration for Musician/Music Album auto-population |
+| Phase 2 | Planned | Spotify integration for Musician/Music Album richer artist data (photos, full discography) |
 | Phase 3 | Planned | Sharing with contacts (requires Firebase Auth + Firestore write access) |
 | Phase 4 | Planned | AI recommendations (requires Claude API via Firebase Function) |
 | Chrome Web Store | Future | One-time $5 developer fee; publish when Phase 1 is stable |
