@@ -50,7 +50,8 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Google Sans', 'Segoe UI', sans-serif;
   background: var(--bg);
   color: var(--text-primary);
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   font-size: 14px;
@@ -699,7 +700,7 @@ body {
 }
 
 .nyt-logo-wrap svg {
-  height: 14px;
+  height: 17px;
   width: auto;
   fill: rgba(255,255,255,0.7);
   display: block;
@@ -721,10 +722,11 @@ body {
 }
 
 .rs-logo-img {
-  height: 18px;
+  height: 22px;
   width: auto;
   display: block;
   opacity: 0.7;
+  filter: brightness(0) invert(1);
 }
 
 .steam-logo-wrap {
@@ -738,15 +740,62 @@ body {
   content: '';
   display: inline-block;
   width: 1px;
-  height: 16px;
+  height: 18px;
   background: rgba(255,255,255,0.25);
 }
 
 .steam-logo-img {
-  height: 32px;
+  height: 45px;
   width: auto;
   display: block;
   opacity: 0.7;
+  filter: brightness(0) invert(1);
+  /* Taller than the title text/other logos — cancel the extra height it would otherwise add
+     to .grid-title's row so this page's header isn't taller than every other category page. */
+  margin: -10px 0;
+}
+
+.nyt-logo-wrap,
+.rs-logo-wrap,
+.steam-logo-wrap {
+  position: relative;
+  cursor: default;
+}
+
+.nyt-logo-wrap::after,
+.rs-logo-wrap::after,
+.steam-logo-wrap::after {
+  content: 'Top 100 list populated using data from this organization.';
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  width: 220px;
+  padding: 10px 12px;
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  line-height: 1.4;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-50%) translateY(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+  pointer-events: none;
+  z-index: 20;
+  text-align: left;
+}
+
+.nyt-logo-wrap:hover::after,
+.rs-logo-wrap:hover::after,
+.steam-logo-wrap:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
 }
 
 .grid-count {
@@ -1625,6 +1674,14 @@ body {
   max-height: 140px;
 }
 
+/* Summary content (Book/Show/Movie/Game) reuses this same element/id, but is prose rather than
+   fixed-height rows — mirrors the Song List accordion's fix for the same top/bottom clipping. */
+.detail-albums-list--summary.detail-accordion-collapsible.open {
+  max-height: 150px;
+  margin-top: -9px;
+  margin-bottom: -8px;
+}
+
 .detail-album-row {
   display: flex;
   align-items: center;
@@ -1675,7 +1732,9 @@ body {
 }
 
 .detail-tracklist.detail-accordion-collapsible.open {
-  max-height: 220px;
+  max-height: 150px;
+  margin-top: -9px;
+  margin-bottom: -8px;
 }
 
 .detail-tracklist-row {
@@ -1711,6 +1770,13 @@ body {
 .detail-tracklist-row--status {
   color: var(--text-muted);
   font-style: italic;
+}
+
+.detail-accordion-summary-text {
+  padding: 6px 2px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
 
 .btn-standalone-queue {
@@ -3498,6 +3564,19 @@ body {
   transition: color 0.15s;
 }
 .card-author-link:hover {
+  color: var(--primary);
+}
+
+/* Musician's own card title reuses .card-author-link for its "make text also a link"
+   treatment, but should look like a normal card title (matching Movies etc.), not the
+   smaller byline style .card-author-link otherwise uses for the artist name on Album cards. */
+.card-author-link.card-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  -webkit-line-clamp: 1;
+}
+.card-author-link.card-title:hover {
   color: var(--primary);
 }
 
