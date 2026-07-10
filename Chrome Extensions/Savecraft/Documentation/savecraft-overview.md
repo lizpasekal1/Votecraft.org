@@ -123,17 +123,22 @@ A separate browsing mode (toggled via the sidebar options menu) that surfaces Vo
 - **Music Albums** — 2,444 albums from those artists, each showing the artist name as a clickable link; the Music Albums subfolder under Musicians navigates to this view
 - **Clicking a musician card** opens the detail popup; clicking the musician's name navigates to their profile
 - **Curated cache** — data is cached in `chrome.storage.local` for 24 hours; cache is versioned so bumping `_CURATED_CACHE_VERSION` in `app.js` forces a fresh fetch
+- **Top 100 lists** — the "Top 100" genre shows a source-attribution logo next to the section title, indicating which outlet curated that list: Rolling Stone (Musicians, Shows, Books), The New York Times (Movies), Steam (Games). Hovering any logo shows a tooltip explaining the attribution. Curated categories are keyed by their singular `CATEGORIES` name internally (e.g. `genre:Top 100:Musician`, not `genre:Top 100:Music`) — this tripped up the logo-matching logic once before, so keep that in mind if extending it.
 
 ### Item Detail Modal
-Clicking a card opens a detail modal showing cover image, title, author link (clickable → author page), platform tags, notes, and queue status controls.
+Clicking a card opens a detail modal. **Every category now shares the same accordion-based layout** (this used to be Musician/Music-Album-only, but was extended to all categories):
 
-**Musician and Music Album modals** share a distinct accordion-based layout, different from every other category:
-- **Image** — 16:9 cropped cover (object-fit: cover). Musicians show a "Promo Vid" toggle (fetches a YouTube Data API-backed music video for the artist, filtered to the Music category) that swaps the photo for an inline video player; Music Albums show a "Full Album Art ▶" button that opens the full uncropped cover art in a lightbox.
-- **Header overlay** — an "Official Website" pill (auto-discovered via MusicBrainz → Wikidata, cached per artist) overlays the top of the image for both categories.
-- **Title area** — Musicians show their name with a clickable arrow to their author page. Music Albums show a bold "Artist | Year" line (in the brand purple) above the album title.
-- **Accordion rows** (icon + label + chevron, mutually exclusive — opening one closes the others): **My Notes** (live-editable textarea, debounced auto-save), **Albums** (Musician-only — the artist's known albums, capped at 5 with a "See all →" link to their profile), **Song List** (Music Album-only — the album's tracks, lazily fetched via the iTunes lookup API on first expand using the item's `collectionId`; a one-time backfill resolves `collectionId`/`year` for older items that predate this field), and **Web Links**.
-- **Add to Queue** — a standalone pill button below the accordion stack (rather than sharing a header row with Web Links, as other categories do).
-- **Bookmark / Favorite** — the save/bookmark icon lives inside the "Add to Queue" button for Musicians (top-right corner is reserved for a Favorite star instead); other categories keep the bookmark as a separate top-right circular button. Favoriting a Musician adds it to an auto-created "Favorites" folder for that category in the sidebar (the folder is removed again once nothing in it remains favorited).
+- **Image** — 16:9 cropped cover (object-fit: cover). Musicians show a "Promo Vid" toggle (fetches a YouTube Data API-backed music video for the artist, filtered to the Music category) that swaps the photo for an inline video player; Music Albums show an "Album Art ▶" button that opens the full uncropped cover art in a lightbox. Other categories show neither toggle.
+- **Header overlay** — an "Official Website" pill overlays the top of the image for every category. For Musician/Music Album it resolves via MusicBrainz → Wikidata (cached per artist); every other category falls back to the item's own saved `url`.
+- **Title area** — Musicians show their name with a clickable arrow to their author page. Music Albums show a bold "Artist | Year" line (in the brand purple) above the album title. Other categories show a plain title (no arrow, not a link).
+- **Bookmark / Favorite** — the save/bookmark icon lives inside the "Add to Queue" button (for every category now); the top-right corner is a Favorite star instead. Favoriting an item adds it to an auto-created "Favorites" folder for that item's category in the sidebar (the folder is removed again once nothing in it remains favorited).
+- **Accordion rows** (icon + label + chevron, mutually exclusive — opening one closes the others):
+  - **My Notes** — live-editable textarea, debounced auto-save, shown for every category.
+  - Second row, category-dependent: **Albums** (Musician only — the artist's known albums, capped at 5 with a "See all →" link to their profile) / **Song List** (Music Album only — the album's tracks, lazily fetched via the iTunes lookup API on first expand using the item's `collectionId`; a one-time backfill resolves `collectionId`/`year` for older items that predate this field) / **Summary** (Book, Show, Movie, Game — shows `item.summary`, auto-backfilled from Wikipedia if missing; see below) / **Placeholder** (Visual Art — reserved, intentionally empty for now).
+  - **Web Links** — same accordion treatment for every category.
+- **Add to Queue** — a standalone pill button below the accordion stack for every category (rather than sharing a header row with Web Links, as it used to for non-music categories).
+
+**Wikipedia fallback (Book/Show/Movie/Game only)** — when one of these items is missing an image or summary, `ensureItemWikipediaInfo(title, category)` looks the title up on Wikipedia, validated against category-specific keywords (e.g. a Movie result must mention "film"/"movie" in its description) with a category-biased search retry if the direct title match fails or is a disambiguation page — this stops a generic title (e.g. a movie called "Up") from pulling in the wrong same-named article. Results are cached indefinitely in `chrome.storage.local` (`state.itemWikiCache`), keyed by `category:title`. Note: Wikipedia serves non-free poster/cover art at reduced resolution for fair-use reasons, so fetched images are sometimes lower quality than the original source — this is a known limitation, not a bug.
 
 For curated albums, the artist name is a clickable link in the title area (unless already on that artist's own page).
 
@@ -226,7 +231,7 @@ The search bar and sort dropdown in the header filter both the grid view and the
 | Microlink (`api.microlink.io`) | Fetch og:image for right-click saves | None |
 | Firestore REST (`firestore.googleapis.com`) | Curated item data (read-only at runtime) | None for reads; Firebase Auth required for writes |
 | MusicBrainz (`musicbrainz.org`) → Wikidata (`www.wikidata.org`) | Resolving a Musician's official website | None — free, public |
-| Wikipedia (`en.wikipedia.org`) | Artist bio/photo fallback | None — free, public |
+| Wikipedia (`en.wikipedia.org`) | Artist bio/photo fallback (Musician); image/summary fallback for Book, Show, Movie, Game items missing one | None — free, public |
 | YouTube Data API v3 (`www.googleapis.com`) | Promo Vid search (Musician modal), filtered to the Music category | API key (`YOUTUBE_API_KEY` in `app.js`) — falls back to opening a YouTube search in a new tab if unset |
 
 All of the above are declared in `manifest.json` under `host_permissions`. YouTube video embeds additionally rely on a `declarativeNetRequestWithHostAccess` rule (`rules/youtube_referer_rules.json`) that sets the `Referer` header the embedded player requires, since extension pages don't send one natively.

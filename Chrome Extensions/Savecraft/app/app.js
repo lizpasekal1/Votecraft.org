@@ -1,5 +1,9 @@
 // ===== CONSTANTS =====
 const CATEGORIES = ['Book', 'Game', 'Movie', 'Musician', 'Music Album', 'Show', 'Visual Art'];
+// Categories whose empty accordion (in the placeholder slot between My Notes and Web Links)
+// is labeled "Summary" instead of "Placeholder", and which get a Wikipedia fallback for a
+// missing image/summary. Visual Art and the music categories are intentionally excluded.
+const SUMMARY_PLACEHOLDER_CATEGORIES = ['Book', 'Show', 'Movie', 'Game'];
 const CURATED_GENRES = ['Top 100', 'Futurism', 'Fantasy', 'Thriller', 'Pop', 'Classic', 'Jazz', 'Comedy'];
 const GENRE_EMOJI = {
   'Top 100':  '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M852-212 732-332l56-56 120 120-56 56ZM708-692l-56-56 120-120 56 56-120 120Zm-456 0L132-812l56-56 120 120-56 56ZM108-212l-56-56 120-120 56 56-120 120Zm246-75 126-76 126 77-33-144 111-96-146-13-58-136-58 135-146 13 111 97-33 143ZM233-120l65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Zm247-361Z"/></svg>',
@@ -164,6 +168,7 @@ const state = {
   artistWebsiteCache: {}, // { [normalizedArtistName]: { url: string|null, fetchedAt: number } } — auto-fetched via MusicBrainz/Wikidata
   artistBioCache: {}, // { [normalizedArtistName]: { bio: string|null, photoUrl: string|null, fetchedAt: number } } — auto-fetched via Wikipedia
   artistVideoCache: {}, // { [normalizedArtistName]: { videoId: string|null, fetchedAt: number } } — auto-fetched via YouTube Data API
+  itemWikiCache: {}, // { [normalizedTitle]: { bio: string|null, photoUrl: string|null, fetchedAt: number } } — auto-fetched via Wikipedia for Book/Show/Movie/Game items
   tutorialSeen: false,
   kanbanSort: { 'in-queue': 'newest', 'in-progress': 'newest', 'my-review': 'newest', 'done': 'newest' },
   kanbanLists: [],
@@ -361,12 +366,17 @@ function persistArtistVideoCache() {
   chrome.storage.local.set({ savecraft_artist_video_cache: state.artistVideoCache });
 }
 
+function persistItemWikiCache() {
+  chrome.storage.local.set({ savecraft_item_wiki_cache: state.itemWikiCache });
+}
+
 // Shared check for "does this Wikidata/Wikipedia result actually describe a musician/band" —
 // used to reject same-name but wrong-topic matches (e.g. "Eagles" the bird) rather than guessing.
 const MUSIC_ENTITY_KEYWORDS = /\b(band|singer|musician|rapper|duo|group|composer|songwriter|dj)\b/i;
 
 const ARTIST_WEBSITE_CACHE_MISS_TTL = 90 * 24 * 60 * 60 * 1000; // 90 days
 const ARTIST_BIO_CACHE_MISS_TTL = 90 * 24 * 60 * 60 * 1000; // 90 days
+const ITEM_WIKI_CACHE_MISS_TTL = 90 * 24 * 60 * 60 * 1000; // 90 days
 
 // True for a photo already auto-fetched from the iTunes album-cover fallback (identifiable by
 // Apple's CDN domain) — safe to replace with a real Wikipedia photo once one's available, unlike
@@ -465,6 +475,70 @@ async function fetchWikipediaSummary(title) {
   } catch {
     return null;
   }
+}
+
+// Keyword validators + search-query hints per category — same "confirm the topic before
+// trusting it" approach as isMusicEntitySummary/fetchArtistWikipediaSummary below, so a generic
+// title (e.g. a movie called "Up" or "Cars") doesn't pull in the wrong same-named Wikipedia page.
+const CATEGORY_WIKI_KEYWORDS = {
+  Movie: /\b(film|movie)\b/i,
+  Show: /\b(television series|tv series|television show|web series)\b/i,
+  Game: /\b(video game)\b/i,
+  Book: /\b(novel|book|memoir)\b/i,
+};
+const CATEGORY_WIKI_SEARCH_HINT = {
+  Movie: 'film',
+  Show: 'TV series',
+  Game: 'video game',
+  Book: 'novel',
+};
+
+function isCategoryEntitySummary(summary, category) {
+  if (!summary || summary.type === 'disambiguation') return false;
+  const keywords = CATEGORY_WIKI_KEYWORDS[category];
+  return keywords ? keywords.test(`${summary.description || ''} ${summary.extract || ''}`) : true;
+}
+
+// Returns a validated (confirmed-topic) Wikipedia summary for a Book/Show/Movie/Game title, or
+// null if nothing matching that category is found — mirrors fetchArtistWikipediaSummary.
+async function fetchItemWikipediaSummary(title, category) {
+  const direct = await fetchWikipediaSummary(title);
+  if (isCategoryEntitySummary(direct, category)) return direct;
+
+  const hint = CATEGORY_WIKI_SEARCH_HINT[category];
+  if (!hint) return null;
+  try {
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title + ' ' + hint)}&format=json&origin=*`;
+    const resp = await fetch(searchUrl);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    for (const result of (data.query?.search || []).slice(0, 5)) {
+      const candidate = await fetchWikipediaSummary(result.title);
+      if (isCategoryEntitySummary(candidate, category)) return candidate;
+    }
+  } catch { /* no confirmed match found */ }
+  return null;
+}
+
+// Fallback image + summary source for Book/Show/Movie/Game items that don't have one saved —
+// looked up by the item's own title (no author/artist involved), validated against the item's
+// category so a wrong same-named topic isn't accepted. Cached indefinitely on success; cached
+// "not found" results expire after ITEM_WIKI_CACHE_MISS_TTL.
+async function ensureItemWikipediaInfo(title, category) {
+  if (!title) return { bio: null, photoUrl: null };
+  const key = `${category}:${title}`.trim().toLowerCase();
+  const cached = state.itemWikiCache[key];
+  if (cached && ((cached.bio || cached.photoUrl) || (Date.now() - cached.fetchedAt < ITEM_WIKI_CACHE_MISS_TTL))) {
+    return { bio: cached.bio || null, photoUrl: cached.photoUrl || null };
+  }
+  const summary = await fetchItemWikipediaSummary(title, category);
+  const result = {
+    bio: summary?.extract || null,
+    photoUrl: summary?.originalimage?.source || summary?.thumbnail?.source || null,
+  };
+  state.itemWikiCache[key] = { ...result, fetchedAt: Date.now() };
+  persistItemWikiCache();
+  return result;
 }
 
 function isMusicEntitySummary(summary) {
@@ -1458,14 +1532,17 @@ function renderGrid() {
     gridTitle.textContent = 'All Items';
   } else if (state.view.startsWith('genre:')) {
     const parts = state.view.slice(6).split(':');
-    if (state.view === 'genre:Top 100:Music' || state.view === 'genre:Top 100:Shows') {
-      const label = state.view === 'genre:Top 100:Music' ? 'Top 100 Music' : 'Top 100 Shows';
-      gridTitle.innerHTML = `${label} <span class="rs-logo-wrap" title="As selected by Rolling Stone"><img src="${chrome.runtime.getURL('app/rs-logo.png')}" class="rs-logo-img" alt="Rolling Stone"></span>`;
-    } else if (state.view === 'genre:Top 100:Games') {
-      gridTitle.innerHTML = `Top 100 Games <span class="steam-logo-wrap" title="Most played on Steam"><img src="${chrome.runtime.getURL('app/steam-logo.png')}" class="steam-logo-img" alt="Steam"></span>`;
-    } else if (state.view === 'genre:Top 100:Movies' || state.view === 'genre:Top 100:Books') {
-      const catLabel = state.view === 'genre:Top 100:Movies' ? 'Top 100 Movies' : 'Top 100 Books';
-      gridTitle.innerHTML = `${catLabel} <span class="nyt-logo-wrap" title="As selected by The New York Times"><svg viewBox="0 0 452.8 59.5" xmlns="http://www.w3.org/2000/svg" aria-label="The New York Times"><path d="M33.9,6.1c0-4.9-4.7-6.1-8.4-6.1v0.7c2.2,0,3.9,0.7,3.9,2.5c0,1-0.7,2.5-3,2.5c-1.7,0-5.4-1-8.1-2c-3.2-1.2-6.1-2.2-8.6-2.2c-4.9,0-8.4,3.7-8.4,7.9c0,3.7,2.7,4.9,3.7,5.4l0.2-0.5c-0.5-0.5-1.2-1-1.2-2.5c0-1,1-2.7,3.4-2.7c2.2,0,5.2,1,9.1,2.2c3.4,1,7.1,1.7,9.1,2v7.6l-3.7,3.2v0.2l3.7,3.2v10.6c-2,1.2-4.2,1.5-6.1,1.5c-3.7,0-6.9-1-9.6-3.9l10.1-4.9v-17L7.9,19.2c1-3.2,3.7-5.4,6.4-6.9L14,11.6c-7.4,2-14,8.9-14,17.2C0,38.6,8.1,46,17.2,46c9.8,0,16.2-7.9,16.2-16H33c-1.5,3.2-3.7,6.1-6.4,7.6V27.5l3.9-3.2v-0.2l-3.9-3.2v-7.6C30.3,13.3,33.9,10.8,33.9,6.1z M12.5,33.2l-3,1.5c-1.7-2.2-2.7-5.2-2.7-9.3c0-1.7,0-3.7,0.5-5.2l5.2-2.2V33.2z M38.6,38.9l-3.2,2.5l0.5,0.5l1.5-1.2l5.4,4.9l7.4-4.9l-0.2-0.5l-2,1.2l-2.5-2.5V22.1l2-1.5l4.2,3.4v15c0,9.3-2,10.8-6.1,12.3v0.7c6.9,0.2,13.3-2,13.3-14V21.9l2.2-1.7l-0.5-0.5l-2,1.5L52.4,16l-6.9,5.2V1H45l-8.6,5.9v0.5c1,0.5,2.5,1,2.5,3.7C38.9,11.1,38.6,38.9,38.6,38.9z M83.6,36.2l-6.1,4.7l-6.1-4.9v-3l11.6-7.9v-0.2L77,16l-12.8,6.9v16.2l-2.5,2l0.5,0.5l2.2-1.7l8.4,6.1l11.1-8.9C83.9,37.1,83.6,36.2,83.6,36.2z M71.3,32V19.9l0.5-0.2l5.4,8.6C77.2,28.3,71.3,32,71.3,32z M130.6,3.9c0-0.7-0.2-1.5-0.5-2.2h-0.5c-0.7,2-1.7,3-4.2,3c-2.2,0-3.7-1.2-4.7-2.2l-7.1,8.1l0.5,0.5l2.5-2.2c1.5,1.2,2.7,2.2,6.1,2.5v20.4L108.2,6.9c-1.2-2-3-4.7-6.4-4.7c-3.9,0-7.4,3.4-6.9,8.9h0.7c0.2-1.5,1-3.2,2.7-3.2c1.2,0,2.5,1.2,3.2,2.5v8.1c-4.4,0-7.4,2-7.4,5.7c0,2,1,4.9,3.9,5.7v-0.5c-0.5-0.5-0.7-1-0.7-1.7c0-1.2,1-2.2,2.7-2.2h1.2v10.3c-5.2,0-9.3,3-9.3,7.9c0,4.7,3.9,6.9,8.4,6.6v-0.5c-2.7-0.2-3.9-1.5-3.9-3.2c0-2.2,1.5-3.2,3.4-3.2c2,0,3.7,1.2,4.9,2.7l7.1-7.9l-0.5-0.5l-1.7,2c-2.7-2.5-4.2-3.2-7.4-3.7V11.3L122,45.7h1.5V11.3C127.1,11.1,130.6,8.1,130.6,3.9z M148.5,36.2l-6.1,4.7l-6.1-4.9v-3l11.6-7.9v-0.2l-5.9-8.9l-12.8,6.9v16.2l-2.5,2l0.5,0.5l2.2-1.7l8.4,6.1l11.1-8.9C148.8,37.1,148.5,36.2,148.5,36.2z M136.2,32V19.9l0.5-0.2l5.4,8.6C142.2,28.3,136.2,32,136.2,32z M188.6,18.7l-1.7,1.2l-4.7-3.9l-5.4,4.9l2.2,2.2v18.4l-5.9-3.7V22.6l2-1.2l-5.7-5.4l-5.4,4.9l2.2,2.2v17.7l-0.7,0.5l-5.2-3.7V22.9c0-3.4-1.7-4.4-3.7-5.7c-1.7-1.2-2.7-2-2.7-3.7c0-1.5,1.5-2.2,2.2-2.7v-0.5c-2,0-7.1,2-7.1,6.6c0,2.5,1.2,3.4,2.5,4.7c1.2,1.2,2.5,2.2,2.5,4.4v14.3l-2.7,2l0.5,0.5l2.5-2l5.7,4.9l6.1-4.2l6.9,4.2l13-7.6V21.6l3.2-2.5L188.6,18.7L188.6,18.7z M234.4,5.2l-2.5,2.2l-5.4-4.9l-8.1,5.9V3h-0.7l0.2,39.8c-0.7,0-3-0.5-4.7-1l-0.5-33.2c0-2.5-1.7-5.9-6.1-5.9s-7.4,3.4-7.4,6.9h0.7c0.2-1.5,1-2.7,2.5-2.7c1.5,0,2.7,1,2.7,4.2v9.6c-4.4,0.2-7.1,2.7-7.1,5.9c0,2,1,4.9,3.9,4.9V31c-1-0.5-1.2-1.2-1.2-1.7c0-1.5,1.2-2,3.2-2h1v15.2c-3.7,1.2-5.2,3.9-5.2,6.9c0,4.2,3.2,7.1,8.1,7.1c3.4,0,6.4-0.5,9.3-1.2c2.5-0.5,5.7-1.2,7.1-1.2c2,0,2.7,1,2.7,2.2c0,1.7-0.7,2.5-1.7,2.7v0.5c3.9-0.7,6.4-3.2,6.4-6.9s-3.7-5.9-7.6-5.9c-2,0-6.1,0.7-9.1,1.2c-3.4,0.7-6.9,1.2-7.9,1.2c-1.7,0-3.7-0.7-3.7-3.2c0-2,1.7-3.7,5.9-3.7c2.2,0,4.9,0.2,7.6,1c3,0.7,5.7,1.5,8.1,1.5c3.7,0,6.9-1.2,6.9-6.4V8.1l3-2.5L234.4,5.2L234.4,5.2z M224.3,20.2c-0.7,0.7-1.7,1.5-3,1.5s-2.5-0.7-3-1.5V9.3l2.5-1.7l3.4,3.2C224.3,10.8,224.3,20.2,224.3,20.2z M224.3,27.5c-0.5-0.5-1.7-1.2-3-1.2s-2.5,0.7-3,1.2v-6.4c0.5,0.5,1.7,1.2,3,1.2s2.5-0.7,3-1.2V27.5z M224.3,39.1c0,2-1.2,3.9-3.9,3.9h-2V28.5c0.5-0.5,1.7-1.2,3-1.2s2.2,0.7,3,1.2C224.3,28.5,224.3,39.1,224.3,39.1z M258,21.6l-7.9-5.7l-12.1,6.9v16l-2.5,2l0.2,0.5l2-1.5l7.9,5.9l12.3-7.4C258,38.4,258,21.6,258,21.6z M244.7,37.1V19.4l6.1,4.4v17.5C250.9,41.3,244.7,37.1,244.7,37.1z M281.4,16.5h-0.5c-0.7,0.5-1.5,1-2.2,1c-1,0-2.2-0.5-2.7-1.2h-0.5l-4.2,4.7l-4.2-4.7l-7.4,4.9l0.2,0.5l2-1.2l2.5,2.7v15.5l-3.2,2.5l0.5,0.5l1.5-1.2l5.9,4.9l7.6-5.2l-0.2-0.5l-2.2,1.2l-3-2.5V21.2c1.2,1.2,2.7,2.5,4.4,2.5C279.1,23.9,281.1,20.4,281.4,16.5L281.4,16.5z M310.9,40.1l-8.4,5.7l-11.3-17.2l8.1-12.5h0.5c1,1,2.5,2,4.2,2c1.7,0,3-1,3.7-2h0.5c-0.2,4.9-3.7,7.9-6.1,7.9c-2.5,0-3.7-1.2-5.2-2l-0.7,1.2l12.3,18.2l2.5-1.5V40.1z M283.8,38.9l-3.2,2.5l0.5,0.5l1.5-1.2l5.4,4.9l7.4-4.9l-0.5-0.5l-2,1.2l-2.5-2.5V1h-0.2l-8.9,5.9v0.5c1,0.5,2.5,0.7,2.5,3.7C283.8,11.1,283.8,38.9,283.8,38.9z M351.7,6.1c0-4.9-4.7-6.1-8.4-6.1v0.7c2.2,0,3.9,0.7,3.9,2.5c0,1-0.7,2.5-3,2.5c-1.7,0-5.4-1-8.1-2c-3.2-1-6.1-2-8.6-2c-4.9,0-8.4,3.7-8.4,7.9c0,3.7,2.7,4.9,3.7,5.4l0.2-0.5c-0.7-0.5-1.5-1-1.5-2.5c0-1,1-2.7,3.4-2.7c2.2,0,5.2,1,9.1,2.2c3.4,1,7.1,1.7,9.1,2v7.6l-3.7,3.2v0.2l3.7,3.2v10.6c-2,1.2-4.2,1.5-6.1,1.5c-3.7,0-6.9-1-9.6-3.9l10.1-4.9V13.8l-12.3,5.4c1.2-3.2,3.9-5.4,6.4-7.1l-0.2-0.5c-7.4,2-14,8.6-14,17c0,9.8,8.1,17.2,17.2,17.2c9.8,0,16.2-7.9,16.2-16h-0.5c-1.5,3.2-3.7,6.1-6.4,7.6V27.3l3.9-3.2v-0.2l-3.7-3.2v-7.4C348,13.3,351.7,10.8,351.7,6.1z M330.3,33.2l-3,1.5c-1.7-2.2-2.7-5.2-2.7-9.3c0-1.7,0.2-3.7,0.7-5.2l5.2-2.2L330.3,33.2z M360.3,3.7H360l-4.9,4.2v0.2l4.2,4.7h0.5l4.9-4.2V8.4L360.3,3.7L360.3,3.7z M367.7,40.1l-2,1.2l-2.5-2.5v-17l2.5-1.7l-0.5-0.5l-1.7,1.5l-4.4-5.2l-7.1,4.9l0.5,0.7l1.7-1.2l2.2,2.7v16l-3.2,2.5l0.2,0.5l1.7-1.2l5.4,4.9l7.4-4.9L367.7,40.1L367.7,40.1z M408.7,39.8l-1.7,1.2l-2.7-2.5V21.9l2.5-2l-0.5-0.5l-2,1.7l-5.7-5.2l-7.4,5.2l-5.7-5.2l-6.9,5.2l-4.4-5.2l-7.1,4.9l0.2,0.7l1.7-1.2l2.5,2.7v16l-2,2l5.7,4.7l5.4-4.9l-2.2-2.2V21.9l2.2-1.5l3.7,3.4v14.8l-2,2l5.7,4.7l5.4-4.9l-2.2-2.2V21.9l2-1.2l3.9,3.4v14.8l-1.7,1.7l5.7,5.2l7.6-5.2L408.7,39.8L408.7,39.8z M430.1,36.2l-6.1,4.7l-6.1-4.9v-3l11.6-7.9v-0.2l-5.9-8.9l-12.8,6.9v16.7l8.6,6.1l11.1-8.9C430.4,36.9,430.1,36.2,430.1,36.2z M417.8,32V19.9l0.5-0.2l5.4,8.6C423.7,28.3,417.8,32,417.8,32z M452.5,29.8l-4.7-3.7c3.2-2.7,4.4-6.4,4.4-8.9v-1.5h-0.5c-0.5,1.2-1.5,2.5-3.4,2.5c-2,0-3.2-1-4.4-2.5l-11.1,6.1v8.9l4.2,3.2c-4.2,3.7-4.9,6.1-4.9,8.1c0,2.5,1.2,4.2,3.2,4.9l0.2-0.5c-0.5-0.5-1-0.7-1-2c0-0.7,1-2,3-2c2.5,0,3.9,1.7,4.7,2.5l10.6-6.4v-8.9C452.8,29.8,452.5,29.8,452.5,29.8z M449.8,22.4c-1.7,3-5.4,5.9-7.6,7.4l-2.7-2.2v-8.6c1,2.5,3.7,4.4,6.4,4.4C447.6,23.4,448.6,23.1,449.8,22.4z M445.6,42.1c-1.2-2.7-4.2-4.7-7.1-4.7c-0.7,0-2.7,0-4.7,1.2c1.2-2,4.4-5.4,8.6-7.9l3,2.5L445.6,42.1L445.6,42.1z"/></svg></span>`;
+    // NOTE: curated categories are keyed by their singular CATEGORIES names (e.g. 'Musician',
+    // 'Show'), not display plurals — these checks previously used the wrong strings and never
+    // matched, so none of these logos ever actually rendered.
+    if (state.view === 'genre:Top 100:Musician' || state.view === 'genre:Top 100:Show' || state.view === 'genre:Top 100:Book') {
+      const label = `Top 100 ${escapeHtml(CAT_LABEL[parts[1]] || parts[1])}`;
+      gridTitle.innerHTML = `${label} <span class="rs-logo-wrap"><img src="${chrome.runtime.getURL('app/rs-logo.png')}" class="rs-logo-img" alt="Rolling Stone"></span>`;
+    } else if (state.view === 'genre:Top 100:Game') {
+      gridTitle.innerHTML = `Top 100 Games <span class="steam-logo-wrap"><img src="${chrome.runtime.getURL('app/steam-logo.png')}" class="steam-logo-img" alt="Steam"></span>`;
+    } else if (state.view === 'genre:Top 100:Movie') {
+      const catLabel = `Top 100 ${escapeHtml(CAT_LABEL[parts[1]] || parts[1])}`;
+      gridTitle.innerHTML = `${catLabel} <span class="nyt-logo-wrap"><svg viewBox="0 0 452.8 59.5" xmlns="http://www.w3.org/2000/svg" aria-label="The New York Times"><path d="M33.9,6.1c0-4.9-4.7-6.1-8.4-6.1v0.7c2.2,0,3.9,0.7,3.9,2.5c0,1-0.7,2.5-3,2.5c-1.7,0-5.4-1-8.1-2c-3.2-1.2-6.1-2.2-8.6-2.2c-4.9,0-8.4,3.7-8.4,7.9c0,3.7,2.7,4.9,3.7,5.4l0.2-0.5c-0.5-0.5-1.2-1-1.2-2.5c0-1,1-2.7,3.4-2.7c2.2,0,5.2,1,9.1,2.2c3.4,1,7.1,1.7,9.1,2v7.6l-3.7,3.2v0.2l3.7,3.2v10.6c-2,1.2-4.2,1.5-6.1,1.5c-3.7,0-6.9-1-9.6-3.9l10.1-4.9v-17L7.9,19.2c1-3.2,3.7-5.4,6.4-6.9L14,11.6c-7.4,2-14,8.9-14,17.2C0,38.6,8.1,46,17.2,46c9.8,0,16.2-7.9,16.2-16H33c-1.5,3.2-3.7,6.1-6.4,7.6V27.5l3.9-3.2v-0.2l-3.9-3.2v-7.6C30.3,13.3,33.9,10.8,33.9,6.1z M12.5,33.2l-3,1.5c-1.7-2.2-2.7-5.2-2.7-9.3c0-1.7,0-3.7,0.5-5.2l5.2-2.2V33.2z M38.6,38.9l-3.2,2.5l0.5,0.5l1.5-1.2l5.4,4.9l7.4-4.9l-0.2-0.5l-2,1.2l-2.5-2.5V22.1l2-1.5l4.2,3.4v15c0,9.3-2,10.8-6.1,12.3v0.7c6.9,0.2,13.3-2,13.3-14V21.9l2.2-1.7l-0.5-0.5l-2,1.5L52.4,16l-6.9,5.2V1H45l-8.6,5.9v0.5c1,0.5,2.5,1,2.5,3.7C38.9,11.1,38.6,38.9,38.6,38.9z M83.6,36.2l-6.1,4.7l-6.1-4.9v-3l11.6-7.9v-0.2L77,16l-12.8,6.9v16.2l-2.5,2l0.5,0.5l2.2-1.7l8.4,6.1l11.1-8.9C83.9,37.1,83.6,36.2,83.6,36.2z M71.3,32V19.9l0.5-0.2l5.4,8.6C77.2,28.3,71.3,32,71.3,32z M130.6,3.9c0-0.7-0.2-1.5-0.5-2.2h-0.5c-0.7,2-1.7,3-4.2,3c-2.2,0-3.7-1.2-4.7-2.2l-7.1,8.1l0.5,0.5l2.5-2.2c1.5,1.2,2.7,2.2,6.1,2.5v20.4L108.2,6.9c-1.2-2-3-4.7-6.4-4.7c-3.9,0-7.4,3.4-6.9,8.9h0.7c0.2-1.5,1-3.2,2.7-3.2c1.2,0,2.5,1.2,3.2,2.5v8.1c-4.4,0-7.4,2-7.4,5.7c0,2,1,4.9,3.9,5.7v-0.5c-0.5-0.5-0.7-1-0.7-1.7c0-1.2,1-2.2,2.7-2.2h1.2v10.3c-5.2,0-9.3,3-9.3,7.9c0,4.7,3.9,6.9,8.4,6.6v-0.5c-2.7-0.2-3.9-1.5-3.9-3.2c0-2.2,1.5-3.2,3.4-3.2c2,0,3.7,1.2,4.9,2.7l7.1-7.9l-0.5-0.5l-1.7,2c-2.7-2.5-4.2-3.2-7.4-3.7V11.3L122,45.7h1.5V11.3C127.1,11.1,130.6,8.1,130.6,3.9z M148.5,36.2l-6.1,4.7l-6.1-4.9v-3l11.6-7.9v-0.2l-5.9-8.9l-12.8,6.9v16.2l-2.5,2l0.5,0.5l2.2-1.7l8.4,6.1l11.1-8.9C148.8,37.1,148.5,36.2,148.5,36.2z M136.2,32V19.9l0.5-0.2l5.4,8.6C142.2,28.3,136.2,32,136.2,32z M188.6,18.7l-1.7,1.2l-4.7-3.9l-5.4,4.9l2.2,2.2v18.4l-5.9-3.7V22.6l2-1.2l-5.7-5.4l-5.4,4.9l2.2,2.2v17.7l-0.7,0.5l-5.2-3.7V22.9c0-3.4-1.7-4.4-3.7-5.7c-1.7-1.2-2.7-2-2.7-3.7c0-1.5,1.5-2.2,2.2-2.7v-0.5c-2,0-7.1,2-7.1,6.6c0,2.5,1.2,3.4,2.5,4.7c1.2,1.2,2.5,2.2,2.5,4.4v14.3l-2.7,2l0.5,0.5l2.5-2l5.7,4.9l6.1-4.2l6.9,4.2l13-7.6V21.6l3.2-2.5L188.6,18.7L188.6,18.7z M234.4,5.2l-2.5,2.2l-5.4-4.9l-8.1,5.9V3h-0.7l0.2,39.8c-0.7,0-3-0.5-4.7-1l-0.5-33.2c0-2.5-1.7-5.9-6.1-5.9s-7.4,3.4-7.4,6.9h0.7c0.2-1.5,1-2.7,2.5-2.7c1.5,0,2.7,1,2.7,4.2v9.6c-4.4,0.2-7.1,2.7-7.1,5.9c0,2,1,4.9,3.9,4.9V31c-1-0.5-1.2-1.2-1.2-1.7c0-1.5,1.2-2,3.2-2h1v15.2c-3.7,1.2-5.2,3.9-5.2,6.9c0,4.2,3.2,7.1,8.1,7.1c3.4,0,6.4-0.5,9.3-1.2c2.5-0.5,5.7-1.2,7.1-1.2c2,0,2.7,1,2.7,2.2c0,1.7-0.7,2.5-1.7,2.7v0.5c3.9-0.7,6.4-3.2,6.4-6.9s-3.7-5.9-7.6-5.9c-2,0-6.1,0.7-9.1,1.2c-3.4,0.7-6.9,1.2-7.9,1.2c-1.7,0-3.7-0.7-3.7-3.2c0-2,1.7-3.7,5.9-3.7c2.2,0,4.9,0.2,7.6,1c3,0.7,5.7,1.5,8.1,1.5c3.7,0,6.9-1.2,6.9-6.4V8.1l3-2.5L234.4,5.2L234.4,5.2z M224.3,20.2c-0.7,0.7-1.7,1.5-3,1.5s-2.5-0.7-3-1.5V9.3l2.5-1.7l3.4,3.2C224.3,10.8,224.3,20.2,224.3,20.2z M224.3,27.5c-0.5-0.5-1.7-1.2-3-1.2s-2.5,0.7-3,1.2v-6.4c0.5,0.5,1.7,1.2,3,1.2s2.5-0.7,3-1.2V27.5z M224.3,39.1c0,2-1.2,3.9-3.9,3.9h-2V28.5c0.5-0.5,1.7-1.2,3-1.2s2.2,0.7,3,1.2C224.3,28.5,224.3,39.1,224.3,39.1z M258,21.6l-7.9-5.7l-12.1,6.9v16l-2.5,2l0.2,0.5l2-1.5l7.9,5.9l12.3-7.4C258,38.4,258,21.6,258,21.6z M244.7,37.1V19.4l6.1,4.4v17.5C250.9,41.3,244.7,37.1,244.7,37.1z M281.4,16.5h-0.5c-0.7,0.5-1.5,1-2.2,1c-1,0-2.2-0.5-2.7-1.2h-0.5l-4.2,4.7l-4.2-4.7l-7.4,4.9l0.2,0.5l2-1.2l2.5,2.7v15.5l-3.2,2.5l0.5,0.5l1.5-1.2l5.9,4.9l7.6-5.2l-0.2-0.5l-2.2,1.2l-3-2.5V21.2c1.2,1.2,2.7,2.5,4.4,2.5C279.1,23.9,281.1,20.4,281.4,16.5L281.4,16.5z M310.9,40.1l-8.4,5.7l-11.3-17.2l8.1-12.5h0.5c1,1,2.5,2,4.2,2c1.7,0,3-1,3.7-2h0.5c-0.2,4.9-3.7,7.9-6.1,7.9c-2.5,0-3.7-1.2-5.2-2l-0.7,1.2l12.3,18.2l2.5-1.5V40.1z M283.8,38.9l-3.2,2.5l0.5,0.5l1.5-1.2l5.4,4.9l7.4-4.9l-0.5-0.5l-2,1.2l-2.5-2.5V1h-0.2l-8.9,5.9v0.5c1,0.5,2.5,0.7,2.5,3.7C283.8,11.1,283.8,38.9,283.8,38.9z M351.7,6.1c0-4.9-4.7-6.1-8.4-6.1v0.7c2.2,0,3.9,0.7,3.9,2.5c0,1-0.7,2.5-3,2.5c-1.7,0-5.4-1-8.1-2c-3.2-1-6.1-2-8.6-2c-4.9,0-8.4,3.7-8.4,7.9c0,3.7,2.7,4.9,3.7,5.4l0.2-0.5c-0.7-0.5-1.5-1-1.5-2.5c0-1,1-2.7,3.4-2.7c2.2,0,5.2,1,9.1,2.2c3.4,1,7.1,1.7,9.1,2v7.6l-3.7,3.2v0.2l3.7,3.2v10.6c-2,1.2-4.2,1.5-6.1,1.5c-3.7,0-6.9-1-9.6-3.9l10.1-4.9V13.8l-12.3,5.4c1.2-3.2,3.9-5.4,6.4-7.1l-0.2-0.5c-7.4,2-14,8.6-14,17c0,9.8,8.1,17.2,17.2,17.2c9.8,0,16.2-7.9,16.2-16h-0.5c-1.5,3.2-3.7,6.1-6.4,7.6V27.3l3.9-3.2v-0.2l-3.7-3.2v-7.4C348,13.3,351.7,10.8,351.7,6.1z M330.3,33.2l-3,1.5c-1.7-2.2-2.7-5.2-2.7-9.3c0-1.7,0.2-3.7,0.7-5.2l5.2-2.2L330.3,33.2z M360.3,3.7H360l-4.9,4.2v0.2l4.2,4.7h0.5l4.9-4.2V8.4L360.3,3.7L360.3,3.7z M367.7,40.1l-2,1.2l-2.5-2.5v-17l2.5-1.7l-0.5-0.5l-1.7,1.5l-4.4-5.2l-7.1,4.9l0.5,0.7l1.7-1.2l2.2,2.7v16l-3.2,2.5l0.2,0.5l1.7-1.2l5.4,4.9l7.4-4.9L367.7,40.1L367.7,40.1z M408.7,39.8l-1.7,1.2l-2.7-2.5V21.9l2.5-2l-0.5-0.5l-2,1.7l-5.7-5.2l-7.4,5.2l-5.7-5.2l-6.9,5.2l-4.4-5.2l-7.1,4.9l0.2,0.7l1.7-1.2l2.5,2.7v16l-2,2l5.7,4.7l5.4-4.9l-2.2-2.2V21.9l2.2-1.5l3.7,3.4v14.8l-2,2l5.7,4.7l5.4-4.9l-2.2-2.2V21.9l2-1.2l3.9,3.4v14.8l-1.7,1.7l5.7,5.2l7.6-5.2L408.7,39.8L408.7,39.8z M430.1,36.2l-6.1,4.7l-6.1-4.9v-3l11.6-7.9v-0.2l-5.9-8.9l-12.8,6.9v16.7l8.6,6.1l11.1-8.9C430.4,36.9,430.1,36.2,430.1,36.2z M417.8,32V19.9l0.5-0.2l5.4,8.6C423.7,28.3,417.8,32,417.8,32z M452.5,29.8l-4.7-3.7c3.2-2.7,4.4-6.4,4.4-8.9v-1.5h-0.5c-0.5,1.2-1.5,2.5-3.4,2.5c-2,0-3.2-1-4.4-2.5l-11.1,6.1v8.9l4.2,3.2c-4.2,3.7-4.9,6.1-4.9,8.1c0,2.5,1.2,4.2,3.2,4.9l0.2-0.5c-0.5-0.5-1-0.7-1-2c0-0.7,1-2,3-2c2.5,0,3.9,1.7,4.7,2.5l10.6-6.4v-8.9C452.8,29.8,452.5,29.8,452.5,29.8z M449.8,22.4c-1.7,3-5.4,5.9-7.6,7.4l-2.7-2.2v-8.6c1,2.5,3.7,4.4,6.4,4.4C447.6,23.4,448.6,23.1,449.8,22.4z M445.6,42.1c-1.2-2.7-4.2-4.7-7.1-4.7c-0.7,0-2.7,0-4.7,1.2c1.2-2,4.4-5.4,8.6-7.9l3,2.5L445.6,42.1L445.6,42.1z"/></svg></span>`;
     } else {
       gridTitle.textContent = parts.length === 2
         ? `${parts[0]} ${parts[1]}`
@@ -1821,7 +1898,7 @@ function renderCard(item) {
        <div class="card-placeholder placeholder-${catClass(item.category)}" style="display:none;">${letter}</div>`
     : `<div class="card-placeholder placeholder-${catClass(item.category)}">${letter}</div>`;
 
-  const folderLabel = folder
+  const folderLabel = (folder && folder.name !== 'Favorites')
     ? `<span class="card-folder-label"><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h240l80 80h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Z"/></svg> ${escapeHtml(folder.name)}</span>`
     : '';
 
@@ -2267,14 +2344,14 @@ function openDetailModal(item) {
   const isMusicianItem = item.category === 'Musician';
   const _imageClass = `detail-image${isMusicianItem ? ' detail-image--faces' : ''}`;
   document.getElementById('detail-body').classList.toggle('detail-body--tight-bottom', isMusicianItem);
-  document.getElementById('detail-bookmark-btn').style.display = isMusicianItem ? 'none' : '';
-  document.getElementById('detail-favorite-btn').style.display = isMusicianItem ? '' : 'none';
+  document.getElementById('detail-bookmark-btn').style.display = 'none';
+  document.getElementById('detail-favorite-btn').style.display = '';
 
   const PLAY_ICON_SVG = `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`;
   const _promoToggleHtml = isMusicianItem
     ? `<button class="btn-promo-toggle" id="btn-promo-toggle" title="Watch on YouTube"><span>Promo Vid</span>${PLAY_ICON_SVG}</button>`
     : isMusicAlbum
-    ? `<button class="btn-promo-toggle" id="btn-fullart-toggle" title="View full album art"><span>Full Album Art</span>${PLAY_ICON_SVG}</button>`
+    ? `<button class="btn-promo-toggle" id="btn-fullart-toggle" title="View full album art"><span>Album Art</span>${PLAY_ICON_SVG}</button>`
     : '';
 
   if (item.imageUrl) {
@@ -2367,10 +2444,10 @@ function openDetailModal(item) {
   const _detailAuthorCat = item.author ? item.category : 'Musician';
   const _isCuratedMusician = item.curated && item.category === 'Musician';
 
-  // The website CTA overlays the top of the image for both Musician and Music Album (the
-  // header container holds only that button now — the artist name for Music Album moved
-  // into its own "Artist | Year" line above the title, built below).
-  const _showArtistHeaderAbove = isMusicianItem || isMusicAlbum;
+  // The website CTA overlays the top of the image for every category now (the header container
+  // holds only that button — the artist name for Music Album moved into its own "Artist | Year"
+  // line above the title, built below).
+  const _showArtistHeaderAbove = true;
 
   const _titleHtml = item.category === 'Musician'
     ? `<button class="detail-author-link" data-author="${escapeHtml(item.title)}" data-category="Musician">${escapeHtml(item.title || '')}<svg class="detail-title-arrow" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m321-80-71-71 329-329-329-329 71-71 400 400L321-80Z"/></svg></button>`
@@ -2392,14 +2469,21 @@ function openDetailModal(item) {
 
   // Official website CTA — resolves the relevant musician (the item itself, or the album's artist).
   // Scoped strictly to Musician/Music Album so an unrelated item.author (e.g. a Book's author) never
-  // gets matched against an existing Musician profile of the same name.
+  // gets matched against an existing Musician profile of the same name. Every other category falls
+  // back to the item's own saved URL (same link the Web Links accordion's "View Source" uses).
   const _ctaAuthorName = item.category === 'Musician' ? item.title
     : item.category === 'Music Album' ? _detailAuthorName
     : null;
   let _ctaAuthor = _ctaAuthorName ? findAuthor(_ctaAuthorName, 'Musician') : null;
-  const buildWebsiteCta = () => _ctaAuthor?.websiteUrl
-    ? `<a class="btn-detail-website" id="detail-website-cta" href="${escapeHtml(_ctaAuthor.websiteUrl)}" target="_blank" rel="noopener">Official Website</a>`
-    : '';
+  const buildWebsiteCta = () => {
+    if (_ctaAuthor?.websiteUrl) {
+      return `<a class="btn-detail-website" id="detail-website-cta" href="${escapeHtml(_ctaAuthor.websiteUrl)}" target="_blank" rel="noopener">Official Website</a>`;
+    }
+    if (!isMusicianItem && !isMusicAlbum && item.url) {
+      return `<a class="btn-detail-website" id="detail-website-cta" href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Official Website</a>`;
+    }
+    return '';
+  };
 
   const artistHeaderEl = document.getElementById('detail-artist-header');
   const _headerContentHtml = buildWebsiteCta();
@@ -2483,12 +2567,27 @@ function openDetailModal(item) {
   metaEl.innerHTML = '';
   metaEl.style.display = 'none';
 
+  // Declared here (ahead of the Summary section below) so renderSummaryText() can write into
+  // the Summary accordion for Book/Show/Movie/Game; actual content is built further down.
+  const albumsAccordionHeaderEl = document.getElementById('detail-albums-accordion-header');
+  const albumsListEl = document.getElementById('detail-albums-list');
+  const albumsAccordionLabelEl = albumsAccordionHeaderEl.querySelector('span');
+  albumsListEl.classList.remove('detail-albums-list--summary'); // re-added below only for Summary categories
+
   const summaryEl = document.getElementById('detail-summary');
   const summaryLabelEl = document.getElementById('detail-summary-label');
   const summaryToggleEl = document.getElementById('detail-summary-toggle');
   summaryLabelEl.style.display = 'none';
 
   function renderSummaryText(text) {
+    if (SUMMARY_PLACEHOLDER_CATEGORIES.includes(item.category)) {
+      // These categories show summary text inside the Summary accordion instead of the plain
+      // block above notes (the accordion itself is built further down in this function).
+      albumsListEl.innerHTML = text ? `<div class="detail-accordion-summary-text">${escapeHtml(text)}</div>` : '';
+      summaryEl.style.display = 'none';
+      summaryToggleEl.style.display = 'none';
+      return;
+    }
     summaryEl.textContent = text;
     summaryEl.style.display = text ? '' : 'none';
     summaryEl.classList.remove('detail-summary-text--expanded');
@@ -2544,6 +2643,37 @@ function openDetailModal(item) {
     });
   }
 
+  // Book/Show/Movie/Game fallback: fetch a Wikipedia summary/photo (keyed by the item's own
+  // title, not an author) when either is missing — mirrors the Musician bio/photo lookup above.
+  const _needsItemWiki = SUMMARY_PLACEHOLDER_CATEGORIES.includes(item.category) && (!item.summary || !item.imageUrl);
+  if (_needsItemWiki && item.title) {
+    ensureItemWikipediaInfo(item.title, item.category).then(({ bio, photoUrl }) => {
+      if ((!bio && !photoUrl) || _detailItem !== item) return; // nothing found, or modal moved on
+      let changed = false;
+      if (bio && !item.summary) {
+        item.summary = bio;
+        renderSummaryText(bio);
+        changed = true;
+      }
+      if (photoUrl && !item.imageUrl) {
+        item.imageUrl = photoUrl;
+        changed = true;
+        patchCardImage(item.id, item.imageUrl);
+        const wrap = document.getElementById('detail-image-wrap');
+        const cropEl = wrap.querySelector('.detail-image-crop');
+        if (cropEl) {
+          const imgEl = cropEl.querySelector('.detail-image');
+          if (imgEl) {
+            imgEl.src = item.imageUrl;
+          } else {
+            cropEl.innerHTML = `<img class="${_imageClass}" src="${escapeHtml(item.imageUrl)}" alt="">`;
+          }
+        }
+      }
+      if (changed && state.items.some(i => i.id === item.id)) persistItem(item);
+    });
+  }
+
   const notesEl = document.getElementById('detail-notes');
   const notesInputEl = document.getElementById('detail-notes-input');
   const notesLabelEl = document.getElementById('detail-notes-label');
@@ -2556,58 +2686,46 @@ function openDetailModal(item) {
   const linerPanelEl = document.getElementById('liner-notes-panel');
   linerPanelEl.innerHTML = '';
   linerPanelEl.style.display = 'none';
-  if (isMusicianItem || isMusicAlbum) {
-    // My Notes is always shown as its own accordion row for Musician/Music Album modals, even
-    // with no notes yet — it's a directly-editable textarea instead of read-only text, auto-saving
-    // (debounced) as the user types. Genre (item.genre) is intentionally kept on the item but
-    // not rendered anywhere in this modal.
-    notesLabelEl.style.display = 'none'; // replaced by the accordion header below
-    notesEl.style.display = 'none';
-    notesEl.classList.remove('detail-accordion-collapsible', 'open');
+  // My Notes is shown as its own accordion row for every category now, even with no notes yet
+  // — it's a directly-editable textarea instead of read-only text, auto-saving (debounced) as
+  // the user types. Genre (item.genre, Music Album only) is intentionally kept on the item but
+  // not rendered anywhere in this modal.
+  notesLabelEl.style.display = 'none'; // replaced by the accordion header below
+  notesEl.style.display = 'none';
+  notesEl.classList.remove('detail-accordion-collapsible', 'open');
 
-    notesInputEl.value = text;
-    notesInputEl.style.display = '';
-    notesInputEl.classList.add('detail-accordion-collapsible');
-    notesInputEl.classList.remove('open');
-    notesAccordionHeaderEl.classList.remove('open');
-    notesAccordionHeaderEl.style.display = '';
-    notesAccordionHeaderEl.onclick = () => {
-      const nowOpen = notesAccordionHeaderEl.classList.toggle('open');
-      notesInputEl.classList.toggle('open', nowOpen);
-      if (nowOpen) {
-        albumsAccordionHeaderEl.classList.remove('open');
-        albumsListEl.classList.remove('open');
-        tracklistAccordionHeaderEl.classList.remove('open');
-        tracklistEl.classList.remove('open');
-        streamingEl.classList.remove('open');
-        notesInputEl.focus();
-      }
-    };
+  notesInputEl.value = text;
+  notesInputEl.style.display = '';
+  notesInputEl.classList.add('detail-accordion-collapsible');
+  notesInputEl.classList.remove('open');
+  notesAccordionHeaderEl.classList.remove('open');
+  notesAccordionHeaderEl.style.display = '';
+  notesAccordionHeaderEl.onclick = () => {
+    const nowOpen = notesAccordionHeaderEl.classList.toggle('open');
+    notesInputEl.classList.toggle('open', nowOpen);
+    if (nowOpen) {
+      albumsAccordionHeaderEl.classList.remove('open');
+      albumsListEl.classList.remove('open');
+      tracklistAccordionHeaderEl.classList.remove('open');
+      tracklistEl.classList.remove('open');
+      streamingEl.classList.remove('open');
+      notesInputEl.focus();
+    }
+  };
 
-    const saveNotes = debounce(async () => {
-      const newNotes = notesInputEl.value.trim() || null;
-      let liveItem = state.items.find(i => i.id === item.id);
-      if (!liveItem) liveItem = await ensureLiveItem();
-      if (liveItem.notes === newNotes) return;
-      liveItem.notes = newNotes;
-      item.notes = newNotes;
-      await persistItem(liveItem);
-    }, 600);
-    notesInputEl.oninput = saveNotes;
-  } else {
-    linerPanelEl.innerHTML = '';
-    linerPanelEl.style.display = 'none';
-    notesAccordionHeaderEl.style.display = 'none';
-    notesInputEl.style.display = 'none';
-    notesEl.classList.remove('detail-accordion-collapsible', 'open');
-    notesEl.textContent = text;
-    notesEl.style.display = text ? '' : 'none';
-    notesLabelEl.style.display = text ? '' : 'none';
-  }
+  const saveNotes = debounce(async () => {
+    const newNotes = notesInputEl.value.trim() || null;
+    let liveItem = state.items.find(i => i.id === item.id);
+    if (!liveItem) liveItem = await ensureLiveItem();
+    if (liveItem.notes === newNotes) return;
+    liveItem.notes = newNotes;
+    item.notes = newNotes;
+    await persistItem(liveItem);
+  }, 600);
+  notesInputEl.oninput = saveNotes;
 
-  const albumsAccordionHeaderEl = document.getElementById('detail-albums-accordion-header');
-  const albumsListEl = document.getElementById('detail-albums-list');
   if (isMusicianItem) {
+    albumsAccordionLabelEl.textContent = 'Albums';
     const knownAlbums = getKnownAlbumsForArtist(item.title);
     albumsAccordionHeaderEl.classList.remove('open');
     albumsListEl.classList.remove('open');
@@ -2647,11 +2765,52 @@ function openDetailModal(item) {
       albumsListEl.style.display = 'none';
       albumsListEl.innerHTML = '';
     }
-  } else {
+  } else if (isMusicAlbum) {
+    // Music Album has its own Song List accordion in this slot instead — see below.
     albumsAccordionHeaderEl.style.display = 'none';
     albumsListEl.style.display = 'none';
     albumsListEl.innerHTML = '';
     albumsListEl.classList.remove('detail-accordion-collapsible', 'open');
+  } else if (SUMMARY_PLACEHOLDER_CATEGORIES.includes(item.category)) {
+    // Book/Show/Movie/Game show the item's summary inside this accordion instead of the plain
+    // text block above notes — content is populated/updated by renderSummaryText() above.
+    albumsAccordionLabelEl.textContent = 'Summary';
+    albumsAccordionHeaderEl.classList.remove('open');
+    albumsListEl.classList.remove('open');
+    albumsAccordionHeaderEl.style.display = '';
+    albumsListEl.style.display = '';
+    albumsListEl.classList.add('detail-accordion-collapsible', 'detail-albums-list--summary');
+    albumsAccordionHeaderEl.onclick = () => {
+      const nowOpen = albumsAccordionHeaderEl.classList.toggle('open');
+      albumsListEl.classList.toggle('open', nowOpen);
+      if (nowOpen) {
+        notesAccordionHeaderEl.classList.remove('open');
+        notesEl.classList.remove('open');
+        tracklistAccordionHeaderEl.classList.remove('open');
+        tracklistEl.classList.remove('open');
+        streamingEl.classList.remove('open');
+      }
+    };
+  } else {
+    // Placeholder accordion for Visual Art — visible but intentionally empty for now.
+    albumsAccordionLabelEl.textContent = 'Placeholder';
+    albumsAccordionHeaderEl.classList.remove('open');
+    albumsListEl.classList.remove('open');
+    albumsAccordionHeaderEl.style.display = '';
+    albumsListEl.style.display = '';
+    albumsListEl.classList.add('detail-accordion-collapsible');
+    albumsListEl.innerHTML = '';
+    albumsAccordionHeaderEl.onclick = () => {
+      const nowOpen = albumsAccordionHeaderEl.classList.toggle('open');
+      albumsListEl.classList.toggle('open', nowOpen);
+      if (nowOpen) {
+        notesAccordionHeaderEl.classList.remove('open');
+        notesEl.classList.remove('open');
+        tracklistAccordionHeaderEl.classList.remove('open');
+        tracklistEl.classList.remove('open');
+        streamingEl.classList.remove('open');
+      }
+    };
   }
 
   const tracklistAccordionHeaderEl = document.getElementById('detail-tracklist-accordion-header');
@@ -2696,19 +2855,17 @@ function openDetailModal(item) {
   }
 
   const streamingEl = document.getElementById('detail-streaming');
-  // Web Links normally has margin-top:auto + padding-top to push it toward the bottom of a
-  // short modal; in the Musician/Music Album accordion stack it should instead sit flush like
-  // My Notes/Albums/Song List.
-  streamingEl.classList.toggle('detail-streaming--tight', isMusicianItem || isMusicAlbum);
+  // Web Links now always sits flush in the accordion stack (My Notes/Albums or Placeholder/
+  // Song List), rather than pushed to the bottom via margin-top:auto like the old combined row.
+  streamingEl.classList.add('detail-streaming--tight');
   const queueEl = document.getElementById('detail-queue');
-  queueEl.classList.toggle('detail-queue--tight', isMusicianItem || isMusicAlbum);
+  queueEl.classList.add('detail-queue--tight');
   const catConfig = CATEGORY_PLATFORMS[item.category];
   const query = item.title || domain;
   const websiteLinkLabel = isMusicAlbum ? 'View on Apple Music' : (domain || 'View Source');
   const websiteBtn = item.url
     ? `<a class="streaming-link-btn streaming-link-website" href="${escapeHtml(item.url)}" target="_blank">${escapeHtml(websiteLinkLabel)}</a>`
     : '';
-  const arrowSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
 
   const headerLabel = catConfig ? escapeHtml(catConfig.label) : 'Web Links';
 
@@ -2728,20 +2885,15 @@ function openDetailModal(item) {
     if (labelEl) labelEl.classList.toggle('queue-label--active', isQueued);
   }
 
-  // Musician/Music Album modals present Web Links as its own accordion row (icon + label +
-  // chevron, matching My Notes/Albums/Song List) with "Add to Queue" pulled out as a standalone
-  // button below the accordion stack, instead of sharing a header row with it like other
-  // categories do.
+  // Every category now presents Web Links as its own accordion row (icon + label + chevron,
+  // matching My Notes/Albums/Song List) with "Add to Queue" pulled out as a standalone button
+  // below the accordion stack, instead of the old combined header row.
   const WEB_LINKS_ICON_SVG = `<svg class="detail-accordion-icon" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor"><path d="M440-280H280q-83 0-141.5-58.5T80-480q0-83 58.5-141.5T280-680h160v80H280q-50 0-85 35t-35 85q0 50 35 85t85 35h160v80ZM320-440v-80h320v80H320Zm200 160v-80h160q50 0 85-35t35-85q0-50-35-85t-85-35H520v-80h160q83 0 141.5 58.5T880-480q0 83-58.5 141.5T680-280H520Z"/></svg>`;
-  const buildStreamingHeader = () => (isMusicianItem || isMusicAlbum)
-    ? `<div class="detail-accordion-header how-to-read-label">${WEB_LINKS_ICON_SVG}<span>${headerLabel}</span><svg class="detail-accordion-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>`
-    : `<div class="streaming-header">
-        <div class="streaming-label how-to-read-label">${headerLabel}${arrowSvg}</div>
-        <div class="streaming-label queue-label"><span class="queue-label-text">Add to Queue</span>${arrowSvg}</div>
-      </div>`;
+  const buildStreamingHeader = () =>
+    `<div class="detail-accordion-header how-to-read-label">${WEB_LINKS_ICON_SVG}<span>${headerLabel}</span><svg class="detail-accordion-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>`;
 
   const btnStandaloneQueueEl = document.getElementById('btn-standalone-queue');
-  btnStandaloneQueueEl.style.display = (isMusicianItem || isMusicAlbum) ? '' : 'none';
+  btnStandaloneQueueEl.style.display = '';
 
   const buildStreaming = (linksHtml) => buildStreamingHeader() + `<div class="streaming-links-wrap">${linksHtml}</div>`;
 
@@ -3328,6 +3480,14 @@ async function init() {
   await new Promise(resolve => {
     chrome.storage.local.get({ savecraft_artist_video_cache: {} }, data => {
       state.artistVideoCache = data.savecraft_artist_video_cache;
+      resolve();
+    });
+  });
+
+  // Load item wiki cache from local storage (separate from sync)
+  await new Promise(resolve => {
+    chrome.storage.local.get({ savecraft_item_wiki_cache: {} }, data => {
+      state.itemWikiCache = data.savecraft_item_wiki_cache;
       resolve();
     });
   });
