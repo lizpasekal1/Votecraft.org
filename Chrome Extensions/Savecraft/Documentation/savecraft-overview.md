@@ -125,7 +125,17 @@ A separate browsing mode (toggled via the sidebar options menu) that surfaces Vo
 - **Curated cache** — data is cached in `chrome.storage.local` for 24 hours; cache is versioned so bumping `_CURATED_CACHE_VERSION` in `app.js` forces a fresh fetch
 
 ### Item Detail Modal
-Clicking a card opens a detail modal showing cover image, bookmark toggle, title, author link (clickable → author page), platform tags, notes, and queue status controls. For curated albums, the artist name is a clickable link in the title area.
+Clicking a card opens a detail modal showing cover image, title, author link (clickable → author page), platform tags, notes, and queue status controls.
+
+**Musician and Music Album modals** share a distinct accordion-based layout, different from every other category:
+- **Image** — 16:9 cropped cover (object-fit: cover). Musicians show a "Promo Vid" toggle (fetches a YouTube Data API-backed music video for the artist, filtered to the Music category) that swaps the photo for an inline video player; Music Albums show a "Full Album Art ▶" button that opens the full uncropped cover art in a lightbox.
+- **Header overlay** — an "Official Website" pill (auto-discovered via MusicBrainz → Wikidata, cached per artist) overlays the top of the image for both categories.
+- **Title area** — Musicians show their name with a clickable arrow to their author page. Music Albums show a bold "Artist | Year" line (in the brand purple) above the album title.
+- **Accordion rows** (icon + label + chevron, mutually exclusive — opening one closes the others): **My Notes** (live-editable textarea, debounced auto-save), **Albums** (Musician-only — the artist's known albums, capped at 5 with a "See all →" link to their profile), **Song List** (Music Album-only — the album's tracks, lazily fetched via the iTunes lookup API on first expand using the item's `collectionId`; a one-time backfill resolves `collectionId`/`year` for older items that predate this field), and **Web Links**.
+- **Add to Queue** — a standalone pill button below the accordion stack (rather than sharing a header row with Web Links, as other categories do).
+- **Bookmark / Favorite** — the save/bookmark icon lives inside the "Add to Queue" button for Musicians (top-right corner is reserved for a Favorite star instead); other categories keep the bookmark as a separate top-right circular button. Favoriting a Musician adds it to an auto-created "Favorites" folder for that category in the sidebar (the folder is removed again once nothing in it remains favorited).
+
+For curated albums, the artist name is a clickable link in the title area (unless already on that artist's own page).
 
 ### Add / Edit Modal
 - **Author** field (wider, first) + **Title** field side by side
@@ -135,7 +145,7 @@ Clicking a card opens a detail modal showing cover image, bookmark toggle, title
 - Category dropdown (singular names, no icons)
 
 ### Search & Sort
-The search bar and sort dropdown in the header filter both the grid view and the Kanban board in real time.
+The search bar and sort dropdown in the header filter both the grid view and the Kanban board in real time. Sort options: Newest/Oldest first (by save date), A → Z / Z → A (title), and Release Date (Newest/Oldest) — the latter two sort by an item's `year` field (populated for Music Albums via Fetch Albums import or the auto-backfill).
 
 ---
 
@@ -156,6 +166,9 @@ The search bar and sort dropdown in the header filter both the grid view and the
   savedAt: number,
   queueStatus: 'in-queue' | 'in-progress' | 'my-review' | 'done' | null,
   folderId: string | null,
+  genre: string | null,    // Music Album only; not currently rendered anywhere
+  year: string | null,     // Music Album only; 4-digit release year
+  collectionId: number | null, // Music Album only; iTunes collection ID, used to fetch the Song List
 }
 ```
 
@@ -209,11 +222,14 @@ The search bar and sort dropdown in the header filter both the grid view and the
 
 | API | Used for | Auth required |
 |-----|----------|---------------|
-| iTunes Search API (`itunes.apple.com`) | Fetch Albums modal, Add modal autosuggest, curated data population | None — free, public |
+| iTunes Search/Lookup API (`itunes.apple.com`) | Fetch Albums modal, Add modal autosuggest, curated data population, artist photo fallback, album year/collectionId backfill, Song List track lookup | None — free, public |
 | Microlink (`api.microlink.io`) | Fetch og:image for right-click saves | None |
 | Firestore REST (`firestore.googleapis.com`) | Curated item data (read-only at runtime) | None for reads; Firebase Auth required for writes |
+| MusicBrainz (`musicbrainz.org`) → Wikidata (`www.wikidata.org`) | Resolving a Musician's official website | None — free, public |
+| Wikipedia (`en.wikipedia.org`) | Artist bio/photo fallback | None — free, public |
+| YouTube Data API v3 (`www.googleapis.com`) | Promo Vid search (Musician modal), filtered to the Music category | API key (`YOUTUBE_API_KEY` in `app.js`) — falls back to opening a YouTube search in a new tab if unset |
 
-Both `itunes.apple.com` and `api.microlink.io` are declared in `manifest.json` under `host_permissions`.
+All of the above are declared in `manifest.json` under `host_permissions`. YouTube video embeds additionally rely on a `declarativeNetRequestWithHostAccess` rule (`rules/youtube_referer_rules.json`) that sets the `Referer` header the embedded player requires, since extension pages don't send one natively.
 
 ---
 
