@@ -9,13 +9,20 @@ This file helps Claude (or any AI assistant) quickly regain context on the SaveC
 | What | Path |
 |------|------|
 | Chrome extension source | `/Users/lizpasekal/Documents/Votecraft.org/Chrome Extensions/Savecraft/` |
-| Manifest | `…/Savecraft/manifest.json` |
-| Main library page | `…/Savecraft/app/index.html` |
-| All library logic | `…/Savecraft/app/app.js` (~2700+ lines) |
-| All library styles | `…/Savecraft/app/app.css` |
+| Manifest | `…/Savecraft/manifest.json` (must stay at extension root — Chrome requirement) |
+| Main library page | `…/Savecraft/src/app/index.html` |
+| Library logic | `…/Savecraft/src/app/js/*.js` — 12 ES modules (`state.js`, `storage.js`, `utils.js`, `api.js`, `authors.js`, `render.js`, `kanban.js`, `detailModal.js`, `addEditModal.js`, `fetchAlbumsModal.js`, `share.js`, `main.js`); see `savecraft-overview.md` for what lives where |
+| Library styles | `…/Savecraft/src/app/css/*.css` — 8 files split by feature area |
+| Background service worker | `…/Savecraft/src/background/background.js` |
+| Content script | `…/Savecraft/src/content/content.js` |
+| Popup | `…/Savecraft/src/popup/popup.{html,css,js}` |
+| Sponsored page | `…/Savecraft/src/sponsored/sponsored.html` |
+| Logo assets | `…/Savecraft/images/logos/` |
 | Documentation | `/Users/lizpasekal/Documents/Votecraft.org/Chrome Extensions/Savecraft/Documentation/` |
 
 Always edit source code in `Votecraft.org/Chrome Extensions/Savecraft/`. Docs go in the same folder under `Documentation/`.
+
+**Note:** The original monolithic `src/app/app.js`/`app.css` still exist as an unused backup (not loaded by `index.html` anymore) — safe to delete once the module split is confirmed working in a real Chrome load.
 
 ---
 
@@ -102,13 +109,13 @@ For `author:Musician:X` views, `getFilteredSortedItems()` returns:
 - `findAuthor(name, category)` — looks up by exact name + category match (case-sensitive by design)
 - `persistAuthor(author)` — saves to `chrome.storage.sync` as `author_<id>`
 - `renderAuthorPage()` — renders full author page into `#cards-grid`
-- `openAuthorEditModal(name, category)` — opens the Edit Profile modal
-- `handleSaveAuthor()` — saves profile changes
+
+All in `js/authors.js` (profile CRUD/navigation) and `js/render.js` (`renderAuthorPage`). Note: there used to be an "Edit Profile" modal (`openAuthorEditModal`/`handleSaveAuthor`) — it was dead code (never wired to a trigger) and was removed during the app.js → ES module split. Author photo/bio/website are now only ever set automatically via the Wikipedia/MusicBrainz enrichment lookups, not user-editable through the UI.
 
 ### Author page structure
 - Back button in `#grid-title` → returns to category view
-- Header: photo, name, bio, website, action buttons
-- For `Musician` category: **Fetch Albums** button appears next to Edit Profile
+- Header: photo, name, bio, website
+- For `Musician` category: **Fetch Albums** button appears on the header
 - Works grid: all items by this author (includes curated Music Albums from CURATED_ITEMS where `notes === artistName`)
 - Clicking an album card on the author page opens the detail popup
 
@@ -146,7 +153,7 @@ For `author:Musician:X` views, `getFilteredSortedItems()` returns:
 ### Add Modal Autosuggest
 When category is `Music Album` and the author field has 2+ chars, a debounced (600ms) iTunes search runs and shows a dropdown of matching albums. Clicking a suggestion fills title, imageUrl, and url (only if those fields are currently empty).
 
-Key functions: `handleAuthorItunesLookup()`, `showItunesSuggestions()`, `hideItunesSuggestions()`, `applyItunesSuggestion()`, `debounce()`.
+Key functions: `handleAuthorItunesLookup()`, `showItunesSuggestions()`, `hideItunesSuggestions()`, `applyItunesSuggestion()` (all in `js/addEditModal.js`); `debounce()` is in `js/utils.js`.
 
 ---
 
@@ -172,12 +179,12 @@ In **curated genre mode**: clicking it sets `state.view = 'genre:<genre>:Music A
 ### Firestore project
 - Project: `votecraft-789`
 - Collection: `curated_items`
-- API key (read-only, safe to expose): in `_FIREBASE_API_KEY` constant in `app.js`
+- API key (read-only, safe to expose): in `_FIREBASE_API_KEY` constant in `js/storage.js`
 
 ### Loading
-`_loadCuratedFromFirestore()` paginates the collection in 300-doc pages.
-Loaded at startup into `CURATED_ITEMS` (global `let`, populated in `init()`).
-Cached in `chrome.storage.local` for 24 hours. Cache version: `_CURATED_CACHE_VERSION` (bump to force refresh).
+`_loadCuratedFromFirestore()` (in `js/storage.js`) paginates the collection in 300-doc pages.
+Loaded at startup via `initCuratedItems()`, which calls `setCuratedItems()` (in `js/state.js`) to populate the module-level `CURATED_ITEMS` binding — this indirection exists because ES modules can't let other files directly reassign an imported `let`, only the exporting module can, so `state.js` exposes a setter for it. `init()` (in `js/main.js`) calls `initCuratedItems()` on startup.
+Cached in `chrome.storage.local` for 24 hours. Cache version: `_CURATED_CACHE_VERSION` in `js/storage.js` (bump to force refresh).
 
 ### Category normalization
 Firestore stores plural/legacy category names. `_CAT_NORMALIZE` maps them to internal singular names:
@@ -271,4 +278,4 @@ Phase 2 of iTunes integration. Will add Spotify OAuth for richer artist data (ar
 3. Click the **↺ refresh** icon on the SaveCraft card
 4. Reopen the library tab (or hard-refresh it)
 
-No build step — changes are live after reload.
+No build step — changes are live after reload. `src/app/js/main.js` is loaded as an ES module (`<script type="module">`), so `import`/`export` typos surface as console errors on the library tab, not silent failures — always check DevTools console after a reload when editing `js/` or `css/` files.

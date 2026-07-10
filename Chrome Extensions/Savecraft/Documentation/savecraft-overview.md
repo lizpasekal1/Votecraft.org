@@ -23,22 +23,58 @@ To open the full library from the extension: click the toolbar icon → click **
 ## File Structure
 
 ```
-savecraft/
-├── manifest.json               — Extension config (Manifest V3)
-├── background.js               — Service worker: context menus, badge, Microlink image fetch
-├── content.js                  — Injected into every page; reads og:image for right-click saves
-├── popup/
-│   ├── popup.html              — Quick-save widget (shown when clicking toolbar icon)
-│   ├── popup.css
-│   └── popup.js
-├── app/
-│   ├── index.html              — Full library page (opens as a new tab)
-│   ├── app.js                  — All library logic: state, rendering, storage, modals (~2700+ lines)
-│   └── app.css                 — All library styles
+Savecraft/
+├── manifest.json                — Extension config (Manifest V3)
+├── images/
+│   └── logos/                   — Source-attribution logos (Rolling Stone, Steam, NYT) used in Curated SaveCraft
+├── rules/
+│   └── youtube_referer_rules.json — declarativeNetRequest rule for YouTube embed Referer header
+├── scripts/                     — One-off admin tooling to seed/update Firestore curated data (not loaded by the extension)
+├── src/
+│   ├── background/
+│   │   └── background.js        — Service worker: context menus, badge, Microlink image fetch
+│   ├── content/
+│   │   └── content.js           — Injected into every page; reads og:image for right-click saves
+│   ├── popup/
+│   │   ├── popup.html           — Quick-save widget (shown when clicking toolbar icon)
+│   │   ├── popup.css
+│   │   └── popup.js
+│   ├── sponsored/
+│   │   └── sponsored.html       — Standalone "Sponsored Statement" page linked from curated Top 100 detail modals
+│   └── app/
+│       ├── index.html           — Full library page (opens as a new tab); loads js/main.js as an ES module + the css/ stylesheets
+│       ├── js/                  — Library logic, split into ES modules (see below)
+│       └── css/                 — Library styles, split by feature area (see below)
 └── Documentation/
-    ├── savecraft-overview.md   — This file
-    └── session-context.md      — Technical reference for AI assistants
+    ├── savecraft-overview.md    — This file
+    ├── session-context.md       — Technical reference for AI assistants
+    └── savecraft_planning.md    — Original Phase 1 planning doc (historical)
 ```
+
+### `src/app/js/` modules
+
+The library used to be one ~3,700-line `app.js`. It's now split into 12 ES modules, loaded via `<script type="module" src="js/main.js">` in `index.html`. Modules import/export between each other (some circularly — safe under ES modules since nothing is called at module-evaluation time, only from inside functions):
+
+| Module | Responsibility |
+|--------|-----------------|
+| `state.js` | Shared `state` object + static constants (`CATEGORIES`, `CAT_LABEL`, `CAT_EMOJI`, `CATEGORY_PLATFORMS`, etc.) |
+| `storage.js` | All `persist*`/`remove*` functions, `loadAll()`, Firestore curated-data loading (`_loadCuratedFromFirestore`, `initCuratedItems`) |
+| `utils.js` | Pure helpers: `escapeHtml`, `catClass`, `debounce`, `formatTrackDuration`, `patchCardImage`, etc. |
+| `api.js` | External network calls: iTunes, Wikipedia, MusicBrainz/Wikidata, YouTube (`YOUTUBE_API_KEY` lives here) |
+| `authors.js` | Author/musician profile CRUD, navigation, album-metadata backfill |
+| `render.js` | `renderSidebar`, `renderGrid`, `renderCard`, `renderAuthorPage`, curated-image fetch helpers |
+| `kanban.js` | Kanban board rendering and queue-status updates |
+| `detailModal.js` | The item detail modal — largest module, all accordions live here |
+| `addEditModal.js` | Add/Edit item modal, platform picker, iTunes autosuggest |
+| `fetchAlbumsModal.js` | Fetch Albums (bulk iTunes import) modal |
+| `share.js` | Share modal, CSV export |
+| `main.js` | Entry point — search, sort, theme, mobile sidebar, `init()`, all DOMContentLoaded event wiring |
+
+### `src/app/css/` stylesheets
+
+Split along the same lines from the original `app.css`, loaded as separate `<link>` tags in a fixed order (order matters — later files can override earlier ones): `base.css` (reset, theme variables, header), `sidebar.css`, `cards.css` (grid, cards, author pages), `detailModal.css`, `addEditModal.css`, `fetchAlbumsModal.css`, `kanban.css`, `misc.css` (share modal, scrollbar, mobile responsive overrides).
+
+The original monolithic `app.js`/`app.css` are still present in `src/app/` as an unused backup but are no longer loaded by anything — safe to delete once the module split has been confirmed working via a real (non-headless) Chrome smoke test.
 
 ---
 
@@ -81,7 +117,7 @@ Clicking the toolbar icon opens a small popup where the user can paste a URL and
 ### Right-Click Context Menu
 Right-clicking any page or link shows **Save to SaveCraft → [category]**. The service worker (`background.js`) reads `og:image` from the page via the content script and saves the item automatically.
 
-### Full Library (`app/index.html`)
+### Full Library (`src/app/index.html`)
 Opens as a new tab. Contains:
 - **Left sidebar** — category navigation plus a "My Saves Queue" entry that switches to the Kanban view. Musicians has a permanent Music Albums subfolder.
 - **Main grid** — responsive card grid of saved items with cover images, filtered by the selected category/search
@@ -91,9 +127,8 @@ Opens as a new tab. Contains:
 ### Author / Artist Profile Pages
 Every author name on a card or in a detail modal is a clickable link. Clicking it navigates to a dedicated **author profile page** for that person within that category:
 
-- **Profile header** — photo, name, bio, website link, Edit Profile button
+- **Profile header** — photo, name, bio, website link
 - **Works grid** — all saved items by that author in that category. For **Musician** profiles, Music Album items by the same artist are also shown — including curated albums from Firestore where the artist name matches.
-- **Edit Profile modal** — lets the user set a photo URL, bio, and website for the author
 - Author profiles are stored in `chrome.storage.sync` under keys `author_<id>`
 - Navigating to an author auto-creates a stub profile if one doesn't exist yet
 - The URL view format is `author:<category>:<name>` (e.g. `author:Musician:Gorillaz`)
@@ -122,7 +157,7 @@ A separate browsing mode (toggled via the sidebar options menu) that surfaces Vo
 - **Musicians** — 100 top artists (from iTunes charts), each card's name links to their author profile page
 - **Music Albums** — 2,444 albums from those artists, each showing the artist name as a clickable link; the Music Albums subfolder under Musicians navigates to this view
 - **Clicking a musician card** opens the detail popup; clicking the musician's name navigates to their profile
-- **Curated cache** — data is cached in `chrome.storage.local` for 24 hours; cache is versioned so bumping `_CURATED_CACHE_VERSION` in `app.js` forces a fresh fetch
+- **Curated cache** — data is cached in `chrome.storage.local` for 24 hours; cache is versioned so bumping `_CURATED_CACHE_VERSION` in `js/storage.js` forces a fresh fetch
 - **Top 100 lists** — the "Top 100" genre shows a source-attribution logo next to the section title, indicating which outlet curated that list: Rolling Stone (Musicians, Shows, Books), The New York Times (Movies), Steam (Games). Hovering any logo shows a tooltip explaining the attribution. Curated categories are keyed by their singular `CATEGORIES` name internally (e.g. `genre:Top 100:Musician`, not `genre:Top 100:Music`) — this tripped up the logo-matching logic once before, so keep that in mind if extending it.
 
 ### Item Detail Modal
@@ -232,7 +267,7 @@ The search bar and sort dropdown in the header filter both the grid view and the
 | Firestore REST (`firestore.googleapis.com`) | Curated item data (read-only at runtime) | None for reads; Firebase Auth required for writes |
 | MusicBrainz (`musicbrainz.org`) → Wikidata (`www.wikidata.org`) | Resolving a Musician's official website | None — free, public |
 | Wikipedia (`en.wikipedia.org`) | Artist bio/photo fallback (Musician); image/summary fallback for Book, Show, Movie, Game items missing one | None — free, public |
-| YouTube Data API v3 (`www.googleapis.com`) | Promo Vid search (Musician modal), filtered to the Music category | API key (`YOUTUBE_API_KEY` in `app.js`) — falls back to opening a YouTube search in a new tab if unset |
+| YouTube Data API v3 (`www.googleapis.com`) | Promo Vid search (Musician modal), filtered to the Music category | API key (`YOUTUBE_API_KEY` in `js/api.js`) — falls back to opening a YouTube search in a new tab if unset |
 
 All of the above are declared in `manifest.json` under `host_permissions`. YouTube video embeds additionally rely on a `declarativeNetRequestWithHostAccess` rule (`rules/youtube_referer_rules.json`) that sets the `Referer` header the embedded player requires, since extension pages don't send one natively.
 
@@ -240,10 +275,10 @@ All of the above are declared in `manifest.json` under `host_permissions`. YouTu
 
 ## Development Tips
 
-- The extension page URL is `chrome-extension://<extension-id>/app/index.html`. Open DevTools on it like any webpage (F12 while the library tab is active).
+- The extension page URL is `chrome-extension://<extension-id>/src/app/index.html`. Open DevTools on it like any webpage (F12 while the library tab is active).
 - To inspect the background service worker: go to `chrome://extensions` → find SaveCraft → click **"service worker"** link.
 - To wipe all saved data during testing: open the library → DevTools console → `chrome.storage.sync.clear()` then reload.
-- Curated data is cached in `chrome.storage.local`. To force a fresh fetch from Firestore, bump `_CURATED_CACHE_VERSION` in `app.js` and refresh the extension.
+- Curated data is cached in `chrome.storage.local`. To force a fresh fetch from Firestore, bump `_CURATED_CACHE_VERSION` in `src/app/js/storage.js` and refresh the extension.
 - Firestore writes (for populating curated data) require temporarily setting `allow write: if true` on the `curated_items` rule in Firebase Console → Firestore → Rules. Always revert after.
 
 ---

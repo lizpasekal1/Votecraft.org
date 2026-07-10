@@ -4,6 +4,7 @@ const CATEGORIES = ['Book', 'Game', 'Movie', 'Musician', 'Music Album', 'Show', 
 // is labeled "Summary" instead of "Placeholder", and which get a Wikipedia fallback for a
 // missing image/summary. Visual Art and the music categories are intentionally excluded.
 const SUMMARY_PLACEHOLDER_CATEGORIES = ['Book', 'Show', 'Movie', 'Game'];
+const MODAL_BOOKMARK_ICON_SVG = '<svg class="modal-bookmark-icon" xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Z"/></svg>';
 const CURATED_GENRES = ['Top 100', 'Futurism', 'Fantasy', 'Thriller', 'Pop', 'Classic', 'Jazz', 'Comedy'];
 const GENRE_EMOJI = {
   'Top 100':  '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M852-212 732-332l56-56 120 120-56 56ZM708-692l-56-56 120-120 56 56-120 120Zm-456 0L132-812l56-56 120 120-56 56ZM108-212l-56-56 120-120 56 56-120 120Zm246-75 126-76 126 77-33-144 111-96-146-13-58-136-58 135-146 13 111 97-33 143ZM233-120l65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Zm247-361Z"/></svg>',
@@ -21,7 +22,8 @@ const CAT_LABEL = {
   'Show': 'Shows', 'Visual Art': 'Visual Art',
 };
 
-const CAT_EMOJI = { 'Music Album': '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M447-207q-47-47-47-113t47-113q47-47 113-47 23 0 42.5 5.5T640-458v-342h240v120H720v360q0 66-47 113t-113 47q-66 0-113-47ZM80-320q0-99 38-186.5T221-659q65-65 152.5-103T560-800v80q-82 0-155 31.5t-127.5 86q-54.5 54.5-86 127T160-320H80Zm160 0q0-66 25.5-124.5t69-102Q378-590 436-615t124-25v80q-100 0-170 70t-70 170h-80Z"/></svg>', Musician: '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M447-207q-47-47-47-113t47-113q47-47 113-47 23 0 42.5 5.5T640-458v-342h240v120H720v360q0 66-47 113t-113 47q-66 0-113-47ZM80-320q0-99 38-186.5T221-659q65-65 152.5-103T560-800v80q-82 0-155 31.5t-127.5 86q-54.5 54.5-86 127T160-320H80Zm160 0q0-66 25.5-124.5t69-102Q378-590 436-615t124-25v80q-100 0-170 70t-70 170h-80Z"/></svg>', Show: '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm120-200h80v-240h70l90 240h80l120-320H660l-60 180-60-180H200v80h120v240Z"/></svg>', Book: '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M270-80q-45 0-77.5-30.5T160-186v-558q0-38 23.5-68t61.5-38l395-78v640l-379 76q-9 2-15 9.5t-6 16.5q0 11 9 18.5t21 7.5h450v-640h80v720H270Zm10-217 80-16v-478l-80 16v478Z"/></svg>', Movie: '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="m460-380 280-180-280-180v360ZM320-240q-33 0-56.5-23.5T240-320v-480q0-33 23.5-56.5T320-880h480q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H320ZM160-80q-33 0-56.5-23.5T80-160v-560h80v560h560v80H160Z"/></svg>', Game: '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M182-200q-51 0-79-35.5T82-322l42-300q9-60 53.5-99T282-760h396q60 0 104.5 39t53.5 99l42 300q7 51-21 86.5T778-200q-21 0-39-7.5T706-230l-90-90H344l-90 90q-15 15-33 22.5t-39 7.5Zm526.5-251.5Q720-463 720-480t-11.5-28.5Q697-520 680-520t-28.5 11.5Q640-497 640-480t11.5 28.5Q663-440 680-440t28.5-11.5Zm-80-120Q640-583 640-600t-11.5-28.5Q617-640 600-640t-28.5 11.5Q560-617 560-600t11.5 28.5Q583-560 600-560t28.5-11.5ZM310-440h60v-70h70v-60h-70v-70h-60v70h-70v60h70v70Z"/></svg>', 'Visual Art': '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-83 32.5-156t88-127Q256-817 330-848.5T488-880q80 0 151 27.5t124.5 76q53.5 48.5 85 115T880-518q0 115-70 176.5T640-280h-74q-9 0-12.5 5t-3.5 11q0 12 15 34.5t15 51.5q0 50-27.5 74T480-80ZM303-457q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm120-160q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm200 0q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm120 160q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Z"/></svg>', 'Favorite Albums': '💿', 'Web Links': '🎧' };
+const CAT_EMOJI_NOTE_ICON = '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M447-207q-47-47-47-113t47-113q47-47 113-47 23 0 42.5 5.5T640-458v-342h240v120H720v360q0 66-47 113t-113 47q-66 0-113-47ZM80-320q0-99 38-186.5T221-659q65-65 152.5-103T560-800v80q-82 0-155 31.5t-127.5 86q-54.5 54.5-86 127T160-320H80Zm160 0q0-66 25.5-124.5t69-102Q378-590 436-615t124-25v80q-100 0-170 70t-70 170h-80Z"/></svg>';
+const CAT_EMOJI = { 'Music Album': CAT_EMOJI_NOTE_ICON, Musician: CAT_EMOJI_NOTE_ICON, Show: '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm120-200h80v-240h70l90 240h80l120-320H660l-60 180-60-180H200v80h120v240Z"/></svg>', Book: '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M270-80q-45 0-77.5-30.5T160-186v-558q0-38 23.5-68t61.5-38l395-78v640l-379 76q-9 2-15 9.5t-6 16.5q0 11 9 18.5t21 7.5h450v-640h80v720H270Zm10-217 80-16v-478l-80 16v478Z"/></svg>', Movie: '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="m460-380 280-180-280-180v360ZM320-240q-33 0-56.5-23.5T240-320v-480q0-33 23.5-56.5T320-880h480q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H320ZM160-80q-33 0-56.5-23.5T80-160v-560h80v560h560v80H160Z"/></svg>', Game: '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M182-200q-51 0-79-35.5T82-322l42-300q9-60 53.5-99T282-760h396q60 0 104.5 39t53.5 99l42 300q7 51-21 86.5T778-200q-21 0-39-7.5T706-230l-90-90H344l-90 90q-15 15-33 22.5t-39 7.5Zm526.5-251.5Q720-463 720-480t-11.5-28.5Q697-520 680-520t-28.5 11.5Q640-497 640-480t11.5 28.5Q663-440 680-440t28.5-11.5Zm-80-120Q640-583 640-600t-11.5-28.5Q617-640 600-640t-28.5 11.5Q560-617 560-600t11.5 28.5Q583-560 600-560t28.5-11.5ZM310-440h60v-70h70v-60h-70v-70h-60v70h-70v60h70v70Z"/></svg>', 'Visual Art': '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-83 32.5-156t88-127Q256-817 330-848.5T488-880q80 0 151 27.5t124.5 76q53.5 48.5 85 115T880-518q0 115-70 176.5T640-280h-74q-9 0-12.5 5t-3.5 11q0 12 15 34.5t15 51.5q0 50-27.5 74T480-80ZM303-457q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm120-160q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm200 0q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm120 160q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Z"/></svg>', 'Favorite Albums': '💿', 'Web Links': '🎧' };
 
 const CATEGORY_PLATFORMS = {
   'Music Album':  { label: 'Web Links', platforms: [
@@ -407,6 +409,8 @@ function patchCardImage(itemId, imageUrl) {
     img.className = 'card-image';
     img.src = imageUrl;
     img.alt = '';
+    img.loading = 'lazy';
+    img.decoding = 'async';
     img.onerror = () => { img.style.display = 'none'; placeholder.style.display = 'flex'; };
     placeholder.style.display = 'none';
     card.insertBefore(img, placeholder);
@@ -426,7 +430,7 @@ async function ensureArtistWikipediaInfo(artistName) {
     return { bio: cached.bio || null, photoUrl: cached.photoUrl || null };
   }
   const summary = await fetchArtistWikipediaSummary(artistName);
-  let photoUrl = summary?.originalimage?.source || summary?.thumbnail?.source || null;
+  let photoUrl = summary?.thumbnail?.source || summary?.originalimage?.source || null;
   if (!photoUrl) photoUrl = await fetchArtistPhotoFromItunes(artistName);
   const result = { bio: summary?.extract || null, photoUrl };
   state.artistBioCache[key] = { ...result, fetchedAt: Date.now() };
@@ -534,7 +538,7 @@ async function ensureItemWikipediaInfo(title, category) {
   const summary = await fetchItemWikipediaSummary(title, category);
   const result = {
     bio: summary?.extract || null,
-    photoUrl: summary?.originalimage?.source || summary?.thumbnail?.source || null,
+    photoUrl: summary?.thumbnail?.source || summary?.originalimage?.source || null,
   };
   state.itemWikiCache[key] = { ...result, fetchedAt: Date.now() };
   persistItemWikiCache();
@@ -593,7 +597,7 @@ async function fetchArtistPhotoFromItunes(artistName) {
     const lowerName = artistName.trim().toLowerCase();
     const match = data.results.find(r => r.collectionType && r.artistName?.toLowerCase() === lowerName)
       || data.results.find(r => r.collectionType);
-    return match?.artworkUrl100?.replace('100x100bb', '1200x1200bb') || null;
+    return match?.artworkUrl100?.replace('100x100bb', '300x300bb') || null;
   } catch {
     return null;
   }
@@ -650,10 +654,14 @@ async function fetchArtistWebsiteFromWikidata(artistName) {
   return preferred?.mainsnak?.datavalue?.value || null;
 }
 
+// Tracks item ids with a lookup currently in flight, so a renderGrid() firing again before the
+// previous round-trip resolves (e.g. rapid filter/search changes) doesn't fire a duplicate fetch.
+const _curatedImgFetchInFlight = new Set();
 function fetchMissingCuratedImages(items) {
-  const missing = items.filter(i => i.curated && !i.imageUrl);
+  const missing = items.filter(i => i.curated && !i.imageUrl && !_curatedImgFetchInFlight.has(i.id));
   if (!missing.length) return;
   missing.forEach(item => {
+    _curatedImgFetchInFlight.add(item.id);
     fetch(`https://api.microlink.io?url=${encodeURIComponent(item.url)}`)
       .then(r => r.json())
       .then(data => {
@@ -661,7 +669,6 @@ function fetchMissingCuratedImages(items) {
         if (!imgUrl) return;
         state.curatedImgCache[item.id] = imgUrl;
         persistCuratedImgCache();
-        // Swap placeholder with image directly in the DOM
         const card = document.querySelector(`.card[data-id="${item.id}"]`);
         if (!card) return;
         if (card.querySelector('.card-image')) return; // already has an image, don't double-insert
@@ -671,25 +678,32 @@ function fetchMissingCuratedImages(items) {
         img.className = 'card-image';
         img.src = imgUrl;
         img.alt = '';
+        img.loading = 'lazy';
+        img.decoding = 'async';
         img.onerror = () => { img.style.display = 'none'; placeholder.style.display = 'flex'; };
         placeholder.style.display = 'none'; // hide placeholder before image arrives
         card.insertBefore(img, placeholder);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => _curatedImgFetchInFlight.delete(item.id));
   });
 }
 
 // Same idea as fetchMissingCuratedImages(), but for curated Musician cards whose photo is
 // missing or still the iTunes stand-in — looks up (and caches) the Wikipedia photo per artist,
 // then live-patches any matching cards already on screen.
+const _curatedMusicianPhotoFetchInFlight = new Set();
 function fetchMissingCuratedMusicianPhotos(items) {
-  const missing = items.filter(i => i.curated && i.category === 'Musician' && (!i.imageUrl || isItunesArtworkUrl(i.imageUrl)));
+  const missing = items.filter(i => i.curated && i.category === 'Musician' && (!i.imageUrl || isItunesArtworkUrl(i.imageUrl)) && !_curatedMusicianPhotoFetchInFlight.has(i.id));
   if (!missing.length) return;
   missing.forEach(item => {
-    ensureArtistWikipediaInfo(item.title).then(({ photoUrl }) => {
-      if (!photoUrl) return;
-      patchCardImage(item.id, photoUrl);
-    });
+    _curatedMusicianPhotoFetchInFlight.add(item.id);
+    ensureArtistWikipediaInfo(item.title)
+      .then(({ photoUrl }) => {
+        if (!photoUrl) return;
+        patchCardImage(item.id, photoUrl);
+      })
+      .finally(() => _curatedMusicianPhotoFetchInFlight.delete(item.id));
   });
 }
 
@@ -707,10 +721,6 @@ function removeFolder(id) {
 
 function persistAuthor(author) {
   return new Promise(resolve => chrome.storage.sync.set({ [`author_${author.id}`]: author }, resolve));
-}
-
-function removeAuthor(id) {
-  return new Promise(resolve => chrome.storage.sync.remove(`author_${id}`, resolve));
 }
 
 function findAuthor(name, category) {
@@ -859,7 +869,6 @@ function escapeHtml(str) {
 function getFilteredSortedItems() {
   let items = [...state.items];
 
-  // View filter
   if (state.view === 'all') {
     // no filter
   } else if (state.view.startsWith('genre:')) {
@@ -1144,7 +1153,6 @@ function renderSidebar() {
     });
   });
 
-  // Add-folder
   sidebar.querySelectorAll('[data-add-folder]').forEach(el => {
     el.addEventListener('click', e => {
       e.stopPropagation();
@@ -1152,7 +1160,6 @@ function renderSidebar() {
     });
   });
 
-  // Delete-folder
   sidebar.querySelectorAll('.sidebar-delete-folder').forEach(btn => {
     btn.addEventListener('click', async e => {
       e.stopPropagation();
@@ -1185,19 +1192,21 @@ const KANBAN_COLUMNS = [
 
 let _demoStatus = 'in-queue';
 let _kanbanSortListenerAdded = false;
-const KANBAN_DEMO = () => ({
-  id: '__demo__',
-  title: 'Drag to progress',
-  category: 'Books',
-  imageUrl: null,
-  queueStatus: _demoStatus,
-  _isDemo: true,
-});
+function KANBAN_DEMO() {
+  return {
+    id: '__demo__',
+    title: 'Drag to progress',
+    category: 'Books',
+    imageUrl: null,
+    queueStatus: _demoStatus,
+    _isDemo: true,
+  };
+}
 
 function renderKanbanCard(item) {
   const letter    = (item.title || '?')[0].toUpperCase();
   const thumb     = item.imageUrl
-    ? `<img class="kcard-thumb" src="${escapeHtml(item.imageUrl)}" alt="" onerror="this.style.display='none'">`
+    ? `<img class="kcard-thumb" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">`
     : `<div class="kcard-thumb kcard-thumb--placeholder placeholder-${catClass(item.category)}">${letter}</div>`;
 
   const demoTag   = item._isDemo ? `<span class="kcard-demo-badge">DEMO</span>` : '';
@@ -1616,7 +1625,6 @@ function renderGrid() {
     });
   });
 
-  // Save curated item to personal My Saves
   container.querySelectorAll('.btn-save-curated').forEach(btn => {
     btn.addEventListener('click', async e => {
       e.stopPropagation();
@@ -1804,7 +1812,7 @@ function renderAuthorPage() {
   const items = getFilteredSortedItems();
 
   const photoHtml = author?.imageUrl
-    ? `<img class="author-page-photo" src="${escapeHtml(author.imageUrl)}" alt=""
+    ? `<img class="author-page-photo" src="${escapeHtml(author.imageUrl)}" alt="" loading="lazy" decoding="async"
             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
        <div class="author-page-photo-placeholder placeholder-${catClass(cat)}" style="display:none">${escapeHtml(name[0]?.toUpperCase() || '?')}</div>`
     : `<div class="author-page-photo-placeholder placeholder-${catClass(cat)}">${escapeHtml(name[0]?.toUpperCase() || '?')}</div>`;
@@ -1893,7 +1901,7 @@ function renderCard(item) {
   const folder = item.folderId ? state.folders.find(f => f.id === item.folderId) : null;
 
   const imageSection = item.imageUrl
-    ? `<img class="card-image" src="${escapeHtml(item.imageUrl)}" alt=""
+    ? `<img class="card-image" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async"
             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
        <div class="card-placeholder placeholder-${catClass(item.category)}" style="display:none;">${letter}</div>`
     : `<div class="card-placeholder placeholder-${catClass(item.category)}">${letter}</div>`;
@@ -2009,7 +2017,7 @@ async function handleAuthorItunesLookup() {
       .map(r => ({
         title: r.collectionName,
         artist: r.artistName,
-        imageUrl: r.artworkUrl100?.replace('100x100bb', '1200x1200bb') || null,
+        imageUrl: r.artworkUrl100?.replace('100x100bb', '600x600bb') || null,
         url: r.collectionViewUrl || null,
         year: r.releaseDate?.slice(0, 4) || '',
       }));
@@ -2027,7 +2035,7 @@ function showItunesSuggestions(albums) {
   el.innerHTML = albums.map((a, i) => `
     <div class="itunes-suggestion-row" data-index="${i}">
       ${a.imageUrl
-        ? `<img class="itunes-suggestion-art" src="${escapeHtml(a.imageUrl)}" alt=""
+        ? `<img class="itunes-suggestion-art" src="${escapeHtml(a.imageUrl)}" alt="" loading="lazy" decoding="async"
                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
            <div class="itunes-suggestion-art itunes-suggestion-art-placeholder" style="display:none">♪</div>`
         : `<div class="itunes-suggestion-art itunes-suggestion-art-placeholder">♪</div>`}
@@ -2072,7 +2080,7 @@ function openAddModal() {
   document.getElementById('input-image-url').value = '';
   updatePlatformsSection('');
   document.getElementById('modal-category').value = '';
-  document.querySelector('#modal-overlay h2').innerHTML = `<svg class="modal-bookmark-icon" xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Z"/></svg>Add to SaveCraft`;
+  document.querySelector('#modal-overlay h2').innerHTML = `${MODAL_BOOKMARK_ICON_SVG}Add to SaveCraft`;
   document.getElementById('btn-modal-save').textContent = 'Save';
   document.getElementById('modal-overlay').classList.add('open');
   document.getElementById('input-url').focus();
@@ -2089,7 +2097,7 @@ function openEditModal(item) {
   document.getElementById('modal-category').value = item.category || '';
   updatePlatformsSection(item.category || '');
   if (item.platforms) setSelectedPlatforms(item.platforms);
-  document.querySelector('#modal-overlay h2').innerHTML = `<svg class="modal-bookmark-icon" xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Z"/></svg>Edit Item`;
+  document.querySelector('#modal-overlay h2').innerHTML = `${MODAL_BOOKMARK_ICON_SVG}Edit Item`;
   document.getElementById('btn-modal-save').textContent = 'Update';
 
   document.getElementById('modal-overlay').classList.add('open');
@@ -2112,7 +2120,7 @@ async function fetchAlbumsFromItunes(artistName) {
       title: r.collectionName,
       artist: r.artistName,
       year: r.releaseDate ? r.releaseDate.slice(0, 4) : '',
-      imageUrl: r.artworkUrl100?.replace('100x100bb', '1200x1200bb') || null,
+      imageUrl: r.artworkUrl100?.replace('100x100bb', '600x600bb') || null,
       url: r.collectionViewUrl || null,
       genre: r.primaryGenreName || null,
       type: r.collectionType,
@@ -2156,7 +2164,7 @@ function renderFetchAlbumsList(allAlbums, artistName, mode, hideSingles) {
         <input type="checkbox" class="fetch-album-check" data-index="${i}"
                ${alreadySaved ? 'disabled' : defaultChecked ? 'checked' : ''}>
         ${album.imageUrl
-          ? `<img class="fetch-album-art" src="${escapeHtml(album.imageUrl)}" alt=""
+          ? `<img class="fetch-album-art" src="${escapeHtml(album.imageUrl)}" alt="" loading="lazy" decoding="async"
                   onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
              <div class="fetch-album-art fetch-album-art-placeholder" style="display:none">♪</div>`
           : `<div class="fetch-album-art fetch-album-art-placeholder">♪</div>`}
@@ -2268,68 +2276,6 @@ async function handleImportAlbums() {
   renderSidebar();
   if (state.view.startsWith('author:')) renderAuthorPage();
   else renderGrid();
-}
-
-function openAuthorEditModal(name, category) {
-  const author = findAuthor(name, category);
-  document.getElementById('author-modal-name').textContent = name;
-  document.getElementById('author-modal-category').textContent = category;
-  document.getElementById('author-input-image').value   = author?.imageUrl   || '';
-  document.getElementById('author-input-bio').value     = author?.bio        || '';
-  document.getElementById('author-input-website').value = author?.websiteUrl || '';
-  document.getElementById('author-website-status').textContent = '';
-  const findBtn = document.getElementById('btn-find-website');
-  findBtn.style.display = category === 'Musician' ? '' : 'none';
-  findBtn.disabled = false;
-  findBtn.textContent = 'Find website';
-  document.getElementById('author-modal-overlay').classList.add('open');
-  document.getElementById('author-input-bio').focus();
-}
-
-async function handleFindWebsite() {
-  const name = document.getElementById('author-modal-name').textContent;
-  const btn = document.getElementById('btn-find-website');
-  const status = document.getElementById('author-website-status');
-  btn.disabled = true;
-  btn.textContent = 'Searching…';
-  status.textContent = 'Searching MusicBrainz…';
-  const url = await fetchArtistWebsite(name); // bypass cache — this is an explicit user-initiated retry
-  const key = name.trim().toLowerCase();
-  state.artistWebsiteCache[key] = { url, fetchedAt: Date.now() };
-  persistArtistWebsiteCache();
-  btn.disabled = false;
-  btn.textContent = 'Find website';
-  if (url) {
-    document.getElementById('author-input-website').value = url;
-    status.textContent = 'Found';
-  } else {
-    status.textContent = 'No official site found — enter manually';
-  }
-}
-
-function closeAuthorEditModal() {
-  document.getElementById('author-modal-overlay').classList.remove('open');
-}
-
-async function handleSaveAuthor() {
-  const name     = document.getElementById('author-modal-name').textContent;
-  const category = document.getElementById('author-modal-category').textContent;
-  const imageUrl   = document.getElementById('author-input-image').value.trim()   || null;
-  const bio        = document.getElementById('author-input-bio').value.trim()       || null;
-  const websiteUrl = document.getElementById('author-input-website').value.trim()  || null;
-
-  let author = findAuthor(name, category);
-  if (!author) {
-    author = { id: Date.now().toString(), name, category, savedAt: Date.now() };
-    state.authors.push(author);
-  }
-  author.imageUrl   = imageUrl;
-  author.bio        = bio;
-  author.websiteUrl = websiteUrl;
-
-  await persistAuthor(author);
-  closeAuthorEditModal();
-  if (state.view.startsWith('author:')) renderGrid();
 }
 
 let _detailItem = null;
@@ -2735,7 +2681,7 @@ function openDetailModal(item) {
       albumsListEl.classList.add('detail-accordion-collapsible');
       albumsListEl.innerHTML = knownAlbums.slice(0, 5).map(a => `
         <button class="detail-album-row" data-album-id="${escapeHtml(a.id)}">
-          ${a.imageUrl ? `<img class="detail-album-row-thumb" src="${escapeHtml(a.imageUrl)}" alt="">` : `<span class="detail-album-row-thumb"></span>`}
+          ${a.imageUrl ? `<img class="detail-album-row-thumb" src="${escapeHtml(a.imageUrl)}" alt="" loading="lazy" decoding="async">` : `<span class="detail-album-row-thumb"></span>`}
           <span class="detail-album-row-title">${escapeHtml(a.title || '')}</span>
         </button>`).join('')
         + `<button class="detail-album-row detail-album-row--see-all" id="detail-albums-see-all">See all →</button>`;
@@ -2921,7 +2867,6 @@ function openDetailModal(item) {
   async function ensureLiveItem() {
     let liveItem = state.items.find(i => i.id === item.id);
     if (!liveItem) {
-      // Curated item not yet saved — create a real copy
       liveItem = { ...item, curated: false, savedAt: Date.now() };
       state.items.push(liveItem);
       await persistItem(liveItem);
@@ -2965,7 +2910,6 @@ function openDetailModal(item) {
   function wireQueueSection() {
     updateQueueLabel();
 
-    // Base "Queue" tag — dequeues when tapped while active
     document.getElementById('btn-queue-base')?.addEventListener('click', async () => {
       const liveItem = state.items.find(i => i.id === item.id);
       if (!liveItem) return;
@@ -3432,65 +3376,28 @@ function closeSidebar() {
 }
 
 // ===== INIT =====
+// All local-only caches (curated images, artist lookups, etc.) are stored separately from
+// chrome.storage.sync — this loads one of them into `state` at startup.
+function loadLocalCache(storageKey, stateProp) {
+  return new Promise(resolve => {
+    chrome.storage.local.get({ [storageKey]: {} }, data => {
+      state[stateProp] = data[storageKey];
+      resolve();
+    });
+  });
+}
+
 async function init() {
   await loadAll();
   CURATED_ITEMS = await _getCuratedItems();
 
-  // Load curated image cache from local storage (separate from sync)
-  await new Promise(resolve => {
-    chrome.storage.local.get({ savecraft_curated_img: {} }, data => {
-      state.curatedImgCache = data.savecraft_curated_img;
-      resolve();
-    });
-  });
-
-  // Load curated album metadata cache from local storage (separate from sync)
-  await new Promise(resolve => {
-    chrome.storage.local.get({ savecraft_curated_album_meta: {} }, data => {
-      state.curatedAlbumMetaCache = data.savecraft_curated_album_meta;
-      resolve();
-    });
-  });
-
-  // Load album track-list cache from local storage (separate from sync)
-  await new Promise(resolve => {
-    chrome.storage.local.get({ savecraft_album_tracklist: {} }, data => {
-      state.albumTrackListCache = data.savecraft_album_tracklist;
-      resolve();
-    });
-  });
-
-  // Load artist website cache from local storage (separate from sync)
-  await new Promise(resolve => {
-    chrome.storage.local.get({ savecraft_artist_website_cache: {} }, data => {
-      state.artistWebsiteCache = data.savecraft_artist_website_cache;
-      resolve();
-    });
-  });
-
-  // Load artist bio cache from local storage (separate from sync)
-  await new Promise(resolve => {
-    chrome.storage.local.get({ savecraft_artist_bio_cache_v2: {} }, data => {
-      state.artistBioCache = data.savecraft_artist_bio_cache_v2;
-      resolve();
-    });
-  });
-
-  // Load artist video cache from local storage (separate from sync)
-  await new Promise(resolve => {
-    chrome.storage.local.get({ savecraft_artist_video_cache: {} }, data => {
-      state.artistVideoCache = data.savecraft_artist_video_cache;
-      resolve();
-    });
-  });
-
-  // Load item wiki cache from local storage (separate from sync)
-  await new Promise(resolve => {
-    chrome.storage.local.get({ savecraft_item_wiki_cache: {} }, data => {
-      state.itemWikiCache = data.savecraft_item_wiki_cache;
-      resolve();
-    });
-  });
+  await loadLocalCache('savecraft_curated_img', 'curatedImgCache');
+  await loadLocalCache('savecraft_curated_album_meta', 'curatedAlbumMetaCache');
+  await loadLocalCache('savecraft_album_tracklist', 'albumTrackListCache');
+  await loadLocalCache('savecraft_artist_website_cache', 'artistWebsiteCache');
+  await loadLocalCache('savecraft_artist_bio_cache_v2', 'artistBioCache');
+  await loadLocalCache('savecraft_artist_video_cache', 'artistVideoCache');
+  await loadLocalCache('savecraft_item_wiki_cache', 'itemWikiCache');
 
   chrome.storage.sync.get({ savecraft_theme: 'dark' }, data => {
     applyTheme(data.savecraft_theme);
@@ -3720,18 +3627,6 @@ async function init() {
     const mode = document.querySelector('.fetch-toggle-btn.active')?.dataset.mode || 'exact';
     const hideSingles = !document.getElementById('fetch-hide-singles').checked;
     renderFetchAlbumsList(allAlbums, overlay.dataset.artist, mode, hideSingles);
-  });
-
-  document.getElementById('btn-author-modal-close').addEventListener('click', closeAuthorEditModal);
-  document.getElementById('btn-author-modal-cancel').addEventListener('click', closeAuthorEditModal);
-  document.getElementById('btn-author-modal-save').addEventListener('click', handleSaveAuthor);
-  document.getElementById('btn-find-website').addEventListener('click', handleFindWebsite);
-  document.getElementById('author-modal-overlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('author-modal-overlay')) closeAuthorEditModal();
-  });
-  document.getElementById('author-modal-overlay').addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeAuthorEditModal();
-    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'TEXTAREA') handleSaveAuthor();
   });
 
   document.getElementById('fab-add').addEventListener('click', openAddModal);
