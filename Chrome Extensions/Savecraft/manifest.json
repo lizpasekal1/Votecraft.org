@@ -3,8 +3,17 @@
   "name": "SaveCraft",
   "version": "1.0",
   "description": "Your personal media library. Save movies, shows, music, books, and games you want to experience.",
-  "permissions": ["storage", "contextMenus", "activeTab", "tabs"],
-  "host_permissions": ["https://api.microlink.io/*", "https://firestore.googleapis.com/*", "https://itunes.apple.com/*"],
+  "permissions": ["storage", "contextMenus", "activeTab", "tabs", "declarativeNetRequestWithHostAccess"],
+  "host_permissions": ["https://api.microlink.io/*", "https://firestore.googleapis.com/*", "https://itunes.apple.com/*", "https://musicbrainz.org/*", "https://www.wikidata.org/*", "https://en.wikipedia.org/*", "https://www.googleapis.com/*", "https://www.youtube.com/*", "https://www.youtube-nocookie.com/*"],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "yt_referer_rules",
+        "enabled": true,
+        "path": "rules/youtube_referer_rules.json"
+      }
+    ]
+  },
   "background": {
     "service_worker": "background.js"
   },

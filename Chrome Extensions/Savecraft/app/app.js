@@ -17,7 +17,7 @@ const CAT_LABEL = {
   'Show': 'Shows', 'Visual Art': 'Visual Art',
 };
 
-const CAT_EMOJI = { 'Music Album': '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#7C6FF5"><path d="M447-207q-47-47-47-113t47-113q47-47 113-47 23 0 42.5 5.5T640-458v-342h240v120H720v360q0 66-47 113t-113 47q-66 0-113-47ZM80-320q0-99 38-186.5T221-659q65-65 152.5-103T560-800v80q-82 0-155 31.5t-127.5 86q-54.5 54.5-86 127T160-320H80Zm160 0q0-66 25.5-124.5t69-102Q378-590 436-615t124-25v80q-100 0-170 70t-70 170h-80Z"/></svg>', Musician: '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#7C6FF5"><path d="M447-207q-47-47-47-113t47-113q47-47 113-47 23 0 42.5 5.5T640-458v-342h240v120H720v360q0 66-47 113t-113 47q-66 0-113-47ZM80-320q0-99 38-186.5T221-659q65-65 152.5-103T560-800v80q-82 0-155 31.5t-127.5 86q-54.5 54.5-86 127T160-320H80Zm160 0q0-66 25.5-124.5t69-102Q378-590 436-615t124-25v80q-100 0-170 70t-70 170h-80Z"/></svg>', Show: '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#7C6FF5"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm120-200h80v-240h70l90 240h80l120-320H660l-60 180-60-180H200v80h120v240Z"/></svg>', Book: '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#7C6FF5"><path d="M270-80q-45 0-77.5-30.5T160-186v-558q0-38 23.5-68t61.5-38l395-78v640l-379 76q-9 2-15 9.5t-6 16.5q0 11 9 18.5t21 7.5h450v-640h80v720H270Zm10-217 80-16v-478l-80 16v478Z"/></svg>', Movie: '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#7C6FF5"><path d="m460-380 280-180-280-180v360ZM320-240q-33 0-56.5-23.5T240-320v-480q0-33 23.5-56.5T320-880h480q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H320ZM160-80q-33 0-56.5-23.5T80-160v-560h80v560h560v80H160Z"/></svg>', Game: '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#7C6FF5"><path d="M182-200q-51 0-79-35.5T82-322l42-300q9-60 53.5-99T282-760h396q60 0 104.5 39t53.5 99l42 300q7 51-21 86.5T778-200q-21 0-39-7.5T706-230l-90-90H344l-90 90q-15 15-33 22.5t-39 7.5Zm526.5-251.5Q720-463 720-480t-11.5-28.5Q697-520 680-520t-28.5 11.5Q640-497 640-480t11.5 28.5Q663-440 680-440t28.5-11.5Zm-80-120Q640-583 640-600t-11.5-28.5Q617-640 600-640t-28.5 11.5Q560-617 560-600t11.5 28.5Q583-560 600-560t28.5-11.5ZM310-440h60v-70h70v-60h-70v-70h-60v70h-70v60h70v70Z"/></svg>', 'Visual Art': '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#7C6FF5"><path d="M480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-83 32.5-156t88-127Q256-817 330-848.5T488-880q80 0 151 27.5t124.5 76q53.5 48.5 85 115T880-518q0 115-70 176.5T640-280h-74q-9 0-12.5 5t-3.5 11q0 12 15 34.5t15 51.5q0 50-27.5 74T480-80ZM303-457q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm120-160q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm200 0q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm120 160q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Z"/></svg>', 'Favorite Albums': '💿', 'Web Links': '🎧' };
+const CAT_EMOJI = { 'Music Album': '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M447-207q-47-47-47-113t47-113q47-47 113-47 23 0 42.5 5.5T640-458v-342h240v120H720v360q0 66-47 113t-113 47q-66 0-113-47ZM80-320q0-99 38-186.5T221-659q65-65 152.5-103T560-800v80q-82 0-155 31.5t-127.5 86q-54.5 54.5-86 127T160-320H80Zm160 0q0-66 25.5-124.5t69-102Q378-590 436-615t124-25v80q-100 0-170 70t-70 170h-80Z"/></svg>', Musician: '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M447-207q-47-47-47-113t47-113q47-47 113-47 23 0 42.5 5.5T640-458v-342h240v120H720v360q0 66-47 113t-113 47q-66 0-113-47ZM80-320q0-99 38-186.5T221-659q65-65 152.5-103T560-800v80q-82 0-155 31.5t-127.5 86q-54.5 54.5-86 127T160-320H80Zm160 0q0-66 25.5-124.5t69-102Q378-590 436-615t124-25v80q-100 0-170 70t-70 170h-80Z"/></svg>', Show: '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm120-200h80v-240h70l90 240h80l120-320H660l-60 180-60-180H200v80h120v240Z"/></svg>', Book: '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M270-80q-45 0-77.5-30.5T160-186v-558q0-38 23.5-68t61.5-38l395-78v640l-379 76q-9 2-15 9.5t-6 16.5q0 11 9 18.5t21 7.5h450v-640h80v720H270Zm10-217 80-16v-478l-80 16v478Z"/></svg>', Movie: '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="m460-380 280-180-280-180v360ZM320-240q-33 0-56.5-23.5T240-320v-480q0-33 23.5-56.5T320-880h480q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H320ZM160-80q-33 0-56.5-23.5T80-160v-560h80v560h560v80H160Z"/></svg>', Game: '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M182-200q-51 0-79-35.5T82-322l42-300q9-60 53.5-99T282-760h396q60 0 104.5 39t53.5 99l42 300q7 51-21 86.5T778-200q-21 0-39-7.5T706-230l-90-90H344l-90 90q-15 15-33 22.5t-39 7.5Zm526.5-251.5Q720-463 720-480t-11.5-28.5Q697-520 680-520t-28.5 11.5Q640-497 640-480t11.5 28.5Q663-440 680-440t28.5-11.5Zm-80-120Q640-583 640-600t-11.5-28.5Q617-640 600-640t-28.5 11.5Q560-617 560-600t11.5 28.5Q583-560 600-560t28.5-11.5ZM310-440h60v-70h70v-60h-70v-70h-60v70h-70v60h70v70Z"/></svg>', 'Visual Art': '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-83 32.5-156t88-127Q256-817 330-848.5T488-880q80 0 151 27.5t124.5 76q53.5 48.5 85 115T880-518q0 115-70 176.5T640-280h-74q-9 0-12.5 5t-3.5 11q0 12 15 34.5t15 51.5q0 50-27.5 74T480-80ZM303-457q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm120-160q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm200 0q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm120 160q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Z"/></svg>', 'Favorite Albums': '💿', 'Web Links': '🎧' };
 
 const CATEGORY_PLATFORMS = {
   'Music Album':  { label: 'Web Links', platforms: [
@@ -149,7 +149,8 @@ const state = {
   folders: [],
   authors: [],
   view: 'Books',     // 'all', category name, or folder id
-  sort: 'newest',
+  authorReturnView: null, // view to restore when leaving an author page via its back button
+  sort: 'az',
   search: '',
   modalCategory: null,
   editingId: null,
@@ -158,6 +159,11 @@ const state = {
   hiddenCurated: new Set(), // curated item IDs the user has dismissed
   curatedOverrides: {}, // { [curatedItemId]: { url, title, notes, imageUrl } }
   curatedImgCache: {},  // { [curatedItemId]: imageUrl } — auto-fetched via Microlink
+  curatedAlbumMetaCache: {}, // { [curatedItemId]: { year, collectionId } } — auto-fetched via iTunes (curated albums have neither field in Firestore)
+  albumTrackListCache: {}, // { [collectionId]: { tracks: [{number,title,durationMs}], fetchedAt } } — auto-fetched via iTunes lookup, never expires
+  artistWebsiteCache: {}, // { [normalizedArtistName]: { url: string|null, fetchedAt: number } } — auto-fetched via MusicBrainz/Wikidata
+  artistBioCache: {}, // { [normalizedArtistName]: { bio: string|null, photoUrl: string|null, fetchedAt: number } } — auto-fetched via Wikipedia
+  artistVideoCache: {}, // { [normalizedArtistName]: { videoId: string|null, fetchedAt: number } } — auto-fetched via YouTube Data API
   tutorialSeen: false,
   kanbanSort: { 'in-queue': 'newest', 'in-progress': 'newest', 'my-review': 'newest', 'done': 'newest' },
   kanbanLists: [],
@@ -178,7 +184,7 @@ async function loadAll() {
       state.authors = Object.entries(data)
         .filter(([k]) => k.startsWith('author_'))
         .map(([, v]) => v);
-      state.sort = data.savecraft_sort || 'newest';
+      state.sort = data.savecraft_sort || 'az';
       state.tutorialSeen = data.savecraft_tutorial_seen || false;
       if (data.savecraft_kanban_sort) state.kanbanSort = { ...state.kanbanSort, ...data.savecraft_kanban_sort };
       const defaultLists = [
@@ -267,27 +273,58 @@ function removeItem(id) {
 
 async function autoSaveMusician(artistName) {
   if (!artistName) return;
-  if (state.items.find(i => i.category === 'Musician' && i.title === artistName)) return;
-  let curated = null;
-  for (const genre of Object.keys(CURATED_ITEMS)) {
-    curated = (CURATED_ITEMS[genre]['Musician'] || []).find(m => m.title === artistName);
-    if (curated) break;
+  let musicianItem = state.items.find(i => i.category === 'Musician' && i.title === artistName);
+  if (!musicianItem) {
+    let curated = null;
+    for (const genre of Object.keys(CURATED_ITEMS)) {
+      curated = (CURATED_ITEMS[genre]['Musician'] || []).find(m => m.title === artistName);
+      if (curated) break;
+    }
+    musicianItem = {
+      id: `item_${Date.now()}`,
+      title: artistName,
+      category: 'Musician',
+      author: null,
+      url: curated?.url || '',
+      imageUrl: curated?.imageUrl || null,
+      notes: null,
+      savedAt: Date.now(),
+      curated: false,
+      done: false,
+      folderId: null,
+    };
+    state.items.push(musicianItem);
+    await persistItem(musicianItem);
   }
-  const musician = {
-    id: `item_${Date.now()}`,
-    title: artistName,
-    category: 'Musician',
-    author: null,
-    url: curated?.url || '',
-    imageUrl: curated?.imageUrl || null,
-    notes: null,
-    savedAt: Date.now(),
-    curated: false,
-    done: false,
-    folderId: null,
-  };
-  state.items.push(musician);
-  await persistItem(musician);
+
+  // Ensure an author profile exists so a website lookup has somewhere to attach
+  let author = findAuthor(artistName, 'Musician');
+  if (!author) {
+    author = { id: Date.now().toString(), name: artistName, category: 'Musician', bio: null, imageUrl: null, websiteUrl: null, savedAt: Date.now() };
+    state.authors.push(author);
+    await persistAuthor(author);
+  }
+  if (!author.websiteUrl) {
+    ensureArtistWebsite(artistName).then(url => {
+      if (!url) return;
+      author.websiteUrl = url;
+      persistAuthor(author);
+    });
+  }
+  const _needsAuthorUpdate = !author.imageUrl || isItunesArtworkUrl(author.imageUrl) || !author.bio;
+  const _needsItemUpdate = !musicianItem.imageUrl || isItunesArtworkUrl(musicianItem.imageUrl);
+  if (_needsAuthorUpdate || _needsItemUpdate) {
+    ensureArtistWikipediaInfo(artistName).then(({ bio, photoUrl }) => {
+      let changed = false;
+      if (applyArtistPhotoToItem(author, photoUrl)) changed = true;
+      if (!author.bio && bio) { author.bio = bio; changed = true; }
+      if (changed) persistAuthor(author);
+      if (applyArtistPhotoToItem(musicianItem, photoUrl)) {
+        persistItem(musicianItem);
+        patchCardImage(musicianItem.id, musicianItem.imageUrl);
+      }
+    });
+  }
 }
 
 function persistHiddenCurated() {
@@ -300,6 +337,243 @@ function persistCuratedOverrides() {
 
 function persistCuratedImgCache() {
   chrome.storage.local.set({ savecraft_curated_img: state.curatedImgCache });
+}
+
+function persistCuratedAlbumMetaCache() {
+  chrome.storage.local.set({ savecraft_curated_album_meta: state.curatedAlbumMetaCache });
+}
+
+function persistAlbumTrackListCache() {
+  chrome.storage.local.set({ savecraft_album_tracklist: state.albumTrackListCache });
+}
+
+function persistArtistWebsiteCache() {
+  chrome.storage.local.set({ savecraft_artist_website_cache: state.artistWebsiteCache });
+}
+
+// _v2: bumped when the cached shape grew a photoUrl field, so old bio-only cache entries
+// (which would otherwise short-circuit the photo lookup) don't linger.
+function persistArtistBioCache() {
+  chrome.storage.local.set({ savecraft_artist_bio_cache_v2: state.artistBioCache });
+}
+
+function persistArtistVideoCache() {
+  chrome.storage.local.set({ savecraft_artist_video_cache: state.artistVideoCache });
+}
+
+// Shared check for "does this Wikidata/Wikipedia result actually describe a musician/band" —
+// used to reject same-name but wrong-topic matches (e.g. "Eagles" the bird) rather than guessing.
+const MUSIC_ENTITY_KEYWORDS = /\b(band|singer|musician|rapper|duo|group|composer|songwriter|dj)\b/i;
+
+const ARTIST_WEBSITE_CACHE_MISS_TTL = 90 * 24 * 60 * 60 * 1000; // 90 days
+const ARTIST_BIO_CACHE_MISS_TTL = 90 * 24 * 60 * 60 * 1000; // 90 days
+
+// True for a photo already auto-fetched from the iTunes album-cover fallback (identifiable by
+// Apple's CDN domain) — safe to replace with a real Wikipedia photo once one's available, unlike
+// a URL the user pasted in manually, which is never overwritten by auto-fetch.
+function isItunesArtworkUrl(url) {
+  return !!url && /mzstatic\.com/i.test(url);
+}
+
+// Sets imageUrl on an author record or item if it's empty or still the replaceable iTunes
+// stand-in — never overwrites a real (curated or user-provided) photo. Returns true if changed.
+function applyArtistPhotoToItem(target, photoUrl) {
+  if (!photoUrl || !target) return false;
+  if (target.imageUrl && !isItunesArtworkUrl(target.imageUrl)) return false;
+  target.imageUrl = photoUrl;
+  return true;
+}
+
+// Swaps in a newly-fetched image on any already-rendered card for this item, mirroring the
+// same live-patch technique fetchMissingCuratedImages() uses for curated thumbnails.
+function patchCardImage(itemId, imageUrl) {
+  if (!imageUrl) return;
+  document.querySelectorAll(`.card[data-id="${itemId}"]`).forEach(card => {
+    const existingImg = card.querySelector('.card-image');
+    if (existingImg) { existingImg.src = imageUrl; return; }
+    const placeholder = card.querySelector('.card-placeholder');
+    if (!placeholder) return;
+    const img = document.createElement('img');
+    img.className = 'card-image';
+    img.src = imageUrl;
+    img.alt = '';
+    img.onerror = () => { img.style.display = 'none'; placeholder.style.display = 'flex'; };
+    placeholder.style.display = 'none';
+    card.insertBefore(img, placeholder);
+  });
+}
+
+// Looks up a short bio paragraph AND a photo via Wikipedia (both come from the same page
+// summary, so they're fetched together). Rejects (returns nulls rather than guessing) any
+// candidate page whose description/extract doesn't read as being about a musician/band, to
+// avoid pulling in data about an unrelated same-named topic (e.g. "Eagles" the bird). Falls
+// back to an iTunes album-cover stand-in for the photo only if Wikipedia has no image at all.
+async function ensureArtistWikipediaInfo(artistName) {
+  if (!artistName) return { bio: null, photoUrl: null };
+  const key = artistName.trim().toLowerCase();
+  const cached = state.artistBioCache[key];
+  if (cached && ((cached.bio || cached.photoUrl) || (Date.now() - cached.fetchedAt < ARTIST_BIO_CACHE_MISS_TTL))) {
+    return { bio: cached.bio || null, photoUrl: cached.photoUrl || null };
+  }
+  const summary = await fetchArtistWikipediaSummary(artistName);
+  let photoUrl = summary?.originalimage?.source || summary?.thumbnail?.source || null;
+  if (!photoUrl) photoUrl = await fetchArtistPhotoFromItunes(artistName);
+  const result = { bio: summary?.extract || null, photoUrl };
+  state.artistBioCache[key] = { ...result, fetchedAt: Date.now() };
+  persistArtistBioCache();
+  return result;
+}
+
+// Set this to a YouTube Data API v3 key (restricted to that API only) to enable inline promo
+// video playback. Without one, the Promo Vid button falls back to opening a YouTube search
+// in a new tab. Get a key at https://console.cloud.google.com (enable "YouTube Data API v3",
+// then Credentials → Create Credentials → API Key).
+const YOUTUBE_API_KEY = '';
+
+const ARTIST_VIDEO_CACHE_MISS_TTL = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+// Resolves a real, embeddable YouTube video ID for an artist via the YouTube Data API,
+// scoped to videoCategoryId=10 ("Music") so results are actual music videos rather than
+// interviews, live performances mislabeled otherwise, fan content, etc. Cached per artist.
+async function ensureArtistMusicVideoId(artistName) {
+  if (!artistName || !YOUTUBE_API_KEY) return null;
+  const key = artistName.trim().toLowerCase();
+  const cached = state.artistVideoCache[key];
+  if (cached && (cached.videoId || (Date.now() - cached.fetchedAt < ARTIST_VIDEO_CACHE_MISS_TTL))) {
+    return cached.videoId;
+  }
+  let videoId = null;
+  try {
+    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoCategoryId=10&maxResults=1&q=${encodeURIComponent(artistName + ' official music video')}&key=${YOUTUBE_API_KEY}`;
+    const resp = await fetch(url);
+    if (resp.ok) {
+      const data = await resp.json();
+      videoId = data.items?.[0]?.id?.videoId || null;
+    }
+  } catch { /* no video found */ }
+  state.artistVideoCache[key] = { videoId, fetchedAt: Date.now() };
+  persistArtistVideoCache();
+  return videoId;
+}
+
+async function fetchWikipediaSummary(title) {
+  try {
+    const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}?redirect=true`;
+    const resp = await fetch(url);
+    if (!resp.ok) return null;
+    return await resp.json();
+  } catch {
+    return null;
+  }
+}
+
+function isMusicEntitySummary(summary) {
+  if (!summary || summary.type === 'disambiguation') return false;
+  return MUSIC_ENTITY_KEYWORDS.test(`${summary.description || ''} ${summary.extract || ''}`);
+}
+
+// Returns a validated (confirmed-music-topic) Wikipedia summary object — includes `extract`
+// (bio text) and `thumbnail`/`originalimage` (photo) — or null if nothing music-related is found.
+async function fetchArtistWikipediaSummary(artistName) {
+  const direct = await fetchWikipediaSummary(artistName);
+  if (isMusicEntitySummary(direct)) return direct;
+
+  // Direct title was missing, a disambiguation page, or about the wrong topic (e.g. "Eagles"
+  // the bird) — search instead, biased toward music, and only accept a confirmed music match.
+  try {
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(artistName + ' band OR musician')}&format=json&origin=*`;
+    const resp = await fetch(searchUrl);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    for (const result of (data.query?.search || []).slice(0, 5)) {
+      const candidate = await fetchWikipediaSummary(result.title);
+      if (isMusicEntitySummary(candidate)) return candidate;
+    }
+  } catch { /* no confirmed music match found */ }
+  return null;
+}
+
+// Looks up an artist's official homepage via MusicBrainz (preferred) then Wikidata (fallback).
+// Cached indefinitely on success; cached "not found" results expire after ARTIST_WEBSITE_CACHE_MISS_TTL.
+async function ensureArtistWebsite(artistName) {
+  if (!artistName) return null;
+  const key = artistName.trim().toLowerCase();
+  const cached = state.artistWebsiteCache[key];
+  if (cached && (cached.url || (Date.now() - cached.fetchedAt < ARTIST_WEBSITE_CACHE_MISS_TTL))) {
+    return cached.url;
+  }
+  const url = await fetchArtistWebsite(artistName);
+  state.artistWebsiteCache[key] = { url, fetchedAt: Date.now() };
+  persistArtistWebsiteCache();
+  return url;
+}
+
+// iTunes's Search API has no dedicated "artist photo" field — the closest available image is
+// an album cover, so we use the most relevant album's artwork as a stand-in for the artist photo.
+async function fetchArtistPhotoFromItunes(artistName) {
+  try {
+    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(artistName)}&entity=album&media=music&limit=5`;
+    const resp = await fetch(url);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    const lowerName = artistName.trim().toLowerCase();
+    const match = data.results.find(r => r.collectionType && r.artistName?.toLowerCase() === lowerName)
+      || data.results.find(r => r.collectionType);
+    return match?.artworkUrl100?.replace('100x100bb', '1200x1200bb') || null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchArtistWebsite(artistName) {
+  try {
+    const mbUrl = await fetchArtistWebsiteFromMusicBrainz(artistName);
+    if (mbUrl) return mbUrl;
+  } catch { /* fall through to Wikidata */ }
+  try {
+    const wdUrl = await fetchArtistWebsiteFromWikidata(artistName);
+    if (wdUrl) return wdUrl;
+  } catch { /* no website found anywhere */ }
+  return null;
+}
+
+async function fetchArtistWebsiteFromMusicBrainz(artistName) {
+  const searchUrl = `https://musicbrainz.org/ws/2/artist?query=${encodeURIComponent(artistName)}&fmt=json&limit=5`;
+  const searchResp = await fetch(searchUrl);
+  if (!searchResp.ok) return null;
+  const searchData = await searchResp.json();
+  const lowerName = artistName.trim().toLowerCase();
+  const match = (searchData.artists || []).find(a =>
+    a.name?.toLowerCase() === lowerName || a.score >= 90
+  );
+  if (!match) return null;
+
+  const lookupUrl = `https://musicbrainz.org/ws/2/artist/${match.id}?inc=url-rels&fmt=json`;
+  const lookupResp = await fetch(lookupUrl);
+  if (!lookupResp.ok) return null;
+  const lookupData = await lookupResp.json();
+  const homepage = (lookupData.relations || []).find(r => r.type === 'official homepage' && !r.ended);
+  return homepage?.url?.resource || null;
+}
+
+async function fetchArtistWebsiteFromWikidata(artistName) {
+  const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(artistName)}&language=en&type=item&format=json&limit=5`;
+  const searchResp = await fetch(searchUrl);
+  if (!searchResp.ok) return null;
+  const searchData = await searchResp.json();
+  const results = searchData.search || [];
+  if (!results.length) return null;
+
+  const candidate = results.find(r => MUSIC_ENTITY_KEYWORDS.test(r.description || '')) || results[0];
+
+  const entityUrl = `https://www.wikidata.org/wiki/Special:EntityData/${candidate.id}.json`;
+  const entityResp = await fetch(entityUrl);
+  if (!entityResp.ok) return null;
+  const entityData = await entityResp.json();
+  const claims = entityData.entities?.[candidate.id]?.claims?.P856 || [];
+  if (!claims.length) return null;
+  const preferred = claims.find(c => c.rank === 'preferred') || claims.find(c => c.rank !== 'deprecated');
+  return preferred?.mainsnak?.datavalue?.value || null;
 }
 
 function fetchMissingCuratedImages(items) {
@@ -331,6 +605,20 @@ function fetchMissingCuratedImages(items) {
   });
 }
 
+// Same idea as fetchMissingCuratedImages(), but for curated Musician cards whose photo is
+// missing or still the iTunes stand-in — looks up (and caches) the Wikipedia photo per artist,
+// then live-patches any matching cards already on screen.
+function fetchMissingCuratedMusicianPhotos(items) {
+  const missing = items.filter(i => i.curated && i.category === 'Musician' && (!i.imageUrl || isItunesArtworkUrl(i.imageUrl)));
+  if (!missing.length) return;
+  missing.forEach(item => {
+    ensureArtistWikipediaInfo(item.title).then(({ photoUrl }) => {
+      if (!photoUrl) return;
+      patchCardImage(item.id, photoUrl);
+    });
+  });
+}
+
 function persistViewState() {
   chrome.storage.sync.set({ savecraft_view: state.view, savecraft_sidebar_mode: state.sidebarMode });
 }
@@ -356,6 +644,7 @@ function findAuthor(name, category) {
 }
 
 async function navigateToAuthor(name, category) {
+  state.authorReturnView = state.view;
   let author = findAuthor(name, category);
   if (!author) {
     author = { id: Date.now().toString(), name, category, bio: null, imageUrl: null, websiteUrl: null, savedAt: Date.now() };
@@ -366,10 +655,118 @@ async function navigateToAuthor(name, category) {
   persistViewState();
   renderSidebar();
   renderGrid();
+
+  if (category === 'Musician' && !author.websiteUrl) {
+    ensureArtistWebsite(name).then(url => {
+      if (!url) return;
+      author.websiteUrl = url;
+      persistAuthor(author);
+      if (state.view === `author:${category}:${name}`) renderGrid();
+    });
+  }
+
+  const _navMusicianItem = state.items.find(i => i.category === 'Musician' && i.title === name);
+  const _navNeedsAuthorUpdate = !author.imageUrl || isItunesArtworkUrl(author.imageUrl) || !author.bio;
+  const _navNeedsItemUpdate = _navMusicianItem && (!_navMusicianItem.imageUrl || isItunesArtworkUrl(_navMusicianItem.imageUrl));
+  if (category === 'Musician' && (_navNeedsAuthorUpdate || _navNeedsItemUpdate)) {
+    ensureArtistWikipediaInfo(name).then(({ bio, photoUrl }) => {
+      let changed = false;
+      if (applyArtistPhotoToItem(author, photoUrl)) changed = true;
+      if (!author.bio && bio) { author.bio = bio; changed = true; }
+      if (changed) persistAuthor(author);
+
+      if (_navMusicianItem && applyArtistPhotoToItem(_navMusicianItem, photoUrl)) {
+        persistItem(_navMusicianItem);
+        patchCardImage(_navMusicianItem.id, _navMusicianItem.imageUrl);
+        changed = true;
+      }
+
+      if (changed && state.view === `author:${category}:${name}`) renderGrid();
+    });
+  }
+}
+
+// Finds (or builds a lightweight stand-in for) a Musician item to show in the quick-preview
+// detail modal — used when clicking an artist's own name on their own album page, where
+// navigating to the page you're already on wouldn't make sense.
+function resolveMusicianItem(name) {
+  const personal = state.items.find(i => i.category === 'Musician' && i.title === name);
+  if (personal) return personal;
+  for (const genre of Object.keys(CURATED_ITEMS)) {
+    const curated = (CURATED_ITEMS[genre]['Musician'] || []).find(m => m.title === name);
+    if (curated) return { ...curated, category: 'Musician', curated: true, done: false, savedAt: 0, folderId: null };
+  }
+  const author = findAuthor(name, 'Musician');
+  return {
+    id: `virtual-author-${name}`,
+    title: name,
+    category: 'Musician',
+    author: null,
+    url: author?.websiteUrl || null,
+    imageUrl: author?.imageUrl || null,
+    summary: author?.bio || null,
+    notes: null,
+    curated: true,
+    done: false,
+    savedAt: 0,
+    folderId: null,
+  };
+}
+
+// Finds already-known Music Album items for an artist — personal saves plus curated entries —
+// for the Albums accordion in the Musician quick-preview modal. Mirrors the same two lookups
+// getFilteredSortedItems() already does for the author:Musician:<name> full-page view.
+function getKnownAlbumsForArtist(name) {
+  const personal = state.items.filter(i => i.category === 'Music Album' && i.author === name);
+  const existingIds = new Set(personal.map(i => i.id));
+  const curated = [];
+  for (const genre of Object.keys(CURATED_ITEMS)) {
+    (CURATED_ITEMS[genre]['Music Album'] || [])
+      .filter(i => i.notes === name && !state.hiddenCurated.has(i.id) && !existingIds.has(i.id))
+      .forEach(i => {
+        const override = state.curatedOverrides[i.id] || {};
+        curated.push({ ...i, ...override, category: 'Music Album', curated: true, done: false, savedAt: 0, folderId: null });
+      });
+  }
+  return [...personal, ...curated];
+}
+
+// Wires clicks on card artist-name links: normally navigates to the author's page, but for
+// the "open artist modal" variant (used on the artist's own album page) it opens the quick
+// preview modal instead, since navigating to the page already open wouldn't make sense.
+function wireCardAuthorLinks(container) {
+  container.querySelectorAll('.card-author-link').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      if (btn.classList.contains('card-open-artist-modal')) {
+        openDetailModal(resolveMusicianItem(btn.dataset.artist));
+      } else {
+        navigateToAuthor(btn.dataset.author, btn.dataset.category);
+      }
+    });
+  });
 }
 
 // ===== HELPERS =====
 function catClass(cat) { return (cat || '').replace(/\s+/g, '-'); }
+
+// Shorter display text for category badges (the underlying category value is unchanged).
+function badgeLabel(cat) { return cat === 'Music Album' ? 'Album' : cat; }
+
+// True when browsing the dedicated "Music Albums" section (the Musicians > Music Albums
+// sidebar subfolder, personal or curated) — artist names aren't clickable links there.
+function isMusicAlbumsSectionView() {
+  return state.view === 'Music Album' || (state.view.startsWith('genre:') && state.view.endsWith(':Music Album'));
+}
+
+// True when viewing a musician's own author page and this is one of their own works —
+// the author-name link would just point back to the page already open, so it isn't a link there.
+function isOwnAuthorPageView(authorName) {
+  if (!state.view.startsWith('author:')) return false;
+  const rest = state.view.slice(7);
+  const name = rest.slice(rest.indexOf(':') + 1);
+  return name === authorName;
+}
 
 function getDomain(url) {
   try { return new URL(url).hostname.replace('www.', ''); }
@@ -402,6 +799,17 @@ function getFilteredSortedItems() {
           const override = state.curatedOverrides[i.id] || {};
           const base = { ...i, ...override, category: cat, done: false, savedAt: 0, folderId: null, curated: true };
           if (!base.imageUrl && state.curatedImgCache[i.id]) base.imageUrl = state.curatedImgCache[i.id];
+          if (cat === 'Music Album') {
+            const meta = state.curatedAlbumMetaCache[i.id];
+            if (meta) {
+              if (!base.year && meta.year) base.year = meta.year;
+              if (!base.collectionId && meta.collectionId) base.collectionId = meta.collectionId;
+            }
+          }
+          if (cat === 'Musician') {
+            const wikiPhoto = state.artistBioCache[(base.title || '').trim().toLowerCase()]?.photoUrl;
+            if (wikiPhoto && (!base.imageUrl || isItunesArtworkUrl(base.imageUrl))) base.imageUrl = wikiPhoto;
+          }
           return base;
         });
     } else {
@@ -421,7 +829,13 @@ function getFilteredSortedItems() {
           .filter(i => i.notes === name && !state.hiddenCurated.has(i.id) && !existingIds.has(i.id))
           .forEach(i => {
             const override = state.curatedOverrides[i.id] || {};
-            items.push({ ...i, ...override, category: 'Music Album', curated: true, done: false, savedAt: 0, folderId: null });
+            const merged = { ...i, ...override, category: 'Music Album', curated: true, done: false, savedAt: 0, folderId: null };
+            const meta = state.curatedAlbumMetaCache[i.id];
+            if (meta) {
+              if (!merged.year && meta.year) merged.year = meta.year;
+              if (!merged.collectionId && meta.collectionId) merged.collectionId = meta.collectionId;
+            }
+            items.push(merged);
           });
       }
     }
@@ -456,6 +870,8 @@ function getFilteredSortedItems() {
       if (aNum !== bNum) return aNum ? 1 : -1;
       return tb.localeCompare(ta);
     }); break;
+    case 'release-new': items.sort((a, b) => (parseInt(b.year) || -Infinity) - (parseInt(a.year) || -Infinity)); break;
+    case 'release-old': items.sort((a, b) => (parseInt(a.year) || Infinity) - (parseInt(b.year) || Infinity)); break;
   }
 
   return items;
@@ -477,13 +893,14 @@ function renderSidebar() {
   const headerTitleEl = document.getElementById('sidebar-header-title');
   const isCuratedDrilldown = state.sidebarMode === 'curated' && state.view.startsWith('genre:');
   if (isCuratedDrilldown) {
-    headerTitleEl.innerHTML = `<button class="sidebar-back-btn" id="sidebar-back-btn" title="Back to genres"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>${escapeHtml(sidebarTitle)}`;
+    headerTitleEl.innerHTML = `<button class="sidebar-back-btn" id="sidebar-back-btn" title="Back to genres"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg><span>${escapeHtml(sidebarTitle)}</span></button>`;
   } else {
     headerTitleEl.textContent = sidebarTitle;
   }
   document.getElementById('sidebar-back-btn')?.addEventListener('click', (e) => {
     e.stopPropagation();
-    state.view = 'curated';
+    const parts = state.view.slice(6).split(':'); // strip 'genre:' prefix -> [genre, category?]
+    state.view = parts.length > 1 ? `genre:${parts[0]}` : 'curated';
     persistViewState();
     renderSidebar();
     renderGrid();
@@ -724,7 +1141,7 @@ function renderKanbanCard(item) {
         </div>
         ${removeBtn}
       </div>
-      <span class="kcard-badge badge-${catClass(item.category)}">${item.category}</span>
+      <span class="kcard-badge badge-${catClass(item.category)}">${badgeLabel(item.category)}</span>
     </div>`;
 }
 
@@ -1082,6 +1499,7 @@ function renderGrid() {
   container.innerHTML = items.map(item => renderCard(item)).join('');
   persistViewState();
   fetchMissingCuratedImages(items);
+  fetchMissingCuratedMusicianPhotos(items);
 
   container.querySelectorAll('.card').forEach(card => {
     card.addEventListener('click', e => {
@@ -1100,12 +1518,7 @@ function renderGrid() {
     });
   });
 
-  container.querySelectorAll('.card-author-link').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      navigateToAuthor(btn.dataset.author, btn.dataset.category);
-    });
-  });
+  wireCardAuthorLinks(container);
 
   container.querySelectorAll('.btn-edit').forEach(btn => {
     btn.addEventListener('click', e => {
@@ -1133,7 +1546,7 @@ function renderGrid() {
       const id = btn.dataset.id;
       if (state.items.some(i => i._curatedSourceId === id)) {
         btn.title = 'Already saved!';
-        btn.style.color = '#7C6FF5';
+        btn.style.color = '#5B5BEF';
         setTimeout(() => { btn.title = 'Save to My Saves'; btn.style.color = ''; }, 1500);
         return;
       }
@@ -1163,7 +1576,7 @@ function renderGrid() {
       };
       await persistItem(newItem);
       state.items.unshift(newItem);
-      btn.style.color = '#7C6FF5';
+      btn.style.color = '#5B5BEF';
       btn.title = 'Saved!';
       setTimeout(() => { btn.style.color = ''; btn.title = 'Save to My Saves'; }, 1500);
       renderSidebar();
@@ -1188,6 +1601,110 @@ function renderGrid() {
   });
 }
 
+const _albumYearBackfillAttempted = new Set();
+async function backfillAlbumYears(artistName, items) {
+  const key = artistName.trim().toLowerCase();
+  if (_albumYearBackfillAttempted.has(key)) return;
+  // Also backfills collectionId (needed for the Song List accordion's iTunes track lookup) —
+  // reuses this same per-artist iTunes search rather than adding a second network pass.
+  const missing = items.filter(i => i.category === 'Music Album' && (!i.year || !i.collectionId));
+  if (missing.length === 0) return;
+  _albumYearBackfillAttempted.add(key);
+  let albums;
+  try {
+    albums = await fetchAlbumsFromItunes(artistName);
+  } catch {
+    return;
+  }
+  let changed = false;
+  for (const merged of missing) {
+    const match = albums.find(a => a.title === merged.title) || albums.find(a => a.title.toLowerCase() === merged.title.toLowerCase());
+    if (!match?.year && !match?.collectionId) continue;
+    if (merged.curated) {
+      const meta = state.curatedAlbumMetaCache[merged.id] || {};
+      if (match.year) meta.year = match.year;
+      if (match.collectionId) meta.collectionId = match.collectionId;
+      state.curatedAlbumMetaCache[merged.id] = meta;
+      persistCuratedAlbumMetaCache();
+    } else {
+      const liveItem = state.items.find(i => i.id === merged.id);
+      if (liveItem) {
+        if (match.year) liveItem.year = match.year;
+        if (match.collectionId) liveItem.collectionId = match.collectionId;
+        await persistItem(liveItem);
+      }
+    }
+    changed = true;
+  }
+  if (changed && state.view === `author:Musician:${artistName}`) renderAuthorPage();
+}
+
+// Resolves an iTunes collectionId for a Music Album item so its track list can be looked up.
+// Prefers whatever the year/collectionId backfill already found; falls back to a fresh
+// per-item iTunes search (so Song List still works even if the artist's author page — where
+// the bulk backfill runs — was never visited), persisting the result once found.
+async function resolveAlbumCollectionId(item) {
+  if (item.collectionId) return item.collectionId;
+  if (item.curated && state.curatedAlbumMetaCache[item.id]?.collectionId) {
+    return state.curatedAlbumMetaCache[item.id].collectionId;
+  }
+  const artistName = item.author || (item.curated ? item.notes : null);
+  if (!artistName || !item.title) return null;
+  let albums;
+  try {
+    albums = await fetchAlbumsFromItunes(artistName);
+  } catch {
+    return null;
+  }
+  const match = albums.find(a => a.title === item.title) || albums.find(a => a.title.toLowerCase() === item.title.toLowerCase());
+  if (!match?.collectionId) return null;
+  if (item.curated) {
+    const meta = state.curatedAlbumMetaCache[item.id] || {};
+    meta.collectionId = match.collectionId;
+    if (match.year && !meta.year) meta.year = match.year;
+    state.curatedAlbumMetaCache[item.id] = meta;
+    persistCuratedAlbumMetaCache();
+  } else {
+    const liveItem = state.items.find(i => i.id === item.id);
+    if (liveItem) {
+      liveItem.collectionId = match.collectionId;
+      await persistItem(liveItem);
+    }
+  }
+  return match.collectionId;
+}
+
+// Fetches (and caches forever, since track lists don't change) an album's track list via the
+// iTunes lookup endpoint. Returns null if no collectionId could be resolved or the lookup fails.
+async function ensureAlbumTrackList(item) {
+  const collectionId = await resolveAlbumCollectionId(item);
+  if (!collectionId) return null;
+  const cached = state.albumTrackListCache[collectionId];
+  if (cached) return cached.tracks;
+  try {
+    const resp = await fetch(`https://itunes.apple.com/lookup?id=${collectionId}&entity=song`);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    const tracks = data.results
+      .filter(r => r.wrapperType === 'track')
+      .map(r => ({ number: r.trackNumber, title: r.trackName, durationMs: r.trackTimeMillis }))
+      .sort((a, b) => (a.number || 0) - (b.number || 0));
+    state.albumTrackListCache[collectionId] = { tracks, fetchedAt: Date.now() };
+    persistAlbumTrackListCache();
+    return tracks;
+  } catch {
+    return null;
+  }
+}
+
+function formatTrackDuration(ms) {
+  if (!ms) return '';
+  const totalSeconds = Math.round(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
 function renderAuthorPage() {
   const rest = state.view.slice(7);
   const colonIdx = rest.indexOf(':');
@@ -1199,9 +1716,9 @@ function renderAuthorPage() {
   const author = findAuthor(name, cat);
 
   gridTitle.style.display = '';
-  gridTitle.innerHTML = `<button class="author-back-btn" id="author-back-btn">&#8249;</button> ${CAT_EMOJI[cat] || ''} ${escapeHtml(CAT_LABEL[cat] || cat)}`;
+  gridTitle.innerHTML = `<button class="author-back-btn" id="author-back-btn"><span>&#8249;</span><span>${CAT_EMOJI[cat] || ''} ${escapeHtml(CAT_LABEL[cat] || cat)}</span></button>`;
   document.getElementById('author-back-btn').addEventListener('click', () => {
-    state.view = cat;
+    state.view = state.authorReturnView || cat;
     persistViewState();
     renderSidebar();
     renderGrid();
@@ -1220,13 +1737,14 @@ function renderAuthorPage() {
     <div class="author-page-header">
       <div class="author-page-photo-wrap">${photoHtml}</div>
       <div class="author-page-info">
-        <div class="author-page-name">${escapeHtml(name)}</div>
-        ${author?.bio ? `<p class="author-page-bio">${escapeHtml(author.bio)}</p>` : ''}
+        ${cat === 'Musician'
+          ? `<button class="author-page-name author-page-name-btn" id="author-page-name-btn">${escapeHtml(name)}<svg class="detail-title-arrow" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m321-80-71-71 329-329-329-329 71-71 400 400L321-80Z"/></svg></button>`
+          : `<div class="author-page-name">${escapeHtml(name)}</div>`
+        }
         ${author?.websiteUrl ? `<a class="author-page-website" href="${escapeHtml(author.websiteUrl)}" target="_blank" rel="noopener">${escapeHtml(author.websiteUrl)}</a>` : ''}
       </div>
       <div class="author-page-actions">
         ${cat === 'Musician' ? `<button class="btn-fetch-albums" id="btn-fetch-albums">Fetch Albums</button>` : ''}
-        <button class="btn-edit-author-profile" id="btn-edit-author-profile">Edit Profile</button>
       </div>
     </div>
     <div class="author-works-header">Works (${items.length})</div>
@@ -1238,8 +1756,8 @@ function renderAuthorPage() {
     </div>
   `;
 
-  document.getElementById('btn-edit-author-profile').addEventListener('click', () => {
-    openAuthorEditModal(name, cat);
+  document.getElementById('author-page-name-btn')?.addEventListener('click', () => {
+    openDetailModal(resolveMusicianItem(name));
   });
 
   document.getElementById('btn-fetch-albums')?.addEventListener('click', () => {
@@ -1265,12 +1783,9 @@ function renderAuthorPage() {
     });
   });
 
-  worksGrid.querySelectorAll('.card-author-link').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      navigateToAuthor(btn.dataset.author, btn.dataset.category);
-    });
-  });
+  wireCardAuthorLinks(worksGrid);
+
+  if (cat === 'Musician') backfillAlbumYears(name, items);
 
   worksGrid.querySelectorAll('.btn-edit').forEach(btn => {
     btn.addEventListener('click', e => {
@@ -1317,15 +1832,20 @@ function renderCard(item) {
         ${(() => {
           const aName = item.author || (item.curated && item.category === 'Music Album' ? item.notes : null);
           const aCat  = item.author ? item.category : 'Musician';
-          return aName ? `<button class="card-author-link" data-author="${escapeHtml(aName)}" data-category="${escapeHtml(aCat)}">${escapeHtml(aName)}</button>` : '';
+          if (!aName) return '';
+          if ((item.category === 'Music Album' && isMusicAlbumsSectionView()) || isOwnAuthorPageView(aName)) {
+            return `<div class="card-author-name">${escapeHtml(aName)}</div>`;
+          }
+          return `<button class="card-author-link" data-author="${escapeHtml(aName)}" data-category="${escapeHtml(aCat)}">${escapeHtml(aName)}</button>`;
         })()}
-        ${item.curated && item.category === 'Musician'
+        ${item.category === 'Musician' && !isOwnAuthorPageView(item.title)
           ? `<button class="card-author-link card-title" data-author="${escapeHtml(item.title)}" data-category="Musician">${escapeHtml(item.title || '')}</button>`
-          : `<div class="card-title">${escapeHtml(item.title || '')}</div>`
+          : `<div class="card-title${item.category === 'Music Album' ? ' card-title--album' : ''}">${escapeHtml(item.title || '')}</div>`
         }
+        ${item.category === 'Music Album' && item.year ? `<div class="card-album-year">${escapeHtml(item.year)}</div>` : ''}
         <div class="card-meta">
           ${folderLabel}
-          <span class="card-badge badge-${catClass(item.category)}" style="margin-left:auto">${item.category}</span>
+          <span class="card-badge badge-${catClass(item.category)}" style="margin-left:auto">${badgeLabel(item.category)}</span>
         </div>
       </div>
       ${item.curated ? '' : `<div class="card-actions">
@@ -1412,7 +1932,7 @@ async function handleAuthorItunesLookup() {
       .map(r => ({
         title: r.collectionName,
         artist: r.artistName,
-        imageUrl: r.artworkUrl100?.replace('100x100bb', '600x600bb') || null,
+        imageUrl: r.artworkUrl100?.replace('100x100bb', '1200x1200bb') || null,
         url: r.collectionViewUrl || null,
         year: r.releaseDate?.slice(0, 4) || '',
       }));
@@ -1515,10 +2035,11 @@ async function fetchAlbumsFromItunes(artistName) {
       title: r.collectionName,
       artist: r.artistName,
       year: r.releaseDate ? r.releaseDate.slice(0, 4) : '',
-      imageUrl: r.artworkUrl100?.replace('100x100bb', '600x600bb') || null,
+      imageUrl: r.artworkUrl100?.replace('100x100bb', '1200x1200bb') || null,
       url: r.collectionViewUrl || null,
       genre: r.primaryGenreName || null,
       type: r.collectionType,
+      collectionId: r.collectionId || null,
     }));
 }
 
@@ -1655,7 +2176,10 @@ async function handleImportAlbums() {
       category: 'Music Album',
       url: album.url || null,
       imageUrl: album.imageUrl || null,
-      notes: album.genre || null,
+      notes: null,
+      genre: album.genre || null, // kept for future use, not currently rendered in the detail modal
+      year: album.year || null,
+      collectionId: album.collectionId || null,
       folderId: null,
       savedAt: Date.now(),
     };
@@ -1676,8 +2200,34 @@ function openAuthorEditModal(name, category) {
   document.getElementById('author-input-image').value   = author?.imageUrl   || '';
   document.getElementById('author-input-bio').value     = author?.bio        || '';
   document.getElementById('author-input-website').value = author?.websiteUrl || '';
+  document.getElementById('author-website-status').textContent = '';
+  const findBtn = document.getElementById('btn-find-website');
+  findBtn.style.display = category === 'Musician' ? '' : 'none';
+  findBtn.disabled = false;
+  findBtn.textContent = 'Find website';
   document.getElementById('author-modal-overlay').classList.add('open');
   document.getElementById('author-input-bio').focus();
+}
+
+async function handleFindWebsite() {
+  const name = document.getElementById('author-modal-name').textContent;
+  const btn = document.getElementById('btn-find-website');
+  const status = document.getElementById('author-website-status');
+  btn.disabled = true;
+  btn.textContent = 'Searching…';
+  status.textContent = 'Searching MusicBrainz…';
+  const url = await fetchArtistWebsite(name); // bypass cache — this is an explicit user-initiated retry
+  const key = name.trim().toLowerCase();
+  state.artistWebsiteCache[key] = { url, fetchedAt: Date.now() };
+  persistArtistWebsiteCache();
+  btn.disabled = false;
+  btn.textContent = 'Find website';
+  if (url) {
+    document.getElementById('author-input-website').value = url;
+    status.textContent = 'Found';
+  } else {
+    status.textContent = 'No official site found — enter manually';
+  }
 }
 
 function closeAuthorEditModal() {
@@ -1708,81 +2258,456 @@ async function handleSaveAuthor() {
 let _detailItem = null;
 
 function openDetailModal(item) {
+  document.body.style.overflow = 'hidden'; // lock background scroll while the modal is open
   _detailItem = item;
   const domain = (() => { try { return new URL(item.url).hostname.replace('www.', ''); } catch { return item.url; } })();
 
   const wrap = document.getElementById('detail-image-wrap');
+  const isMusicAlbum = item.category === 'Music Album';
+  const isMusicianItem = item.category === 'Musician';
+  const _imageClass = `detail-image${isMusicianItem ? ' detail-image--faces' : ''}`;
+  document.getElementById('detail-body').classList.toggle('detail-body--tight-bottom', isMusicianItem);
+  document.getElementById('detail-bookmark-btn').style.display = isMusicianItem ? 'none' : '';
+  document.getElementById('detail-favorite-btn').style.display = isMusicianItem ? '' : 'none';
+
+  const PLAY_ICON_SVG = `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`;
+  const _promoToggleHtml = isMusicianItem
+    ? `<button class="btn-promo-toggle" id="btn-promo-toggle" title="Watch on YouTube"><span>Promo Vid</span>${PLAY_ICON_SVG}</button>`
+    : isMusicAlbum
+    ? `<button class="btn-promo-toggle" id="btn-fullart-toggle" title="View full album art"><span>Full Album Art</span>${PLAY_ICON_SVG}</button>`
+    : '';
+
   if (item.imageUrl) {
-    wrap.innerHTML = `<img class="detail-image" src="${escapeHtml(item.imageUrl)}" alt="">`;
+    wrap.innerHTML = `<div class="detail-image-crop"><img class="${_imageClass}" src="${escapeHtml(item.imageUrl)}" alt=""></div>${_promoToggleHtml}`;
     wrap.style.display = '';
+    if (isMusicAlbum) {
+      wrap.querySelector('.detail-image').addEventListener('click', () => openImageLightbox(item.imageUrl));
+    }
   } else {
     const letter = (item.title || domain || '?')[0].toUpperCase();
-    wrap.innerHTML = `<div class="detail-placeholder placeholder-${catClass(item.category || 'Music-Album')}">${letter}</div>`;
+    wrap.innerHTML = `<div class="detail-image-crop"><div class="detail-placeholder placeholder-${catClass(item.category || 'Music-Album')}">${letter}</div></div>${_promoToggleHtml}`;
     wrap.style.display = '';
+  }
+
+  if (isMusicianItem) {
+    let _showingPromoVideo = false;
+    const promoBtn = document.getElementById('btn-promo-toggle');
+    const promoLabelEl = promoBtn.querySelector('span');
+    promoBtn.onclick = async () => {
+      const cropEl = wrap.querySelector('.detail-image-crop');
+      if (_showingPromoVideo) {
+        _showingPromoVideo = false;
+        cropEl.innerHTML = item.imageUrl
+          ? `<img class="${_imageClass}" src="${escapeHtml(item.imageUrl)}" alt="">`
+          : `<div class="detail-placeholder placeholder-${catClass(item.category)}">${(item.title || '?')[0].toUpperCase()}</div>`;
+        promoLabelEl.textContent = 'Promo Vid';
+        return;
+      }
+      promoBtn.disabled = true;
+      promoLabelEl.textContent = 'Loading…';
+      const videoId = await ensureArtistMusicVideoId(item.title);
+      promoBtn.disabled = false;
+      if (_detailItem !== item) return; // modal moved on to a different item while awaiting
+      if (!videoId) {
+        // No API key set yet, or no match found — fall back to a real search in a new tab.
+        promoLabelEl.textContent = 'Promo Vid';
+        const searchQuery = encodeURIComponent(`${item.title || ''} official music video`);
+        window.open(`https://www.youtube.com/results?search_query=${searchQuery}`, '_blank', 'noopener');
+        return;
+      }
+      _showingPromoVideo = true;
+      cropEl.innerHTML = `<iframe class="detail-video-frame" src="https://www.youtube-nocookie.com/embed/${videoId}?rel=0&autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+      promoLabelEl.textContent = 'Featured Photos';
+    };
+  }
+
+  if (isMusicAlbum) {
+    document.getElementById('btn-fullart-toggle').onclick = () => {
+      if (item.imageUrl) openImageLightbox(item.imageUrl);
+    };
   }
 
   const BOOKMARK_OUTLINE = `<svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 -960 960 960" width="22px" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/></svg>`;
   const BOOKMARK_FILLED = `<svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 -960 960 960" width="22px" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Z"/></svg>`;
+  const FAVORITE_STAR = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m354-287 126-76 126 77-33-144 111-96-146-13-58-136-58 135-146 13 111 97-33 143ZM233-120l65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Zm247-350Z"/></svg>`;
   function updateDetailActions() {
     const isSaved = !!state.items.find(i => i.id === item.id);
     document.getElementById('detail-edit').style.display = (!item.curated || isSaved) ? '' : 'none';
   }
+  function getFavoritesFolder(category) {
+    return state.folders.find(f => f.name === 'Favorites' && f.parentCategory === category);
+  }
+  function updateFavoriteIcon() {
+    const favBtn = document.getElementById('detail-favorite-btn');
+    if (!favBtn) return;
+    const liveItem = state.items.find(i => i.id === item.id);
+    const favFolder = getFavoritesFolder(item.category);
+    const favorited = !!liveItem && !!favFolder && liveItem.folderId === favFolder.id;
+    favBtn.innerHTML = FAVORITE_STAR;
+    favBtn.classList.toggle('detail-favorite-btn--active', favorited);
+  }
   function updateBookmarkIcon() {
-    const btn = document.getElementById('detail-bookmark-btn');
-    if (!btn) return;
     const saved = !!state.items.find(i => i.id === item.id);
-    btn.innerHTML = saved ? BOOKMARK_FILLED : BOOKMARK_OUTLINE;
-    btn.classList.toggle('detail-bookmark-btn--saved', saved);
+    const btn = document.getElementById('detail-bookmark-btn');
+    if (btn) {
+      btn.innerHTML = saved ? BOOKMARK_FILLED : BOOKMARK_OUTLINE;
+      btn.classList.toggle('detail-bookmark-btn--saved', saved);
+    }
+    const queueBookmarkEl = document.getElementById('standalone-queue-bookmark');
+    if (queueBookmarkEl) {
+      queueBookmarkEl.innerHTML = saved ? BOOKMARK_FILLED : BOOKMARK_OUTLINE;
+      queueBookmarkEl.classList.toggle('detail-bookmark-btn--saved', saved);
+    }
     updateDetailActions();
   }
-  updateDetailActions();
-  const initSaved = !!state.items.find(i => i.id === item.id);
+  updateBookmarkIcon();
+  updateFavoriteIcon();
   const _detailAuthorName = item.author
     || (item.curated && item.category === 'Music Album' ? item.notes : null);
   const _detailAuthorCat = item.author ? item.category : 'Musician';
   const _isCuratedMusician = item.curated && item.category === 'Musician';
-  const _titleHtml = _isCuratedMusician
-    ? `<button class="detail-author-link" data-author="${escapeHtml(item.title)}" data-category="Musician">${escapeHtml(item.title || '')}</button>`
+
+  // The website CTA overlays the top of the image for both Musician and Music Album (the
+  // header container holds only that button now — the artist name for Music Album moved
+  // into its own "Artist | Year" line above the title, built below).
+  const _showArtistHeaderAbove = isMusicianItem || isMusicAlbum;
+
+  const _titleHtml = item.category === 'Musician'
+    ? `<button class="detail-author-link" data-author="${escapeHtml(item.title)}" data-category="Musician">${escapeHtml(item.title || '')}<svg class="detail-title-arrow" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m321-80-71-71 329-329-329-329 71-71 400 400L321-80Z"/></svg></button>`
     : escapeHtml(item.title || '');
-  const _authorHtml = !_isCuratedMusician && _detailAuthorName
+
+  const _authorHtml = !_isCuratedMusician && _detailAuthorName && !isMusicAlbum
     ? `<span class="detail-title-sep"> | </span><button class="detail-author-link" data-author="${escapeHtml(_detailAuthorName)}" data-category="${escapeHtml(_detailAuthorCat)}">${escapeHtml(_detailAuthorName)}</button>`
     : '';
-  document.getElementById('detail-title').innerHTML = `<span class="detail-title-text">${_titleHtml}${_authorHtml}</span><button class="detail-bookmark-btn${initSaved ? ' detail-bookmark-btn--saved' : ''}" id="detail-bookmark-btn" title="Save to My Saves">${initSaved ? BOOKMARK_FILLED : BOOKMARK_OUTLINE}</button>`;
 
-  document.getElementById('detail-bookmark-btn').addEventListener('click', async () => {
+  // "Artist | Year" line above the album title — replaces the old header-block placement.
+  // Genre is intentionally kept on item.genre (still fetched/stored/backfilled) but not
+  // rendered anywhere in this modal per current design.
+  const _albumArtistYearHtml = isMusicAlbum && _detailAuthorName
+    ? `<div class="detail-album-artist-year">${isMusicAlbumsSectionView()
+        ? escapeHtml(_detailAuthorName)
+        : `<button class="detail-author-link" data-author="${escapeHtml(_detailAuthorName)}" data-category="${escapeHtml(_detailAuthorCat)}">${escapeHtml(_detailAuthorName)}</button>`
+      }${item.year ? ` <span class="detail-title-sep">|</span> ${escapeHtml(item.year)}` : ''}</div>`
+    : '';
+
+  // Official website CTA — resolves the relevant musician (the item itself, or the album's artist).
+  // Scoped strictly to Musician/Music Album so an unrelated item.author (e.g. a Book's author) never
+  // gets matched against an existing Musician profile of the same name.
+  const _ctaAuthorName = item.category === 'Musician' ? item.title
+    : item.category === 'Music Album' ? _detailAuthorName
+    : null;
+  let _ctaAuthor = _ctaAuthorName ? findAuthor(_ctaAuthorName, 'Musician') : null;
+  const buildWebsiteCta = () => _ctaAuthor?.websiteUrl
+    ? `<a class="btn-detail-website" id="detail-website-cta" href="${escapeHtml(_ctaAuthor.websiteUrl)}" target="_blank" rel="noopener">Official Website</a>`
+    : '';
+
+  const artistHeaderEl = document.getElementById('detail-artist-header');
+  const _headerContentHtml = buildWebsiteCta();
+  // Both Musician and Music Album pin the website CTA inline over the top of the image now.
+  artistHeaderEl.classList.add('detail-artist-header--inline');
+  if (_showArtistHeaderAbove && _headerContentHtml) {
+    artistHeaderEl.innerHTML = _headerContentHtml;
+    artistHeaderEl.style.display = '';
+  } else {
+    artistHeaderEl.innerHTML = '';
+    artistHeaderEl.style.display = 'none';
+  }
+
+  document.getElementById('detail-title').innerHTML = `${_albumArtistYearHtml}<span class="detail-title-text">${_titleHtml}${_authorHtml}</span>`;
+
+  if (_ctaAuthorName && !_ctaAuthor?.websiteUrl) {
+    ensureArtistWebsite(_ctaAuthorName).then(url => {
+      if (!url || _detailItem !== item) return; // no result, or modal moved on to a different item
+      let author = findAuthor(_ctaAuthorName, 'Musician');
+      if (!author) {
+        author = { id: Date.now().toString(), name: _ctaAuthorName, category: 'Musician', bio: null, imageUrl: null, websiteUrl: null, savedAt: Date.now() };
+        state.authors.push(author);
+      }
+      author.websiteUrl = url;
+      persistAuthor(author);
+      _ctaAuthor = author;
+      if (document.getElementById('detail-website-cta')) return; // already inserted
+      const headerEl = document.getElementById('detail-artist-header');
+      headerEl.insertAdjacentHTML('beforeend', buildWebsiteCta());
+      headerEl.style.display = ''; // reveal it if it started empty/hidden (Musician with no prior website)
+    });
+  }
+
+  async function toggleBookmark() {
     const liveItem = state.items.find(i => i.id === item.id);
     if (!liveItem) {
       await ensureLiveItem();
-      updateBookmarkIcon();
     } else {
       const idx = state.items.indexOf(liveItem);
       state.items.splice(idx, 1);
       await removeItem(liveItem.id);
-      updateBookmarkIcon();
     }
-  });
+    updateBookmarkIcon();
+  }
+  document.getElementById('detail-bookmark-btn').onclick = toggleBookmark;
+  const standaloneQueueBookmarkEl = document.getElementById('standalone-queue-bookmark');
+  standaloneQueueBookmarkEl.onclick = (e) => {
+    e.stopPropagation();
+    toggleBookmark();
+  };
 
-  document.getElementById('detail-meta').innerHTML = '';
+  document.getElementById('detail-favorite-btn').onclick = async () => {
+    const liveItem = await ensureLiveItem();
+    const favFolder = getFavoritesFolder(liveItem.category);
+    const isFavorited = !!favFolder && liveItem.folderId === favFolder.id;
+    if (isFavorited) {
+      liveItem.folderId = null;
+      await persistItem(liveItem);
+      const stillHasItems = state.items.some(i => i.folderId === favFolder.id);
+      if (!stillHasItems) {
+        state.folders = state.folders.filter(f => f.id !== favFolder.id);
+        await removeFolder(favFolder.id);
+      }
+    } else {
+      let folder = favFolder;
+      if (!folder) {
+        folder = { id: `favorites-${liveItem.category.toLowerCase().replace(/\s+/g, '-')}`, name: 'Favorites', parentCategory: liveItem.category };
+        state.folders.push(folder);
+        await persistFolder(folder);
+      }
+      liveItem.folderId = folder.id;
+      await persistItem(liveItem);
+    }
+    updateBookmarkIcon();
+    updateFavoriteIcon();
+    renderSidebar();
+    renderGrid();
+  };
+
+  const metaEl = document.getElementById('detail-meta');
+  metaEl.innerHTML = '';
+  metaEl.style.display = 'none';
 
   const summaryEl = document.getElementById('detail-summary');
   const summaryLabelEl = document.getElementById('detail-summary-label');
-  const summaryText = item.summary || '';
-  summaryEl.textContent = summaryText;
-  summaryEl.style.display = summaryText ? '' : 'none';
-  summaryLabelEl.style.display = summaryText ? '' : 'none';
+  const summaryToggleEl = document.getElementById('detail-summary-toggle');
+  summaryLabelEl.style.display = 'none';
+
+  function renderSummaryText(text) {
+    summaryEl.textContent = text;
+    summaryEl.style.display = text ? '' : 'none';
+    summaryEl.classList.remove('detail-summary-text--expanded');
+    summaryToggleEl.classList.remove('detail-summary-toggle--open');
+    summaryToggleEl.style.display = 'none';
+    if (text) {
+      requestAnimationFrame(() => {
+        if (summaryEl.scrollHeight > summaryEl.clientHeight + 1) {
+          summaryToggleEl.style.display = '';
+        }
+      });
+    }
+  }
+
+  summaryToggleEl.onclick = () => {
+    const expanded = summaryEl.classList.toggle('detail-summary-text--expanded');
+    summaryToggleEl.classList.toggle('detail-summary-toggle--open', expanded);
+  };
+
+  const summaryText = item.summary || (isMusicianItem ? _ctaAuthor?.bio : null) || '';
+  renderSummaryText(summaryText);
+
+  const _needsBio = isMusicianItem && !summaryText;
+  const _needsPhoto = isMusicianItem && (!item.imageUrl || isItunesArtworkUrl(item.imageUrl));
+  if ((_needsBio || _needsPhoto) && _ctaAuthorName) {
+    ensureArtistWikipediaInfo(_ctaAuthorName).then(({ bio, photoUrl }) => {
+      if ((!bio && !photoUrl) || _detailItem !== item) return; // nothing found, or modal moved on
+      let author = findAuthor(_ctaAuthorName, 'Musician');
+      if (!author) {
+        author = { id: Date.now().toString(), name: _ctaAuthorName, category: 'Musician', bio: null, imageUrl: null, websiteUrl: null, savedAt: Date.now() };
+        state.authors.push(author);
+      }
+      let authorChanged = applyArtistPhotoToItem(author, photoUrl);
+      if (bio && !author.bio) { author.bio = bio; authorChanged = true; }
+      if (authorChanged) persistAuthor(author);
+      _ctaAuthor = author;
+      if (_needsBio && bio && !item.summary) renderSummaryText(bio);
+
+      if (_needsPhoto && applyArtistPhotoToItem(item, photoUrl)) {
+        if (state.items.some(i => i.id === item.id)) persistItem(item);
+        patchCardImage(item.id, item.imageUrl);
+        const wrap = document.getElementById('detail-image-wrap');
+        const cropEl = wrap.querySelector('.detail-image-crop');
+        if (cropEl && !cropEl.querySelector('.detail-video-frame')) { // don't clobber an actively-playing promo video
+          const imgEl = cropEl.querySelector('.detail-image');
+          if (imgEl) {
+            imgEl.src = item.imageUrl;
+          } else {
+            cropEl.innerHTML = `<img class="detail-image detail-image--faces" src="${escapeHtml(item.imageUrl)}" alt="">`;
+          }
+        }
+      }
+    });
+  }
 
   const notesEl = document.getElementById('detail-notes');
+  const notesInputEl = document.getElementById('detail-notes-input');
   const notesLabelEl = document.getElementById('detail-notes-label');
-  const text = item.notes || item.description || '';
-  notesEl.textContent = text;
-  notesEl.style.display = text ? '' : 'none';
-  notesLabelEl.style.display = text ? '' : 'none';
+  const notesAccordionHeaderEl = document.getElementById('detail-notes-accordion-header');
+  // Curated (not-yet-saved) Music Album items stash the artist name in item.notes (see
+  // _detailAuthorName above) — that's never real user notes, so exclude it here or the
+  // editable textarea below would pre-fill with the artist name instead of being empty.
+  const _curatedAlbumNotesIsArtistName = item.curated && isMusicAlbum;
+  const text = (_curatedAlbumNotesIsArtistName ? null : item.notes) || item.description || '';
+  const linerPanelEl = document.getElementById('liner-notes-panel');
+  linerPanelEl.innerHTML = '';
+  linerPanelEl.style.display = 'none';
+  if (isMusicianItem || isMusicAlbum) {
+    // My Notes is always shown as its own accordion row for Musician/Music Album modals, even
+    // with no notes yet — it's a directly-editable textarea instead of read-only text, auto-saving
+    // (debounced) as the user types. Genre (item.genre) is intentionally kept on the item but
+    // not rendered anywhere in this modal.
+    notesLabelEl.style.display = 'none'; // replaced by the accordion header below
+    notesEl.style.display = 'none';
+    notesEl.classList.remove('detail-accordion-collapsible', 'open');
+
+    notesInputEl.value = text;
+    notesInputEl.style.display = '';
+    notesInputEl.classList.add('detail-accordion-collapsible');
+    notesInputEl.classList.remove('open');
+    notesAccordionHeaderEl.classList.remove('open');
+    notesAccordionHeaderEl.style.display = '';
+    notesAccordionHeaderEl.onclick = () => {
+      const nowOpen = notesAccordionHeaderEl.classList.toggle('open');
+      notesInputEl.classList.toggle('open', nowOpen);
+      if (nowOpen) {
+        albumsAccordionHeaderEl.classList.remove('open');
+        albumsListEl.classList.remove('open');
+        tracklistAccordionHeaderEl.classList.remove('open');
+        tracklistEl.classList.remove('open');
+        streamingEl.classList.remove('open');
+        notesInputEl.focus();
+      }
+    };
+
+    const saveNotes = debounce(async () => {
+      const newNotes = notesInputEl.value.trim() || null;
+      let liveItem = state.items.find(i => i.id === item.id);
+      if (!liveItem) liveItem = await ensureLiveItem();
+      if (liveItem.notes === newNotes) return;
+      liveItem.notes = newNotes;
+      item.notes = newNotes;
+      await persistItem(liveItem);
+    }, 600);
+    notesInputEl.oninput = saveNotes;
+  } else {
+    linerPanelEl.innerHTML = '';
+    linerPanelEl.style.display = 'none';
+    notesAccordionHeaderEl.style.display = 'none';
+    notesInputEl.style.display = 'none';
+    notesEl.classList.remove('detail-accordion-collapsible', 'open');
+    notesEl.textContent = text;
+    notesEl.style.display = text ? '' : 'none';
+    notesLabelEl.style.display = text ? '' : 'none';
+  }
+
+  const albumsAccordionHeaderEl = document.getElementById('detail-albums-accordion-header');
+  const albumsListEl = document.getElementById('detail-albums-list');
+  if (isMusicianItem) {
+    const knownAlbums = getKnownAlbumsForArtist(item.title);
+    albumsAccordionHeaderEl.classList.remove('open');
+    albumsListEl.classList.remove('open');
+    if (knownAlbums.length) {
+      albumsAccordionHeaderEl.style.display = '';
+      albumsListEl.style.display = '';
+      albumsListEl.classList.add('detail-accordion-collapsible');
+      albumsListEl.innerHTML = knownAlbums.slice(0, 5).map(a => `
+        <button class="detail-album-row" data-album-id="${escapeHtml(a.id)}">
+          ${a.imageUrl ? `<img class="detail-album-row-thumb" src="${escapeHtml(a.imageUrl)}" alt="">` : `<span class="detail-album-row-thumb"></span>`}
+          <span class="detail-album-row-title">${escapeHtml(a.title || '')}</span>
+        </button>`).join('')
+        + `<button class="detail-album-row detail-album-row--see-all" id="detail-albums-see-all">See all →</button>`;
+      albumsListEl.querySelectorAll('.detail-album-row[data-album-id]').forEach(row => {
+        row.addEventListener('click', () => {
+          const album = knownAlbums.find(a => a.id === row.dataset.albumId);
+          if (album) openDetailModal(album);
+        });
+      });
+      document.getElementById('detail-albums-see-all')?.addEventListener('click', () => {
+        closeDetailModal();
+        navigateToAuthor(item.title, 'Musician');
+      });
+      albumsAccordionHeaderEl.onclick = () => {
+        const nowOpen = albumsAccordionHeaderEl.classList.toggle('open');
+        albumsListEl.classList.toggle('open', nowOpen);
+        if (nowOpen) {
+          notesAccordionHeaderEl.classList.remove('open');
+          notesEl.classList.remove('open');
+          tracklistAccordionHeaderEl.classList.remove('open');
+          tracklistEl.classList.remove('open');
+          streamingEl.classList.remove('open');
+        }
+      };
+    } else {
+      albumsAccordionHeaderEl.style.display = 'none';
+      albumsListEl.style.display = 'none';
+      albumsListEl.innerHTML = '';
+    }
+  } else {
+    albumsAccordionHeaderEl.style.display = 'none';
+    albumsListEl.style.display = 'none';
+    albumsListEl.innerHTML = '';
+    albumsListEl.classList.remove('detail-accordion-collapsible', 'open');
+  }
+
+  const tracklistAccordionHeaderEl = document.getElementById('detail-tracklist-accordion-header');
+  const tracklistEl = document.getElementById('detail-tracklist');
+  tracklistAccordionHeaderEl.classList.remove('open');
+  tracklistEl.classList.remove('open');
+  if (isMusicAlbum) {
+    tracklistAccordionHeaderEl.style.display = '';
+    tracklistEl.style.display = '';
+    tracklistEl.classList.add('detail-accordion-collapsible');
+    tracklistEl.innerHTML = '';
+    let _tracklistLoaded = false;
+    tracklistAccordionHeaderEl.onclick = async () => {
+      const nowOpen = tracklistAccordionHeaderEl.classList.toggle('open');
+      tracklistEl.classList.toggle('open', nowOpen);
+      if (!nowOpen) return;
+      notesAccordionHeaderEl.classList.remove('open');
+      notesInputEl.classList.remove('open');
+      streamingEl.classList.remove('open');
+      if (_tracklistLoaded) return;
+      _tracklistLoaded = true;
+      tracklistEl.innerHTML = `<div class="detail-tracklist-row detail-tracklist-row--status">Loading…</div>`;
+      const tracks = await ensureAlbumTrackList(item);
+      if (_detailItem !== item) return; // modal moved on to a different item while awaiting
+      if (!tracklistAccordionHeaderEl.classList.contains('open')) return; // user closed it already
+      if (!tracks || tracks.length === 0) {
+        tracklistEl.innerHTML = `<div class="detail-tracklist-row detail-tracklist-row--status">Track list unavailable</div>`;
+      } else {
+        tracklistEl.innerHTML = tracks.map(t => `
+          <div class="detail-tracklist-row">
+            <span class="detail-tracklist-number">${t.number || ''}</span>
+            <span class="detail-tracklist-title">${escapeHtml(t.title || '')}</span>
+            <span class="detail-tracklist-duration">${formatTrackDuration(t.durationMs)}</span>
+          </div>`).join('');
+      }
+    };
+  } else {
+    tracklistAccordionHeaderEl.style.display = 'none';
+    tracklistEl.style.display = 'none';
+    tracklistEl.innerHTML = '';
+    tracklistEl.classList.remove('detail-accordion-collapsible', 'open');
+  }
 
   const streamingEl = document.getElementById('detail-streaming');
+  // Web Links normally has margin-top:auto + padding-top to push it toward the bottom of a
+  // short modal; in the Musician/Music Album accordion stack it should instead sit flush like
+  // My Notes/Albums/Song List.
+  streamingEl.classList.toggle('detail-streaming--tight', isMusicianItem || isMusicAlbum);
   const queueEl = document.getElementById('detail-queue');
+  queueEl.classList.toggle('detail-queue--tight', isMusicianItem || isMusicAlbum);
   const catConfig = CATEGORY_PLATFORMS[item.category];
   const query = item.title || domain;
-  const websiteBtn = `<a class="streaming-link-btn streaming-link-website" href="${escapeHtml(item.url)}" target="_blank">Wikipedia</a>`;
+  const websiteLinkLabel = isMusicAlbum ? 'View on Apple Music' : (domain || 'View Source');
+  const websiteBtn = item.url
+    ? `<a class="streaming-link-btn streaming-link-website" href="${escapeHtml(item.url)}" target="_blank">${escapeHtml(websiteLinkLabel)}</a>`
+    : '';
   const arrowSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
 
   const headerLabel = catConfig ? escapeHtml(catConfig.label) : 'Web Links';
@@ -1797,18 +2722,28 @@ function openDetailModal(item) {
   function updateQueueLabel() {
     const liveItem = state.items.find(i => i.id === item.id);
     const isQueued = !!liveItem?.queueStatus;
-    const labelEl = streamingEl.querySelector('.queue-label');
-    const textEl = streamingEl.querySelector('.queue-label-text');
-    if (textEl) textEl.textContent = isQueued ? 'Queue ✓' : 'Add to Queue';
+    const labelEl = streamingEl.querySelector('.queue-label') || document.getElementById('btn-standalone-queue');
+    const textEl = streamingEl.querySelector('.queue-label-text') || document.getElementById('standalone-queue-text');
+    if (textEl) textEl.textContent = 'Add to Queue';
     if (labelEl) labelEl.classList.toggle('queue-label--active', isQueued);
   }
 
-  const buildStreaming = (linksHtml) =>
-    `<div class="streaming-header">
-      <div class="streaming-label how-to-read-label">${headerLabel}${arrowSvg}</div>
-      <div class="streaming-label queue-label"><span class="queue-label-text">Add to Queue</span>${arrowSvg}</div>
-    </div>`
-    + `<div class="streaming-links-wrap">${linksHtml}</div>`;
+  // Musician/Music Album modals present Web Links as its own accordion row (icon + label +
+  // chevron, matching My Notes/Albums/Song List) with "Add to Queue" pulled out as a standalone
+  // button below the accordion stack, instead of sharing a header row with it like other
+  // categories do.
+  const WEB_LINKS_ICON_SVG = `<svg class="detail-accordion-icon" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor"><path d="M440-280H280q-83 0-141.5-58.5T80-480q0-83 58.5-141.5T280-680h160v80H280q-50 0-85 35t-35 85q0 50 35 85t85 35h160v80ZM320-440v-80h320v80H320Zm200 160v-80h160q50 0 85-35t35-85q0-50-35-85t-85-35H520v-80h160q83 0 141.5 58.5T880-480q0 83-58.5 141.5T680-280H520Z"/></svg>`;
+  const buildStreamingHeader = () => (isMusicianItem || isMusicAlbum)
+    ? `<div class="detail-accordion-header how-to-read-label">${WEB_LINKS_ICON_SVG}<span>${headerLabel}</span><svg class="detail-accordion-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>`
+    : `<div class="streaming-header">
+        <div class="streaming-label how-to-read-label">${headerLabel}${arrowSvg}</div>
+        <div class="streaming-label queue-label"><span class="queue-label-text">Add to Queue</span>${arrowSvg}</div>
+      </div>`;
+
+  const btnStandaloneQueueEl = document.getElementById('btn-standalone-queue');
+  btnStandaloneQueueEl.style.display = (isMusicianItem || isMusicAlbum) ? '' : 'none';
+
+  const buildStreaming = (linksHtml) => buildStreamingHeader() + `<div class="streaming-links-wrap">${linksHtml}</div>`;
 
   if (catConfig && catConfig.platforms) {
     const savedPlatforms = item.platforms;
@@ -1820,7 +2755,17 @@ function openDetailModal(item) {
     streamingEl.innerHTML = buildStreaming(websiteBtn);
   }
   streamingEl.style.display = '';
-  streamingEl.querySelector('.how-to-read-label')?.addEventListener('click', () => streamingEl.classList.toggle('open'));
+  streamingEl.querySelector('.how-to-read-label')?.addEventListener('click', () => {
+    const nowOpen = streamingEl.classList.toggle('open');
+    if (nowOpen) {
+      notesAccordionHeaderEl.classList.remove('open');
+      notesEl.classList.remove('open');
+      albumsAccordionHeaderEl.classList.remove('open');
+      albumsListEl.classList.remove('open');
+      tracklistAccordionHeaderEl.classList.remove('open');
+      tracklistEl.classList.remove('open');
+    }
+  });
   async function ensureLiveItem() {
     let liveItem = state.items.find(i => i.id === item.id);
     if (!liveItem) {
@@ -1835,7 +2780,7 @@ function openDetailModal(item) {
     return liveItem;
   }
 
-  streamingEl.querySelector('.queue-label').onclick = async () => {
+  (streamingEl.querySelector('.queue-label') || btnStandaloneQueueEl).onclick = async () => {
     const liveItem = state.items.find(i => i.id === item.id);
     if (!liveItem?.queueStatus) {
       const live = await ensureLiveItem();
@@ -1855,14 +2800,13 @@ function openDetailModal(item) {
     const liveItem = state.items.find(i => i.id === item.id);
     const listIds = getListIds(liveItem);
     const isQueued = !!liveItem?.queueStatus;
-    const baseTag = `<button class="queue-tag queue-tag-base${isQueued ? ' active' : ''}" id="btn-queue-base">Queue</button>`;
+    const baseTag = `<button class="queue-tag queue-tag-base${isQueued ? ' active' : ''}" id="btn-queue-base">${isQueued ? 'Deselect Queue' : 'Select Queue'}</button>`;
     const makeTag = l => `<button class="queue-tag${listIds.includes(l.id) ? ' active' : ''}" data-list-id="${l.id}">${l.name}</button>`;
     const addBtn = `<button class="queue-tag queue-tag-add" id="btn-queue-add-list">+ Add list</button>`;
     const lists = state.kanbanLists;
-    const beforeLast = lists.slice(0, -1).map(makeTag).join('');
-    const last = lists.length ? makeTag(lists[lists.length - 1]) : '';
+    const listTags = lists.map(makeTag).join('');
     return `<div class="streaming-links-wrap">
-      ${baseTag}${beforeLast}${addBtn}${last}
+      ${baseTag}${listTags}${addBtn}
     </div>`;
   }
 
@@ -1984,6 +2928,16 @@ function openDetailModal(item) {
 
 function closeDetailModal() {
   document.getElementById('detail-modal-overlay').classList.remove('open');
+  document.body.style.overflow = ''; // restore background scroll
+}
+
+function openImageLightbox(imageUrl) {
+  document.getElementById('image-lightbox-img').src = imageUrl;
+  document.getElementById('image-lightbox-overlay').classList.add('open');
+}
+
+function closeImageLightbox() {
+  document.getElementById('image-lightbox-overlay').classList.remove('open');
 }
 
 async function handleSaveItem() {
@@ -2338,6 +3292,46 @@ async function init() {
     });
   });
 
+  // Load curated album metadata cache from local storage (separate from sync)
+  await new Promise(resolve => {
+    chrome.storage.local.get({ savecraft_curated_album_meta: {} }, data => {
+      state.curatedAlbumMetaCache = data.savecraft_curated_album_meta;
+      resolve();
+    });
+  });
+
+  // Load album track-list cache from local storage (separate from sync)
+  await new Promise(resolve => {
+    chrome.storage.local.get({ savecraft_album_tracklist: {} }, data => {
+      state.albumTrackListCache = data.savecraft_album_tracklist;
+      resolve();
+    });
+  });
+
+  // Load artist website cache from local storage (separate from sync)
+  await new Promise(resolve => {
+    chrome.storage.local.get({ savecraft_artist_website_cache: {} }, data => {
+      state.artistWebsiteCache = data.savecraft_artist_website_cache;
+      resolve();
+    });
+  });
+
+  // Load artist bio cache from local storage (separate from sync)
+  await new Promise(resolve => {
+    chrome.storage.local.get({ savecraft_artist_bio_cache_v2: {} }, data => {
+      state.artistBioCache = data.savecraft_artist_bio_cache_v2;
+      resolve();
+    });
+  });
+
+  // Load artist video cache from local storage (separate from sync)
+  await new Promise(resolve => {
+    chrome.storage.local.get({ savecraft_artist_video_cache: {} }, data => {
+      state.artistVideoCache = data.savecraft_artist_video_cache;
+      resolve();
+    });
+  });
+
   chrome.storage.sync.get({ savecraft_theme: 'dark' }, data => {
     applyTheme(data.savecraft_theme);
   });
@@ -2459,7 +3453,6 @@ async function init() {
     }
   });
 
-  document.getElementById('detail-close').addEventListener('click', closeDetailModal);
   document.getElementById('detail-edit').addEventListener('click', () => {
     if (!_detailItem) return;
     closeDetailModal();
@@ -2469,8 +3462,14 @@ async function init() {
   document.getElementById('detail-modal-overlay').addEventListener('click', e => {
     if (e.target === document.getElementById('detail-modal-overlay')) closeDetailModal();
   });
+  document.getElementById('image-lightbox-overlay').addEventListener('click', closeImageLightbox);
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeDetailModal();
+    if (e.key !== 'Escape') return;
+    if (document.getElementById('image-lightbox-overlay').classList.contains('open')) {
+      closeImageLightbox();
+    } else {
+      closeDetailModal();
+    }
   });
 
   document.getElementById('modal-overlay').addEventListener('keydown', e => {
@@ -2566,6 +3565,7 @@ async function init() {
   document.getElementById('btn-author-modal-close').addEventListener('click', closeAuthorEditModal);
   document.getElementById('btn-author-modal-cancel').addEventListener('click', closeAuthorEditModal);
   document.getElementById('btn-author-modal-save').addEventListener('click', handleSaveAuthor);
+  document.getElementById('btn-find-website').addEventListener('click', handleFindWebsite);
   document.getElementById('author-modal-overlay').addEventListener('click', e => {
     if (e.target === document.getElementById('author-modal-overlay')) closeAuthorEditModal();
   });
