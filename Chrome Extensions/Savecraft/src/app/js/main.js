@@ -1,0 +1,380 @@
+// ===== ENTRY POINT: search, sort, theme, mobile sidebar, live storage sync, init/event wiring =====
+
+import { state, STREAMING_DOMAINS } from './state.js';
+import { loadAll, loadLocalCache, initCuratedItems } from './storage.js';
+import { debounce } from './utils.js';
+import { renderSidebar, renderGrid } from './render.js';
+import { initShare } from './share.js';
+import {
+  openAddModal, closeAddModal, handleSaveItem, updatePlatformSummary, updatePlatformsSection,
+  hideItunesSuggestions, handleAuthorItunesLookup, openEditModal,
+} from './addEditModal.js';
+import { closeDetailModal, closeImageLightbox, getDetailItem } from './detailModal.js';
+import { closeFetchAlbumsModal, handleImportAlbums, renderFetchAlbumsList } from './fetchAlbumsModal.js';
+
+// ===== SEARCH =====
+let searchDebounce;
+export function handleSearch(query) {
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(() => {
+    state.search = query.trim();
+    renderGrid();
+  }, 220);
+}
+
+export function initSearch() {
+  const wrap = document.getElementById('search-expand-wrap');
+  const input = document.getElementById('search-expand-input');
+  const btn = document.getElementById('btn-search-icon');
+
+  function openSearch() {
+    wrap.classList.add('open');
+    input.focus();
+  }
+
+  function closeSearch() {
+    wrap.classList.remove('open');
+    input.value = '';
+    if (state.search) { state.search = ''; renderGrid(); }
+  }
+
+  btn.addEventListener('click', () => {
+    wrap.classList.contains('open') ? closeSearch() : openSearch();
+  });
+
+  input.addEventListener('input', e => handleSearch(e.target.value));
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeSearch();
+  });
+
+  document.addEventListener('click', e => {
+    if (!wrap.contains(e.target) && wrap.classList.contains('open')) {
+      if (!input.value) closeSearch();
+    }
+  });
+}
+
+// ===== SORT =====
+export function handleSort(sort) {
+  state.sort = sort;
+  chrome.storage.sync.set({ savecraft_sort: sort });
+  renderGrid();
+}
+
+// ===== LIVE STORAGE UPDATES =====
+// Keeps the library in sync when items are added via right-click or popup
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'sync') return;
+  let changed = false;
+
+  for (const [key, { newValue, oldValue }] of Object.entries(changes)) {
+    if (key.startsWith('item_')) {
+      if (newValue === undefined) {
+        state.items = state.items.filter(i => `item_${i.id}` !== key);
+      } else if (!oldValue) {
+        if (!state.items.find(i => `item_${i.id}` === key)) state.items.unshift(newValue);
+      } else {
+        const idx = state.items.findIndex(i => `item_${i.id}` === key);
+        if (idx >= 0) state.items[idx] = newValue;
+        else state.items.unshift(newValue);
+      }
+      changed = true;
+    }
+    if (key.startsWith('folder_')) {
+      if (newValue === undefined) {
+        state.folders = state.folders.filter(f => `folder_${f.id}` !== key);
+      } else if (!state.folders.find(f => `folder_${f.id}` === key)) {
+        state.folders.push(newValue);
+      }
+      changed = true;
+    }
+    if (key.startsWith('author_')) {
+      if (newValue === undefined) {
+        state.authors = state.authors.filter(a => `author_${a.id}` !== key);
+      } else {
+        const idx = state.authors.findIndex(a => `author_${a.id}` === key);
+        if (idx >= 0) state.authors[idx] = newValue; else state.authors.push(newValue);
+      }
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    renderSidebar();
+    renderGrid();
+  }
+});
+
+// ===== THEME =====
+export function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const label = document.getElementById('theme-label');
+  if (label) label.textContent = theme === 'dark' ? 'Light mode' : 'Dark mode';
+}
+
+export function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  chrome.storage.sync.set({ savecraft_theme: next });
+}
+
+// ===== MOBILE SIDEBAR =====
+export function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebar-overlay').classList.add('open');
+}
+export function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+
+// ===== INIT =====
+async function init() {
+  await loadAll();
+  await initCuratedItems();
+
+  await loadLocalCache('savecraft_curated_img', 'curatedImgCache');
+  await loadLocalCache('savecraft_curated_album_meta', 'curatedAlbumMetaCache');
+  await loadLocalCache('savecraft_album_tracklist', 'albumTrackListCache');
+  await loadLocalCache('savecraft_artist_website_cache', 'artistWebsiteCache');
+  await loadLocalCache('savecraft_artist_bio_cache_v2', 'artistBioCache');
+  await loadLocalCache('savecraft_artist_video_cache', 'artistVideoCache');
+  await loadLocalCache('savecraft_item_wiki_cache', 'itemWikiCache');
+
+  chrome.storage.sync.get({ savecraft_theme: 'dark' }, data => {
+    applyTheme(data.savecraft_theme);
+  });
+
+  const settingsWrap = document.getElementById('settings-wrap');
+  const settingsDropdown = document.getElementById('settings-dropdown');
+  document.getElementById('btn-theme').addEventListener('click', e => {
+    e.stopPropagation();
+    settingsDropdown.hidden ? settingsDropdown.removeAttribute('hidden') : settingsDropdown.setAttribute('hidden', '');
+  });
+  document.getElementById('btn-toggle-theme').addEventListener('click', () => {
+    toggleTheme();
+    settingsDropdown.setAttribute('hidden', '');
+  });
+  document.getElementById('btn-profile').addEventListener('click', () => {
+    settingsDropdown.setAttribute('hidden', '');
+  });
+  document.addEventListener('click', e => {
+    if (!settingsWrap.contains(e.target)) settingsDropdown.setAttribute('hidden', '');
+  });
+
+  const sortSelect = document.getElementById('sort-select');
+  sortSelect.value = state.sort;
+
+  renderSidebar();
+  renderGrid();
+  initShare();
+  initSearch();
+
+  sortSelect.addEventListener('change', () => handleSort(sortSelect.value));
+
+  const menuBtn = document.getElementById('btn-sidebar-menu');
+  const myOptionsDropdown = document.getElementById('my-options-dropdown');
+  menuBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    myOptionsDropdown.classList.toggle('open');
+  });
+  myOptionsDropdown.querySelectorAll('.my-options-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const opt = btn.dataset.option;
+      if (opt === 'curated') {
+        state.sidebarMode = 'curated';
+        state.view = 'curated';
+        renderSidebar();
+        renderGrid();
+      } else if (opt === 'my-lists') {
+        state.sidebarMode = 'categories';
+        state.view = 'all';
+        renderSidebar();
+        renderGrid();
+      } else if (opt === 'sponsored') {
+        state.sidebarMode = 'sponsored';
+        state.view = 'sponsored';
+        renderSidebar();
+        renderGrid();
+      }
+      myOptionsDropdown.classList.remove('open');
+    });
+  });
+  document.addEventListener('click', e => {
+    if (!document.getElementById('sidebar-menu-wrap').contains(e.target)) {
+      myOptionsDropdown.classList.remove('open');
+    }
+  });
+
+  document.getElementById('btn-add').addEventListener('click', openAddModal);
+
+  document.getElementById('modal-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-overlay')) closeAddModal();
+  });
+
+  document.getElementById('btn-modal-cancel').addEventListener('click', closeAddModal);
+  document.getElementById('btn-modal-cancel-x').addEventListener('click', closeAddModal);
+  document.getElementById('btn-modal-save').addEventListener('click', handleSaveItem);
+
+  document.getElementById('platform-chips').addEventListener('change', updatePlatformSummary);
+
+  document.addEventListener('click', e => {
+    const dropdown = document.getElementById('platform-dropdown');
+    if (dropdown && dropdown.open && !dropdown.contains(e.target)) {
+      dropdown.open = false;
+    }
+  });
+
+  document.getElementById('btn-saves-list').addEventListener('click', e => {
+    e.stopPropagation();
+    const dd = document.getElementById('saves-list-dropdown');
+    document.getElementById('board-filter-dropdown')?.setAttribute('hidden', '');
+    document.getElementById('board-info-popup')?.setAttribute('hidden', '');
+    dd.toggleAttribute('hidden');
+  });
+
+  document.getElementById('btn-board-filter').addEventListener('click', e => {
+    e.stopPropagation();
+    const dd = document.getElementById('board-filter-dropdown');
+    document.getElementById('saves-list-dropdown')?.setAttribute('hidden', '');
+    document.getElementById('board-info-popup')?.setAttribute('hidden', '');
+    dd.toggleAttribute('hidden');
+  });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#board-filter-wrap')) {
+      document.getElementById('board-filter-dropdown')?.setAttribute('hidden', '');
+    }
+  });
+
+  document.getElementById('btn-board-info').addEventListener('click', e => {
+    e.stopPropagation();
+    document.getElementById('saves-list-dropdown')?.setAttribute('hidden', '');
+    const popup = document.getElementById('board-info-popup');
+    popup.toggleAttribute('hidden');
+  });
+  document.addEventListener('click', e => {
+    const popup = document.getElementById('board-info-popup');
+    if (!popup.hidden && !e.target.closest('#board-info-wrap')) {
+      popup.setAttribute('hidden', '');
+    }
+    if (!document.getElementById('saves-list-dropdown')?.hidden && !e.target.closest('#saves-list-wrap')) {
+      document.getElementById('saves-list-dropdown').setAttribute('hidden', '');
+    }
+  });
+
+  document.getElementById('detail-edit').addEventListener('click', () => {
+    const detailItem = getDetailItem();
+    if (!detailItem) return;
+    closeDetailModal();
+    const liveItem = state.items.find(i => i.id === detailItem.id);
+    openEditModal(liveItem || detailItem);
+  });
+  document.getElementById('detail-modal-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('detail-modal-overlay')) closeDetailModal();
+  });
+  document.getElementById('image-lightbox-overlay').addEventListener('click', closeImageLightbox);
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (document.getElementById('image-lightbox-overlay').classList.contains('open')) {
+      closeImageLightbox();
+    } else {
+      closeDetailModal();
+    }
+  });
+
+  document.getElementById('modal-overlay').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') handleSaveItem();
+    if (e.key === 'Escape') closeAddModal();
+  });
+
+  // Clear image URL on focus when editing so user can paste a new one; restore if left empty
+  const imageUrlInput = document.getElementById('input-image-url');
+  let _savedImageUrl = '';
+  imageUrlInput.addEventListener('focus', () => {
+    if (state.editingId) {
+      _savedImageUrl = imageUrlInput.value;
+      imageUrlInput.value = '';
+    }
+  });
+  imageUrlInput.addEventListener('blur', () => {
+    if (state.editingId && imageUrlInput.value.trim() === '') {
+      imageUrlInput.value = _savedImageUrl;
+    }
+  });
+
+  document.getElementById('btn-clear-image').addEventListener('click', () => {
+    imageUrlInput.value = '';
+    _savedImageUrl = '';
+    imageUrlInput.focus();
+  });
+
+  document.getElementById('modal-category').addEventListener('change', e => {
+    updatePlatformsSection(e.target.value);
+    hideItunesSuggestions();
+  });
+
+  const _debouncedItunesLookup = debounce(handleAuthorItunesLookup, 600);
+  document.getElementById('input-author').addEventListener('input', _debouncedItunesLookup);
+  document.getElementById('input-author').addEventListener('blur', () => {
+    setTimeout(hideItunesSuggestions, 150);
+  });
+
+  // Auto-set category to "Web Links" when a streaming URL is pasted
+  document.getElementById('input-url').addEventListener('input', e => {
+    if (state.editingId) return; // don't override on edit
+    const raw = e.target.value.trim();
+    let hostname = '';
+    try { hostname = new URL(raw).hostname.replace('www.', ''); } catch { return; }
+    const isStreaming = STREAMING_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
+    if (!isStreaming) return;
+
+    const catSelect = document.getElementById('modal-category');
+    if (catSelect.value) return; // user already picked a category, don't override
+
+    catSelect.value = 'Web Links';
+  });
+
+
+  document.getElementById('btn-hamburger').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.contains('open') ? closeSidebar() : openSidebar();
+  });
+
+  document.getElementById('sidebar-overlay').addEventListener('click', closeSidebar);
+
+  document.getElementById('sidebar').addEventListener('click', e => {
+    if (window.innerWidth <= 768 && e.target.closest('.sidebar-item')) {
+      closeSidebar();
+    }
+  });
+
+
+  document.getElementById('btn-fetch-albums-close').addEventListener('click', closeFetchAlbumsModal);
+  document.getElementById('btn-fetch-albums-cancel').addEventListener('click', closeFetchAlbumsModal);
+  document.getElementById('btn-fetch-albums-import').addEventListener('click', handleImportAlbums);
+  document.getElementById('fetch-albums-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('fetch-albums-overlay')) closeFetchAlbumsModal();
+  });
+  document.getElementById('fetch-albums-toggle').addEventListener('click', e => {
+    const btn = e.target.closest('.fetch-toggle-btn');
+    if (!btn) return;
+    const overlay = document.getElementById('fetch-albums-overlay');
+    document.querySelectorAll('.fetch-toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const allAlbums = JSON.parse(overlay.dataset.allAlbums || '[]');
+    const hideSingles = !document.getElementById('fetch-hide-singles').checked;
+    renderFetchAlbumsList(allAlbums, overlay.dataset.artist, btn.dataset.mode, hideSingles);
+  });
+  document.getElementById('fetch-hide-singles').addEventListener('change', () => {
+    const overlay = document.getElementById('fetch-albums-overlay');
+    const allAlbums = JSON.parse(overlay.dataset.allAlbums || '[]');
+    const mode = document.querySelector('.fetch-toggle-btn.active')?.dataset.mode || 'exact';
+    const hideSingles = !document.getElementById('fetch-hide-singles').checked;
+    renderFetchAlbumsList(allAlbums, overlay.dataset.artist, mode, hideSingles);
+  });
+
+  document.getElementById('fab-add').addEventListener('click', openAddModal);
+}
+
+document.addEventListener('DOMContentLoaded', init);

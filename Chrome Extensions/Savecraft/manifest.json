@@ -15,20 +15,20 @@
     ]
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "src/background/background.js"
   },
   "action": {
-    "default_popup": "popup/popup.html",
+    "default_popup": "src/popup/popup.html",
     "default_title": "SaveCraft"
   },
   "web_accessible_resources": [{
-    "resources": ["app/rs-logo.png", "app/steam-logo.png"],
+    "resources": ["images/logos/pngkey.com-rolling-stones-tongue-png-3135824.png", "images/logos/steam.png"],
     "matches": ["<all_urls>"]
   }],
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
-      "js": ["content.js"],
+      "js": ["src/content/content.js"],
       "run_at": "document_idle"
     }
   ]

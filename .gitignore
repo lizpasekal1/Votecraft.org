@@ -33,6 +33,9 @@ npm-debug.log*
 # WordPress config (contains DB password and secret keys)
 wordpress/
 
+# Chrome-generated extension runtime metadata (declarativeNetRequest ruleset indexing)
+_metadata/
+
 # Large raw data files (CSV dumps, SQL imports, DB exports) — not source code
 data/
 sql_output/

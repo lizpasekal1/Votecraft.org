@@ -4,7 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SaveCraft</title>
-  <link rel="stylesheet" href="app.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <link rel="stylesheet" href="css/cards.css">
+  <link rel="stylesheet" href="css/detailModal.css">
+  <link rel="stylesheet" href="css/addEditModal.css">
+  <link rel="stylesheet" href="css/fetchAlbumsModal.css">
+  <link rel="stylesheet" href="css/kanban.css">
+  <link rel="stylesheet" href="css/misc.css">
 </head>
 <body>
 
@@ -298,43 +305,6 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="author-modal-overlay">
-    <div class="modal author-modal">
-      <button class="modal-x-close" id="btn-author-modal-close" title="Close">&#x2715;</button>
-      <div class="modal-header">
-        <h2>Edit Profile</h2>
-      </div>
-      <div class="author-modal-readonly">
-        <span class="author-modal-label">Author</span>
-        <span id="author-modal-name" class="author-modal-value"></span>
-      </div>
-      <div class="author-modal-readonly">
-        <span class="author-modal-label">Category</span>
-        <span id="author-modal-category" class="author-modal-value"></span>
-      </div>
-      <div class="form-group">
-        <label>Photo URL</label>
-        <input type="url" id="author-input-image" placeholder="https://…" autocomplete="off" />
-      </div>
-      <div class="form-group">
-        <label>Bio</label>
-        <textarea id="author-input-bio" placeholder="Short biography…" rows="3" maxlength="1000"></textarea>
-      </div>
-      <div class="form-group">
-        <label>Website</label>
-        <div class="author-website-row">
-          <input type="url" id="author-input-website" placeholder="https://…" autocomplete="off" />
-          <button type="button" class="btn-find-website" id="btn-find-website" title="Look up official website">Find website</button>
-        </div>
-        <span class="author-website-status" id="author-website-status"></span>
-      </div>
-      <div class="modal-actions">
-        <button class="btn-cancel" id="btn-author-modal-cancel">Cancel</button>
-        <button class="btn-primary" id="btn-author-modal-save">Save</button>
-      </div>
-    </div>
-  </div>
-
   <div class="modal-overlay" id="fetch-albums-overlay">
     <div class="modal fetch-albums-modal">
       <button class="modal-x-close" id="btn-fetch-albums-close" title="Close">&#x2715;</button>
@@ -366,6 +336,6 @@
 
   <button class="fab-add" id="fab-add" title="Add item">+</button>
 
-  <script src="app.js"></script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

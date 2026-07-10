@@ -59,7 +59,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 // Handle messages from popup and app page
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.action === 'openLibrary') {
-    chrome.tabs.create({ url: chrome.runtime.getURL('app/index.html') });
+    chrome.tabs.create({ url: chrome.runtime.getURL('src/app/index.html') });
     sendResponse({ ok: true });
   }
 

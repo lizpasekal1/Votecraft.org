@@ -1,0 +1,624 @@
+/* ===== GRID AREA ===== */
+.grid-area {
+  flex: 1;
+  padding: 24px 20px;
+  overflow-y: auto;
+  align-self: stretch;
+}
+
+.grid-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.grid-header .sort-select {
+  margin-left: auto;
+}
+
+.grid-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.nyt-logo-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 4px;
+}
+
+.nyt-logo-wrap::before {
+  content: '';
+  display: inline-block;
+  width: 1px;
+  height: 18px;
+  background: rgba(255,255,255,0.25);
+}
+
+.nyt-logo-wrap svg {
+  height: 17px;
+  width: auto;
+  fill: rgba(255,255,255,0.7);
+  display: block;
+}
+
+.rs-logo-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 4px;
+}
+
+.rs-logo-wrap::before {
+  content: '';
+  display: inline-block;
+  width: 1px;
+  height: 18px;
+  background: rgba(255,255,255,0.25);
+}
+
+.rs-logo-img {
+  height: 22px;
+  width: auto;
+  display: block;
+  opacity: 0.7;
+  filter: brightness(0) invert(1);
+}
+
+.steam-logo-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 4px;
+}
+
+.steam-logo-wrap::before {
+  content: '';
+  display: inline-block;
+  width: 1px;
+  height: 18px;
+  background: rgba(255,255,255,0.25);
+}
+
+.steam-logo-img {
+  height: 45px;
+  width: auto;
+  display: block;
+  opacity: 0.7;
+  filter: brightness(0) invert(1);
+  /* Taller than the title text/other logos — cancel the extra height it would otherwise add
+     to .grid-title's row so this page's header isn't taller than every other category page. */
+  margin: -10px 0;
+}
+
+.nyt-logo-wrap,
+.rs-logo-wrap,
+.steam-logo-wrap {
+  position: relative;
+  cursor: default;
+}
+
+.nyt-logo-wrap::after,
+.rs-logo-wrap::after,
+.steam-logo-wrap::after {
+  content: 'Top 100 list populated using data from this organization.';
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  width: 220px;
+  padding: 10px 12px;
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  line-height: 1.4;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-50%) translateY(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+  pointer-events: none;
+  z-index: 20;
+  text-align: left;
+}
+
+.nyt-logo-wrap:hover::after,
+.rs-logo-wrap:hover::after,
+.steam-logo-wrap:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ===== CARDS GRID ===== */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+/* ===== CARD ===== */
+.card {
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.1s;
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  height: 110px;
+}
+
+.card:hover {
+  box-shadow: 0 4px 20px var(--shadow-card);
+  transform: translateY(-1px);
+}
+
+/* Left thumbnail */
+.card-image {
+  width: 100px;
+  height: 100%;
+  flex-shrink: 0;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.card-placeholder {
+  width: 100px;
+  height: 100%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  letter-spacing: -0.02em;
+}
+
+/* Placeholder gradients */
+.placeholder-Music-Album { background: linear-gradient(135deg, #EC4899 0%, #F9A8D4 100%); }
+.placeholder-Musician    { background: linear-gradient(135deg, #EC4899 0%, #F9A8D4 100%); }
+.placeholder-Show        { background: linear-gradient(135deg, #8B5CF6 0%, #C4B5FD 100%); }
+.placeholder-Book        { background: linear-gradient(135deg, #10B981 0%, #6EE7B7 100%); }
+.placeholder-Movie       { background: linear-gradient(135deg, #3B82F6 0%, #93C5FD 100%); }
+.placeholder-Game        { background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%); }
+.placeholder-Visual-Art  { background: linear-gradient(135deg, #F97316 0%, #FDBA74 100%); }
+.placeholder-Memes       { background: linear-gradient(135deg, #EF4444 0%, #FCA5A5 100%); }
+/* Legacy names kept for any un-migrated items */
+.placeholder-Music  { background: linear-gradient(135deg, #EC4899 0%, #F9A8D4 100%); }
+.placeholder-Shows  { background: linear-gradient(135deg, #8B5CF6 0%, #C4B5FD 100%); }
+.placeholder-Books  { background: linear-gradient(135deg, #10B981 0%, #6EE7B7 100%); }
+.placeholder-Movies { background: linear-gradient(135deg, #3B82F6 0%, #93C5FD 100%); }
+.placeholder-Games  { background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%); }
+
+/* Right content */
+.card-body {
+  flex: 1;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 3px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.card-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+}
+
+.card-title--album {
+  font-size: 16px;
+}
+
+.card-album-year {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.card-author {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+}
+
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+
+.card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.card-badge svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+/* Badge colors */
+.badge-Music-Album  { background: #FCE7F3; color: #BE185D; }
+.badge-Musician     { background: #FCE7F3; color: #BE185D; }
+.badge-Show         { background: #EDE9FE; color: #6D28D9; }
+.badge-Book         { background: #D1FAE5; color: #065F46; }
+.badge-Movie        { background: #DBEAFE; color: #1E40AF; }
+.badge-Game         { background: #FEF3C7; color: #92400E; }
+.badge-Visual-Art   { background: #FFEDD5; color: #9A3412; }
+.badge-Memes        { background: #FEE2E2; color: #991B1B; }
+/* Legacy names kept for any un-migrated items */
+.badge-Music  { background: #FCE7F3; color: #BE185D; }
+.badge-Shows  { background: #EDE9FE; color: #6D28D9; }
+.badge-Books  { background: #D1FAE5; color: #065F46; }
+.badge-Movies { background: #DBEAFE; color: #1E40AF; }
+.badge-Games  { background: #FEF3C7; color: #92400E; }
+.badge-Memes  { background: #FEE2E2; color: #991B1B; }
+
+[data-theme="dark"] .badge-Music-Album  { background: #4A1830; color: #F9A8D4; }
+[data-theme="dark"] .badge-Musician     { background: #4A1830; color: #F9A8D4; }
+[data-theme="dark"] .badge-Show         { background: #2E1A5E; color: #C4B5FD; }
+[data-theme="dark"] .badge-Book         { background: #064E3B; color: #6EE7B7; }
+[data-theme="dark"] .badge-Movie        { background: #1E3A5F; color: #93C5FD; }
+[data-theme="dark"] .badge-Game         { background: #4A2C00; color: #FCD34D; }
+[data-theme="dark"] .badge-Visual-Art   { background: #4A1A00; color: #FDBA74; }
+[data-theme="dark"] .badge-Memes        { background: #4A1010; color: #FCA5A5; }
+/* Legacy dark names */
+[data-theme="dark"] .badge-Music  { background: #4A1830; color: #F9A8D4; }
+[data-theme="dark"] .badge-Shows  { background: #2E1A5E; color: #C4B5FD; }
+[data-theme="dark"] .badge-Books  { background: #064E3B; color: #6EE7B7; }
+[data-theme="dark"] .badge-Movies { background: #1E3A5F; color: #93C5FD; }
+[data-theme="dark"] .badge-Games  { background: #4A2C00; color: #FCD34D; }
+[data-theme="dark"] .badge-Memes  { background: #4A1010; color: #FCA5A5; }
+
+.card-folder-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* Hover actions — right side of card */
+.card-actions {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.card:hover .card-actions {
+  display: flex;
+}
+
+.card-action-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: var(--hover-bg);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: #9AA0A6;
+  transition: background 0.1s, color 0.1s;
+}
+
+.card-action-btn:hover {
+  background: var(--border);
+  color: var(--text-primary);
+}
+
+/* ===== EMPTY STATE ===== */
+.cards-grid.landing-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 160px);
+  padding-bottom: 20vh;
+}
+
+.cards-grid.landing-state .empty-state {
+  background: #5B5BEF;
+  border-radius: 24px;
+  padding: 48px 64px;
+}
+
+.cards-grid.landing-state .empty-state--sponsored {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.cards-grid.landing-state .empty-state h3 {
+  color: #fff;
+}
+
+.cards-grid.landing-state .empty-state--sponsored h3 {
+  color: #FFD700;
+}
+
+.cards-grid.landing-state .empty-state p {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Sponsored mobile tab */
+.sidebar-mode-tab--sponsored.active {
+  background: #FFD700;
+  color: #1a1a1a;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  text-align: center;
+  padding: 80px 24px;
+  color: var(--text-secondary);
+}
+
+.empty-state-icon {
+  font-size: 56px;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.empty-state p {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Share modal overrides */
+
+/* ===== AUTHOR PAGES ===== */
+
+.author-page-grid {
+  display: block;
+}
+
+.author-page-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.author-page-photo-wrap {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.author-page-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.author-page-photo-placeholder {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 38px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+
+.author-page-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.author-page-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.author-page-name-btn {
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.author-page-name-btn:hover {
+  color: var(--primary);
+}
+
+.author-page-website {
+  font-size: 12px;
+  color: var(--primary);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.author-page-website:hover {
+  text-decoration: underline;
+}
+
+.author-works-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+}
+
+.author-works-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.author-no-works {
+  color: var(--text-muted);
+  font-size: 13px;
+  grid-column: 1 / -1;
+}
+
+/* Non-clickable author name on cards (Music Albums section) */
+.card-author-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: left;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+}
+
+/* Clickable author name on cards */
+.card-author-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+  transition: color 0.15s;
+}
+.card-author-link:hover {
+  color: var(--primary);
+}
+
+/* Musician's own card title reuses .card-author-link for its "make text also a link"
+   treatment, but should look like a normal card title (matching Movies etc.), not the
+   smaller byline style .card-author-link otherwise uses for the artist name on Album cards. */
+.card-author-link.card-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  -webkit-line-clamp: 1;
+}
+.card-author-link.card-title:hover {
+  color: var(--primary);
+}
+
+/* Clickable author name in detail modal */
+.detail-author-link {
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.detail-title-arrow {
+  width: 16px;
+  height: 16px;
+  margin-left: 2px;
+  flex-shrink: 0;
+}
+.detail-author-link:hover {
+  color: var(--primary);
+}
+
+/* Back button in grid title */
+.author-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.author-back-btn:hover {
+  color: var(--primary);
+}
+
+.modal-x-close:hover {
+  color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+  .author-works-grid {
+    grid-template-columns: 1fr;
+  }
+  .author-page-header {
+    flex-wrap: wrap;
+  }
+}
+
