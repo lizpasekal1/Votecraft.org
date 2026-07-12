@@ -5,7 +5,7 @@ import { escapeHtml, catClass, badgeLabel } from './utils.js';
 import { persistViewState, persistItem } from './storage.js';
 import { openDetailModal } from './detailModal.js';
 
-const KANBAN_COLUMNS = [
+export const KANBAN_COLUMNS = [
   { key: 'in-queue',     label: 'QUEUE' },
   { key: 'in-progress',  label: 'IN PROGRESS' },
   { key: 'my-review',    label: 'MY NOTES' },
@@ -14,7 +14,7 @@ const KANBAN_COLUMNS = [
 
 let _demoStatus = 'in-queue';
 let _kanbanSortListenerAdded = false;
-function KANBAN_DEMO() {
+export function KANBAN_DEMO() {
   return {
     id: '__demo__',
     title: 'Drag to progress',

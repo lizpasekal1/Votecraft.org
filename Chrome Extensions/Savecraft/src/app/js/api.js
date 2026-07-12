@@ -52,6 +52,136 @@ export async function fetchAlbumsFromItunes(artistName) {
     }));
 }
 
+// ===== STEP 1 SEARCH (Add-modal category typeahead) =====
+// Each function takes a raw search term and returns a normalized result array:
+// { title, author, imageUrl, imageUrlLarge, url, year, meta }. No caching here — unlike the
+// ensure*WikipediaInfo functions below, these are live typeahead queries, not enrichment
+// lookups, so there's nothing worth persisting.
+
+export async function searchMusicians(term) {
+  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=musicArtist&limit=8`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`iTunes error: ${resp.status}`);
+  const data = await resp.json();
+  return (data.results || []).map(r => ({
+    title: r.artistName,
+    author: null,
+    imageUrl: null, // no artwork on this entity — photo arrives later via ensureArtistWikipediaInfo
+    imageUrlLarge: null,
+    url: r.artistLinkUrl || null,
+    year: null,
+    meta: r.primaryGenreName || null,
+  }));
+}
+
+// Generalizes the fetch logic that used to live only in handleAuthorItunesLookup — same
+// endpoint/params, but no longer filtered to "artist name starts with the typed word" (that
+// heuristic only made sense when the search box was specifically an Author field).
+export async function searchMusicAlbums(term) {
+  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=album&media=music&limit=15`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`iTunes error: ${resp.status}`);
+  const data = await resp.json();
+  return data.results
+    .filter(r => r.collectionType)
+    .filter(r => !/\s[-–]\s*(single|ep)\s*$/i.test(r.collectionName))
+    .slice(0, 8)
+    .map(r => ({
+      title: r.collectionName,
+      author: r.artistName,
+      imageUrl: r.artworkUrl100?.replace('100x100bb', '600x600bb') || null,
+      imageUrlLarge: r.artworkUrl100?.replace('100x100bb', '600x600bb') || null,
+      url: r.collectionViewUrl || null,
+      year: r.releaseDate?.slice(0, 4) || null,
+      meta: [r.artistName, r.releaseDate?.slice(0, 4)].filter(Boolean).join(' · ') || null,
+    }));
+}
+
+// Each iTunes tvSeason result is one season; dedupe by artistId (stable per-show) and keep
+// the first (most relevant) season per show, presenting the show itself as the result.
+export async function searchShows(term) {
+  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=tvSeason&media=tvShow&country=US&limit=10`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`iTunes error: ${resp.status}`);
+  const data = await resp.json();
+  const seen = new Set();
+  const shows = [];
+  for (const r of (data.results || [])) {
+    if (!r.artistId || seen.has(r.artistId)) continue;
+    seen.add(r.artistId);
+    shows.push({
+      title: r.artistName,
+      author: null,
+      imageUrl: r.artworkUrl100?.replace('100x100bb', '600x600bb') || null,
+      imageUrlLarge: r.artworkUrl100?.replace('100x100bb', '600x600bb') || null,
+      url: r.artistViewUrl || null,
+      year: r.releaseDate?.slice(0, 4) || null,
+      meta: r.releaseDate ? r.releaseDate.slice(0, 4) : null,
+    });
+  }
+  return shows.slice(0, 8);
+}
+
+export async function searchBooks(term) {
+  const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(term)}&limit=8&fields=title,author_name,first_publish_year,cover_i,key`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Open Library error: ${resp.status}`);
+  const data = await resp.json();
+  return (data.docs || []).map(d => ({
+    title: d.title,
+    author: d.author_name?.[0] || null,
+    imageUrl: d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg` : null,
+    imageUrlLarge: d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-L.jpg` : null,
+    url: d.key ? `https://openlibrary.org${d.key}` : null,
+    year: d.first_publish_year ? String(d.first_publish_year) : null,
+    meta: [d.author_name?.[0], d.first_publish_year].filter(Boolean).join(' · ') || null,
+  }));
+}
+
+export async function searchGames(term) {
+  const url = `https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(term)}&l=english&cc=US`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Steam error: ${resp.status}`);
+  const data = await resp.json();
+  return (data.items || []).slice(0, 8).map(it => ({
+    title: it.name,
+    author: null,
+    imageUrl: it.tiny_image || `https://cdn.akamai.steamstatic.com/steam/apps/${it.id}/header.jpg`,
+    imageUrlLarge: `https://cdn.akamai.steamstatic.com/steam/apps/${it.id}/library_600x900.jpg`,
+    url: `https://store.steampowered.com/app/${it.id}/`,
+    year: null,
+    meta: null,
+  }));
+}
+
+// Movie typeahead via Wikipedia's generator=search (richer than plain opensearch — returns a
+// thumbnail + one-line description per result in a single request). Distinct from
+// fetchItemWikipediaSummary/ensureItemWikipediaInfo below, which fetch ONE page's full summary
+// for enrichment after a title is already chosen, not a multi-result live search. iTunes has no
+// working movie search anymore (Apple sunset movie purchases from this API — verified live,
+// zero results for well-known titles across every entity/media combination), so Wikipedia is
+// the only viable free source here.
+export async function searchMoviesWikipedia(term) {
+  const url = `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(term + ' film')}&gsrlimit=6&prop=pageimages|description&pithumbsize=100&format=json&origin=*`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Wikipedia error: ${resp.status}`);
+  const data = await resp.json();
+  const pages = Object.values(data.query?.pages || {});
+  // query.pages is an object keyed by pageid, not an array — order isn't guaranteed to match
+  // search relevance. MediaWiki's generator=search response includes an `index` field per page
+  // reflecting rank; sort by it defensively (falls back to insertion order if ever absent).
+  pages.sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
+  return pages.map(p => ({
+    title: p.title,
+    author: null,
+    imageUrl: p.thumbnail?.source || null,
+    imageUrlLarge: p.thumbnail?.source || null,
+    url: `https://en.wikipedia.org/wiki/${encodeURIComponent(p.title.replace(/ /g, '_'))}`,
+    year: null,
+    meta: p.description || null,
+  }));
+}
+
 async function fetchWikipediaSummary(title) {
   try {
     const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}?redirect=true`;

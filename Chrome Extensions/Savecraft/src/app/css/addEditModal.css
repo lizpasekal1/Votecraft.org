@@ -1,4 +1,25 @@
 /* ===== ADD / EDIT ITEM MODAL ===== */
+.modal-back-icon {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  z-index: 10;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+.modal-back-icon:hover {
+  color: var(--text-primary);
+  background: var(--hover-bg);
+}
+
 .platform-dropdown {
   position: relative;
 }
@@ -199,6 +220,17 @@
   outline: none;
 }
 .title-author-input--author { flex: 1; }
+
+/* Categories with no meaningful "Author" (Musician, Movie, Show, Game, Visual Art) collapse
+   to a single field instead of showing a permanently-empty Author box. */
+.title-author-row--single #input-author,
+.title-author-row--single .title-author-sep {
+  display: none;
+}
+.title-author-row--single #input-title {
+  flex: 1;
+}
+
 .title-author-sep {
   flex-shrink: 0;
   color: var(--text-muted);
@@ -227,18 +259,20 @@
   font-size: 10px;
 }
 
-.form-label-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 7px;
+.input-with-clear {
+  position: relative;
 }
 
-.form-label-row label {
-  margin-bottom: 0;
+.input-with-clear input {
+  width: 100%;
+  padding-right: 28px !important;
 }
 
 .btn-clear-image {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
   background: none;
   border: none;
   cursor: pointer;
@@ -305,6 +339,13 @@
   flex-shrink: 0;
 }
 
+/* This modal only ever has one visible action button (Save/Update) now that Cancel is gone —
+   center it instead of right-aligning, unlike the shared .modal-actions default (still used
+   as-is by the Fetch Albums modal, which has two buttons). */
+#modal-overlay .modal-actions {
+  justify-content: center;
+}
+
 .btn-cancel {
   padding: 9px 20px;
   border: 1.5px solid var(--border);
@@ -342,18 +383,74 @@
 }
 
 
-/* ===== ITUNES AUTOSUGGEST ===== */
-.itunes-suggestions {
+/* ===== ADD-MODAL WIZARD: STEP 1 (category tiles + search) ===== */
+.step1-category-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.step1-category-tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.step1-category-tile:hover {
+  border-color: var(--primary);
+  background: var(--hover-bg);
+}
+
+.step1-category-tile.selected {
+  border-color: var(--primary);
+  background: var(--hover-bg);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.step1-category-tile-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.step1-search-wrap {
+  position: relative;
+  margin-bottom: 0;
+}
+
+.step1-search-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  color: var(--text-primary);
+  background: var(--surface);
+  transition: border-color 0.15s;
+}
+.step1-search-input:focus { border-color: var(--primary); }
+
+/* Generalized results dropdown — same visual language as the old iTunes-only suggestions list */
+.step1-search-results {
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
-  max-height: 220px;
+  max-height: 260px;
   overflow-y: auto;
   margin-top: 4px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   z-index: 10;
 }
-.itunes-suggestion-row {
+.step1-result-row {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -361,26 +458,24 @@
   cursor: pointer;
   transition: background 0.1s;
 }
-.itunes-suggestion-row:hover {
-  background: var(--hover-bg);
-}
-.itunes-suggestion-art {
+.step1-result-row:hover { background: var(--hover-bg); }
+.step1-result-art {
   width: 38px;
   height: 38px;
   border-radius: 4px;
   object-fit: cover;
   flex-shrink: 0;
 }
-.itunes-suggestion-art-placeholder {
+.step1-result-art-placeholder {
   background: var(--hover-bg);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
-  color: var(--text-secondary);
+  flex-shrink: 0;
 }
-.itunes-suggestion-info { flex: 1; min-width: 0; }
-.itunes-suggestion-title {
+.step1-result-art-placeholder svg { width: 18px; height: 18px; }
+.step1-result-info { flex: 1; min-width: 0; }
+.step1-result-title {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
@@ -388,9 +483,38 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.itunes-suggestion-meta {
+.step1-result-meta {
   font-size: 11px;
   color: var(--text-secondary);
   margin-top: 1px;
+}
+
+.step1-manual-add {
+  display: block;
+  margin-top: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+}
+.step1-manual-add:hover { color: var(--primary); }
+.step1-manual-add span { color: var(--primary); font-weight: 600; }
+
+/* ===== STEP 2 image preview ===== */
+.step2-image-preview-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+.step2-image-preview {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--hover-bg);
 }
 

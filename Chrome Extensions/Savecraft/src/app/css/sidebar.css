@@ -15,6 +15,60 @@
   padding: 12px 0;
   overflow-y: auto;
   align-self: stretch;
+  transition: width 0.2s ease;
+}
+
+/* ===== SIDEBAR COLLAPSE (desktop-only rail — the mobile drawer has its own full-width
+   overlay UX and isn't affected by this) ===== */
+.btn-sidebar-collapse {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-sidebar-collapse:hover { background: var(--hover-bg); color: var(--text-primary); }
+
+.header-sidebar {
+  transition: width 0.2s ease;
+}
+.header-sidebar.sidebar-collapsed {
+  width: 64px;
+  padding: 0 8px;
+}
+.header-sidebar.sidebar-collapsed .sidebar-header-controls {
+  justify-content: center;
+}
+.header-sidebar.sidebar-collapsed .sidebar-header-title,
+.header-sidebar.sidebar-collapsed .sidebar-menu-wrap {
+  display: none;
+}
+
+.sidebar.sidebar-collapsed {
+  width: 64px;
+}
+.sidebar.sidebar-collapsed .sidebar-label-text,
+.sidebar.sidebar-collapsed .sidebar-right,
+.sidebar.sidebar-collapsed .sidebar-subfolder,
+.sidebar.sidebar-collapsed .sidebar-add-folder,
+.sidebar.sidebar-collapsed .sidebar-divider {
+  display: none;
+}
+.sidebar.sidebar-collapsed .sidebar-item {
+  justify-content: center;
+  padding: 10px 0;
+  margin-right: 0;
+  border-radius: 12px;
+}
+.sidebar.sidebar-collapsed .sidebar-label {
+  flex: none;
+  justify-content: center;
 }
 
 .sidebar-item {

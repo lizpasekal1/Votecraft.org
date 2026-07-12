@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="css/addEditModal.css">
   <link rel="stylesheet" href="css/fetchAlbumsModal.css">
   <link rel="stylesheet" href="css/kanban.css">
+  <link rel="stylesheet" href="css/dashboard.css">
   <link rel="stylesheet" href="css/misc.css">
 </head>
 <body>
@@ -18,12 +19,16 @@
   <header class="header">
     <div class="header-sidebar" id="header-sidebar">
       <div class="sidebar-header-controls">
+        <button class="btn-sidebar-collapse" id="btn-sidebar-collapse" title="Collapse sidebar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+        </button>
         <span class="sidebar-header-title" id="sidebar-header-title">My Saves</span>
         <div class="sidebar-menu-wrap" id="sidebar-menu-wrap" style="margin-left:auto;">
           <button class="btn-sidebar-menu" id="btn-sidebar-menu" title="Menu">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
           </button>
           <div class="my-options-dropdown" id="my-options-dropdown" style="left:auto;right:0;">
+            <button class="my-options-item" data-option="home">🏠 Home</button>
             <button class="my-options-item" data-option="my-lists">My Saves</button>
             <button class="my-options-item" data-option="shared">Shared Saves</button>
             <button class="my-options-item" data-option="curated">Curated SaveCraft</button>
@@ -179,10 +184,13 @@
 
   <div class="modal-overlay" id="modal-overlay">
     <div class="modal" style="position:relative">
+      <button class="modal-back-icon" id="btn-modal-back" title="Back" style="display:none">
+        <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor"><path d="M400-80 0-480l400-400 56 56-344 344 344 344-56 56Z"/></svg>
+      </button>
       <button class="modal-x-close" id="btn-modal-cancel-x" title="Close">&#x2715;</button>
       <div class="modal-header">
-        <h2>Add to SaveCraft</h2>
-        <select id="modal-category" class="modal-category-select">
+        <h2>What are you adding to?</h2>
+        <select id="modal-category" class="modal-category-select" style="display:none">
           <option value="">Category...</option>
           <option value="Book">Book</option>
           <option value="Game">Game</option>
@@ -194,7 +202,29 @@
         </select>
       </div>
 
-      <div class="modal-body">
+      <!-- ===== SCREEN A: category tiles (Add flow only) ===== -->
+      <div class="modal-body modal-step1" id="modal-step1">
+        <div class="step1-category-grid" id="step1-category-grid"></div>
+      </div>
+
+      <!-- ===== SCREEN B: live search for the selected category (Add flow only) ===== -->
+      <div class="modal-body modal-step-search" id="modal-step-search" style="display:none">
+        <div class="form-group step1-search-wrap" id="step1-search-wrap">
+          <input type="text" id="step1-search-input" class="step1-search-input" placeholder="" autocomplete="off" />
+          <div id="step1-search-results" class="step1-search-results" style="display:none"></div>
+          <button type="button" class="step1-manual-add" id="step1-manual-add" style="display:none">
+            Can't find it? Add "<span id="step1-manual-add-text"></span>" manually
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== SCREEN C (Add) / single page (Edit): review + refine ===== -->
+      <div class="modal-body modal-step2" id="modal-step2" style="display:none">
+
+      <div class="step2-image-preview-wrap" id="step2-image-preview-wrap" style="display:none">
+        <img id="step2-image-preview" class="step2-image-preview" alt=""
+             onerror="this.closest('.step2-image-preview-wrap').style.display='none'">
+      </div>
 
       <div class="form-group">
         <div class="title-author-row">
@@ -202,7 +232,6 @@
           <span class="title-author-sep">|</span>
           <input type="text" id="input-title" placeholder="Title" autocomplete="off" class="title-author-input title-author-input--author" />
         </div>
-        <div id="itunes-suggestions" class="itunes-suggestions" style="display:none"></div>
       </div>
 
       <div class="form-group">
@@ -228,13 +257,13 @@
 
       <div class="form-row form-row--url-pair">
         <div class="form-group">
-          <div class="form-label-row">
-            <label><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M460-360q69 0 120-45t60-113l-320 90q26 32 62 50t78 18ZM294-510l106-30q4-28-14-49t-46-21q-25 0-42.5 17.5T280-550q0 11 4 21t10 19Zm240-70 106-30q5-28-13.5-49T580-680q-25 0-42.5 17.5T520-620q0 11 4 21t10 19Zm106 460H200q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v440L640-120Zm-40-80v-80q0-33 23.5-56.5T680-360h80v-400H200v560h400Zm0 0Zm-400 0v-560 560Z"/></svg>Image URL</label>
+          <label><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M460-360q69 0 120-45t60-113l-320 90q26 32 62 50t78 18ZM294-510l106-30q4-28-14-49t-46-21q-25 0-42.5 17.5T280-550q0 11 4 21t10 19Zm240-70 106-30q5-28-13.5-49T580-680q-25 0-42.5 17.5T520-620q0 11 4 21t10 19Zm106 460H200q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v440L640-120Zm-40-80v-80q0-33 23.5-56.5T680-360h80v-400H200v560h400Zm0 0Zm-400 0v-560 560Z"/></svg>Image URL</label>
+          <div class="input-with-clear">
+            <input type="url" id="input-image-url" placeholder="Image override…" autocomplete="off" />
             <button type="button" class="btn-clear-image" id="btn-clear-image" title="Clear image URL">
               <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg>
             </button>
           </div>
-          <input type="url" id="input-image-url" placeholder="Image override…" autocomplete="off" />
         </div>
         <div class="form-group">
           <label><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M318-120q-82 0-140-58t-58-140q0-40 15-76t43-64l134-133 56 56-134 134q-17 17-25.5 38.5T200-318q0 49 34.5 83.5T318-200q23 0 45-8.5t39-25.5l133-134 57 57-134 133q-28 28-64 43t-76 15Zm79-220-57-57 223-223 57 57-223 223Zm251-28-56-57 134-133q17-17 25-38t8-44q0-50-34-85t-84-35q-23 0-44.5 8.5T558-726L425-592l-57-56 134-134q28-28 64-43t76-15q82 0 139.5 58T839-641q0 39-14.5 75T782-502L648-368Z"/></svg>URL</label>
@@ -242,11 +271,10 @@
         </div>
       </div>
 
-      </div><!-- /.modal-body -->
+      </div><!-- /modal-step2 -->
 
       <div class="modal-actions">
-        <button class="btn-cancel" id="btn-modal-cancel">Cancel</button>
-        <button class="btn-primary" id="btn-modal-save">Save</button>
+        <button class="btn-primary" id="btn-modal-save" style="display:none">Save</button>
       </div>
     </div>
   </div>

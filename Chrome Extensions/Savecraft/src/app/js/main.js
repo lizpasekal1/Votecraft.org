@@ -7,7 +7,8 @@ import { renderSidebar, renderGrid } from './render.js';
 import { initShare } from './share.js';
 import {
   openAddModal, closeAddModal, handleSaveItem, updatePlatformSummary, updatePlatformsSection,
-  hideItunesSuggestions, handleAuthorItunesLookup, openEditModal,
+  openEditModal, selectStep1Category, handleStep1Search, hideSearchResults, handleStep1ManualAdd,
+  handleModalBack, refreshStep2ImagePreviewFromManualInput, updateTitleAuthorLayout,
 } from './addEditModal.js';
 import { closeDetailModal, closeImageLightbox, getDetailItem } from './detailModal.js';
 import { closeFetchAlbumsModal, handleImportAlbums, renderFetchAlbumsList } from './fetchAlbumsModal.js';
@@ -120,6 +121,18 @@ export function toggleTheme() {
   chrome.storage.sync.set({ savecraft_theme: next });
 }
 
+// ===== SIDEBAR COLLAPSE (desktop rail — mobile drawer is unaffected) =====
+function applySidebarCollapsed(collapsed) {
+  document.getElementById('header-sidebar').classList.toggle('sidebar-collapsed', collapsed);
+  document.getElementById('sidebar').classList.toggle('sidebar-collapsed', collapsed);
+}
+
+function toggleSidebarCollapsed() {
+  const collapsed = !document.getElementById('sidebar').classList.contains('sidebar-collapsed');
+  applySidebarCollapsed(collapsed);
+  chrome.storage.sync.set({ savecraft_sidebar_collapsed: collapsed });
+}
+
 // ===== MOBILE SIDEBAR =====
 export function openSidebar() {
   document.getElementById('sidebar').classList.add('open');
@@ -147,6 +160,11 @@ async function init() {
     applyTheme(data.savecraft_theme);
   });
 
+  chrome.storage.sync.get({ savecraft_sidebar_collapsed: false }, data => {
+    applySidebarCollapsed(data.savecraft_sidebar_collapsed);
+  });
+  document.getElementById('btn-sidebar-collapse').addEventListener('click', toggleSidebarCollapsed);
+
   const settingsWrap = document.getElementById('settings-wrap');
   const settingsDropdown = document.getElementById('settings-dropdown');
   document.getElementById('btn-theme').addEventListener('click', e => {
@@ -167,6 +185,15 @@ async function init() {
   const sortSelect = document.getElementById('sort-select');
   sortSelect.value = state.sort;
 
+  // SaveCraft's Dashboard is the persistent home page — every fresh load must land here first,
+  // regardless of whatever the user was last browsing. loadAll() above already restored
+  // state.view/sidebarMode from chrome.storage.sync as usual; we don't skip that restore, we
+  // just override it in memory for this one very-first render. This forced value is never
+  // written back to storage, so the real "last real view" stays intact in storage until the
+  // user actually navigates somewhere.
+  state.view = 'dashboard';
+  state.sidebarMode = 'home';
+
   renderSidebar();
   renderGrid();
   initShare();
@@ -183,7 +210,12 @@ async function init() {
   myOptionsDropdown.querySelectorAll('.my-options-item').forEach(btn => {
     btn.addEventListener('click', () => {
       const opt = btn.dataset.option;
-      if (opt === 'curated') {
+      if (opt === 'home') {
+        state.sidebarMode = 'home';
+        state.view = 'dashboard';
+        renderSidebar();
+        renderGrid();
+      } else if (opt === 'curated') {
         state.sidebarMode = 'curated';
         state.view = 'curated';
         renderSidebar();
@@ -214,7 +246,6 @@ async function init() {
     if (e.target === document.getElementById('modal-overlay')) closeAddModal();
   });
 
-  document.getElementById('btn-modal-cancel').addEventListener('click', closeAddModal);
   document.getElementById('btn-modal-cancel-x').addEventListener('click', closeAddModal);
   document.getElementById('btn-modal-save').addEventListener('click', handleSaveItem);
 
@@ -311,15 +342,27 @@ async function init() {
   });
 
   document.getElementById('modal-category').addEventListener('change', e => {
+    state.modalCategory = e.target.value;
     updatePlatformsSection(e.target.value);
-    hideItunesSuggestions();
+    updateTitleAuthorLayout(e.target.value);
   });
 
-  const _debouncedItunesLookup = debounce(handleAuthorItunesLookup, 600);
-  document.getElementById('input-author').addEventListener('input', _debouncedItunesLookup);
-  document.getElementById('input-author').addEventListener('blur', () => {
-    setTimeout(hideItunesSuggestions, 150);
+  document.getElementById('step1-category-grid').addEventListener('click', e => {
+    const tile = e.target.closest('.step1-category-tile');
+    if (tile) selectStep1Category(tile.dataset.category);
   });
+
+  const _debouncedStep1Search = debounce(handleStep1Search, 500);
+  document.getElementById('step1-search-input').addEventListener('input', _debouncedStep1Search);
+  document.getElementById('step1-search-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); handleStep1ManualAdd(); }
+  });
+  document.getElementById('step1-search-input').addEventListener('blur', () => {
+    setTimeout(hideSearchResults, 150);
+  });
+  document.getElementById('step1-manual-add').addEventListener('click', handleStep1ManualAdd);
+  document.getElementById('btn-modal-back').addEventListener('click', handleModalBack);
+  document.getElementById('input-image-url').addEventListener('input', refreshStep2ImagePreviewFromManualInput);
 
   // Auto-set category to "Web Links" when a streaming URL is pasted
   document.getElementById('input-url').addEventListener('input', e => {

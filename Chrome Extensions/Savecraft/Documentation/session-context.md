@@ -11,8 +11,8 @@ This file helps Claude (or any AI assistant) quickly regain context on the SaveC
 | Chrome extension source | `/Users/lizpasekal/Documents/Votecraft.org/Chrome Extensions/Savecraft/` |
 | Manifest | `…/Savecraft/manifest.json` (must stay at extension root — Chrome requirement) |
 | Main library page | `…/Savecraft/src/app/index.html` |
-| Library logic | `…/Savecraft/src/app/js/*.js` — 12 ES modules (`state.js`, `storage.js`, `utils.js`, `api.js`, `authors.js`, `render.js`, `kanban.js`, `detailModal.js`, `addEditModal.js`, `fetchAlbumsModal.js`, `share.js`, `main.js`); see `savecraft-overview.md` for what lives where |
-| Library styles | `…/Savecraft/src/app/css/*.css` — 8 files split by feature area |
+| Library logic | `…/Savecraft/src/app/js/*.js` — 13 ES modules (`state.js`, `storage.js`, `utils.js`, `api.js`, `authors.js`, `render.js`, `kanban.js`, `detailModal.js`, `addEditModal.js`, `fetchAlbumsModal.js`, `dashboard.js`, `share.js`, `main.js`); see `savecraft-overview.md` for what lives where |
+| Library styles | `…/Savecraft/src/app/css/*.css` — 9 files split by feature area |
 | Background service worker | `…/Savecraft/src/background/background.js` |
 | Content script | `…/Savecraft/src/content/content.js` |
 | Popup | `…/Savecraft/src/popup/popup.{html,css,js}` |
@@ -71,7 +71,8 @@ state = {
   search: string,
   sort: string,
   editingId: string | null,
-  sidebarMode: 'categories' | 'curated' | 'sponsored',
+  sidebarMode: 'categories' | 'curated' | 'sponsored' | 'home',
+  modalCategory: string | null,  // currently-selected category in the Add-modal wizard (also drives Screen C's #modal-category select)
   // ...curated state, kanban state, etc.
 }
 ```
@@ -84,6 +85,7 @@ state = {
 
 | Value | Shows |
 |-------|-------|
+| `'dashboard'` | The Dashboard home page (`renderDashboard()`, in `js/dashboard.js`) — forced by `main.js`'s `init()` on every load, regardless of the restored/persisted view |
 | `'All'` | All items |
 | `'Music Album'` | Items with category === 'Music Album' |
 | `'Musician'` | Items with category === 'Musician' |
@@ -93,6 +95,8 @@ state = {
 | `'genre:Jazz:Movie'` | Curated genre + category drilldown — shows curated items |
 | `'genre:Top 100:Musician'` | Curated Top 100 musician entries (100 artists) |
 | `'genre:Top 100:Music Album'` | Curated Top 100 albums (2444 entries) |
+
+Arriving at or returning to `'dashboard'` is deliberately never persisted via `persistViewState()` (checked at every call site that can set it) — so the real last-active view a user was browsing stays in `chrome.storage.sync` untouched until they navigate somewhere else for real.
 
 `renderGrid()` early-returns to `renderAuthorPage()` when `state.view.startsWith('author:')`.
 
@@ -131,12 +135,14 @@ All in `js/authors.js` (profile CRUD/navigation) and `js/render.js` (`renderAuth
 2. If not, creates one — pulling `url` and `imageUrl` from `CURATED_ITEMS[genre]['Musician']` if available
 3. Persists it to `chrome.storage.sync`
 
+The reverse direction: `autoImportMusicianAlbums(musicianItem)` (in `js/addEditModal.js`) runs whenever a brand-new `Musician` is saved via `handleSaveItem()` — fire-and-forget, not awaited before the modal closes. Calls `fetchAlbumsFromItunes(artistName)`, filters to `artist === artistName` (exact, case-insensitive) and excludes anything matching the singles/EPs title pattern or `type === 'Single'` (same filter `fetchAlbumsModal.js` uses), dedupes against any already-saved albums by title, then creates+persists the rest as `Music Album` items and re-renders.
+
 ---
 
-## iTunes Integration
+## External Search Integrations
 
-### Host permission
-`itunes.apple.com` is declared in `manifest.json` `host_permissions`. Required for all iTunes fetch calls.
+### Host permissions
+`itunes.apple.com`, `openlibrary.org`, `store.steampowered.com`, `en.wikipedia.org` are all declared in `manifest.json` `host_permissions` — required for the respective `fetch()` calls to work from the extension page. Cover-art CDN hosts (`covers.openlibrary.org`, `cdn.akamai.steamstatic.com`, iTunes's `mzstatic.com`) do **not** need entries — they're only ever loaded via plain `<img src>`, not `fetch()`.
 
 ### Fetch Albums (author page)
 `openFetchAlbumsModal(artistName)` — opens modal, calls `fetchAlbumsFromItunes()`, renders results.
@@ -150,10 +156,21 @@ All in `js/authors.js` (profile CRUD/navigation) and `js/render.js` (`renderAuth
 
 `handleImportAlbums()` — creates `Music Album` items from checked results.
 
-### Add Modal Autosuggest
-When category is `Music Album` and the author field has 2+ chars, a debounced (600ms) iTunes search runs and shows a dropdown of matching albums. Clicking a suggestion fills title, imageUrl, and url (only if those fields are currently empty).
+### Add Modal Wizard (Screen B: category search)
+Add is a 3-screen wizard in `js/addEditModal.js`: category grid → live search → review/refine. Each category dispatches to a different search function in `js/api.js`, all returning the same normalized shape (`{ title, author, imageUrl, imageUrlLarge, url, year, meta }`) so the results-dropdown renderer and the review-screen pre-fill don't special-case each source:
 
-Key functions: `handleAuthorItunesLookup()`, `showItunesSuggestions()`, `hideItunesSuggestions()`, `applyItunesSuggestion()` (all in `js/addEditModal.js`); `debounce()` is in `js/utils.js`.
+| Category | Function | Source |
+|----------|----------|--------|
+| Musician | `searchMusicians()` | iTunes `entity=musicArtist` |
+| Music Album | `searchMusicAlbums()` | iTunes `entity=album` (generalized from the old author-field-only lookup) |
+| Show | `searchShows()` | iTunes `entity=tvSeason`, deduped by `artistId` |
+| Book | `searchBooks()` | Open Library `search.json` |
+| Game | `searchGames()` | Steam `storesearch` |
+| Movie | `searchMoviesWikipedia()` | Wikipedia `generator=search` — iTunes movie search is dead |
+
+Search is debounced ~500ms on `#step1-search-input`. Selecting a result (or typing a title with no match and continuing manually) advances to the review screen (`showReviewScreen()`), which then kicks off background enrichment via the *existing* `ensureArtistWikipediaInfo`/`ensureItemWikipediaInfo` (Musician / Book·Show·Movie·Game respectively) to fill in Summary and upgrade the image — Music Album already has full data from iTunes, Visual Art has no source, neither triggers a lookup.
+
+`handleSaveItem()` no longer requires a URL — Title is the required field instead (same red-border-flash validation UX, just checking a different field). This also fixed a latent bug: editing a curated item with a blank Title used to silently write `title: null` over the curated base item.
 
 ---
 
@@ -171,6 +188,9 @@ For the `Musician` category, a **permanent hardcoded subfolder** is injected:
 In **regular mode**: clicking it sets `state.view = 'Music Album'`.
 
 In **curated genre mode**: clicking it sets `state.view = 'genre:<genre>:Music Album'` — the `data-permanent="true"` attribute triggers this branch in the subfolder click handler.
+
+### Collapsible desktop rail
+Desktop-only (the mobile drawer is a separate full-width overlay and unaffected). `#btn-sidebar-collapse` (in `.sidebar-header-controls`) toggles a `.sidebar-collapsed` class on both `#sidebar` and `#header-sidebar`, shrinking them to a 64px icon-only rail — CSS-only hiding via a `.sidebar-label-text` span that wraps just the text portion of each category/genre label (added specifically so it could be hidden without touching the icon or the click-handling/wiring, which is unchanged). Persisted via `chrome.storage.sync` (`savecraft_sidebar_collapsed`), applied in `main.js`'s `init()` the same way theme is (`applySidebarCollapsed()`/`toggleSidebarCollapsed()`, mirroring `applyTheme()`/`toggleTheme()`).
 
 ---
 
@@ -218,6 +238,17 @@ CURATED_ITEMS = {
 
 ### Populating curated data (admin scripts)
 Scripts live in the Claude session scratchpad. To re-run, the Firestore `curated_items` rule must temporarily be `allow write: if true`. After running, revert to `allow write: if request.auth != null` and bump `_CURATED_CACHE_VERSION`.
+
+---
+
+## Dashboard (`js/dashboard.js`)
+
+The persistent home page. `renderDashboard()` is the sole export, dispatched from `renderGrid()` when `state.view === 'dashboard'`. Everything else in the module is private, split into per-widget `build*()` (returns an HTML string) / `wire*()` (attaches listeners after `innerHTML` is set) pairs — same idiom as the rest of this codebase's rendering.
+
+- **Favorites aggregation** — `getAllFavoriteItems()` walks every `state.folders` entry named `'Favorites'` (one per category, created on-demand by `detailModal.js`) and collects their combined `folderId` membership from `state.items`. No prior helper did this across categories. `resolveFavoriteSlides()` falls back to `CURATED_ITEMS['Top 100']['Musician']` + `['Music Album']` (both defensively optional-chained) when the real list is empty.
+- **Slideshow state** (`_favSlides`, `_favIndex`, `_favIsDemo`, `_favTimer`) is module-level, not part of `state` — ephemeral per-render UI state nothing else reads, matching how `kanban.js`/`render.js`/`detailModal.js` already keep private UI state module-local. The auto-advance `setInterval` self-clears on its own next tick if `.dash-fav-slideshow` is no longer in the DOM (i.e. the user navigated away), rather than relying on every navigation path remembering to call a cleanup function.
+- **Kanban mini-board** reuses `KANBAN_COLUMNS` and `KANBAN_DEMO()` (both exported from `kanban.js` specifically for this reuse) so the widget's columns/labels/demo content stay in sync with the real board by construction, not by copy-pasted constants.
+- **`.grid-header` gotcha**: `renderDashboard()` hides the `.grid-header` wrapper (sort/filter controls) entirely, not just its children — an earlier version only hid the children, leaving the wrapper's own `margin-bottom: 20px` unaccounted for in the "fill exactly this much height, no scroll" layout math, which caused a stray scrollbar. `renderGrid()`'s existing top-of-function reset block restores `.grid-header` to visible before any other view renders, so this doesn't leak into other views.
 
 ---
 

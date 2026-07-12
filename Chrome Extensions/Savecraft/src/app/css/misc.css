@@ -156,6 +156,11 @@
   .btn-add-item { display: none; }
   .share-btn-wrap { display: none; }
 
+  /* Dashboard */
+  .dash-widget-grid { grid-template-columns: 1fr; }
+  .dash-hero { height: auto; padding: 0; }
+  .dash-hero-content { padding: 20px; background: linear-gradient(to bottom, var(--surface) 60%, transparent); }
+
   /* Hamburger */
   .btn-hamburger {
     display: flex;
