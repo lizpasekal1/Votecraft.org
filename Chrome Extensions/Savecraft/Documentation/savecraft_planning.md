@@ -29,9 +29,9 @@ Savecraft/
 │   │   └── popup.js
 │   ├── sponsored/sponsored.html
 │   └── app/
-│       ├── index.html          ← full library page (opens as new tab)
-│       ├── js/                 ← library logic, 12 ES modules
-│       └── css/                ← library styles, split by feature area
+│       ├── index.html          ← full library page (opens as new tab); Dashboard home page shown first on every open
+│       ├── js/                 ← library logic, 13 ES modules (includes dashboard.js)
+│       └── css/                ← library styles, split by feature area (includes dashboard.css)
 └── Documentation/
     ├── savecraft_planning.md   ← this file
     ├── savecraft-overview.md

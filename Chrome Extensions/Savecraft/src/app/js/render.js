@@ -15,6 +15,7 @@ import { renderKanbanBoard } from './kanban.js';
 import { openDetailModal } from './detailModal.js';
 import { openEditModal } from './addEditModal.js';
 import { openFetchAlbumsModal } from './fetchAlbumsModal.js';
+import { renderDashboard } from './dashboard.js';
 import { closeSidebar } from './main.js';
 
 export function getFilteredSortedItems() {
@@ -148,6 +149,7 @@ export function renderSidebar() {
       </button>
     </div>
     <div class="sidebar-mode-tabs">
+      <button class="sidebar-mode-tab ${state.sidebarMode === 'home' ? 'active' : ''}" data-sidebar-opt="home">🏠 Home</button>
       <button class="sidebar-mode-tab ${state.sidebarMode === 'categories' ? 'active' : ''}" data-sidebar-opt="my-lists">My Saves</button>
       <button class="sidebar-mode-tab ${state.sidebarMode === 'curated' ? 'active' : ''}" data-sidebar-opt="curated">Curated</button>
       <button class="sidebar-mode-tab sidebar-mode-tab--sponsored ${state.sidebarMode === 'sponsored' ? 'active' : ''}" data-sidebar-opt="sponsored">⚡ VC</button>
@@ -159,14 +161,19 @@ export function renderSidebar() {
     sidebar.querySelectorAll('[data-sidebar-opt]').forEach(btn => {
       btn.addEventListener('click', () => {
         const opt = btn.dataset.sidebarOpt;
-        if (opt === 'curated') {
+        if (opt === 'home') {
+          state.sidebarMode = 'home'; state.view = 'dashboard';
+        } else if (opt === 'curated') {
           state.sidebarMode = 'curated'; state.view = 'curated';
         } else if (opt === 'sponsored') {
           state.sidebarMode = 'sponsored'; state.view = 'sponsored';
         } else {
           state.sidebarMode = 'categories'; state.view = 'all';
         }
-        persistViewState();
+        // Arriving at the dashboard is never persisted as the "last view" — see main.js's
+        // init() for why — so the real last-active view stays intact until the user actually
+        // navigates somewhere else.
+        if (opt !== 'home') persistViewState();
         renderSidebar();
         renderGrid();
       });
@@ -180,7 +187,7 @@ export function renderSidebar() {
         ${CURATED_GENRES.map((genre, i) => `
           ${i > 0 ? '<div class="sidebar-divider"></div>' : ''}
           <div class="sidebar-item sidebar-genre" data-genre="${genre}">
-            <span class="sidebar-label"><span class="cat-icon">${GENRE_EMOJI[genre] || '📁'}</span> ${escapeHtml(genre)}</span>
+            <span class="sidebar-label"><span class="cat-icon">${GENRE_EMOJI[genre] || '📁'}</span><span class="sidebar-label-text"> ${escapeHtml(genre)}</span></span>
             <svg class="sidebar-genre-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
         `).join('')}
@@ -246,7 +253,7 @@ export function renderSidebar() {
     return `
       <div class="sidebar-item sidebar-category ${isActive ? 'active' : ''}"
            data-view="${cat}" data-toggle="${cat}">
-        <span class="sidebar-label"><span class="cat-icon">${CAT_EMOJI[cat]}</span> ${CAT_LABEL[cat] || cat}</span>
+        <span class="sidebar-label"><span class="cat-icon">${CAT_EMOJI[cat]}</span><span class="sidebar-label-text"> ${CAT_LABEL[cat] || cat}</span></span>
         <span class="sidebar-right">${countLabel}<span class="sidebar-arrow">${arrow}</span></span>
       </div>
       ${expandedContent}
@@ -398,9 +405,15 @@ export function renderGrid() {
   document.getElementById('board-info-popup')?.setAttribute('hidden', '');
   document.getElementById('sort-select').style.display = '';
   gridTitle.style.display = '';
+  document.querySelector('.grid-header').style.display = ''; // dashboard.js hides this wrapper entirely; every other view needs it restored
 
   if (state.view === 'kanban') {
     renderKanbanBoard();
+    return;
+  }
+
+  if (state.view === 'dashboard') {
+    renderDashboard();
     return;
   }
 

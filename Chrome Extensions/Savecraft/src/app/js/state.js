@@ -103,7 +103,7 @@ export const state = {
   modalCategory: null,
   editingId: null,
   collapsed: new Set(CATEGORIES), // all collapsed by default
-  sidebarMode: 'categories', // 'categories' | 'curated'
+  sidebarMode: 'categories', // 'categories' | 'curated' | 'sponsored' | 'home'
   hiddenCurated: new Set(), // curated item IDs the user has dismissed
   curatedOverrides: {}, // { [curatedItemId]: { url, title, notes, imageUrl } }
   curatedImgCache: {},  // { [curatedItemId]: imageUrl } — auto-fetched via Microlink

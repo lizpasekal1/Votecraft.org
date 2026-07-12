@@ -1,0 +1,301 @@
+/* ===== DASHBOARD (home page) ===== */
+
+.dashboard-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  /* Fills the available height of .grid-area (which has symmetric 24px top/bottom padding),
+     so the widget grid below naturally lands flush with that bottom padding — matching the
+     top margin above the hero without hardcoding a separate value. */
+  min-height: 100%;
+}
+
+/* --- Hero --- */
+.dash-hero {
+  position: relative;
+  height: 220px;
+  overflow: hidden;
+}
+
+.dash-hero-collage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+}
+
+.dash-hero--no-collage .dash-hero-collage { display: none; }
+
+.dash-hero-collage-track {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: max-content;
+  animation: dash-marquee 45s linear infinite;
+}
+
+@keyframes dash-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); } /* track content is duplicated in JS for a seamless loop */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-hero-collage-track { animation: none; }
+}
+
+.dash-hero-thumb {
+  width: 119px;
+  height: 119px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px var(--shadow-card);
+  transform: rotate(var(--rot));
+  flex-shrink: 0;
+}
+.dash-hero-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.dash-hero-content {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 32px;
+  background: linear-gradient(to right, var(--bg) 35%, transparent 90%);
+}
+
+.dash-hero-greeting { font-size: 26px; font-weight: 700; color: var(--text-primary); margin: 0; }
+.dash-hero-sub { font-size: 14px; color: var(--text-secondary); margin: 4px 0 0; }
+
+/* --- Widget grid --- */
+.dash-widget-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr); /* both rows equal height, so all 4 cards match */
+  gap: 16px;
+  flex: 1; /* stretch to fill whatever vertical space is left after the hero */
+}
+
+.dash-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0; /* lets content that should grow (slideshow, mini-board) actually grow, not overflow */
+}
+
+.dash-card-header { display: flex; align-items: center; justify-content: space-between; }
+.dash-card-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+
+/* Kanban widget — a scaled-down peek at the real board */
+.dash-kanban-open {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+.dash-kanban-open:hover { text-decoration: underline; }
+
+.dash-kanban-mini-board {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+}
+
+.dash-kmini-col {
+  background: var(--hover-bg);
+  border-radius: 10px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.dash-kmini-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  padding: 0 2px;
+}
+.dash-kmini-col-header span {
+  background: var(--surface);
+  color: var(--text-secondary);
+  border-radius: 10px;
+  padding: 1px 6px;
+  font-weight: 600;
+}
+
+.dash-kmini-col-cards { display: flex; flex-direction: column; gap: 6px; }
+
+.dash-kmini-card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.dash-kmini-card:hover { border-color: var(--primary); }
+
+.dash-kmini-thumb {
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.dash-kmini-info { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.dash-kmini-title {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dash-kmini-demo-badge {
+  align-self: flex-start;
+  background: var(--primary-bg);
+  color: var(--primary);
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 1px 5px;
+}
+
+.dash-kmini-more, .dash-kmini-col-empty {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 2px;
+}
+
+/* Favorites widget */
+.dash-fav-slideshow {
+  position: relative;
+  flex: 1;
+  min-height: 160px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--hover-bg);
+  cursor: pointer;
+}
+.dash-fav-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+.dash-fav-slide.active { opacity: 1; pointer-events: auto; }
+.dash-fav-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.dash-fav-slide-info {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 10px 12px;
+  background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+.dash-fav-demo-badge {
+  position: absolute;
+  top: 8px; left: 8px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 12px;
+  padding: 3px 8px;
+}
+.dash-fav-prev, .dash-fav-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+.dash-fav-prev { left: 8px; }
+.dash-fav-next { right: 8px; }
+.dash-fav-prev:hover, .dash-fav-next:hover { background: var(--primary); }
+.dash-fav-dots { display: flex; justify-content: center; gap: 6px; margin-top: 4px; }
+.dash-fav-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  cursor: pointer;
+  transition: width 0.2s, background 0.2s;
+}
+.dash-fav-dot.active { width: 16px; background: var(--primary); }
+.dash-fav-empty { color: var(--text-secondary); font-size: 13px; }
+/* No slideshow rendered in the empty state — center the message in the taller card instead
+   of leaving it stranded at the top. */
+.dash-card--favorites:has(.dash-fav-empty) { align-items: center; justify-content: center; }
+
+/* Curated Lists widget */
+.dash-card--curated { justify-content: center; } /* vertically center the chip row in the taller card */
+.dash-genre-strip { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; }
+.dash-genre-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  width: 64px;
+}
+.dash-genre-chip:hover .dash-genre-icon {
+  box-shadow:
+    0 0 0 2px var(--primary),
+    inset 0 1px 0 rgba(255,255,255,0.25),
+    inset 0 -1px 0 rgba(0,0,0,0.2);
+}
+.dash-genre-label { font-size: 11px; color: var(--text-secondary); text-align: center; }
+
+/* Profile widget (decorative-only) */
+.dash-card--profile { align-items: center; text-align: center; justify-content: center; }
+.dash-card--profile:hover { border-color: var(--primary); }
+.dash-profile-avatar.cat-icon { width: 56px; height: 56px; border-radius: 50%; }
+.dash-profile-avatar.cat-icon::after { border-radius: 50% 50% 0 0; }
+.dash-profile-name { font-weight: 600; font-size: 14px; color: var(--text-primary); }
+.dash-profile-sub { font-size: 12px; color: var(--text-muted); }
