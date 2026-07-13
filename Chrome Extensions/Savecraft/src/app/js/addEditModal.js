@@ -13,6 +13,7 @@ import {
   searchMusicians, searchMusicAlbums, searchShows, searchBooks, searchGames, searchMoviesWikipedia,
   ensureArtistWikipediaInfo, ensureItemWikipediaInfo, fetchAlbumsFromItunes,
 } from './api.js';
+import { autoSaveMusician } from './authors.js';
 
 // ===== ADD-MODAL WIZARD STATE (screen 'category' → 'search' → 'review') =====
 let _wizardScreen = 'category';    // which screen is currently visible — drives what the back icon does
@@ -452,6 +453,16 @@ export async function handleSaveItem() {
 
   if (!state.editingId && category === 'Musician') {
     autoImportMusicianAlbums(item); // fire-and-forget, doesn't block the modal closing
+  }
+
+  if (!state.editingId && category === 'Music Album' && author) {
+    // Fire-and-forget, mirroring the Musician branch above: get-or-create the artist's Musician
+    // record (autoSaveMusician already dedupes by exact title match, so re-adding an album by an
+    // artist you've already saved won't create a second Musician), then pull in the rest of
+    // their discography the same way a brand-new Musician save does.
+    autoSaveMusician(author).then(musicianItem => {
+      if (musicianItem) autoImportMusicianAlbums(musicianItem);
+    });
   }
 }
 

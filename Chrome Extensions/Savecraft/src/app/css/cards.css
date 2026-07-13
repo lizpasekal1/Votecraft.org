@@ -592,6 +592,18 @@
   color: var(--primary);
 }
 
+/* The artist name in a Music Album's combined "Artist | Title" title line — purple by default,
+   not just on hover, so it reads as a distinct label from the (white) album title next to it.
+   Dims on hover instead of the base .detail-author-link:hover's (redundant, since it's already
+   purple) color change. */
+.detail-album-artist-link {
+  color: var(--primary);
+}
+.detail-album-artist-link:hover {
+  color: var(--primary);
+  opacity: 0.6;
+}
+
 /* Back button in grid title */
 .author-back-btn {
   display: inline-flex;

@@ -72,6 +72,8 @@ export async function autoSaveMusician(artistName) {
       }
     });
   }
+
+  return musicianItem;
 }
 
 export async function navigateToAuthor(name, category) {

@@ -5,6 +5,7 @@
 import { state } from './state.js';
 import {
   persistArtistBioCache, persistArtistVideoCache, persistArtistWebsiteCache, persistItemWikiCache,
+  persistLastfmCache,
 } from './storage.js';
 
 // Shared check for "does this Wikidata/Wikipedia result actually describe a musician/band" —
@@ -400,4 +401,52 @@ export async function ensureArtistMusicVideoId(artistName) {
   state.artistVideoCache[key] = { videoId, fetchedAt: Date.now() };
   persistArtistVideoCache();
   return videoId;
+}
+
+// Set this to a free Last.fm API key (https://www.last.fm/api/account/create) to enable the
+// Profile page's "Connect Last.fm" recent-tracks card. Without one, the Connections section
+// still shows the connect UI, but this returns null and the card explains no key is configured
+// yet — same graceful-empty behavior as YOUTUBE_API_KEY above when it's blank.
+const LASTFM_API_KEY = '';
+
+// Lets callers show "not configured yet" instead of a misleading "username not found" when the
+// key above is still blank.
+export function isLastfmConfigured() {
+  return !!LASTFM_API_KEY;
+}
+
+// Short TTL — unlike the other ensure* caches above (artist bio/website/video, all 30-90 day
+// TTLs for slow-changing data), "recent tracks" is only meaningful when fresh.
+const LASTFM_RECENT_TRACKS_CACHE_MISS_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Reads a Last.fm user's recent scrobbles via the public (no OAuth, no login) user.getrecenttracks
+// endpoint — just a username + API key. Returns null if no key is configured, the username
+// doesn't exist, or the request fails; returns an array (possibly empty) otherwise.
+export async function ensureLastfmRecentTracks(username) {
+  if (!username || !LASTFM_API_KEY) return null;
+  const key = username.trim().toLowerCase();
+  const cached = state.lastfmCache[key];
+  if (cached && Date.now() - cached.fetchedAt < LASTFM_RECENT_TRACKS_CACHE_MISS_TTL) {
+    return cached.tracks;
+  }
+  let tracks = null;
+  try {
+    const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(username)}&api_key=${LASTFM_API_KEY}&format=json&limit=8`;
+    const resp = await fetch(url);
+    if (resp.ok) {
+      const data = await resp.json();
+      if (!data.error) {
+        tracks = (data.recenttracks?.track || []).map(t => ({
+          title: t.name || null,
+          artist: t.artist?.['#text'] || null,
+          imageUrl: t.image?.find(i => i.size === 'medium')?.['#text'] || null,
+          nowPlaying: t['@attr']?.nowplaying === 'true',
+          url: t.url || null,
+        }));
+      }
+    }
+  } catch { /* leave tracks null — treated as "couldn't fetch," not "empty history" */ }
+  state.lastfmCache[key] = { tracks, fetchedAt: Date.now() };
+  persistLastfmCache();
+  return tracks;
 }

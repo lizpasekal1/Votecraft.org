@@ -1,0 +1,243 @@
+/* ===== PROFILE PAGE ===== */
+
+.profile-page-wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.profile-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Account stays its own natural-height card at the top, full width — everything below it
+   (Connections/Interests/Your Music Taste/Friends) is sized to exactly match the Dashboard's
+   widget grid (same 2x2 grid, same .dash-card box model, imported from dashboard.css) rather
+   than sizing to its own content. */
+.profile-widget-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 16px;
+  height: 500px;
+}
+
+/* Dashboard widgets are deliberately "peek" sized (a few tracks, a capped genre list, etc.) —
+   Profile's equivalents can have more to show, so let each card scroll internally instead of
+   overflowing the fixed cell or stretching the grid taller than the Dashboard's. */
+.profile-widget-grid .dash-card {
+  overflow-y: auto;
+}
+
+.profile-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.profile-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.profile-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.profile-card-copy {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* --- Account --- */
+.profile-account-email {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* --- Connections --- */
+.profile-connection-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.profile-connection-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.profile-connection-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.profile-connection-copy {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.profile-connection-empty {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.profile-track-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profile-track-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px;
+  border-radius: 8px;
+  background: var(--hover-bg);
+}
+
+.profile-track-art {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--border);
+}
+
+.profile-track-art--placeholder {
+  display: block;
+}
+
+.profile-track-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.profile-track-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-track-artist {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-track-nowplaying {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--primary);
+  background: var(--primary-bg);
+  border-radius: 10px;
+  padding: 3px 8px;
+}
+
+/* --- Interests --- */
+.profile-interests-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px;
+}
+
+.profile-interest-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.profile-interest-option input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* --- Your Music Taste --- */
+.profile-genre-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-genre-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-genre-label {
+  flex-shrink: 0;
+  width: 110px;
+  font-size: 13px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-genre-bar-track {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--hover-bg);
+  overflow: hidden;
+}
+
+.profile-genre-bar-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 4px;
+}
+
+.profile-genre-count {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+  min-width: 16px;
+  text-align: right;
+}
+
+/* --- Last.fm connect modal --- */
+.lastfm-modal-copy {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 16px;
+}

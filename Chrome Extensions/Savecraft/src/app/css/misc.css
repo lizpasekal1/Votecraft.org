@@ -161,6 +161,9 @@
   .dash-hero { height: auto; padding: 0; }
   .dash-hero-content { padding: 20px; background: linear-gradient(to bottom, var(--surface) 60%, transparent); }
 
+  /* Profile page */
+  .profile-widget-grid { grid-template-columns: 1fr; height: auto; }
+
   /* Hamburger */
   .btn-hamburger {
     display: flex;

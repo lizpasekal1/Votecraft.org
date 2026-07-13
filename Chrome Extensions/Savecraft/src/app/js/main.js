@@ -1,8 +1,13 @@
 // ===== ENTRY POINT: search, sort, theme, mobile sidebar, live storage sync, init/event wiring =====
 
 import { state, STREAMING_DOMAINS } from './state.js';
-import { loadAll, loadLocalCache, initCuratedItems } from './storage.js';
-import { debounce } from './utils.js';
+import {
+  loadAll, loadLocalCache, initCuratedItems, persistSort, persistTheme, persistSidebarCollapsed,
+  persistLastfmUsername, disconnectLastfm,
+} from './storage.js';
+import { initAuth, onAuthChange, getCurrentUser, signUp, signIn, signOut } from './auth.js';
+import { ensureLastfmRecentTracks, isLastfmConfigured } from './api.js';
+import { debounce, escapeHtml } from './utils.js';
 import { renderSidebar, renderGrid } from './render.js';
 import { initShare } from './share.js';
 import {
@@ -59,7 +64,7 @@ export function initSearch() {
 // ===== SORT =====
 export function handleSort(sort) {
   state.sort = sort;
-  chrome.storage.sync.set({ savecraft_sort: sort });
+  persistSort(sort);
   renderGrid();
 }
 
@@ -118,7 +123,7 @@ export function toggleTheme() {
   const current = document.documentElement.getAttribute('data-theme');
   const next = current === 'dark' ? 'light' : 'dark';
   applyTheme(next);
-  chrome.storage.sync.set({ savecraft_theme: next });
+  persistTheme(next);
 }
 
 // ===== SIDEBAR COLLAPSE (desktop rail — mobile drawer is unaffected) =====
@@ -130,7 +135,78 @@ function applySidebarCollapsed(collapsed) {
 function toggleSidebarCollapsed() {
   const collapsed = !document.getElementById('sidebar').classList.contains('sidebar-collapsed');
   applySidebarCollapsed(collapsed);
-  chrome.storage.sync.set({ savecraft_sidebar_collapsed: collapsed });
+  persistSidebarCollapsed(collapsed);
+}
+
+// ===== AUTH MODAL =====
+export function openAuthModal() {
+  document.getElementById('auth-error').style.display = 'none';
+  document.getElementById('auth-modal-overlay').classList.add('open');
+}
+function closeAuthModal() {
+  document.getElementById('auth-modal-overlay').classList.remove('open');
+  document.getElementById('auth-email').value = '';
+  document.getElementById('auth-password').value = '';
+}
+
+function showAuthError(message) {
+  const el = document.getElementById('auth-error');
+  el.textContent = message;
+  el.style.display = 'block';
+}
+
+function applyAuthUI(user) {
+  const label = document.getElementById('profile-label');
+  if (label) label.textContent = user ? user.email : 'Sign in';
+
+  document.getElementById('auth-modal-title').textContent = user
+    ? 'Your account'
+    : 'Sign in to sync your saves';
+  document.getElementById('auth-signed-out-fields').style.display = user ? 'none' : '';
+  document.getElementById('auth-password-field').style.display = user ? 'none' : '';
+  document.getElementById('auth-signed-out-actions').style.display = user ? 'none' : '';
+  document.getElementById('auth-signed-in-info').style.display = user ? '' : 'none';
+  document.getElementById('auth-signed-in-actions').style.display = user ? '' : 'none';
+  if (user) {
+    document.getElementById('auth-signed-in-info').innerHTML = `Signed in as <strong>${user.email}</strong>`;
+  }
+}
+
+async function handleAuthSubmit(fn) {
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  document.getElementById('auth-error').style.display = 'none';
+  const result = await fn(email, password);
+  if (result.ok) {
+    closeAuthModal();
+  } else {
+    showAuthError(result.error);
+  }
+}
+
+// ===== LAST.FM MODAL (Profile page's Connections section) =====
+export function openLastfmModal() {
+  document.getElementById('lastfm-error').style.display = 'none';
+  document.getElementById('lastfm-username').value = state.lastfmUsername || '';
+  applyLastfmModalUI(state.lastfmUsername);
+  document.getElementById('lastfm-modal-overlay').classList.add('open');
+}
+function closeLastfmModal() {
+  document.getElementById('lastfm-modal-overlay').classList.remove('open');
+}
+function showLastfmError(message) {
+  const el = document.getElementById('lastfm-error');
+  el.textContent = message;
+  el.style.display = 'block';
+}
+function applyLastfmModalUI(username) {
+  document.getElementById('lastfm-username-field').style.display = username ? 'none' : '';
+  document.getElementById('lastfm-disconnected-actions').style.display = username ? 'none' : '';
+  document.getElementById('lastfm-connected-actions').style.display = username ? '' : 'none';
+  document.getElementById('lastfm-connected-info').style.display = username ? '' : 'none';
+  if (username) {
+    document.getElementById('lastfm-connected-info').innerHTML = `Connected as <strong>${escapeHtml(username)}</strong>`;
+  }
 }
 
 // ===== MOBILE SIDEBAR =====
@@ -145,6 +221,7 @@ export function closeSidebar() {
 
 // ===== INIT =====
 async function init() {
+  await initAuth();
   await loadAll();
   await initCuratedItems();
 
@@ -155,15 +232,28 @@ async function init() {
   await loadLocalCache('savecraft_artist_bio_cache_v2', 'artistBioCache');
   await loadLocalCache('savecraft_artist_video_cache', 'artistVideoCache');
   await loadLocalCache('savecraft_item_wiki_cache', 'itemWikiCache');
+  await loadLocalCache('savecraft_lastfm_cache', 'lastfmCache');
 
   chrome.storage.sync.get({ savecraft_theme: 'dark' }, data => {
     applyTheme(data.savecraft_theme);
   });
 
-  chrome.storage.sync.get({ savecraft_sidebar_collapsed: false }, data => {
+  chrome.storage.sync.get({ savecraft_sidebar_collapsed: true }, data => {
     applySidebarCollapsed(data.savecraft_sidebar_collapsed);
   });
   document.getElementById('btn-sidebar-collapse').addEventListener('click', toggleSidebarCollapsed);
+
+  // Clicking any nav item while the rail is collapsed expands it back open — the user can
+  // still re-collapse it manually via the toggle button above. Delegated on the sidebar
+  // container itself (registered once here) rather than per-item, since renderSidebar()
+  // rebuilds the sidebar's innerHTML on nearly every navigation.
+  document.getElementById('sidebar').addEventListener('click', e => {
+    const sidebarEl = document.getElementById('sidebar');
+    if (sidebarEl.classList.contains('sidebar-collapsed') && e.target.closest('.sidebar-item')) {
+      applySidebarCollapsed(false);
+      persistSidebarCollapsed(false);
+    }
+  });
 
   const settingsWrap = document.getElementById('settings-wrap');
   const settingsDropdown = document.getElementById('settings-dropdown');
@@ -177,9 +267,57 @@ async function init() {
   });
   document.getElementById('btn-profile').addEventListener('click', () => {
     settingsDropdown.setAttribute('hidden', '');
+    // Demo mode: always go straight to the Profile page, skipping the sign-in gate — re-enable
+    // the `getCurrentUser() ? ... : openAuthModal()` branch once real auth is part of the demo.
+    state.view = 'profile';
+    renderSidebar();
+    renderGrid();
   });
   document.addEventListener('click', e => {
     if (!settingsWrap.contains(e.target)) settingsDropdown.setAttribute('hidden', '');
+  });
+
+  onAuthChange(applyAuthUI);
+  applyAuthUI(getCurrentUser());
+
+  document.getElementById('btn-auth-close').addEventListener('click', closeAuthModal);
+  document.getElementById('auth-modal-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('auth-modal-overlay')) closeAuthModal();
+  });
+  document.getElementById('btn-auth-signup').addEventListener('click', () => handleAuthSubmit(signUp));
+  document.getElementById('btn-auth-signin').addEventListener('click', () => handleAuthSubmit(signIn));
+  document.getElementById('btn-auth-signout').addEventListener('click', async () => {
+    await signOut();
+    closeAuthModal();
+  });
+  document.getElementById('auth-modal-overlay').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') handleAuthSubmit(signIn);
+    if (e.key === 'Escape') closeAuthModal();
+  });
+
+  document.getElementById('btn-lastfm-close').addEventListener('click', closeLastfmModal);
+  document.getElementById('btn-lastfm-cancel').addEventListener('click', closeLastfmModal);
+  document.getElementById('lastfm-modal-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('lastfm-modal-overlay')) closeLastfmModal();
+  });
+  document.getElementById('btn-lastfm-connect').addEventListener('click', async () => {
+    const username = document.getElementById('lastfm-username').value.trim();
+    if (!username) { showLastfmError('Enter a Last.fm username.'); return; }
+    if (!isLastfmConfigured()) { showLastfmError('Last.fm isn’t configured yet — check back soon.'); return; }
+    const tracks = await ensureLastfmRecentTracks(username);
+    if (tracks === null) { showLastfmError('Could not find that Last.fm username.'); return; }
+    state.lastfmUsername = username;
+    persistLastfmUsername(username);
+    closeLastfmModal();
+    if (state.view === 'profile') renderGrid();
+  });
+  document.getElementById('btn-lastfm-disconnect').addEventListener('click', () => {
+    disconnectLastfm();
+    closeLastfmModal();
+    if (state.view === 'profile') renderGrid();
+  });
+  document.getElementById('lastfm-modal-overlay').addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeLastfmModal();
   });
 
   const sortSelect = document.getElementById('sort-select');
@@ -201,12 +339,10 @@ async function init() {
 
   sortSelect.addEventListener('change', () => handleSort(sortSelect.value));
 
-  const menuBtn = document.getElementById('btn-sidebar-menu');
+  // The options dropdown (Home/My Saves/Shared Saves/Curated/⚡ VC) now lives under the same
+  // button that toggles sidebar collapse — shown on hover (pure CSS, see .sidebar-collapse-wrap
+  // in sidebar.css), so no click-to-open/click-outside-to-close JS is needed for visibility.
   const myOptionsDropdown = document.getElementById('my-options-dropdown');
-  menuBtn.addEventListener('click', e => {
-    e.stopPropagation();
-    myOptionsDropdown.classList.toggle('open');
-  });
   myOptionsDropdown.querySelectorAll('.my-options-item').forEach(btn => {
     btn.addEventListener('click', () => {
       const opt = btn.dataset.option;
@@ -231,13 +367,7 @@ async function init() {
         renderSidebar();
         renderGrid();
       }
-      myOptionsDropdown.classList.remove('open');
     });
-  });
-  document.addEventListener('click', e => {
-    if (!document.getElementById('sidebar-menu-wrap').contains(e.target)) {
-      myOptionsDropdown.classList.remove('open');
-    }
   });
 
   document.getElementById('btn-add').addEventListener('click', openAddModal);

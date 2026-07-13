@@ -8,6 +8,14 @@
      so the widget grid below naturally lands flush with that bottom padding — matching the
      top margin above the hero without hardcoding a separate value. */
   min-height: 100%;
+  max-height: 100%;
+}
+
+/* The dashboard is designed to fit exactly within the available height (fixed hero + a
+   flex:1 widget grid below it) — it should never scroll, unlike every other view, which
+   still needs normal overflow-y:auto for long lists. Scoped to just this view via :has(). */
+.grid-area:has(.dashboard-wrap) {
+  overflow: hidden;
 }
 
 /* --- Hero --- */
@@ -47,14 +55,17 @@
 }
 
 .dash-hero-thumb {
-  width: 119px;
-  height: 119px;
+  width: 150px;
+  height: 150px;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 20px var(--shadow-card);
   transform: rotate(var(--rot));
   flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.15s;
 }
+.dash-hero-thumb:hover { transform: rotate(var(--rot)) scale(1.05); }
 .dash-hero-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 .dash-hero-content {
@@ -89,6 +100,10 @@
   flex-direction: column;
   gap: 12px;
   min-height: 0; /* lets content that should grow (slideshow, mini-board) actually grow, not overflow */
+  min-width: 0; /* without this, a card whose content wants to be wide (e.g. the curated-lists
+                   carousel strip, before it starts scrolling) forces its whole grid column
+                   wider, squeezing the other column — grid tracks default to an auto minimum
+                   equal to content's max-content size, not 0 */
 }
 
 .dash-card-header { display: flex; align-items: center; justify-content: space-between; }
@@ -147,34 +162,34 @@
 
 .dash-kmini-card {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  align-items: stretch; /* thumb stretches to the card's full height, set by the text column */
+  gap: 9px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 5px;
+  border-radius: 11px;
+  padding: 0; /* the thumb now bleeds to the card's top/bottom/left edges; text keeps its own padding */
+  overflow: hidden; /* clips the flush thumb to the card's rounded corners */
   cursor: pointer;
   transition: border-color 0.15s;
 }
 .dash-kmini-card:hover { border-color: var(--primary); }
 
 .dash-kmini-thumb {
-  width: 26px;
-  height: 26px;
-  border-radius: 5px;
+  width: 44px;
+  align-self: stretch;
   object-fit: cover;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 700;
   color: #fff;
 }
 
-.dash-kmini-info { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.dash-kmini-info { min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 7px 9px 7px 0; }
 .dash-kmini-title {
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 500;
   color: var(--text-primary);
   white-space: nowrap;
@@ -185,10 +200,10 @@
   align-self: flex-start;
   background: var(--primary-bg);
   color: var(--primary);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
-  border-radius: 8px;
-  padding: 1px 5px;
+  border-radius: 11px;
+  padding: 1px 7px;
 }
 
 .dash-kmini-more, .dash-kmini-col-empty {
@@ -198,104 +213,143 @@
   padding: 2px;
 }
 
-/* Favorites widget */
-.dash-fav-slideshow {
+/* Shared thumbnail-carousel style — used by both Favorites Spotlight and Curated Lists so they
+   read as the same visual language: a horizontally scrollable row of landscape thumbnails with
+   a caption below each one (ESPN-style "shows strip" reference). */
+.dash-carousel {
   position: relative;
-  flex: 1;
-  min-height: 160px;
-  border-radius: 12px;
-  overflow: hidden;
-  background: var(--hover-bg);
-  cursor: pointer;
-}
-.dash-fav-slide {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.35s ease;
-}
-.dash-fav-slide.active { opacity: 1; pointer-events: auto; }
-.dash-fav-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.dash-fav-slide-info {
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  padding: 10px 12px;
-  background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-}
-.dash-fav-demo-badge {
-  position: absolute;
-  top: 8px; left: 8px;
-  background: var(--primary);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-  border-radius: 12px;
-  padding: 3px 8px;
-}
-.dash-fav-prev, .dash-fav-next {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(0,0,0,0.5);
-  color: #fff;
-  cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: center;
-  z-index: 2;
+  gap: 4px;
+  flex: 1; /* fills the remaining height below the header, keeping the title pinned to the top */
 }
-.dash-fav-prev { left: 8px; }
-.dash-fav-next { right: 8px; }
-.dash-fav-prev:hover, .dash-fav-next:hover { background: var(--primary); }
-.dash-fav-dots { display: flex; justify-content: center; gap: 6px; margin-top: 4px; }
-.dash-fav-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 3px;
-  background: var(--border);
-  cursor: pointer;
-  transition: width 0.2s, background 0.2s;
-}
-.dash-fav-dot.active { width: 16px; background: var(--primary); }
-.dash-fav-empty { color: var(--text-secondary); font-size: 13px; }
-/* No slideshow rendered in the empty state — center the message in the taller card instead
-   of leaving it stranded at the top. */
-.dash-card--favorites:has(.dash-fav-empty) { align-items: center; justify-content: center; }
 
-/* Curated Lists widget */
-.dash-card--curated { justify-content: center; } /* vertically center the chip row in the taller card */
-.dash-genre-strip { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; }
-.dash-genre-chip {
+/* Favorites Spotlight's category filter button — reuses the Kanban board's .btn-board-filter
+   structure/positioning but recolored to the SaveCraft purple, scoped to this class only so the
+   real board's filter button (surface-colored) elsewhere is unaffected. */
+.dash-fav-category-btn {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.dash-fav-category-btn svg { opacity: 0.85; fill: #fff; }
+.dash-fav-category-btn:hover {
+  background: var(--primary-hover, var(--primary));
+  border-color: var(--primary-hover, var(--primary));
+}
+
+.dash-carousel-strip {
+  flex: 1;
+  min-width: 0; /* lets the strip actually shrink/scroll instead of forcing the arrows off the edges */
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  padding: 4px 2px 8px;
+  scrollbar-width: none;
+}
+.dash-carousel-strip::-webkit-scrollbar { display: none; }
+
+.dash-thumb-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   background: none;
   border: none;
   cursor: pointer;
   flex-shrink: 0;
-  width: 64px;
+  width: 170px;
+  scroll-snap-align: start;
 }
-.dash-genre-chip:hover .dash-genre-icon {
-  box-shadow:
-    0 0 0 2px var(--primary),
-    inset 0 1px 0 rgba(255,255,255,0.25),
-    inset 0 -1px 0 rgba(0,0,0,0.2);
+
+.dash-thumb-art {
+  position: relative;
+  width: 170px;
+  height: 112px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--hover-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  transition: box-shadow 0.15s;
 }
-.dash-genre-label { font-size: 11px; color: var(--text-secondary); text-align: center; }
+.dash-thumb-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.dash-thumb-card:hover .dash-thumb-art {
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+.dash-thumb-badge {
+  position: absolute;
+  top: 6px; left: 6px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 2px 6px;
+}
+
+.dash-thumb-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.dash-carousel-prev, .dash-carousel-next {
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 25px; /* bare arrow glyph, ~40% larger than the old circle-button size */
+  line-height: 1;
+  padding: 4px 2px;
+  z-index: 2;
+  transition: color 0.15s;
+}
+.dash-carousel-prev:hover, .dash-carousel-next:hover { color: var(--primary); }
+
+/* No carousel rendered in the empty state — center the message in the remaining space instead
+   of leaving it stranded at the top, without pulling the title down off the top-left corner. */
+.dash-fav-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
 
 /* Profile widget (decorative-only) */
-.dash-card--profile { align-items: center; text-align: center; justify-content: center; }
 .dash-card--profile:hover { border-color: var(--primary); }
+/* The header title ("Profile") is pinned top-left, same as every other widget's header — the
+   card itself no longer centers its whole column; only .dash-profile-body (avatar/name/sub)
+   below the header centers within the remaining space. */
+.dash-profile-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+}
 .dash-profile-avatar.cat-icon { width: 56px; height: 56px; border-radius: 50%; }
 .dash-profile-avatar.cat-icon::after { border-radius: 50% 50% 0 0; }
+/* The person-icon SVG hardcodes 24px height/width, which reads tiny inside a 56px circle —
+   override it here rather than in the SVG string, since that markup is otherwise reusable. */
+.dash-profile-avatar.cat-icon svg { width: 40px; height: 40px; }
 .dash-profile-name { font-weight: 600; font-size: 14px; color: var(--text-primary); }
 .dash-profile-sub { font-size: 12px; color: var(--text-muted); }

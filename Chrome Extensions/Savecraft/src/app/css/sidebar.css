@@ -20,6 +20,26 @@
 
 /* ===== SIDEBAR COLLAPSE (desktop-only rail — the mobile drawer has its own full-width
    overlay UX and isn't affected by this) ===== */
+.sidebar-collapse-wrap {
+  position: relative;
+  margin-left: auto;
+}
+/* Collapsed: .sidebar-header-controls already centers its (now sole visible) child, but the
+   wrap's own margin-left:auto would otherwise still shove it flush against the right edge
+   instead — cancel it so the button centers in the 64px rail, lining up with the category
+   icons below it. */
+.header-sidebar.sidebar-collapsed .sidebar-collapse-wrap {
+  margin-left: 0;
+}
+/* Hovering the button (or the dropdown itself, once open) reveals the options menu — pure
+   CSS, no JS needed to show/hide. Clicking the button is a separate, independent action
+   (toggles sidebar collapse — see btn-sidebar-collapse's click listener in main.js). */
+.sidebar-collapse-wrap:hover .my-options-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s; /* shows immediately, unlike the delayed hide */
+}
+
 .btn-sidebar-collapse {
   background: none;
   border: none;
@@ -45,8 +65,7 @@
 .header-sidebar.sidebar-collapsed .sidebar-header-controls {
   justify-content: center;
 }
-.header-sidebar.sidebar-collapsed .sidebar-header-title,
-.header-sidebar.sidebar-collapsed .sidebar-menu-wrap {
+.header-sidebar.sidebar-collapsed .sidebar-header-title {
   display: none;
 }
 
@@ -69,6 +88,29 @@
 .sidebar.sidebar-collapsed .sidebar-label {
   flex: none;
   justify-content: center;
+}
+
+/* Collapsed rail: the full-row hover highlight looks off since the row is much wider than the
+   icon itself — instead, only the icon's own background square lightens on hover. */
+.sidebar.sidebar-collapsed .sidebar-item:hover {
+  background: none;
+}
+.sidebar.sidebar-collapsed .sidebar-item:hover .cat-icon {
+  background: #45454a;
+}
+
+/* Same idea for the active/current page — the wide-row purple band looked just as off; instead
+   only the icon square fills purple, with the icon itself flipped to white for contrast (it's
+   normally purple-on-dark, which would otherwise vanish against a purple square). */
+.sidebar.sidebar-collapsed .sidebar-item.active {
+  background: none;
+}
+.sidebar.sidebar-collapsed .sidebar-item.active .cat-icon {
+  background: var(--primary);
+}
+.sidebar.sidebar-collapsed .sidebar-item.active .cat-icon svg {
+  fill: #fff;
+  color: #fff;
 }
 
 .sidebar-item {

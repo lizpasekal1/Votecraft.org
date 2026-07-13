@@ -2,6 +2,7 @@
 
 import { state, CATEGORIES } from './state.js';
 import { getFilteredSortedItems } from './render.js';
+import { persistShareCount } from './storage.js';
 
 export function initShare() {
   const wrap = document.getElementById('share-btn-wrap');
@@ -117,7 +118,7 @@ export function sendViaEmail() {
 
   chrome.storage.sync.get({ savecraft_share_count: 0 }, data => {
     const newCount = data.savecraft_share_count + 1;
-    chrome.storage.sync.set({ savecraft_share_count: newCount });
+    persistShareCount(newCount);
     updateShareCount(newCount);
   });
 

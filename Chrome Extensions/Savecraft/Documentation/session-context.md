@@ -4,6 +4,19 @@ This file helps Claude (or any AI assistant) quickly regain context on the SaveC
 
 ---
 
+## Latest Session Summary
+
+- **`js/auth.js`** (new) — Firebase Auth REST API (email/password), no SDK. `getCurrentUser()`/`onAuthChange()`/`signUp()`/`signIn()`/`signOut()`/`getValidIdToken()`.
+- **`js/storage.js`** — every `persist*` now dual-writes to Firestore (`savecraft_users/{uid}/...`) when signed in, via `_firestoreUpsert`/`_firestoreUpsertFields`. `runInitialSync(uid)` merges local ↔ cloud on first sign-in. New fields threaded through `loadAll()`/`_readLocalSettingsSnapshot()`/`runInitialSync()`: `lastfmUsername`, `followedCuratedLists` (a `Set`), `lastfmCache` (local-only).
+- **`js/profile.js`** (new) — `renderProfilePage()`, dispatched from `render.js`'s `renderGrid()` on `state.view === 'profile'`. Reused by three entry points (Dashboard's Profile widget, Settings-dropdown `#btn-profile`, both in `dashboard.js`/`main.js`) — **all three currently skip the sign-in check** (demo mode; look for the "Demo mode" comments to restore `getCurrentUser() ? ... : openAuthModal()` gating later). Layout: Account card alone at top; Connections/Interests/Your Music Taste/Friends share a `.profile-widget-grid` sized identically to the Dashboard's `.dash-card`/2×2 grid (reusing that exact class), each scrolling internally if content overflows its cell.
+- **`js/api.js`** — `ensureLastfmRecentTracks(username)` (public `user.getrecenttracks`, no OAuth) + `isLastfmConfigured()`; API key constant `LASTFM_API_KEY` is currently blank, same pattern as the pre-existing unused `YOUTUBE_API_KEY`.
+- **Firestore**: `savecraft_users` collection/rules already documented in `firebase/votecraft-firebase.md` — this is a **deliberately separate** account system from the shared "Emporium" Votecraft account used by JokeMaster; a future "Connect to Votecraft" linking step is designed but not built.
+- **Dashboard changes**: Favorites Spotlight and Curated Lists both rebuilt on a shared `.dash-thumb-card`/`.dash-carousel-*` component with seamless infinite-scroll (three duplicated copies of the card list, silently re-centered between clicks); `CURATED_LIST_DISPLAY_NAMES`/`CURATED_LIST_COVER_OVERRIDES` in `dashboard.js` cosmetically relabel some genres as curator/org-branded lists; Kanban mini-widget trimmed to Queue + In Progress only, cards enlarged; Dashboard no longer scrolls (`.grid-area:has(.dashboard-wrap) { overflow: hidden }` in `dashboard.css`); sidebar gained a persistent "Dashboard" link at the top (`render.js`).
+- **Bug fix**: `detailModal.js`'s `ensureLiveItem()` was stranding a curated Music Album's artist name in `.notes` when the album got promoted to a real saved item (the `.notes` fallback only applied while `curated: true`). Fixed going forward, plus a one-time backfill in `storage.js`'s `loadAll()` for already-affected items.
+- **New feature**: saving a Music Album now also triggers `autoSaveMusician()` + `autoImportMusicianAlbums()` (in `addEditModal.js`), mirroring the existing reverse (Musician → auto-import albums) behavior.
+
+---
+
 ## File Locations
 
 | What | Path |
