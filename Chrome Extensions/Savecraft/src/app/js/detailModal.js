@@ -127,26 +127,36 @@ export function openDetailModal(item) {
   const _isCuratedMusician = item.curated && item.category === 'Musician';
 
   // The website CTA overlays the top of the image for every category now (the header container
-  // holds only that button — the artist name for Music Album moved into its own "Artist | Year"
-  // line above the title, built below).
+  // holds only that button).
   const _showArtistHeaderAbove = true;
+
+  // Music Album now leads with the artist name in the main title line itself — "Harry Styles |
+  // Fine Line" — rather than a separate line above it. The artist is a clickable link to their
+  // author page (unless we're already on that artist's own Music Albums section, where linking
+  // back to themselves would be redundant), styled purple via .detail-album-artist-link; the
+  // album title after it stays the title's normal white color.
+  const _albumTitleArtistHtml = isMusicAlbum && _detailAuthorName
+    ? `${isMusicAlbumsSectionView()
+        ? `<span class="detail-album-artist-link">${escapeHtml(_detailAuthorName)}</span>`
+        : `<button class="detail-author-link detail-album-artist-link" data-author="${escapeHtml(_detailAuthorName)}" data-category="${escapeHtml(_detailAuthorCat)}">${escapeHtml(_detailAuthorName)}</button>`
+      }<span class="detail-title-sep"> | </span>`
+    : '';
 
   const _titleHtml = item.category === 'Musician'
     ? `<button class="detail-author-link" data-author="${escapeHtml(item.title)}" data-category="Musician">${escapeHtml(item.title || '')}<svg class="detail-title-arrow" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m321-80-71-71 329-329-329-329 71-71 400 400L321-80Z"/></svg></button>`
-    : escapeHtml(item.title || '');
+    : isMusicAlbum
+      ? `${_albumTitleArtistHtml}${escapeHtml(item.title || '')}`
+      : escapeHtml(item.title || '');
 
   const _authorHtml = !_isCuratedMusician && _detailAuthorName && !isMusicAlbum
     ? `<span class="detail-title-sep"> | </span><button class="detail-author-link" data-author="${escapeHtml(_detailAuthorName)}" data-category="${escapeHtml(_detailAuthorCat)}">${escapeHtml(_detailAuthorName)}</button>`
     : '';
 
-  // "Artist | Year" line above the album title — replaces the old header-block placement.
-  // Genre is intentionally kept on item.genre (still fetched/stored/backfilled) but not
-  // rendered anywhere in this modal per current design.
-  const _albumArtistYearHtml = isMusicAlbum && _detailAuthorName
-    ? `<div class="detail-album-artist-year">${isMusicAlbumsSectionView()
-        ? escapeHtml(_detailAuthorName)
-        : `<button class="detail-author-link" data-author="${escapeHtml(_detailAuthorName)}" data-category="${escapeHtml(_detailAuthorCat)}">${escapeHtml(_detailAuthorName)}</button>`
-      }${item.year ? ` <span class="detail-title-sep">|</span> ${escapeHtml(item.year)}` : ''}</div>`
+  // Year alone now (artist moved into the main title line above). Genre is intentionally kept
+  // on item.genre (still fetched/stored/backfilled) but not rendered anywhere in this modal per
+  // current design.
+  const _albumArtistYearHtml = isMusicAlbum && item.year
+    ? `<div class="detail-album-artist-year">${escapeHtml(item.year)}</div>`
     : '';
 
   // Official website CTA — resolves the relevant musician (the item itself, or the album's artist).
@@ -179,7 +189,7 @@ export function openDetailModal(item) {
     artistHeaderEl.style.display = 'none';
   }
 
-  document.getElementById('detail-title').innerHTML = `${_albumArtistYearHtml}<span class="detail-title-text">${_titleHtml}${_authorHtml}</span>`;
+  document.getElementById('detail-title').innerHTML = `<span class="detail-title-text">${_titleHtml}${_authorHtml}</span>${_albumArtistYearHtml}`;
 
   if (_ctaAuthorName && !_ctaAuthor?.websiteUrl) {
     ensureArtistWebsite(_ctaAuthorName).then(url => {
@@ -415,12 +425,12 @@ export function openDetailModal(item) {
       albumsAccordionHeaderEl.style.display = '';
       albumsListEl.style.display = '';
       albumsListEl.classList.add('detail-accordion-collapsible');
-      albumsListEl.innerHTML = knownAlbums.slice(0, 5).map(a => `
+      albumsListEl.innerHTML = `<button class="detail-album-row detail-album-row--see-all" id="detail-albums-see-all">See all →</button>`
+        + knownAlbums.slice(0, 5).map(a => `
         <button class="detail-album-row" data-album-id="${escapeHtml(a.id)}">
           ${a.imageUrl ? `<img class="detail-album-row-thumb" src="${escapeHtml(a.imageUrl)}" alt="" loading="lazy" decoding="async">` : `<span class="detail-album-row-thumb"></span>`}
           <span class="detail-album-row-title">${escapeHtml(a.title || '')}</span>
-        </button>`).join('')
-        + `<button class="detail-album-row detail-album-row--see-all" id="detail-albums-see-all">See all →</button>`;
+        </button>`).join('');
       albumsListEl.querySelectorAll('.detail-album-row[data-album-id]').forEach(row => {
         row.addEventListener('click', () => {
           const album = knownAlbums.find(a => a.id === row.dataset.albumId);
@@ -604,10 +614,19 @@ export function openDetailModal(item) {
     let liveItem = state.items.find(i => i.id === item.id);
     if (!liveItem) {
       liveItem = { ...item, curated: false, savedAt: Date.now() };
+      if (liveItem.category === 'Music Album' && !liveItem.author && liveItem.notes) {
+        // Curated Music Album items stash the artist name in .notes (see _detailAuthorName
+        // above) — once this becomes a real personal item, item.curated flips to false, so that
+        // fallback no longer applies. Promote the name into .author now (and clear .notes) or
+        // the artist link/website CTA silently vanish on every future open of this item, and the
+        // artist name would otherwise show up in My Notes as if it were a real saved note.
+        liveItem.author = liveItem.notes;
+        liveItem.notes = null;
+      }
       state.items.push(liveItem);
       await persistItem(liveItem);
       if (liveItem.category === 'Music Album') {
-        await autoSaveMusician(liveItem.notes || liveItem.author);
+        await autoSaveMusician(liveItem.author);
       }
     }
     return liveItem;

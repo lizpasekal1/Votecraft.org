@@ -4,6 +4,17 @@ SaveCraft is a Chrome extension that acts as a personal media library. Users sav
 
 ---
 
+## Recent Additions (latest session)
+
+- **Accounts + Firestore sync** — SaveCraft now has its own email/password sign-in (`js/auth.js`), deliberately independent from any shared Votecraft account. Every existing `persist*` call in `storage.js` dual-writes to Firestore (`savecraft_users/{uid}` + subcollections) when signed in; `chrome.storage.sync` stays the source of truth and signed-out users are unaffected. See `firebase/votecraft-firebase.md` for the data model/rules.
+- **Profile page** (`js/profile.js`, new view `state.view === 'profile'`) — Account info, a Last.fm "recent tracks" connection (username only, no OAuth, paste an API key into `api.js` to enable), an Interests picker (which curator-branded curated lists to follow), a "Your Music Taste" genre breakdown from saved albums, and a static Friends placeholder. **Currently in demo mode**: every entry point skips the sign-in gate and goes straight to this page — see the "demo mode" comments in `dashboard.js`/`main.js`/`profile.js` for exactly where to restore real gating.
+- **Curated Lists relabeled** — several Dashboard curated-genre cards now show sponsor/org-branded display names (e.g. "Top 100" → "Votecraft List", "Thriller" → "FairVote List") purely cosmetically via `CURATED_LIST_DISPLAY_NAMES`/`CURATED_LIST_COVER_OVERRIDES` in `dashboard.js` — previews a future "lists from different curator groups" direction without touching real genre data/navigation.
+- **Album → Artist auto-import** — saving a new Music Album now also calls `autoSaveMusician()` and `autoImportMusicianAlbums()`, mirroring the existing reverse behavior (adding a Musician auto-imports their albums).
+- **Detail modal**: Music Album titles now read "Artist | Title" (artist as a purple clickable link) instead of a separate line above the title. Fixed a real bug in `ensureLiveItem()` where a curated album's artist name (stashed in `.notes` while curated) was silently stranded once the album was saved and `.notes` fallback stopped applying — `storage.js`'s `loadAll()` now also backfills any already-affected existing items.
+- **Dashboard**: Favorites Spotlight and Curated Lists now share one thumbnail-carousel look with infinite scroll (loops seamlessly, no "flying back" jump); Kanban widget sized up and trimmed to just Queue/In Progress; the whole Dashboard no longer scrolls (`.grid-area:has(.dashboard-wrap)`); a "Dashboard" link was added to the top of the sidebar.
+
+---
+
 ## Loading the Extension in Chrome
 
 The extension runs as an unpacked developer extension — it is not yet published to the Chrome Web Store.
@@ -323,7 +334,8 @@ All of the above are declared in `manifest.json` under `host_permissions`. YouTu
 | Phase | Status | Description |
 |-------|--------|-------------|
 | Phase 1 | ✅ Active | Core extension — personal saves, curated recommendations, Kanban, author pages, iTunes integration |
+| Phase 1.5 | ✅ Active (demo mode) | Accounts + Firestore sync + Profile page — see "Recent Additions" above |
 | Phase 2 | Planned | Spotify integration for Musician/Music Album richer artist data (photos, full discography) |
-| Phase 3 | Planned | Sharing with contacts (requires Firebase Auth + Firestore write access) |
+| Phase 3 | Unblocked, not built | Sharing with contacts — Firebase Auth + Firestore write access now exist (Phase 1.5); the sharing feature itself still isn't built |
 | Phase 4 | Planned | AI recommendations (requires Claude API via Firebase Function) |
 | Chrome Web Store | Future | One-time $5 developer fee; publish when Phase 1 is stable |

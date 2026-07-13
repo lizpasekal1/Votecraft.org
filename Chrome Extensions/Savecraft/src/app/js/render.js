@@ -16,7 +16,13 @@ import { openDetailModal } from './detailModal.js';
 import { openEditModal } from './addEditModal.js';
 import { openFetchAlbumsModal } from './fetchAlbumsModal.js';
 import { renderDashboard } from './dashboard.js';
+import { renderProfilePage } from './profile.js';
 import { closeSidebar } from './main.js';
+
+// Fill swapped from the source icon's #1f1f1f (near-black, invisible against .cat-icon's dark
+// background) to the same #5B5BEF used by every other sidebar cat-icon SVG (CAT_EMOJI in
+// state.js) so it's actually visible in the app's dark theme.
+const DASHBOARD_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5B5BEF"><path d="M160-120v-480l320-240 320 240v480H560v-280H400v280H160Z"/></svg>';
 
 export function getFilteredSortedItems() {
   let items = [...state.items];
@@ -180,10 +186,33 @@ export function renderSidebar() {
     });
   }
 
+  // Keyed off state.view rather than state.sidebarMode — every other sidebar click handler
+  // (category, subfolder, "All Items") reliably updates state.view but doesn't reset
+  // sidebarMode away from 'home', so checking sidebarMode here left this link stuck active
+  // after navigating away from the dashboard.
+  const dashboardLinkHtml = `
+    <div class="sidebar-item sidebar-dashboard-link ${state.view === 'dashboard' ? 'active' : ''}" data-view="dashboard">
+      <span class="sidebar-label"><span class="cat-icon">${DASHBOARD_ICON_SVG}</span><span class="sidebar-label-text"> Dashboard</span></span>
+    </div>
+    <div class="sidebar-divider"></div>
+  `;
+
+  function wireDashboardLink() {
+    sidebar.querySelector('.sidebar-dashboard-link')?.addEventListener('click', () => {
+      state.sidebarMode = 'home';
+      state.view = 'dashboard';
+      // Deliberately no persistViewState() call — arriving at the dashboard is never persisted
+      // as the "last view" (see main.js's init()), so the real last-active view stays intact.
+      renderSidebar();
+      renderGrid();
+    });
+  }
+
   // Curated mode: genre picker until a genre is selected, then show categories
   if (state.sidebarMode === 'curated' && !state.view.startsWith('genre:')) {
     sidebar.innerHTML = mobileHeader + `
       <div class="sidebar-items-scroll">
+        ${dashboardLinkHtml}
         ${CURATED_GENRES.map((genre, i) => `
           ${i > 0 ? '<div class="sidebar-divider"></div>' : ''}
           <div class="sidebar-item sidebar-genre" data-genre="${genre}">
@@ -194,6 +223,7 @@ export function renderSidebar() {
       </div>
     `;
     wireMobileHeader();
+    wireDashboardLink();
     sidebar.querySelectorAll('.sidebar-genre').forEach(el => {
       el.addEventListener('click', () => {
         state.view = 'genre:' + el.dataset.genre;
@@ -262,10 +292,12 @@ export function renderSidebar() {
 
   sidebar.innerHTML = mobileHeader + `
     <div class="sidebar-items-scroll">
+      ${dashboardLinkHtml}
       ${categorySections}
     </div>
   `;
   wireMobileHeader();
+  wireDashboardLink();
 
   // Category header: toggle collapse OR switch view
   sidebar.querySelectorAll('.sidebar-category').forEach(el => {
@@ -414,6 +446,11 @@ export function renderGrid() {
 
   if (state.view === 'dashboard') {
     renderDashboard();
+    return;
+  }
+
+  if (state.view === 'profile') {
+    renderProfilePage();
     return;
   }
 

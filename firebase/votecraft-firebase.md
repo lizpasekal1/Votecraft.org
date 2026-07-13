@@ -78,6 +78,20 @@ Per-user joke votes. Auth-gated.
 
 ---
 
+### `savecraft_users` — SaveCraft
+Per-user synced library — the extension's `chrome.storage.sync` data mirrored to the cloud so a future mobile web app (savecraft.org) can read/write the same data. Auth-gated, one doc + three subcollections per user, mirroring the `gameStates` pattern above.
+
+**Document ID:** `{firebase-auth-uid}`
+
+- `savecraft_users/{uid}` — settings singleton: `sort`, `tutorialSeen`, `kanbanSort`, `kanbanLists`, `hiddenCurated`, `curatedOverrides`, `view`, `sidebarMode`, `theme`, `sidebarCollapsed`, `shareCount`, `updatedAt`
+- `savecraft_users/{uid}/items/{itemId}` — one doc per saved item, `itemId` matches the extension's local item id
+- `savecraft_users/{uid}/folders/{folderId}` — one doc per folder
+- `savecraft_users/{uid}/authors/{authorId}` — one doc per author/artist profile
+
+**Auth is SaveCraft-specific, not the shared Emporium account** (see the "Auth implication" note below — this is a deliberate divergence from this doc's original vision, decided directly with the user). Uses the same Firebase project and the same email+password provider, but a SaveCraft sign-up does not double as a Votecraft account. Written via the Firebase Auth REST API directly from the extension (no SDK — the extension has no bundler), not through any shared Emporium sign-in flow.
+
+---
+
 ## Auth Setup
 - **Method:** Email + Password
 - **Anonymous auth:** Enabled (used by JokeMaster for guest play)
@@ -123,6 +137,16 @@ When an app prompts users to create an account, the flow uses Votecraft account 
 but is framed around that app's own value — not "join Votecraft." One account works everywhere,
 but branding stays local to each app. The Emporium (`votecraft.org/emporium/`) is for users
 who actively want to explore the full ecosystem — opt-in, not the default entry point.
+
+**Divergence for SaveCraft (decided directly with the user, current implementation):** SaveCraft
+does *not* follow the "one shared account" model above. It has its own independent sign-up —
+a SaveCraft account is a SaveCraft account, full stop, not secretly a Votecraft account under
+different branding. The reasoning: a shared account, even invisibly branded, is still the same
+account from day one — closer to "Votecraft in disguise" than "a standalone tool that happens to
+connect later." A future "Connect to Votecraft" step (not yet built) will let a user *explicitly*
+link their already-independent SaveCraft account to a Votecraft account, rather than the two
+being the same account implicitly. If other apps adopt the shared-account model above, SaveCraft
+should be treated as the deliberate exception, not a bug to "fix" into consistency.
 
 ---
 

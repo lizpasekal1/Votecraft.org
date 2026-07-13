@@ -118,4 +118,7 @@ export const state = {
   kanbanLists: [],
   activeListId: null,
   kanbanCategory: null,
+  lastfmUsername: null,            // Last.fm account username the user has linked, or null
+  followedCuratedLists: new Set(), // Set of CURATED_GENRES keys the user has opted into via Profile > Interests
+  lastfmCache: {}, // { [normalizedUsername]: { tracks: [...]|null, fetchedAt } } — auto-fetched via Last.fm, short TTL
 };

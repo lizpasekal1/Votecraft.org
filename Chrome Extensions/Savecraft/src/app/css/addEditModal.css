@@ -518,3 +518,17 @@
   background: var(--hover-bg);
 }
 
+/* ===== Auth modal ===== */
+.auth-error {
+  color: #EF4444;
+  font-size: 13px;
+  margin-top: -6px;
+}
+.auth-signed-in-info {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+.auth-signed-in-info strong {
+  color: var(--text-primary);
+}
+
