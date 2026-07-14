@@ -242,7 +242,16 @@ export async function loadAll() {
       if (data.savecraft_sidebar_mode) state.sidebarMode = data.savecraft_sidebar_mode;
 
       // Clean up legacy default folders no longer used
-      const legacyIds = ['default-music-albums', 'default-music-streaming'];
+      const legacyIds = [
+        'default-music-albums', 'default-music-streaming',
+        // News outlet curation is being reworked — pull these back out for now.
+        'default-news-ap', 'default-news-reuters', 'default-news-npr', 'default-news-pbs',
+        'default-shows-news',
+        'default-weblinks-news',
+        'default-books-genres',
+        // Redundant with the real Musician category now — confusingly asked "pick Musician" twice.
+        'default-music-musicians',
+      ];
       const legacyKeys = legacyIds.map(id => `folder_${id}`).filter(k => data[k]);
       state.folders = state.folders.filter(f => !legacyIds.includes(f.id));
 
@@ -260,6 +269,40 @@ export async function loadAll() {
         migrated.forEach(item => { toMigrate[`item_${item.id}`] = item; });
         chrome.storage.sync.set(toMigrate);
       }
+
+      // Migrate the old folder-based "Favorites" mechanism to the new item.favorite boolean —
+      // favoriting used to overwrite folderId to point at a per-category "Favorites" folder,
+      // clobbering whatever real folder the item was in. Can't recover that lost folder, so this
+      // resets folderId to null (un-foldered now counts as a category's primary folder).
+      const favoritesFolderIds = new Set(state.folders.filter(f => f.name === 'Favorites').map(f => f.id));
+      if (favoritesFolderIds.size) {
+        const favMigrated = [];
+        state.items.forEach(item => {
+          if (favoritesFolderIds.has(item.folderId)) {
+            item.favorite = true;
+            item.folderId = null;
+            favMigrated.push(item);
+          }
+        });
+        if (favMigrated.length) {
+          const toMigrate = {};
+          favMigrated.forEach(item => { toMigrate[`item_${item.id}`] = item; });
+          chrome.storage.sync.set(toMigrate);
+        }
+        state.folders = state.folders.filter(f => !favoritesFolderIds.has(f.id));
+        favoritesFolderIds.forEach(id => removeFolder(id));
+      }
+
+      // Rename a couple of already-seeded default folders — seeding only ever inserts a folder
+      // once, so a name change made here later never reaches anyone who already loaded the old one.
+      const FOLDER_RENAMES = { 'default-shows-shows': 'TV Shows' };
+      Object.entries(FOLDER_RENAMES).forEach(([id, name]) => {
+        const folder = state.folders.find(f => f.id === id);
+        if (folder && folder.name !== name) {
+          folder.name = name;
+          persistFolder(folder);
+        }
+      });
 
       // Backfill: curated Music Album items stash their artist name in .notes while curated (see
       // detailModal.js's _detailAuthorName). Before a fix, promoting one to a real saved item
@@ -284,13 +327,24 @@ export async function loadAll() {
       // Seed new default folders if not present
       const defaults = [
         { id: 'default-music-albums',     name: 'Music Albums', parentCategory: 'Music Album' },
-        { id: 'default-music-musicians',  name: 'Musicians',    parentCategory: 'Music Album' },
         { id: 'default-music-playlists',  name: 'Playlists',    parentCategory: 'Music Album' },
         { id: 'default-books-authors',    name: 'Authors',      parentCategory: 'Book' },
-        { id: 'default-books-genres',     name: 'Genres',       parentCategory: 'Book' },
         { id: 'default-weblinks-articles', name: 'Articles',    parentCategory: 'Web Links' },
         { id: 'default-weblinks-blogs',    name: 'Blogs',       parentCategory: 'Web Links' },
-        { id: 'default-weblinks-news',     name: 'News',        parentCategory: 'Web Links' },
+        { id: 'default-movies-videos',   name: 'Videos',        parentCategory: 'Movie' },
+        { id: 'default-shows-podcasts',  name: 'Podcasts',      parentCategory: 'Show' },
+        { id: 'default-shows-webseries', name: 'Webseries',     parentCategory: 'Show' },
+        { id: 'default-shows-tutorials', name: 'Tutorials',     parentCategory: 'Show' },
+        { id: 'default-movies-movies',       name: 'Movies',    parentCategory: 'Movie' },
+        { id: 'default-shows-shows',         name: 'TV Shows',  parentCategory: 'Show' },
+        { id: 'default-musicians-musicians', name: 'Musicians', parentCategory: 'Musician' },
+        { id: 'default-books-books',         name: 'Books',     parentCategory: 'Book' },
+        { id: 'default-weblinks-websites',   name: 'Website',   parentCategory: 'Web Links' },
+        { id: 'default-art-dance',     name: 'Dance',     parentCategory: 'Visual Art' },
+        { id: 'default-art-comics',    name: 'Comics',    parentCategory: 'Visual Art' },
+        { id: 'default-art-painting',  name: 'Painting',  parentCategory: 'Visual Art' },
+        { id: 'default-art-sculpture', name: 'Sculpture', parentCategory: 'Visual Art' },
+        // Curated News outlet folders removed for now — coming back to this (see legacyIds above).
       ];
       const toSave = {};
       for (const df of defaults) {

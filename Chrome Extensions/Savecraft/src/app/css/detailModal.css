@@ -606,13 +606,6 @@
   cursor: default;
 }
 
-.detail-video-frame {
-  width: 100%;
-  height: 100%;
-  border: 0;
-  display: block;
-}
-
 .liner-notes-panel {
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
@@ -717,26 +710,53 @@
   color: #fff;
 }
 
-.detail-vc-why {
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid var(--border);
-}
-
 .vc-why-title {
+  display: block;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #ffffff;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
-.vc-why-text {
-  font-size: 13px;
+.vc-why-tooltip-text {
+  display: block;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
   color: var(--text-secondary);
   line-height: 1.5;
-  margin: 0 0 10px;
+}
+
+/* Callout attached to the sponsored-statement badge itself — shown on hover instead of a
+   permanently-visible "Why VoteCraft Recommends" section at the bottom of the modal. */
+.vc-sponsored-tooltip {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 8px;
+  width: 240px;
+  max-width: 80vw;
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  white-space: normal; /* .vc-sponsored-tag (the parent) sets nowrap for its own label — reset it here so this text wraps instead of overflowing */
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px);
+  transition: opacity 0.15s, transform 0.15s, visibility 0.15s;
+  z-index: 5;
+}
+
+.vc-sponsored-tag--overlay:hover .vc-sponsored-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }
 
 .vc-sponsored-tag {
@@ -761,6 +781,20 @@
 .vc-sponsored-tag:hover {
   background: var(--primary-hover);
   transform: translateY(-1px);
+}
+
+/* Same slot/positioning language as .btn-promo-toggle, since it sits in that same corner of the image */
+.vc-sponsored-tag--overlay {
+  position: absolute;
+  right: 12px;
+  bottom: -12px;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* Stacked above the promo-video/album-art toggle when both are present on the same item */
+.vc-sponsored-tag--overlay.vc-sponsored-tag--stacked {
+  bottom: 24px;
 }
 
 

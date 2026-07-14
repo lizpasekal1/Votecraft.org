@@ -163,6 +163,8 @@
 .dash-kmini-card {
   display: flex;
   align-items: stretch; /* thumb stretches to the card's full height, set by the text column */
+  height: 36px; /* fixed so every card matches regardless of thumb/title content — was content-driven before, causing uneven heights */
+  flex-shrink: 0;
   gap: 9px;
   background: var(--surface);
   border: 1px solid var(--border);

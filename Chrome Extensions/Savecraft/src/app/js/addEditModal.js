@@ -6,9 +6,9 @@
 // results-dropdown renderer don't need to special-case each source.
 
 import { state, CATEGORIES, CAT_LABEL, CAT_EMOJI, CATEGORY_PLATFORMS, MODAL_BOOKMARK_ICON_SVG } from './state.js';
-import { escapeHtml, isItunesArtworkUrl } from './utils.js';
+import { escapeHtml, isItunesArtworkUrl, folderIconHtml } from './utils.js';
 import { persistItem, persistCuratedOverrides } from './storage.js';
-import { renderSidebar, renderGrid } from './render.js';
+import { renderSidebar, renderGrid, promptAddFolder } from './render.js';
 import {
   searchMusicians, searchMusicAlbums, searchShows, searchBooks, searchGames, searchMoviesWikipedia,
   ensureArtistWikipediaInfo, ensureItemWikipediaInfo, fetchAlbumsFromItunes,
@@ -20,6 +20,9 @@ let _wizardScreen = 'category';    // which screen is currently visible — driv
 let _wizardResults = [];           // last-rendered search results, indexed for click-to-select
 let _wizardFetchedImageUrl = null; // image resolved from search selection / review-screen enrichment; merged into item.imageUrl at save time only if the user hasn't typed a manual override
 let _wizardToken = 0;              // bumped on every open/close/back/advance — in-flight search or enrichment callbacks compare against this and no-op if stale
+let _wizardFolderId = null;        // folder chosen on the folder-picker screen (null = "No folder")
+let _wizardHadFolderScreen = false; // whether the current category actually showed a folder screen — drives Back navigation
+let _wizardHadMusicChoiceScreen = false; // whether the combined "Music" tile's Musician/Album sub-choice screen was shown — drives Back navigation
 
 const STEP1_SEARCH_FN = {
   Musician: searchMusicians,
@@ -28,7 +31,7 @@ const STEP1_SEARCH_FN = {
   Book: searchBooks,
   Game: searchGames,
   Movie: searchMoviesWikipedia,
-  // 'Visual Art' intentionally omitted — no search source; its category tile goes straight to the review screen.
+  // 'Visual Art' and 'Web Links' intentionally omitted — no search source for either; both go straight to the review screen.
 };
 
 const STEP1_PLACEHOLDER = {
@@ -92,9 +95,16 @@ export function getSelectedPlatforms() {
 
 // ===== SCREEN A: category tiles =====
 
+// Musician and Music Album are one combined "Music" tile here — picking it leads to a small
+// sub-choice screen (showMusicChoiceScreen) instead of two separate tiles. Nothing about the
+// underlying categories themselves changes; this is purely a wizard-entry-point convenience.
 function renderCategoryTiles() {
   const grid = document.getElementById('step1-category-grid');
-  grid.innerHTML = CATEGORIES.map(cat => `
+  grid.innerHTML = CATEGORIES.filter(cat => cat !== 'Music Album').map(cat => cat === 'Musician' ? `
+    <button type="button" class="step1-category-tile" data-category="__music__">
+      <span class="cat-icon">${CAT_EMOJI['Music Album'] || ''}</span>
+      <span class="step1-category-tile-label">Music</span>
+    </button>` : `
     <button type="button" class="step1-category-tile" data-category="${cat}">
       <span class="cat-icon">${CAT_EMOJI[cat] || ''}</span>
       <span class="step1-category-tile-label">${CAT_LABEL[cat] || cat}</span>
@@ -102,16 +112,114 @@ function renderCategoryTiles() {
 }
 
 export function selectStep1Category(cat) {
-  state.modalCategory = cat;
-  document.getElementById('modal-category').value = cat;
   document.querySelectorAll('.step1-category-tile').forEach(t =>
     t.classList.toggle('selected', t.dataset.category === cat));
 
-  if (cat === 'Visual Art') {
-    showReviewScreen(null);
+  if (cat === '__music__') {
+    showMusicChoiceScreen();
     return;
   }
 
+  state.modalCategory = cat;
+  document.getElementById('modal-category').value = cat;
+  showFolderScreenOrSkip(cat);
+}
+
+// ===== SCREEN A1.5: Musician vs Music Album sub-choice (only for the combined "Music" tile) =====
+
+function showMusicChoiceScreen() {
+  _wizardScreen = 'music-choice';
+  _wizardHadMusicChoiceScreen = true;
+  _wizardToken += 1;
+
+  document.getElementById('modal-step1').style.display = 'none';
+  document.getElementById('modal-step-music-choice').style.display = '';
+  document.getElementById('modal-step-folder').style.display = 'none';
+  document.getElementById('modal-step-search').style.display = 'none';
+  document.getElementById('modal-step2').style.display = 'none';
+  document.getElementById('btn-modal-back').style.display = '';
+  document.getElementById('btn-modal-save').style.display = 'none';
+  document.querySelector('#modal-overlay h2').innerHTML = `${MODAL_BOOKMARK_ICON_SVG}Musician or Album?`;
+
+  const grid = document.getElementById('step1-music-choice-grid');
+  grid.innerHTML = ['Musician', 'Music Album'].map(cat => `
+    <button type="button" class="step1-category-tile" data-category="${cat}">
+      <span class="cat-icon">${CAT_EMOJI[cat] || ''}</span>
+      <span class="step1-category-tile-label">${CAT_LABEL[cat] || cat}</span>
+    </button>`).join('');
+
+  grid.querySelectorAll('.step1-category-tile').forEach(t => {
+    t.addEventListener('click', () => selectMusicChoice(t.dataset.category));
+  });
+}
+
+function selectMusicChoice(cat) {
+  state.modalCategory = cat;
+  document.getElementById('modal-category').value = cat;
+  showFolderScreenOrSkip(cat);
+}
+
+// ===== SCREEN A2: folder picker (shown only when the category has at least one folder) =====
+
+function showFolderScreenOrSkip(cat) {
+  const folders = state.folders.filter(f => f.parentCategory === cat).sort((a, b) => a.name.localeCompare(b.name));
+  // With no "Skip" option, a single folder is no real choice — auto-assign it and move on
+  // instead of forcing a click on the only tile that could ever be picked.
+  if (folders.length <= 1) {
+    _wizardHadFolderScreen = false;
+    _wizardFolderId = folders[0]?.id || null;
+    advanceFromFolderScreen(cat);
+    return;
+  }
+  showFolderScreen(cat, folders);
+}
+
+function showFolderScreen(cat, folders) {
+  _wizardScreen = 'folder';
+  _wizardHadFolderScreen = true;
+  _wizardToken += 1;
+
+  document.getElementById('modal-step1').style.display = 'none';
+  document.getElementById('modal-step-music-choice').style.display = 'none';
+  document.getElementById('modal-step-folder').style.display = '';
+  document.getElementById('modal-step-search').style.display = 'none';
+  document.getElementById('modal-step2').style.display = 'none';
+  document.getElementById('btn-modal-back').style.display = '';
+  document.getElementById('btn-modal-save').style.display = 'none';
+  const isNews = cat === 'News';
+  document.querySelector('#modal-overlay h2').innerHTML = `${MODAL_BOOKMARK_ICON_SVG}${isNews ? 'Choose a source' : 'Choose a folder'}`;
+
+  // No "Skip" — a folder must always be picked; there is no path to the review screen without one.
+  const grid = document.getElementById('step1-folder-grid');
+  grid.innerHTML = folders.map(f => `
+    <button type="button" class="step1-category-tile${f.id ? '' : ' step1-category-tile--no-icon'}" data-folder-id="${f.id}">
+      ${f.id ? `<span class="cat-icon">${folderIconHtml(f.id, 28)}</span>` : ''}
+      <span class="step1-category-tile-label">${escapeHtml(f.name)}${f.paywalled ? ' <span class="step1-paywalled-badge">Paywalled</span>' : ''}</span>
+    </button>`).join('');
+
+  grid.querySelectorAll('.step1-category-tile').forEach(t => {
+    t.addEventListener('click', () => selectStep1Folder(t.dataset.folderId || null, cat));
+  });
+
+  const addFolderLink = document.getElementById('step1-add-folder-link');
+  addFolderLink.style.display = cat === 'Visual Art' ? '' : 'none';
+  addFolderLink.onclick = () => {
+    promptAddFolder(cat);
+    const updatedFolders = state.folders.filter(f => f.parentCategory === cat).sort((a, b) => a.name.localeCompare(b.name));
+    showFolderScreen(cat, updatedFolders);
+  };
+}
+
+function selectStep1Folder(folderId, cat) {
+  _wizardFolderId = folderId;
+  advanceFromFolderScreen(cat);
+}
+
+function advanceFromFolderScreen(cat) {
+  if (cat === 'Visual Art' || cat === 'Web Links' || cat === 'News') {
+    showReviewScreen(null);
+    return;
+  }
   showSearchScreen(cat);
 }
 
@@ -122,6 +230,8 @@ function showSearchScreen(cat) {
   _wizardToken += 1;
 
   document.getElementById('modal-step1').style.display = 'none';
+  document.getElementById('modal-step-music-choice').style.display = 'none';
+  document.getElementById('modal-step-folder').style.display = 'none';
   document.getElementById('modal-step-search').style.display = '';
   document.getElementById('modal-step2').style.display = 'none';
   document.getElementById('btn-modal-back').style.display = '';
@@ -201,11 +311,14 @@ function showReviewScreen(result) {
   const myToken = _wizardToken;
 
   document.getElementById('modal-step1').style.display = 'none';
+  document.getElementById('modal-step-music-choice').style.display = 'none';
+  document.getElementById('modal-step-folder').style.display = 'none';
   document.getElementById('modal-step-search').style.display = 'none';
   document.getElementById('modal-step2').style.display = '';
   document.getElementById('modal-category').style.display = '';
   document.getElementById('btn-modal-back').style.display = '';
   document.getElementById('btn-modal-save').style.display = '';
+  document.getElementById('folder-select-group').style.display = 'none'; // Add flow assigns folder via the wizard screen, not this select
   document.querySelector('#modal-overlay h2').innerHTML = `${MODAL_BOOKMARK_ICON_SVG}Add to SaveCraft`;
 
   document.getElementById('input-title').value = result?.title || '';
@@ -213,6 +326,7 @@ function showReviewScreen(result) {
   document.getElementById('input-summary').value = '';
   document.getElementById('input-notes').value = '';
   document.getElementById('input-image-url').value = '';
+  document.getElementById('input-youtube-url').value = '';
   document.getElementById('input-url').value = result?.url || '';
   updateTitleAuthorLayout(state.modalCategory);
   updatePlatformsSection(state.modalCategory || '');
@@ -225,12 +339,21 @@ function showReviewScreen(result) {
 }
 
 // ===== BACK NAVIGATION =====
-// Single back icon, top-left of the modal — steps back exactly one screen. From 'review' this
-// goes to 'search' for categories that have one, or straight to 'category' for Visual Art
-// (which has no search screen to return to). From 'search' it always goes to 'category'.
+// Single back icon, top-left of the modal — steps back exactly one screen through the nested
+// chain: category → [music-choice, only for the combined "Music" tile] → [folder, only if the
+// category has folders] → [search, only if the category has a search source] → review.
 export function handleModalBack() {
-  if (_wizardScreen === 'review' && state.modalCategory && state.modalCategory !== 'Visual Art') {
+  if (_wizardScreen === 'review' && state.modalCategory && state.modalCategory !== 'Visual Art' && state.modalCategory !== 'Web Links' && state.modalCategory !== 'News') {
     backToSearchScreen();
+  } else if (_wizardScreen === 'folder') {
+    if (_wizardHadMusicChoiceScreen) backToMusicChoiceScreen();
+    else backToCategoryScreen();
+  } else if (_wizardScreen === 'music-choice') {
+    backToCategoryScreen();
+  } else if (_wizardHadFolderScreen) {
+    backToFolderScreen();
+  } else if (_wizardHadMusicChoiceScreen) {
+    backToMusicChoiceScreen();
   } else {
     backToCategoryScreen();
   }
@@ -248,11 +371,38 @@ function backToSearchScreen() {
   // toggles) — no reset here — so stepping back into it is non-destructive.
 }
 
+function backToFolderScreen() {
+  _wizardScreen = 'folder';
+  _wizardToken += 1;
+  document.getElementById('modal-step2').style.display = 'none';
+  document.getElementById('modal-step-search').style.display = 'none';
+  document.getElementById('modal-step-folder').style.display = '';
+  document.getElementById('modal-category').style.display = 'none';
+  document.getElementById('btn-modal-save').style.display = 'none';
+  document.querySelector('#modal-overlay h2').innerHTML = `${MODAL_BOOKMARK_ICON_SVG}Choose a folder`;
+  // Folder tiles/listeners are left exactly as rendered — non-destructive re-entry, same as backToSearchScreen's pattern.
+}
+
+function backToMusicChoiceScreen() {
+  _wizardScreen = 'music-choice';
+  _wizardToken += 1;
+  document.getElementById('modal-step2').style.display = 'none';
+  document.getElementById('modal-step-search').style.display = 'none';
+  document.getElementById('modal-step-folder').style.display = 'none';
+  document.getElementById('modal-step-music-choice').style.display = '';
+  document.getElementById('modal-category').style.display = 'none';
+  document.getElementById('btn-modal-save').style.display = 'none';
+  document.querySelector('#modal-overlay h2').innerHTML = `${MODAL_BOOKMARK_ICON_SVG}Musician or Album?`;
+  // Tiles/listeners are left exactly as rendered — non-destructive re-entry, same as backToFolderScreen's pattern.
+}
+
 function backToCategoryScreen() {
   _wizardScreen = 'category';
   _wizardToken += 1; // invalidate any in-flight search or enrichment
   document.getElementById('modal-step2').style.display = 'none';
   document.getElementById('modal-step-search').style.display = 'none';
+  document.getElementById('modal-step-folder').style.display = 'none';
+  document.getElementById('modal-step-music-choice').style.display = 'none';
   document.getElementById('modal-step1').style.display = '';
   document.getElementById('modal-category').style.display = 'none';
   document.getElementById('btn-modal-back').style.display = 'none';
@@ -305,12 +455,32 @@ export function refreshStep2ImagePreviewFromManualInput() {
 
 // ===== OPEN / CLOSE =====
 
+// Edit-mode-only folder reassignment — the Add flow uses the dedicated wizard folder screen
+// instead, so this is only ever called from openEditModal().
+function populateFolderSelect(category, folderId) {
+  const wrap = document.getElementById('folder-select-group');
+  const select = document.getElementById('input-folder-select');
+  const folders = state.folders.filter(f => f.parentCategory === category).sort((a, b) => a.name.localeCompare(b.name));
+  if (folders.length === 0) {
+    wrap.style.display = 'none';
+    select.innerHTML = '';
+    return;
+  }
+  wrap.style.display = '';
+  select.innerHTML = `<option value="">No folder</option>` +
+    folders.map(f => `<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('');
+  select.value = folderId || '';
+}
+
 export function openAddModal() {
   state.modalCategory = null;
   state.editingId = null;
   _wizardScreen = 'category';
   _wizardResults = [];
   _wizardFetchedImageUrl = null;
+  _wizardFolderId = null;
+  _wizardHadFolderScreen = false;
+  _wizardHadMusicChoiceScreen = false;
   _wizardToken += 1;
 
   document.getElementById('input-url').value = '';
@@ -319,6 +489,7 @@ export function openAddModal() {
   document.getElementById('input-summary').value = '';
   document.getElementById('input-notes').value = '';
   document.getElementById('input-image-url').value = '';
+  document.getElementById('input-youtube-url').value = '';
   updatePlatformsSection('');
   document.getElementById('modal-category').value = '';
   document.getElementById('modal-category').style.display = 'none';
@@ -331,6 +502,8 @@ export function openAddModal() {
   document.getElementById('step1-manual-add').style.display = 'none';
 
   document.getElementById('modal-step1').style.display = '';
+  document.getElementById('modal-step-music-choice').style.display = 'none';
+  document.getElementById('modal-step-folder').style.display = 'none';
   document.getElementById('modal-step-search').style.display = 'none';
   document.getElementById('modal-step2').style.display = 'none';
   document.getElementById('btn-modal-back').style.display = 'none';
@@ -353,14 +526,18 @@ export function openEditModal(item) {
   document.getElementById('input-summary').value = item.summary || '';
   document.getElementById('input-notes').value = item.notes || '';
   document.getElementById('input-image-url').value = item.imageUrl || '';
+  document.getElementById('input-youtube-url').value = item.youtubeUrl || '';
   updateTitleAuthorLayout(item.category);
   document.getElementById('modal-category').value = item.category || '';
   document.getElementById('modal-category').style.display = '';
   updatePlatformsSection(item.category || '');
   if (item.platforms) setSelectedPlatforms(item.platforms);
   renderStep2ImagePreview(item.imageUrl || null);
+  populateFolderSelect(item.category, item.folderId);
 
   document.getElementById('modal-step1').style.display = 'none';
+  document.getElementById('modal-step-music-choice').style.display = 'none';
+  document.getElementById('modal-step-folder').style.display = 'none';
   document.getElementById('modal-step-search').style.display = 'none';
   document.getElementById('modal-step2').style.display = '';
   document.getElementById('btn-modal-back').style.display = 'none'; // Edit never has a prior screen, so no Back
@@ -385,10 +562,13 @@ export async function handleSaveItem() {
   const titleInput = document.getElementById('input-title').value.trim();
   const author = document.getElementById('input-author').value.trim() || null;
   const category = document.getElementById('modal-category').value || null;
-  const folderId = null;
+  const folderId = state.editingId
+    ? (document.getElementById('input-folder-select').value || null)
+    : (_wizardFolderId || null);
   const summary = document.getElementById('input-summary').value.trim() || null;
   const notes = document.getElementById('input-notes').value.trim() || null;
   const manualImageUrl = document.getElementById('input-image-url').value.trim() || null;
+  const youtubeUrl = document.getElementById('input-youtube-url').value.trim() || null;
   const platforms = getSelectedPlatforms();
 
   if (!titleInput) {
@@ -404,6 +584,25 @@ export async function handleSaveItem() {
     return;
   }
 
+  // News is source-verified, not free-paste: the URL must actually belong to the chosen curated
+  // outlet's domain — a picked outlet alone is just a label, this is what makes it enforcement.
+  // Gated on folderId being set: the curated outlet folders are pulled out for now (being
+  // reworked), so with none configured this is a no-op and News behaves like a plain category.
+  if (category === 'News' && folderId) {
+    const outletFolder = state.folders.find(f => f.id === folderId);
+    const domain = outletFolder?.domain;
+    let hostname = null;
+    try { hostname = url ? new URL(url).hostname.replace(/^www\./, '') : null; } catch { hostname = null; }
+    const matches = !!domain && !!hostname && (hostname === domain || hostname.endsWith(`.${domain}`));
+    if (!matches) {
+      const urlInput = document.getElementById('input-url');
+      urlInput.focus();
+      urlInput.style.borderColor = '#EF4444';
+      setTimeout(() => urlInput.style.borderColor = '', 2000);
+      return;
+    }
+  }
+
   const saveBtn = document.getElementById('btn-modal-save');
   saveBtn.disabled = true;
   saveBtn.textContent = 'Saving...';
@@ -413,7 +612,7 @@ export async function handleSaveItem() {
   let item;
   if (state.editingId && state.editingId.startsWith('cur-')) {
     // Curated item edit — save as an override, not a new personal item
-    state.curatedOverrides[state.editingId] = { url, title, author, summary, notes, imageUrl: manualImageUrl };
+    state.curatedOverrides[state.editingId] = { url, title, author, summary, notes, imageUrl: manualImageUrl, youtubeUrl };
     await persistCuratedOverrides();
     saveBtn.disabled = false;
     saveBtn.textContent = 'Save';
@@ -422,13 +621,13 @@ export async function handleSaveItem() {
     return;
   } else if (state.editingId) {
     const existing = state.items.find(i => i.id === state.editingId);
-    item = { ...existing, url, title, author, summary, notes, imageUrl: manualImageUrl, category, folderId, platforms };
+    item = { ...existing, url, title, author, summary, notes, imageUrl: manualImageUrl, youtubeUrl, category, folderId, platforms };
     const idx = state.items.findIndex(i => i.id === state.editingId);
     if (idx >= 0) state.items[idx] = item;
   } else {
     item = {
       id: Date.now().toString(), url, title, author, summary, notes,
-      imageUrl: manualImageUrl || _wizardFetchedImageUrl || null, description: null,
+      imageUrl: manualImageUrl || _wizardFetchedImageUrl || null, youtubeUrl, description: null,
       category, folderId, platforms, done: false, savedAt: Date.now(),
     };
   }

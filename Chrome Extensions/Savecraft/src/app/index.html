@@ -67,6 +67,10 @@
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
               <span id="profile-label">Sign in</span>
             </button>
+            <a class="settings-option" id="link-sponsored-statements" href="#" target="_blank" rel="noopener">
+              <span aria-hidden="true">⚡</span>
+              <span>Sponsored Statements</span>
+            </a>
           </div>
         </div>
         <div class="share-btn-wrap" id="share-btn-wrap">
@@ -264,6 +268,8 @@
         <h2>What are you adding to?</h2>
         <select id="modal-category" class="modal-category-select" style="display:none">
           <option value="">Category...</option>
+          <option value="Web Links">Website</option>
+          <option value="News">News</option>
           <option value="Book">Book</option>
           <option value="Game">Game</option>
           <option value="Movie">Movie</option>
@@ -277,6 +283,17 @@
       <!-- ===== SCREEN A: category tiles (Add flow only) ===== -->
       <div class="modal-body modal-step1" id="modal-step1">
         <div class="step1-category-grid" id="step1-category-grid"></div>
+      </div>
+
+      <!-- ===== SCREEN A1.5: Musician vs Music Album sub-choice, shown only from the combined "Music" tile (Add flow only) ===== -->
+      <div class="modal-body modal-step-music-choice" id="modal-step-music-choice" style="display:none">
+        <div class="step1-category-grid" id="step1-music-choice-grid"></div>
+      </div>
+
+      <!-- ===== SCREEN A2: folder picker, shown only when the chosen category has folders (Add flow only) ===== -->
+      <div class="modal-body modal-step-folder" id="modal-step-folder" style="display:none">
+        <div class="step1-category-grid" id="step1-folder-grid"></div>
+        <button type="button" class="step1-add-folder-link" id="step1-add-folder-link">Add New Folder</button>
       </div>
 
       <!-- ===== SCREEN B: live search for the selected category (Add flow only) ===== -->
@@ -316,15 +333,32 @@
         <textarea id="input-notes" placeholder="Add a note..." autocomplete="off" rows="2"></textarea>
       </div>
 
-      <div class="form-group" id="platforms-section" style="display:none;">
-        <label><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M360-120H200q-33 0-56.5-23.5T120-200v-280q0-75 28.5-140.5t77-114q48.5-48.5 114-77T480-840q75 0 140.5 28.5t114 77q48.5 48.5 77 114T840-480v280q0 33-23.5 56.5T760-120H600v-320h160v-40q0-117-81.5-198.5T480-760q-117 0-198.5 81.5T200-480v40h160v320Zm-80-240h-80v160h80v-160Zm400 0v160h80v-160h-80Zm-400 0h-80 80Zm400 0h80-80Z"/></svg><span id="platforms-label-text"></span></label>
-        <details class="platform-dropdown" id="platform-dropdown">
-          <summary class="platform-dropdown-summary">
-            <span id="platform-summary-text">All selected</span>
-            <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M480-360 280-560h400L480-360Z"/></svg>
-          </summary>
-          <div class="platform-dropdown-list" id="platform-chips"></div>
-        </details>
+      <!-- Edit-mode-only folder reassignment; the Add flow uses the dedicated folder-picker wizard screen instead -->
+      <div class="form-group" id="folder-select-group" style="display:none;">
+        <label><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h240l80 80h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Z"/></svg>Folder</label>
+        <select id="input-folder-select"></select>
+      </div>
+
+      <div class="form-row form-row--url-pair">
+        <div class="form-group" id="platforms-section" style="display:none;">
+          <label><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M360-120H200q-33 0-56.5-23.5T120-200v-280q0-75 28.5-140.5t77-114q48.5-48.5 114-77T480-840q75 0 140.5 28.5t114 77q48.5 48.5 77 114T840-480v280q0 33-23.5 56.5T760-120H600v-320h160v-40q0-117-81.5-198.5T480-760q-117 0-198.5 81.5T200-480v40h160v320Zm-80-240h-80v160h80v-160Zm400 0v160h80v-160h-80Zm-400 0h-80 80Zm400 0h80-80Z"/></svg><span id="platforms-label-text"></span></label>
+          <details class="platform-dropdown" id="platform-dropdown">
+            <summary class="platform-dropdown-summary">
+              <span id="platform-summary-text">All selected</span>
+              <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M480-360 280-560h400L480-360Z"/></svg>
+            </summary>
+            <div class="platform-dropdown-list" id="platform-chips"></div>
+          </details>
+        </div>
+        <div class="form-group">
+          <label><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M320-200v-560l440 280-440 280Z"/></svg>YouTube URL</label>
+          <div class="input-with-clear">
+            <input type="url" id="input-youtube-url" placeholder="https://youtube.com/watch?v=…" autocomplete="off" />
+            <button type="button" class="btn-clear-image" id="btn-clear-youtube" title="Clear YouTube URL">
+              <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="form-row form-row--url-pair">
@@ -400,7 +434,6 @@
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
         <div class="detail-queue" id="detail-queue"></div>
-        <div class="detail-vc-why" id="detail-vc-why" style="display:none;"></div>
       </div>
     </div>
   </div>

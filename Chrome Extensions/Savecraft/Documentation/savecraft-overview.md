@@ -6,15 +6,22 @@ SaveCraft is a Chrome extension that acts as a personal media library. Users sav
 
 ## Recent Additions (latest session)
 
-- **Accounts + Firestore sync** — SaveCraft now has its own email/password sign-in (`js/auth.js`), deliberately independent from any shared Votecraft account. Every existing `persist*` call in `storage.js` dual-writes to Firestore (`savecraft_users/{uid}` + subcollections) when signed in; `chrome.storage.sync` stays the source of truth and signed-out users are unaffected. See `firebase/votecraft-firebase.md` for the data model/rules.
-- **Profile page** (`js/profile.js`, new view `state.view === 'profile'`) — a two-column page below a full-width Account card. **Connections**: Last.fm (recent scrobbles) and Steam (recently-played games) are fully working, username/vanity-URL only, no OAuth — both API keys (`LASTFM_API_KEY`/`STEAM_API_KEY` in `api.js`) ship blank, paste one in to activate it. Instagram is a static "coming soon" row (no confirmed integration path — Meta's personal-account API is discontinued). **Interests**: pick which curator-branded curated lists to follow (stored, not yet wired into the Dashboard's own Curated Lists widget). **Your Music Taste**: a genre breakdown from saved albums. **Friends**: static placeholder. The four non-Account cards deliberately match the Dashboard's `.dash-card` sizing/2×2 grid shape. **Currently in demo mode**: every entry point (Dashboard's Profile widget, Settings-dropdown "Sign in" row) skips the sign-in gate and goes straight here — see the "demo mode" comments in `dashboard.js`/`main.js`/`profile.js` for exactly where to restore real gating.
-- **Reload now restores your actual last page** — the old "always force Dashboard on load" behavior was removed; every navigation path persists `state.view`, including Dashboard and Profile (previously deliberately excluded). A brand-new install with no saved state still defaults to the Dashboard.
-- **New "Webpages" sidebar tab** — filters items with `category === 'Web Links'` (the pseudo-category the Add modal auto-assigns for pasted streaming/generic URLs with no better category picked), positioned right before Books. Folded into the same category-rendering path as every real category, so it gets full folder support (collapse/expand, "+ New folder", folder counts/deletion) — three default folders (Articles, Blogs, News) are seeded automatically. Excluded from curated-genre browsing (no curated Web Links content exists).
-- **Curated Lists relabeled** — several Dashboard curated-genre cards now show sponsor/org-branded display names (e.g. "Top 100" → "Votecraft List", "Thriller" → "FairVote List") purely cosmetically via `CURATED_LIST_DISPLAY_NAMES`/`CURATED_LIST_COVER_OVERRIDES` in `dashboard.js` — previews a future "lists from different curator groups" direction without touching real genre data/navigation.
-- **Album → Artist auto-import** — saving a new Music Album now also calls `autoSaveMusician()` and `autoImportMusicianAlbums()`, mirroring the existing reverse behavior (adding a Musician auto-imports their albums).
-- **Detail modal**: Music Album titles now read "Artist | Title" (artist as a purple clickable link) instead of a separate line above the title. Fixed a real bug in `ensureLiveItem()` where a curated album's artist name (stashed in `.notes` while curated) was silently stranded once the album was saved and `.notes` fallback stopped applying — `storage.js`'s `loadAll()` now also backfills any already-affected existing items.
-- **Dashboard**: Favorites Spotlight and Curated Lists now share one thumbnail-carousel look with infinite scroll (loops seamlessly, no "flying back" jump); Kanban widget sized up and trimmed to just Queue/In Progress; the whole Dashboard no longer scrolls (`.grid-area:has(.dashboard-wrap)`); a "Dashboard" link was added to the top of the sidebar.
-- **Collapsed sidebar rail polish**: hover/active highlight now lights up just the icon square instead of the whole (much wider) row; the curated genre-picker's `>` arrows are hidden while collapsed, since there's no room to act on them.
+This was a large session centered on one theme: **folders went from decorative to functional**, which then cascaded into a rethink of what a "category tab" even shows.
+
+- **Folder assignment actually works now.** Previously the only thing that ever set `item.folderId` was the Favorite star (see below) — every seeded default folder (Authors, Genres, etc.) was permanently empty. The Add wizard now has a dedicated folder-picker screen between category and search/review (skipped automatically when a category has 0 or exactly 1 folder — no pointless single-choice click); Edit mode has a folder `<select>`. Picking a folder is mandatory — there's no "Skip"/"No folder" option anymore.
+- **"Primary folder" tab filtering** (`PRIMARY_FOLDER_ID` in `state.js`) — this is the big behavioral change. A top-level category tab (e.g. "Movies") now shows only that category's designated *primary* folder plus anything with no folder assigned — not everything in the category. Other folders (e.g. "Videos" under Movie, "Podcasts"/"Webseries" under Show) are excluded from the flat tab view unless opened directly. Clicking the primary folder itself shows the identical result as the tab. Nothing already saved "disappears" — un-foldered items count as primary automatically, no migration needed.
+- **New default folders per category**, each with its own custom icon (`FOLDER_ICON` map in `state.js` + `folderIconHtml()` helper in `utils.js`; official/default folders can't be deleted from the sidebar — no × shown — only user-created ones can, with a confirm prompt): Movie → Movies (primary) + Videos; Show → TV Shows (primary, tab still labeled "Shows") + Podcasts + Webseries + Tutorials; Musician → Musicians (primary); Music Album → Music Albums (primary) + Playlists; Book → Books (primary) + Authors; Website → Website (primary) + Articles + Blogs; Visual Art (tab now labeled "Arts") → Dance, Comics, Painting, Sculpture, plus an "Add New Folder" quick-link specific to that screen.
+- **"Website" is now a real category** — the old sidebar-only "Web Links" pseudo-category was promoted into a full `CATEGORIES` member, selectable in the Add wizard (first tile). No search source (manual title/URL entry, like Visual Art); no streaming-platform picker section.
+- **New "News" category** — source-verified by design: the folder-picker is the *only* way to attribute a News item (no free URL paste), and when a folder has a `domain` field, `handleSaveItem()` validates the pasted URL's hostname actually matches before allowing the save. A starter set of curated wire-service folders (AP/Reuters/NPR/PBS) was built with this domain-validation infrastructure but then pulled back out pending a real editorial list — the mandatory-picker and domain-check code stays in place and reactivates automatically once folders exist again.
+- **Musician + Music Album combined into one "Music" tile** in the Add wizard only — picking it shows a small Musician-vs-Album sub-choice screen, then continues into the exact same underlying flow as before. The two categories are **not** merged at the data level (still separate `item.category` values, separate search sources) — this is purely a wizard-entry convenience, since research showed a real merge would require touching a large amount of existing category-discriminator logic (badges, detail-modal rendering, CSS) for no functional gain.
+- **Favorites decoupled from folders.** The old mechanism was itself a folder (`favorites-<category>`) and overwrote `item.folderId` when toggled — which actively conflicted with the new primary-folder system (favoriting something would silently move it out of whatever folder it was in). Favorite is now a plain `item.favorite` boolean, independent of `folderId`. Favorited items float to the top of every list, sorted alphabetically among themselves regardless of the active sort mode. A one-time migration in `storage.js` converts anyone who favorited something under the old mechanism.
+- **Detail modal**: the "Promo Vid" YouTube toggle is removed from Musician items entirely (button, click handler, YouTube Data API lookup, search fallback — all gone; Music Album's "Album Art" toggle is untouched). A new manual **"YouTube URL"** field in the Add/Edit modal lets you paste a specific video link for any item; it now surfaces as a real "YouTube" link in the Web Links accordion (not a generic search) whenever set.
+- **Sponsored Statement redesign** — the old static "WHY VOTECRAFT RECOMMENDS" text block at the bottom of the modal is gone. The "⚡ Your Sponsored Statement" badge now sits directly on the item image (same corner slot the old Promo Vid/Album Art toggle used), with the "why" explanation as a hover callout on the badge itself. Also fixed a real bug: the curated-Top-100 detection used to guess at hardcoded ID prefixes (wrong for at least Books); it now checks actual membership in `CURATED_ITEMS['Top 100'][item.category]`, so it's correct for every category automatically. The linked page (`src/sponsored/sponsored.html` + new `sponsored.js`) got a full visual redesign — brand-aligned purple (`#5B5BEF`, matching the app instead of a slightly-off shade), a wider/roomier layout, a product-mockup preview card, and reordered sections (Why it exists → Pricing → What's included → Get in touch). Also newly reachable from Settings dropdown → "Sponsored Statements".
+- **"VoteCraft Picks"** (mobile header dropdown + sidebar "⚡ VC" tab) now links straight into the real curated Top 100 saves area instead of a "Coming soon" placeholder.
+- **Reload now restores your actual last page** — the old "always force Dashboard on load" behavior was removed; every navigation path persists `state.view`, including Dashboard and Profile (previously deliberately excluded).
+- **Curated Lists relabeled** — several Dashboard curated-genre cards now show sponsor/org-branded display names (e.g. "Top 100" → "Votecraft List", "Thriller" → "FairVote List") purely cosmetically via `CURATED_LIST_DISPLAY_NAMES`/`CURATED_LIST_COVER_OVERRIDES` in `dashboard.js`.
+- **Accounts + Firestore sync** — SaveCraft has its own email/password sign-in (`js/auth.js`), independent from any shared Votecraft account. Every `persist*` call in `storage.js` dual-writes to Firestore when signed in.
+- **Profile page** (`js/profile.js`) — Account card + Connections (Last.fm/Steam, both public-username-only, no OAuth)/Interests/Your Music Taste/Friends-placeholder. Still in demo mode — every entry point skips the sign-in gate.
 
 ---
 
@@ -54,7 +61,8 @@ Savecraft/
 │   │   ├── popup.css
 │   │   └── popup.js
 │   ├── sponsored/
-│   │   └── sponsored.html       — Standalone "Sponsored Statement" page linked from curated Top 100 detail modals
+│   │   ├── sponsored.html       — Standalone "Sponsored Statement" page linked from curated Top 100 detail modals + the Settings dropdown
+│   │   └── sponsored.js         — External script (extension-page CSP blocks inline <script>) — sets the "SaveCraft" wordmark link's href
 │   └── app/
 │       ├── index.html           — Full library page (opens as a new tab); loads js/main.js as an ES module + the css/ stylesheets
 │       ├── js/                  — Library logic, split into ES modules (see below)
@@ -110,21 +118,27 @@ The original monolithic `app.js`/`app.css` are still present in `src/app/` as an
 
 ## Categories
 
-Categories use **singular names** in storage and the Add Item dropdown, and **plural names** in the sidebar:
+Categories use **singular names** in storage and the Add Item dropdown, and **plural names** (mostly) in the sidebar:
 
-| Storage / dropdown value | Sidebar label |
-|--------------------------|---------------|
-| Book | Books |
-| Game | Games |
-| Movie | Movies |
-| Musician | Musicians |
-| Music Album | *(hidden — accessed via subfolder)* |
-| Show | Shows |
-| Visual Art | Visual Art |
+| Storage / dropdown value | Sidebar label | Primary folder |
+|--------------------------|---------------|-----------------|
+| Web Links | Website | Website |
+| Visual Art | Arts | *(none — Dance/Comics/Painting/Sculpture are all equal, non-primary folders)* |
+| Book | Books | Books |
+| Game | Games | *(none)* |
+| News | News | *(none currently — see Recent Additions)* |
+| Movie | Movies | Movies |
+| Musician | Musicians | Musicians |
+| Music Album | *(hidden — accessed via subfolder)* | Music Albums |
+| Show | Shows | TV Shows |
+
+`CATEGORIES`' order (`state.js`) directly drives both the sidebar and the Add-wizard tile grid order — that's why the table above is in that order, not alphabetical.
 
 The `Music Album` category is not shown as a top-level sidebar entry. Instead, a permanent **Music Albums** subfolder appears under **Musicians** in the sidebar. This subfolder also works in Curated SaveCraft mode, navigating to the curated music album list for the selected genre.
 
-**`Web Links`** is a separate pseudo-category, not a member of `CATEGORIES` (it's not offered in the Add Item wizard) — the Add modal auto-assigns it when a streaming/generic URL is pasted with no better category picked. It shows in the sidebar as **Webpages**, right before Books, with full folder support (three defaults seeded: Articles, Blogs, News) — see `render.js`'s `sidebarCategoryList`.
+**`Web Links`** is a real `CATEGORIES` member now (promoted from a sidebar-only pseudo-category), shown as **Website** everywhere — sidebar, grid title, and Add-wizard tile all read from the same `CAT_LABEL['Web Links']` value now, no more special-cased "Webpages" text.
+
+A category's **primary folder** (`PRIMARY_FOLDER_ID` in `state.js`, keyed by category → the seeded folder's id) is what its top-level tab actually filters to — see "Primary folder tab filtering" in Recent Additions above. Categories with no entry (Game, News currently, Visual Art) show every item in the category unfiltered, same as before this session.
 
 ---
 
@@ -193,14 +207,14 @@ A separate browsing mode (toggled via the sidebar options menu) that surfaces Vo
 ### Item Detail Modal
 Clicking a card opens a detail modal. **Every category now shares the same accordion-based layout** (this used to be Musician/Music-Album-only, but was extended to all categories):
 
-- **Image** — 16:9 cropped cover (object-fit: cover). Musicians show a "Promo Vid" toggle (fetches a YouTube Data API-backed music video for the artist, filtered to the Music category) that swaps the photo for an inline video player; Music Albums show an "Album Art ▶" button that opens the full uncropped cover art in a lightbox. Other categories show neither toggle.
+- **Image** — 16:9 cropped cover (object-fit: cover). Music Albums show an "Album Art ▶" button that opens the full uncropped cover art in a lightbox. Musicians no longer have a "Promo Vid" toggle — it was removed this session (see Recent Additions); a curated Top 100 item of any category instead shows the "⚡ Your Sponsored Statement" badge in that same corner.
 - **Header overlay** — an "Official Website" pill overlays the top of the image for every category. For Musician/Music Album it resolves via MusicBrainz → Wikidata (cached per artist); every other category falls back to the item's own saved `url`.
 - **Title area** — Musicians show their name with a clickable arrow to their author page. Music Albums show a bold "Artist | Year" line (in the brand purple) above the album title. Other categories show a plain title (no arrow, not a link).
-- **Bookmark / Favorite** — the save/bookmark icon lives inside the "Add to Queue" button (for every category now); the top-right corner is a Favorite star instead. Favoriting an item adds it to an auto-created "Favorites" folder for that item's category in the sidebar (the folder is removed again once nothing in it remains favorited).
+- **Bookmark / Favorite** — the save/bookmark icon lives inside the "Add to Queue" button (for every category now); the top-right corner is a Favorite star instead. Favoriting is now a plain `item.favorite` boolean (see Recent Additions) — it no longer touches `item.folderId` or creates a "Favorites" folder.
 - **Accordion rows** (icon + label + chevron, mutually exclusive — opening one closes the others):
   - **My Notes** — live-editable textarea, debounced auto-save, shown for every category.
   - Second row, category-dependent: **Albums** (Musician only — the artist's known albums, capped at 5 with a "See all →" link to their profile) / **Song List** (Music Album only — the album's tracks, lazily fetched via the iTunes lookup API on first expand using the item's `collectionId`; a one-time backfill resolves `collectionId`/`year` for older items that predate this field) / **Summary** (Book, Show, Movie, Game — shows `item.summary`, auto-backfilled from Wikipedia if missing; see below) / **Placeholder** (Visual Art — reserved, intentionally empty for now).
-  - **Web Links** — same accordion treatment for every category.
+  - **Web Links** — same accordion treatment for every category; now also shows a real "YouTube" link (the item's own saved `youtubeUrl`, not a search) whenever one's set, regardless of category.
 - **Add to Queue** — a standalone pill button below the accordion stack for every category (rather than sharing a header row with Web Links, as it used to for non-music categories).
 
 **Wikipedia fallback (Book/Show/Movie/Game only)** — when one of these items is missing an image or summary, `ensureItemWikipediaInfo(title, category)` looks the title up on Wikipedia, validated against category-specific keywords (e.g. a Movie result must mention "film"/"movie" in its description) with a category-biased search retry if the direct title match fails or is a disambiguation page — this stops a generic title (e.g. a movie called "Up") from pulling in the wrong same-named article. Results are cached indefinitely in `chrome.storage.local` (`state.itemWikiCache`), keyed by `category:title`. Note: Wikipedia serves non-free poster/cover art at reduced resolution for fair-use reasons, so fetched images are sometimes lower quality than the original source — this is a known limitation, not a bug.
@@ -208,13 +222,14 @@ Clicking a card opens a detail modal. **Every category now shares the same accor
 For curated albums, the artist name is a clickable link in the title area (unless already on that artist's own page).
 
 ### Add / Edit Modal
-**Add is a 3-screen wizard** (`js/addEditModal.js`), replacing the old single flat form:
+**Add is now up to a 4-screen wizard** (`js/addEditModal.js`), each screen skipped automatically when there's nothing to choose:
 
-1. **Category screen** — "What are you adding to?" plus a 7-tile category grid (icon + label, same icons as the sidebar). No back icon here (nothing to go back to).
-2. **Search screen** — its own screen, header shows the selected category name. Live-typing (debounced ~500ms) searches a category-appropriate free API and shows a results dropdown (thumbnail + title + meta line). A "Can't find it? Add '...' manually" link/Enter-to-continue lets the user skip straight to the review screen with just a typed title if nothing matches. Visual Art has no search source — its tile jumps straight to the review screen.
-3. **Review screen** (also used standalone for Edit — no search step there) — pre-filled Title/Author (or a single "Name"/"Title" field for author-less categories — see below), a small auto-fetched image preview, Summary, My Notes, Platforms, Image URL + URL (URL is optional — no longer required to save; Title is the required field instead).
+1. **Category screen** — "What are you adding to?" plus a category tile grid (icon + label, same icons as the sidebar). Musician and Music Album are combined into one **"Music"** tile here — picking it shows a small Musician-vs-Album sub-choice screen before continuing, but doesn't change which underlying category the item ends up as. No back icon here (nothing to go back to).
+2. **Folder-picker screen** — shown only when the chosen category has 2+ folders (0 or 1 auto-skips straight through, since there's no real choice to make). Picking a folder is mandatory — there is no "Skip"/"No folder" tile. For News specifically, this doubles as source verification (see below).
+3. **Search screen** — its own screen, header shows the selected category name. Live-typing (debounced ~500ms) searches a category-appropriate free API and shows a results dropdown (thumbnail + title + meta line). A "Can't find it? Add '...' manually" link/Enter-to-continue lets the user skip straight to the review screen with just a typed title if nothing matches. Visual Art ("Arts") and Website have no search source — their tile jumps straight to the review screen.
+4. **Review screen** (also used standalone for Edit — no search/folder steps there, folder reassignment is a `<select>` instead) — pre-filled Title/Author (or a single "Name"/"Title" field for author-less categories — see below), a small auto-fetched image preview, Summary, My Notes, Platforms, Image URL, **YouTube URL** (new — a specific video link, separate from the platform search links), and URL (optional — Title is the only required field).
 
-A single back icon (top-left of the modal, mirroring the X close button top-right) steps back exactly one screen at a time — Review → Search (or straight to Category for Visual Art) → Category. Stepping back is non-destructive: the search screen's term/results are left exactly as the user left them. There's no bottom Cancel button anymore — the X icon, clicking outside, or Escape all close the modal.
+A single back icon (top-left of the modal, mirroring the X close button top-right) steps back exactly one screen at a time through whichever of the above actually appeared for that category. Stepping back is non-destructive: the search screen's term/results are left exactly as the user left them. There's no bottom Cancel button anymore — the X icon, clicking outside, or Escape all close the modal.
 
 **Per-category search source** (all free, no API key):
 | Category | Source | Notes |
@@ -225,13 +240,15 @@ A single back icon (top-left of the modal, mirroring the X close button top-righ
 | Book | Open Library (`openlibrary.org/search.json`) | Cover art via `covers.openlibrary.org` |
 | Game | Steam (`store.steampowered.com/api/storesearch`) | Cover art via `cdn.akamai.steamstatic.com` |
 | Movie | Wikipedia (`generator=search`) | iTunes's movie search is dead — verified live, 0 results for well-known titles since Apple moved movie purchases to the Apple TV app |
-| Visual Art | *(none)* | Manual entry only, same as before |
+| Visual Art ("Arts") | *(none)* | Manual entry only |
+| Website | *(none)* | Manual entry only |
+| News | *(none)* | Manual entry, but gated: the pasted URL's hostname must match the chosen folder's `domain` field, or the save is blocked with an inline error — see Recent Additions |
 
 Once a Review screen loads, background enrichment (`ensureArtistWikipediaInfo`/`ensureItemWikipediaInfo`, both already used elsewhere in the app) fills in Summary and upgrades the image a moment later, without blocking the screen from showing instantly.
 
 **Title/Author field**: only Music Album (artist) and Book (author) show a separate Author field — every other category collapses to a single field, labeled "Name" for Musician and "Title" everywhere else, since a permanently-empty Author box was confusing. This is purely visual (the underlying field is never cleared programmatically), so editing an older item that happens to have Author data set doesn't silently lose it.
 
-Edit (`openEditModal`) always opens directly to the review-screen layout — no category grid, no search step, no back icon.
+Edit (`openEditModal`) always opens directly to the review-screen layout — no category grid, no search/folder-picker step, no back icon.
 
 ### Search & Sort
 The search bar and sort dropdown in the header filter both the grid view and the Kanban board in real time. Sort options: Newest/Oldest first (by save date), A → Z / Z → A (title), and Release Date (Newest/Oldest) — the latter two sort by an item's `year` field (populated for Music Albums via Fetch Albums import or the auto-backfill).
@@ -250,11 +267,13 @@ The search bar and sort dropdown in the header filter both the grid view and the
   summary: string | null,
   notes: string | null,
   imageUrl: string | null,
+  youtubeUrl: string | null, // new — a specific saved video link, shown in the Web Links accordion
   category: string,        // singular: 'Book', 'Musician', 'Music Album', etc.
   platforms: string[] | null,
   savedAt: number,
   queueStatus: 'in-queue' | 'in-progress' | 'my-review' | 'done' | null,
-  folderId: string | null,
+  folderId: string | null, // null now means "counts as the category's primary folder", not "unfiled" — see PRIMARY_FOLDER_ID
+  favorite: boolean,       // new — replaces the old folder-based Favorites mechanism entirely
   genre: string | null,    // Music Album only; not currently rendered anywhere
   year: string | null,     // Music Album only; 4-digit release year
   collectionId: number | null, // Music Album only; iTunes collection ID, used to fetch the Song List
@@ -280,8 +299,11 @@ The search bar and sort dropdown in the header filter both the grid view and the
   id: string,
   name: string,
   parentCategory: string,  // e.g. 'Music Album'
+  domain: string | null,   // News folders only — the URL a saved item's link must match
+  paywalled: boolean | undefined, // News folders only — shown as a "Paywalled" badge in the picker
 }
 ```
+Default/official folder ids are always prefixed `default-` (e.g. `default-movies-videos`) — the sidebar delete-button and the Add-wizard "no icon fallback" logic both key off that prefix to distinguish them from user-created folders (which use a `Date.now()` timestamp id).
 
 ### Curated Item (Firestore `curated_items` document)
 ```js
