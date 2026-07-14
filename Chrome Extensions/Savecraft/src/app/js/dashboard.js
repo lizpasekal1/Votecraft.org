@@ -379,6 +379,7 @@ function wireProfileWidget(container) {
     // Demo mode: always go straight to the Profile page, skipping the sign-in gate — re-enable
     // the `getCurrentUser() ? ... : openAuthModal()` branch once real auth is part of the demo.
     state.view = 'profile';
+    persistViewState();
     renderSidebar();
     renderGrid();
   });
@@ -477,7 +478,6 @@ export function renderDashboard() {
   wireFavoritesWidget(container);
   wireCuratedListsWidget(container);
   wireProfileWidget(container);
-  // Deliberately no persistViewState() call here — arriving at/returning to the dashboard is
-  // never written to storage as the "last view," so the real last-active view a user was
-  // browsing before closing the tab stays intact until they actually navigate somewhere.
+  // Persistence for "arriving at the dashboard" happens at each navigation call site (sidebar
+  // link, mobile tab, etc.), not here — same layering as every other view's render function.
 }

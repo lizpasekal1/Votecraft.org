@@ -96,13 +96,15 @@ export const state = {
   items: [],
   folders: [],
   authors: [],
-  view: 'Books',     // 'all', category name, or folder id
+  view: 'dashboard', // 'all', category name, folder id, or 'dashboard'/'profile' — this default
+                     // only ever applies to a genuinely first-ever load (no saved savecraft_view
+                     // yet); any returning session restores wherever it last was, via loadAll()
   authorReturnView: null, // view to restore when leaving an author page via its back button
   sort: 'az',
   search: '',
   modalCategory: null,
   editingId: null,
-  collapsed: new Set(CATEGORIES), // all collapsed by default
+  collapsed: new Set([...CATEGORIES, 'Web Links']), // all collapsed by default ('Web Links' isn't a CATEGORIES member — see render.js's sidebarCategoryList — but gets the same folder/collapse treatment in the sidebar)
   sidebarMode: 'categories', // 'categories' | 'curated' | 'sponsored' | 'home'
   hiddenCurated: new Set(), // curated item IDs the user has dismissed
   curatedOverrides: {}, // { [curatedItemId]: { url, title, notes, imageUrl } }
@@ -121,4 +123,6 @@ export const state = {
   lastfmUsername: null,            // Last.fm account username the user has linked, or null
   followedCuratedLists: new Set(), // Set of CURATED_GENRES keys the user has opted into via Profile > Interests
   lastfmCache: {}, // { [normalizedUsername]: { tracks: [...]|null, fetchedAt } } — auto-fetched via Last.fm, short TTL
+  steamId: null,   // Steam vanity URL or numeric SteamID64 the user has linked, or null
+  steamCache: {},  // { [normalizedInput]: { games: [...]|null, fetchedAt } } — auto-fetched via Steam Web API
 };

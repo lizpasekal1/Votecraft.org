@@ -361,6 +361,14 @@
   background: var(--hover-bg);
 }
 
+.btn-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.btn-cancel:disabled:hover {
+  background: var(--surface);
+}
+
 .btn-primary {
   padding: 9px 24px;
   border: none;

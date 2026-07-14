@@ -24,6 +24,10 @@ import { closeSidebar } from './main.js';
 // state.js) so it's actually visible in the app's dark theme.
 const DASHBOARD_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5B5BEF"><path d="M160-120v-480l320-240 320 240v480H560v-280H400v280H160Z"/></svg>';
 
+// Same fill-swap reasoning as DASHBOARD_ICON_SVG above (#1f1f1f is invisible against the dark
+// cat-icon background).
+const WEBPAGES_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5B5BEF"><path d="M325-111.5q-73-31.5-127.5-86t-86-127.5Q80-398 80-480.5t31.5-155q31.5-72.5 86-127t127.5-86Q398-880 480.5-880t155 31.5q72.5 31.5 127 86t86 127Q880-563 880-480.5T848.5-325q-31.5 73-86 127.5t-127 86Q563-80 480.5-80T325-111.5ZM480-162q26-36 45-75t31-83H404q12 44 31 83t45 75Zm-104-16q-18-33-31.5-68.5T322-320H204q29 50 72.5 87t99.5 55Zm208 0q56-18 99.5-55t72.5-87H638q-9 38-22.5 73.5T584-178ZM170-400h136q-3-20-4.5-39.5T300-480q0-21 1.5-40.5T306-560H170q-5 20-7.5 39.5T160-480q0 21 2.5 40.5T170-400Zm216 0h188q3-20 4.5-39.5T580-480q0-21-1.5-40.5T574-560H386q-3 20-4.5 39.5T380-480q0 21 1.5 40.5T386-400Zm268 0h136q5-20 7.5-39.5T800-480q0-21-2.5-40.5T790-560H654q3 20 4.5 39.5T660-480q0 21-1.5 40.5T654-400Zm-16-240h118q-29-50-72.5-87T584-782q18 33 31.5 68.5T638-640Zm-234 0h152q-12-44-31-83t-45-75q-26 36-45 75t-31 83Zm-200 0h118q9-38 22.5-73.5T376-782q-56 18-99.5 55T204-640Z"/></svg>';
+
 export function getFilteredSortedItems() {
   let items = [...state.items];
 
@@ -80,7 +84,7 @@ export function getFilteredSortedItems() {
           });
       }
     }
-  } else if (CATEGORIES.includes(state.view)) {
+  } else if (CATEGORIES.includes(state.view) || state.view === 'Web Links') {
     items = items.filter(i => i.category === state.view);
   } else {
     items = items.filter(i => i.folderId === state.view);
@@ -176,10 +180,7 @@ export function renderSidebar() {
         } else {
           state.sidebarMode = 'categories'; state.view = 'all';
         }
-        // Arriving at the dashboard is never persisted as the "last view" — see main.js's
-        // init() for why — so the real last-active view stays intact until the user actually
-        // navigates somewhere else.
-        if (opt !== 'home') persistViewState();
+        persistViewState();
         renderSidebar();
         renderGrid();
       });
@@ -201,8 +202,7 @@ export function renderSidebar() {
     sidebar.querySelector('.sidebar-dashboard-link')?.addEventListener('click', () => {
       state.sidebarMode = 'home';
       state.view = 'dashboard';
-      // Deliberately no persistViewState() call — arriving at the dashboard is never persisted
-      // as the "last view" (see main.js's init()), so the real last-active view stays intact.
+      persistViewState();
       renderSidebar();
       renderGrid();
     });
@@ -237,7 +237,19 @@ export function renderSidebar() {
 
   const isCuratedGenre = state.view.startsWith('genre:');
   const curatedGenreBase = isCuratedGenre ? state.view.slice(6).split(':')[0] : null;
-  const categorySections = CATEGORIES.filter(cat => cat !== 'Music Album').map(cat => {
+
+  // 'Web Links' isn't a member of CATEGORIES (it isn't offered as a category in the Add Item
+  // wizard, and CATEGORY_PLATFORMS/CAT_LABEL don't cover it either) — it's the pseudo-category
+  // the Add modal auto-assigns when a streaming/generic URL is pasted with no better category
+  // selected (see main.js). Folded into the same category-rendering loop below (icon/label
+  // special-cased inside it) so it gets full folder support like every real category, rather
+  // than a separately-maintained simple link. Left out of curated-genre drilldowns — there's no
+  // curated "Web Links" content, so it'd always be an empty, dead entry there.
+  const sidebarCategoryList = isCuratedGenre
+    ? CATEGORIES.filter(cat => cat !== 'Music Album')
+    : ['Web Links', ...CATEGORIES.filter(cat => cat !== 'Music Album')];
+
+  const categorySections = sidebarCategoryList.map(cat => {
     const count = isCuratedGenre
       ? (CURATED_ITEMS[curatedGenreBase]?.[cat]?.filter(i => !state.hiddenCurated.has(i.id)).length ?? 0)
       : state.items.filter(i => i.category === cat).length;
@@ -283,7 +295,7 @@ export function renderSidebar() {
     return `
       <div class="sidebar-item sidebar-category ${isActive ? 'active' : ''}"
            data-view="${cat}" data-toggle="${cat}">
-        <span class="sidebar-label"><span class="cat-icon">${CAT_EMOJI[cat]}</span><span class="sidebar-label-text"> ${CAT_LABEL[cat] || cat}</span></span>
+        <span class="sidebar-label"><span class="cat-icon">${cat === 'Web Links' ? WEBPAGES_ICON_SVG : CAT_EMOJI[cat]}</span><span class="sidebar-label-text"> ${cat === 'Web Links' ? 'Webpages' : (CAT_LABEL[cat] || cat)}</span></span>
         <span class="sidebar-right">${countLabel}<span class="sidebar-arrow">${arrow}</span></span>
       </div>
       ${expandedContent}
@@ -304,8 +316,9 @@ export function renderSidebar() {
     el.addEventListener('click', () => {
       const cat = el.dataset.toggle;
       if (state.collapsed.has(cat)) {
-        // Expanding — collapse all others first
-        state.collapsed = new Set(CATEGORIES);
+        // Expanding — collapse all others first (sidebarCategoryList, not CATEGORIES, so
+        // 'Web Links' — not a CATEGORIES member — also gets collapsed like every real category)
+        state.collapsed = new Set(sidebarCategoryList);
         state.collapsed.delete(cat);
       } else {
         state.collapsed.add(cat);
@@ -502,6 +515,8 @@ export function renderGrid() {
     }
   } else if (CATEGORIES.includes(state.view)) {
     gridTitle.innerHTML = `${CAT_EMOJI[state.view]} ${CAT_LABEL[state.view] || state.view}`;
+  } else if (state.view === 'Web Links') {
+    gridTitle.innerHTML = `${WEBPAGES_ICON_SVG} Webpages`;
   } else {
     const folder = state.folders.find(f => f.id === state.view);
     gridTitle.textContent = folder ? folder.name : 'Folder';

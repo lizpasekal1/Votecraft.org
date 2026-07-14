@@ -1,18 +1,18 @@
 // ===== PROFILE PAGE =====
-// A full-page view (state.view === 'profile'). Demo mode: every nav entry point (dashboard.js's
-// Profile widget, main.js's Settings-dropdown #btn-profile, the sidebar link) currently skips
-// the sign-in gate and always lands here — re-add the `getCurrentUser() ? ... : openAuthModal()`
-// branching at each of those once real auth is part of the demo. Five stacked sections: Account,
-// Connections (Last.fm), Interests (curator-branded curated lists), Your Music Taste, and a
-// static Friends placeholder.
+// A full-page view (state.view === 'profile'). Demo mode: both nav entry points (dashboard.js's
+// Profile widget and main.js's Settings-dropdown #btn-profile) currently skip the sign-in gate
+// and always land here — re-add the `getCurrentUser() ? ... : openAuthModal()` branching at each
+// of those once real auth is part of the demo. Five stacked sections: Account, Connections
+// (Last.fm, Steam), Interests (curator-branded curated lists), Your Music Taste, and a static
+// Friends placeholder.
 
 import { state, CURATED_GENRES } from './state.js';
 import { escapeHtml } from './utils.js';
 import { getCurrentUser } from './auth.js';
-import { persistFollowedCuratedLists, disconnectLastfm } from './storage.js';
-import { ensureLastfmRecentTracks } from './api.js';
+import { persistFollowedCuratedLists, disconnectLastfm, disconnectSteam } from './storage.js';
+import { ensureLastfmRecentTracks, ensureSteamRecentGames } from './api.js';
 import { CURATED_LIST_DISPLAY_NAMES, DEMO_PROFILE_NAME } from './dashboard.js';
-import { openAuthModal, openLastfmModal } from './main.js';
+import { openAuthModal, openLastfmModal, openSteamModal } from './main.js';
 
 // ===== account =====
 
@@ -22,9 +22,11 @@ function buildAccountSection(user) {
   const displayName = user ? escapeHtml(user.email) : `${DEMO_PROFILE_NAME} (demo)`;
   return `
     <div class="profile-card profile-card--account">
-      <div class="profile-card-header"><span class="profile-card-title">Account</span></div>
+      <div class="profile-card-header">
+        <span class="profile-card-title">Account</span>
+        <button class="btn-cancel" id="profile-manage-account">Manage account</button>
+      </div>
       <div class="profile-account-email">${displayName}</div>
-      <button class="btn-cancel" id="profile-manage-account">Manage account</button>
     </div>`;
 }
 
@@ -32,9 +34,15 @@ function wireAccountSection(container) {
   container.querySelector('#profile-manage-account')?.addEventListener('click', openAuthModal);
 }
 
-// ===== connections (Last.fm) =====
+// ===== connections (Last.fm, Steam) =====
+// One "Connections" card holding a row per platform, keeping the card count at 4 so the widget
+// grid stays exactly the Dashboard's 2x2 shape (see renderProfilePage below) — a new card per
+// platform would break that. Each row follows the same not-connected/connected shape:
+// name + copy on the left, a Connect/Disconnect button on the right, vertically centered.
 
-const LASTFM_CONNECTION_COPY = 'SaveCraft only reads your public Last.fm username to show your recent scrobbles — no password, no Last.fm login, and nothing is ever posted on your behalf.';
+const NO_LOGIN_REQUIRED_COPY = 'No password, no login required.';
+const LASTFM_CONNECTION_COPY = 'We only access your public Last.fm profile.';
+const STEAM_CONNECTION_COPY = 'We only access your public Steam profile.';
 
 function _timeAgo(timestamp) {
   const diffMin = Math.floor((Date.now() - timestamp) / 60000);
@@ -44,20 +52,17 @@ function _timeAgo(timestamp) {
   return `${diffHr} hour${diffHr === 1 ? '' : 's'} ago`;
 }
 
-function buildConnectionsSection() {
+function buildLastfmRow() {
   const username = state.lastfmUsername;
 
   if (!username) {
     return `
-      <div class="dash-card profile-card--connections">
-        <div class="profile-card-header"><span class="profile-card-title">Connections</span></div>
-        <div class="profile-connection-row">
-          <div class="profile-connection-info">
-            <span class="profile-connection-name">Last.fm</span>
-            <p class="profile-connection-copy">${escapeHtml(LASTFM_CONNECTION_COPY)}</p>
-          </div>
-          <button class="btn-primary" id="profile-connect-lastfm">Connect Last.fm</button>
+      <div class="profile-connection-row">
+        <div class="profile-connection-info">
+          <span class="profile-connection-name">Last.fm</span>
+          <p class="profile-card-copy">${escapeHtml(LASTFM_CONNECTION_COPY)}<br>${escapeHtml(NO_LOGIN_REQUIRED_COPY)}</p>
         </div>
+        <button class="btn-primary" id="profile-connect-lastfm">Connect<br>Last.fm</button>
       </div>`;
   }
 
@@ -79,18 +84,83 @@ function buildConnectionsSection() {
     </div>`).join('') : '<div class="profile-connection-empty">No recent tracks found.</div>';
 
   return `
-    <div class="dash-card profile-card--connections">
-      <div class="profile-card-header">
-        <span class="profile-card-title">Connections</span>
-        <button class="btn-cancel" id="profile-disconnect-lastfm">Disconnect</button>
+    <div class="profile-connection-row">
+      <div class="profile-connection-info">
+        <span class="profile-connection-name">Last.fm — connected as ${escapeHtml(username)}</span>
+        <p class="profile-card-copy">${escapeHtml(LASTFM_CONNECTION_COPY)}<br>${escapeHtml(NO_LOGIN_REQUIRED_COPY)}${escapeHtml(statusLine)}</p>
       </div>
+      <button class="btn-cancel" id="profile-disconnect-lastfm">Disconnect</button>
+    </div>
+    <div class="profile-track-list">${tracksHtml}</div>`;
+}
+
+function buildSteamRow() {
+  const steamId = state.steamId;
+
+  if (!steamId) {
+    return `
       <div class="profile-connection-row">
         <div class="profile-connection-info">
-          <span class="profile-connection-name">Last.fm — connected as ${escapeHtml(username)}</span>
-          <p class="profile-connection-copy">${escapeHtml(LASTFM_CONNECTION_COPY)}${escapeHtml(statusLine)}</p>
+          <span class="profile-connection-name">Steam</span>
+          <p class="profile-card-copy">${escapeHtml(STEAM_CONNECTION_COPY)}<br>${escapeHtml(NO_LOGIN_REQUIRED_COPY)}</p>
         </div>
+        <button class="btn-primary" id="profile-connect-steam">Connect<br>Steam</button>
+      </div>`;
+  }
+
+  const cached = state.steamCache[steamId.trim().toLowerCase()];
+  const games = cached?.games || [];
+  const fetchedAgo = cached?.fetchedAt ? _timeAgo(cached.fetchedAt) : null;
+  const statusLine = fetchedAgo
+    ? ` Showing your ${games.length} recently played game${games.length === 1 ? '' : 's'}, last updated ${fetchedAgo}.`
+    : '';
+
+  const gamesHtml = games.length ? games.map(g => `
+    <div class="profile-track-row">
+      ${g.imageUrl ? `<img class="profile-track-art" src="${escapeHtml(g.imageUrl)}" alt="" loading="lazy" decoding="async">` : '<span class="profile-track-art profile-track-art--placeholder"></span>'}
+      <div class="profile-track-info">
+        <span class="profile-track-title">${escapeHtml(g.name || '')}</span>
+        <span class="profile-track-artist">${g.playtime2Weeks ? `${Math.round(g.playtime2Weeks / 60 * 10) / 10} hrs past 2 weeks` : ''}</span>
       </div>
-      <div class="profile-track-list">${tracksHtml}</div>
+    </div>`).join('') : '<div class="profile-connection-empty">No recently played games found.</div>';
+
+  return `
+    <div class="profile-connection-row">
+      <div class="profile-connection-info">
+        <span class="profile-connection-name">Steam — connected as ${escapeHtml(steamId)}</span>
+        <p class="profile-card-copy">${escapeHtml(STEAM_CONNECTION_COPY)}<br>${escapeHtml(NO_LOGIN_REQUIRED_COPY)}${escapeHtml(statusLine)}</p>
+      </div>
+      <button class="btn-cancel" id="profile-disconnect-steam">Disconnect</button>
+    </div>
+    <div class="profile-track-list">${gamesHtml}</div>`;
+}
+
+// Not wired up, and there's no known path yet — Meta shut down the personal-account Instagram
+// Basic Display API in Dec 2024; what's left (the Graph API) only supports Business/Creator
+// accounts and requires Meta's App Review process. Placeholder only, flagging intent to revisit
+// once there's an actual plan for how this would work.
+function buildInstagramRow() {
+  return `
+    <div class="profile-connection-row">
+      <div class="profile-connection-info">
+        <span class="profile-connection-name">Instagram</span>
+        <p class="profile-card-copy">Coming soon — no confirmed path yet (Instagram's personal-account API was discontinued; the replacement requires a Business/Creator account and Meta app review).</p>
+      </div>
+      <button class="btn-primary" disabled>Coming soon</button>
+    </div>`;
+}
+
+function buildConnectionsSection() {
+  return `
+    <div class="dash-card profile-card--connections">
+      <div class="profile-card-header"><span class="profile-card-title">Connections</span></div>
+      <div class="profile-connections-list">
+        ${buildLastfmRow()}
+        <div class="profile-connection-divider"></div>
+        ${buildSteamRow()}
+        <div class="profile-connection-divider"></div>
+        ${buildInstagramRow()}
+      </div>
     </div>`;
 }
 
@@ -108,6 +178,11 @@ function wireConnectionsSection(container) {
   container.querySelector('#profile-connect-lastfm')?.addEventListener('click', openLastfmModal);
   container.querySelector('#profile-disconnect-lastfm')?.addEventListener('click', () => {
     disconnectLastfm();
+    _rebuildConnectionsCard();
+  });
+  container.querySelector('#profile-connect-steam')?.addEventListener('click', openSteamModal);
+  container.querySelector('#profile-disconnect-steam')?.addEventListener('click', () => {
+    disconnectSteam();
     _rebuildConnectionsCard();
   });
 }
@@ -220,6 +295,11 @@ export function renderProfilePage() {
 
   if (state.lastfmUsername) {
     ensureLastfmRecentTracks(state.lastfmUsername).then(() => {
+      if (state.view === 'profile') _rebuildConnectionsCard();
+    });
+  }
+  if (state.steamId) {
+    ensureSteamRecentGames(state.steamId).then(() => {
       if (state.view === 'profile') _rebuildConnectionsCard();
     });
   }

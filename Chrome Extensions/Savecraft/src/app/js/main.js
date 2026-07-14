@@ -3,10 +3,10 @@
 import { state, STREAMING_DOMAINS } from './state.js';
 import {
   loadAll, loadLocalCache, initCuratedItems, persistSort, persistTheme, persistSidebarCollapsed,
-  persistLastfmUsername, disconnectLastfm,
+  persistLastfmUsername, disconnectLastfm, persistViewState, persistSteamId, disconnectSteam,
 } from './storage.js';
 import { initAuth, onAuthChange, getCurrentUser, signUp, signIn, signOut } from './auth.js';
-import { ensureLastfmRecentTracks, isLastfmConfigured } from './api.js';
+import { ensureLastfmRecentTracks, isLastfmConfigured, ensureSteamRecentGames, isSteamConfigured } from './api.js';
 import { debounce, escapeHtml } from './utils.js';
 import { renderSidebar, renderGrid } from './render.js';
 import { initShare } from './share.js';
@@ -209,6 +209,31 @@ function applyLastfmModalUI(username) {
   }
 }
 
+// ===== STEAM MODAL (Profile page's Connections section) =====
+export function openSteamModal() {
+  document.getElementById('steam-error').style.display = 'none';
+  document.getElementById('steam-username').value = state.steamId || '';
+  applySteamModalUI(state.steamId);
+  document.getElementById('steam-modal-overlay').classList.add('open');
+}
+function closeSteamModal() {
+  document.getElementById('steam-modal-overlay').classList.remove('open');
+}
+function showSteamError(message) {
+  const el = document.getElementById('steam-error');
+  el.textContent = message;
+  el.style.display = 'block';
+}
+function applySteamModalUI(steamId) {
+  document.getElementById('steam-username-field').style.display = steamId ? 'none' : '';
+  document.getElementById('steam-disconnected-actions').style.display = steamId ? 'none' : '';
+  document.getElementById('steam-connected-actions').style.display = steamId ? '' : 'none';
+  document.getElementById('steam-connected-info').style.display = steamId ? '' : 'none';
+  if (steamId) {
+    document.getElementById('steam-connected-info').innerHTML = `Connected as <strong>${escapeHtml(steamId)}</strong>`;
+  }
+}
+
 // ===== MOBILE SIDEBAR =====
 export function openSidebar() {
   document.getElementById('sidebar').classList.add('open');
@@ -233,6 +258,7 @@ async function init() {
   await loadLocalCache('savecraft_artist_video_cache', 'artistVideoCache');
   await loadLocalCache('savecraft_item_wiki_cache', 'itemWikiCache');
   await loadLocalCache('savecraft_lastfm_cache', 'lastfmCache');
+  await loadLocalCache('savecraft_steam_cache', 'steamCache');
 
   chrome.storage.sync.get({ savecraft_theme: 'dark' }, data => {
     applyTheme(data.savecraft_theme);
@@ -270,6 +296,7 @@ async function init() {
     // Demo mode: always go straight to the Profile page, skipping the sign-in gate — re-enable
     // the `getCurrentUser() ? ... : openAuthModal()` branch once real auth is part of the demo.
     state.view = 'profile';
+    persistViewState();
     renderSidebar();
     renderGrid();
   });
@@ -320,18 +347,36 @@ async function init() {
     if (e.key === 'Escape') closeLastfmModal();
   });
 
+  document.getElementById('btn-steam-close').addEventListener('click', closeSteamModal);
+  document.getElementById('btn-steam-cancel').addEventListener('click', closeSteamModal);
+  document.getElementById('steam-modal-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('steam-modal-overlay')) closeSteamModal();
+  });
+  document.getElementById('btn-steam-connect').addEventListener('click', async () => {
+    const username = document.getElementById('steam-username').value.trim();
+    if (!username) { showSteamError('Enter a Steam vanity URL or SteamID64.'); return; }
+    if (!isSteamConfigured()) { showSteamError('Steam isn’t configured yet — check back soon.'); return; }
+    const games = await ensureSteamRecentGames(username);
+    if (games === null) { showSteamError('Could not find that Steam profile — make sure Game Details is set to Public.'); return; }
+    state.steamId = username;
+    persistSteamId(username);
+    closeSteamModal();
+    if (state.view === 'profile') renderGrid();
+  });
+  document.getElementById('btn-steam-disconnect').addEventListener('click', () => {
+    disconnectSteam();
+    closeSteamModal();
+    if (state.view === 'profile') renderGrid();
+  });
+  document.getElementById('steam-modal-overlay').addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeSteamModal();
+  });
+
   const sortSelect = document.getElementById('sort-select');
   sortSelect.value = state.sort;
 
-  // SaveCraft's Dashboard is the persistent home page — every fresh load must land here first,
-  // regardless of whatever the user was last browsing. loadAll() above already restored
-  // state.view/sidebarMode from chrome.storage.sync as usual; we don't skip that restore, we
-  // just override it in memory for this one very-first render. This forced value is never
-  // written back to storage, so the real "last real view" stays intact in storage until the
-  // user actually navigates somewhere.
-  state.view = 'dashboard';
-  state.sidebarMode = 'home';
-
+  // Reloading lands back on whatever view/sidebarMode was last active — loadAll() above already
+  // restored both from chrome.storage.sync, so no override needed here.
   renderSidebar();
   renderGrid();
   initShare();
@@ -349,24 +394,19 @@ async function init() {
       if (opt === 'home') {
         state.sidebarMode = 'home';
         state.view = 'dashboard';
-        renderSidebar();
-        renderGrid();
       } else if (opt === 'curated') {
         state.sidebarMode = 'curated';
         state.view = 'curated';
-        renderSidebar();
-        renderGrid();
       } else if (opt === 'my-lists') {
         state.sidebarMode = 'categories';
         state.view = 'all';
-        renderSidebar();
-        renderGrid();
       } else if (opt === 'sponsored') {
         state.sidebarMode = 'sponsored';
         state.view = 'sponsored';
-        renderSidebar();
-        renderGrid();
       }
+      persistViewState();
+      renderSidebar();
+      renderGrid();
     });
   });
 
