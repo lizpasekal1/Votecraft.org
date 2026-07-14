@@ -5,7 +5,7 @@
 import { state } from './state.js';
 import {
   persistArtistBioCache, persistArtistVideoCache, persistArtistWebsiteCache, persistItemWikiCache,
-  persistLastfmCache,
+  persistLastfmCache, persistSteamCache,
 } from './storage.js';
 
 // Shared check for "does this Wikidata/Wikipedia result actually describe a musician/band" —
@@ -449,4 +449,67 @@ export async function ensureLastfmRecentTracks(username) {
   state.lastfmCache[key] = { tracks, fetchedAt: Date.now() };
   persistLastfmCache();
   return tracks;
+}
+
+// Set this to a free Steam Web API key (https://steamcommunity.com/dev/apikey) to enable the
+// Profile page's "Connect Steam" recently-played card. Same graceful-empty behavior as the keys
+// above when left blank — requires the linked profile's game details to be set to public.
+const STEAM_API_KEY = '';
+
+export function isSteamConfigured() {
+  return !!STEAM_API_KEY;
+}
+
+const STEAM_RECENT_GAMES_CACHE_MISS_TTL = 30 * 60 * 1000; // 30 minutes — more stable than "now playing", but still worth refreshing periodically
+
+// Steam identifies profiles by a numeric SteamID64, but most people only know their custom
+// "vanity URL" name (steamcommunity.com/id/<this>) — resolves that to a SteamID64 via
+// ISteamUser/ResolveVanityURL, passing through unchanged if the input already looks like a raw
+// SteamID64 (17 digits, Steam's fixed format).
+async function _resolveSteamId(input) {
+  if (/^\d{17}$/.test(input)) return input;
+  try {
+    const url = `https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/?key=${STEAM_API_KEY}&vanityurl=${encodeURIComponent(input)}`;
+    const resp = await fetch(url);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    return data.response?.success === 1 ? data.response.steamid : null;
+  } catch {
+    return null;
+  }
+}
+
+// Reads a Steam user's recently-played games via the public (no OAuth, no login) Web API — a
+// vanity URL or SteamID64 plus an API key. Returns null if no key is configured, the profile
+// can't be resolved, or its game details aren't public; returns an array (possibly empty)
+// otherwise.
+export async function ensureSteamRecentGames(usernameOrId) {
+  if (!usernameOrId || !STEAM_API_KEY) return null;
+  const key = usernameOrId.trim().toLowerCase();
+  const cached = state.steamCache[key];
+  if (cached && Date.now() - cached.fetchedAt < STEAM_RECENT_GAMES_CACHE_MISS_TTL) {
+    return cached.games;
+  }
+  let games = null;
+  try {
+    const steamId = await _resolveSteamId(usernameOrId.trim());
+    if (steamId) {
+      const url = `https://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v1/?key=${STEAM_API_KEY}&steamid=${steamId}&format=json`;
+      const resp = await fetch(url);
+      if (resp.ok) {
+        const data = await resp.json();
+        games = (data.response?.games || []).map(g => ({
+          name: g.name || null,
+          imageUrl: g.img_icon_url
+            ? `https://media.steampowered.com/steamcommunity/public/images/apps/${g.appid}/${g.img_icon_url}.jpg`
+            : null,
+          playtime2Weeks: g.playtime_2weeks || 0,
+          appid: g.appid,
+        }));
+      }
+    }
+  } catch { /* leave games null — treated as "couldn't fetch," not "empty history" */ }
+  state.steamCache[key] = { games, fetchedAt: Date.now() };
+  persistSteamCache();
+  return games;
 }

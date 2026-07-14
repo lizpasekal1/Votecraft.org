@@ -228,6 +228,7 @@ export async function loadAll() {
       state.curatedOverrides = data.savecraft_curated_overrides || {};
       state.lastfmUsername = data.savecraft_lastfm_username || null;
       state.followedCuratedLists = new Set(data.savecraft_followed_curated_lists || []);
+      state.steamId = data.savecraft_steam_id || null;
       if (data.savecraft_view?.startsWith('author:')) {
         const rest = data.savecraft_view.slice(7);
         const colonIdx = rest.indexOf(':');
@@ -287,6 +288,9 @@ export async function loadAll() {
         { id: 'default-music-playlists',  name: 'Playlists',    parentCategory: 'Music Album' },
         { id: 'default-books-authors',    name: 'Authors',      parentCategory: 'Book' },
         { id: 'default-books-genres',     name: 'Genres',       parentCategory: 'Book' },
+        { id: 'default-weblinks-articles', name: 'Articles',    parentCategory: 'Web Links' },
+        { id: 'default-weblinks-blogs',    name: 'Blogs',       parentCategory: 'Web Links' },
+        { id: 'default-weblinks-news',     name: 'News',        parentCategory: 'Web Links' },
       ];
       const toSave = {};
       for (const df of defaults) {
@@ -460,6 +464,23 @@ export function persistLastfmCache() {
   chrome.storage.local.set({ savecraft_lastfm_cache: state.lastfmCache });
 }
 
+export function persistSteamId(steamId) {
+  chrome.storage.sync.set({ savecraft_steam_id: steamId });
+  const user = getCurrentUser();
+  if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { steamId }).catch(_syncError);
+}
+
+export function disconnectSteam() {
+  state.steamId = null;
+  chrome.storage.sync.set({ savecraft_steam_id: null });
+  const user = getCurrentUser();
+  if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { steamId: null }).catch(_syncError);
+}
+
+export function persistSteamCache() {
+  chrome.storage.local.set({ savecraft_steam_cache: state.steamCache });
+}
+
 // ===== INITIAL SYNC (runs once, right after a successful sign-up/sign-in) =====
 // Deliberately simple union-by-ID merge, not a general bidirectional sync engine. Settings are
 // whole-doc (cloud wins wholesale if it exists); items/folders/authors merge independently by
@@ -484,6 +505,7 @@ function _readLocalSettingsSnapshot() {
       savecraft_share_count: 0,
       savecraft_lastfm_username: null,
       savecraft_followed_curated_lists: [],
+      savecraft_steam_id: null,
     }, data => resolve({
       sort: data.savecraft_sort,
       tutorialSeen: data.savecraft_tutorial_seen,
@@ -498,6 +520,7 @@ function _readLocalSettingsSnapshot() {
       shareCount: data.savecraft_share_count,
       lastfmUsername: data.savecraft_lastfm_username,
       followedCuratedLists: data.savecraft_followed_curated_lists,
+      steamId: data.savecraft_steam_id,
     }));
   });
 }
@@ -564,6 +587,7 @@ export async function runInitialSync(uid) {
       savecraft_share_count: cloudSettings.shareCount,
       savecraft_lastfm_username: cloudSettings.lastfmUsername,
       savecraft_followed_curated_lists: cloudSettings.followedCuratedLists,
+      savecraft_steam_id: cloudSettings.steamId,
     }, resolve));
     // Reflect into live state immediately for the fields state.js actually tracks (theme,
     // sidebarCollapsed, and shareCount have no state.* mirror — main.js/share.js read those
@@ -578,6 +602,7 @@ export async function runInitialSync(uid) {
     if (cloudSettings.sidebarMode) state.sidebarMode = cloudSettings.sidebarMode;
     if (cloudSettings.lastfmUsername !== undefined) state.lastfmUsername = cloudSettings.lastfmUsername;
     if (cloudSettings.followedCuratedLists) state.followedCuratedLists = new Set(cloudSettings.followedCuratedLists);
+    if (cloudSettings.steamId !== undefined) state.steamId = cloudSettings.steamId;
   }
 
   await _mergeCollection(uid, idToken, 'items', 'item_', state.items);

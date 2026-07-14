@@ -10,21 +10,19 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-width: 900px;
-  margin: 0 auto;
   width: 100%;
 }
 
 /* Account stays its own natural-height card at the top, full width — everything below it
-   (Connections/Interests/Your Music Taste/Friends) is sized to exactly match the Dashboard's
-   widget grid (same 2x2 grid, same .dash-card box model, imported from dashboard.css) rather
-   than sizing to its own content. */
+   (Connections/Interests/Your Music Taste/Friends) shares the Dashboard's 2x2 grid shape and
+   .dash-card box model, but taller than the Dashboard's own grid — Connections in particular
+   has grown to 4 platform rows, more than the Dashboard's "peek" widgets were ever sized for. */
 .profile-widget-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   grid-template-rows: repeat(2, 1fr);
   gap: 16px;
-  height: 500px;
+  height: 800px;
 }
 
 /* Dashboard widgets are deliberately "peek" sized (a few tracks, a capped genre list, etc.) —
@@ -70,6 +68,17 @@
 }
 
 /* --- Connections --- */
+.profile-connections-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.profile-connection-divider {
+  height: 1px;
+  background: var(--border);
+}
+
 .profile-connection-row {
   display: flex;
   align-items: center;
@@ -79,21 +88,30 @@
 
 .profile-connection-info {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
+}
+
+/* Fixed size (matching the Last.fm row's button) for every row's action button — Connect,
+   Disconnect, or the disabled "Coming soon" ones — so they all line up instead of each shrinking
+   to fit its own label, which also kept shifting the description text's available width per row. */
+.profile-connection-row .btn-primary,
+.profile-connection-row .btn-cancel {
+  width: 150px;
+  height: 58px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .profile-connection-name {
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
-}
-
-.profile-connection-copy {
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin: 0;
 }
 
 .profile-connection-empty {

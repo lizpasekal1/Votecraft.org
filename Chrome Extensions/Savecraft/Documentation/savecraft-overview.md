@@ -7,11 +7,14 @@ SaveCraft is a Chrome extension that acts as a personal media library. Users sav
 ## Recent Additions (latest session)
 
 - **Accounts + Firestore sync** — SaveCraft now has its own email/password sign-in (`js/auth.js`), deliberately independent from any shared Votecraft account. Every existing `persist*` call in `storage.js` dual-writes to Firestore (`savecraft_users/{uid}` + subcollections) when signed in; `chrome.storage.sync` stays the source of truth and signed-out users are unaffected. See `firebase/votecraft-firebase.md` for the data model/rules.
-- **Profile page** (`js/profile.js`, new view `state.view === 'profile'`) — Account info, a Last.fm "recent tracks" connection (username only, no OAuth, paste an API key into `api.js` to enable), an Interests picker (which curator-branded curated lists to follow), a "Your Music Taste" genre breakdown from saved albums, and a static Friends placeholder. **Currently in demo mode**: every entry point skips the sign-in gate and goes straight to this page — see the "demo mode" comments in `dashboard.js`/`main.js`/`profile.js` for exactly where to restore real gating.
+- **Profile page** (`js/profile.js`, new view `state.view === 'profile'`) — a two-column page below a full-width Account card. **Connections**: Last.fm (recent scrobbles) and Steam (recently-played games) are fully working, username/vanity-URL only, no OAuth — both API keys (`LASTFM_API_KEY`/`STEAM_API_KEY` in `api.js`) ship blank, paste one in to activate it. Instagram is a static "coming soon" row (no confirmed integration path — Meta's personal-account API is discontinued). **Interests**: pick which curator-branded curated lists to follow (stored, not yet wired into the Dashboard's own Curated Lists widget). **Your Music Taste**: a genre breakdown from saved albums. **Friends**: static placeholder. The four non-Account cards deliberately match the Dashboard's `.dash-card` sizing/2×2 grid shape. **Currently in demo mode**: every entry point (Dashboard's Profile widget, Settings-dropdown "Sign in" row) skips the sign-in gate and goes straight here — see the "demo mode" comments in `dashboard.js`/`main.js`/`profile.js` for exactly where to restore real gating.
+- **Reload now restores your actual last page** — the old "always force Dashboard on load" behavior was removed; every navigation path persists `state.view`, including Dashboard and Profile (previously deliberately excluded). A brand-new install with no saved state still defaults to the Dashboard.
+- **New "Webpages" sidebar tab** — filters items with `category === 'Web Links'` (the pseudo-category the Add modal auto-assigns for pasted streaming/generic URLs with no better category picked), positioned right before Books. Folded into the same category-rendering path as every real category, so it gets full folder support (collapse/expand, "+ New folder", folder counts/deletion) — three default folders (Articles, Blogs, News) are seeded automatically. Excluded from curated-genre browsing (no curated Web Links content exists).
 - **Curated Lists relabeled** — several Dashboard curated-genre cards now show sponsor/org-branded display names (e.g. "Top 100" → "Votecraft List", "Thriller" → "FairVote List") purely cosmetically via `CURATED_LIST_DISPLAY_NAMES`/`CURATED_LIST_COVER_OVERRIDES` in `dashboard.js` — previews a future "lists from different curator groups" direction without touching real genre data/navigation.
 - **Album → Artist auto-import** — saving a new Music Album now also calls `autoSaveMusician()` and `autoImportMusicianAlbums()`, mirroring the existing reverse behavior (adding a Musician auto-imports their albums).
 - **Detail modal**: Music Album titles now read "Artist | Title" (artist as a purple clickable link) instead of a separate line above the title. Fixed a real bug in `ensureLiveItem()` where a curated album's artist name (stashed in `.notes` while curated) was silently stranded once the album was saved and `.notes` fallback stopped applying — `storage.js`'s `loadAll()` now also backfills any already-affected existing items.
 - **Dashboard**: Favorites Spotlight and Curated Lists now share one thumbnail-carousel look with infinite scroll (loops seamlessly, no "flying back" jump); Kanban widget sized up and trimmed to just Queue/In Progress; the whole Dashboard no longer scrolls (`.grid-area:has(.dashboard-wrap)`); a "Dashboard" link was added to the top of the sidebar.
+- **Collapsed sidebar rail polish**: hover/active highlight now lights up just the icon square instead of the whole (much wider) row; the curated genre-picker's `>` arrows are hidden while collapsed, since there's no room to act on them.
 
 ---
 
@@ -64,14 +67,15 @@ Savecraft/
 
 ### `src/app/js/` modules
 
-The library used to be one ~3,700-line `app.js`. It's now split into 13 ES modules, loaded via `<script type="module" src="js/main.js">` in `index.html`. Modules import/export between each other (some circularly — safe under ES modules since nothing is called at module-evaluation time, only from inside functions):
+The library used to be one ~3,700-line `app.js`. It's now split into 15 ES modules, loaded via `<script type="module" src="js/main.js">` in `index.html`. Modules import/export between each other (some circularly — safe under ES modules since nothing is called at module-evaluation time, only from inside functions):
 
 | Module | Responsibility |
 |--------|-----------------|
 | `state.js` | Shared `state` object + static constants (`CATEGORIES`, `CAT_LABEL`, `CAT_EMOJI`, `CATEGORY_PLATFORMS`, etc.) |
-| `storage.js` | All `persist*`/`remove*` functions, `loadAll()`, Firestore curated-data loading (`_loadCuratedFromFirestore`, `initCuratedItems`) |
+| `storage.js` | All `persist*`/`remove*` functions, `loadAll()`, Firestore curated-data loading (`_loadCuratedFromFirestore`, `initCuratedItems`), Firestore dual-write helpers for the account-sync feature |
 | `utils.js` | Pure helpers: `escapeHtml`, `catClass`, `debounce`, `formatTrackDuration`, `patchCardImage`, etc. |
-| `api.js` | External network calls: iTunes, Open Library, Steam, Wikipedia, MusicBrainz/Wikidata, YouTube (`YOUTUBE_API_KEY` lives here) |
+| `api.js` | External network calls: iTunes, Open Library, Steam, Wikipedia, MusicBrainz/Wikidata, YouTube, Last.fm, Steam Web API (unset API key constants live here) |
+| `auth.js` | Email/password auth via the Firebase Auth REST API — no SDK, independent from any shared Votecraft account |
 | `authors.js` | Author/musician profile CRUD, navigation, album-metadata backfill |
 | `render.js` | `renderSidebar`, `renderGrid`, `renderCard`, `renderAuthorPage`, curated-image fetch helpers |
 | `kanban.js` | Kanban board rendering and queue-status updates (`KANBAN_DEMO`/`KANBAN_COLUMNS` exported for reuse by the Dashboard) |
@@ -79,12 +83,13 @@ The library used to be one ~3,700-line `app.js`. It's now split into 13 ES modul
 | `addEditModal.js` | Add/Edit item modal — the 3-screen add wizard (category → search → review) plus the single-page Edit form |
 | `fetchAlbumsModal.js` | Fetch Albums (bulk iTunes import) modal |
 | `dashboard.js` | The Dashboard home page — hero collage + 4 widget cards (see "Dashboard (Home Page)" below) |
+| `profile.js` | The Profile page — account info, Connections (Last.fm/Steam/Instagram), Interests, Your Music Taste, Friends |
 | `share.js` | Share modal, CSV export |
 | `main.js` | Entry point — search, sort, theme, sidebar collapse, mobile sidebar, `init()`, all DOMContentLoaded event wiring |
 
 ### `src/app/css/` stylesheets
 
-Split along the same lines from the original `app.css`, loaded as separate `<link>` tags in a fixed order (order matters — later files can override earlier ones): `base.css` (reset, theme variables, header), `sidebar.css` (includes the collapsible desktop rail), `cards.css` (grid, cards, author pages), `detailModal.css`, `addEditModal.css`, `fetchAlbumsModal.css`, `kanban.css`, `dashboard.css`, `misc.css` (share modal, scrollbar, mobile responsive overrides).
+Split along the same lines from the original `app.css`, loaded as separate `<link>` tags in a fixed order (order matters — later files can override earlier ones): `base.css` (reset, theme variables, header), `sidebar.css` (includes the collapsible desktop rail), `cards.css` (grid, cards, author pages), `detailModal.css`, `addEditModal.css`, `fetchAlbumsModal.css`, `kanban.css`, `dashboard.css`, `profile.css` (Profile page + its Connect Last.fm/Steam modals), `misc.css` (share modal, scrollbar, mobile responsive overrides).
 
 The original monolithic `app.js`/`app.css` are still present in `src/app/` as an unused backup but are no longer loaded by anything — safe to delete once the module split has been confirmed working via a real (non-headless) Chrome smoke test.
 
@@ -118,6 +123,8 @@ Categories use **singular names** in storage and the Add Item dropdown, and **pl
 | Visual Art | Visual Art |
 
 The `Music Album` category is not shown as a top-level sidebar entry. Instead, a permanent **Music Albums** subfolder appears under **Musicians** in the sidebar. This subfolder also works in Curated SaveCraft mode, navigating to the curated music album list for the selected genre.
+
+**`Web Links`** is a separate pseudo-category, not a member of `CATEGORIES` (it's not offered in the Add Item wizard) — the Add modal auto-assigns it when a streaming/generic URL is pasted with no better category picked. It shows in the sidebar as **Webpages**, right before Books, with full folder support (three defaults seeded: Articles, Blogs, News) — see `render.js`'s `sidebarCategoryList`.
 
 ---
 

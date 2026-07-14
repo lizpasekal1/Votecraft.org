@@ -76,7 +76,8 @@
 .sidebar.sidebar-collapsed .sidebar-right,
 .sidebar.sidebar-collapsed .sidebar-subfolder,
 .sidebar.sidebar-collapsed .sidebar-add-folder,
-.sidebar.sidebar-collapsed .sidebar-divider {
+.sidebar.sidebar-collapsed .sidebar-divider,
+.sidebar.sidebar-collapsed .sidebar-genre-arrow {
   display: none;
 }
 .sidebar.sidebar-collapsed .sidebar-item {

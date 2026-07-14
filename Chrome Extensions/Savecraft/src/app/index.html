@@ -177,7 +177,7 @@
         <h2>Connect Last.fm</h2>
       </div>
       <div class="modal-body">
-        <p class="lastfm-modal-copy">SaveCraft only reads your public Last.fm username to show your recent scrobbles — no password, no Last.fm login, and nothing is ever posted on your behalf.</p>
+        <p class="lastfm-modal-copy">We only access your public Last.fm profile.<br>No password, no login required.</p>
         <div class="form-group" id="lastfm-username-field">
           <input type="text" id="lastfm-username" placeholder="Last.fm username" autocomplete="off" />
         </div>
@@ -190,6 +190,30 @@
       </div>
       <div class="modal-actions" id="lastfm-connected-actions" style="display:none">
         <button class="btn-primary" id="btn-lastfm-disconnect">Disconnect</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="steam-modal-overlay">
+    <div class="modal lastfm-modal" style="position:relative">
+      <button class="modal-x-close" id="btn-steam-close" title="Close">&#x2715;</button>
+      <div class="modal-header">
+        <h2>Connect Steam</h2>
+      </div>
+      <div class="modal-body">
+        <p class="lastfm-modal-copy">We only access your public Steam profile.<br>No password, no login required. Your Game Details privacy setting must be Public.</p>
+        <div class="form-group" id="steam-username-field">
+          <input type="text" id="steam-username" placeholder="Steam vanity URL or SteamID64" autocomplete="off" />
+        </div>
+        <div id="steam-error" class="auth-error" style="display:none"></div>
+        <div id="steam-connected-info" class="auth-signed-in-info" style="display:none"></div>
+      </div>
+      <div class="modal-actions" id="steam-disconnected-actions">
+        <button class="btn-cancel" id="btn-steam-cancel">Cancel</button>
+        <button class="btn-primary" id="btn-steam-connect">Connect</button>
+      </div>
+      <div class="modal-actions" id="steam-connected-actions" style="display:none">
+        <button class="btn-primary" id="btn-steam-disconnect">Disconnect</button>
       </div>
     </div>
   </div>
