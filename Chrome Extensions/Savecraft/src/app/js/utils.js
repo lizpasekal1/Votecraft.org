@@ -75,14 +75,6 @@ export function getDomain(url) {
   catch { return url; }
 }
 
-// Pulls the 11-char video ID out of any common YouTube URL shape (watch?v=, youtu.be/, embed/,
-// shorts/) so a manually-pasted link can be embedded the same way as an auto-resolved video ID.
-export function extractYoutubeVideoId(url) {
-  if (!url) return null;
-  const match = url.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
-  return match ? match[1] : null;
-}
-
 export function escapeHtml(str) {
   if (!str) return '';
   return str

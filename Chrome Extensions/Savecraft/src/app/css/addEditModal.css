@@ -438,11 +438,6 @@
   transition: border-color 0.15s, background 0.15s;
 }
 
-.step1-category-tile--no-icon {
-  justify-content: center;
-  text-align: center;
-}
-
 .step1-category-tile:hover {
   border-color: var(--primary);
   background: var(--hover-bg);

@@ -265,11 +265,11 @@ function wireKanbanWidget(container) {
 
 // ===== curated lists widget =====
 
-// Cosmetic-only relabeling for a few genres — previews the "these lists come from different
-// sponsored/curator groups" direction the user wants to grow into (see savecraft_planning notes),
-// without touching the real genre keys anything else (navigation, CURATED_ITEMS lookups) relies
-// on. Only the 3 the user named explicitly are overridden for now; the rest still show their
-// real genre name until there's a fuller set of curator names to use.
+// Cosmetic-only relabeling for a few genres — previews a "these lists come from different
+// sponsored/curator groups" direction (see savecraft_planning notes), without touching the real
+// genre keys anything else (navigation, CURATED_ITEMS lookups) relies on. Only 3 genres are
+// overridden for now; the rest still show their real genre name until there's a fuller set of
+// curator names to use.
 export const CURATED_LIST_DISPLAY_NAMES = {
   'Top 100': 'Votecraft List',
   'Futurism': 'Art Club List',
@@ -424,9 +424,12 @@ function buildHeroCollage() {
   const noCollage = heroItems.length === 0;
   const marqueeItems = [...heroItems, ...heroItems]; // duplicated for a seamless CSS marquee loop
 
+  // loading="eager" (not "lazy") — every thumbnail here is immediately visible the moment the
+  // Dashboard renders, so deferring their fetch (the point of lazy-loading) only delays them
+  // showing up, which is exactly the "pops in late" feeling this is meant to avoid.
   const thumbsHtml = marqueeItems.map((item, i) => `
     <div class="dash-hero-thumb" data-id="${escapeHtml(item.id)}" style="--rot:${HERO_ROTATIONS[i % HERO_ROTATIONS.length]}deg">
-      <img src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async" onerror="this.parentElement.style.display='none'">
+      <img src="${escapeHtml(item.imageUrl)}" alt="" loading="eager" decoding="async" onerror="this.parentElement.style.display='none'">
     </div>`).join('');
 
   return `

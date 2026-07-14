@@ -59,6 +59,7 @@
   height: 150px;
   border-radius: 12px;
   overflow: hidden;
+  background: var(--surface); /* fills the square while its image is still loading, instead of showing empty space through to the page background */
   box-shadow: 0 4px 20px var(--shadow-card);
   transform: rotate(var(--rot));
   flex-shrink: 0;

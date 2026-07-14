@@ -4,127 +4,295 @@
   padding: 0;
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  width: 300px;
-  background: #F8F9FA;
-  color: #202124;
+/* Defaults are dark — matches the main app's default theme. [data-theme="light"] below overrides
+   when the user has picked light mode in the main app's settings (kept in sync via popup.js). */
+:root {
+  color-scheme: dark;
+  --bg:              #1A1B1E;
+  --surface:         #25262B;
+  --border:          #373A40;
+  --text-primary:    #E8EAED;
+  --text-secondary:  #9AA0A6;
+  --text-muted:      #6B7280;
+  --primary:         #7C6FF5;
+  --primary-bg:      #2D2945;
+  --primary-hover:   #6A5EE0;
+  --hover-bg:        #2C2D32;
+  --danger-bg:       #4A2C00;
+  --danger-text:     #FCD34D;
+  --success:         #10B981;
 }
 
-/* Header */
-.header {
+[data-theme="light"] {
+  color-scheme: light;
+  --bg:              #F8F9FA;
+  --surface:         #ffffff;
+  --border:          #E0E0E0;
+  --text-primary:    #202124;
+  --text-secondary:  #80868B;
+  --text-muted:      #9AA0A6;
+  --primary:         #5C4EFA;
+  --primary-bg:      #EBE8FD;
+  --primary-hover:   #4A3DD4;
+  --hover-bg:        #F1F3F4;
+  --danger-bg:       #FEF3C7;
+  --danger-text:     #B45309;
+  --success:         #059669;
+}
+
+/* Fixed width always; height is one of exactly two sizes (set via a class on body from
+   popup.js), not per-screen free growth — a compact size for the tile-picker screens
+   (category/music-choice/folder) and a taller one for the review/details screen, which has
+   more form content. Picking a tile never resizes the window mid-navigation within a size
+   class, and the one class swap between "compact" and "tall" is the only resize that happens. */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  width: 360px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text-primary);
+  transition: background 0.15s, color 0.15s, height 0.15s;
+}
+
+body.size-compact { height: 320px; }
+body.size-tall { height: 480px; }
+
+/* Top bar */
+.popup-header {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: white;
-  border-bottom: 1px solid #E0E0E0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
 }
 
 .logo {
   font-size: 15px;
   font-weight: 700;
-  color: #5C4EFA;
+  color: var(--primary);
 }
 
 .btn-library {
   font-size: 12px;
-  color: #5C4EFA;
-  background: none;
-  border: none;
+  color: var(--primary);
+  background: var(--primary-bg);
+  border: 1.5px solid var(--primary);
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 7px;
+  font-weight: 600;
+  transition: background 0.15s, color 0.15s;
 }
 
 .btn-library:hover {
-  background: #EBE8FD;
+  background: var(--primary);
+  color: white;
 }
 
 /* Content */
 .content {
-  padding: 14px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 4px;
+}
+
+/* Tile-picker screens (category / music-choice / folder) center their grid in whatever room is
+   left below the header, instead of hugging the top — most noticeable on screens with just a
+   couple of tiles. The review screen (a form, not a tile grid) stays top-anchored as normal. */
+.wizard-step--tiles {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Nudge up 30px from dead-center — sitting exactly in the middle read as too far from the
+   header on screens with just a couple of tiles. */
+.wizard-step--tiles .cat-grid {
+  margin-top: -30px;
 }
 
 .unsaveable-msg {
   font-size: 12px;
-  color: #B45309;
-  background: #FEF3C7;
+  color: var(--danger-text);
+  background: var(--danger-bg);
   border-radius: 8px;
   padding: 8px 12px;
   text-align: center;
+  margin-bottom: 12px;
 }
 
-.page-preview {
-  background: white;
-  border: 1px solid #E0E0E0;
-  border-radius: 8px;
-  padding: 10px 12px;
+/* ===== Wizard header (mirrors the main app's Add Item modal header) ===== */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
 }
 
-.page-title {
-  font-size: 13px;
-  font-weight: 500;
-  color: #202124;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.modal-back-icon {
+  position: absolute;
+  top: -2px;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  transition: color 0.15s;
 }
+.modal-back-icon:hover { color: var(--text-primary); }
 
-.page-domain {
-  font-size: 11px;
-  color: #80868B;
-  margin-top: 3px;
-}
-
-.section-label {
-  font-size: 11px;
+.modal-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 15px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #80868B;
+  color: var(--text-primary);
+  text-align: center;
 }
 
-/* Category grid */
+.modal-bookmark-icon {
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
+/* ===== Category / folder tile grids (mirrors .step1-category-tile) ===== */
 .cat-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 6px;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
 .cat-btn {
-  padding: 8px 4px;
-  border: 1.5px solid #E0E0E0;
-  border-radius: 8px;
-  background: white;
-  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 12.5px;
+  font-weight: 600;
   cursor: pointer;
-  text-align: center;
-  line-height: 1.4;
-  transition: all 0.15s;
-  color: #202124;
+  text-align: left;
+  color: var(--text-primary);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.cat-btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  fill: var(--primary);
+}
+
+.cat-btn span.cat-btn-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .cat-btn:hover {
-  border-color: #5C4EFA;
+  border-color: var(--primary);
+  background: var(--hover-bg);
 }
 
 .cat-btn.selected {
-  background: #EBE8FD;
-  border-color: #5C4EFA;
-  color: #5C4EFA;
-  font-weight: 500;
+  border-color: var(--primary);
+  background: var(--hover-bg);
+  box-shadow: 0 0 0 1px var(--primary);
 }
+
+/* ===== Review screen ===== */
+.review-image-preview-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+.review-image-preview {
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--hover-bg);
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--primary);
+  margin-bottom: 6px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  color: var(--text-primary);
+  background: var(--surface);
+  transition: border-color 0.15s;
+}
+
+.form-group input:focus {
+  border-color: var(--primary);
+}
+
+.input-with-clear {
+  position: relative;
+}
+.input-with-clear input {
+  padding-right: 28px;
+}
+.btn-clear-field {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+.btn-clear-field:hover { color: var(--text-primary); }
 
 /* Save button */
 .btn-save {
   width: 100%;
   padding: 10px;
-  background: #5C4EFA;
+  margin-top: 4px;
+  background: var(--primary);
   color: white;
   border: none;
   border-radius: 8px;
@@ -135,40 +303,52 @@ body {
 }
 
 .btn-save:hover {
-  background: #4A3DD4;
+  background: var(--primary-hover);
 }
 
 .btn-save:disabled {
-  background: #B0A8F7;
+  background: var(--primary-bg);
+  color: var(--text-muted);
   cursor: not-allowed;
 }
 
 .saved-msg {
   text-align: center;
   font-size: 13px;
-  color: #059669;
+  color: var(--success);
   font-weight: 500;
   padding: 6px;
 }
 
-.hidden {
-  display: none;
+.saved-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
 }
 
-/* ===== DARK MODE (follows system preference) ===== */
-@media (prefers-color-scheme: dark) {
-  body { background: #1A1B1E; color: #E8EAED; }
-  .header { background: #25262B; border-color: #373A40; }
-  .logo { color: #7C6FF5; }
-  .btn-library { color: #7C6FF5; }
-  .btn-library:hover { background: #2D2945; }
-  .page-preview { background: #25262B; border-color: #373A40; }
-  .page-title { color: #E8EAED; }
-  .page-domain { color: #9AA0A6; }
-  .cat-btn { background: #25262B; border-color: #373A40; color: #E8EAED; }
-  .cat-btn:hover { border-color: #7C6FF5; }
-  .cat-btn.selected { background: #2D2945; border-color: #7C6FF5; color: #7C6FF5; }
-  .btn-save { background: #7C6FF5; }
-  .btn-save:hover { background: #6A5EE0; }
-  .unsaveable-msg { background: #4A2C00; color: #FCD34D; }
+.saved-actions .btn-save {
+  margin-top: 0;
+}
+
+.btn-saved-close {
+  width: 100%;
+  padding: 9px;
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-saved-close:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.hidden {
+  display: none;
 }

@@ -192,8 +192,8 @@ function showFolderScreen(cat, folders) {
   // No "Skip" — a folder must always be picked; there is no path to the review screen without one.
   const grid = document.getElementById('step1-folder-grid');
   grid.innerHTML = folders.map(f => `
-    <button type="button" class="step1-category-tile${f.id ? '' : ' step1-category-tile--no-icon'}" data-folder-id="${f.id}">
-      ${f.id ? `<span class="cat-icon">${folderIconHtml(f.id, 28)}</span>` : ''}
+    <button type="button" class="step1-category-tile" data-folder-id="${f.id}">
+      <span class="cat-icon">${folderIconHtml(f.id, 28)}</span>
       <span class="step1-category-tile-label">${escapeHtml(f.name)}${f.paywalled ? ' <span class="step1-paywalled-badge">Paywalled</span>' : ''}</span>
     </button>`).join('');
 
