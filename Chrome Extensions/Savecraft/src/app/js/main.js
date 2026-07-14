@@ -300,6 +300,7 @@ async function init() {
     renderSidebar();
     renderGrid();
   });
+  document.getElementById('link-sponsored-statements').href = chrome.runtime.getURL('src/sponsored/sponsored.html');
   document.addEventListener('click', e => {
     if (!settingsWrap.contains(e.target)) settingsDropdown.setAttribute('hidden', '');
   });
@@ -401,8 +402,9 @@ async function init() {
         state.sidebarMode = 'categories';
         state.view = 'all';
       } else if (opt === 'sponsored') {
-        state.sidebarMode = 'sponsored';
-        state.view = 'sponsored';
+        // "VoteCraft Picks" links straight into the real curated Top 100 saves area.
+        state.sidebarMode = 'curated';
+        state.view = 'genre:Top 100';
       }
       persistViewState();
       renderSidebar();
@@ -509,6 +511,12 @@ async function init() {
     imageUrlInput.value = '';
     _savedImageUrl = '';
     imageUrlInput.focus();
+  });
+
+  document.getElementById('btn-clear-youtube').addEventListener('click', () => {
+    const youtubeUrlInput = document.getElementById('input-youtube-url');
+    youtubeUrlInput.value = '';
+    youtubeUrlInput.focus();
   });
 
   document.getElementById('modal-category').addEventListener('change', e => {

@@ -13,11 +13,10 @@
   padding: 6px;
   z-index: 10;
   border-radius: 4px;
-  transition: color 0.15s, background 0.15s;
+  transition: color 0.15s;
 }
 .modal-back-icon:hover {
   color: var(--text-primary);
-  background: var(--hover-bg);
 }
 
 .platform-dropdown {
@@ -161,6 +160,11 @@
   color: var(--text-primary);
 }
 
+#modal-overlay h2 {
+  justify-content: center;
+  width: 100%;
+}
+
 .modal-bookmark-icon {
   flex-shrink: 0;
   color: var(--primary);
@@ -189,6 +193,10 @@
   display: flex;
   gap: 12px;
   margin-bottom: 0;
+}
+
+.form-row + .form-row {
+  margin-top: 18px;
 }
 
 .form-row .form-group {
@@ -250,9 +258,12 @@
   margin-bottom: 0;
 }
 
-.form-row--url-pair .form-group input {
-  padding: 7px 10px;
+.form-row--url-pair .form-group input,
+.form-row--url-pair .platform-dropdown-summary {
+  height: 34px;
+  padding: 0 10px;
   font-size: 11px;
+  box-sizing: border-box;
 }
 
 .form-row--url-pair label {
@@ -399,6 +410,21 @@
   margin-bottom: 18px;
 }
 
+.step1-add-folder-link {
+  display: block;
+  width: 100%;
+  text-align: center;
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.step1-add-folder-link:hover { text-decoration: underline; }
+
 .step1-category-tile {
   display: flex;
   align-items: center;
@@ -410,6 +436,11 @@
   cursor: pointer;
   text-align: left;
   transition: border-color 0.15s, background 0.15s;
+}
+
+.step1-category-tile--no-icon {
+  justify-content: center;
+  text-align: center;
 }
 
 .step1-category-tile:hover {
@@ -427,6 +458,20 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
+}
+
+.step1-paywalled-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: var(--hover-bg);
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
 }
 
 .step1-search-wrap {

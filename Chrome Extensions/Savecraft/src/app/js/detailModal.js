@@ -1,12 +1,12 @@
 // ===== ITEM DETAIL MODAL (the accordion-based modal shared by every category) =====
 
-import { state, CATEGORY_PLATFORMS, SUMMARY_PLACEHOLDER_CATEGORIES } from './state.js';
+import { state, CATEGORY_PLATFORMS, SUMMARY_PLACEHOLDER_CATEGORIES, CURATED_ITEMS } from './state.js';
 import {
   escapeHtml, catClass, isMusicAlbumsSectionView, isItunesArtworkUrl, applyArtistPhotoToItem,
   patchCardImage, debounce, formatTrackDuration,
 } from './utils.js';
-import { persistItem, removeItem, persistAuthor, persistFolder, removeFolder } from './storage.js';
-import { ensureArtistMusicVideoId, ensureArtistWebsite, ensureArtistWikipediaInfo, ensureItemWikipediaInfo } from './api.js';
+import { persistItem, removeItem, persistAuthor } from './storage.js';
+import { ensureArtistWebsite, ensureArtistWikipediaInfo, ensureItemWikipediaInfo } from './api.js';
 import { findAuthor, navigateToAuthor, getKnownAlbumsForArtist, autoSaveMusician, ensureAlbumTrackList } from './authors.js';
 import { renderSidebar, renderGrid } from './render.js';
 
@@ -21,6 +21,11 @@ export function openDetailModal(item) {
   _detailItem = item;
   const domain = (() => { try { return new URL(item.url).hostname.replace('www.', ''); } catch { return item.url; } })();
 
+  // Checked against the actual curated data instead of guessing at id-prefix conventions (which
+  // turned out wrong for at least Books) — this works for every category with real Top 100
+  // curated content, automatically, with no per-category id scheme to keep in sync.
+  const isCuratedTop100 = item.curated && !!item.id && !!(CURATED_ITEMS['Top 100']?.[item.category] || []).some(i => i.id === item.id);
+
   const wrap = document.getElementById('detail-image-wrap');
   const isMusicAlbum = item.category === 'Music Album';
   const isMusicianItem = item.category === 'Musician';
@@ -30,54 +35,42 @@ export function openDetailModal(item) {
   document.getElementById('detail-favorite-btn').style.display = '';
 
   const PLAY_ICON_SVG = `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`;
-  const _promoToggleHtml = isMusicianItem
-    ? `<button class="btn-promo-toggle" id="btn-promo-toggle" title="Watch on YouTube"><span>Promo Vid</span>${PLAY_ICON_SVG}</button>`
-    : isMusicAlbum
+  const _promoToggleHtml = isMusicAlbum
     ? `<button class="btn-promo-toggle" id="btn-fullart-toggle" title="View full album art"><span>Album Art</span>${PLAY_ICON_SVG}</button>`
     : '';
+  // Same slot the promo-video/album-art toggle uses — stacked above it when both are present
+  // (a curated Top 100 Musician/Music Album item), otherwise it has that corner to itself.
+  let _sponsoredTagHtml = '';
+  if (isCuratedTop100) {
+    const CATEGORY_WHY_TEXT = {
+      Musician: 'Music shapes culture, identity, and resistance — the same forces that drive civic change.',
+      'Music Album': 'Music shapes culture, identity, and resistance — the same forces that drive civic change.',
+      Show: 'The stories we follow on screen shape our empathy, our politics, and how we see each other.',
+      Game: 'Games build communities, test strategy, and spark collaboration — skills at the core of civic life.',
+      Book: 'Great books expand our understanding of the world and each other — the foundation of an engaged citizenry.',
+    };
+    const whyText = CATEGORY_WHY_TEXT[item.category]
+      || 'What we watch shapes how we see power and justice — the same questions at the heart of civic life.';
+    _sponsoredTagHtml = `
+      <a class="vc-sponsored-tag vc-sponsored-tag--overlay${_promoToggleHtml ? ' vc-sponsored-tag--stacked' : ''}" href="${chrome.runtime.getURL('src/sponsored/sponsored.html')}" target="_blank">
+        ⚡ Your Sponsored Statement
+        <span class="vc-sponsored-tooltip">
+          <span class="vc-why-title">WHY VOTECRAFT RECOMMENDS</span>
+          <span class="vc-why-tooltip-text">${whyText}</span>
+        </span>
+      </a>`;
+  }
 
   if (item.imageUrl) {
-    wrap.innerHTML = `<div class="detail-image-crop"><img class="${_imageClass}" src="${escapeHtml(item.imageUrl)}" alt=""></div>${_promoToggleHtml}`;
+    wrap.innerHTML = `<div class="detail-image-crop"><img class="${_imageClass}" src="${escapeHtml(item.imageUrl)}" alt=""></div>${_promoToggleHtml}${_sponsoredTagHtml}`;
     wrap.style.display = '';
     if (isMusicAlbum) {
       wrap.querySelector('.detail-image').addEventListener('click', () => openImageLightbox(item.imageUrl));
     }
   } else {
     const letter = (item.title || domain || '?')[0].toUpperCase();
-    wrap.innerHTML = `<div class="detail-image-crop"><div class="detail-placeholder placeholder-${catClass(item.category || 'Music-Album')}">${letter}</div></div>${_promoToggleHtml}`;
+    wrap.innerHTML = `<div class="detail-image-crop"><div class="detail-placeholder placeholder-${catClass(item.category || 'Music-Album')}">${letter}</div></div>${_promoToggleHtml}${_sponsoredTagHtml}`;
     wrap.style.display = '';
-  }
-
-  if (isMusicianItem) {
-    let _showingPromoVideo = false;
-    const promoBtn = document.getElementById('btn-promo-toggle');
-    const promoLabelEl = promoBtn.querySelector('span');
-    promoBtn.onclick = async () => {
-      const cropEl = wrap.querySelector('.detail-image-crop');
-      if (_showingPromoVideo) {
-        _showingPromoVideo = false;
-        cropEl.innerHTML = item.imageUrl
-          ? `<img class="${_imageClass}" src="${escapeHtml(item.imageUrl)}" alt="">`
-          : `<div class="detail-placeholder placeholder-${catClass(item.category)}">${(item.title || '?')[0].toUpperCase()}</div>`;
-        promoLabelEl.textContent = 'Promo Vid';
-        return;
-      }
-      promoBtn.disabled = true;
-      promoLabelEl.textContent = 'Loading…';
-      const videoId = await ensureArtistMusicVideoId(item.title);
-      promoBtn.disabled = false;
-      if (_detailItem !== item) return; // modal moved on to a different item while awaiting
-      if (!videoId) {
-        // No API key set yet, or no match found — fall back to a real search in a new tab.
-        promoLabelEl.textContent = 'Promo Vid';
-        const searchQuery = encodeURIComponent(`${item.title || ''} official music video`);
-        window.open(`https://www.youtube.com/results?search_query=${searchQuery}`, '_blank', 'noopener');
-        return;
-      }
-      _showingPromoVideo = true;
-      cropEl.innerHTML = `<iframe class="detail-video-frame" src="https://www.youtube-nocookie.com/embed/${videoId}?rel=0&autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-      promoLabelEl.textContent = 'Featured Photos';
-    };
   }
 
   if (isMusicAlbum) {
@@ -93,15 +86,11 @@ export function openDetailModal(item) {
     const isSaved = !!state.items.find(i => i.id === item.id);
     document.getElementById('detail-edit').style.display = (!item.curated || isSaved) ? '' : 'none';
   }
-  function getFavoritesFolder(category) {
-    return state.folders.find(f => f.name === 'Favorites' && f.parentCategory === category);
-  }
   function updateFavoriteIcon() {
     const favBtn = document.getElementById('detail-favorite-btn');
     if (!favBtn) return;
     const liveItem = state.items.find(i => i.id === item.id);
-    const favFolder = getFavoritesFolder(item.category);
-    const favorited = !!liveItem && !!favFolder && liveItem.folderId === favFolder.id;
+    const favorited = !!liveItem?.favorite;
     favBtn.innerHTML = FAVORITE_STAR;
     favBtn.classList.toggle('detail-favorite-btn--active', favorited);
   }
@@ -229,26 +218,8 @@ export function openDetailModal(item) {
 
   document.getElementById('detail-favorite-btn').onclick = async () => {
     const liveItem = await ensureLiveItem();
-    const favFolder = getFavoritesFolder(liveItem.category);
-    const isFavorited = !!favFolder && liveItem.folderId === favFolder.id;
-    if (isFavorited) {
-      liveItem.folderId = null;
-      await persistItem(liveItem);
-      const stillHasItems = state.items.some(i => i.folderId === favFolder.id);
-      if (!stillHasItems) {
-        state.folders = state.folders.filter(f => f.id !== favFolder.id);
-        await removeFolder(favFolder.id);
-      }
-    } else {
-      let folder = favFolder;
-      if (!folder) {
-        folder = { id: `favorites-${liveItem.category.toLowerCase().replace(/\s+/g, '-')}`, name: 'Favorites', parentCategory: liveItem.category };
-        state.folders.push(folder);
-        await persistFolder(folder);
-      }
-      liveItem.folderId = folder.id;
-      await persistItem(liveItem);
-    }
+    liveItem.favorite = !liveItem.favorite;
+    await persistItem(liveItem);
     updateBookmarkIcon();
     updateFavoriteIcon();
     renderSidebar();
@@ -323,7 +294,7 @@ export function openDetailModal(item) {
         patchCardImage(item.id, item.imageUrl);
         const wrap = document.getElementById('detail-image-wrap');
         const cropEl = wrap.querySelector('.detail-image-crop');
-        if (cropEl && !cropEl.querySelector('.detail-video-frame')) { // don't clobber an actively-playing promo video
+        if (cropEl) {
           const imgEl = cropEl.querySelector('.detail-image');
           if (imgEl) {
             imgEl.src = item.imageUrl;
@@ -558,6 +529,11 @@ export function openDetailModal(item) {
   const websiteBtn = item.url
     ? `<a class="streaming-link-btn streaming-link-website" href="${escapeHtml(item.url)}" target="_blank">${escapeHtml(websiteLinkLabel)}</a>`
     : '';
+  // The item's own saved YouTube URL (set via the "YouTube URL" field in the Add/Edit modal) —
+  // a real link to that specific video, not a generic YouTube search like the other platforms.
+  const youtubeBtn = item.youtubeUrl
+    ? `<a class="streaming-link-btn" href="${escapeHtml(item.youtubeUrl)}" target="_blank">YouTube</a>`
+    : '';
 
   const headerLabel = catConfig ? escapeHtml(catConfig.label) : 'Web Links';
 
@@ -594,9 +570,9 @@ export function openDetailModal(item) {
     const platformsToShow = (savedPlatforms && savedPlatforms.length > 0)
       ? catConfig.platforms.filter(p => savedPlatforms.includes(p.id))
       : catConfig.platforms;
-    streamingEl.innerHTML = buildStreaming(websiteBtn + platformsToShow.map(p => `<a class="streaming-link-btn" href="${p.searchUrl(query)}" target="_blank">${p.name}</a>`).join(''));
+    streamingEl.innerHTML = buildStreaming(websiteBtn + youtubeBtn + platformsToShow.map(p => `<a class="streaming-link-btn" href="${p.searchUrl(query)}" target="_blank">${p.name}</a>`).join(''));
   } else {
-    streamingEl.innerHTML = buildStreaming(websiteBtn);
+    streamingEl.innerHTML = buildStreaming(websiteBtn + youtubeBtn);
   }
   streamingEl.style.display = '';
   streamingEl.querySelector('.how-to-read-label')?.addEventListener('click', () => {
@@ -739,33 +715,6 @@ export function openDetailModal(item) {
   queueEl.classList.remove('open');
   wireQueueSection();
   updateQueueLabel();
-
-  // VoteCraft recommends section (Top 100 curated items only)
-  const vcWhyEl = document.getElementById('detail-vc-why');
-  const isCuratedTop100 = item.curated && item.id && (item.id.startsWith('cur-top100-') || item.id.startsWith('cur-top100g-') || item.id.startsWith('cur-top100b-') || item.id.startsWith('cur-rs100-') || item.id.startsWith('cur-rstv-'));
-  if (isCuratedTop100) {
-    const isMusic = item.id.startsWith('cur-rs100-');
-    const isShows = item.id.startsWith('cur-rstv-');
-    const isGames = item.id.startsWith('cur-top100g-');
-    const isBooks = item.id.startsWith('cur-top100b-');
-    const whyText = isMusic
-      ? 'Music shapes culture, identity, and resistance — the same forces that drive civic change.'
-      : isShows
-      ? 'The stories we follow on screen shape our empathy, our politics, and how we see each other.'
-      : isGames
-      ? 'Games build communities, test strategy, and spark collaboration — skills at the core of civic life.'
-      : isBooks
-      ? 'Great books expand our understanding of the world and each other — the foundation of an engaged citizenry.'
-      : 'What we watch shapes how we see power and justice — the same questions at the heart of civic life.';
-    vcWhyEl.innerHTML = `
-      <div class="vc-why-title">WHY VOTECRAFT RECOMMENDS</div>
-      <p class="vc-why-text">${whyText}</p>
-      <div style="text-align:center;margin-top:10px"><a class="vc-sponsored-tag" href="${chrome.runtime.getURL('src/sponsored/sponsored.html')}" target="_blank">⚡ Your Sponsored Statement</a></div>
-    `;
-    vcWhyEl.style.display = '';
-  } else {
-    vcWhyEl.style.display = 'none';
-  }
 
   document.getElementById('detail-modal-overlay').classList.add('open');
 

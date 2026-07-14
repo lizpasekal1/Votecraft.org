@@ -1,12 +1,23 @@
 // ===== PURE / SHARED HELPERS =====
 
-import { state } from './state.js';
+import { state, FOLDER_ICON, GENERIC_FOLDER_ICON_PATH } from './state.js';
 
 // True for a photo already auto-fetched from the iTunes album-cover fallback (identifiable by
 // Apple's CDN domain) — safe to replace with a real Wikipedia photo once one's available, unlike
 // a URL the user pasted in manually, which is never overwritten by auto-fetch.
 export function isItunesArtworkUrl(url) {
   return !!url && /mzstatic\.com/i.test(url);
+}
+
+// Renders a folder's sidebar/wizard icon — its own custom icon (FOLDER_ICON, keyed by folder id)
+// if it has one, else the plain generic folder icon every user-created folder uses.
+export function folderIconHtml(folderId, sizePx) {
+  const icon = FOLDER_ICON[folderId];
+  if (icon?.type === 'emoji') {
+    return `<span style="font-size:${sizePx}px;line-height:1">${icon.value}</span>`;
+  }
+  const path = icon?.type === 'svg' ? icon.path : GENERIC_FOLDER_ICON_PATH;
+  return `<svg xmlns="http://www.w3.org/2000/svg" height="${sizePx}px" viewBox="0 -960 960 960" width="${sizePx}px" fill="#5B5BEF"><path d="${path}"/></svg>`;
 }
 
 // Sets imageUrl on an author record or item if it's empty or still the replaceable iTunes
@@ -62,6 +73,14 @@ export function isOwnAuthorPageView(authorName) {
 export function getDomain(url) {
   try { return new URL(url).hostname.replace('www.', ''); }
   catch { return url; }
+}
+
+// Pulls the 11-char video ID out of any common YouTube URL shape (watch?v=, youtu.be/, embed/,
+// shorts/) so a manually-pasted link can be embedded the same way as an auto-resolved video ID.
+export function extractYoutubeVideoId(url) {
+  if (!url) return null;
+  const match = url.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
+  return match ? match[1] : null;
 }
 
 export function escapeHtml(str) {
