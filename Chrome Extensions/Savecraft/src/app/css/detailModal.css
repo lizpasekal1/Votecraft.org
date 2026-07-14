@@ -740,7 +740,7 @@
   max-width: 80vw;
   box-sizing: border-box;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--primary);
   border-radius: 8px;
   padding: 10px 12px;
   font-size: 13px;
@@ -757,6 +757,30 @@
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
+}
+
+/* Pointer tail — two stacked triangles (border color behind, surface color on top, inset 1px)
+   so the tail reads as a continuation of the box's own border+fill, not a separate shape. */
+.vc-sponsored-tooltip::before,
+.vc-sponsored-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 120px;
+  border-style: solid;
+  border-color: transparent;
+}
+
+.vc-sponsored-tooltip::before {
+  border-width: 12px;
+  border-top-color: var(--primary);
+}
+
+.vc-sponsored-tooltip::after {
+  border-width: 11px;
+  right: 121px; /* 1px more than ::before so the two triangles' centers (not just their right edges) line up — they have different border-widths, so anchoring both to the same "right" leaves the apex points 1px apart */
+  margin-top: -1px;
+  border-top-color: var(--surface);
 }
 
 .vc-sponsored-tag {
@@ -779,7 +803,6 @@
 }
 
 .vc-sponsored-tag:hover {
-  background: var(--primary-hover);
   transform: translateY(-1px);
 }
 

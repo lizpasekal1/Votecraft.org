@@ -364,27 +364,12 @@
   padding: 48px 64px;
 }
 
-.cards-grid.landing-state .empty-state--sponsored {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
-  border: 1px solid rgba(255, 215, 0, 0.3);
-}
-
 .cards-grid.landing-state .empty-state h3 {
   color: #fff;
 }
 
-.cards-grid.landing-state .empty-state--sponsored h3 {
-  color: #FFD700;
-}
-
 .cards-grid.landing-state .empty-state p {
   color: rgba(255, 255, 255, 0.8);
-}
-
-/* Sponsored mobile tab */
-.sidebar-mode-tab--sponsored.active {
-  background: #FFD700;
-  color: #1a1a1a;
 }
 
 .empty-state {

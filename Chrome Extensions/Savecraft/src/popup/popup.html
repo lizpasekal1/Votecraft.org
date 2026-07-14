@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <title>SaveCraft</title>
   <link rel="stylesheet" href="popup.css">
 </head>
-<body>
-  <div class="header">
+<body class="size-compact">
+  <div class="popup-header">
     <span class="logo">SaveCraft</span>
     <button id="btn-open-library" class="btn-library">Open Library →</button>
   </div>
@@ -16,25 +16,69 @@
       This page can't be saved (browser internal page).
     </div>
 
-    <div id="page-preview" class="page-preview">
-      <div class="page-title" id="page-title">Loading...</div>
-      <div class="page-domain" id="page-domain"></div>
+    <div class="modal-header" style="position:relative">
+      <button class="modal-back-icon" id="btn-back" title="Back" style="display:none">
+        <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M400-80 0-480l400-400 56 56-344 344 344 344-56 56Z"/></svg>
+      </button>
+      <h2 id="modal-title">
+        <svg class="modal-bookmark-icon" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Z"/></svg>
+        <span id="modal-title-text">What are you adding to?</span>
+      </h2>
     </div>
 
-    <div class="section-label">Category</div>
-    <div class="cat-grid">
-      <button class="cat-btn" data-cat="Music">🎵<br>Music</button>
-      <button class="cat-btn" data-cat="Shows">📺<br>Shows</button>
-      <button class="cat-btn" data-cat="Books">📚<br>Books</button>
-      <button class="cat-btn" data-cat="Movies">🎬<br>Movies</button>
-      <button class="cat-btn" data-cat="Games">🎮<br>Games</button>
-      <button class="cat-btn" data-cat="Memes">🤣<br>Memes</button>
+    <!-- Screen 1: category -->
+    <div class="wizard-step wizard-step--tiles" id="step-category">
+      <div class="cat-grid" id="cat-grid"></div>
     </div>
 
-    <button id="btn-save" class="btn-save">Save Page</button>
-    <div id="saved-msg" class="saved-msg hidden">✅ Saved to SaveCraft!</div>
+    <!-- Screen 1.5: Musician vs Music Album sub-choice, shown only from the combined "Music" tile -->
+    <div class="wizard-step wizard-step--tiles" id="step-music-choice" style="display:none">
+      <div class="cat-grid" id="music-choice-grid"></div>
+    </div>
+
+    <!-- Screen 2: folder picker (only shown when the category has more than one folder) -->
+    <div class="wizard-step wizard-step--tiles" id="step-folder" style="display:none">
+      <div class="cat-grid" id="folder-grid"></div>
+    </div>
+
+    <!-- Screen 3: review + save -->
+    <div class="wizard-step" id="step-review" style="display:none">
+      <div class="review-image-preview-wrap" id="image-preview-wrap" style="display:none">
+        <img id="image-preview" class="review-image-preview" alt=""
+             onerror="this.closest('.review-image-preview-wrap').style.display='none'">
+      </div>
+
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" id="input-title" placeholder="Title" autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label>Image URL</label>
+        <div class="input-with-clear">
+          <input type="url" id="input-image-url" placeholder="Image override…" autocomplete="off" />
+          <button type="button" class="btn-clear-field" id="btn-clear-image" title="Clear image URL">
+            <svg xmlns="http://www.w3.org/2000/svg" height="12px" viewBox="0 -960 960 960" width="12px" fill="currentColor"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>URL</label>
+        <input type="url" id="input-url" placeholder="https://…" autocomplete="off" />
+      </div>
+
+      <button id="btn-save" class="btn-save">Save Page</button>
+      <div id="saved-msg" class="saved-msg hidden">
+        ✅ Saved to SaveCraft!
+        <div class="saved-actions">
+          <button type="button" id="btn-saved-open-library" class="btn-save">Open Library →</button>
+          <button type="button" id="btn-saved-close" class="btn-saved-close">Close</button>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <script src="popup.js"></script>
+  <script type="module" src="popup.js"></script>
 </body>
 </html>

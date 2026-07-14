@@ -4,7 +4,7 @@
 
 import { state } from './state.js';
 import {
-  persistArtistBioCache, persistArtistVideoCache, persistArtistWebsiteCache, persistItemWikiCache,
+  persistArtistBioCache, persistArtistWebsiteCache, persistItemWikiCache,
   persistLastfmCache, persistSteamCache,
 } from './storage.js';
 
@@ -371,42 +371,9 @@ export async function ensureArtistWebsite(artistName) {
   return url;
 }
 
-// Set this to a YouTube Data API v3 key (restricted to that API only) to enable inline promo
-// video playback. Without one, the Promo Vid button falls back to opening a YouTube search
-// in a new tab. Get a key at https://console.cloud.google.com (enable "YouTube Data API v3",
-// then Credentials → Create Credentials → API Key).
-const YOUTUBE_API_KEY = '';
-
-const ARTIST_VIDEO_CACHE_MISS_TTL = 30 * 24 * 60 * 60 * 1000; // 30 days
-
-// Resolves a real, embeddable YouTube video ID for an artist via the YouTube Data API,
-// scoped to videoCategoryId=10 ("Music") so results are actual music videos rather than
-// interviews, live performances mislabeled otherwise, fan content, etc. Cached per artist.
-export async function ensureArtistMusicVideoId(artistName) {
-  if (!artistName || !YOUTUBE_API_KEY) return null;
-  const key = artistName.trim().toLowerCase();
-  const cached = state.artistVideoCache[key];
-  if (cached && (cached.videoId || (Date.now() - cached.fetchedAt < ARTIST_VIDEO_CACHE_MISS_TTL))) {
-    return cached.videoId;
-  }
-  let videoId = null;
-  try {
-    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoCategoryId=10&maxResults=1&q=${encodeURIComponent(artistName + ' official music video')}&key=${YOUTUBE_API_KEY}`;
-    const resp = await fetch(url);
-    if (resp.ok) {
-      const data = await resp.json();
-      videoId = data.items?.[0]?.id?.videoId || null;
-    }
-  } catch { /* no video found */ }
-  state.artistVideoCache[key] = { videoId, fetchedAt: Date.now() };
-  persistArtistVideoCache();
-  return videoId;
-}
-
 // Set this to a free Last.fm API key (https://www.last.fm/api/account/create) to enable the
 // Profile page's "Connect Last.fm" recent-tracks card. Without one, the Connections section
-// still shows the connect UI, but this returns null and the card explains no key is configured
-// yet — same graceful-empty behavior as YOUTUBE_API_KEY above when it's blank.
+// still shows the connect UI, but this returns null and the card explains no key is configured yet.
 const LASTFM_API_KEY = '';
 
 // Lets callers show "not configured yet" instead of a misleading "username not found" when the

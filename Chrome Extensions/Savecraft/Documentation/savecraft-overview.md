@@ -6,8 +6,12 @@ SaveCraft is a Chrome extension that acts as a personal media library. Users sav
 
 ## Recent Additions (latest session)
 
-This was a large session centered on one theme: **folders went from decorative to functional**, which then cascaded into a rethink of what a "category tab" even shows.
+This session had two halves: a cleanup pass on the previous session's work, then a full rebuild of the browser-toolbar popup into a real wizard.
 
+- **Popup rebuilt from a single flat screen into a real multi-screen wizard** (`src/popup/`) — previously it was one screen (paste URL, pick a category from a hardcoded 6-item list, instant save). It's now `type="module"` and imports `CATEGORIES`/`CAT_LABEL`/`CAT_EMOJI` directly from `js/state.js` and `folderIconHtml`/`escapeHtml` from `js/utils.js` — the first time the popup shares code with the main app instead of duplicating it. Flow now mirrors the Add Item modal: category tile screen → Musician-vs-Music-Album sub-choice for the combined "Music" tile → folder-picker screen (reads `folder_*` keys straight from `chrome.storage.sync`, auto-skipped when a category has 0 or 1 folders) → a review screen with editable Title/Image URL/URL (previously saved instantly with no chance to fix anything). A real bug got fixed in the process: the old popup's category values (`"Movies"`, `"Books"`, `"Shows"`, `"Games"`, `"Memes"`, `"Music"`) never matched the real `CATEGORIES` strings at all, so anything saved from the popup before this rebuild silently never filed under its category tab — only visible in "All". After saving, the popup now asks **"Open Library →" or "Close"** instead of auto-closing after 1 second. Dark theme now syncs with the main app's saved `savecraft_theme` preference (was hardcoded to follow OS `prefers-color-scheme` before). The window uses exactly two fixed sizes (320px "compact" for tile-picker screens, 480px "tall" for the review screen) instead of resizing per screen.
+- **Category icon/label polish** — Movie's icon replaced with a custom film-strip SVG, Visual Art's with a custom tag/label SVG (both pasted by hand, source files kept at `images/icons/` for reference); sidebar tab labels changed: Movie → "Films" (the `Movies`/`Videos` *subfolder* names were deliberately left alone), Web Links → "Websites" (was "Website"), Musician → "Music" (was "Musicians"). `Movie` was also reordered in `CATEGORIES` to sit directly after `Book`.
+- **Dead-code cleanup pass** — removed the fully-orphaned YouTube promo-video lookup feature (`ensureArtistMusicVideoId()`, `YOUTUBE_API_KEY`, `ARTIST_VIDEO_CACHE_MISS_TTL`, `persistArtistVideoCache()`, `state.artistVideoCache`, `extractYoutubeVideoId()`) — verified fully unreferenced before deleting, not just assumed from memory. Extracted a shared `matchesPrimaryOrUnfoldered(item, category)` helper in `render.js`, replacing four copy-pasted inline predicates. Removed several dead CSS rules (`.detail-video-frame`, `.empty-state--sponsored`, `.sidebar-mode-tab--sponsored.active`, `.step1-category-tile--no-icon`) and a dead `state.view === 'sponsored'` placeholder block.
+- **Dashboard hero collage fix** — thumbnails sometimes showed as empty squares or popped in late; fixed with `background: var(--surface)` on `.dash-hero-thumb` (fills the square while its image loads) and switching `loading="lazy"` → `loading="eager"` (the collage is always visible, so lazy-loading was actively counterproductive here).
 - **Folder assignment actually works now.** Previously the only thing that ever set `item.folderId` was the Favorite star (see below) — every seeded default folder (Authors, Genres, etc.) was permanently empty. The Add wizard now has a dedicated folder-picker screen between category and search/review (skipped automatically when a category has 0 or exactly 1 folder — no pointless single-choice click); Edit mode has a folder `<select>`. Picking a folder is mandatory — there's no "Skip"/"No folder" option anymore.
 - **"Primary folder" tab filtering** (`PRIMARY_FOLDER_ID` in `state.js`) — this is the big behavioral change. A top-level category tab (e.g. "Movies") now shows only that category's designated *primary* folder plus anything with no folder assigned — not everything in the category. Other folders (e.g. "Videos" under Movie, "Podcasts"/"Webseries" under Show) are excluded from the flat tab view unless opened directly. Clicking the primary folder itself shows the identical result as the tab. Nothing already saved "disappears" — un-foldered items count as primary automatically, no migration needed.
 - **New default folders per category**, each with its own custom icon (`FOLDER_ICON` map in `state.js` + `folderIconHtml()` helper in `utils.js`; official/default folders can't be deleted from the sidebar — no × shown — only user-created ones can, with a confirm prompt): Movie → Movies (primary) + Videos; Show → TV Shows (primary, tab still labeled "Shows") + Podcasts + Webseries + Tutorials; Musician → Musicians (primary); Music Album → Music Albums (primary) + Playlists; Book → Books (primary) + Authors; Website → Website (primary) + Articles + Blogs; Visual Art (tab now labeled "Arts") → Dance, Comics, Painting, Sculpture, plus an "Add New Folder" quick-link specific to that screen.
@@ -47,7 +51,8 @@ To open the full library from the extension: click the toolbar icon → click **
 Savecraft/
 ├── manifest.json                — Extension config (Manifest V3)
 ├── images/
-│   └── logos/                   — Source-attribution logos (Rolling Stone, Steam, NYT) used in Curated SaveCraft
+│   ├── logos/                   — Source-attribution logos (Rolling Stone, Steam, NYT) used in Curated SaveCraft
+│   └── icons/                   — Source SVGs for hand-pasted category icons (Movie, Visual Art), kept for reference; the actual icons are inlined in state.js's CAT_EMOJI
 ├── rules/
 │   └── youtube_referer_rules.json — declarativeNetRequest rule for YouTube embed Referer header
 ├── scripts/                     — One-off admin tooling to seed/update Firestore curated data (not loaded by the extension)
@@ -57,9 +62,9 @@ Savecraft/
 │   ├── content/
 │   │   └── content.js           — Injected into every page; reads og:image for right-click saves
 │   ├── popup/
-│   │   ├── popup.html           — Quick-save widget (shown when clicking toolbar icon)
+│   │   ├── popup.html           — Quick-save wizard (shown when clicking toolbar icon); mirrors the Add Item modal's flow
 │   │   ├── popup.css
-│   │   └── popup.js
+│   │   └── popup.js             — ES module; imports category config + helpers from src/app/js/state.js and utils.js
 │   ├── sponsored/
 │   │   ├── sponsored.html       — Standalone "Sponsored Statement" page linked from curated Top 100 detail modals + the Settings dropdown
 │   │   └── sponsored.js         — External script (extension-page CSP blocks inline <script>) — sets the "SaveCraft" wordmark link's href
@@ -122,13 +127,13 @@ Categories use **singular names** in storage and the Add Item dropdown, and **pl
 
 | Storage / dropdown value | Sidebar label | Primary folder |
 |--------------------------|---------------|-----------------|
-| Web Links | Website | Website |
+| Web Links | Websites | Website |
 | Visual Art | Arts | *(none — Dance/Comics/Painting/Sculpture are all equal, non-primary folders)* |
 | Book | Books | Books |
+| Movie | Films | Movies |
 | Game | Games | *(none)* |
 | News | News | *(none currently — see Recent Additions)* |
-| Movie | Movies | Movies |
-| Musician | Musicians | Musicians |
+| Musician | Music | Musicians |
 | Music Album | *(hidden — accessed via subfolder)* | Music Albums |
 | Show | Shows | TV Shows |
 
@@ -145,7 +150,7 @@ A category's **primary folder** (`PRIMARY_FOLDER_ID` in `state.js`, keyed by cat
 ## Key Features
 
 ### Quick-Save Popup
-Clicking the toolbar icon opens a small popup where the user can paste a URL and pick a category. The item is saved to `chrome.storage.sync` immediately.
+Clicking the toolbar icon opens a small wizard-style popup (`src/popup/`) mirroring the Add Item modal: category tile screen (imports `CATEGORIES`/`CAT_LABEL`/`CAT_EMOJI` straight from `js/state.js`) → Musician-vs-Music-Album sub-choice for the combined "Music" tile → folder-picker screen (auto-skipped when the category has 0 or 1 folders) → a review screen with editable Title/Image URL/URL, pre-filled from the current tab (title, URL, and an auto-fetched `og:image` via the content script or Microlink fallback). After saving, it asks **"Open Library →"** or **"Close"** rather than auto-closing. Matches the main app's dark/light theme automatically. Fixed at two sizes — compact for the tile-picker screens, taller for the review screen — never freely resizing mid-navigation.
 
 ### Right-Click Context Menu
 Right-clicking any page or link shows **Save to SaveCraft → [category]**. The service worker (`background.js`) reads `og:image` from the page via the content script and saves the item automatically.

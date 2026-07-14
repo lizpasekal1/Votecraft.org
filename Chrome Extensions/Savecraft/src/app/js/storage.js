@@ -418,10 +418,6 @@ export function persistArtistBioCache() {
   chrome.storage.local.set({ savecraft_artist_bio_cache_v2: state.artistBioCache });
 }
 
-export function persistArtistVideoCache() {
-  chrome.storage.local.set({ savecraft_artist_video_cache: state.artistVideoCache });
-}
-
 export function persistItemWikiCache() {
   chrome.storage.local.set({ savecraft_item_wiki_cache: state.itemWikiCache });
 }

@@ -24,6 +24,16 @@ import { closeSidebar } from './main.js';
 // state.js) so it's actually visible in the app's dark theme.
 const DASHBOARD_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5B5BEF"><path d="M160-120v-480l320-240 320 240v480H560v-280H400v280H160Z"/></svg>';
 
+// An item counts as belonging to a category's primary folder if it's actually filed there, or
+// if it has no folder at all (un-foldered items are treated as primary so nothing already-saved
+// appears to vanish). Categories with no primary folder (e.g. Visual Art) match on category alone.
+// Shared by the top-level tab filter, the primary-folder-clicked-directly case, and both sidebar
+// count calculations below — previously duplicated inline at each of those four call sites.
+function matchesPrimaryOrUnfoldered(item, category) {
+  const primaryId = PRIMARY_FOLDER_ID[category];
+  return item.category === category && (!primaryId || item.folderId === primaryId || !item.folderId);
+}
+
 export function getFilteredSortedItems() {
   let items = [...state.items];
 
@@ -82,16 +92,14 @@ export function getFilteredSortedItems() {
     }
   } else if (CATEGORIES.includes(state.view)) {
     // A top-level tab shows only its "primary" folder's items, plus anything with no folder
-    // assigned yet (treated as belonging to primary so nothing already-saved appears to vanish).
-    // Categories with no primary folder (Visual Art) fall back to a plain category match.
-    const primaryId = PRIMARY_FOLDER_ID[state.view];
-    items = items.filter(i => i.category === state.view && (!primaryId || i.folderId === primaryId || !i.folderId));
+    // assigned yet — see matchesPrimaryOrUnfoldered() above.
+    items = items.filter(i => matchesPrimaryOrUnfoldered(i, state.view));
   } else {
     const folder = state.folders.find(f => f.id === state.view);
     const isPrimaryFolder = folder && PRIMARY_FOLDER_ID[folder.parentCategory] === folder.id;
     items = isPrimaryFolder
       // Clicking the primary folder directly shows exactly what its category tab shows.
-      ? items.filter(i => i.category === folder.parentCategory && (i.folderId === folder.id || !i.folderId))
+      ? items.filter(i => matchesPrimaryOrUnfoldered(i, folder.parentCategory))
       : items.filter(i => i.folderId === state.view);
   }
 
@@ -149,8 +157,6 @@ export function renderSidebar() {
     sidebarTitle = state.view.slice(6).split(':')[0] + ' Saves';
   } else if (state.sidebarMode === 'curated') {
     sidebarTitle = 'Curated SaveCraft';
-  } else if (state.sidebarMode === 'sponsored') {
-    sidebarTitle = 'VoteCraft Picks';
   }
   const headerTitleEl = document.getElementById('sidebar-header-title');
   const isCuratedDrilldown = state.sidebarMode === 'curated' && state.view.startsWith('genre:');
@@ -179,7 +185,7 @@ export function renderSidebar() {
       <button class="sidebar-mode-tab ${state.sidebarMode === 'home' ? 'active' : ''}" data-sidebar-opt="home">🏠 Home</button>
       <button class="sidebar-mode-tab ${state.sidebarMode === 'categories' ? 'active' : ''}" data-sidebar-opt="my-lists">My Saves</button>
       <button class="sidebar-mode-tab ${state.sidebarMode === 'curated' ? 'active' : ''}" data-sidebar-opt="curated">Curated</button>
-      <button class="sidebar-mode-tab sidebar-mode-tab--sponsored ${state.sidebarMode === 'sponsored' ? 'active' : ''}" data-sidebar-opt="sponsored">⚡ VC</button>
+      <button class="sidebar-mode-tab sidebar-mode-tab--sponsored" data-sidebar-opt="sponsored">⚡ VC</button>
     </div>
   `;
 
@@ -268,7 +274,7 @@ export function renderSidebar() {
     const count = isCuratedGenre
       ? (CURATED_ITEMS[curatedGenreBase]?.[cat]?.filter(i => !state.hiddenCurated.has(i.id)).length ?? 0)
       // Matches what tapping the tab actually reveals: the primary folder plus un-foldered items.
-      : state.items.filter(i => i.category === cat && (!primaryId || i.folderId === primaryId || !i.folderId)).length;
+      : state.items.filter(i => matchesPrimaryOrUnfoldered(i, cat)).length;
     const subfolders = state.folders.filter(f => f.parentCategory === cat).sort((a, b) => a.name.localeCompare(b.name));
     const isActive = isCuratedGenre
       ? state.view === `genre:${curatedGenreBase}:${cat}`
@@ -290,7 +296,7 @@ export function renderSidebar() {
     const subfolderRows = subfolders.map(folder => {
       const isPrimaryFolder = primaryId === folder.id;
       const fCount = isCuratedGenre ? 0 : state.items.filter(i =>
-        isPrimaryFolder ? (i.category === cat && (i.folderId === folder.id || !i.folderId)) : i.folderId === folder.id
+        isPrimaryFolder ? matchesPrimaryOrUnfoldered(i, cat) : i.folderId === folder.id
       ).length;
       const fCountLabel = fCount > 0 ? `<span class="sidebar-count">${fCount}</span>` : '';
       // Official/default folders (seeded in storage.js's `defaults` array, always id-prefixed
@@ -487,20 +493,6 @@ export function renderGrid() {
 
   if (state.view === 'profile') {
     renderProfilePage();
-    return;
-  }
-
-  if (state.view === 'sponsored') {
-    gridTitle.textContent = '';
-    container.className = 'cards-grid landing-state';
-    container.innerHTML = `
-      <div class="empty-state empty-state--sponsored">
-        <div class="empty-state-icon">⚡</div>
-        <h3>VoteCraft Picks</h3>
-        <p>Curated picks brought to you by VoteCraft.<br>Coming soon.</p>
-      </div>
-    `;
-    persistViewState();
     return;
   }
 
