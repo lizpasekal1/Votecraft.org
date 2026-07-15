@@ -183,15 +183,32 @@ export async function searchMoviesWikipedia(term) {
   }));
 }
 
+// This is the shared low-level fetch every Wikipedia lookup in this file funnels through (up to
+// 6 calls per single artist/item lookup once the search-fallback candidates are counted), and
+// render.js's fetchMissingCuratedMusicianPhotos() can fire dozens of these back-to-back with no
+// pacing when a curated Musician grid renders (e.g. Top 100's 100 artists). A 429 here used to
+// look identical to a genuine "no Wikipedia page" — silently returning null, which every ensure*
+// caller then caches as a 90-day miss, permanently hiding a real artist's photo/bio just because
+// it happened to be rate-limited on first render. Retries a 429 with backoff before giving up
+// (can't set a real User-Agent here — browsers silently drop script-set User-Agent headers on
+// fetch(), unlike the Node-based admin scripts elsewhere in this project, so pacing/backoff is
+// the only lever actually available in this environment).
 async function fetchWikipediaSummary(title) {
-  try {
-    const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}?redirect=true`;
-    const resp = await fetch(url);
-    if (!resp.ok) return null;
-    return await resp.json();
-  } catch {
-    return null;
+  const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}?redirect=true`;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const resp = await fetch(url);
+      if (resp.status === 429) {
+        await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+        continue;
+      }
+      if (!resp.ok) return null;
+      return await resp.json();
+    } catch {
+      return null;
+    }
   }
+  return null;
 }
 
 function isMusicEntitySummary(summary) {

@@ -616,19 +616,25 @@ export function fetchMissingCuratedImages(items) {
 
 // Same idea as fetchMissingCuratedImages(), but for curated Musician cards whose photo is
 // missing or still the iTunes stand-in — looks up (and caches) the Wikipedia photo per artist,
-// then live-patches any matching cards already on screen.
+// then live-patches any matching cards already on screen. Staggered (150ms apart) rather than
+// fired all at once — a full Top 100 Musicians grid can have up to 100 of these queue up on a
+// single render, and Wikipedia's REST API rate-limits bursts; fetchWikipediaSummary() already
+// retries a single 429, but spacing the requests out in the first place means far fewer of them
+// ever need to.
 const _curatedMusicianPhotoFetchInFlight = new Set();
 export function fetchMissingCuratedMusicianPhotos(items) {
   const missing = items.filter(i => i.curated && i.category === 'Musician' && (!i.imageUrl || isItunesArtworkUrl(i.imageUrl)) && !_curatedMusicianPhotoFetchInFlight.has(i.id));
   if (!missing.length) return;
-  missing.forEach(item => {
+  missing.forEach((item, i) => {
     _curatedMusicianPhotoFetchInFlight.add(item.id);
-    ensureArtistWikipediaInfo(item.title)
-      .then(({ photoUrl }) => {
-        if (!photoUrl) return;
-        patchCardImage(item.id, photoUrl);
-      })
-      .finally(() => _curatedMusicianPhotoFetchInFlight.delete(item.id));
+    setTimeout(() => {
+      ensureArtistWikipediaInfo(item.title)
+        .then(({ photoUrl }) => {
+          if (!photoUrl) return;
+          patchCardImage(item.id, photoUrl);
+        })
+        .finally(() => _curatedMusicianPhotoFetchInFlight.delete(item.id));
+    }, i * 150);
   });
 }
 
