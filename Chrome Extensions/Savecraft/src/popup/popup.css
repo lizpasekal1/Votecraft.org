@@ -59,6 +59,12 @@ body {
 body.size-compact { height: 320px; }
 body.size-tall { height: 480px; }
 
+/* The "can't be saved" banner (browser-internal pages) adds real height above the wizard
+   content — without accounting for it, the fixed sizes above left too little room and the
+   tile grid below got squeezed/pushed down. Added once at load, never toggled mid-navigation. */
+body.has-banner.size-compact { height: 385px; }
+body.has-banner.size-tall { height: 545px; }
+
 /* Top bar */
 .popup-header {
   flex-shrink: 0;
@@ -139,6 +145,45 @@ body.size-tall { height: 480px; }
   margin-bottom: 16px;
 }
 
+/* Folder-picker and music-choice screens only — their header text sat too close to the
+   unsaveable-page banner/top edge. The back arrow is absolutely positioned inside .modal-header,
+   so it would otherwise drift down along with the header's shifted box — counter that to keep
+   it in its usual spot. */
+body.screen-folder .modal-header,
+body.screen-music-choice .modal-header,
+body.screen-review .modal-header {
+  margin-top: 60px;
+}
+body.screen-folder .modal-back-icon,
+body.screen-music-choice .modal-back-icon,
+body.screen-review .modal-back-icon {
+  margin-top: -60px;
+}
+
+/* Same two screens — bring their tile buttons up an extra 20px on top of the base -30px nudge
+   (both screens dropped 20px further per a later request, matching the header position above). */
+body.screen-folder .cat-grid,
+body.screen-music-choice .cat-grid {
+  margin-top: -45px;
+}
+
+/* Folder screen — extra vertical breathing room between tile rows, and a wider gap between
+   columns (which also narrows each tile, since the columns are 1fr 1fr). */
+body.screen-folder .cat-grid {
+  row-gap: 18px;
+  column-gap: 18px;
+}
+
+/* Music-choice screen — Musician/Music Album stack in a single column instead of side by side. */
+body.screen-music-choice .cat-grid {
+  grid-template-columns: 1fr;
+  row-gap: 20px;
+}
+body.screen-music-choice .cat-btn {
+  width: calc(100% - 70px);
+  margin: 0 auto;
+}
+
 .modal-back-icon {
   position: absolute;
   top: -2px;
@@ -146,6 +191,7 @@ body.size-tall { height: 480px; }
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   background: none;
   border: none;
   color: var(--text-muted);
@@ -156,6 +202,13 @@ body.size-tall { height: 480px; }
 }
 .modal-back-icon:hover { color: var(--text-primary); }
 
+.modal-back-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+}
+.modal-back-label:empty { display: none; }
+
 .modal-header h2 {
   display: flex;
   align-items: center;
@@ -164,6 +217,18 @@ body.size-tall { height: 480px; }
   font-weight: 600;
   color: var(--text-primary);
   text-align: center;
+}
+
+/* Folder and music-choice screens — "Choose a folder" text is 3px larger than other headers. */
+body.screen-folder .modal-header h2,
+body.screen-music-choice .modal-header h2 {
+  font-size: 18px;
+}
+
+/* Folder and music-choice screens — the bookmark icon next to "Choose a folder" is dropped. */
+body.screen-folder .modal-bookmark-icon,
+body.screen-music-choice .modal-bookmark-icon {
+  display: none;
 }
 
 .modal-bookmark-icon {
