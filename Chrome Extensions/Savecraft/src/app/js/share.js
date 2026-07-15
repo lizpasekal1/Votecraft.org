@@ -1,6 +1,6 @@
 // ===== SHARE =====
 
-import { state, CATEGORIES } from './state.js';
+import { state, CATEGORIES, CAT_LABEL } from './state.js';
 import { getFilteredSortedItems } from './render.js';
 import { persistShareCount } from './storage.js';
 
@@ -26,6 +26,11 @@ export function initShare() {
 
   document.getElementById('share-export-csv-dd').addEventListener('click', () => {
     exportAsCsv();
+    closeDropdown();
+  });
+
+  document.getElementById('share-export-md-dd').addEventListener('click', () => {
+    exportAsMarkdown();
     closeDropdown();
   });
 
@@ -143,6 +148,41 @@ export function exportAsCsv() {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'savecraft-export.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// Grouped by category (in CATEGORIES order, matching the sidebar) so the file reads like a
+// real document rather than a flat table — CSV already covers the flat/spreadsheet case.
+export function exportAsMarkdown() {
+  const items = getFilteredSortedItems();
+  const byCategory = new Map();
+  items.forEach(item => {
+    const cat = item.category || 'Other';
+    if (!byCategory.has(cat)) byCategory.set(cat, []);
+    byCategory.get(cat).push(item);
+  });
+
+  const orderedCats = [...CATEGORIES.filter(c => byCategory.has(c)), ...[...byCategory.keys()].filter(c => !CATEGORIES.includes(c))];
+
+  const lines = ['# SaveCraft Library', ''];
+  orderedCats.forEach(cat => {
+    lines.push(`## ${CAT_LABEL[cat] || cat}`, '');
+    byCategory.get(cat).forEach(item => {
+      const title = (item.title || 'Untitled').replace(/\[/g, '\\[').replace(/\]/g, '\\]');
+      const date = new Date(item.savedAt).toLocaleDateString();
+      const doneMark = item.done ? 'x' : ' ';
+      const link = item.url ? `[${title}](${item.url})` : title;
+      lines.push(`- [${doneMark}] ${link} — saved ${date}`);
+    });
+    lines.push('');
+  });
+
+  const md = lines.join('\n');
+  const blob = new Blob([md], { type: 'text/markdown' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'savecraft-export.md';
   a.click();
   URL.revokeObjectURL(a.href);
 }

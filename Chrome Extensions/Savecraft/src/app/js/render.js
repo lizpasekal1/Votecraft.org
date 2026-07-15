@@ -23,6 +23,9 @@ import { closeSidebar } from './main.js';
 // background) to the same #5B5BEF used by every other sidebar cat-icon SVG (CAT_EMOJI in
 // state.js) so it's actually visible in the app's dark theme.
 const DASHBOARD_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5B5BEF"><path d="M160-120v-480l320-240 320 240v480H560v-280H400v280H160Z"/></svg>';
+// Sized/colored to match a folder row's icon (folderIconHtml(id, 16), fill="#5B5BEF"), since the
+// Queue Kanban link renders as a subfolder-styled row nested under Dashboard, not a category icon.
+const KANBAN_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="#5B5BEF"><path d="M280-160v-640h400v640H280Zm-160-80v-480h80v480h-80Zm640 0v-480h80v480h-80Zm-400 0h240v-480H360v480Zm0 0v-480 480Z"/></svg>';
 
 // An item counts as belonging to a category's primary folder if it's actually filed there, or
 // if it has no folder at all (un-foldered items are treated as primary so nothing already-saved
@@ -215,17 +218,42 @@ export function renderSidebar() {
   // (category, subfolder, "All Items") reliably updates state.view but doesn't reset
   // sidebarMode away from 'home', so checking sidebarMode here left this link stuck active
   // after navigating away from the dashboard.
+  // Collapsible exactly like a category row (arrow on the right, click toggles), but with its
+  // own standalone entry in state.collapsed — not part of the categories' mutual-exclusion
+  // accordion group, since Dashboard isn't rendered in that list. No count badge before the
+  // arrow (unlike categories) since "Queue Kanban" isn't a countable quantity.
+  const isDashboardCollapsed = state.collapsed.has('dashboard');
+  const dashboardArrow = isDashboardCollapsed ? '▶' : '▼';
+
+  // The Queue Kanban row is styled exactly like a category's folder row (same classes/icon
+  // sizing as subfolderRows below) so it reads as "a folder nested under Dashboard" — but it's
+  // static (no "+ New folder" affordance, can't be deleted/renamed) since Dashboard isn't a real
+  // category with `state.folders` entries.
   const dashboardLinkHtml = `
-    <div class="sidebar-item sidebar-dashboard-link ${state.view === 'dashboard' ? 'active' : ''}" data-view="dashboard">
+    <div class="sidebar-item sidebar-dashboard-link ${state.view === 'dashboard' ? 'active' : ''}" data-view="dashboard" data-toggle="dashboard">
       <span class="sidebar-label"><span class="cat-icon">${DASHBOARD_ICON_SVG}</span><span class="sidebar-label-text"> Dashboard</span></span>
+      <span class="sidebar-right"><span class="sidebar-arrow">${dashboardArrow}</span></span>
     </div>
+    ${isDashboardCollapsed ? '' : `
+    <div class="sidebar-item sidebar-subfolder sidebar-kanban-link ${state.view === 'kanban' ? 'active' : ''}" data-view="kanban">
+      ${KANBAN_ICON_SVG} Queue Kanban
+    </div>`}
     <div class="sidebar-divider"></div>
   `;
 
   function wireDashboardLink() {
     sidebar.querySelector('.sidebar-dashboard-link')?.addEventListener('click', () => {
+      if (state.collapsed.has('dashboard')) state.collapsed.delete('dashboard');
+      else state.collapsed.add('dashboard');
       state.sidebarMode = 'home';
       state.view = 'dashboard';
+      persistViewState();
+      renderSidebar();
+      renderGrid();
+    });
+    sidebar.querySelector('.sidebar-kanban-link')?.addEventListener('click', () => {
+      state.sidebarMode = 'home';
+      state.view = 'kanban';
       persistViewState();
       renderSidebar();
       renderGrid();
@@ -371,8 +399,10 @@ export function renderSidebar() {
     });
   });
 
-  // Subfolder view-switching
-  sidebar.querySelectorAll('.sidebar-subfolder').forEach(el => {
+  // Subfolder view-switching (the Queue Kanban row also uses .sidebar-subfolder for its visual
+  // styling, but it's already wired explicitly in wireDashboardLink() — excluded here so it
+  // doesn't get a second, redundant click handler).
+  sidebar.querySelectorAll('.sidebar-subfolder:not(.sidebar-kanban-link)').forEach(el => {
     el.addEventListener('click', () => {
       if (isCuratedGenre && el.dataset.permanent) {
         state.view = `genre:${curatedGenreBase}:${el.dataset.view}`;

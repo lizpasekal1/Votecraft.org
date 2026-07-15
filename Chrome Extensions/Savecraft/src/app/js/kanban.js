@@ -1,6 +1,6 @@
 // ===== KANBAN BOARD ("My Saves Queue") =====
 
-import { state, CATEGORIES } from './state.js';
+import { state, CATEGORIES, CAT_LABEL } from './state.js';
 import { escapeHtml, catClass, badgeLabel } from './utils.js';
 import { persistViewState, persistItem } from './storage.js';
 import { openDetailModal } from './detailModal.js';
@@ -11,6 +11,23 @@ export const KANBAN_COLUMNS = [
   { key: 'my-review',    label: 'MY NOTES' },
   { key: 'done',         label: 'ARCHIVE' },
 ];
+
+// Card/grid formats offered by the format picker once a column is expanded full-width. The
+// first two control cards-per-row (a grid-density choice); the last three control what a card
+// actually shows (a content-density choice) — see renderKanbanCard()'s format branches.
+const KANBAN_EXPANDED_FORMATS = [
+  { key: 'two-col',  label: 'Two Column' },
+  { key: 'four-col', label: 'Four Column' },
+  { key: 'large',    label: 'Large Card' },
+  { key: 'detail',   label: 'Detail Card' },
+  { key: 'simple',   label: 'Simple Text' },
+];
+
+// Same top-right circular button in both states — a plain "+" when this column can be expanded,
+// swapping to a purple "−" (via .kanban-expand-btn--active in CSS) when it's the one currently
+// expanded, so clicking it again visibly reads as "shrink back down."
+const EXPAND_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+const COLLAPSE_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>';
 
 let _demoStatus = 'in-queue';
 let _kanbanSortListenerAdded = false;
@@ -25,7 +42,9 @@ export function KANBAN_DEMO() {
   };
 }
 
-function renderKanbanCard(item) {
+// `format` is only ever set while a column is expanded (see KANBAN_EXPANDED_FORMATS) — with no
+// format, this renders the exact same card the normal 4-column board has always shown.
+function renderKanbanCard(item, format = null) {
   const letter    = (item.title || '?')[0].toUpperCase();
   const thumb     = item.imageUrl
     ? `<img class="kcard-thumb" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">`
@@ -34,19 +53,57 @@ function renderKanbanCard(item) {
   const demoTag   = item._isDemo ? `<span class="kcard-demo-badge">DEMO</span>` : '';
   const removeBtn = !item._isDemo
     ? `<button class="kcard-remove" data-id="${item.id}" title="Remove from board">✕</button>` : '';
+  const badge     = `<span class="kcard-badge badge-${catClass(item.category)}">${badgeLabel(item.category)}</span>`;
+
+  if (!format) {
+    return `
+      <div class="kcard${item._isDemo ? ' kcard--demo' : ''}" data-id="${item.id}" draggable="true"${item._isDemo ? ' title="Open any item and tap \'Add to Queue\' to add it here"' : ''}>
+        ${thumb}
+        <div class="kcard-content">
+          <div class="kcard-info">
+            ${demoTag}
+            <div class="kcard-title">${escapeHtml(item.title || '?')}</div>
+            ${item.author ? `<div class="kcard-author">${escapeHtml(item.author)}</div>` : ''}
+          </div>
+          ${removeBtn}
+        </div>
+        ${badge}
+      </div>`;
+  }
+
+  // Cross-column drag targets (the other three columns) aren't in the DOM while expanded, so
+  // dragging is disabled entirely for every formatted card — see the wiring in renderKanbanBoard().
+  if (format === 'simple') {
+    return `
+      <div class="kcard kcard--simple${item._isDemo ? ' kcard--demo' : ''}" data-id="${item.id}" draggable="false">
+        <div class="kcard-title">${escapeHtml(item.title || '?')}</div>
+        ${badge}
+        ${removeBtn}
+      </div>`;
+  }
+
+  const noteText = item.notes || item.summary || '';
+  const dateText = item.savedAt ? new Date(item.savedAt).toLocaleDateString() : '';
+  // Four Column stays denser (title + author only) so four comfortably fit per row.
+  const showExtras = format !== 'four-col';
+  const noteHtml = showExtras && noteText
+    ? `<div class="kcard-note${format === 'detail' ? ' kcard-note--full' : ''}">${escapeHtml(noteText)}</div>` : '';
+  const dateHtml = showExtras && dateText ? `<div class="kcard-date">Saved ${dateText}</div>` : '';
 
   return `
-    <div class="kcard${item._isDemo ? ' kcard--demo' : ''}" data-id="${item.id}" draggable="true"${item._isDemo ? ' title="Open any item and tap \'Add to Queue\' to add it here"' : ''}>
+    <div class="kcard kcard--${format}${item._isDemo ? ' kcard--demo' : ''}" data-id="${item.id}" draggable="false">
       ${thumb}
       <div class="kcard-content">
         <div class="kcard-info">
           ${demoTag}
           <div class="kcard-title">${escapeHtml(item.title || '?')}</div>
           ${item.author ? `<div class="kcard-author">${escapeHtml(item.author)}</div>` : ''}
+          ${noteHtml}
+          ${dateHtml}
         </div>
         ${removeBtn}
       </div>
-      <span class="kcard-badge badge-${catClass(item.category)}">${badgeLabel(item.category)}</span>
+      ${badge}
     </div>`;
 }
 
@@ -54,11 +111,13 @@ function renderBoardFilterDropdown() {
   const dd = document.getElementById('board-filter-dropdown');
   if (!dd) return;
   const labelEl = document.getElementById('board-filter-label');
-  if (labelEl) labelEl.textContent = state.kanbanCategory ? state.kanbanCategory.toUpperCase() : 'CATEGORIES';
+  if (labelEl) labelEl.textContent = state.kanbanCategory ? (CAT_LABEL[state.kanbanCategory] || state.kanbanCategory).toUpperCase() : 'CATEGORIES';
 
+  // Same list/order/labels the sidebar shows — excludes Music Album (folded into Musician's
+  // "Music Albums" subfolder there, never its own top-level entry).
   const allOption = `<button class="saves-list-option${!state.kanbanCategory ? ' active' : ''}" data-cat="">All Categories</button>`;
-  const catOptions = CATEGORIES.map(cat =>
-    `<button class="saves-list-option${state.kanbanCategory === cat ? ' active' : ''}" data-cat="${cat}">${cat}</button>`
+  const catOptions = CATEGORIES.filter(cat => cat !== 'Music Album').map(cat =>
+    `<button class="saves-list-option${state.kanbanCategory === cat ? ' active' : ''}" data-cat="${cat}">${CAT_LABEL[cat] || cat}</button>`
   ).join('');
   dd.innerHTML = allOption + `<div class="saves-list-divider"></div>` + catOptions;
 
@@ -177,10 +236,56 @@ export function renderKanbanBoard() {
 
   const SORT_LABELS = { newest: 'Newest first', oldest: 'Oldest first', az: 'A → Z', za: 'Z → A' };
 
+  // Shared by both layouts below — just the label + sort control row.
+  function renderColumnTitle(col, currentSort) {
+    return `
+      <div class="kanban-column-title">
+        ${col.label}
+        <button class="kanban-sort-btn" data-col="${col.key}" title="Sort ${col.label}">
+          <svg width="10" height="10" viewBox="0 0 10 6" fill="currentColor"><path d="M0 0l5 6 5-6z"/></svg>
+        </button>
+        <div class="kanban-sort-dropdown" data-col="${col.key}" hidden>
+          ${Object.entries(SORT_LABELS).map(([k, label]) =>
+            `<button class="kanban-sort-option${k === currentSort ? ' active' : ''}" data-col="${col.key}" data-sort="${k}">${label}</button>`
+          ).join('')}
+        </div>
+      </div>`;
+  }
+
   if (isSearching && allItems.length === 0) {
     container.innerHTML = `
       <div class="kanban-board">
         <div class="kanban-no-results">🔍 No results for "<strong>${escapeHtml(state.search)}</strong>"</div>
+      </div>`;
+  } else if (state.kanbanExpandedCol) {
+    const col = KANBAN_COLUMNS.find(c => c.key === state.kanbanExpandedCol);
+    const format = state.kanbanExpandedFormat;
+    const cards = sortCards(allItems.filter(i => i.queueStatus === col.key), col.key);
+    const currentSort = state.kanbanSort[col.key] || 'newest';
+    // Format picker sits in the top-right corner, positioned via CSS right next to the
+    // collapse button — not inline in the centered title row like the sort control.
+    const formatPicker = `
+      <button class="kanban-format-btn" title="Card format">
+        <span class="kanban-format-btn-label">${KANBAN_EXPANDED_FORMATS.find(f => f.key === format)?.label || ''}</span>
+        <svg width="10" height="10" viewBox="0 0 10 6" fill="currentColor"><path d="M0 0l5 6 5-6z"/></svg>
+      </button>
+      <div class="kanban-format-dropdown" hidden>
+        ${KANBAN_EXPANDED_FORMATS.map(f =>
+          `<button class="kanban-format-option${f.key === format ? ' active' : ''}" data-format="${f.key}">${f.label}</button>`
+        ).join('')}
+      </div>`;
+    container.innerHTML = `
+      <div class="kanban-board kanban-board--expanded">
+        <div class="kanban-column kanban-column--expanded">
+          ${formatPicker}
+          <button class="kanban-expand-btn kanban-expand-btn--active" data-col="${col.key}" title="Shrink back to the full board">
+            ${COLLAPSE_ICON_SVG}
+          </button>
+          ${renderColumnTitle(col, currentSort)}
+          <div class="kanban-cards kanban-cards--${format}" data-col="${col.key}">
+            ${cards.map(item => renderKanbanCard(item, format)).join('') || '<div class="kanban-empty"></div>'}
+          </div>
+        </div>
       </div>`;
   } else {
     container.innerHTML = `<div class="kanban-board">` + KANBAN_COLUMNS.map(col => {
@@ -188,19 +293,12 @@ export function renderKanbanBoard() {
       const currentSort = state.kanbanSort[col.key] || 'newest';
       return `
         <div class="kanban-column">
-          <div class="kanban-column-title">
-            ${col.label}
-            <button class="kanban-sort-btn" data-col="${col.key}" title="Sort ${col.label}">
-              <svg width="10" height="10" viewBox="0 0 10 6" fill="currentColor"><path d="M0 0l5 6 5-6z"/></svg>
-            </button>
-            <div class="kanban-sort-dropdown" data-col="${col.key}" hidden>
-              ${Object.entries(SORT_LABELS).map(([k, label]) =>
-                `<button class="kanban-sort-option${k === currentSort ? ' active' : ''}" data-col="${col.key}" data-sort="${k}">${label}</button>`
-              ).join('')}
-            </div>
-          </div>
+          <button class="kanban-expand-btn" data-col="${col.key}" title="Expand ${col.label}">
+            ${EXPAND_ICON_SVG}
+          </button>
+          ${renderColumnTitle(col, currentSort)}
           <div class="kanban-cards" data-col="${col.key}">
-            ${cards.map(renderKanbanCard).join('') || (() => {
+            ${cards.map(item => renderKanbanCard(item)).join('') || (() => {
               const hints = { 'in-progress': 'Drag cards to progress', 'my-review': 'Drag cards to my notes', 'done': 'Drag cards to archive' };
               return hints[col.key] ? `<div class="progress-drop-hint">${hints[col.key]}</div>` : '<div class="kanban-empty"></div>';
             })()}
@@ -219,13 +317,21 @@ export function renderKanbanBoard() {
 
   const board = container.querySelector('.kanban-board') || container;
 
+  board.querySelectorAll('.kanban-expand-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const col = btn.dataset.col;
+      state.kanbanExpandedCol = state.kanbanExpandedCol === col ? null : col;
+      renderKanbanBoard();
+    });
+  });
   board.querySelectorAll('.kanban-sort-btn').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
       const col = btn.dataset.col;
       const dropdown = board.querySelector(`.kanban-sort-dropdown[data-col="${col}"]`);
       const isOpen = !dropdown.hidden;
-      board.querySelectorAll('.kanban-sort-dropdown').forEach(d => d.setAttribute('hidden', ''));
+      board.querySelectorAll('.kanban-sort-dropdown, .kanban-format-dropdown').forEach(d => d.setAttribute('hidden', ''));
       if (!isOpen) dropdown.removeAttribute('hidden');
     });
   });
@@ -238,10 +344,26 @@ export function renderKanbanBoard() {
       renderKanbanBoard();
     });
   });
+  board.querySelectorAll('.kanban-format-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const dropdown = board.querySelector('.kanban-format-dropdown');
+      const isOpen = !dropdown.hidden;
+      board.querySelectorAll('.kanban-sort-dropdown, .kanban-format-dropdown').forEach(d => d.setAttribute('hidden', ''));
+      if (!isOpen) dropdown.removeAttribute('hidden');
+    });
+  });
+  board.querySelectorAll('.kanban-format-option').forEach(opt => {
+    opt.addEventListener('click', e => {
+      e.stopPropagation();
+      state.kanbanExpandedFormat = opt.dataset.format;
+      renderKanbanBoard();
+    });
+  });
   if (!_kanbanSortListenerAdded) {
     _kanbanSortListenerAdded = true;
     document.addEventListener('click', () => {
-      document.querySelectorAll('.kanban-sort-dropdown').forEach(d => d.setAttribute('hidden', ''));
+      document.querySelectorAll('.kanban-sort-dropdown, .kanban-format-dropdown').forEach(d => d.setAttribute('hidden', ''));
     });
   }
 
@@ -267,43 +389,48 @@ export function renderKanbanBoard() {
     });
   });
 
-  let dragId = null;
-  board.querySelectorAll('.kcard').forEach(card => {
-    card.addEventListener('dragstart', e => {
-      dragId = card.dataset.id;
-      card.classList.add('kcard--dragging');
-      e.dataTransfer.effectAllowed = 'move';
+  // Drag-and-drop between columns only makes sense when all four columns are actually on
+  // screen — while one is expanded, the other three (the only other valid drop targets) aren't
+  // in the DOM at all, so cards render with draggable="false" and none of this gets wired up.
+  if (!state.kanbanExpandedCol) {
+    let dragId = null;
+    board.querySelectorAll('.kcard').forEach(card => {
+      card.addEventListener('dragstart', e => {
+        dragId = card.dataset.id;
+        card.classList.add('kcard--dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      card.addEventListener('dragend', () => {
+        card.classList.remove('kcard--dragging');
+        board.querySelectorAll('.kanban-column').forEach(col => col.classList.remove('kanban-column--over'));
+      });
     });
-    card.addEventListener('dragend', () => {
-      card.classList.remove('kcard--dragging');
-      board.querySelectorAll('.kanban-column').forEach(col => col.classList.remove('kanban-column--over'));
-    });
-  });
 
-  board.querySelectorAll('.kanban-cards').forEach(col => {
-    col.addEventListener('dragover', e => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      col.closest('.kanban-column').classList.add('kanban-column--over');
-      const hint = col.querySelector('.progress-drop-hint');
-      if (hint) hint.style.opacity = '0';
-    });
-    col.addEventListener('dragleave', e => {
-      if (!col.contains(e.relatedTarget)) {
-        col.closest('.kanban-column').classList.remove('kanban-column--over');
+    board.querySelectorAll('.kanban-cards').forEach(col => {
+      col.addEventListener('dragover', e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        col.closest('.kanban-column').classList.add('kanban-column--over');
         const hint = col.querySelector('.progress-drop-hint');
-        if (hint) hint.style.opacity = '';
-      }
+        if (hint) hint.style.opacity = '0';
+      });
+      col.addEventListener('dragleave', e => {
+        if (!col.contains(e.relatedTarget)) {
+          col.closest('.kanban-column').classList.remove('kanban-column--over');
+          const hint = col.querySelector('.progress-drop-hint');
+          if (hint) hint.style.opacity = '';
+        }
+      });
+      col.addEventListener('drop', async e => {
+        e.preventDefault();
+        col.closest('.kanban-column').classList.remove('kanban-column--over');
+        if (!dragId) return;
+        const newStatus = col.dataset.col;
+        if (dragId === '__demo__') { _demoStatus = newStatus; dragId = null; renderKanbanBoard(); }
+        else { await updateQueueStatus(dragId, newStatus); dragId = null; }
+      });
     });
-    col.addEventListener('drop', async e => {
-      e.preventDefault();
-      col.closest('.kanban-column').classList.remove('kanban-column--over');
-      if (!dragId) return;
-      const newStatus = col.dataset.col;
-      if (dragId === '__demo__') { _demoStatus = newStatus; dragId = null; renderKanbanBoard(); }
-      else { await updateQueueStatus(dragId, newStatus); dragId = null; }
-    });
-  });
+  }
 }
 
 export async function updateQueueStatus(id, newStatus) {

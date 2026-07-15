@@ -340,6 +340,7 @@ export async function loadAll() {
         { id: 'default-musicians-musicians', name: 'Musicians', parentCategory: 'Musician' },
         { id: 'default-books-books',         name: 'Books',     parentCategory: 'Book' },
         { id: 'default-weblinks-websites',   name: 'Website',   parentCategory: 'Web Links' },
+        { id: 'default-weblinks-shops',      name: 'Shops',     parentCategory: 'Web Links' },
         { id: 'default-art-dance',     name: 'Dance',     parentCategory: 'Visual Art' },
         { id: 'default-art-comics',    name: 'Comics',    parentCategory: 'Visual Art' },
         { id: 'default-art-painting',  name: 'Painting',  parentCategory: 'Visual Art' },

@@ -57,13 +57,17 @@ body {
 }
 
 body.size-compact { height: 320px; }
-body.size-tall { height: 480px; }
+/* The review screen's content height varies (banner, category label length, image preview),
+   so a guessed fixed number here always left an unpredictable amount of empty space below the
+   Save button. Sized to content instead — #step-review's own padding-bottom below is what
+   actually controls how much space sits below the button, precisely, in every case. */
+body.size-tall { height: auto; }
 
 /* The "can't be saved" banner (browser-internal pages) adds real height above the wizard
-   content — without accounting for it, the fixed sizes above left too little room and the
-   tile grid below got squeezed/pushed down. Added once at load, never toggled mid-navigation. */
+   content — without accounting for it, the fixed compact size left too little room and the
+   tile grid below got squeezed/pushed down. Added once at load, never toggled mid-navigation.
+   size-tall doesn't need an equivalent — its height is already computed from real content. */
 body.has-banner.size-compact { height: 385px; }
-body.has-banner.size-tall { height: 545px; }
 
 /* Top bar */
 .popup-header {
@@ -184,6 +188,20 @@ body.screen-music-choice .cat-btn {
   margin: 0 auto;
 }
 
+/* Book's (Authors/Books) and Movie's (Movies/Videos) folder screens — stacked layout matching
+   the music-choice screen, instead of the usual 2-column folder-tile grid every other category's
+   folder screen uses. Scoped to the folder screen's own grid element (not the shared .cat-grid
+   class every screen's grid uses) so a stale body class can't leak this into the category/
+   music-choice screens too. */
+body.screen-folder-stacked #folder-grid {
+  grid-template-columns: 1fr;
+  row-gap: 20px;
+}
+body.screen-folder-stacked #folder-grid .cat-btn {
+  width: calc(100% - 70px);
+  margin: 0 auto;
+}
+
 .modal-back-icon {
   position: absolute;
   top: -2px;
@@ -285,6 +303,12 @@ body.screen-music-choice .modal-bookmark-icon {
 }
 
 /* ===== Review screen ===== */
+/* With body.size-tall now auto-height (see above), this is what actually guarantees exactly
+   40px of space below the Save Page button, regardless of category/banner state. */
+#step-review {
+  padding-bottom: 40px;
+}
+
 .review-image-preview-wrap {
   display: flex;
   justify-content: center;

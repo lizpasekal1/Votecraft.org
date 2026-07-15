@@ -411,7 +411,7 @@ async function init() {
     });
   });
 
-  document.getElementById('btn-add').addEventListener('click', openAddModal);
+  document.getElementById('btn-add').addEventListener('click', () => openAddModal());
 
   document.getElementById('modal-overlay').addEventListener('click', e => {
     if (e.target === document.getElementById('modal-overlay')) closeAddModal();
@@ -594,7 +594,7 @@ async function init() {
     renderFetchAlbumsList(allAlbums, overlay.dataset.artist, mode, hideSingles);
   });
 
-  document.getElementById('fab-add').addEventListener('click', openAddModal);
+  document.getElementById('fab-add').addEventListener('click', () => openAddModal());
 }
 
 document.addEventListener('DOMContentLoaded', init);
