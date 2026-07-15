@@ -30,6 +30,7 @@ chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
   if (url.startsWith('chrome://') || url.startsWith('chrome-extension://') || url.startsWith('about:')) {
     pageIsSaveable = false;
     document.getElementById('unsaveable-msg').classList.remove('hidden');
+    document.body.classList.add('has-banner');
   }
 });
 
@@ -64,13 +65,17 @@ function showMusicChoiceScreen() {
   currentScreen = 'music-choice';
   hadMusicChoiceScreen = true;
   setScreen('music-choice');
-  setHeader('Musician or Album?', true);
+  setHeader('Choose a folder', true, 'Music');
 
+  // CAT_LABEL['Musician'] is "Music" (used for the combined top-level tile/tab) — on this
+  // specific sub-choice screen that reads as ambiguous next to "Music Album", so it's
+  // overridden to the more specific "Musician" here only.
+  const musicChoiceLabels = { Musician: 'Musician', 'Music Album': CAT_LABEL['Music Album'] };
   const grid = document.getElementById('music-choice-grid');
   grid.innerHTML = ['Musician', 'Music Album'].map(cat => `
     <button type="button" class="cat-btn" data-category="${cat}">
       ${CAT_EMOJI[cat] || ''}
-      <span class="cat-btn-label">${CAT_LABEL[cat] || cat}</span>
+      <span class="cat-btn-label">${musicChoiceLabels[cat] || cat}</span>
     </button>`).join('');
 
   grid.querySelectorAll('.cat-btn').forEach(btn => {
@@ -105,7 +110,7 @@ function showFolderScreen(folders) {
   currentScreen = 'folder';
   hadFolderScreen = true;
   setScreen('folder');
-  setHeader('Choose a folder', true);
+  setHeader('Choose a folder', true, CAT_LABEL[selectedCategory] || selectedCategory);
 
   const grid = document.getElementById('folder-grid');
   grid.innerHTML = folders.map(f => `
@@ -127,7 +132,7 @@ function showFolderScreen(folders) {
 async function showReviewScreen() {
   currentScreen = 'review';
   setScreen('review');
-  setHeader('Add to SaveCraft', true);
+  setHeader('Add to SaveCraft', true, CAT_LABEL[selectedCategory] || selectedCategory);
   document.getElementById('btn-save').disabled = !pageIsSaveable;
 
   if (!reviewPrefilled && currentTab?.url) {
@@ -174,9 +179,10 @@ document.getElementById('btn-clear-image').addEventListener('click', () => {
 
 // ===== Header + screen switching =====
 
-function setHeader(text, showBack) {
+function setHeader(text, showBack, backLabel) {
   document.getElementById('modal-title-text').textContent = text;
   document.getElementById('btn-back').style.display = showBack ? '' : 'none';
+  document.getElementById('modal-back-label').textContent = backLabel || '';
 }
 
 function setScreen(name) {
@@ -186,6 +192,9 @@ function setScreen(name) {
   document.getElementById('step-review').style.display = name === 'review' ? '' : 'none';
   document.body.classList.toggle('size-tall', name === 'review');
   document.body.classList.toggle('size-compact', name !== 'review');
+  document.body.classList.toggle('screen-folder', name === 'folder');
+  document.body.classList.toggle('screen-music-choice', name === 'music-choice');
+  document.body.classList.toggle('screen-review', name === 'review');
 }
 
 function backToCategoryScreen() {
