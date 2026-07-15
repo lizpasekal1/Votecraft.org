@@ -111,6 +111,10 @@ function showFolderScreen(folders) {
   hadFolderScreen = true;
   setScreen('folder');
   setHeader('Choose a folder', true, CAT_LABEL[selectedCategory] || selectedCategory);
+  // Book's (Authors/Books) and Movie's (Movies/Videos) folder screens stack like the Musician/
+  // Music Album screen instead of the usual 2-column folder-tile layout — every other category's
+  // folder screen is unaffected.
+  document.body.classList.toggle('screen-folder-stacked', selectedCategory === 'Book' || selectedCategory === 'Movie');
 
   const grid = document.getElementById('folder-grid');
   grid.innerHTML = folders.map(f => `
@@ -227,9 +231,14 @@ document.getElementById('btn-back').addEventListener('click', () => {
   }
 });
 
-// Open full library page
-function openLibrary() {
-  chrome.runtime.sendMessage({ action: 'openLibrary' });
+// Open full library page. Waits for the background service worker to actually acknowledge the
+// message before closing — MV3 service workers unload when idle, so firing sendMessage and
+// closing the popup in the same tick could close it before a cold-starting worker ever received
+// the message, silently dropping the request (this is why it sometimes took a second click).
+async function openLibrary() {
+  try {
+    await chrome.runtime.sendMessage({ action: 'openLibrary' });
+  } catch {}
   window.close();
 }
 document.getElementById('btn-open-library').addEventListener('click', openLibrary);

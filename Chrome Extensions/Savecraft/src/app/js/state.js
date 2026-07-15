@@ -106,6 +106,7 @@ export const FOLDER_ICON = {
   'default-weblinks-articles':  { type: 'svg', path: 'M123-440q-1-10-1.5-20t-.5-20q0-75 28-140.5t77-114q49-48.5 114-77T480-840q75 0 140.5 28.5t114 77q48.5 48.5 77 114T840-480q0 10-.5 20t-1.5 20h-81q2-10 2.5-20t.5-20q0-10-.5-20t-2.5-20H639q1 10 1 20v40q0 10-1 20h-79v-33q0-12-.5-24t-1.5-23H403q-1 11-1.5 23t-.5 24v33h-79q-1-10-1-20v-40q0-10 1-20H204q-2 10-2.5 20t-.5 20q0 10 .5 20t2.5 20h-81Zm105-160h103q8-43 20-77.5t26-62.5q-48 18-87 54.5T228-600Zm186 0h132q-10-43-25-84t-41-76q-26 35-41.5 76T414-600Zm216 0h103q-23-49-62.5-85.5T583-740q14 30 26.5 63.5T630-600ZM440-120v-40q0-50-35-85t-85-35H80v-80h240q48 0 89.5 21t70.5 59q29-38 70.5-59t89.5-21h240v80H640q-50 0-85 35t-35 85v40h-80Z' },
   'default-weblinks-blogs':     { type: 'svg', path: 'M40-200v-560h80v560H40Zm160 0v-560h80v560h-80Zm240 0q-33 0-56.5-23.5T360-280v-400q0-33 23.5-56.5T440-760h400q33 0 56.5 23.5T920-680v400q0 33-23.5 56.5T840-200H440Zm40-160h320L696-500l-76 100-56-74-84 114Z' },
   'default-weblinks-websites':  { type: 'svg', path: 'M325-111.5q-73-31.5-127.5-86t-86-127.5Q80-398 80-480.5t31.5-155q31.5-72.5 86-127t127.5-86Q398-880 480.5-880t155 31.5q72.5 31.5 127 86t86 127Q880-563 880-480.5T848.5-325q-31.5 73-86 127.5t-127 86Q563-80 480.5-80T325-111.5ZM480-162q26-36 45-75t31-83H404q12 44 31 83t45 75Zm-104-16q-18-33-31.5-68.5T322-320H204q29 50 72.5 87t99.5 55Zm208 0q56-18 99.5-55t72.5-87H638q-9 38-22.5 73.5T584-178ZM170-400h136q-3-20-4.5-39.5T300-480q0-21 1.5-40.5T306-560H170q-5 20-7.5 39.5T160-480q0 21 2.5 40.5T170-400Zm216 0h188q3-20 4.5-39.5T580-480q0-21-1.5-40.5T574-560H386q-3 20-4.5 39.5T380-480q0 21 1.5 40.5T386-400Zm268 0h136q5-20 7.5-39.5T800-480q0-21-2.5-40.5T790-560H654q3 20 4.5 39.5T660-480q0 21-1.5 40.5T654-400Zm-16-240h118q-29-50-72.5-87T584-782q18 33 31.5 68.5T638-640Zm-234 0h152q-12-44-31-83t-45-75q-26 36-45 75t-31 83Zm-200 0h118q9-38 22.5-73.5T376-782q-56 18-99.5 55T204-640Z' },
+  'default-weblinks-shops':     { type: 'svg', path: 'M223.5-103.5Q200-127 200-160t23.5-56.5Q247-240 280-240t56.5 23.5Q360-193 360-160t-23.5 56.5Q313-80 280-80t-56.5-23.5Zm400 0Q600-127 600-160t23.5-56.5Q647-240 680-240t56.5 23.5Q760-193 760-160t-23.5 56.5Q713-80 680-80t-56.5-23.5ZM246-720l96 200h280l110-200H246Zm-38-80h590q23 0 35 20.5t1 41.5L692-482q-11 20-29.5 31T622-440H324l-44 80h480v80H280q-45 0-68-39.5t-2-78.5l54-98-144-304H40v-80h130l38 80Zm134 280h280-280Z' },
   'default-books-authors':      { type: 'svg', path: 'M280-600h400v-80H280v80Zm-80 480q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v258q-23-45-66-71.5T680-600q-45 0-84 21t-65 59H280v80h221q-2 20 0 40t9 40H280v80h157q-19 22-28 48.5t-9 55.5v56H200Zm280 0v-56q0-24 12.5-44.5T528-250q36-15 74.5-22.5T680-280q39 0 77.5 7.5T832-250q23 9 35.5 29.5T880-176v56H480Zm129-229q-29-29-29-71t29-71q29-29 71-29t71 29q29 29 29 71t-29 71q-29 29-71 29t-71-29Z' },
   'default-books-books':        { type: 'svg', path: 'M270-80q-45 0-77.5-30.5T160-186v-558q0-38 23.5-68t61.5-38l395-78v640l-379 76q-9 2-15 9.5t-6 16.5q0 11 9 18.5t21 7.5h450v-640h80v720H270Zm10-217 80-16v-478l-80 16v478Z' },
   // Placeholder reusing the app's existing music-note icon — the pasted "Musician" icon came
@@ -140,7 +141,7 @@ export const state = {
   search: '',
   modalCategory: null,
   editingId: null,
-  collapsed: new Set(CATEGORIES), // all collapsed by default
+  collapsed: new Set([...CATEGORIES, 'dashboard']), // all collapsed by default, including the Dashboard row's Queue Kanban link
   sidebarMode: 'categories', // 'categories' | 'curated' | 'home'
   hiddenCurated: new Set(), // curated item IDs the user has dismissed
   curatedOverrides: {}, // { [curatedItemId]: { url, title, notes, imageUrl } }
@@ -155,6 +156,8 @@ export const state = {
   kanbanLists: [],
   activeListId: null,
   kanbanCategory: null,
+  kanbanExpandedCol: null,         // column key currently expanded full-width, or null for the normal 4-column board — not persisted, resets every load
+  kanbanExpandedFormat: 'two-col', // 'two-col' | 'four-col' | 'large' | 'detail' | 'simple' — only meaningful while a column is expanded, not persisted
   lastfmUsername: null,            // Last.fm account username the user has linked, or null
   followedCuratedLists: new Set(), // Set of CURATED_GENRES keys the user has opted into via Profile > Interests
   lastfmCache: {}, // { [normalizedUsername]: { tracks: [...]|null, fetchedAt } } — auto-fetched via Last.fm, short TTL
