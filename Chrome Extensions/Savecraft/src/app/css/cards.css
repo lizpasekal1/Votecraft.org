@@ -27,6 +27,24 @@
   margin-bottom: 16px;
 }
 
+/* News outlet folder header — domain + paywalled badge next to the publication name */
+.grid-title-domain {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.grid-title-paywalled-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  background: var(--hover-bg);
+  border-radius: 10px;
+  padding: 2px 8px;
+}
+
 .nyt-logo-wrap {
   display: inline-flex;
   align-items: center;
@@ -197,8 +215,12 @@
 .placeholder-Musician    { background: linear-gradient(135deg, #EC4899 0%, #F9A8D4 100%); }
 .placeholder-Show        { background: linear-gradient(135deg, #8B5CF6 0%, #C4B5FD 100%); }
 .placeholder-Book        { background: linear-gradient(135deg, #10B981 0%, #6EE7B7 100%); }
+.placeholder-Book-Author { background: linear-gradient(135deg, #10B981 0%, #6EE7B7 100%); }
 .placeholder-Movie       { background: linear-gradient(135deg, #3B82F6 0%, #93C5FD 100%); }
+.placeholder-Movie-Director { background: linear-gradient(135deg, #3B82F6 0%, #93C5FD 100%); }
+.placeholder-Show-Creator   { background: linear-gradient(135deg, #8B5CF6 0%, #C4B5FD 100%); }
 .placeholder-Game        { background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%); }
+.placeholder-Game-Studio { background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%); }
 .placeholder-Visual-Art  { background: linear-gradient(135deg, #F97316 0%, #FDBA74 100%); }
 .placeholder-Memes       { background: linear-gradient(135deg, #EF4444 0%, #FCA5A5 100%); }
 /* Legacy names kept for any un-migrated items */
@@ -282,8 +304,12 @@
 .badge-Musician     { background: #FCE7F3; color: #BE185D; }
 .badge-Show         { background: #EDE9FE; color: #6D28D9; }
 .badge-Book         { background: #D1FAE5; color: #065F46; }
+.badge-Book-Author  { background: #D1FAE5; color: #065F46; }
 .badge-Movie        { background: #DBEAFE; color: #1E40AF; }
+.badge-Movie-Director { background: #DBEAFE; color: #1E40AF; }
+.badge-Show-Creator   { background: #EDE9FE; color: #6D28D9; }
 .badge-Game         { background: #FEF3C7; color: #92400E; }
+.badge-Game-Studio  { background: #FEF3C7; color: #92400E; }
 .badge-Visual-Art   { background: #FFEDD5; color: #9A3412; }
 .badge-Memes        { background: #FEE2E2; color: #991B1B; }
 /* Legacy names kept for any un-migrated items */
@@ -299,7 +325,10 @@
 [data-theme="dark"] .badge-Show         { background: #2E1A5E; color: #C4B5FD; }
 [data-theme="dark"] .badge-Book         { background: #064E3B; color: #6EE7B7; }
 [data-theme="dark"] .badge-Movie        { background: #1E3A5F; color: #93C5FD; }
+[data-theme="dark"] .badge-Movie-Director { background: #1E3A5F; color: #93C5FD; }
+[data-theme="dark"] .badge-Show-Creator   { background: #2E1A5E; color: #C4B5FD; }
 [data-theme="dark"] .badge-Game         { background: #4A2C00; color: #FCD34D; }
+[data-theme="dark"] .badge-Game-Studio  { background: #4A2C00; color: #FCD34D; }
 [data-theme="dark"] .badge-Visual-Art   { background: #4A1A00; color: #FDBA74; }
 [data-theme="dark"] .badge-Memes        { background: #4A1010; color: #FCA5A5; }
 /* Legacy dark names */

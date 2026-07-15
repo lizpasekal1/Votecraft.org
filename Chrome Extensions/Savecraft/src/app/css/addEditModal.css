@@ -229,8 +229,8 @@
 }
 .title-author-input--author { flex: 1; }
 
-/* Categories with no meaningful "Author" (Musician, Movie, Show, Game, Visual Art) collapse
-   to a single field instead of showing a permanently-empty Author box. */
+/* Categories with no meaningful "Author"-equivalent (Musician, News, Visual Art, Web Links)
+   collapse to a single field instead of showing a permanently-empty Author box. */
 .title-author-row--single #input-author,
 .title-author-row--single .title-author-sep {
   display: none;

@@ -53,7 +53,14 @@ export function patchCardImage(itemId, imageUrl) {
 export function catClass(cat) { return (cat || '').replace(/\s+/g, '-'); }
 
 // Shorter display text for category badges (the underlying category value is unchanged).
-export function badgeLabel(cat) { return cat === 'Music Album' ? 'Album' : cat; }
+export function badgeLabel(cat) {
+  if (cat === 'Music Album') return 'Album';
+  if (cat === 'Book Author') return 'Author';
+  if (cat === 'Movie Director') return 'Director';
+  if (cat === 'Show Creator') return 'Creator';
+  if (cat === 'Game Studio') return 'Studio';
+  return cat;
+}
 
 // True when browsing the dedicated "Music Albums" section (the Musicians > Music Albums
 // sidebar subfolder, personal or curated) — artist names aren't clickable links there.

@@ -1,11 +1,11 @@
 // ===== ITEM DETAIL MODAL (the accordion-based modal shared by every category) =====
 
-import { state, CATEGORY_PLATFORMS, SUMMARY_PLACEHOLDER_CATEGORIES, CURATED_ITEMS } from './state.js';
+import { state, CATEGORY_PLATFORMS, SUMMARY_PLACEHOLDER_CATEGORIES, CURATED_ITEMS, CURATED_NOTES_CATEGORIES, CREATOR_CARD_CATEGORY } from './state.js';
 import {
-  escapeHtml, catClass, isMusicAlbumsSectionView, isItunesArtworkUrl, applyArtistPhotoToItem,
-  patchCardImage, debounce, formatTrackDuration,
+  escapeHtml, catClass, isMusicAlbumsSectionView, isOwnAuthorPageView, isItunesArtworkUrl,
+  applyArtistPhotoToItem, patchCardImage, debounce, formatTrackDuration,
 } from './utils.js';
-import { persistItem, removeItem, persistAuthor } from './storage.js';
+import { persistItem, removeItem, persistAuthor, persistViewState } from './storage.js';
 import { ensureArtistWebsite, ensureArtistWikipediaInfo, ensureItemWikipediaInfo } from './api.js';
 import { findAuthor, navigateToAuthor, getKnownAlbumsForArtist, autoSaveMusician, ensureAlbumTrackList } from './authors.js';
 import { renderSidebar, renderGrid } from './render.js';
@@ -34,12 +34,8 @@ export function openDetailModal(item) {
   document.getElementById('detail-bookmark-btn').style.display = 'none';
   document.getElementById('detail-favorite-btn').style.display = '';
 
-  const PLAY_ICON_SVG = `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`;
-  const _promoToggleHtml = isMusicAlbum
-    ? `<button class="btn-promo-toggle" id="btn-fullart-toggle" title="View full album art"><span>Album Art</span>${PLAY_ICON_SVG}</button>`
-    : '';
-  // Same slot the promo-video/album-art toggle uses — stacked above it when both are present
-  // (a curated Top 100 Musician/Music Album item), otherwise it has that corner to itself.
+  // Only the Sponsored Statement badge appears in this corner now — the Album Art toggle button
+  // was removed (clicking the image itself still opens the full-art lightbox, see below).
   let _sponsoredTagHtml = '';
   if (isCuratedTop100) {
     const CATEGORY_WHY_TEXT = {
@@ -52,7 +48,7 @@ export function openDetailModal(item) {
     const whyText = CATEGORY_WHY_TEXT[item.category]
       || 'What we watch shapes how we see power and justice — the same questions at the heart of civic life.';
     _sponsoredTagHtml = `
-      <a class="vc-sponsored-tag vc-sponsored-tag--overlay${_promoToggleHtml ? ' vc-sponsored-tag--stacked' : ''}" href="${chrome.runtime.getURL('src/sponsored/sponsored.html')}" target="_blank">
+      <a class="vc-sponsored-tag vc-sponsored-tag--overlay" href="${chrome.runtime.getURL('src/sponsored/sponsored.html')}" target="_blank">
         ⚡ Your Sponsored Statement
         <span class="vc-sponsored-tooltip">
           <span class="vc-why-title">WHY VOTECRAFT RECOMMENDS</span>
@@ -62,21 +58,15 @@ export function openDetailModal(item) {
   }
 
   if (item.imageUrl) {
-    wrap.innerHTML = `<div class="detail-image-crop"><img class="${_imageClass}" src="${escapeHtml(item.imageUrl)}" alt=""></div>${_promoToggleHtml}${_sponsoredTagHtml}`;
+    wrap.innerHTML = `<div class="detail-image-crop"><img class="${_imageClass}" src="${escapeHtml(item.imageUrl)}" alt=""></div>${_sponsoredTagHtml}`;
     wrap.style.display = '';
     if (isMusicAlbum) {
       wrap.querySelector('.detail-image').addEventListener('click', () => openImageLightbox(item.imageUrl));
     }
   } else {
     const letter = (item.title || domain || '?')[0].toUpperCase();
-    wrap.innerHTML = `<div class="detail-image-crop"><div class="detail-placeholder placeholder-${catClass(item.category || 'Music-Album')}">${letter}</div></div>${_promoToggleHtml}${_sponsoredTagHtml}`;
+    wrap.innerHTML = `<div class="detail-image-crop"><div class="detail-placeholder placeholder-${catClass(item.category || 'Music-Album')}">${letter}</div></div>${_sponsoredTagHtml}`;
     wrap.style.display = '';
-  }
-
-  if (isMusicAlbum) {
-    document.getElementById('btn-fullart-toggle').onclick = () => {
-      if (item.imageUrl) openImageLightbox(item.imageUrl);
-    };
   }
 
   const BOOKMARK_OUTLINE = `<svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 -960 960 960" width="22px" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/></svg>`;
@@ -111,9 +101,15 @@ export function openDetailModal(item) {
   updateBookmarkIcon();
   updateFavoriteIcon();
   const _detailAuthorName = item.author
-    || (item.curated && item.category === 'Music Album' ? item.notes : null);
-  const _detailAuthorCat = item.author ? item.category : 'Musician';
-  const _isCuratedMusician = item.curated && item.category === 'Musician';
+    || (item.curated && CURATED_NOTES_CATEGORIES.includes(item.category) ? item.notes : null);
+  // When the name comes from the curated `.notes` fallback (no item.author), the profile page
+  // to link to is 'Musician' for a Music Album (the one category whose curated-notes creator
+  // isn't its own category) and item.category for everything else.
+  const _detailAuthorCat = item.author ? item.category : (item.category === 'Music Album' ? 'Musician' : item.category);
+  // True for any curated "creator card" (Musician, Book Author, Movie Director, Show Creator,
+  // Game Studio) — the title itself already IS the creator's name/link, so the separate author
+  // byline below would be redundant.
+  const _isCuratedMusician = item.curated && !!CREATOR_CARD_CATEGORY[item.category];
 
   // The website CTA overlays the top of the image for every category now (the header container
   // holds only that button).
@@ -131,14 +127,23 @@ export function openDetailModal(item) {
       }<span class="detail-title-sep"> | </span>`
     : '';
 
-  const _titleHtml = item.category === 'Musician'
-    ? `<button class="detail-author-link" data-author="${escapeHtml(item.title)}" data-category="Musician">${escapeHtml(item.title || '')}<svg class="detail-title-arrow" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m321-80-71-71 329-329-329-329 71-71 400 400L321-80Z"/></svg></button>`
+  const _titleHtml = CREATOR_CARD_CATEGORY[item.category] && !isOwnAuthorPageView(item.title)
+    ? `<button class="detail-author-link" data-author="${escapeHtml(item.title)}" data-category="${CREATOR_CARD_CATEGORY[item.category]}">${escapeHtml(item.title || '')}<svg class="detail-title-arrow" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m321-80-71-71 329-329-329-329 71-71 400 400L321-80Z"/></svg></button>`
     : isMusicAlbum
       ? `${_albumTitleArtistHtml}${escapeHtml(item.title || '')}`
       : escapeHtml(item.title || '');
 
   const _authorHtml = !_isCuratedMusician && _detailAuthorName && !isMusicAlbum
-    ? `<span class="detail-title-sep"> | </span><button class="detail-author-link" data-author="${escapeHtml(_detailAuthorName)}" data-category="${escapeHtml(_detailAuthorCat)}">${escapeHtml(_detailAuthorName)}</button>`
+    ? `<span class="detail-title-sep"> | </span><button class="detail-author-link" data-author="${escapeHtml(_detailAuthorName)}" data-category="${escapeHtml(_detailAuthorCat)}">${escapeHtml(_detailAuthorName)}${item.authorHasMore ? ' …' : ''}</button>`
+    : '';
+
+  // News items don't have item.author — they're attributed via item.folderId pointing at a
+  // curated outlet folder instead, so the publication byline navigates straight to that folder's
+  // view rather than through navigateToAuthor.
+  const _publicationFolder = item.category === 'News' && item.folderId
+    ? state.folders.find(f => f.id === item.folderId) : null;
+  const _publicationHtml = _publicationFolder
+    ? `<span class="detail-title-sep"> | </span><button class="detail-author-link detail-publication-link" data-folder-id="${escapeHtml(item.folderId)}">${escapeHtml(_publicationFolder.name)}</button>`
     : '';
 
   // Year alone now (artist moved into the main title line above). Genre is intentionally kept
@@ -178,7 +183,7 @@ export function openDetailModal(item) {
     artistHeaderEl.style.display = 'none';
   }
 
-  document.getElementById('detail-title').innerHTML = `<span class="detail-title-text">${_titleHtml}${_authorHtml}</span>${_albumArtistYearHtml}`;
+  document.getElementById('detail-title').innerHTML = `<span class="detail-title-text">${_titleHtml}${_authorHtml}${_publicationHtml}</span>${_albumArtistYearHtml}`;
 
   if (_ctaAuthorName && !_ctaAuthor?.websiteUrl) {
     ensureArtistWebsite(_ctaAuthorName).then(url => {
@@ -341,11 +346,11 @@ export function openDetailModal(item) {
   const notesInputEl = document.getElementById('detail-notes-input');
   const notesLabelEl = document.getElementById('detail-notes-label');
   const notesAccordionHeaderEl = document.getElementById('detail-notes-accordion-header');
-  // Curated (not-yet-saved) Music Album items stash the artist name in item.notes (see
-  // _detailAuthorName above) — that's never real user notes, so exclude it here or the
-  // editable textarea below would pre-fill with the artist name instead of being empty.
-  const _curatedAlbumNotesIsArtistName = item.curated && isMusicAlbum;
-  const text = (_curatedAlbumNotesIsArtistName ? null : item.notes) || item.description || '';
+  // Curated (not-yet-saved) items in creator-linked categories stash the creator's name in
+  // item.notes (see _detailAuthorName above) — that's never real user notes, so exclude it here
+  // or the editable textarea below would pre-fill with the creator name instead of being empty.
+  const _curatedNotesIsCreatorName = item.curated && CURATED_NOTES_CATEGORIES.includes(item.category);
+  const text = (_curatedNotesIsCreatorName ? null : item.notes) || item.description || '';
   const linerPanelEl = document.getElementById('liner-notes-panel');
   linerPanelEl.innerHTML = '';
   linerPanelEl.style.display = 'none';
@@ -590,12 +595,13 @@ export function openDetailModal(item) {
     let liveItem = state.items.find(i => i.id === item.id);
     if (!liveItem) {
       liveItem = { ...item, curated: false, savedAt: Date.now() };
-      if (liveItem.category === 'Music Album' && !liveItem.author && liveItem.notes) {
-        // Curated Music Album items stash the artist name in .notes (see _detailAuthorName
-        // above) — once this becomes a real personal item, item.curated flips to false, so that
-        // fallback no longer applies. Promote the name into .author now (and clear .notes) or
-        // the artist link/website CTA silently vanish on every future open of this item, and the
-        // artist name would otherwise show up in My Notes as if it were a real saved note.
+      if (CURATED_NOTES_CATEGORIES.includes(liveItem.category) && !liveItem.author && liveItem.notes) {
+        // Curated items in creator-linked categories stash the creator's name in .notes (see
+        // _detailAuthorName above) — once this becomes a real personal item, item.curated flips
+        // to false, so that fallback no longer applies. Promote the name into .author now (and
+        // clear .notes) or the creator link/website CTA silently vanish on every future open of
+        // this item, and the creator name would otherwise show up in My Notes as if it were a
+        // real saved note.
         liveItem.author = liveItem.notes;
         liveItem.notes = null;
       }
@@ -718,10 +724,22 @@ export function openDetailModal(item) {
 
   document.getElementById('detail-modal-overlay').classList.add('open');
 
-  document.querySelectorAll('.detail-author-link').forEach(el => {
+  // .detail-publication-link also carries .detail-author-link for styling, but navigates via
+  // folderId instead of navigateToAuthor — excluded here, wired separately below.
+  document.querySelectorAll('.detail-author-link:not(.detail-publication-link)').forEach(el => {
     el.addEventListener('click', () => {
       closeDetailModal();
       navigateToAuthor(el.dataset.author, el.dataset.category);
+    });
+  });
+
+  document.querySelectorAll('.detail-publication-link').forEach(el => {
+    el.addEventListener('click', () => {
+      closeDetailModal();
+      state.view = el.dataset.folderId;
+      persistViewState();
+      renderSidebar();
+      renderGrid();
     });
   });
 }

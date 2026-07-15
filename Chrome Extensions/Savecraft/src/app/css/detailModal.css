@@ -574,38 +574,6 @@
   color: #fff;
 }
 
-/* Musician modal — promo video / featured photo toggle over the image */
-.btn-promo-toggle {
-  position: absolute;
-  right: 12px;
-  bottom: -16px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  background: #5B5BEF;
-  border: none;
-  border-radius: 999px;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  z-index: 2;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-  transition: background 0.15s;
-}
-
-.btn-promo-toggle:hover {
-  background: #6a5de0;
-}
-
-.btn-promo-toggle:disabled {
-  opacity: 0.7;
-  cursor: default;
-}
-
 .liner-notes-panel {
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
@@ -806,7 +774,6 @@
   transform: translateY(-1px);
 }
 
-/* Same slot/positioning language as .btn-promo-toggle, since it sits in that same corner of the image */
 .vc-sponsored-tag--overlay {
   position: absolute;
   right: 12px;
@@ -814,12 +781,6 @@
   z-index: 2;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
-
-/* Stacked above the promo-video/album-art toggle when both are present on the same item */
-.vc-sponsored-tag--overlay.vc-sponsored-tag--stacked {
-  bottom: 24px;
-}
-
 
 .image-lightbox-overlay {
   display: none;
