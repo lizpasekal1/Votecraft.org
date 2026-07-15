@@ -8,6 +8,23 @@ export const CATEGORIES = ['Web Links', 'Visual Art', 'Book', 'Movie', 'Game', '
 // is labeled "Summary" instead of "Placeholder", and which get a Wikipedia fallback for a
 // missing image/summary. Visual Art and the music categories are intentionally excluded.
 export const SUMMARY_PLACEHOLDER_CATEGORIES = ['Book', 'Show', 'Movie', 'Game'];
+// Categories whose curated (Top 100) items stash the creator's name in a clean `.notes` field —
+// confirmed Music Album is the only one. Book/Movie/Game/Show instead combine "Title — Creator"
+// into `.title`, with a real description in `.notes` — see splitCuratedTitleCreator() in
+// render.js, which parses those apart into a real item.author at load time instead.
+export const CURATED_NOTES_CATEGORIES = ['Music Album'];
+// Curated "creator card" pseudo-categories (a person/studio's own card, e.g. a curated Musician
+// or Book Author entry) map to the real CATEGORIES member their profile page/works are filed
+// under — Musician already works this way natively (it IS a real category); Book Author/Movie
+// Director/Show Creator/Game Studio are curated-only buckets that map back to the real
+// Book/Movie/Show/Game category for navigateToAuthor().
+export const CREATOR_CARD_CATEGORY = {
+  Musician: 'Musician',
+  'Book Author': 'Book',
+  'Movie Director': 'Movie',
+  'Show Creator': 'Show',
+  'Game Studio': 'Game',
+};
 export const MODAL_BOOKMARK_ICON_SVG = '<svg class="modal-bookmark-icon" xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Z"/></svg>';
 export const CURATED_GENRES = ['Top 100', 'Futurism', 'Fantasy', 'Thriller', 'Pop', 'Classic', 'Jazz', 'Comedy'];
 export const GENRE_EMOJI = {
@@ -143,6 +160,12 @@ export const state = {
   editingId: null,
   collapsed: new Set([...CATEGORIES, 'dashboard']), // all collapsed by default, including the Dashboard row's Queue Kanban link
   sidebarMode: 'categories', // 'categories' | 'curated' | 'home'
+  // Which sidebar subfolder was actually clicked while browsing a curated genre — several
+  // folders under the same category (e.g. Movie's "Movies" and "Videos") route to the exact
+  // same genre:<genre>:<category> view since curated data isn't split into personal-style
+  // subfolders, so state.view alone can't tell them apart for highlighting purposes. Not
+  // persisted — resets to no-subfolder-highlighted on reload, which is a safe default.
+  activeCuratedFolderId: null,
   hiddenCurated: new Set(), // curated item IDs the user has dismissed
   curatedOverrides: {}, // { [curatedItemId]: { url, title, notes, imageUrl } }
   curatedImgCache: {},  // { [curatedItemId]: imageUrl } — auto-fetched via Microlink
@@ -151,6 +174,7 @@ export const state = {
   artistWebsiteCache: {}, // { [normalizedArtistName]: { url: string|null, fetchedAt: number } } — auto-fetched via MusicBrainz/Wikidata
   artistBioCache: {}, // { [normalizedArtistName]: { bio: string|null, photoUrl: string|null, fetchedAt: number } } — auto-fetched via Wikipedia
   itemWikiCache: {}, // { [normalizedTitle]: { bio: string|null, photoUrl: string|null, fetchedAt: number } } — auto-fetched via Wikipedia for Book/Show/Movie/Game items
+  creatorCache: {}, // { [category:title]: { creator: string|null, fetchedAt: number } } — Movie director/Show creator via Wikidata, Game studio via Steam
   tutorialSeen: false,
   kanbanSort: { 'in-queue': 'newest', 'in-progress': 'newest', 'my-review': 'newest', 'done': 'newest' },
   kanbanLists: [],

@@ -6,6 +6,34 @@ SaveCraft is a Chrome extension that acts as a personal media library. Users sav
 
 ## Recent Additions (latest session)
 
+This session generalized the Musician "creator has their own profile page" pattern to Book (authors), Movie (directors), Game (studios), and Show (creators) — the most-requested extension of the app's most successful design pattern — then spent most of the rest of the session hardening curated-genre sidebar navigation, which turned out to have several real bugs once four more categories started routing through it, plus a Kanban board layout fix and a new drag-to-reorder feature.
+
+- **Creator profile pages extended to Book/Movie/Game/Show** (`render.js`, `detailModal.js`, `state.js`) — any Book author, Movie director, Show creator, or Game studio name is now a clickable link (on cards and in the detail modal) that navigates to a dedicated profile page listing everything by them, exactly like Musician already worked. `CREATOR_CARD_CATEGORY` (moved to `state.js` so both `render.js` and `detailModal.js` can share it) maps each curated "creator card" pseudo-category to the real category it files under: `{ Musician: 'Musician', 'Book Author': 'Book', 'Movie Director': 'Movie', 'Show Creator': 'Show', 'Game Studio': 'Game' }`.
+- **332 new curated Firestore documents seeded**: 83 Book Author cards, 78 Movie Director cards, 89 Show Creator cards, 82 Game Studio cards — each `{id, title, url, imageUrl, notes (bio), genre: 'Top 100', category}`. Sourced externally per category:
+  - **Movie director** — Wikidata property P57 (two-hop `wbsearchentities` → `Special:EntityData` → `wbgetentities` to resolve the entity reference to a name)
+  - **Show creator** — same two-hop Wikidata pattern, property P170 (P57 on a TV series returns per-episode directors, not a single showrunner)
+  - **Game studio** — Steam's `appdetails` endpoint (`developers` field), using the Steam app ID already embedded in each curated game's stored URL
+  - **Bio/photo for all of the above** — Wikipedia REST summary API, same pattern `ensureItemWikipediaInfo` already used elsewhere, with manual verification-and-correction passes for cases where an automated keyword-filtered search matched the wrong person/company (documented in the code as a recurring failure mode worth watching for: a too-narrow keyword regex rejects a correct direct match and falls through to a wrong search-retry result)
+  - Two standalone seeder tools in `scripts/`: `seed-book-authors.html` (83 docs) and `seed-creator-cards.html` (the other 249) — plain `fetch()` against the Firestore REST API + Firebase Auth REST API, no SDK, no build step. Both now have a **"Create Account"** button (not just Sign In) so seeding doesn't require an existing SaveCraft login.
+- **Movie/Show/Game curated items have no creator field in Firestore at all** (unlike Book, whose curated title is `"Title — Author"` combined) — resolved externally and kept as **static in-app data** (`js/curatedCreatorLookup.js`, auto-generated) rather than rewriting 300+ existing production `curated_items` documents' title fields. Exports `CURATED_MOVIE_DIRECTOR`/`CURATED_SHOW_CREATOR`/`CURATED_GAME_STUDIO` (raw data) plus the shared helpers `splitCuratedTitleCreator()`, `getStaticCuratedCreator()`, and `SPLIT_TITLE_CREATOR_CATEGORIES` — imported by both `render.js` (rendering) and `storage.js` (the backfill migration below), which is why these live in their own dependency-free module rather than inside `render.js`.
+- **Lead-director "…" indicator** — a co-directed movie's card byline shows the lead director's name followed by "…" (`item.authorHasMore`, display-only — the actual name used for the clickable link/navigation stays clean, so clicking it still correctly opens that director's own profile page).
+- **New folders**: Movie → **Directors**; Show → **Creators**; Game → **Board Games**, **Console Games**, **Mobile Games**, **Game Companies** (Game had zero folders before this session).
+- **Curated-genre sidebar navigation — several real bugs found and fixed**, all variations of the same root cause (a folder/page's `state.view` not staying prefixed `genre:...` while browsing a curated genre, which silently bounced the whole sidebar back out to "My SaveCraft" or the top-level genre picker):
+  - Clicking **any** subfolder (not just the ones with their own curated bucket) while browsing a curated genre used to drop out of that genre entirely — now every subfolder computes a `curatedTarget` (its own dedicated bucket like Authors/Directors/Creators/Game Companies, or the full parent category for the handful of folders that represent "the whole category" — Books/Movies/TV Shows/Console Games/Musicians — or its own id as an inert placeholder for folders with no curated-specific data at all, like Videos/Podcasts/Webseries/Tutorials/Board Games/Mobile Games, which now correctly show **empty** instead of duplicating a sibling folder's content).
+  - Only the folder actually clicked highlights now — several sibling folders (e.g. Movie's "Movies" and "Videos") can route to the exact same underlying view, which previously made them both light up as active; `state.activeCuratedFolderId` tracks the specific folder clicked, separate from the derived `state.view`.
+  - Top-level category tabs (Books, Films, Games, Music, Shows) no longer show a count badge while browsing a curated genre — only the subfolders underneath do.
+  - **Visiting an author/creator page from curated browsing no longer resets the sidebar.** `navigateToAuthor()` sets `state.view` to `author:<cat>:<name>`, which doesn't start with `genre:` — every sidebar mode/context decision used to read `state.view` directly, so clicking an author's name while browsing Top 100 bounced the sidebar back to the top-level genre picker under a wrong "My Saves" label. `renderSidebar()` now computes a `sidebarEffectiveView` that falls back to `state.authorReturnView` (already tracked, just previously unused for this) whenever on an author page, and uses it for every "which sidebar screen" decision while leaving the real `state.view` alone for `isActive` highlighting.
+  - **Duplicate cards on author/director pages** — the same work is frequently curated separately for multiple genres (e.g. a movie in both "Top 100" and "Thriller", 20 such overlaps confirmed live), each its own Firestore doc with its own id. The author-page pull-in loop crosses every genre and was only deduping by id, so the same movie showed up twice under its director. Now also dedupes by title.
+- **Data-quality fix: Music Albums were showing Musician cards.** A legacy `category: "Music"` Firestore bucket (101 docs, titles are artist names like "The Beatles" — a stale duplicate of the Musicians list, unrelated to real albums) was being merged into "Music Album" by `_CAT_NORMALIZE`'s `'Music': 'Music Album'` mapping. That mapping is removed — those legacy docs now land in an inert bucket nothing reads instead of leaking into Albums. (The remaining ~2,400 real `Music Album` docs under Top 100 are genuine albums but not an actual curated Top 100 shortlist — a separate, not-yet-addressed editorial gap.)
+- **Backfill migration for already-saved items** (`storage.js`, `loadAll()`) — Book/Movie/Show/Game items saved before the above creator-resolution logic existed (or worked correctly) were stuck showing a raw combined title or no byline at all forever, since the creator-name resolution only ever ran once, at first-save time. A one-time backfill (same pattern as the pre-existing Music Album `.notes`→`.author` migration) now splits Book's combined title or fills in Movie/Show/Game's author from the static lookup, for any already-saved item still missing it.
+- **`_CURATED_CACHE_VERSION` bumped 5 → 7** across the session's Firestore/normalization changes, forcing a fresh fetch instead of serving stale 24-hour-cached bucketing.
+- **Kanban board layout fixed to fill the actual window height** (`kanban.css`) — `.kanban-board`/`.kanban-wrap` used a hardcoded `height: calc(100vh - 180px)` guess that fell short of the real available space, leaving the column divider lines and per-column scroll areas stopping short of the bottom of the window. Replaced with proper flexbox fill (`.grid-area:has(.kanban-wrap) { display: flex; flex-direction: column; overflow: hidden; }`, mirroring the existing `.grid-area:has(.dashboard-wrap)` pattern) — no more magic numbers. Column divider lines also lost their rounded top/bottom corners (`border-radius` removed from `.kanban-column`) for a cleaner straight line.
+- **Cards can now be dragged up/down within a column to reorder them** (`kanban.js`) — dropping a card above/below another card inserts it at that exact spot (tracked via per-card `dragover`, not just the column-level one) and assigns every card in that column a fresh sequential `item.manualOrder`, switching that column to a new **"Custom order"** sort mode (also selectable from the existing per-column sort dropdown) so the manual order persists instead of being overridden by newest/oldest/A→Z on the next render. Cross-column drag (changing `queueStatus`) still works and now also respects drop position within the target column. The now-redundant standalone `updateQueueStatus()` export was removed (its only call site was the drop handler this replaced).
+
+---
+
+## Recent Additions (previous session)
+
 This session had three halves: a cleanup pass on the previous session's work, a full rebuild of the browser-toolbar popup into a real wizard, and then a Kanban board expand/focus feature plus a batch of smaller fixes.
 
 - **Kanban column expand/focus mode** (`js/kanban.js`, `css/kanban.css`) — each column now has a small circular button in its top-right corner (a "+", matching every column) that expands that one column to the full width of the board and removes the other three from the DOM entirely (not just hidden — this is also what disables cross-column drag-and-drop while expanded, since the other columns aren't valid drop targets anymore). The button on the expanded column turns into a purple "−"; clicking it again shrinks back to the normal 4-column board. While expanded, a pill-shaped format picker (styled like the existing "Categories" filter pill) offers five named layouts — **Two Column** (image on the left, notes/date shown), **Four Column** (denser, title+author only), **Large Card** (thumb on top, big), **Detail Card** (thumb on top, notes shown in full instead of clamped), **Simple Text** (no thumbnail, dense 2-column list) — each driving both a CSS grid density and a `renderKanbanCard(item, format)` content variant. None of this touches the normal 4-column board's cards, which still render exactly as before when no format is passed. The expanded/format choice is ephemeral (`state.kanbanExpandedCol`/`kanbanExpandedFormat`), resetting on every reload. (An earlier version of this button briefly opened the Add Item modal instead — abandoned in favor of the expand behavior before shipping.)
@@ -87,18 +115,19 @@ Savecraft/
 
 ### `src/app/js/` modules
 
-The library used to be one ~3,700-line `app.js`. It's now split into 15 ES modules, loaded via `<script type="module" src="js/main.js">` in `index.html`. Modules import/export between each other (some circularly — safe under ES modules since nothing is called at module-evaluation time, only from inside functions):
+The library used to be one ~3,700-line `app.js`. It's now split into 16 ES modules, loaded via `<script type="module" src="js/main.js">` in `index.html`. Modules import/export between each other (some circularly — safe under ES modules since nothing is called at module-evaluation time, only from inside functions):
 
 | Module | Responsibility |
 |--------|-----------------|
-| `state.js` | Shared `state` object + static constants (`CATEGORIES`, `CAT_LABEL`, `CAT_EMOJI`, `CATEGORY_PLATFORMS`, etc.) |
-| `storage.js` | All `persist*`/`remove*` functions, `loadAll()`, Firestore curated-data loading (`_loadCuratedFromFirestore`, `initCuratedItems`), Firestore dual-write helpers for the account-sync feature |
+| `state.js` | Shared `state` object + static constants (`CATEGORIES`, `CAT_LABEL`, `CAT_EMOJI`, `CATEGORY_PLATFORMS`, `CREATOR_CARD_CATEGORY`, etc.) |
+| `storage.js` | All `persist*`/`remove*` functions, `loadAll()` (incl. one-time backfill migrations), Firestore curated-data loading (`_loadCuratedFromFirestore`, `initCuratedItems`), Firestore dual-write helpers for the account-sync feature |
 | `utils.js` | Pure helpers: `escapeHtml`, `catClass`, `debounce`, `formatTrackDuration`, `patchCardImage`, etc. |
 | `api.js` | External network calls: iTunes, Open Library, Steam, Wikipedia, MusicBrainz/Wikidata, YouTube, Last.fm, Steam Web API (unset API key constants live here) |
 | `auth.js` | Email/password auth via the Firebase Auth REST API — no SDK, independent from any shared Votecraft account |
 | `authors.js` | Author/musician profile CRUD, navigation, album-metadata backfill |
+| `curatedCreatorLookup.js` | Auto-generated static data: curated Top 100 Movie/Show/Game title → director/creator/studio name (no dependencies — Firestore has no creator field for these, unlike Book's combined title), plus the shared `splitCuratedTitleCreator()`/`getStaticCuratedCreator()` helpers, imported by both `render.js` and `storage.js` |
 | `render.js` | `renderSidebar`, `renderGrid`, `renderCard`, `renderAuthorPage`, curated-image fetch helpers |
-| `kanban.js` | Kanban board rendering and queue-status updates (`KANBAN_DEMO`/`KANBAN_COLUMNS` exported for reuse by the Dashboard) |
+| `kanban.js` | Kanban board rendering, drag-and-drop (cross-column + within-column reorder) — `KANBAN_DEMO`/`KANBAN_COLUMNS` exported for reuse by the Dashboard |
 | `detailModal.js` | The item detail modal — largest module, all accordions live here |
 | `addEditModal.js` | Add/Edit item modal — the 3-screen add wizard (category → search → review) plus the single-page Edit form |
 | `fetchAlbumsModal.js` | Fetch Albums (bulk iTunes import) modal |
@@ -106,6 +135,10 @@ The library used to be one ~3,700-line `app.js`. It's now split into 15 ES modul
 | `profile.js` | The Profile page — account info, Connections (Last.fm/Steam/Instagram), Interests, Your Music Taste, Friends |
 | `share.js` | Share modal, CSV export, Markdown export |
 | `main.js` | Entry point — search, sort, theme, sidebar collapse, mobile sidebar, `init()`, all DOMContentLoaded event wiring |
+
+### `scripts/` (admin tooling, not loaded by the extension)
+
+One-off HTML tools for seeding curated Firestore data — plain `fetch()` against the Firestore REST API + Firebase Auth REST API, no SDK, no build step. Each has a Sign In *and* Create Account button, so seeding doesn't require an existing SaveCraft login. Require the `curated_items` Firestore rule to temporarily allow `if request.auth != null` (revert to `if false` after running). Notable ones: `seed-book-authors.html` (83 Book Author docs), `seed-creator-cards.html` (249 Movie Director/Show Creator/Game Studio docs combined).
 
 ### `src/app/css/` stylesheets
 
@@ -148,6 +181,8 @@ Categories use **singular names** in storage and the Add Item dropdown, and **pl
 
 The `Music Album` category is not shown as a top-level sidebar entry. Instead, a permanent **Music Albums** subfolder appears under **Musicians** in the sidebar. This subfolder also works in Curated SaveCraft mode, navigating to the curated music album list for the selected genre.
 
+Beyond each category's primary folder, several categories also have a **creator-card folder** — a non-primary subfolder that doubles as an entry point into a curated "creator card" bucket when browsing a curated genre (see "Author / Artist Profile Pages" below): Book → **Authors**, Movie → **Directors**, Show → **Creators**, Game → **Game Companies**. Game additionally has **Board Games**/**Console Games**/**Mobile Games** (its first-ever folders besides Game Companies) — of these, only Console Games maps to the full curated Games list (Top 100 games are all console/PC titles); Board Games and Mobile Games correctly show empty while browsing a curated genre, since there's no curated data for those types yet.
+
 **`Web Links`** is a real `CATEGORIES` member now (promoted from a sidebar-only pseudo-category), shown as **Website** everywhere — sidebar, grid title, and Add-wizard tile all read from the same `CAT_LABEL['Web Links']` value now, no more special-cased "Webpages" text.
 
 A category's **primary folder** (`PRIMARY_FOLDER_ID` in `state.js`, keyed by category → the seeded folder's id) is what its top-level tab actually filters to — see "Primary folder tab filtering" in Recent Additions above. Categories with no entry (Game, News currently, Visual Art) show every item in the category unfiltered, same as before this session.
@@ -182,7 +217,11 @@ Opens as a new tab. Contains:
 All 4 widget cards stretch to equal height and fill the available vertical space down to a bottom margin matching the top margin above the hero (`.dashboard-wrap` fills `.grid-area`'s content-box height; both share the same 24px padding by construction, not a hardcoded value).
 
 ### Kanban Board ("My Saves Queue")
-`js/kanban.js` + `css/kanban.css`. Four columns — Queue, In Progress, My Notes, Archive (`KANBAN_COLUMNS`) — each holding items with a matching `item.queueStatus`. Cards support drag-and-drop between columns, a per-column sort dropdown (Newest/Oldest/A→Z/Z→A, persisted in `state.kanbanSort`), and a Categories filter pill (matches the sidebar's labels/order exactly, excludes Music Album).
+`js/kanban.js` + `css/kanban.css`. Four columns — Queue, In Progress, My Notes, Archive (`KANBAN_COLUMNS`) — each holding items with a matching `item.queueStatus`. Cards support drag-and-drop between columns, a per-column sort dropdown (Newest/Oldest/A→Z/Z→A/**Custom order**, persisted in `state.kanbanSort`), and a Categories filter pill (matches the sidebar's labels/order exactly, excludes Music Album).
+
+**Layout fills the actual window height** — `.kanban-board`/`.kanban-wrap` use flexbox (`flex: 1; min-height: 0;`) to fill whatever space `.grid-area` actually has left below the toolbar row, with `.grid-area:has(.kanban-wrap) { overflow: hidden; }` (mirroring the Dashboard's `:has(.dashboard-wrap)` pattern) so the page itself never scrolls — only the individual columns do. Column divider lines (`.kanban-column`'s `border-right`) have no rounded corners, so they run as a clean straight line all the way to the bottom.
+
+**Drag-to-reorder within a column** — dropping a card above/below another card (tracked via a `dragover` listener on each `.kcard`, not just the column container, computing before/after from the cursor's Y position against the hovered card's midpoint) inserts it at that exact spot rather than always appending to the end. Every card in the target column then gets a fresh sequential `item.manualOrder`, and that column's sort mode switches to **"Custom order"** — otherwise the manual position would just get overridden by whatever sort (newest/oldest/A→Z) was active. Cross-column drops (changing `item.queueStatus`) respect drop position the same way. A `.kcard--drop-before`/`.kcard--drop-after` box-shadow shows the insertion point live while dragging.
 
 **Column expand/focus mode** — every column has a small circular button in its top-right corner:
 - Normal state: a plain "+". Clicking it expands that column to the full width of the board and removes the other three columns from the render entirely — not just visually hidden, actually absent from the DOM, which is also what disables drag-and-drop while expanded (the other columns aren't valid drop targets anymore; cards render with `draggable="false"`).
@@ -199,14 +238,15 @@ All 4 widget cards stretch to equal height and fill the available vertical space
 
 `renderKanbanCard(item, format)` — passing no `format` renders the exact same card the 4-column board has always shown (this code path is untouched by the whole feature). The expanded column and format choice (`state.kanbanExpandedCol`/`state.kanbanExpandedFormat`) are ephemeral — never written to `chrome.storage.sync`, so they reset to the normal board on every reload.
 
-### Author / Artist Profile Pages
-Every author name on a card or in a detail modal is a clickable link. Clicking it navigates to a dedicated **author profile page** for that person within that category:
+### Author / Artist / Director / Studio / Creator Profile Pages
+Every author/director/studio/creator name on a card or in a detail modal is a clickable link (`CREATOR_CARD_CATEGORY` in `state.js`, extended this session from Musician-only to Book/Movie/Show/Game). Clicking it navigates to a dedicated **profile page** for that person/studio within that category:
 
-- **Profile header** — photo, name, bio, website link
-- **Works grid** — all saved items by that author in that category. For **Musician** profiles, Music Album items by the same artist are also shown — including curated albums from Firestore where the artist name matches.
+- **Profile header** — photo, name, bio, website link. Bio/photo enrichment (like Musician's) is not yet built for the new categories — the header shows a plain name until that's added; the curated "creator card" itself (in the Authors/Directors/Creators/Game Companies folder) already has bio/photo, just not yet copied onto this stub.
+- **Works grid** — all saved items by that person in that category. For **Musician** profiles, Music Album items by the same artist are also shown — including curated albums from Firestore where the artist name matches. For Book/Movie/Show/Game, curated items across every genre are pulled in too (a director's page shows their movies from Top 100 *and* Thriller *and* any other genre they're curated under), deduped by title since the same work is frequently curated separately per genre.
 - Author profiles are stored in `chrome.storage.sync` under keys `author_<id>`
 - Navigating to an author auto-creates a stub profile if one doesn't exist yet
-- The URL view format is `author:<category>:<name>` (e.g. `author:Musician:Gorillaz`)
+- The URL view format is `author:<category>:<name>` (e.g. `author:Musician:Gorillaz`, `author:Movie:Bong Joon-ho`)
+- Visiting one of these pages while browsing a curated genre keeps the sidebar showing that genre's category tree (via `state.authorReturnView`) instead of resetting to the top-level genre picker — see `session-context.md`'s Sidebar Structure section for the mechanism.
 
 ### Auto-Save Musician
 When a user queues or saves any **Music Album** item for the first time, the artist is automatically added to their **Musicians** saves. The `autoSaveMusician()` function pulls the artist's iTunes URL and cover art from the curated Firestore data if available.
@@ -229,10 +269,12 @@ A separate browsing mode (toggled via the sidebar options menu) that surfaces Vo
 - **Genre picker** — genres like Top 100, Classic, Jazz, Pop, etc.
 - **Category drilldown** — clicking a genre shows categories; clicking a category shows curated items
 - **Musicians** — 100 top artists (from iTunes charts), each card's name links to their author profile page
-- **Music Albums** — 2,444 albums from those artists, each showing the artist name as a clickable link; the Music Albums subfolder under Musicians navigates to this view
-- **Clicking a musician card** opens the detail popup; clicking the musician's name navigates to their profile
-- **Curated cache** — data is cached in `chrome.storage.local` for 24 hours; cache is versioned so bumping `_CURATED_CACHE_VERSION` in `js/storage.js` forces a fresh fetch
+- **Music Albums** — a `Music Album`-category Firestore bucket under Top 100 (~2,400 docs), each showing the artist name as a clickable link; the Music Albums subfolder under Musicians navigates to this view. **Not currently a genuine curated Top 100 shortlist** — it's bulk auto-synced album metadata, not a hand-picked list; a real editorial pass is still needed (see Recent Additions' data-quality fix for a related bug that was found and fixed here — a legacy mislabeled category was leaking Musician-name cards into this bucket).
+- **Book Authors / Movie Directors / Show Creators / Game Studios** — curated "creator card" buckets (83/78/89/82 entries respectively), reached via each category's Authors/Directors/Creators/Game Companies folder. Same idea as Musicians, generalized this session — see "Recent Additions" for how the creator names were sourced (Wikidata/Steam) and why they're kept as static in-app data rather than stored in Firestore for Movie/Show/Game.
+- **Clicking a creator card** opens the detail popup; clicking the name navigates to their profile
+- **Curated cache** — data is cached in `chrome.storage.local` for 24 hours; cache is versioned so bumping `_CURATED_CACHE_VERSION` in `js/storage.js` forces a fresh fetch (currently `7`)
 - **Top 100 lists** — the "Top 100" genre shows a source-attribution logo next to the section title, indicating which outlet curated that list: Rolling Stone (Musicians, Shows, Books), The New York Times (Movies), Steam (Games). Hovering any logo shows a tooltip explaining the attribution. Curated categories are keyed by their singular `CATEGORIES` name internally (e.g. `genre:Top 100:Musician`, not `genre:Top 100:Music`) — this tripped up the logo-matching logic once before, so keep that in mind if extending it.
+- **Sidebar navigation while browsing a curated genre** — every subfolder click stays inside the current genre (routing to a dedicated creator bucket, the full parent category, or an inert empty state — see Recent Additions), only the actually-clicked folder highlights, and visiting an author/creator page no longer resets the sidebar. See `session-context.md`'s Sidebar Structure section for the full mechanism (`sidebarEffectiveView`, `state.activeCuratedFolderId`, `FOLDER_SHOWS_FULL_CURATED_CATEGORY`).
 
 ### Item Detail Modal
 Clicking a card opens a detail modal. **Every category now shares the same accordion-based layout** (this used to be Musician/Music-Album-only, but was extended to all categories):
@@ -307,6 +349,8 @@ The search bar and sort dropdown in the header filter both the grid view and the
   genre: string | null,    // Music Album only; not currently rendered anywhere
   year: string | null,     // Music Album only; 4-digit release year
   collectionId: number | null, // Music Album only; iTunes collection ID, used to fetch the Song List
+  authorHasMore: boolean | undefined, // Movie only — true for a co-directed movie, shows "…" after the lead director's name on the card/byline (display-only, never part of the name used for navigation)
+  manualOrder: number | undefined,    // Kanban only — sequential position within its column once the user has dragged it; only meaningful when that column's state.kanbanSort is 'manual' ("Custom order")
 }
 ```
 
@@ -338,15 +382,18 @@ Default/official folder ids are always prefixed `default-` (e.g. `default-movies
 ### Curated Item (Firestore `curated_items` document)
 ```js
 {
-  id: string,          // 'itunes_<collectionId>' or 'artist_itunes_<artistId>' or 'cur-*'
+  id: string,          // 'itunes_<collectionId>' or 'artist_itunes_<artistId>' or 'cur-*' or 'top-100-<kind>-<slug>'
   title: string,
-  category: string,    // stored as plural in Firestore ('Movies', 'Music Album'), normalized on load
+  category: string,    // stored as plural in Firestore ('Movies', 'Music Album'), normalized on load —
+                        // 'Book Author'/'Movie Director'/'Show Creator'/'Game Studio' are stored exactly
+                        // as-is (curated-only pseudo-categories, not real CATEGORIES members)
   genre: string,       // e.g. 'Top 100', 'Classic', 'Jazz'
   url: string | null,
   imageUrl: string | null,
-  notes: string | null, // for Music Album entries: the artist name
+  notes: string | null, // for Music Album entries: the artist name; for the four creator pseudo-categories: their bio
 }
 ```
+Book's curated `.title` combines `"Title — Author"` in one field (split apart at load time — see `splitCuratedTitleCreator()` in `curatedCreatorLookup.js`); Movie/Show/Game curated items have no creator anywhere in Firestore at all (plain title, real description in `.notes`) — their creator name comes from the static `curatedCreatorLookup.js` data instead, keyed by title.
 
 ### Other `chrome.storage.sync` keys
 | Key | Contents |
@@ -384,7 +431,7 @@ All of the above are declared in `manifest.json` under `host_permissions`. YouTu
 - To inspect the background service worker: go to `chrome://extensions` → find SaveCraft → click **"service worker"** link.
 - To wipe all saved data during testing: open the library → DevTools console → `chrome.storage.sync.clear()` then reload.
 - Curated data is cached in `chrome.storage.local`. To force a fresh fetch from Firestore, bump `_CURATED_CACHE_VERSION` in `src/app/js/storage.js` and refresh the extension.
-- Firestore writes (for populating curated data) require temporarily setting `allow write: if true` on the `curated_items` rule in Firebase Console → Firestore → Rules. Always revert after.
+- Firestore writes (for populating curated data) require temporarily setting the `curated_items` rule in Firebase Console → Firestore → Rules to `allow write: if request.auth != null;` (any authenticated user, not `if true`) — the `scripts/seed-*.html` tools sign in a real account first. Always revert to `allow write: if false;` after. A disposable Firebase Auth account (created via the REST `accounts:signUp` endpoint, same one the seeder tools' "Create Account" button uses) satisfies this rule just as well as a real user login and never touches anyone's actual data — useful for scripted/one-off seeding without needing real credentials.
 
 ---
 

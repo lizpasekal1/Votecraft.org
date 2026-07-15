@@ -1,6 +1,9 @@
 // ===== MAIN GRID / SIDEBAR / AUTHOR PAGE RENDERING =====
 
-import { state, CURATED_ITEMS, CATEGORIES, CAT_LABEL, CAT_EMOJI, CURATED_GENRES, GENRE_EMOJI, PRIMARY_FOLDER_ID } from './state.js';
+import { state, CURATED_ITEMS, CATEGORIES, CAT_LABEL, CAT_EMOJI, CURATED_GENRES, GENRE_EMOJI, PRIMARY_FOLDER_ID, CURATED_NOTES_CATEGORIES, CREATOR_CARD_CATEGORY } from './state.js';
+import {
+  SPLIT_TITLE_CREATOR_CATEGORIES, splitCuratedTitleCreator, getStaticCuratedCreator,
+} from './curatedCreatorLookup.js';
 import {
   escapeHtml, catClass, badgeLabel, isMusicAlbumsSectionView, isOwnAuthorPageView, getDomain,
   isItunesArtworkUrl, patchCardImage, folderIconHtml,
@@ -37,6 +40,42 @@ function matchesPrimaryOrUnfoldered(item, category) {
   return item.category === category && (!primaryId || item.folderId === primaryId || !item.folderId);
 }
 
+// Resolves a raw (pre-merge) curated item's creator name, trying every source in the same order
+// the main genre: view branch above does — an explicit .author field, then the Book-style split
+// title, then the static Movie/Show/Game lookup. Used to match curated items against an author
+// page's name without needing to build the full merged item first.
+function resolveCuratedCreatorName(cat, item) {
+  if (item.author) return item.author;
+  if (SPLIT_TITLE_CREATOR_CATEGORIES.includes(cat)) {
+    const split = splitCuratedTitleCreator(item.title);
+    if (split.author) return split.author;
+  }
+  return getStaticCuratedCreator(cat, item.title)?.name || null;
+}
+
+// Folders that double as an entry point into a curated "creator card" bucket when browsing a
+// curated genre — see the sidebar-subfolder rendering/wiring below.
+const FOLDER_ID_TO_CURATED_CATEGORY = {
+  'default-books-authors': 'Book Author',
+  'default-movies-directors': 'Movie Director',
+  'default-shows-creators': 'Show Creator',
+  'default-games-companies': 'Game Studio',
+};
+
+// Folders that represent "the whole category" closely enough to show the full curated Top
+// 100/genre list when browsing a curated genre (Books' "Books" folder, Movies' "Movies" folder,
+// Shows' "TV Shows" folder, Games' "Console Games" folder — curated Top 100 games are all
+// console/PC titles, there's no board/mobile game curated data). Every other regular folder
+// (Videos, Podcasts, Webseries, Tutorials, Board Games, Mobile Games) has no curated-specific
+// data at all and correctly shows empty rather than duplicating a sibling folder's content.
+const FOLDER_SHOWS_FULL_CURATED_CATEGORY = new Set([
+  'default-books-books',
+  'default-movies-movies',
+  'default-shows-shows',
+  'default-games-console',
+  'default-musicians-musicians',
+]);
+
 export function getFilteredSortedItems() {
   let items = [...state.items];
 
@@ -53,6 +92,18 @@ export function getFilteredSortedItems() {
           const override = state.curatedOverrides[i.id] || {};
           const base = { ...i, ...override, category: cat, done: false, savedAt: 0, folderId: null, curated: true };
           if (!base.imageUrl && state.curatedImgCache[i.id]) base.imageUrl = state.curatedImgCache[i.id];
+          if (SPLIT_TITLE_CREATOR_CATEGORIES.includes(cat) && !base.author) {
+            const split = splitCuratedTitleCreator(base.title);
+            base.title = split.title;
+            base.author = split.author;
+          }
+          if (!base.author) {
+            const staticCreator = getStaticCuratedCreator(cat, base.title);
+            if (staticCreator) {
+              base.author = staticCreator.name;
+              base.authorHasMore = staticCreator.hasMore;
+            }
+          }
           if (cat === 'Music Album') {
             const meta = state.curatedAlbumMetaCache[i.id];
             if (meta) {
@@ -76,18 +127,54 @@ export function getFilteredSortedItems() {
     const name = rest.slice(colonIdx + 1);
     const relatedCats = cat === 'Musician' ? ['Musician', 'Music Album'] : [cat];
     items = items.filter(i => relatedCats.includes(i.category) && i.author === name);
-    if (cat === 'Musician') {
+    // Also pull in matching curated Top 100 items — Music Album stashes the creator's name in
+    // `.notes` (there's no dedicated creator field in the curated Firestore schema); Book/Movie/
+    // Game/Show combine it into `.title` instead ("Title — Creator"), see
+    // splitCuratedTitleCreator() below. Musician's related curated category is Music Album (a
+    // different category); for Book/Movie/Game/Show the curated category is the page's own
+    // category. Keyed by the author-page's `cat` (e.g. 'Musician'), not `item.category` (e.g.
+    // 'Music Album') — a different axis than CURATED_NOTES_CATEGORIES above, so kept as its own
+    // local list.
+    const AUTHOR_PAGE_CURATED_NOTES_CATS = ['Musician', 'Book', 'Movie', 'Game', 'Show'];
+    if (AUTHOR_PAGE_CURATED_NOTES_CATS.includes(cat)) {
+      const curatedCat = cat === 'Musician' ? 'Music Album' : cat;
       const existingIds = new Set(items.map(i => i.id));
+      // The same work is frequently curated separately for multiple genres (e.g. a movie in both
+      // "Top 100" and "Thriller") — each is its own Firestore doc with its own id, so id-based
+      // dedup alone lets the exact same title through twice when this loop crosses genres. Track
+      // titles actually added here too so an author's page shows each work once.
+      const seenTitles = new Set(items.map(i => i.title));
+      const matchesCreator = curatedCat === 'Music Album'
+        ? i => i.notes === name
+        : i => resolveCuratedCreatorName(curatedCat, i) === name;
       for (const genre of Object.keys(CURATED_ITEMS)) {
-        (CURATED_ITEMS[genre]['Music Album'] || [])
-          .filter(i => i.notes === name && !state.hiddenCurated.has(i.id) && !existingIds.has(i.id))
+        (CURATED_ITEMS[genre][curatedCat] || [])
+          .filter(i => matchesCreator(i) && !state.hiddenCurated.has(i.id) && !existingIds.has(i.id))
           .forEach(i => {
             const override = state.curatedOverrides[i.id] || {};
-            const merged = { ...i, ...override, category: 'Music Album', curated: true, done: false, savedAt: 0, folderId: null };
-            const meta = state.curatedAlbumMetaCache[i.id];
-            if (meta) {
-              if (!merged.year && meta.year) merged.year = meta.year;
-              if (!merged.collectionId && meta.collectionId) merged.collectionId = meta.collectionId;
+            const merged = { ...i, ...override, category: curatedCat, curated: true, done: false, savedAt: 0, folderId: null };
+            if (SPLIT_TITLE_CREATOR_CATEGORIES.includes(curatedCat)) {
+              const split = splitCuratedTitleCreator(merged.title);
+              merged.title = split.title;
+              merged.author = split.author;
+            }
+            if (!merged.author) {
+              const staticCreator = getStaticCuratedCreator(curatedCat, merged.title);
+              if (staticCreator) {
+                merged.author = staticCreator.name;
+                merged.authorHasMore = staticCreator.hasMore;
+              }
+            }
+            if (seenTitles.has(merged.title)) return;
+            seenTitles.add(merged.title);
+            // Year/collectionId enrichment is Music Album-specific (iTunes track-list metadata) —
+            // doesn't apply to the other categories' curated items.
+            if (curatedCat === 'Music Album') {
+              const meta = state.curatedAlbumMetaCache[i.id];
+              if (meta) {
+                if (!merged.year && meta.year) merged.year = meta.year;
+                if (!merged.collectionId && meta.collectionId) merged.collectionId = meta.collectionId;
+              }
             }
             items.push(merged);
           });
@@ -153,16 +240,25 @@ export function getFilteredSortedItems() {
 // ===== SIDEBAR =====
 export function renderSidebar() {
   const sidebar = document.getElementById('sidebar');
+  // An author/creator page (Book author, Movie director…) reached from curated genre browsing
+  // sets state.view to 'author:<cat>:<name>', which starts with neither 'genre:' nor anything
+  // else the sidebar recognizes — every mode/context decision below used to read state.view
+  // directly, so visiting an author page from Top 100 bounced the whole sidebar back to the
+  // top-level genre picker, losing all context. state.authorReturnView (set by
+  // navigateToAuthor()) remembers where the user actually was; fall back to it here for every
+  // "which sidebar screen" decision while leaving the real state.view alone for isActive checks
+  // further down, so nothing shows falsely highlighted while genuinely on an author page.
+  const sidebarEffectiveView = (state.view.startsWith('author:') && state.authorReturnView?.startsWith('genre:'))
+    ? state.authorReturnView
+    : state.view;
   let sidebarTitle = 'My Saves';
-  if (state.view.startsWith('author:')) {
-    sidebarTitle = 'My Saves';
-  } else if (state.view.startsWith('genre:')) {
-    sidebarTitle = state.view.slice(6).split(':')[0] + ' Saves';
+  if (sidebarEffectiveView.startsWith('genre:')) {
+    sidebarTitle = sidebarEffectiveView.slice(6).split(':')[0] + ' Saves';
   } else if (state.sidebarMode === 'curated') {
     sidebarTitle = 'Curated SaveCraft';
   }
   const headerTitleEl = document.getElementById('sidebar-header-title');
-  const isCuratedDrilldown = state.sidebarMode === 'curated' && state.view.startsWith('genre:');
+  const isCuratedDrilldown = state.sidebarMode === 'curated' && sidebarEffectiveView.startsWith('genre:');
   if (isCuratedDrilldown) {
     headerTitleEl.innerHTML = `<button class="sidebar-back-btn" id="sidebar-back-btn" title="Back to genres"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg><span>${escapeHtml(sidebarTitle)}</span></button>`;
   } else {
@@ -170,7 +266,10 @@ export function renderSidebar() {
   }
   document.getElementById('sidebar-back-btn')?.addEventListener('click', (e) => {
     e.stopPropagation();
-    const parts = state.view.slice(6).split(':'); // strip 'genre:' prefix -> [genre, category?]
+    // Uses sidebarEffectiveView (not the raw state.view) so this also works correctly from an
+    // author page reached via curated browsing — it steps back to the genre-level view instead
+    // of trying to parse the 'author:<cat>:<name>' string as if it were a 'genre:' one.
+    const parts = sidebarEffectiveView.slice(6).split(':'); // strip 'genre:' prefix -> [genre, category?]
     state.view = parts.length > 1 ? `genre:${parts[0]}` : 'curated';
     persistViewState();
     renderSidebar();
@@ -261,7 +360,7 @@ export function renderSidebar() {
   }
 
   // Curated mode: genre picker until a genre is selected, then show categories
-  if (state.sidebarMode === 'curated' && !state.view.startsWith('genre:')) {
+  if (state.sidebarMode === 'curated' && !sidebarEffectiveView.startsWith('genre:')) {
     sidebar.innerHTML = mobileHeader + `
       <div class="sidebar-items-scroll">
         ${dashboardLinkHtml}
@@ -287,8 +386,8 @@ export function renderSidebar() {
     return;
   }
 
-  const isCuratedGenre = state.view.startsWith('genre:');
-  const curatedGenreBase = isCuratedGenre ? state.view.slice(6).split(':')[0] : null;
+  const isCuratedGenre = sidebarEffectiveView.startsWith('genre:');
+  const curatedGenreBase = isCuratedGenre ? sidebarEffectiveView.slice(6).split(':')[0] : null;
 
   // 'Web Links' ("Website") is a real CATEGORIES member, so the generic filter below already
   // includes it — excluded here only from curated-genre drilldowns, since there's no curated
@@ -308,32 +407,58 @@ export function renderSidebar() {
       ? state.view === `genre:${curatedGenreBase}:${cat}`
       : state.view === cat;
     const isCollapsed = state.collapsed.has(cat);
-    const countLabel = count > 0 ? `<span class="sidebar-count">${count}</span>` : '';
+    // Top-level category tabs don't show a count while browsing a curated genre — only the
+    // subfolders underneath do (Authors/Directors/etc., the full-category folder, and the
+    // explicitly-empty ones) per the user's request; personal "My Saves" browsing keeps its count.
+    const countLabel = (!isCuratedGenre && count > 0) ? `<span class="sidebar-count">${count}</span>` : '';
     const arrow = isCollapsed ? '▶' : '▼';
 
     const musicAlbumActive = isCuratedGenre
       ? state.view === `genre:${curatedGenreBase}:Music Album`
       : state.view === 'Music Album';
+    const musicAlbumCount = isCuratedGenre
+      ? (CURATED_ITEMS[curatedGenreBase]?.['Music Album']?.length ?? 0)
+      : state.items.filter(i => matchesPrimaryOrUnfoldered(i, 'Music Album')).length;
+    const musicAlbumCountLabel = musicAlbumCount > 0 ? `<span class="sidebar-count">${musicAlbumCount}</span>` : '';
     const permanentSubfolders = cat === 'Musician' ? `
       <div class="sidebar-item sidebar-subfolder ${musicAlbumActive ? 'active' : ''}"
            data-view="Music Album" data-permanent="true">
         <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M500-360q42 0 71-29t29-71v-220h120v-80H560v220q-13-10-28-15t-32-5q-42 0-71 29t-29 71q0 42 29 71t71 29ZM320-240q-33 0-56.5-23.5T240-320v-480q0-33 23.5-56.5T320-880h480q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H320Zm0-80h480v-480H320v480ZM160-80q-33 0-56.5-23.5T80-160v-560h80v560h560v80H160Zm160-720v480-480Z"/></svg> Music Albums
+        ${musicAlbumCountLabel}
       </div>
     ` : '';
 
     const subfolderRows = subfolders.map(folder => {
       const isPrimaryFolder = primaryId === folder.id;
-      const fCount = isCuratedGenre ? 0 : state.items.filter(i =>
-        isPrimaryFolder ? matchesPrimaryOrUnfoldered(i, cat) : i.folderId === folder.id
-      ).length;
+      // What this folder maps to while browsing a curated genre: its own dedicated "creator
+      // card" bucket (Authors/Directors/Creators/Game Companies) if it has one; else the full
+      // parent category if it's one of the handful of folders that closely represent "the whole
+      // category" (Books/Movies/TV Shows/Console Games); else the folder's own id, which never
+      // matches a real CURATED_ITEMS bucket and so naturally (and correctly) resolves to an
+      // empty list — Videos/Podcasts/Webseries/Tutorials/Board Games/Mobile Games have no
+      // curated-specific data at all, and showing a sibling folder's content under their name
+      // would be misleading. Keeping the "genre:" prefix either way is what stays inside Top
+      // 100/Fantasy/etc. instead of bouncing back to "My SaveCraft" (the original Authors bug).
+      const curatedTarget = FOLDER_ID_TO_CURATED_CATEGORY[folder.id]
+        || (FOLDER_SHOWS_FULL_CURATED_CATEGORY.has(folder.id) ? cat : folder.id);
+      const fCount = isCuratedGenre
+        ? (CURATED_ITEMS[curatedGenreBase]?.[curatedTarget]?.length ?? 0)
+        : state.items.filter(i => isPrimaryFolder ? matchesPrimaryOrUnfoldered(i, cat) : i.folderId === folder.id).length;
       const fCountLabel = fCount > 0 ? `<span class="sidebar-count">${fCount}</span>` : '';
       // Official/default folders (seeded in storage.js's `defaults` array, always id-prefixed
       // "default-") can't be deleted from the sidebar — only user-created ones (Date.now() ids) can.
       const isOfficialFolder = folder.id.startsWith('default-');
       const deleteBtn = isOfficialFolder ? '' : `<button class="sidebar-delete-folder" data-folder-id="${folder.id}" title="Delete folder">×</button>`;
+      // Several sibling folders can share the exact same curatedTarget (e.g. none currently do
+      // after the empty-fallback above, but kept for safety/future folders) — state.view alone
+      // can't always tell which specific folder was clicked, so state.activeCuratedFolderId
+      // (set on click) disambiguates which single row shows as active.
+      const isActive = isCuratedGenre
+        ? state.view === `genre:${curatedGenreBase}:${curatedTarget}` && state.activeCuratedFolderId === folder.id
+        : state.view === folder.id;
       return `
-        <div class="sidebar-item sidebar-subfolder ${state.view === folder.id ? 'active' : ''}"
-             data-view="${folder.id}">
+        <div class="sidebar-item sidebar-subfolder ${isActive ? 'active' : ''}"
+             data-view="${folder.id}" data-curated-target="${escapeHtml(curatedTarget)}">
           ${folderIconHtml(folder.id, 16)} ${escapeHtml(folder.name)}
           ${fCountLabel}
           ${deleteBtn}
@@ -385,6 +510,7 @@ export function renderSidebar() {
       } else {
         state.view = cat;
       }
+      state.activeCuratedFolderId = null;
       renderSidebar();
       renderGrid();
     });
@@ -406,8 +532,17 @@ export function renderSidebar() {
     el.addEventListener('click', () => {
       if (isCuratedGenre && el.dataset.permanent) {
         state.view = `genre:${curatedGenreBase}:${el.dataset.view}`;
+        state.activeCuratedFolderId = null;
+      } else if (isCuratedGenre && el.dataset.curatedTarget) {
+        // Stays inside the genre by routing to this folder's curatedTarget (a dedicated creator
+        // bucket, the full parent category, or — for folders with no curated data at all — the
+        // folder's own id, which naturally resolves to an empty list). See the curatedTarget
+        // computation in the row-render above for the full explanation.
+        state.view = `genre:${curatedGenreBase}:${el.dataset.curatedTarget}`;
+        state.activeCuratedFolderId = el.dataset.view;
       } else {
         state.view = el.dataset.view;
+        state.activeCuratedFolderId = null;
       }
       persistViewState();
       renderSidebar();
@@ -562,7 +697,16 @@ export function renderGrid() {
     gridTitle.innerHTML = `${CAT_EMOJI[state.view]} ${CAT_LABEL[state.view] || state.view}`;
   } else {
     const folder = state.folders.find(f => f.id === state.view);
-    gridTitle.textContent = folder ? folder.name : 'Folder';
+    // News outlet folders double as "publication profile pages" — a richer header (domain +
+    // paywalled badge, both already on the folder from the News-category work) instead of just
+    // the bare folder name every other folder gets.
+    if (folder && folder.parentCategory === 'News') {
+      const domainHtml = folder.domain ? `<span class="grid-title-domain">${escapeHtml(folder.domain)}</span>` : '';
+      const paywalledHtml = folder.paywalled ? `<span class="grid-title-paywalled-badge">Paywalled</span>` : '';
+      gridTitle.innerHTML = `${escapeHtml(folder.name)} ${domainHtml}${paywalledHtml}`;
+    } else {
+      gridTitle.textContent = folder ? folder.name : 'Folder';
+    }
   }
 
   const items = getFilteredSortedItems();
@@ -606,6 +750,7 @@ export function renderGrid() {
   });
 
   wireCardAuthorLinks(container);
+  wirePublicationLinks(container);
 
   container.querySelectorAll('.btn-edit').forEach(btn => {
     btn.addEventListener('click', e => {
@@ -792,6 +937,21 @@ export function renderAuthorPage() {
   persistViewState();
 }
 
+// News cards' publication byline is folder-based, not author-based, so it doesn't go through
+// navigateToAuthor/wireCardAuthorLinks — it just navigates straight to the outlet's existing
+// folder view (same routing a sidebar folder click already uses).
+function wirePublicationLinks(container) {
+  container.querySelectorAll('.card-publication-link').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      state.view = btn.dataset.folderId;
+      persistViewState();
+      renderSidebar();
+      renderGrid();
+    });
+  });
+}
+
 export function renderCard(item) {
   const domain = getDomain(item.url);
   const letter = domain[0]?.toUpperCase() || '?';
@@ -812,16 +972,32 @@ export function renderCard(item) {
       ${imageSection}
       <div class="card-body">
         ${(() => {
-          const aName = item.author || (item.curated && item.category === 'Music Album' ? item.notes : null);
-          const aCat  = item.author ? item.category : 'Musician';
+          const aName = item.author || (item.curated && CURATED_NOTES_CATEGORIES.includes(item.category) ? item.notes : null);
+          // When the name comes from the curated `.notes` fallback (no item.author), the profile
+          // page to link to is 'Musician' for a Music Album (the one category whose
+          // curated-notes creator isn't its own category) and item.category for everything else.
+          const aCat = item.author ? item.category : (item.category === 'Music Album' ? 'Musician' : item.category);
           if (!aName) return '';
+          // A co-directed movie shows the lead director's name plus "…" to indicate collaborators
+          // — display-only, never part of the name used to link to/match that director's page.
+          const aDisplay = escapeHtml(aName) + (item.authorHasMore ? ' …' : '');
           if ((item.category === 'Music Album' && isMusicAlbumsSectionView()) || isOwnAuthorPageView(aName)) {
-            return `<div class="card-author-name">${escapeHtml(aName)}</div>`;
+            return `<div class="card-author-name">${aDisplay}</div>`;
           }
-          return `<button class="card-author-link" data-author="${escapeHtml(aName)}" data-category="${escapeHtml(aCat)}">${escapeHtml(aName)}</button>`;
+          return `<button class="card-author-link" data-author="${escapeHtml(aName)}" data-category="${escapeHtml(aCat)}">${aDisplay}</button>`;
         })()}
-        ${item.category === 'Musician' && !isOwnAuthorPageView(item.title)
-          ? `<button class="card-author-link card-title" data-author="${escapeHtml(item.title)}" data-category="Musician">${escapeHtml(item.title || '')}</button>`
+        ${(() => {
+          // News items don't have item.author — they're attributed via item.folderId pointing
+          // at a curated outlet folder instead (see the folder-header treatment in renderGrid()).
+          if (item.category !== 'News' || !item.folderId) return '';
+          const outletFolder = state.folders.find(f => f.id === item.folderId);
+          if (!outletFolder) return '';
+          return state.view === item.folderId
+            ? `<div class="card-author-name">${escapeHtml(outletFolder.name)}</div>`
+            : `<button class="card-author-link card-publication-link" data-folder-id="${escapeHtml(item.folderId)}">${escapeHtml(outletFolder.name)}</button>`;
+        })()}
+        ${CREATOR_CARD_CATEGORY[item.category] && !isOwnAuthorPageView(item.title)
+          ? `<button class="card-author-link card-title" data-author="${escapeHtml(item.title)}" data-category="${CREATOR_CARD_CATEGORY[item.category]}">${escapeHtml(item.title || '')}</button>`
           : `<div class="card-title${item.category === 'Music Album' ? ' card-title--album' : ''}">${escapeHtml(item.title || '')}</div>`
         }
         ${item.category === 'Music Album' && item.year ? `<div class="card-album-year">${escapeHtml(item.year)}</div>` : ''}

@@ -11,7 +11,7 @@ import { persistItem, persistCuratedOverrides } from './storage.js';
 import { renderSidebar, renderGrid, promptAddFolder } from './render.js';
 import {
   searchMusicians, searchMusicAlbums, searchShows, searchBooks, searchGames, searchMoviesWikipedia,
-  ensureArtistWikipediaInfo, ensureItemWikipediaInfo, fetchAlbumsFromItunes,
+  ensureArtistWikipediaInfo, ensureItemWikipediaInfo, ensureItemCreator, fetchAlbumsFromItunes,
 } from './api.js';
 import { autoSaveMusician } from './authors.js';
 
@@ -43,15 +43,19 @@ const STEP1_PLACEHOLDER = {
   Movie: 'Search for a movie…',
 };
 
-// Only Music Album (artist) and Book (author) have a meaningful separate "Author" — every other
-// category collapses the Title/Author row to a single field so it doesn't sit there empty.
-const CATEGORIES_WITH_AUTHOR = new Set(['Music Album', 'Book']);
+// Music Album (artist), Book (author), Movie (director), Show (creator), and Game (studio) each
+// have a meaningful separate "Author"-equivalent field — every other category collapses the
+// Title/Author row to a single field so it doesn't sit there empty.
+const CATEGORIES_WITH_AUTHOR = new Set(['Music Album', 'Book', 'Movie', 'Show', 'Game']);
 const SINGLE_FIELD_PLACEHOLDER = { Musician: 'Name' }; // everything else defaults to "Title"
+const AUTHOR_FIELD_LABEL = { 'Music Album': 'Artist', Book: 'Author', Movie: 'Director', Show: 'Creator', Game: 'Studio' };
 
 // Purely visual (hide/show + placeholder) — deliberately never clears #input-author's value,
 // even when hiding it, so opening Edit on an older item that happens to have author data set
-// doesn't silently blank it on save. For the Add wizard this is a non-issue anyway: none of the
-// author-less categories' search results ever populate `author` in the first place.
+// doesn't silently blank it on save. For the Add wizard this is mostly a non-issue: Movie/Show/
+// Game's search results don't populate `author` (no free API returns director/creator/studio in
+// their search response), but the review screen's background enrichment fills it in a moment
+// later — see kickOffStep2Enrichment().
 export function updateTitleAuthorLayout(category) {
   const row = document.querySelector('.title-author-row');
   const showsAuthor = CATEGORIES_WITH_AUTHOR.has(category);
@@ -59,6 +63,7 @@ export function updateTitleAuthorLayout(category) {
   document.getElementById('input-title').placeholder = showsAuthor
     ? 'Title'
     : (SINGLE_FIELD_PLACEHOLDER[category] || 'Title');
+  document.getElementById('input-author').placeholder = AUTHOR_FIELD_LABEL[category] || 'Author';
 }
 
 export function updatePlatformSummary() {
@@ -430,6 +435,18 @@ function kickOffStep2Enrichment(token) {
   }
   // Music Album already has full title/author/art/url straight from iTunes; Visual Art has no
   // enrichment source at all — neither needs a background lookup here.
+
+  // Director/Creator/Studio auto-fill — separate from (and runs alongside) the bio/image
+  // enrichment above, since Movie/Show/Game need both. Book/Music Album already get `author`
+  // straight from their search results, so they don't need this.
+  if (category === 'Movie' || category === 'Show' || category === 'Game') {
+    const url = document.getElementById('input-url').value.trim();
+    ensureItemCreator(title, category, { url }).then(creator => {
+      if (token !== _wizardToken) return;
+      const authorEl = document.getElementById('input-author');
+      if (creator && !authorEl.value.trim()) authorEl.value = creator;
+    });
+  }
 }
 
 function applyStep2Enrichment(bio, photoUrl) {

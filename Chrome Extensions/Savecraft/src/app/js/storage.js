@@ -6,14 +6,23 @@ import { state, setCuratedItems } from './state.js';
 // Circular import with auth.js (auth.js imports runInitialSync from here) — safe under this
 // codebase's established convention, see auth.js's own note on the same import.
 import { getCurrentUser, getValidIdToken } from './auth.js';
+import {
+  SPLIT_TITLE_CREATOR_CATEGORIES, splitCuratedTitleCreator, getStaticCuratedCreator,
+} from './curatedCreatorLookup.js';
 
 const _FIREBASE_PROJECT = 'votecraft-789';
 const _FIREBASE_API_KEY = 'AIzaSyArJ6pkXUDbZf4jcxRita0qcdr-hT46kI8';
-const _CURATED_CACHE_VERSION = 5;
+const _CURATED_CACHE_VERSION = 7;
 
 const _CAT_NORMALIZE = {
   'Movies': 'Movie', 'Books': 'Book', 'Games': 'Game',
-  'Shows': 'Show', 'Musicians': 'Musician', 'Music': 'Music Album', 'Music Albums': 'Music Album',
+  'Shows': 'Show', 'Musicians': 'Musician', 'Music Albums': 'Music Album',
+  // NOTE: raw category "Music" (no "Album") is deliberately NOT mapped to 'Music Album' here.
+  // Live Firestore data confirmed genre="Top 100" + category="Music" is a legacy duplicate of
+  // the Musicians list (101 docs, titles are artist names like "The Beatles", not albums) that
+  // was previously leaking into the Music Album bucket via this exact mapping, showing musician
+  // cards under "Music Albums". Left unmapped, these docs land in an inert "Music" bucket that
+  // nothing in the app reads, instead of being force-merged somewhere they don't belong.
 };
 
 // ===== SYNCED PERSONAL LIBRARY (Firestore dual-write, only active when signed in) =====
@@ -317,6 +326,27 @@ export async function loadAll() {
           item.notes = null;
           authorBackfilled.push(item);
         }
+        // Same idea for Book/Movie/Show/Game items saved before the creator-name resolution
+        // existed (or before it worked correctly) — Book's combined "Title — Author" was never
+        // split into item.author, and Movie/Show/Game's item.author was never filled in from the
+        // static Wikidata/Steam-sourced lookup, so these were stuck showing their raw combined
+        // title (or no byline at all) on cards/Kanban forever, since ensureLiveItem() only runs
+        // once, at first-save time.
+        if (!item.curated && !item.author && SPLIT_TITLE_CREATOR_CATEGORIES.includes(item.category)) {
+          const split = splitCuratedTitleCreator(item.title);
+          if (split.author) {
+            item.title = split.title;
+            item.author = split.author;
+            authorBackfilled.push(item);
+          } else {
+            const staticCreator = getStaticCuratedCreator(item.category, item.title);
+            if (staticCreator) {
+              item.author = staticCreator.name;
+              item.authorHasMore = staticCreator.hasMore;
+              authorBackfilled.push(item);
+            }
+          }
+        }
       });
       if (authorBackfilled.length) {
         const toBackfill = {};
@@ -332,9 +362,11 @@ export async function loadAll() {
         { id: 'default-weblinks-articles', name: 'Articles',    parentCategory: 'Web Links' },
         { id: 'default-weblinks-blogs',    name: 'Blogs',       parentCategory: 'Web Links' },
         { id: 'default-movies-videos',   name: 'Videos',        parentCategory: 'Movie' },
+        { id: 'default-movies-directors', name: 'Directors',    parentCategory: 'Movie' },
         { id: 'default-shows-podcasts',  name: 'Podcasts',      parentCategory: 'Show' },
         { id: 'default-shows-webseries', name: 'Webseries',     parentCategory: 'Show' },
         { id: 'default-shows-tutorials', name: 'Tutorials',     parentCategory: 'Show' },
+        { id: 'default-shows-creators',  name: 'Creators',      parentCategory: 'Show' },
         { id: 'default-movies-movies',       name: 'Movies',    parentCategory: 'Movie' },
         { id: 'default-shows-shows',         name: 'TV Shows',  parentCategory: 'Show' },
         { id: 'default-musicians-musicians', name: 'Musicians', parentCategory: 'Musician' },
@@ -345,6 +377,10 @@ export async function loadAll() {
         { id: 'default-art-comics',    name: 'Comics',    parentCategory: 'Visual Art' },
         { id: 'default-art-painting',  name: 'Painting',  parentCategory: 'Visual Art' },
         { id: 'default-art-sculpture', name: 'Sculpture', parentCategory: 'Visual Art' },
+        { id: 'default-games-board',      name: 'Board Games',    parentCategory: 'Game' },
+        { id: 'default-games-console',    name: 'Console Games',  parentCategory: 'Game' },
+        { id: 'default-games-mobile',     name: 'Mobile Games',   parentCategory: 'Game' },
+        { id: 'default-games-companies',  name: 'Game Companies', parentCategory: 'Game' },
         // Curated News outlet folders removed for now — coming back to this (see legacyIds above).
       ];
       const toSave = {};
@@ -421,6 +457,10 @@ export function persistArtistBioCache() {
 
 export function persistItemWikiCache() {
   chrome.storage.local.set({ savecraft_item_wiki_cache: state.itemWikiCache });
+}
+
+export function persistCreatorCache() {
+  chrome.storage.local.set({ savecraft_creator_cache: state.creatorCache });
 }
 
 export function persistViewState() {

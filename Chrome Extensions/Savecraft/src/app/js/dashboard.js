@@ -439,7 +439,7 @@ function buildHeroCollage() {
       </div>
       <div class="dash-hero-content">
         <h1 class="dash-hero-greeting">${escapeHtml(greetingWithName)}</h1>
-        <p class="dash-hero-sub">Here's what's waiting in your library.</p>
+        <p class="dash-hero-sub">Here's what's waiting in your SaveCraft library</p>
       </div>
     </section>`;
 }

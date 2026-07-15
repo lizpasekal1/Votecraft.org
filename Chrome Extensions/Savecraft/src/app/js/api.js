@@ -5,7 +5,7 @@
 import { state } from './state.js';
 import {
   persistArtistBioCache, persistArtistWebsiteCache, persistItemWikiCache,
-  persistLastfmCache, persistSteamCache,
+  persistLastfmCache, persistSteamCache, persistCreatorCache,
 } from './storage.js';
 
 // Shared check for "does this Wikidata/Wikipedia result actually describe a musician/band" —
@@ -369,6 +369,86 @@ export async function ensureArtistWebsite(artistName) {
   state.artistWebsiteCache[key] = { url, fetchedAt: Date.now() };
   persistArtistWebsiteCache();
   return url;
+}
+
+// ===== Creator auto-fill (Movie director, Show creator, Game studio) =====
+// Movie/Show use the same Wikidata two-hop pattern as fetchArtistWebsiteFromWikidata above, but
+// the property value itself is a Wikidata entity reference (a QID), not a plain string like
+// P856's URL — so a second lookup is needed to resolve that QID to a readable name. Game instead
+// pulls straight from Steam's appdetails endpoint, which returns the studio name directly.
+const CREATOR_CACHE_MISS_TTL = 90 * 24 * 60 * 60 * 1000; // 90 days
+
+async function fetchWikidataEntityLabelViaProperty(title, property, descriptionRegex) {
+  const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(title)}&language=en&type=item&format=json&limit=5`;
+  const searchResp = await fetch(searchUrl);
+  if (!searchResp.ok) return null;
+  const searchData = await searchResp.json();
+  const results = searchData.search || [];
+  if (!results.length) return null;
+
+  const candidate = results.find(r => descriptionRegex.test(r.description || '')) || results[0];
+
+  const entityUrl = `https://www.wikidata.org/wiki/Special:EntityData/${candidate.id}.json`;
+  const entityResp = await fetch(entityUrl);
+  if (!entityResp.ok) return null;
+  const entityData = await entityResp.json();
+  const claims = entityData.entities?.[candidate.id]?.claims?.[property] || [];
+  if (!claims.length) return null;
+  const preferred = claims.find(c => c.rank === 'preferred') || claims.find(c => c.rank !== 'deprecated');
+  const targetId = preferred?.mainsnak?.datavalue?.value?.id;
+  if (!targetId) return null;
+
+  const labelUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${targetId}&props=labels&languages=en&format=json`;
+  const labelResp = await fetch(labelUrl);
+  if (!labelResp.ok) return null;
+  const labelData = await labelResp.json();
+  return labelData.entities?.[targetId]?.labels?.en?.value || null;
+}
+
+// P57 = director. A film's director claim is a single (or a couple, for co-directors) entity —
+// unlike a TV series (see below), this reliably names "the director."
+async function fetchMovieDirectorFromWikidata(title) {
+  return fetchWikidataEntityLabelViaProperty(title, 'P57', CATEGORY_WIKI_KEYWORDS.Movie);
+}
+
+// P170 = creator, not P57 (director) — verified live that a TV series' P57 lists dozens of
+// per-episode directors, not a single showrunner, while P170 correctly names just the creator.
+async function fetchShowCreatorFromWikidata(title) {
+  return fetchWikidataEntityLabelViaProperty(title, 'P170', CATEGORY_WIKI_KEYWORDS.Show);
+}
+
+// Steam's appdetails endpoint (distinct from searchGames()'s storesearch endpoint) returns the
+// studio directly — no entity-resolution hop needed. The app id isn't its own field on the
+// normalized search result, so it's pulled back out of the URL searchGames() already built.
+async function fetchGameStudioFromSteam(url) {
+  const appId = url?.match(/\/app\/(\d+)/)?.[1];
+  if (!appId) return null;
+  const resp = await fetch(`https://store.steampowered.com/api/appdetails?appids=${appId}`);
+  if (!resp.ok) return null;
+  const data = await resp.json();
+  const developers = data?.[appId]?.data?.developers;
+  return developers?.length ? developers.join(', ') : null;
+}
+
+// Auto-fills the Director/Creator/Studio field on the review screen for Movie/Show/Game — mirrors
+// every other ensure*() cache shape in this file. Cached indefinitely on success; cached "not
+// found" results expire after CREATOR_CACHE_MISS_TTL.
+export async function ensureItemCreator(title, category, { url } = {}) {
+  if (!title) return null;
+  const key = `${category}:${title}`.trim().toLowerCase();
+  const cached = state.creatorCache[key];
+  if (cached && (cached.creator || (Date.now() - cached.fetchedAt < CREATOR_CACHE_MISS_TTL))) {
+    return cached.creator;
+  }
+  let creator = null;
+  try {
+    if (category === 'Movie') creator = await fetchMovieDirectorFromWikidata(title);
+    else if (category === 'Show') creator = await fetchShowCreatorFromWikidata(title);
+    else if (category === 'Game') creator = await fetchGameStudioFromSteam(url);
+  } catch { /* no creator found */ }
+  state.creatorCache[key] = { creator, fetchedAt: Date.now() };
+  persistCreatorCache();
+  return creator;
 }
 
 // Set this to a free Last.fm API key (https://www.last.fm/api/account/create) to enable the

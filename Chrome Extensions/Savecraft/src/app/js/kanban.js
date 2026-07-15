@@ -42,6 +42,22 @@ export function KANBAN_DEMO() {
   };
 }
 
+// Any item with an author (Music Album, Book, etc.) gets the same artist/title text hierarchy
+// as the main grid's cards (.card-author-name/.card-title--album in cards.css) — small gray
+// byline above a bold title, instead of the plain title-then-author stacking every other card
+// uses. Release year (Music Album's own field) shows below the title when present.
+function renderKcardInfo(item) {
+  if (item.author) {
+    const authorDisplay = escapeHtml(item.author) + (item.authorHasMore ? ' …' : '');
+    return `
+      <div class="kcard-artist">${authorDisplay}</div>
+      <div class="kcard-title kcard-title--byline">${escapeHtml(item.title || '?')}</div>
+      ${item.year ? `<div class="kcard-year">${escapeHtml(item.year)}</div>` : ''}
+    `;
+  }
+  return `<div class="kcard-title">${escapeHtml(item.title || '?')}</div>`;
+}
+
 // `format` is only ever set while a column is expanded (see KANBAN_EXPANDED_FORMATS) — with no
 // format, this renders the exact same card the normal 4-column board has always shown.
 function renderKanbanCard(item, format = null) {
@@ -62,8 +78,7 @@ function renderKanbanCard(item, format = null) {
         <div class="kcard-content">
           <div class="kcard-info">
             ${demoTag}
-            <div class="kcard-title">${escapeHtml(item.title || '?')}</div>
-            ${item.author ? `<div class="kcard-author">${escapeHtml(item.author)}</div>` : ''}
+            ${renderKcardInfo(item)}
           </div>
           ${removeBtn}
         </div>
@@ -96,8 +111,7 @@ function renderKanbanCard(item, format = null) {
       <div class="kcard-content">
         <div class="kcard-info">
           ${demoTag}
-          <div class="kcard-title">${escapeHtml(item.title || '?')}</div>
-          ${item.author ? `<div class="kcard-author">${escapeHtml(item.author)}</div>` : ''}
+          ${renderKcardInfo(item)}
           ${noteHtml}
           ${dateHtml}
         </div>
@@ -230,11 +244,17 @@ export function renderKanbanBoard() {
       case 'oldest': return c.sort((a, b) => a.savedAt - b.savedAt);
       case 'az':     return c.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
       case 'za':     return c.sort((a, b) => (b.title || '').localeCompare(a.title || ''));
+      // Dragging a card up/down within a column (see the per-card dragover/drop wiring below)
+      // assigns every card in that column a fresh sequential manualOrder and switches the
+      // column to this mode — falls back to savedAt for any card that's never been touched by
+      // a drag yet (manualOrder still undefined), so newly-queued cards land in a sane spot
+      // instead of jumping to the very front.
+      case 'manual': return c.sort((a, b) => (a.manualOrder ?? Infinity) - (b.manualOrder ?? Infinity) || b.savedAt - a.savedAt);
       default: return c;
     }
   }
 
-  const SORT_LABELS = { newest: 'Newest first', oldest: 'Oldest first', az: 'A → Z', za: 'Z → A' };
+  const SORT_LABELS = { newest: 'Newest first', oldest: 'Oldest first', az: 'A → Z', za: 'Z → A', manual: 'Custom order' };
 
   // Shared by both layouts below — just the label + sort control row.
   function renderColumnTitle(col, currentSort) {
@@ -394,15 +414,48 @@ export function renderKanbanBoard() {
   // in the DOM at all, so cards render with draggable="false" and none of this gets wired up.
   if (!state.kanbanExpandedCol) {
     let dragId = null;
+    // Which card (and above/below it) the dragged card would land on if dropped right now —
+    // tracked via per-card dragover below, read at drop time to place the card exactly where
+    // the user is hovering rather than always appending to the end of the column.
+    let dropTargetId = null;
+    let dropPosition = null; // 'before' | 'after'
+
+    function clearDropIndicators() {
+      board.querySelectorAll('.kcard--drop-before, .kcard--drop-after').forEach(c => c.classList.remove('kcard--drop-before', 'kcard--drop-after'));
+    }
+
+    // The column's cards in their current on-screen order (respects whatever sort mode is
+    // active), so dropping without a specific target card still inserts at a sensible spot.
+    function currentColumnOrder(colKey) {
+      return sortCards(allItems.filter(i => i.queueStatus === colKey && i.id !== '__demo__'), colKey);
+    }
+
     board.querySelectorAll('.kcard').forEach(card => {
       card.addEventListener('dragstart', e => {
         dragId = card.dataset.id;
+        dropTargetId = null;
+        dropPosition = null;
         card.classList.add('kcard--dragging');
         e.dataTransfer.effectAllowed = 'move';
       });
       card.addEventListener('dragend', () => {
         card.classList.remove('kcard--dragging');
         board.querySelectorAll('.kanban-column').forEach(col => col.classList.remove('kanban-column--over'));
+        clearDropIndicators();
+        dropTargetId = null;
+        dropPosition = null;
+      });
+      // Lets a card be dropped above/below any other card, not just anywhere in the column —
+      // this is what actually lets the user move a card up or down within the same column.
+      card.addEventListener('dragover', e => {
+        e.preventDefault();
+        if (!dragId || card.dataset.id === dragId) return;
+        const rect = card.getBoundingClientRect();
+        const before = (e.clientY - rect.top) < rect.height / 2;
+        dropTargetId = card.dataset.id;
+        dropPosition = before ? 'before' : 'after';
+        clearDropIndicators();
+        card.classList.add(before ? 'kcard--drop-before' : 'kcard--drop-after');
       });
     });
 
@@ -424,19 +477,37 @@ export function renderKanbanBoard() {
       col.addEventListener('drop', async e => {
         e.preventDefault();
         col.closest('.kanban-column').classList.remove('kanban-column--over');
+        clearDropIndicators();
         if (!dragId) return;
         const newStatus = col.dataset.col;
-        if (dragId === '__demo__') { _demoStatus = newStatus; dragId = null; renderKanbanBoard(); }
-        else { await updateQueueStatus(dragId, newStatus); dragId = null; }
+        if (dragId === '__demo__') { _demoStatus = newStatus; dragId = null; dropTargetId = null; dropPosition = null; renderKanbanBoard(); return; }
+
+        const draggedItem = state.items.find(i => i.id === dragId);
+        if (!draggedItem) { dragId = null; return; }
+
+        // Re-insert the dragged card into the target column's order at the exact spot it was
+        // dropped, then give every card in that column a fresh sequential manualOrder and switch
+        // the column to "Custom order" — so the manual position actually sticks instead of being
+        // immediately overridden by whatever sort mode (newest/oldest/A→Z) was active before.
+        const targetOrder = currentColumnOrder(newStatus).filter(i => i.id !== dragId);
+        let insertAt = targetOrder.length;
+        if (dropTargetId && dropTargetId !== dragId) {
+          const idx = targetOrder.findIndex(i => i.id === dropTargetId);
+          if (idx !== -1) insertAt = dropPosition === 'before' ? idx : idx + 1;
+        }
+        targetOrder.splice(insertAt, 0, draggedItem);
+
+        draggedItem.queueStatus = newStatus;
+        targetOrder.forEach((item, i) => { item.manualOrder = i; });
+        state.kanbanSort[newStatus] = 'manual';
+        chrome.storage.sync.set({ savecraft_kanban_sort: state.kanbanSort });
+        await Promise.all(targetOrder.map(item => persistItem(item)));
+
+        dragId = null;
+        dropTargetId = null;
+        dropPosition = null;
+        renderKanbanBoard();
       });
     });
   }
-}
-
-export async function updateQueueStatus(id, newStatus) {
-  const item = state.items.find(i => i.id === id);
-  if (!item) return;
-  item.queueStatus = newStatus;
-  await persistItem(item);
-  renderKanbanBoard();
 }

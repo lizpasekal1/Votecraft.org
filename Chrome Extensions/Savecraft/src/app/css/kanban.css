@@ -5,7 +5,12 @@
   overflow-x: auto;
   align-items: stretch;
   padding: 4px 2px 16px;
-  height: calc(100vh - 180px);
+  /* Fills whatever height .kanban-wrap actually has left after its own contents (e.g. a
+     tutorial banner) — see .grid-area:has(.kanban-wrap) below for why this reaches the true
+     bottom of the window instead of the old calc(100vh - 180px) guess, which fell short and
+     left the column divider lines/scroll areas stopping short of the window's bottom edge. */
+  flex: 1;
+  min-height: 0;
 }
 
 .kanban-column {
@@ -17,7 +22,6 @@
   padding: 12px;
   border-right: 1px solid var(--border);
   overflow: hidden;
-  border-radius: 8px;
   transition: background 0.15s;
 }
 
@@ -268,6 +272,27 @@
   text-overflow: ellipsis;
 }
 
+/* Byline layout (any item with an author — Music Album, Book, etc.), matching the main grid's
+   album cards: .card-author-name/.card-title--album/.card-album-year in cards.css. */
+.kcard-artist {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kcard-title--byline {
+  font-size: 13px;
+}
+
+.kcard-year {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
 .kcard-badge {
   font-size: 11px;
   font-weight: 600;
@@ -380,12 +405,29 @@
   outline: 2px dashed var(--primary);
 }
 
+/* Shows exactly where a dragged card will land within a column, above/below whichever card
+   the cursor is currently over — see the per-card dragover tracking in kanban.js. */
+.kcard--drop-before { box-shadow: 0 -3px 0 0 var(--primary); }
+.kcard--drop-after  { box-shadow: 0 3px 0 0 var(--primary); }
+
 /* Kanban wrap — outer column container so tutorial sits above board row */
 .kanban-wrap {
   display: flex;
   flex-direction: column;
   gap: 0;
-  min-height: calc(100vh - 180px);
+  flex: 1;
+  min-height: 0;
+}
+
+/* The Kanban board is designed to fill exactly the available height below the toolbar row
+   (any tutorial banner takes its natural height, .kanban-board flexes to fill the rest) —
+   it should never make the whole page scroll, only the individual columns inside it, unlike
+   every other view (which still needs normal overflow-y:auto for long lists). Scoped to just
+   this view via :has(), mirroring .grid-area:has(.dashboard-wrap) in dashboard.css. */
+.grid-area:has(.kanban-wrap) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* Board info icon + popup */
