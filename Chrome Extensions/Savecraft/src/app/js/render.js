@@ -1102,6 +1102,13 @@ let _bareListCategoryFilter = null;
 // A palette rotated across avatar circles, standing in for a real org logo/photo.
 const DIRECTORY_AVATAR_COLORS = ['#5B5BEF', '#E0507A', '#2A9D8F', '#E76F51', '#8E44AD', '#F4A340'];
 
+// An org's optional imageUrl (CURATED_DIRECTORY_CONTENT) can be either a real external URL (a
+// logo hosted elsewhere) or a path local to this extension's own images/ folder — only the
+// latter needs chrome.runtime.getURL(), and calling it on an already-absolute URL would break it.
+function resolveOrgImageUrl(imageUrl) {
+  return /^https?:\/\//.test(imageUrl) ? imageUrl : chrome.runtime.getURL(imageUrl);
+}
+
 // The top-level Curated SaveCraft landing — a bare-bones, ActBlue-style flat list of the same
 // nonprofit-sponsored orgs as CURATED_DIRECTORY_CONTENT (state.js), with a link through to the
 // fuller "Curated-full-list" hero+carousel page (renderCuratedDirectory() below). Still fully
@@ -1123,7 +1130,7 @@ function renderCuratedBareList(container) {
   const rowsHtml = visibleOrgs.map((org, i) => {
     const color = DIRECTORY_AVATAR_COLORS[i % DIRECTORY_AVATAR_COLORS.length];
     const avatarContent = org.imageUrl
-      ? `<img src="${escapeHtml(chrome.runtime.getURL(org.imageUrl))}" alt="">`
+      ? `<img src="${escapeHtml(resolveOrgImageUrl(org.imageUrl))}" alt="">`
       : org.icon;
     return `
       <div class="bare-list-row"${org.linkTo ? ` data-link-to="${escapeHtml(org.linkTo)}"` : ''}>
@@ -1211,7 +1218,7 @@ function renderCuratedDirectory(container) {
     const tripled = [...orgs, ...orgs, ...orgs];
     const cardsHtml = tripled.map(org => {
       const artContent = org.imageUrl
-        ? `<img class="directory-org-logo" src="${escapeHtml(chrome.runtime.getURL(org.imageUrl))}" alt="">`
+        ? `<img class="directory-org-logo" src="${escapeHtml(resolveOrgImageUrl(org.imageUrl))}" alt="">`
         : `<span class="directory-org-icon">${org.icon}</span>`;
       return `
       <div class="directory-org-card">

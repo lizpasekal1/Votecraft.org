@@ -62,7 +62,7 @@ export const CURATED_DIRECTORY_CONTENT = {
       label: 'Voting & Democracy',
       orgs: [
         { name: 'Votecraft List', tagline: 'The essential picks behind every ballot conversation.', icon: '🗳️', imageUrl: 'images/logos/votecraft_icon_white.png', linkTo: 'genre:Top 100' },
-        { name: 'FairVote List', tagline: 'Ranked-choice voting, explained through story.', icon: '⚖️' },
+        { name: 'FairVote List', tagline: 'Ranked-choice voting, explained through story.', icon: '⚖️', imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/FairVote_logo_2022.svg/1280px-FairVote_logo_2022.svg.png' },
         { name: 'Ballot Access Alliance', tagline: 'Expanding who gets to vote, and how easily.', icon: '📋' },
         { name: 'The Turnout Project', tagline: 'Culture picks that get first-time voters to the polls.', icon: '📣' },
         { name: 'Civic Compass', tagline: 'Nonpartisan civic literacy, one recommendation at a time.', icon: '🧭' },
