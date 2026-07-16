@@ -111,13 +111,21 @@
 .dash-card-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
 
 .dash-card-header-btn {
-  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 148px;
+  height: 30px;
+  padding: 0;
+  box-sizing: border-box;
   border-radius: 999px;
   border: none;
   background: var(--primary);
   color: #fff;
   font-size: 12px;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   cursor: pointer;
   transition: background 0.12s;
 }
@@ -247,9 +255,14 @@
    structure/positioning but recolored to the SaveCraft purple, scoped to this class only so the
    real board's filter button (surface-colored) elsewhere is unaffected. */
 .dash-fav-category-btn {
+  width: 148px;
+  height: 30px;
+  padding: 0 14px;
+  box-sizing: border-box;
   background: var(--primary);
   border-color: var(--primary);
   color: #fff;
+  text-transform: uppercase;
 }
 .dash-fav-category-btn svg { opacity: 0.85; fill: #fff; }
 .dash-fav-category-btn:hover {
