@@ -1105,7 +1105,7 @@ const DIRECTORY_AVATAR_COLORS = ['#5B5BEF', '#E0507A', '#2A9D8F', '#E76F51', '#8
 // An org's optional imageUrl (CURATED_DIRECTORY_CONTENT) can be either a real external URL (a
 // logo hosted elsewhere) or a path local to this extension's own images/ folder — only the
 // latter needs chrome.runtime.getURL(), and calling it on an already-absolute URL would break it.
-function resolveOrgImageUrl(imageUrl) {
+export function resolveOrgImageUrl(imageUrl) {
   return /^https?:\/\//.test(imageUrl) ? imageUrl : chrome.runtime.getURL(imageUrl);
 }
 

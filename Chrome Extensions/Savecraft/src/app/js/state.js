@@ -63,6 +63,7 @@ export const CURATED_DIRECTORY_CONTENT = {
       orgs: [
         { name: 'Votecraft List', tagline: 'The essential picks behind every ballot conversation.', icon: '🗳️', imageUrl: 'images/logos/votecraft_icon_white.png', linkTo: 'genre:Top 100' },
         { name: 'FairVote List', tagline: 'Ranked-choice voting, explained through story.', icon: '⚖️', imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/FairVote_logo_2022.svg/1280px-FairVote_logo_2022.svg.png' },
+        { name: 'Represent-Us List', tagline: 'Pop culture with a civic pulse.', icon: '🎤', imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLN7Vhtsq9mGoooXabqvbP_J_LqfXhzUfXVqVQUGx01VMKYovqsPFRC43U&s=10' },
         { name: 'Ballot Access Alliance', tagline: 'Expanding who gets to vote, and how easily.', icon: '📋' },
         { name: 'The Turnout Project', tagline: 'Culture picks that get first-time voters to the polls.', icon: '📣' },
         { name: 'Civic Compass', tagline: 'Nonpartisan civic literacy, one recommendation at a time.', icon: '🧭' },
@@ -90,7 +91,6 @@ export const CURATED_DIRECTORY_CONTENT = {
     {
       label: 'Civic Participation',
       orgs: [
-        { name: 'Represent-Us List', tagline: 'Pop culture with a civic pulse.', icon: '🎤', imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLN7Vhtsq9mGoooXabqvbP_J_LqfXhzUfXVqVQUGx01VMKYovqsPFRC43U&s=10' },
         { name: 'Youth Vote Initiative', tagline: 'Culture picks built by and for first-time voters.', icon: '🎓' },
         { name: 'Rank The Vote', tagline: 'Explaining electoral reform through story and song.', icon: '🔢' },
         { name: 'Civic Tech Collective', tagline: 'Technology, transparency, and the future of democracy.', icon: '💻' },
