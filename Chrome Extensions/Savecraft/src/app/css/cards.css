@@ -742,10 +742,13 @@
    to the hero's bottom edge, LinkedIn-cover-photo/avatar style (half on the banner, half on the
    page below it), moved fully onto the banner per direct request. Solid background (not the
    hero's gradient) since the icon asset itself is plain white and needs a flat backdrop to read
-   clearly; the border matches the page background so it still reads as its own distinct mark. */
+   clearly; the border matches the page background so it still reads as its own distinct mark.
+   Horizontally centered in the gap between the hero's left edge and where the text block starts
+   (28px hero padding + 171px hero-text padding-left = 199px gap, minus the badge's own 121px
+   width, halved) rather than flush against the hero's padding. */
 .top100-icon-badge {
   position: absolute;
-  left: 28px;
+  left: 39px;
   top: 50%;
   transform: translateY(-50%);
   width: 121px;
@@ -771,7 +774,7 @@
 }
 
 .top100-wordmark-logo {
-  height: 20px;
+  height: 24px;
   width: auto;
   display: block;
   opacity: 0.92;
@@ -788,7 +791,20 @@
   font-size: 15px;
   line-height: 1.5;
   max-width: 640px;
-  opacity: 0.92;
+  /* rgba (not the `opacity` property) so this dims only the base text color — an element's own
+     `opacity` is a compositing effect that dims its children too, which would keep
+     .top100-hero-desc-link from ever reading as pure white. */
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.top100-hero-desc-link {
+  color: #fff;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.top100-hero-desc-link:hover {
+  opacity: 0.85;
 }
 
 /* Holds the real #sort-select, physically relocated here from its usual .grid-header spot —

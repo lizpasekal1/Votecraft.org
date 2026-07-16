@@ -35,7 +35,7 @@ export const CREATOR_CARD_CATEGORY = {
 export const CURATED_GENRE_LANDING_CONTENT = {
   'Top 100': {
     headline: 'The Votecraft List',
-    description: 'A hand-picked look at the culture shaping how people connect, think, and show up — 100 essential picks each across music, film, books, and games. This is what a SaveCraft sponsored list looks like.',
+    description: 'Explore and bookmark recommendations from major publications and experts! This collection has been assembled from the 100 essential picks across music, film, books, and games. Inquire to create a sponsored SaveCraft curated list!',
     rows: [
       // `titles`, when set, hand-picks exactly these items (by exact title match) in this exact
       // order instead of the default "first 15 curated docs" — see renderCuratedGenreLanding()
