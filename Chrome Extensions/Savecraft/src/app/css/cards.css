@@ -1037,6 +1037,13 @@
   object-fit: contain;
 }
 
+/* Same fix as .bare-list-avatar img[src*="votecraft_icon_white"] above — the VoteCraft app icon
+   PNG has a lot of built-in canvas padding, so it reads smaller than the other logos at 72px. */
+.directory-org-logo[src*="votecraft_icon_white"] {
+  width: 96px;
+  height: 96px;
+}
+
 .directory-org-icon {
   font-size: 48px;
   line-height: 1;
@@ -1265,6 +1272,14 @@
 .bare-list-avatar img {
   width: 55%;
   height: 55%;
+  object-fit: contain;
+}
+
+/* The VoteCraft app icon PNG has a lot of built-in canvas padding around the glyph, so it reads
+   noticeably smaller than the other orgs' logo images at the same box size — sized up to match. */
+.bare-list-avatar img[src*="votecraft_icon_white"] {
+  width: 75%;
+  height: 75%;
   object-fit: contain;
 }
 
