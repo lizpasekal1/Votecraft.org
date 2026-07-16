@@ -1175,16 +1175,18 @@
   flex-direction: column;
 }
 
+/* A solid dark background per row (rather than a plain divider) so .bare-list-org-name can be
+   pure white and stay legible in both light and dark theme. Uses --primary-hover (not --primary)
+   so the solid-purple .bare-list-view-btn below still stands out against the row instead of
+   blending into an identical color. */
 .bare-list-row {
   display: flex;
   align-items: center;
   gap: 20px;
-  padding: 20px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.bare-list-row:first-child {
-  padding-top: 0;
+  padding: 20px 16px;
+  border-radius: 10px;
+  background: var(--primary-hover);
+  margin-bottom: 12px;
 }
 
 .bare-list-avatar {
@@ -1210,7 +1212,7 @@
 .bare-list-org-name {
   font-size: 15px;
   font-weight: 600;
-  color: var(--primary);
+  color: #fff;
 }
 
 .bare-list-tags {
@@ -1222,24 +1224,24 @@
 .bare-list-tag {
   padding: 3px 9px;
   border-radius: 6px;
-  background: var(--text-primary);
-  color: var(--bg);
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
   font-size: 11px;
   font-weight: 500;
 }
 
 .bare-list-tag--muted {
-  background: var(--hover-bg);
-  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
 }
 
 .bare-list-view-btn {
   flex-shrink: 0;
   padding: 8px 18px;
-  border-radius: 8px;
+  border-radius: 999px;
   border: none;
-  background: var(--primary-bg);
-  color: var(--primary);
+  background: var(--primary);
+  color: #fff;
   font-size: 13px;
   font-weight: 600;
   cursor: default;
