@@ -108,9 +108,9 @@ export function renderSharedSavesPage() {
         <h2 class="bare-list-title">Shared Saves</h2>
         <p class="bare-list-desc">Curated lists you follow, and friends you've connected with.</p>
       </div>
-      ${buildNonprofitSliderSection()}
-      <div class="shared-section-divider"></div>
       ${buildFriendsSection()}
+      <div class="shared-section-divider"></div>
+      ${buildNonprofitSliderSection()}
     </div>`;
 
   wireCarousels(container);
