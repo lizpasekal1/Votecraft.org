@@ -1058,6 +1058,7 @@
   display: block; /* overrides .cards-grid's default 2-column grid, which was squeezing this
                       single-child page into just the first column's width — same fix as
                       .top100-landing above. */
+  padding-left: 40px;
   padding-bottom: 24px;
 }
 
@@ -1155,7 +1156,6 @@
   flex: 1;
   min-width: 0;
   max-width: 50%; /* narrowed another 20 points past the earlier 70% */
-  margin-left: 40px; /* extra breathing room from the filter rail, on top of .bare-list-body's gap */
   display: flex;
   flex-direction: column;
 }
