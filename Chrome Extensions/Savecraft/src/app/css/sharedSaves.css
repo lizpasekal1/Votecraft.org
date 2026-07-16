@@ -42,6 +42,13 @@
   justify-content: center;
   color: rgba(255, 255, 255, 0.85);
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.shared-vcard-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .shared-vcard-name {
