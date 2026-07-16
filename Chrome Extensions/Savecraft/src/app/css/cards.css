@@ -732,10 +732,10 @@
 }
 
 /* Keeps the text block clear of .top100-icon-badge horizontally instead of relying on vertical
-   spacing — the badge sits at left:28px, is 101px wide, so text starts 50px past its right edge
-   (28 + 101 + 50 = 179px) rather than sharing the hero's own 28px left padding. */
+   spacing — the badge sits at left:28px, is 121px wide, so text starts 50px past its right edge
+   (28 + 121 + 50 = 199px) rather than sharing the hero's own 28px left padding. */
 .top100-hero-text {
-  padding-left: 151px;
+  padding-left: 171px;
 }
 
 /* A square brand-mark badge, vertically centered on the gradient hero — was previously anchored
@@ -748,8 +748,8 @@
   left: 28px;
   top: 50%;
   transform: translateY(-50%);
-  width: 101px;
-  height: 101px;
+  width: 121px;
+  height: 121px;
   border-radius: 18px;
   background: #4638C2;
   border: 4px solid var(--bg);
@@ -760,8 +760,8 @@
 }
 
 .top100-icon-badge img {
-  width: 55px;
-  height: 55px;
+  width: 66px;
+  height: 66px;
   object-fit: contain;
   display: block;
 }

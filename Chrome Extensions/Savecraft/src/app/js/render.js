@@ -1083,8 +1083,13 @@ function renderCuratedGenreLanding(container, genre, content) {
   }
 
   const allRowItems = []; // flattened, de-tripled — fed to the live-fetch calls below
-  const rowsHtml = content.rows.map(({ category, label }) => {
-    const rawItems = (CURATED_ITEMS[genre]?.[category] || []).filter(i => !state.hiddenCurated.has(i.id)).slice(0, 15);
+  const rowsHtml = content.rows.map(({ category, label, titles }) => {
+    const categoryItems = CURATED_ITEMS[genre]?.[category] || [];
+    // `titles` (see CURATED_GENRE_LANDING_CONTENT in state.js) hand-picks exactly these items, by
+    // exact title match, in this exact order — falls back to the default "first 15" otherwise.
+    const rawItems = titles
+      ? titles.map(t => categoryItems.find(i => i.title === t)).filter(i => i && !state.hiddenCurated.has(i.id))
+      : categoryItems.filter(i => !state.hiddenCurated.has(i.id)).slice(0, 15);
     if (!rawItems.length) return '';
     const rowItems = rawItems.map(i => ({ ...i, category, curated: true, imageUrl: resolveRowItemImage(i, category) }));
     allRowItems.push(...rowItems);

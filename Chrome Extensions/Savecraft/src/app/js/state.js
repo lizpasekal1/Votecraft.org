@@ -37,7 +37,10 @@ export const CURATED_GENRE_LANDING_CONTENT = {
     headline: 'The Votecraft List',
     description: 'A hand-picked look at the culture shaping how people connect, think, and show up — 100 essential picks each across music, film, books, and games. This is what a SaveCraft sponsored list looks like.',
     rows: [
-      { category: 'Musician', label: 'Top Musicians' },
+      // `titles`, when set, hand-picks exactly these items (by exact title match) in this exact
+      // order instead of the default "first 15 curated docs" — see renderCuratedGenreLanding()
+      // in render.js.
+      { category: 'Musician', label: 'Top Musicians', titles: ['The Beatles', 'Aretha Franklin', 'Queen', 'Stevie Wonder', 'The Rolling Stones', 'Joni Mitchell', 'Muse', 'Johnny Cash'] },
       { category: 'Movie', label: 'Top Films' },
       { category: 'Book', label: 'Top Books' },
       { category: 'Game', label: 'Top Games' },
