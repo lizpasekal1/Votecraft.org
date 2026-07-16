@@ -1254,6 +1254,7 @@
 
 .bare-list-view-btn {
   flex-shrink: 0;
+  margin-left: 40px;
   padding: 8px 18px;
   border-radius: 999px;
   border: none;
