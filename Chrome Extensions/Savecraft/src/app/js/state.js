@@ -90,7 +90,7 @@ export const CURATED_DIRECTORY_CONTENT = {
     {
       label: 'Civic Participation',
       orgs: [
-        { name: 'Represent-Us List', tagline: 'Pop culture with a civic pulse.', icon: '🎤' },
+        { name: 'Represent-Us List', tagline: 'Pop culture with a civic pulse.', icon: '🎤', imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLN7Vhtsq9mGoooXabqvbP_J_LqfXhzUfXVqVQUGx01VMKYovqsPFRC43U&s=10' },
         { name: 'Youth Vote Initiative', tagline: 'Culture picks built by and for first-time voters.', icon: '🎓' },
         { name: 'Rank The Vote', tagline: 'Explaining electoral reform through story and song.', icon: '🔢' },
         { name: 'Civic Tech Collective', tagline: 'Technology, transparency, and the future of democracy.', icon: '💻' },
