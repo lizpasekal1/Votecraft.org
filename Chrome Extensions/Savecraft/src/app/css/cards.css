@@ -1214,7 +1214,7 @@
 .bare-list-org-tagline {
   font-size: 12.5px;
   line-height: 1.4;
-  color: var(--text-secondary);
+  color: #C4C4CC;
 }
 
 .bare-list-tags {
