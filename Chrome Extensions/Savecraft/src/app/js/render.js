@@ -16,7 +16,7 @@ import {
   persistViewState, persistItem, persistHiddenCurated, persistCuratedImgCache,
   persistFolder, removeFolder, removeItem,
 } from './storage.js';
-import { ensureArtistWikipediaInfo } from './api.js';
+import { ensureArtistWikipediaInfo, fetchWikipediaThumbnailForUrl } from './api.js';
 import { findAuthor, resolveMusicianItem, wireCardAuthorLinks, backfillAlbumYears, ensureLiveItem } from './authors.js';
 import { renderKanbanBoard } from './kanban.js';
 import { openDetailModal } from './detailModal.js';
@@ -594,18 +594,26 @@ export function fetchMissingCuratedImages(items) {
   if (!missing.length) return;
   missing.forEach(item => {
     _curatedImgFetchInFlight.add(item.id);
-    fetch(`https://api.microlink.io?url=${encodeURIComponent(item.url)}`)
-      .then(r => r.json())
-      .then(data => {
-        const imgUrl = data?.data?.image?.url;
-        if (!imgUrl) return;
-        state.curatedImgCache[item.id] = imgUrl;
-        persistCuratedImgCache();
-        // patchCardImage() (utils.js) handles both plain .card elements and the Top 100 landing
-        // page's .top100-row-card — this used to duplicate just the .card half inline here, which
-        // silently never patched a row card's thumbnail once its image arrived (only picked up on
-        // the next full re-render, via resolveRowItemImage() reading the now-populated cache).
-        patchCardImage(item.id, imgUrl);
+    const applyImage = imgUrl => {
+      if (!imgUrl) return;
+      state.curatedImgCache[item.id] = imgUrl;
+      persistCuratedImgCache();
+      // patchCardImage() (utils.js) handles both plain .card elements and the Top 100 landing
+      // page's .top100-row-card — this used to duplicate just the .card half inline here, which
+      // silently never patched a row card's thumbnail once its image arrived (only picked up on
+      // the next full re-render, via resolveRowItemImage() reading the now-populated cache).
+      patchCardImage(item.id, imgUrl);
+    };
+    // Wikipedia-sourced curated items (most Movie/Book/Show/Game entries) get their poster/cover
+    // straight from Wikipedia's own REST summary first — Microlink is a shared third-party quota
+    // (confirmed: it can and does run out for a whole day), and Wikipedia is the actual source of
+    // truth for these items anyway, not just a fallback of convenience.
+    fetchWikipediaThumbnailForUrl(item.url)
+      .then(imgUrl => {
+        if (imgUrl) { applyImage(imgUrl); return null; }
+        return fetch(`https://api.microlink.io?url=${encodeURIComponent(item.url)}`)
+          .then(r => r.json())
+          .then(data => applyImage(data?.data?.image?.url));
       })
       .catch(() => {})
       .finally(() => _curatedImgFetchInFlight.delete(item.id));
@@ -1115,7 +1123,7 @@ function renderCuratedBareList(container) {
   const rowsHtml = visibleOrgs.map((org, i) => {
     const color = DIRECTORY_AVATAR_COLORS[i % DIRECTORY_AVATAR_COLORS.length];
     return `
-      <div class="bare-list-row">
+      <div class="bare-list-row"${org.linkTo ? ` data-link-to="${escapeHtml(org.linkTo)}"` : ''}>
         <button class="bare-list-bookmark-btn" title="Add to your curated list slider" aria-label="Bookmark">${BOOKMARK_OUTLINE_SVG}</button>
         <div class="bare-list-avatar" style="background:${color}">${org.icon}</div>
         <div class="bare-list-info">
@@ -1155,6 +1163,20 @@ function renderCuratedBareList(container) {
     persistViewState();
     renderSidebar();
     renderGrid();
+  });
+
+  // The rare row backed by a real destination (currently just Votecraft List -> VoteCraft Picks,
+  // via CURATED_DIRECTORY_CONTENT's optional org.linkTo) actually navigates; every other row here
+  // stays inert, per the page's usual demo/pitch purpose.
+  container.querySelectorAll('.bare-list-row[data-link-to]').forEach(row => {
+    row.addEventListener('click', e => {
+      if (e.target.closest('.bare-list-bookmark-btn')) return;
+      state.sidebarMode = 'curated';
+      state.view = row.dataset.linkTo;
+      persistViewState();
+      renderSidebar();
+      renderGrid();
+    });
   });
 
   // Demo-only toggle — purely visual, doesn't persist or touch the Kanban queue. This directory is

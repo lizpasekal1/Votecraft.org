@@ -47,11 +47,13 @@ export const CURATED_GENRE_LANDING_CONTENT = {
     ],
   },
 };
-// Content for the top-level Curated SaveCraft directory (renderCuratedDirectory() in render.js) —
-// a fully inert visual demo/pitch page showing many nonprofit-sponsored lists at once,
-// ActBlue-style cause groupings. Only 5 of these orgs are real (matching CURATED_LIST_DISPLAY_NAMES
-// in dashboard.js); the rest are invented placeholders for volume, with emoji standing in for a
-// real logo/cover — nothing on this page is clickable (see renderCuratedDirectory()).
+// Content for the Curated SaveCraft directory — shared by the bare-bones top-level landing
+// (renderCuratedBareList()) and the fuller hero+carousel page (renderCuratedDirectory()), both in
+// render.js. ActBlue-style cause groupings, mostly a demo/pitch surface: only 5 of these orgs are
+// real (matching CURATED_LIST_DISPLAY_NAMES in dashboard.js); the rest are invented placeholders
+// for volume, with emoji standing in for a real logo/cover. Nothing is clickable by default —
+// an org can opt in with a `linkTo` (a real state.view string) for the rare case, like Votecraft
+// List, where a real destination already exists.
 export const CURATED_DIRECTORY_CONTENT = {
   headline: 'Sponsored Lists, Powered by Partners',
   description: "Every list below imagines a nonprofit or advocacy partner's own curated SaveCraft collection — a preview of what's possible when culture and civic life share a spotlight. This directory is a work in progress. Inquire to bring your organization's list to life!",
@@ -59,7 +61,7 @@ export const CURATED_DIRECTORY_CONTENT = {
     {
       label: 'Voting & Democracy',
       orgs: [
-        { name: 'Votecraft List', tagline: 'The essential picks behind every ballot conversation.', icon: '🗳️' },
+        { name: 'Votecraft List', tagline: 'The essential picks behind every ballot conversation.', icon: '🗳️', linkTo: 'genre:Top 100' },
         { name: 'FairVote List', tagline: 'Ranked-choice voting, explained through story.', icon: '⚖️' },
         { name: 'Ballot Access Alliance', tagline: 'Expanding who gets to vote, and how easily.', icon: '📋' },
         { name: 'The Turnout Project', tagline: 'Culture picks that get first-time voters to the polls.', icon: '📣' },
