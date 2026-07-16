@@ -1128,9 +1128,12 @@ function renderCuratedBareList(container) {
   `).join('');
 
   const rowsHtml = visibleOrgs.map((org, i) => {
-    // Progressive List's logo specifically needs a white backdrop to read correctly; every other
-    // avatar (real logo or emoji) keeps the normal rotating brand color.
-    const color = org.name === 'Progressive List' ? '#fff' : DIRECTORY_AVATAR_COLORS[i % DIRECTORY_AVATAR_COLORS.length];
+    // Progressive List's logo specifically needs a white backdrop to read correctly; Votecraft
+    // List always gets the actual SaveCraft brand purple, not whichever color the rotation lands
+    // on; every other avatar (real logo or emoji) keeps the normal rotating brand color.
+    const color = org.name === 'Progressive List' ? '#fff'
+      : org.name === 'Votecraft List' ? '#5B5BEF'
+      : DIRECTORY_AVATAR_COLORS[i % DIRECTORY_AVATAR_COLORS.length];
     const avatarContent = org.imageUrl
       ? `<img src="${escapeHtml(resolveOrgImageUrl(org.imageUrl))}" alt="">`
       : org.icon;
