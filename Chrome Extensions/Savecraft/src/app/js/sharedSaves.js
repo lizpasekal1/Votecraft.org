@@ -88,13 +88,13 @@ const NONPROFIT_SLIDER_CATEGORY_ORDER = [
 function buildNonprofitSliderSection() {
   const byLabel = new Map(CURATED_DIRECTORY_CONTENT.categories.map(c => [c.label, c]));
   // One org per category, except: Voting & Democracy also shows FairVote List and Represent-Us
-  // List right after Votecraft List; Social Justice & Equity also shows End Citizens United right
-  // after Progressive List.
+  // List right after Votecraft List; Social Justice & Equity also shows End Citizens United and
+  // Strict Scrutiny right after Progressive List.
   const cards = NONPROFIT_SLIDER_CATEGORY_ORDER
     .flatMap(label => {
       const { orgs } = byLabel.get(label);
       const picks = label === 'Voting & Democracy' ? orgs.slice(0, 3)
-        : label === 'Social Justice & Equity' ? orgs.slice(0, 2)
+        : label === 'Social Justice & Equity' ? orgs.slice(0, 3)
         : orgs.slice(0, 1);
       return picks.map(org => ({ name: org.name.replace(/\s+List$/i, ''), tagline: org.tagline, tag: label, icon: org.icon, imageUrl: org.imageUrl }));
     });
