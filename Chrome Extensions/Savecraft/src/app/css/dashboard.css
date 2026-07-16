@@ -114,8 +114,8 @@
   padding: 6px 12px;
   border-radius: 999px;
   border: none;
-  background: var(--primary-bg);
-  color: var(--primary);
+  background: var(--primary);
+  color: #fff;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -123,8 +123,7 @@
 }
 
 .dash-card-header-btn:hover {
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-hover);
 }
 
 /* Kanban widget — a scaled-down peek at the real board */
