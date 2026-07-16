@@ -1086,17 +1086,22 @@
   margin: 0;
 }
 
-.bare-list-fulllist-link {
-  margin-top: 4px;
+.bare-list-seeall-btn {
+  align-self: flex-start;
+  margin-top: 16px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  background: var(--primary-bg);
+  color: var(--primary);
   font-size: 13px;
   font-weight: 600;
-  color: var(--primary);
-  text-decoration: none;
-  width: fit-content;
+  cursor: pointer;
 }
 
-.bare-list-fulllist-link:hover {
-  text-decoration: underline;
+.bare-list-seeall-btn:hover {
+  background: var(--primary);
+  color: #fff;
 }
 
 .bare-list-body {
