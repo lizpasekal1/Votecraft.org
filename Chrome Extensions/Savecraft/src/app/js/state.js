@@ -82,7 +82,7 @@ export const CURATED_DIRECTORY_CONTENT = {
       label: 'Social Justice & Equity',
       orgs: [
         { name: 'Progressive List', tagline: 'Bold worldbuilding for a bolder politics.', icon: '🔥', imageUrl: 'https://scorecard.progressivemass.com/static/progressive-mass-logo-48694f1da6be76049871b17018f2a8ef.png' },
-        { name: 'End Citizens United', tagline: 'Getting big money out of politics, one story at a time.', icon: '🚫' },
+        { name: 'End Citizens United', tagline: 'Getting big money out of politics, one story at a time.', icon: '🚫', imageUrl: 'https://www.ricklarsen.org/media/uploads/blog/ECU_Blue.png' },
         { name: 'Strict Scrutiny', tagline: 'The Supreme Court, explained without the jargon.', icon: '⚖️', imageUrl: 'https://i.scdn.co/image/ab67656300005f1fc5c7f6044944383b1333420a' },
         { name: 'Racial Equity Now', tagline: 'Media that centers stories of racial justice.', icon: '✊' },
         { name: 'Housing For All Coalition', tagline: 'Stories of displacement, and the fight against it.', icon: '🏠' },
