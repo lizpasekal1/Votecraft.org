@@ -3,7 +3,7 @@
 import {
   state, CURATED_ITEMS, CATEGORIES, CAT_LABEL, CAT_EMOJI, CURATED_GENRES, GENRE_EMOJI,
   PRIMARY_FOLDER_ID, CURATED_NOTES_CATEGORIES, CREATOR_CARD_CATEGORY,
-  BOOKMARK_OUTLINE_SVG, BOOKMARK_FILLED_SVG, CURATED_GENRE_LANDING_CONTENT,
+  BOOKMARK_OUTLINE_SVG, BOOKMARK_FILLED_SVG, CURATED_GENRE_LANDING_CONTENT, CURATED_DIRECTORY_CONTENT,
 } from './state.js';
 import {
   SPLIT_TITLE_CREATOR_CATEGORIES, splitCuratedTitleCreator, getStaticCuratedCreator,
@@ -24,6 +24,7 @@ import { openEditModal } from './addEditModal.js';
 import { openFetchAlbumsModal } from './fetchAlbumsModal.js';
 import { renderDashboard, _wireCarouselArrows } from './dashboard.js';
 import { renderProfilePage } from './profile.js';
+import { renderSharedSavesPage } from './sharedSaves.js';
 import { closeSidebar } from './main.js';
 
 // Fill swapped from the source icon's #1f1f1f (near-black, invisible against .cat-icon's dark
@@ -260,6 +261,8 @@ export function renderSidebar() {
     sidebarTitle = sidebarEffectiveView.slice(6).split(':')[0] + ' Saves';
   } else if (state.sidebarMode === 'curated') {
     sidebarTitle = 'Curated SaveCraft';
+  } else if (state.sidebarMode === 'shared') {
+    sidebarTitle = 'Shared Saves';
   }
   const headerTitleEl = document.getElementById('sidebar-header-title');
   const isCuratedDrilldown = state.sidebarMode === 'curated' && sidebarEffectiveView.startsWith('genre:');
@@ -681,6 +684,11 @@ export function renderGrid() {
     return;
   }
 
+  if (state.view === 'shared') {
+    renderSharedSavesPage();
+    return;
+  }
+
   if (state.view === 'all' && state.sidebarMode === 'categories') {
     renderKanbanBoard();
     return;
@@ -760,6 +768,15 @@ export function renderGrid() {
     const landingContent = isCuratedTop && !isSearch ? CURATED_GENRE_LANDING_CONTENT[genre] : null;
     if (landingContent) {
       renderCuratedGenreLanding(container, genre, landingContent);
+      return;
+    }
+
+    // The top-level "Curated SaveCraft" landing (no genre picked yet) gets a rich directory of
+    // many nonprofit-sponsored lists instead of the plain "Pick a category" empty state below —
+    // see CURATED_DIRECTORY_CONTENT in state.js. Fully inert (a visual pitch/demo), unlike the
+    // genre landing pages above which link through to real content.
+    if (isCuratedLanding && !isSearch) {
+      renderCuratedDirectory(container);
       return;
     }
 
@@ -1062,6 +1079,60 @@ function linkifyHeroDescription(description) {
   const after = description.slice(idx + phrase.length);
   const sponsoredUrl = chrome.runtime.getURL('src/sponsored/sponsored.html');
   return `${escapeHtml(before)}<a class="top100-hero-desc-link" href="${sponsoredUrl}" target="_blank" rel="noopener">${escapeHtml(phrase)}</a>${escapeHtml(after)}`;
+}
+
+// The top-level Curated SaveCraft directory — a fully inert visual pitch/demo of many
+// nonprofit-sponsored lists at once (see CURATED_DIRECTORY_CONTENT in state.js). Unlike
+// renderCuratedGenreLanding() below, nothing here is clickable: no card navigates anywhere, since
+// most of these orgs are invented placeholders for volume, not real curated content. Reuses the
+// Top 100 landing page's hero/CTA classes for visual consistency, and the same
+// tripled-list + _wireCarouselArrows sliding mechanics for the category rows — only the card
+// markup itself (.directory-org-card) and the lack of any click wiring are new.
+function renderCuratedDirectory(container) {
+  container.className = 'cards-grid top100-landing';
+  document.getElementById('grid-title').style.display = 'none';
+  document.querySelector('.grid-header').style.display = 'none';
+
+  const content = CURATED_DIRECTORY_CONTENT;
+  const categoriesHtml = content.categories.map(({ label, orgs }) => {
+    const tripled = [...orgs, ...orgs, ...orgs];
+    const cardsHtml = tripled.map(org => `
+      <div class="directory-org-card">
+        <span class="directory-org-icon">${org.icon}</span>
+        <span class="directory-org-name">${escapeHtml(org.name)}</span>
+        <span class="directory-org-tagline">${escapeHtml(org.tagline)}</span>
+      </div>`).join('');
+    return `
+      <div class="directory-category">
+        <div class="directory-category-title">${escapeHtml(label)}</div>
+        <div class="dash-carousel directory-carousel">
+          <button class="dash-carousel-prev" aria-label="Previous">‹</button>
+          <div class="dash-carousel-strip">${cardsHtml}</div>
+          <button class="dash-carousel-next" aria-label="Next">›</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="top100-hero">
+      <div class="top100-hero-text">
+        <div class="top100-wordmark"><img src="${chrome.runtime.getURL('images/logos/votecraft-logo_white.png')}" alt="VoteCraft" class="top100-wordmark-logo"></div>
+        <h2 class="top100-hero-title">${escapeHtml(content.headline)}</h2>
+        <p class="top100-hero-desc">${escapeHtml(content.description)}</p>
+      </div>
+      <div class="top100-icon-badge"><img src="${chrome.runtime.getURL('images/logos/votecraft_icon_white.png')}" alt=""></div>
+    </div>
+    ${categoriesHtml}
+    <div class="top100-cta">
+      <span class="top100-cta-text">Want your organization's picks featured here?</span>
+      <a class="top100-cta-btn" href="${chrome.runtime.getURL('src/sponsored/sponsored.html')}" target="_blank" rel="noopener">Become a Sponsor →</a>
+    </div>
+  `;
+
+  container.querySelectorAll('.directory-carousel').forEach(carousel => {
+    const strip = carousel.querySelector('.dash-carousel-strip');
+    if (strip) _wireCarouselArrows(carousel, strip);
+  });
 }
 
 // A richer landing page for a curated genre (currently just Top 100 — see

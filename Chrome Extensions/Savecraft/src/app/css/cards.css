@@ -985,3 +985,53 @@
     font-size: 24px;
   }
 }
+
+/* ===== CURATED SAVECRAFT DIRECTORY =====
+   The top-level "Curated SaveCraft" landing (no genre picked yet) — a fully inert visual pitch/
+   demo of many nonprofit-sponsored lists, ActBlue-style cause groupings. Reuses .top100-hero/
+   .top100-cta above for the header/CTA band; only the category rows below are new. Cards have no
+   hover-to-navigate affordance (cursor: default) since nothing here is clickable. */
+
+.directory-category {
+  margin-bottom: 28px;
+}
+
+.directory-category-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.directory-org-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 170px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  padding: 18px 14px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  cursor: default;
+  text-align: center;
+}
+
+.directory-org-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.directory-org-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.directory-org-tagline {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}

@@ -1,0 +1,23 @@
+/* ===== SHARED SAVES PAGE =====
+   A dashboard of "portals" — followed curated lists + a lightweight Friends stub. Reuses
+   .dash-card (dashboard.css) and .profile-card-header/-title/-copy (profile.css) as-is; only the
+   page shell and the followed-lists mini-grid below are new. */
+
+.shared-page-wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.shared-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.shared-portals-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
