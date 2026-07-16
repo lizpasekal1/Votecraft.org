@@ -18,7 +18,7 @@ const PLACEHOLDER_IMAGE_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="2
 // names — purely illustrative, no real friend-graph data exists yet (see profile.js's own
 // "Friends — coming soon" stub, which this page's Friends section replaces).
 const DEMO_FRIENDS = [
-  { name: 'Jordan Lee', list: 'Votecraft List' },
+  { name: 'Jordan Lee', list: 'Votecraft List', imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
   { name: 'Sam Rivera', list: 'FairVote List' },
   { name: 'Casey Kim', list: 'Progressive List' },
   { name: 'Morgan Blake', list: 'Represent-Us List' },
@@ -31,9 +31,12 @@ function buildVerticalCardSlider({ sectionClass, title, cards }) {
   const tripled = [...cards, ...cards, ...cards];
   const cardsHtml = tripled.map((c, i) => {
     const color = SHARED_VCARD_COLORS[i % SHARED_VCARD_COLORS.length];
+    const avatarContent = c.imageUrl
+      ? `<img src="${escapeHtml(c.imageUrl)}" alt="" loading="lazy" decoding="async">`
+      : (c.icon || PLACEHOLDER_IMAGE_SVG);
     return `
       <div class="shared-vcard">
-        <div class="shared-vcard-avatar" style="background:${color}">${c.icon || PLACEHOLDER_IMAGE_SVG}</div>
+        <div class="shared-vcard-avatar" style="background:${color}">${avatarContent}</div>
         <span class="shared-vcard-name">${escapeHtml(c.name)}</span>
         <span class="shared-vcard-tagline">${escapeHtml(c.tagline)}</span>
         ${c.tag ? `<span class="bare-list-tag bare-list-tag--muted">${escapeHtml(c.tag)}</span>` : ''}
@@ -58,7 +61,7 @@ function buildNonprofitSliderSection() {
 }
 
 function buildFriendsSection() {
-  const cards = DEMO_FRIENDS.map(f => ({ name: f.name, tagline: `Following ${f.list}` }));
+  const cards = DEMO_FRIENDS.map(f => ({ name: f.name, tagline: `Following ${f.list}`, imageUrl: f.imageUrl }));
   return buildVerticalCardSlider({ sectionClass: 'shared-card--friends', title: 'Friends', cards });
 }
 
