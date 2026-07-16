@@ -40,12 +40,18 @@
   align-items: center;
   gap: 10px;
   width: 221px;
+  min-height: 260px; /* so a card's cause-area tag lands in the same spot regardless of how many
+                        lines its tagline wraps to — see the margin-top: auto below */
   flex-shrink: 0;
   scroll-snap-align: start;
   padding: 26px 18px;
   border-radius: 12px;
   background: var(--hover-bg);
   text-align: center;
+}
+
+.shared-vcard > .bare-list-tag {
+  margin-top: auto;
 }
 
 .shared-vcard-avatar {
@@ -82,4 +88,8 @@
   font-size: 16px;
   line-height: 1.4;
   color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
