@@ -1091,9 +1091,11 @@ function renderCuratedGenreLanding(container, genre, content) {
 
   container.innerHTML = `
     <div class="top100-hero">
-      <div class="top100-wordmark"><img src="${chrome.runtime.getURL('images/logos/votecraft-logo_white.png')}" alt="VoteCraft" class="top100-wordmark-logo"></div>
-      <h2 class="top100-hero-title">${escapeHtml(content.headline)}</h2>
-      <p class="top100-hero-desc">${escapeHtml(content.description)}</p>
+      <div class="top100-hero-text">
+        <div class="top100-wordmark"><img src="${chrome.runtime.getURL('images/logos/votecraft-logo_white.png')}" alt="VoteCraft" class="top100-wordmark-logo"></div>
+        <h2 class="top100-hero-title">${escapeHtml(content.headline)}</h2>
+        <p class="top100-hero-desc">${escapeHtml(content.description)}</p>
+      </div>
       <div class="top100-icon-badge"><img src="${chrome.runtime.getURL('images/logos/votecraft_icon_white.png')}" alt=""></div>
     </div>
     <div class="top100-sort-wrap"></div>

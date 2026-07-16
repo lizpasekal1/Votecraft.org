@@ -713,6 +713,13 @@
   color: #fff;
 }
 
+/* Keeps the text block clear of .top100-icon-badge horizontally instead of relying on vertical
+   spacing — the badge sits at left:28px, is 84px wide, so text starts 50px past its right edge
+   (28 + 84 + 50 = 162px) rather than sharing the hero's own 28px left padding. */
+.top100-hero-text {
+  padding-left: 134px;
+}
+
 /* A square brand-mark badge overlapping the bottom edge of the hero, cover-photo/avatar style
    (LinkedIn-esque) — sits half on the gradient banner, half on the page below it. Solid
    background (not the hero's gradient) since the icon asset itself is plain white and needs a
