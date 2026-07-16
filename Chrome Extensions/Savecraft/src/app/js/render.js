@@ -1,6 +1,10 @@
 // ===== MAIN GRID / SIDEBAR / AUTHOR PAGE RENDERING =====
 
-import { state, CURATED_ITEMS, CATEGORIES, CAT_LABEL, CAT_EMOJI, CURATED_GENRES, GENRE_EMOJI, PRIMARY_FOLDER_ID, CURATED_NOTES_CATEGORIES, CREATOR_CARD_CATEGORY } from './state.js';
+import {
+  state, CURATED_ITEMS, CATEGORIES, CAT_LABEL, CAT_EMOJI, CURATED_GENRES, GENRE_EMOJI,
+  PRIMARY_FOLDER_ID, CURATED_NOTES_CATEGORIES, CREATOR_CARD_CATEGORY,
+  BOOKMARK_OUTLINE_SVG, BOOKMARK_FILLED_SVG,
+} from './state.js';
 import {
   SPLIT_TITLE_CREATOR_CATEGORIES, splitCuratedTitleCreator, getStaticCuratedCreator,
 } from './curatedCreatorLookup.js';
@@ -13,7 +17,7 @@ import {
   persistFolder, removeFolder, removeItem,
 } from './storage.js';
 import { ensureArtistWikipediaInfo } from './api.js';
-import { findAuthor, resolveMusicianItem, wireCardAuthorLinks, backfillAlbumYears } from './authors.js';
+import { findAuthor, resolveMusicianItem, wireCardAuthorLinks, backfillAlbumYears, ensureLiveItem } from './authors.js';
 import { renderKanbanBoard } from './kanban.js';
 import { openDetailModal } from './detailModal.js';
 import { openEditModal } from './addEditModal.js';
@@ -757,6 +761,7 @@ export function renderGrid() {
 
   wireCardAuthorLinks(container);
   wirePublicationLinks(container);
+  wireQuickQueueButtons(container);
 
   container.querySelectorAll('.btn-edit').forEach(btn => {
     btn.addEventListener('click', e => {
@@ -917,6 +922,7 @@ export function renderAuthorPage() {
   });
 
   wireCardAuthorLinks(worksGrid);
+  wireQuickQueueButtons(worksGrid);
 
   if (cat === 'Musician') backfillAlbumYears(name, items);
 
@@ -954,6 +960,48 @@ function wirePublicationLinks(container) {
       persistViewState();
       renderSidebar();
       renderGrid();
+    });
+  });
+}
+
+// Quick "add to queue" button on curated cards (see renderCard()) — promotes the curated item
+// into a real personal one via the shared ensureLiveItem() and queues it immediately, without
+// opening the detail modal; tapping it again un-queues it (queueStatus back to null — same as
+// the Kanban board's own remove-from-queue, doesn't delete the now-personal item entirely).
+// Live-patches just this button afterward (icon + active state) rather than a full re-render,
+// same technique patchCardImage() already uses elsewhere.
+function wireQuickQueueButtons(container) {
+  container.querySelectorAll('.card-quick-queue-btn').forEach(btn => {
+    btn.addEventListener('click', async e => {
+      e.stopPropagation();
+      const isActive = btn.classList.contains('card-quick-queue-btn--active');
+      if (isActive) {
+        const liveItem = state.items.find(i => i.id === btn.dataset.id);
+        if (!liveItem) return;
+        liveItem.queueStatus = null;
+        await persistItem(liveItem);
+        btn.classList.remove('card-quick-queue-btn--active');
+        btn.title = 'Add to queue';
+        btn.innerHTML = BOOKMARK_OUTLINE_SVG;
+        return;
+      }
+      let item = state.items.find(i => i.id === btn.dataset.id);
+      if (!item) {
+        for (const genre of Object.keys(CURATED_ITEMS)) {
+          for (const cat of Object.keys(CURATED_ITEMS[genre])) {
+            const found = CURATED_ITEMS[genre][cat].find(i => i.id === btn.dataset.id);
+            if (found) { item = { ...found, category: cat, curated: true }; break; }
+          }
+          if (item) break;
+        }
+      }
+      if (!item) return;
+      const liveItem = await ensureLiveItem(item);
+      liveItem.queueStatus = 'in-queue';
+      await persistItem(liveItem);
+      btn.classList.add('card-quick-queue-btn--active');
+      btn.title = 'In your queue';
+      btn.innerHTML = BOOKMARK_FILLED_SVG;
     });
   });
 }
@@ -1012,9 +1060,18 @@ export function renderCard(item) {
           <span class="card-badge badge-${catClass(item.category)}" style="margin-left:auto">${badgeLabel(item.category)}</span>
         </div>
       </div>
-      ${item.curated ? '' : `<div class="card-actions">
-        <button class="card-action-btn btn-edit" data-id="${item.id}" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg></button>
+      ${item.curated ? (() => {
+        // Quick "add to queue" for curated cards (Top 100 and every other curated genre) — lets
+        // the user queue something straight from the grid without opening the detail modal.
+        // Personal (non-curated) cards don't get this: they already have their own queue toggle
+        // inside the detail modal, and the edit/delete pair above occupies this same corner.
+        // Deliberately not rendered on Kanban cards (kanban.js has its own separate card markup
+        // that never calls renderCard()).
+        const isQueued = !!state.items.find(i => i.id === item.id && i.queueStatus);
+        return `<button class="card-quick-queue-btn${isQueued ? ' card-quick-queue-btn--active' : ''}" data-id="${item.id}" title="${isQueued ? 'In your queue' : 'Add to queue'}">${isQueued ? BOOKMARK_FILLED_SVG : BOOKMARK_OUTLINE_SVG}</button>`;
+      })() : `<div class="card-actions">
         <button class="card-action-btn btn-delete" data-id="${item.id}" title="Remove"><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg></button>
+        <button class="card-action-btn btn-edit" data-id="${item.id}" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg></button>
       </div>`}
     </div>
   `;
