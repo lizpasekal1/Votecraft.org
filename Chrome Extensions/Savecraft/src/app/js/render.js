@@ -991,6 +991,19 @@ function wirePublicationLinks(container) {
 // Live-patches just this button afterward (icon + active state) rather than a full re-render,
 // same technique patchCardImage() already uses elsewhere.
 function wireQuickQueueButtons(container) {
+  // The Top 100 landing page's rows triple every item for the carousel's infinite-scroll
+  // illusion (renderCuratedGenreLanding()), so the same item's bookmark can appear more than
+  // once in the same container — patch every matching copy, not just the one actually clicked,
+  // so they never fall out of sync with each other. A no-op generalization for every other
+  // caller, where an item only ever appears once.
+  function setButtonState(matchBtn, active) {
+    container.querySelectorAll(`.card-quick-queue-btn[data-id="${matchBtn.dataset.id}"]`).forEach(b => {
+      b.classList.toggle('card-quick-queue-btn--active', active);
+      b.title = active ? 'In your queue' : 'Add to queue';
+      b.innerHTML = active ? BOOKMARK_FILLED_SVG : BOOKMARK_OUTLINE_SVG;
+    });
+  }
+
   container.querySelectorAll('.card-quick-queue-btn').forEach(btn => {
     btn.addEventListener('click', async e => {
       e.stopPropagation();
@@ -1000,9 +1013,7 @@ function wireQuickQueueButtons(container) {
         if (!liveItem) return;
         liveItem.queueStatus = null;
         await persistItem(liveItem);
-        btn.classList.remove('card-quick-queue-btn--active');
-        btn.title = 'Add to queue';
-        btn.innerHTML = BOOKMARK_OUTLINE_SVG;
+        setButtonState(btn, false);
         return;
       }
       let item = state.items.find(i => i.id === btn.dataset.id);
@@ -1019,9 +1030,7 @@ function wireQuickQueueButtons(container) {
       const liveItem = await ensureLiveItem(item);
       liveItem.queueStatus = 'in-queue';
       await persistItem(liveItem);
-      btn.classList.add('card-quick-queue-btn--active');
-      btn.title = 'In your queue';
-      btn.innerHTML = BOOKMARK_FILLED_SVG;
+      setButtonState(btn, true);
     });
   });
 }
@@ -1069,11 +1078,19 @@ function renderCuratedGenreLanding(container, genre, content) {
       const art = item.imageUrl
         ? `<img src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async">`
         : `<span class="top100-row-card-fallback">${CAT_EMOJI[category] || '🎬'}</span>`;
+      const isQueued = !!state.items.find(i => i.id === item.id && i.queueStatus);
+      // A plain div, not a <button> — it needs to contain the bookmark <button> below, and
+      // nesting a button inside a button is invalid HTML (the click wiring below works
+      // identically either way, since it's addEventListener-based, not relying on native
+      // <button> semantics).
       return `
-        <button class="top100-row-card" data-id="${escapeHtml(item.id)}" data-category="${escapeHtml(category)}">
-          <div class="top100-row-card-art">${art}</div>
+        <div class="top100-row-card" data-id="${escapeHtml(item.id)}" data-category="${escapeHtml(category)}">
+          <div class="top100-row-card-art">
+            ${art}
+            <button class="card-quick-queue-btn${isQueued ? ' card-quick-queue-btn--active' : ''}" data-id="${escapeHtml(item.id)}" title="${isQueued ? 'In your queue' : 'Add to queue'}">${isQueued ? BOOKMARK_FILLED_SVG : BOOKMARK_OUTLINE_SVG}</button>
+          </div>
           <span class="top100-row-card-label">${escapeHtml(item.title || '')}</span>
-        </button>`;
+        </div>`;
     }).join('');
     return `
       <div class="top100-row">
@@ -1140,6 +1157,8 @@ function renderCuratedGenreLanding(container, genre, content) {
       renderGrid();
     });
   });
+
+  wireQuickQueueButtons(container);
 }
 
 export function renderCard(item) {
