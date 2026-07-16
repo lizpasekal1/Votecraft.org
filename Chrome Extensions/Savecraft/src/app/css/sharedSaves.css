@@ -33,6 +33,13 @@
   padding: 0;
 }
 
+/* Lines the section title up with the divider's left edge (.shared-section-divider has the same
+   24px inset via its own margin) rather than sitting flush with the page edge. */
+.shared-card--nonprofits .profile-card-header,
+.shared-card--friends .profile-card-header {
+  margin-left: 24px;
+}
+
 .shared-section-divider {
   border-top: 1px solid var(--border);
   margin: 8px 24px;
