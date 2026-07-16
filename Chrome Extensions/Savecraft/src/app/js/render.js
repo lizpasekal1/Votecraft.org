@@ -1141,20 +1141,21 @@ function renderCuratedBareList(container) {
       <div class="bare-list-header">
         <h2 class="bare-list-title">Curated SaveCraft</h2>
         <p class="bare-list-desc">Browse nonprofit-sponsored curated lists.</p>
-        <a class="bare-list-fulllist-link" href="#" data-view="curated-full-list">See the full experience →</a>
       </div>
       <div class="bare-list-body">
         <div class="bare-list-filters">
           <div class="bare-list-filter-section-title">Cause Area</div>
           <div class="bare-list-chips">${filterChipsHtml}</div>
         </div>
-        <div class="bare-list-rows">${rowsHtml}</div>
+        <div class="bare-list-rows">
+          ${rowsHtml}
+          <button class="bare-list-seeall-btn" data-view="curated-full-list">See all →</button>
+        </div>
       </div>
     </div>
   `;
 
-  container.querySelector('.bare-list-fulllist-link')?.addEventListener('click', e => {
-    e.preventDefault();
+  container.querySelector('.bare-list-seeall-btn')?.addEventListener('click', () => {
     state.view = 'curated-full-list';
     persistViewState();
     renderSidebar();
