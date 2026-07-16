@@ -2,7 +2,7 @@
 // Author-record CRUD helpers, navigation to author pages, and the artist-album-metadata
 // backfill (year/collectionId/track-list resolution for Music Album items).
 
-import { state, CURATED_ITEMS } from './state.js';
+import { state, CURATED_ITEMS, CURATED_NOTES_CATEGORIES } from './state.js';
 import { persistAuthor, persistItem, persistCuratedAlbumMetaCache, persistAlbumTrackListCache } from './storage.js';
 import { ensureArtistWebsite, ensureArtistWikipediaInfo, fetchAlbumsFromItunes } from './api.js';
 import { isItunesArtworkUrl, applyArtistPhotoToItem, patchCardImage } from './utils.js';
@@ -13,6 +13,33 @@ import { openDetailModal } from './detailModal.js';
 
 export function findAuthor(name, category) {
   return state.authors.find(a => a.name === name && a.category === category) ?? null;
+}
+
+// Promotes a curated item into a real personal item the first time it's queued/bookmarked — a
+// no-op (just returns the existing one) once already promoted. Shared by the detail modal's
+// "Add to Queue" button and the card grid's quick-queue button on curated cards, so the
+// curated→personal conversion (notes→author promotion for the categories that need it, the
+// Music Album→Musician auto-save side effect) only lives in one place.
+export async function ensureLiveItem(item) {
+  let liveItem = state.items.find(i => i.id === item.id);
+  if (!liveItem) {
+    liveItem = { ...item, curated: false, savedAt: Date.now() };
+    if (CURATED_NOTES_CATEGORIES.includes(liveItem.category) && !liveItem.author && liveItem.notes) {
+      // Curated items in creator-linked categories stash the creator's name in .notes — once
+      // this becomes a real personal item, item.curated flips to false, so that fallback no
+      // longer applies. Promote the name into .author now (and clear .notes) or the creator
+      // link/website CTA silently vanish on every future open of this item, and the creator name
+      // would otherwise show up in My Notes as if it were a real saved note.
+      liveItem.author = liveItem.notes;
+      liveItem.notes = null;
+    }
+    state.items.push(liveItem);
+    await persistItem(liveItem);
+    if (liveItem.category === 'Music Album') {
+      await autoSaveMusician(liveItem.author);
+    }
+  }
+  return liveItem;
 }
 
 // When a user queues or saves any Music Album item for the first time, the artist is

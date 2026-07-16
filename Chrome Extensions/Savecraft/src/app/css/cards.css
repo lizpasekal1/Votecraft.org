@@ -378,6 +378,49 @@
   color: var(--text-primary);
 }
 
+/* Quick "add to queue" bookmark on curated cards (see renderCard() in render.js) — same corner
+   slot .card-actions uses for personal cards' edit/delete, but curated and personal cards never
+   render both at once, so there's no overlap. Hidden until hover, same as .card-actions, EXCEPT
+   once queued (--active) it stays permanently visible/purple as a status indicator instead of
+   only showing on hover. */
+.card-quick-queue-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: var(--hover-bg);
+  cursor: pointer;
+  color: #9AA0A6;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  transition: background 0.1s, color 0.1s;
+  z-index: 1;
+}
+
+.card:hover .card-quick-queue-btn {
+  display: flex;
+}
+
+.card-quick-queue-btn:hover {
+  background: var(--border);
+  color: var(--text-primary);
+}
+
+.card-quick-queue-btn--active {
+  display: flex;
+  background: transparent;
+  color: var(--primary);
+}
+
+.card-quick-queue-btn--active:hover {
+  background: var(--border);
+  color: var(--primary);
+}
+
 /* ===== EMPTY STATE ===== */
 .cards-grid.landing-state {
   display: flex;

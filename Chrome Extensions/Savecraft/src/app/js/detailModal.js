@@ -7,7 +7,7 @@ import {
 } from './utils.js';
 import { persistItem, removeItem, persistAuthor, persistViewState } from './storage.js';
 import { ensureArtistWebsite, ensureArtistWikipediaInfo, ensureItemWikipediaInfo } from './api.js';
-import { findAuthor, navigateToAuthor, getKnownAlbumsForArtist, autoSaveMusician, ensureAlbumTrackList } from './authors.js';
+import { findAuthor, navigateToAuthor, getKnownAlbumsForArtist, autoSaveMusician, ensureAlbumTrackList, ensureLiveItem } from './authors.js';
 import { renderSidebar, renderGrid } from './render.js';
 
 let _detailItem = null;
@@ -23,8 +23,13 @@ export function openDetailModal(item) {
 
   // Checked against the actual curated data instead of guessing at id-prefix conventions (which
   // turned out wrong for at least Books) — this works for every category with real Top 100
-  // curated content, automatically, with no per-category id scheme to keep in sync.
-  const isCuratedTop100 = item.curated && !!item.id && !!(CURATED_ITEMS['Top 100']?.[item.category] || []).some(i => i.id === item.id);
+  // curated content, automatically, with no per-category id scheme to keep in sync. Deliberately
+  // NOT gated on item.curated — bookmarking/queueing a curated item (ensureLiveItem()) flips
+  // curated to false but keeps the same id, and the badge should keep showing for that same Top
+  // 100 item once it's saved, not disappear the moment it's queued. A manually-added item's id
+  // (a Date.now() timestamp string) will never match a real curated doc's id, so this still
+  // correctly excludes anything the user actually created themselves.
+  const isCuratedTop100 = !!item.id && !!(CURATED_ITEMS['Top 100']?.[item.category] || []).some(i => i.id === item.id);
 
   const wrap = document.getElementById('detail-image-wrap');
   const isMusicAlbum = item.category === 'Music Album';
@@ -206,7 +211,7 @@ export function openDetailModal(item) {
   async function toggleBookmark() {
     const liveItem = state.items.find(i => i.id === item.id);
     if (!liveItem) {
-      await ensureLiveItem();
+      await ensureLiveItem(item);
     } else {
       const idx = state.items.indexOf(liveItem);
       state.items.splice(idx, 1);
@@ -222,7 +227,7 @@ export function openDetailModal(item) {
   };
 
   document.getElementById('detail-favorite-btn').onclick = async () => {
-    const liveItem = await ensureLiveItem();
+    const liveItem = await ensureLiveItem(item);
     liveItem.favorite = !liveItem.favorite;
     await persistItem(liveItem);
     updateBookmarkIcon();
@@ -384,7 +389,7 @@ export function openDetailModal(item) {
   const saveNotes = debounce(async () => {
     const newNotes = notesInputEl.value.trim() || null;
     let liveItem = state.items.find(i => i.id === item.id);
-    if (!liveItem) liveItem = await ensureLiveItem();
+    if (!liveItem) liveItem = await ensureLiveItem(item);
     if (liveItem.notes === newNotes) return;
     liveItem.notes = newNotes;
     item.notes = newNotes;
@@ -591,33 +596,11 @@ export function openDetailModal(item) {
       tracklistEl.classList.remove('open');
     }
   });
-  async function ensureLiveItem() {
-    let liveItem = state.items.find(i => i.id === item.id);
-    if (!liveItem) {
-      liveItem = { ...item, curated: false, savedAt: Date.now() };
-      if (CURATED_NOTES_CATEGORIES.includes(liveItem.category) && !liveItem.author && liveItem.notes) {
-        // Curated items in creator-linked categories stash the creator's name in .notes (see
-        // _detailAuthorName above) — once this becomes a real personal item, item.curated flips
-        // to false, so that fallback no longer applies. Promote the name into .author now (and
-        // clear .notes) or the creator link/website CTA silently vanish on every future open of
-        // this item, and the creator name would otherwise show up in My Notes as if it were a
-        // real saved note.
-        liveItem.author = liveItem.notes;
-        liveItem.notes = null;
-      }
-      state.items.push(liveItem);
-      await persistItem(liveItem);
-      if (liveItem.category === 'Music Album') {
-        await autoSaveMusician(liveItem.author);
-      }
-    }
-    return liveItem;
-  }
 
   (streamingEl.querySelector('.queue-label') || btnStandaloneQueueEl).onclick = async () => {
     const liveItem = state.items.find(i => i.id === item.id);
     if (!liveItem?.queueStatus) {
-      const live = await ensureLiveItem();
+      const live = await ensureLiveItem(item);
       live.queueStatus = 'in-queue';
       await persistItem(live);
       updateBookmarkIcon();
@@ -665,7 +648,7 @@ export function openDetailModal(item) {
     // List tags — toggle membership
     queueEl.querySelectorAll('.queue-tag:not(.queue-tag-add):not(.queue-tag-base)').forEach(tag => {
       tag.addEventListener('click', async () => {
-        const liveItem = await ensureLiveItem();
+        const liveItem = await ensureLiveItem(item);
         if (!liveItem) return;
         const listIds = getListIds(liveItem);
         const id = tag.dataset.listId;
