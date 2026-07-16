@@ -83,7 +83,6 @@ export const CURATED_DIRECTORY_CONTENT = {
         { name: 'Racial Equity Now', tagline: 'Media that centers stories of racial justice.', icon: '✊' },
         { name: 'Housing For All Coalition', tagline: 'Stories of displacement, and the fight against it.', icon: '🏠' },
         { name: 'Immigrant Justice Network', tagline: 'Amplifying immigrant voices in film and print.', icon: '🌍' },
-        { name: 'Disability Rights Forward', tagline: 'Accessibility and representation, front and center.', icon: '♿' },
       ],
     },
     {
@@ -93,7 +92,6 @@ export const CURATED_DIRECTORY_CONTENT = {
         { name: 'Youth Vote Initiative', tagline: 'Culture picks built by and for first-time voters.', icon: '🎓' },
         { name: 'Rank The Vote', tagline: 'Explaining electoral reform through story and song.', icon: '🔢' },
         { name: 'Civic Tech Collective', tagline: 'Technology, transparency, and the future of democracy.', icon: '💻' },
-        { name: 'Local Journalism Fund', tagline: 'Supporting the reporters who cover your city hall.', icon: '📰' },
       ],
     },
     {
@@ -102,7 +100,6 @@ export const CURATED_DIRECTORY_CONTENT = {
         { name: 'Climate Forward Fund', tagline: 'Stories that make the climate crisis feel personal.', icon: '🌱' },
         { name: 'Ocean Guardians Alliance', tagline: 'Protecting our oceans, one recommendation at a time.', icon: '🌊' },
         { name: 'Green Future Coalition', tagline: 'Optimistic climate fiction and nonfiction.', icon: '🌳' },
-        { name: 'Renewable Futures Network', tagline: 'The clean-energy transition, told through story.', icon: '⚡' },
       ],
     },
     {
@@ -111,7 +108,34 @@ export const CURATED_DIRECTORY_CONTENT = {
         { name: 'Reproductive Freedom Fund', tagline: 'Centering bodily autonomy in culture and story.', icon: '🩺' },
         { name: 'Community Health Access Project', tagline: 'Health equity, told through narrative.', icon: '💞' },
         { name: 'Criminal Justice Reform Now', tagline: 'Stories from inside a broken system, and beyond it.', icon: '⛓️' },
-        { name: 'Mental Health Bridge', tagline: 'Reducing stigma, one recommendation at a time.', icon: '🧠' },
+      ],
+    },
+    {
+      label: 'Education & Literacy',
+      orgs: [
+        { name: 'First Chapter Fund', tagline: 'Early literacy programs, told through story.', icon: '📖' },
+        { name: 'Teach Forward Alliance', tagline: 'Supporting educators in under-resourced schools.', icon: '🍎' },
+      ],
+    },
+    {
+      label: 'Housing & Economic Justice',
+      orgs: [
+        { name: 'Fair Wage Coalition', tagline: 'The fight for a living wage, in culture and in courtrooms.', icon: '💵' },
+        { name: 'Tenant Power Network', tagline: 'Renters organizing for stability and dignity.', icon: '🏘️' },
+      ],
+    },
+    {
+      label: 'Global & Humanitarian',
+      orgs: [
+        { name: 'Refugee Voices Project', tagline: 'Displacement stories, told by the people living them.', icon: '🕊️' },
+        { name: 'Clean Water Collective', tagline: 'Access to clean water, one community at a time.', icon: '💧' },
+      ],
+    },
+    {
+      label: 'Digital & Consumer Rights',
+      orgs: [
+        { name: 'Privacy First Coalition', tagline: 'Data rights and digital privacy, explained simply.', icon: '🔒' },
+        { name: 'Open Internet Fund', tagline: 'Keeping the internet fair, open, and accessible.', icon: '🌐' },
       ],
     },
   ],
