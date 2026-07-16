@@ -19,6 +19,10 @@
   width: 100%;
 }
 
+.shared-page .bare-list-hero {
+  margin-bottom: 40px;
+}
+
 /* Strip .dash-card's boxed look (background/border/padding) for these two sections specifically
    — the sliders sit directly on the page instead of inside a bordered container. Scoped to these
    classes only so the Dashboard's own .dash-card widgets are unaffected. */
