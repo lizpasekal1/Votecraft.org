@@ -82,7 +82,7 @@ export const CURATED_DIRECTORY_CONTENT = {
     {
       label: 'Social Justice & Equity',
       orgs: [
-        { name: 'Progressive List', tagline: 'Bold worldbuilding for a bolder politics.', icon: '🔥' },
+        { name: 'Progressive List', tagline: 'Bold worldbuilding for a bolder politics.', icon: '🔥', imageUrl: 'https://scorecard.progressivemass.com/static/progressive-mass-logo-48694f1da6be76049871b17018f2a8ef.png' },
         { name: 'Racial Equity Now', tagline: 'Media that centers stories of racial justice.', icon: '✊' },
         { name: 'Housing For All Coalition', tagline: 'Stories of displacement, and the fight against it.', icon: '🏠' },
         { name: 'Immigrant Justice Network', tagline: 'Amplifying immigrant voices in film and print.', icon: '🌍' },
