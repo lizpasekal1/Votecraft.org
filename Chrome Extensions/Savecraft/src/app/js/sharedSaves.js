@@ -14,15 +14,14 @@ const SHARED_VCARD_COLORS = ['#5B5BEF', '#E0507A', '#2A9D8F', '#E76F51', '#8E44A
 // just Friends, which has no real photo data to show).
 const PLACEHOLDER_IMAGE_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="26px" viewBox="0 -960 960 960" width="26px" fill="currentColor"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm80-120h480L570-480 450-320l-90-120-120 160Z"/></svg>';
 
-// A handful of fictional demo people, each shown as following one of the app's real curated list
-// names — purely illustrative, no real friend-graph data exists yet (see profile.js's own
-// "Friends — coming soon" stub, which this page's Friends section replaces).
+// A handful of fictional demo people — purely illustrative, no real friend-graph data exists yet
+// (see profile.js's own "Friends — coming soon" stub, which this page's Friends section replaces).
 const DEMO_FRIENDS = [
-  { name: 'Jordan Lee', list: 'Votecraft List', imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
-  { name: 'Sam Rivera', list: 'FairVote List', imageUrl: 'https://images.unsplash.com/photo-1592621385612-4d7129426394?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
-  { name: 'Casey Kim', list: 'Progressive List', imageUrl: 'https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?q=80&w=1335&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
-  { name: 'Morgan Blake', list: 'Represent-Us List', imageUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
-  { name: 'Taylor Osei', list: 'Art Club List', imageUrl: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=1364&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
+  { name: 'Jordan Lee', imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
+  { name: 'Sam Rivera', imageUrl: 'https://images.unsplash.com/photo-1592621385612-4d7129426394?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
+  { name: 'Casey Kim', imageUrl: 'https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?q=80&w=1335&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
+  { name: 'Morgan Blake', imageUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
+  { name: 'Taylor Osei', imageUrl: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=1364&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
 ];
 
 // One reusable vertical-card carousel builder — avatar circle, name, tagline, a title/tag pill —
@@ -38,7 +37,7 @@ function buildVerticalCardSlider({ sectionClass, title, cards }) {
       <div class="shared-vcard">
         <div class="shared-vcard-avatar" style="background:${color}">${avatarContent}</div>
         <span class="shared-vcard-name">${escapeHtml(c.name)}</span>
-        <span class="shared-vcard-tagline">${escapeHtml(c.tagline)}</span>
+        ${c.tagline ? `<span class="shared-vcard-tagline">${escapeHtml(c.tagline)}</span>` : ''}
         ${c.tag ? `<span class="bare-list-tag bare-list-tag--muted">${escapeHtml(c.tag)}</span>` : ''}
       </div>`;
   }).join('');
@@ -61,7 +60,7 @@ function buildNonprofitSliderSection() {
 }
 
 function buildFriendsSection() {
-  const cards = DEMO_FRIENDS.map(f => ({ name: f.name, tagline: `Following ${f.list}`, imageUrl: f.imageUrl }));
+  const cards = DEMO_FRIENDS.map(f => ({ name: f.name, imageUrl: f.imageUrl }));
   return buildVerticalCardSlider({ sectionClass: 'shared-card--friends', title: 'Friends', cards });
 }
 
