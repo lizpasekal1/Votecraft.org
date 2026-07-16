@@ -330,7 +330,10 @@ function buildCuratedListsWidget() {
 
   return `
     <div class="dash-card dash-card--curated">
-      <div class="dash-card-header"><span class="dash-card-title">Curated Lists</span></div>
+      <div class="dash-card-header">
+        <span class="dash-card-title">Curated Lists</span>
+        <button class="dash-card-header-btn dash-curated-add-btn">Add Curated Lists</button>
+      </div>
       <div class="dash-carousel">
         <button class="dash-carousel-prev" aria-label="Previous">‹</button>
         <div class="dash-carousel-strip">${cardsHtml}</div>
@@ -342,6 +345,14 @@ function buildCuratedListsWidget() {
 function wireCuratedListsWidget(container) {
   const card = container.querySelector('.dash-card--curated');
   if (!card) return;
+
+  card.querySelector('.dash-curated-add-btn')?.addEventListener('click', () => {
+    state.sidebarMode = 'curated';
+    state.view = 'curated';
+    persistViewState();
+    renderSidebar();
+    renderGrid();
+  });
 
   card.querySelectorAll('.dash-thumb-card').forEach(btn => {
     btn.addEventListener('click', () => {

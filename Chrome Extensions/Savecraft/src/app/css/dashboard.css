@@ -110,6 +110,23 @@
 .dash-card-header { display: flex; align-items: center; justify-content: space-between; }
 .dash-card-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
 
+.dash-card-header-btn {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: none;
+  background: var(--primary-bg);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.dash-card-header-btn:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
 /* Kanban widget — a scaled-down peek at the real board */
 .dash-kanban-open {
   background: none;
