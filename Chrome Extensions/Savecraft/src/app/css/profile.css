@@ -19,10 +19,10 @@
    has grown to 4 platform rows, more than the Dashboard's "peek" widgets were ever sized for. */
 .profile-widget-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 1fr;
   gap: 16px;
-  height: 800px;
+  height: 400px;
 }
 
 /* Dashboard widgets are deliberately "peek" sized (a few tracks, a capped genre list, etc.) —

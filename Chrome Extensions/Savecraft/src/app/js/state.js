@@ -47,6 +47,71 @@ export const CURATED_GENRE_LANDING_CONTENT = {
     ],
   },
 };
+// Content for the top-level Curated SaveCraft directory (renderCuratedDirectory() in render.js) —
+// a fully inert visual demo/pitch page showing many nonprofit-sponsored lists at once,
+// ActBlue-style cause groupings. Only 5 of these orgs are real (matching CURATED_LIST_DISPLAY_NAMES
+// in dashboard.js); the rest are invented placeholders for volume, with emoji standing in for a
+// real logo/cover — nothing on this page is clickable (see renderCuratedDirectory()).
+export const CURATED_DIRECTORY_CONTENT = {
+  headline: 'Sponsored Lists, Powered by Partners',
+  description: "Every list below imagines a nonprofit or advocacy partner's own curated SaveCraft collection — a preview of what's possible when culture and civic life share a spotlight. This directory is a work in progress. Inquire to bring your organization's list to life!",
+  categories: [
+    {
+      label: 'Voting & Democracy',
+      orgs: [
+        { name: 'Votecraft List', tagline: 'The essential picks behind every ballot conversation.', icon: '🗳️' },
+        { name: 'FairVote List', tagline: 'Ranked-choice voting, explained through story.', icon: '⚖️' },
+        { name: 'Ballot Access Alliance', tagline: 'Expanding who gets to vote, and how easily.', icon: '📋' },
+        { name: 'The Turnout Project', tagline: 'Culture picks that get first-time voters to the polls.', icon: '📣' },
+        { name: 'Civic Compass', tagline: 'Nonpartisan civic literacy, one recommendation at a time.', icon: '🧭' },
+      ],
+    },
+    {
+      label: 'Arts & Culture',
+      orgs: [
+        { name: 'Art Club List', tagline: 'Where speculative fiction meets civic imagination.', icon: '🎨' },
+        { name: 'The Jazz Word List', tagline: 'Jazz history as a living archive.', icon: '🎷' },
+        { name: 'Comedy for Change List', tagline: 'Satire with a point of view.', icon: '🎭' },
+        { name: 'Independent Film Fund', tagline: "Distribution support for films that wouldn't otherwise get seen.", icon: '🎬' },
+        { name: 'Reading Rights Collective', tagline: 'Defending banned books, one list at a time.', icon: '📚' },
+      ],
+    },
+    {
+      label: 'Social Justice & Equity',
+      orgs: [
+        { name: 'Progressive List', tagline: 'Bold worldbuilding for a bolder politics.', icon: '🔥' },
+        { name: 'Racial Equity Now', tagline: 'Media that centers stories of racial justice.', icon: '✊' },
+        { name: 'Housing For All Coalition', tagline: 'Stories of displacement, and the fight against it.', icon: '🏠' },
+        { name: 'Immigrant Justice Network', tagline: 'Amplifying immigrant voices in film and print.', icon: '🌍' },
+      ],
+    },
+    {
+      label: 'Civic Participation',
+      orgs: [
+        { name: 'Represent-Us List', tagline: 'Pop culture with a civic pulse.', icon: '🎤' },
+        { name: 'Youth Vote Initiative', tagline: 'Culture picks built by and for first-time voters.', icon: '🎓' },
+        { name: 'Rank The Vote', tagline: 'Explaining electoral reform through story and song.', icon: '🔢' },
+        { name: 'Civic Tech Collective', tagline: 'Technology, transparency, and the future of democracy.', icon: '💻' },
+      ],
+    },
+    {
+      label: 'Environment & Climate',
+      orgs: [
+        { name: 'Climate Forward Fund', tagline: 'Stories that make the climate crisis feel personal.', icon: '🌱' },
+        { name: 'Ocean Guardians Alliance', tagline: 'Protecting our oceans, one recommendation at a time.', icon: '🌊' },
+        { name: 'Green Future Coalition', tagline: 'Optimistic climate fiction and nonfiction.', icon: '🌳' },
+      ],
+    },
+    {
+      label: 'Health & Justice',
+      orgs: [
+        { name: 'Reproductive Freedom Fund', tagline: 'Centering bodily autonomy in culture and story.', icon: '🩺' },
+        { name: 'Community Health Access Project', tagline: 'Health equity, told through narrative.', icon: '💞' },
+        { name: 'Criminal Justice Reform Now', tagline: 'Stories from inside a broken system, and beyond it.', icon: '⛓️' },
+      ],
+    },
+  ],
+};
 export const MODAL_BOOKMARK_ICON_SVG = '<svg class="modal-bookmark-icon" xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Z"/></svg>';
 // Shared outline/filled bookmark pair — used by the card grid's quick-queue button (curated
 // cards only) and mirrors the detail modal's own bookmark icons (which keep their own local
@@ -186,7 +251,7 @@ export const state = {
   modalCategory: null,
   editingId: null,
   collapsed: new Set([...CATEGORIES, 'dashboard']), // all collapsed by default, including the Dashboard row's Queue Kanban link
-  sidebarMode: 'categories', // 'categories' | 'curated' | 'home'
+  sidebarMode: 'categories', // 'categories' | 'curated' | 'home' | 'shared'
   // Which sidebar subfolder was actually clicked while browsing a curated genre — several
   // folders under the same category (e.g. Movie's "Movies" and "Videos") route to the exact
   // same genre:<genre>:<category> view since curated data isn't split into personal-style

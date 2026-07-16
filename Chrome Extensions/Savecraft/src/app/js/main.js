@@ -385,7 +385,7 @@ async function init() {
 
   sortSelect.addEventListener('change', () => handleSort(sortSelect.value));
 
-  // The options dropdown (Home/My Saves/Shared Saves/Curated/⚡ VC) now lives under the same
+  // The options dropdown (Home/Shared Saves/Curated/⚡ VC) now lives under the same
   // button that toggles sidebar collapse — shown on hover (pure CSS, see .sidebar-collapse-wrap
   // in sidebar.css), so no click-to-open/click-outside-to-close JS is needed for visibility.
   const myOptionsDropdown = document.getElementById('my-options-dropdown');
@@ -398,9 +398,9 @@ async function init() {
       } else if (opt === 'curated') {
         state.sidebarMode = 'curated';
         state.view = 'curated';
-      } else if (opt === 'my-lists') {
-        state.sidebarMode = 'categories';
-        state.view = 'all';
+      } else if (opt === 'shared') {
+        state.sidebarMode = 'shared';
+        state.view = 'shared';
       } else if (opt === 'sponsored') {
         // "VoteCraft Picks" links straight into the real curated Top 100 saves area.
         state.sidebarMode = 'curated';

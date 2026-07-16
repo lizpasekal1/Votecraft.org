@@ -282,8 +282,9 @@ export const CURATED_LIST_DISPLAY_NAMES = {
 };
 
 // Cover-image overrides for the same relabeled lists — takes priority over the dynamically
-// resolved genre cover below.
-const CURATED_LIST_COVER_OVERRIDES = {
+// resolved genre cover below. Exported so sharedSaves.js's followed-lists portals can reuse the
+// same cover-art resolution as this widget.
+export const CURATED_LIST_COVER_OVERRIDES = {
   'Top 100': 'https://epe.brightspotcdn.com/dims4/default/22ecff5/2147483647/strip/true/crop/1720x1167+0+141/resize/840x570!/quality/90/?url=https%3A%2F%2Fepe-brightspot.s3.us-east-1.amazonaws.com%2Faf%2F4d%2Fb3599f274134a7d658fcdcc879e0%2F112024-opinion-mirra-teaching-democracy-crisis-2135716019.jpg',
   'Futurism': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8STeiTkB-qTlmQ3P1RIDrzfbm7ZTepEySa3IgNo6bakUuHFnTNxmQBdED&s=10',
   'Thriller': 'https://fairvote.org/wp-content/uploads/2022/09/New-web.jpg',
@@ -299,8 +300,9 @@ const CURATED_LIST_COVER_OVERRIDES = {
 const DASHBOARD_CURATED_ORDER = ['Top 100', 'Thriller', 'Pop', 'Fantasy', 'Jazz', 'Comedy', 'Futurism'];
 
 // One representative cover image per genre — first item with an imageUrl across any category
-// in that genre, so the card reads as "a list with a face" rather than a bare icon.
-function _resolveGenreCover(genre) {
+// in that genre, so the card reads as "a list with a face" rather than a bare icon. Exported for
+// the same reason as CURATED_LIST_COVER_OVERRIDES above.
+export function _resolveGenreCover(genre) {
   const byCategory = CURATED_ITEMS[genre] || {};
   for (const items of Object.values(byCategory)) {
     const hit = (items || []).find(i => i && i.imageUrl);

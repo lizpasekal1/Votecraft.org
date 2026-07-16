@@ -257,16 +257,6 @@ function buildMusicTasteSection() {
     </div>`;
 }
 
-// ===== friends (placeholder) =====
-
-function buildFriendsPlaceholderSection() {
-  return `
-    <div class="dash-card profile-card--friends">
-      <div class="profile-card-header"><span class="profile-card-title">Friends</span></div>
-      <p class="profile-card-copy">Coming soon — connect with friends to see what they're saving.</p>
-    </div>`;
-}
-
 // ===== entry point =====
 
 export function renderProfilePage() {
@@ -285,7 +275,6 @@ export function renderProfilePage() {
         ${buildConnectionsSection()}
         ${buildInterestsSection()}
         ${buildMusicTasteSection()}
-        ${buildFriendsPlaceholderSection()}
       </div>
     </div>`;
 
