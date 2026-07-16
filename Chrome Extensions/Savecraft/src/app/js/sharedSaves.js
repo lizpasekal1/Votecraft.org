@@ -8,7 +8,7 @@ import { state, CURATED_DIRECTORY_CONTENT } from './state.js';
 import { escapeHtml } from './utils.js';
 import { persistViewState } from './storage.js';
 import { _wireCarouselArrows } from './dashboard.js';
-import { renderSidebar, renderGrid } from './render.js';
+import { renderSidebar, renderGrid, resolveOrgImageUrl } from './render.js';
 
 // Rotated across every vertical card's avatar circle.
 const SHARED_VCARD_COLORS = ['#5B5BEF', '#E0507A', '#2A9D8F', '#E76F51', '#8E44AD', '#F4A340'];
@@ -34,7 +34,7 @@ function buildVerticalCardSlider({ sectionClass, title, cards }) {
   const cardsHtml = tripled.map((c, i) => {
     const color = SHARED_VCARD_COLORS[i % SHARED_VCARD_COLORS.length];
     const avatarContent = c.imageUrl
-      ? `<img src="${escapeHtml(c.imageUrl)}" alt="" loading="lazy" decoding="async">`
+      ? `<img src="${escapeHtml(resolveOrgImageUrl(c.imageUrl))}" alt="" loading="lazy" decoding="async">`
       : (c.icon || PLACEHOLDER_IMAGE_SVG);
     return `
       <div class="shared-vcard">
@@ -58,7 +58,7 @@ function buildVerticalCardSlider({ sectionClass, title, cards }) {
 
 function buildNonprofitSliderSection() {
   const cards = CURATED_DIRECTORY_CONTENT.categories
-    .map(({ label, orgs }) => ({ name: orgs[0].name, tagline: orgs[0].tagline, tag: label, icon: orgs[0].icon }));
+    .map(({ label, orgs }) => ({ name: orgs[0].name, tagline: orgs[0].tagline, tag: label, icon: orgs[0].icon, imageUrl: orgs[0].imageUrl }));
   return buildVerticalCardSlider({ sectionClass: 'shared-card--nonprofits', title: "Curated Lists You've Connected", cards });
 }
 
