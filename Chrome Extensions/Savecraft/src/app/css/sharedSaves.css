@@ -23,24 +23,25 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  width: 170px;
+  gap: 10px;
+  width: 221px;
   flex-shrink: 0;
   scroll-snap-align: start;
-  padding: 20px 14px;
+  padding: 26px 18px;
   border-radius: 12px;
   background: var(--hover-bg);
   text-align: center;
 }
 
 .shared-vcard-avatar {
-  width: 64px;
-  height: 64px;
+  width: 83px;
+  height: 83px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: rgba(255, 255, 255, 0.85);
+  font-size: 36px;
   flex-shrink: 0;
   overflow: hidden;
 }
@@ -51,14 +52,19 @@
   object-fit: cover;
 }
 
+.shared-vcard-avatar svg {
+  width: 34px;
+  height: 34px;
+}
+
 .shared-vcard-name {
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .shared-vcard-tagline {
-  font-size: 12px;
+  font-size: 16px;
   line-height: 1.4;
   color: var(--text-secondary);
 }
