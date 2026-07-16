@@ -211,6 +211,18 @@ async function fetchWikipediaSummary(title) {
   return null;
 }
 
+// Direct-source thumbnail lookup for a curated item whose `.url` already points at a Wikipedia
+// article (common for curated Movie/Book/Show/Game items — see fetchMissingCuratedImages() in
+// render.js) — pulls the poster/cover straight from Wikipedia's own REST summary instead of
+// depending on Microlink, which is a shared third-party quota that curated-image fetching
+// shouldn't be the sole thing at the mercy of. Returns null for a non-Wikipedia url or no image.
+export async function fetchWikipediaThumbnailForUrl(url) {
+  const match = /^https?:\/\/en\.wikipedia\.org\/wiki\/([^?#]+)/.exec(url || '');
+  if (!match) return null;
+  const summary = await fetchWikipediaSummary(decodeURIComponent(match[1]));
+  return summary?.originalimage?.source || summary?.thumbnail?.source || null;
+}
+
 function isMusicEntitySummary(summary) {
   if (!summary || summary.type === 'disambiguation') return false;
   return MUSIC_ENTITY_KEYWORDS.test(`${summary.description || ''} ${summary.extract || ''}`);
