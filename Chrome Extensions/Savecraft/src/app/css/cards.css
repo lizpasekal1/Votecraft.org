@@ -1179,12 +1179,10 @@
   display: flex;
   align-items: center;
   gap: 20px;
-  padding: 20px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.bare-list-row:first-child {
-  padding-top: 0;
+  padding: 20px 16px;
+  border-radius: 10px;
+  background: var(--hover-bg);
+  margin-bottom: 12px;
 }
 
 .bare-list-avatar {
@@ -1210,7 +1208,7 @@
 .bare-list-org-name {
   font-size: 15px;
   font-weight: 600;
-  color: var(--primary);
+  color: #fff;
 }
 
 .bare-list-tags {
