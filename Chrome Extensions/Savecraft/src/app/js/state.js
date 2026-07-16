@@ -72,7 +72,6 @@ export const CURATED_DIRECTORY_CONTENT = {
     {
       label: 'Arts & Culture',
       orgs: [
-        { name: 'Art Club List', tagline: 'Where speculative fiction meets civic imagination.', icon: '🎨' },
         { name: 'The Jazz Word List', tagline: 'Jazz history as a living archive.', icon: '🎷' },
         { name: 'Comedy for Change List', tagline: 'Satire with a point of view.', icon: '🎭' },
         { name: 'Independent Film Fund', tagline: "Distribution support for films that wouldn't otherwise get seen.", icon: '🎬' },
