@@ -646,15 +646,25 @@ export function renderGrid() {
   const container = document.getElementById('cards-grid');
   const gridTitle = document.getElementById('grid-title');
 
+  // The Top 100 landing page (renderCuratedGenreLanding() below) physically relocates the real
+  // #sort-select node into its own content, below the hero — safe to do since it's the same
+  // singleton element (not cloned, so main.js's existing change listener keeps working
+  // regardless of where it sits), but it means every render needs to put it back in its normal
+  // .grid-header home FIRST, before any view (including a plain container.innerHTML= wipe)
+  // could otherwise destroy it as an orphaned child of #cards-grid.
+  const sortSelect = document.getElementById('sort-select');
+  const gridHeader = document.querySelector('.grid-header');
+  if (sortSelect.parentElement !== gridHeader) gridHeader.appendChild(sortSelect);
+  gridHeader.style.display = '';
+
   document.getElementById('saves-list-wrap').style.display = 'none';
   document.getElementById('saves-list-dropdown')?.setAttribute('hidden', '');
   document.getElementById('board-filter-wrap').style.display = 'none';
   document.getElementById('board-filter-dropdown')?.setAttribute('hidden', '');
   document.getElementById('board-info-wrap').style.display = 'none';
   document.getElementById('board-info-popup')?.setAttribute('hidden', '');
-  document.getElementById('sort-select').style.display = '';
+  sortSelect.style.display = '';
   gridTitle.style.display = '';
-  document.querySelector('.grid-header').style.display = ''; // dashboard.js hides this wrapper entirely; every other view needs it restored
 
   if (state.view === 'kanban') {
     renderKanbanBoard();
@@ -1024,6 +1034,13 @@ function wireQuickQueueButtons(container) {
 function renderCuratedGenreLanding(container, genre, content) {
   container.className = 'cards-grid top100-landing';
 
+  // The hero band below is this view's real header — hide the standard #grid-title ("Top 100
+  // Saves") and empty out .grid-header (its sort dropdown gets moved into the hero area itself,
+  // see below) so the hero sits flush at the top instead of leaving a redundant gap above it.
+  // The sidebar's own "Top 100 Saves" back-button label is a separate element, untouched.
+  document.getElementById('grid-title').style.display = 'none';
+  document.querySelector('.grid-header').style.display = 'none';
+
   // Every other curated view resolves an item's displayed image through this same fallback
   // chain (see getFilteredSortedItems()'s genre: branch) before ever falling back to a live
   // fetch — skipping it here was why these rows showed the fallback icon for almost everything
@@ -1078,12 +1095,21 @@ function renderCuratedGenreLanding(container, genre, content) {
       <h2 class="top100-hero-title">${escapeHtml(content.headline)}</h2>
       <p class="top100-hero-desc">${escapeHtml(content.description)}</p>
     </div>
+    <div class="top100-sort-wrap"></div>
     ${rowsHtml}
     <div class="top100-cta">
       <span class="top100-cta-text">Want your organization's picks featured like this?</span>
       <a class="top100-cta-btn" href="${chrome.runtime.getURL('src/sponsored/sponsored.html')}" target="_blank" rel="noopener">Become a Sponsor →</a>
     </div>
   `;
+
+  // Physically relocates the real, singleton #sort-select node (safe — see the comment at the
+  // top of renderGrid() for why) into this view's own layout, below the hero, instead of its
+  // usual spot in the now-hidden .grid-header toolbar.
+  const sortWrap = container.querySelector('.top100-sort-wrap');
+  const sortSelect = document.getElementById('sort-select');
+  sortWrap.appendChild(sortSelect);
+  sortSelect.style.display = '';
 
   // Same live-fetch-and-patch pipeline the main curated grid uses for anything still missing an
   // image after the cache-merge above (Microlink for a general thumbnail, Wikipedia specifically
