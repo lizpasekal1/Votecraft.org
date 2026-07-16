@@ -1138,7 +1138,7 @@ function renderCuratedBareList(container) {
 
   container.innerHTML = `
     <div class="bare-list-page-inner">
-      <div class="bare-list-header">
+      <div class="bare-list-header bare-list-hero">
         <h2 class="bare-list-title">Curated SaveCraft</h2>
         <p class="bare-list-desc">Browse nonprofit-sponsored curated lists.</p>
       </div>
