@@ -94,7 +94,7 @@
    so it reads noticeably smaller than the other orgs' logo images at the same cover-fit sizing —
    scaled up to crop more of that padding away and match. */
 .shared-vcard-avatar img[src*="votecraft_icon_white"] {
-  transform: scale(1.4);
+  transform: scale(1.15);
 }
 
 .shared-vcard-avatar svg {
