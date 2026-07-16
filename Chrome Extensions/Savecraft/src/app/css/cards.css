@@ -1211,10 +1211,17 @@
   color: #fff;
 }
 
+.bare-list-org-tagline {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
 .bare-list-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-bottom: 10px;
 }
 
 .bare-list-tag {

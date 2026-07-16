@@ -1128,6 +1128,7 @@ function renderCuratedBareList(container) {
         <div class="bare-list-avatar" style="background:${color}">${org.icon}</div>
         <div class="bare-list-info">
           <span class="bare-list-org-name">${escapeHtml(org.name)}</span>
+          <span class="bare-list-org-tagline">${escapeHtml(org.tagline)}</span>
           <div class="bare-list-tags">
             <span class="bare-list-tag bare-list-tag--muted">${escapeHtml(org.category)}</span>
           </div>
