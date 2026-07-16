@@ -7,6 +7,8 @@
   display: flex;
   flex-direction: column;
   min-height: 100%;
+  padding-left: 40px; /* matches .bare-list-page's left padding, so the shared .bare-list-hero
+                         banner (with its own -20px margin) lines up the same way on both pages */
 }
 
 .shared-page {
