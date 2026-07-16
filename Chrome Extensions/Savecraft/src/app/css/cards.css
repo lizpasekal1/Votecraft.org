@@ -1138,6 +1138,17 @@
   margin-bottom: 10px;
 }
 
+.bare-list-why-title {
+  margin-top: 28px;
+}
+
+.bare-list-why-copy {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
 .bare-list-chips {
   display: flex;
   flex-wrap: wrap;

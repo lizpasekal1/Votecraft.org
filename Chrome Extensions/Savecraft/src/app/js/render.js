@@ -1147,6 +1147,8 @@ function renderCuratedBareList(container) {
         <div class="bare-list-filters">
           <div class="bare-list-filter-section-title">Cause Area</div>
           <div class="bare-list-chips">${filterChipsHtml}</div>
+          <div class="bare-list-filter-section-title bare-list-why-title">Why Curated Lists</div>
+          <p class="bare-list-why-copy">A good list is a shortcut — built by people who already did the digging, so you don't have to. Curated lists surface what's worth your time from partners whose values you trust, instead of leaving it to chance.</p>
         </div>
         <div class="bare-list-rows">
           ${rowsHtml}
