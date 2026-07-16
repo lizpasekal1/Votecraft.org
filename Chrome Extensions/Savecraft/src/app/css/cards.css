@@ -413,7 +413,7 @@
 
 .card-quick-queue-btn--active {
   display: flex;
-  background: transparent;
+  background: var(--hover-bg);
   color: var(--primary);
 }
 
