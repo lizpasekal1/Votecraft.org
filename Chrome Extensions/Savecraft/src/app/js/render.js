@@ -1094,10 +1094,11 @@ function renderCuratedGenreLanding(container, genre, content) {
     }).join('');
     return `
       <div class="top100-row">
-        <button class="top100-row-header" data-genre="${escapeHtml(genre)}" data-category="${escapeHtml(category)}">
+        <div class="top100-row-header" data-genre="${escapeHtml(genre)}" data-category="${escapeHtml(category)}">
           <span class="top100-row-title">${escapeHtml(label)}</span>
+          <button class="top100-row-add-btn" aria-label="Open ${escapeHtml(label)}"><svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg></button>
           <span class="top100-row-see-all">See all →</span>
-        </button>
+        </div>
         <div class="dash-carousel top100-carousel">
           <button class="dash-carousel-prev" aria-label="Previous">‹</button>
           <div class="dash-carousel-strip">${cardsHtml}</div>
