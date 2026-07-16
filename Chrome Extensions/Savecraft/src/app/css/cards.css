@@ -812,6 +812,32 @@
   transition: opacity 0.15s;
 }
 
+/* Sits right after the row title (not at the far right where "See all" is) — clicking it does
+   the exact same thing clicking the row header/title already does (opens that category's full
+   curated view, same sidebar-highlighting behavior included), it's just a more visible, always-on
+   affordance. No separate click handler needed — it's a child of .top100-row-header, whose click
+   listener already covers it via normal event bubbling. */
+.top100-row-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid #fff;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s;
+}
+
+.top100-row-add-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
 .top100-row-header:hover .top100-row-see-all {
   opacity: 1;
 }
