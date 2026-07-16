@@ -1098,7 +1098,7 @@ function renderCuratedDirectory(container) {
     const tripled = [...orgs, ...orgs, ...orgs];
     const cardsHtml = tripled.map(org => `
       <div class="directory-org-card">
-        <span class="directory-org-icon">${org.icon}</span>
+        <div class="directory-org-art"><span class="directory-org-icon">${org.icon}</span></div>
         <span class="directory-org-name">${escapeHtml(org.name)}</span>
         <span class="directory-org-tagline">${escapeHtml(org.tagline)}</span>
       </div>`).join('');

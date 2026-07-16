@@ -1003,24 +1003,36 @@
   margin-bottom: 12px;
 }
 
+/* Sized to exactly match .top100-row-card's thumbnail (264x149, ~16:9) so this directory's
+   sliders read as the same "Netflix row" shape as the Top 100 landing page's — art box on top,
+   text below it, not the earlier smaller icon-chip card. Not reusing .top100-row-card directly
+   since these cards are inert (no hover-lift/cursor-pointer, no click wiring) and show an emoji
+   in place of real cover art. */
 .directory-org-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
-  width: 170px;
+  width: 264px;
   flex-shrink: 0;
   scroll-snap-align: start;
-  padding: 18px 14px;
-  border-radius: 12px;
-  background: var(--surface);
-  border: 1px solid var(--border);
   cursor: default;
-  text-align: center;
+  text-align: left;
+}
+
+.directory-org-art {
+  width: 264px;
+  height: 149px;
+  border-radius: 10px;
+  background: var(--hover-bg);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .directory-org-icon {
-  font-size: 32px;
+  font-size: 48px;
   line-height: 1;
 }
 
