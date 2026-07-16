@@ -1183,6 +1183,14 @@
   border-radius: 10px;
   background: var(--hover-bg);
   margin-bottom: 12px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+
+.bare-list-row:hover {
+  background: var(--border);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
 }
 
 .bare-list-avatar {
