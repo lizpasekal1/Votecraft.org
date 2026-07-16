@@ -54,6 +54,13 @@
   margin-top: auto;
 }
 
+/* Friend cards have no bottom-anchored tag (see the nonprofit-only rule above), so their shorter
+   avatar+name content is centered vertically within the card's shared min-height instead of
+   sitting flush at the top. */
+.shared-card--friends .shared-vcard {
+  justify-content: center;
+}
+
 .shared-vcard-avatar {
   width: 83px;
   height: 83px;
