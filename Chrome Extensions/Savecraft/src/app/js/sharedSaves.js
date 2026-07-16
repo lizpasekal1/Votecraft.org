@@ -36,7 +36,7 @@ function buildVerticalCardSlider({ sectionClass, title, cards }) {
         <div class="shared-vcard-avatar" style="background:${color}">${c.icon || PLACEHOLDER_IMAGE_SVG}</div>
         <span class="shared-vcard-name">${escapeHtml(c.name)}</span>
         <span class="shared-vcard-tagline">${escapeHtml(c.tagline)}</span>
-        <span class="bare-list-tag bare-list-tag--muted">${escapeHtml(c.tag)}</span>
+        ${c.tag ? `<span class="bare-list-tag bare-list-tag--muted">${escapeHtml(c.tag)}</span>` : ''}
       </div>`;
   }).join('');
 
@@ -58,7 +58,7 @@ function buildNonprofitSliderSection() {
 }
 
 function buildFriendsSection() {
-  const cards = DEMO_FRIENDS.map(f => ({ name: f.name, tagline: `Following ${f.list}`, tag: f.list }));
+  const cards = DEMO_FRIENDS.map(f => ({ name: f.name, tagline: `Following ${f.list}` }));
   return buildVerticalCardSlider({ sectionClass: 'shared-card--friends', title: 'Friends', cards });
 }
 
