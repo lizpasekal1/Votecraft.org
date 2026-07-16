@@ -56,7 +56,7 @@ function buildVerticalCardSlider({ sectionClass, title, cards }) {
 function buildNonprofitSliderSection() {
   const cards = CURATED_DIRECTORY_CONTENT.categories
     .map(({ label, orgs }) => ({ name: orgs[0].name, tagline: orgs[0].tagline, tag: label, icon: orgs[0].icon }));
-  return buildVerticalCardSlider({ sectionClass: 'shared-card--nonprofits', title: 'Explore Nonprofit Lists', cards });
+  return buildVerticalCardSlider({ sectionClass: 'shared-card--nonprofits', title: "Curated Lists You've Connected", cards });
 }
 
 function buildFriendsSection() {
