@@ -23,10 +23,11 @@
   margin-bottom: 40px;
 }
 
-/* Strip .dash-card's boxed look (background/border/padding) for these two sections specifically
-   — the sliders sit directly on the page instead of inside a bordered container. Scoped to these
+/* Strip .dash-card's boxed look (background/border/padding) for these sections specifically —
+   the sliders sit directly on the page instead of inside a bordered container. Scoped to these
    classes only so the Dashboard's own .dash-card widgets are unaffected. */
 .shared-card--nonprofits,
+.shared-card--group-lists,
 .shared-card--friends {
   background: none;
   border: none;
@@ -34,6 +35,7 @@
 }
 
 .shared-card--nonprofits .profile-card-header,
+.shared-card--group-lists .profile-card-header,
 .shared-card--friends .profile-card-header {
   justify-content: center;
   gap: 10px;

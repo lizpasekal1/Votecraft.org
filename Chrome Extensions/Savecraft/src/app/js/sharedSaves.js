@@ -58,7 +58,7 @@ function buildVerticalCardSlider({ sectionClass, title, cards }) {
     </div>`;
 }
 
-function buildNonprofitSliderSection() {
+function buildNonprofitSliderSection(sectionClass, title) {
   // One org per category, except Voting & Democracy — which also shows FairVote List and
   // Represent-Us List right after Votecraft List, matching their order on the Cause Curated page.
   const cards = CURATED_DIRECTORY_CONTENT.categories
@@ -66,7 +66,7 @@ function buildNonprofitSliderSection() {
       const picks = label === 'Voting & Democracy' ? orgs.slice(0, 3) : orgs.slice(0, 1);
       return picks.map(org => ({ name: org.name.replace(/\s+List$/i, ''), tagline: org.tagline, tag: label, icon: org.icon, imageUrl: org.imageUrl }));
     });
-  return buildVerticalCardSlider({ sectionClass: 'shared-card--nonprofits', title: "Curated Lists You've Connected", cards });
+  return buildVerticalCardSlider({ sectionClass, title, cards });
 }
 
 function buildFriendsSection() {
@@ -110,7 +110,9 @@ export function renderSharedSavesPage() {
       </div>
       ${buildFriendsSection()}
       <div class="shared-section-divider"></div>
-      ${buildNonprofitSliderSection()}
+      ${buildNonprofitSliderSection('shared-card--nonprofits', "Curated Lists You've Connected")}
+      <div class="shared-section-divider"></div>
+      ${buildNonprofitSliderSection('shared-card--group-lists', "Group Lists You've Connected")}
     </div>`;
 
   wireCarousels(container);
