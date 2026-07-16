@@ -141,6 +141,7 @@
   color: var(--primary);
   font-size: 13px;
   font-weight: 600;
+  text-transform: uppercase;
   cursor: pointer;
   padding: 0;
 }
