@@ -1128,7 +1128,9 @@ function renderCuratedBareList(container) {
   `).join('');
 
   const rowsHtml = visibleOrgs.map((org, i) => {
-    const color = DIRECTORY_AVATAR_COLORS[i % DIRECTORY_AVATAR_COLORS.length];
+    // Progressive List's logo specifically needs a white backdrop to read correctly; every other
+    // avatar (real logo or emoji) keeps the normal rotating brand color.
+    const color = org.name === 'Progressive List' ? '#fff' : DIRECTORY_AVATAR_COLORS[i % DIRECTORY_AVATAR_COLORS.length];
     const avatarContent = org.imageUrl
       ? `<img src="${escapeHtml(resolveOrgImageUrl(org.imageUrl))}" alt="">`
       : org.icon;
