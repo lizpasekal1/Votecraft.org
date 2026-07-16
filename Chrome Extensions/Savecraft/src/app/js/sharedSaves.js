@@ -32,7 +32,9 @@ const DEMO_FRIENDS = [
 function buildVerticalCardSlider({ sectionClass, title, cards }) {
   const tripled = [...cards, ...cards, ...cards];
   const cardsHtml = tripled.map((c, i) => {
-    const color = SHARED_VCARD_COLORS[i % SHARED_VCARD_COLORS.length];
+    // Progressive List's logo specifically needs a white backdrop to read correctly; every other
+    // avatar (real logo, photo, or emoji) keeps the normal rotating brand color.
+    const color = c.name === 'Progressive' ? '#fff' : SHARED_VCARD_COLORS[i % SHARED_VCARD_COLORS.length];
     const avatarContent = c.imageUrl
       ? `<img src="${escapeHtml(resolveOrgImageUrl(c.imageUrl))}" alt="" loading="lazy" decoding="async">`
       : (c.icon || PLACEHOLDER_IMAGE_SVG);
