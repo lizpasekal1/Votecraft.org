@@ -601,20 +601,11 @@ export function fetchMissingCuratedImages(items) {
         if (!imgUrl) return;
         state.curatedImgCache[item.id] = imgUrl;
         persistCuratedImgCache();
-        const card = document.querySelector(`.card[data-id="${item.id}"]`);
-        if (!card) return;
-        if (card.querySelector('.card-image')) return; // already has an image, don't double-insert
-        const placeholder = card.querySelector('.card-placeholder');
-        if (!placeholder) return;
-        const img = document.createElement('img');
-        img.className = 'card-image';
-        img.src = imgUrl;
-        img.alt = '';
-        img.loading = 'lazy';
-        img.decoding = 'async';
-        img.onerror = () => { img.style.display = 'none'; placeholder.style.display = 'flex'; };
-        placeholder.style.display = 'none'; // hide placeholder before image arrives
-        card.insertBefore(img, placeholder);
+        // patchCardImage() (utils.js) handles both plain .card elements and the Top 100 landing
+        // page's .top100-row-card — this used to duplicate just the .card half inline here, which
+        // silently never patched a row card's thumbnail once its image arrived (only picked up on
+        // the next full re-render, via resolveRowItemImage() reading the now-populated cache).
+        patchCardImage(item.id, imgUrl);
       })
       .catch(() => {})
       .finally(() => _curatedImgFetchInFlight.delete(item.id));
