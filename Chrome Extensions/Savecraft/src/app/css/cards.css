@@ -1193,6 +1193,11 @@
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
 }
 
+.bare-list-row:hover .bare-list-org-name {
+  color: var(--primary);
+  text-decoration: none;
+}
+
 .bare-list-avatar {
   flex-shrink: 0;
   width: 80px;
