@@ -1269,10 +1269,13 @@
   color: #fff;
 }
 
+/* Real logos fill the whole circle (matching the Shared Saves slider's avatar treatment) — except
+   the VoteCraft icon below, which keeps its own contained/scaled sizing since it's a flat
+   white-on-transparent glyph, not a photo/logo suited to a cropped full-bleed fill. */
 .bare-list-avatar img {
-  width: 55%;
-  height: 55%;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* The VoteCraft app icon PNG has a lot of built-in canvas padding around the glyph, so it reads
