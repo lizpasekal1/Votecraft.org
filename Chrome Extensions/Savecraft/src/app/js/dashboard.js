@@ -151,7 +151,7 @@ function buildFavoritesWidget() {
   const categoryFilterHtml = `
     <div class="board-filter-wrap dash-fav-category-wrap">
       <button class="btn-board-filter dash-fav-category-btn">
-        <span>${escapeHtml(_favCategoryFilter ? _favCategoryFilter.toUpperCase() : 'CATEGORIES')}</span>
+        <span>${escapeHtml(_favCategoryFilter ? _favCategoryFilter.toUpperCase() : 'Categories')}</span>
         <svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor"><path d="M0 0l5 6 5-6z"/></svg>
       </button>
       <div class="board-filter-dropdown dash-fav-category-dropdown" hidden></div>
