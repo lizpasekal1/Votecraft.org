@@ -70,15 +70,6 @@ export const CURATED_DIRECTORY_CONTENT = {
       ],
     },
     {
-      label: 'Arts & Culture',
-      orgs: [
-        { name: 'The Jazz Word List', tagline: 'Jazz history as a living archive.', icon: '🎷' },
-        { name: 'Comedy for Change List', tagline: 'Satire with a point of view.', icon: '🎭' },
-        { name: 'Independent Film Fund', tagline: "Distribution support for films that wouldn't otherwise get seen.", icon: '🎬' },
-        { name: 'Reading Rights Collective', tagline: 'Defending banned books, one list at a time.', icon: '📚' },
-      ],
-    },
-    {
       label: 'Social Justice & Equity',
       orgs: [
         { name: 'Progressive List', tagline: 'Bold worldbuilding for a bolder politics.', icon: '🔥', imageUrl: 'https://scorecard.progressivemass.com/static/progressive-mass-logo-48694f1da6be76049871b17018f2a8ef.png' },
@@ -87,6 +78,15 @@ export const CURATED_DIRECTORY_CONTENT = {
         { name: 'Racial Equity Now', tagline: 'Media that centers stories of racial justice.', icon: '✊' },
         { name: 'Housing For All Coalition', tagline: 'Stories of displacement, and the fight against it.', icon: '🏠' },
         { name: 'Immigrant Justice Network', tagline: 'Amplifying immigrant voices in film and print.', icon: '🌍' },
+      ],
+    },
+    {
+      label: 'Arts & Culture',
+      orgs: [
+        { name: 'The Jazz Word List', tagline: 'Jazz history as a living archive.', icon: '🎷' },
+        { name: 'Comedy for Change List', tagline: 'Satire with a point of view.', icon: '🎭' },
+        { name: 'Independent Film Fund', tagline: "Distribution support for films that wouldn't otherwise get seen.", icon: '🎬' },
+        { name: 'Reading Rights Collective', tagline: 'Defending banned books, one list at a time.', icon: '📚' },
       ],
     },
     {
