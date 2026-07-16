@@ -44,7 +44,7 @@ function buildVerticalCardSlider({ sectionClass, title, cards }) {
 
   return `
     <div class="dash-card ${sectionClass}">
-      <div class="profile-card-header"><span class="profile-card-title">${escapeHtml(title)}</span></div>
+      <div class="profile-card-header"><span class="profile-card-title">${escapeHtml(title)}</span><button class="top100-row-add-btn" aria-label="Add"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
       <div class="dash-carousel shared-vcard-carousel">
         <button class="dash-carousel-prev" aria-label="Previous">‹</button>
         <div class="dash-carousel-strip">${cardsHtml}</div>
