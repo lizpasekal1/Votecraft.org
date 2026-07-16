@@ -1156,6 +1156,7 @@
   flex: 1;
   min-width: 0;
   max-width: 50%; /* narrowed another 20 points past the earlier 70% */
+  margin-left: 40px; /* extra space between the filter rail and the list, on top of .bare-list-body's own gap */
   display: flex;
   flex-direction: column;
 }
