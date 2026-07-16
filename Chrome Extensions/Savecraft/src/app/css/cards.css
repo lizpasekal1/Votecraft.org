@@ -1114,6 +1114,7 @@
 .bare-list-filters {
   flex-shrink: 0;
   width: 200px;
+  margin-top: 40px;
 }
 
 .bare-list-filter-section-title {
