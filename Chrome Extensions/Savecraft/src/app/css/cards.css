@@ -726,7 +726,7 @@
   position: relative;
   border-radius: 16px;
   padding: 32px 28px;
-  margin-bottom: 60px; /* extra room for .top100-icon-badge, which hangs ~32px below this edge */
+  margin-bottom: 28px;
   background: linear-gradient(135deg, #5B5BEF 0%, #8B7CF6 55%, #C084FC 100%);
   color: #fff;
 }
@@ -738,15 +738,16 @@
   padding-left: 151px;
 }
 
-/* A square brand-mark badge overlapping the bottom edge of the hero, cover-photo/avatar style
-   (LinkedIn-esque) — sits half on the gradient banner, half on the page below it. Solid
-   background (not the hero's gradient) since the icon asset itself is plain white and needs a
-   flat backdrop to read clearly; the border matches the page background so it reads as "cut out"
-   of the banner rather than just another box floating in front of it. */
+/* A square brand-mark badge, vertically centered on the gradient hero — was previously anchored
+   to the hero's bottom edge, LinkedIn-cover-photo/avatar style (half on the banner, half on the
+   page below it), moved fully onto the banner per direct request. Solid background (not the
+   hero's gradient) since the icon asset itself is plain white and needs a flat backdrop to read
+   clearly; the border matches the page background so it still reads as its own distinct mark. */
 .top100-icon-badge {
   position: absolute;
   left: 28px;
-  bottom: -38px; /* scaled with the box below, keeps the same proportion hanging past the hero's edge */
+  top: 50%;
+  transform: translateY(-50%);
   width: 101px;
   height: 101px;
   border-radius: 18px;
