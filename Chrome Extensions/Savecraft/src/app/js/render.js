@@ -3,7 +3,7 @@
 import {
   state, CURATED_ITEMS, CATEGORIES, CAT_LABEL, CAT_EMOJI, CURATED_GENRES, GENRE_EMOJI,
   PRIMARY_FOLDER_ID, CURATED_NOTES_CATEGORIES, CREATOR_CARD_CATEGORY,
-  BOOKMARK_OUTLINE_SVG, BOOKMARK_FILLED_SVG,
+  BOOKMARK_OUTLINE_SVG, BOOKMARK_FILLED_SVG, CURATED_GENRE_LANDING_CONTENT,
 } from './state.js';
 import {
   SPLIT_TITLE_CREATOR_CATEGORIES, splitCuratedTitleCreator, getStaticCuratedCreator,
@@ -22,7 +22,7 @@ import { renderKanbanBoard } from './kanban.js';
 import { openDetailModal } from './detailModal.js';
 import { openEditModal } from './addEditModal.js';
 import { openFetchAlbumsModal } from './fetchAlbumsModal.js';
-import { renderDashboard } from './dashboard.js';
+import { renderDashboard, _wireCarouselArrows } from './dashboard.js';
 import { renderProfilePage } from './profile.js';
 import { closeSidebar } from './main.js';
 
@@ -726,6 +726,16 @@ export function renderGrid() {
     const isCuratedTop = state.view.startsWith('genre:') && state.view.split(':').length === 2;
     const isCuratedLanding = state.view === 'curated';
     const genre = isCuratedTop ? state.view.slice(6) : null;
+
+    // A handful of curated genres (currently just Top 100) get a richer, distinct landing page
+    // here instead of the plain "Pick a category" empty state below — see
+    // CURATED_GENRE_LANDING_CONTENT in state.js for which genres and what content.
+    const landingContent = isCuratedTop && !isSearch ? CURATED_GENRE_LANDING_CONTENT[genre] : null;
+    if (landingContent) {
+      renderCuratedGenreLanding(container, genre, landingContent);
+      return;
+    }
+
     container.className = (isCuratedTop || isCuratedLanding || !isSearch) ? 'cards-grid landing-state' : 'cards-grid';
     container.innerHTML = `
       <div class="empty-state">
@@ -1002,6 +1012,79 @@ function wireQuickQueueButtons(container) {
       btn.classList.add('card-quick-queue-btn--active');
       btn.title = 'In your queue';
       btn.innerHTML = BOOKMARK_FILLED_SVG;
+    });
+  });
+}
+
+// A richer landing page for a curated genre (currently just Top 100 — see
+// CURATED_GENRE_LANDING_CONTENT in state.js), shown instead of the plain "Pick a category" empty
+// state. Deliberately styled distinct from the Dashboard (see cards.css's .top100-* rules) even
+// though it reuses the Dashboard's proven scroll-carousel mechanics (_wireCarouselArrows) —
+// same plumbing, different skin, so this reads as its own destination, not "the Dashboard again."
+function renderCuratedGenreLanding(container, genre, content) {
+  container.className = 'cards-grid top100-landing';
+
+  const rowsHtml = content.rows.map(({ category, label }) => {
+    const rowItems = (CURATED_ITEMS[genre]?.[category] || []).filter(i => !state.hiddenCurated.has(i.id)).slice(0, 15);
+    if (!rowItems.length) return '';
+    // Tripled for the same "always room to scroll either direction" trick
+    // _wireCarouselArrows() (dashboard.js) already relies on for the Dashboard's own rows.
+    const tripled = [...rowItems, ...rowItems, ...rowItems];
+    const cardsHtml = tripled.map(item => {
+      const art = item.imageUrl
+        ? `<img src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async">`
+        : `<span class="top100-row-card-fallback">${CAT_EMOJI[category] || '🎬'}</span>`;
+      return `
+        <button class="top100-row-card" data-id="${escapeHtml(item.id)}" data-category="${escapeHtml(category)}">
+          <div class="top100-row-card-art">${art}</div>
+          <span class="top100-row-card-label">${escapeHtml(item.title || '')}</span>
+        </button>`;
+    }).join('');
+    return `
+      <div class="top100-row">
+        <button class="top100-row-header" data-genre="${escapeHtml(genre)}" data-category="${escapeHtml(category)}">
+          <span class="top100-row-title">${escapeHtml(label)}</span>
+          <span class="top100-row-see-all">See all →</span>
+        </button>
+        <div class="dash-carousel top100-carousel">
+          <button class="dash-carousel-prev" aria-label="Previous">‹</button>
+          <div class="dash-carousel-strip">${cardsHtml}</div>
+          <button class="dash-carousel-next" aria-label="Next">›</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="top100-hero">
+      <div class="top100-wordmark">SaveCraft <span class="top100-wordmark-x">×</span> VoteCraft</div>
+      <h2 class="top100-hero-title">${escapeHtml(content.headline)}</h2>
+      <p class="top100-hero-desc">${escapeHtml(content.description)}</p>
+    </div>
+    ${rowsHtml}
+    <div class="top100-cta">
+      <span class="top100-cta-text">Want your organization's picks featured like this?</span>
+      <a class="top100-cta-btn" href="${chrome.runtime.getURL('src/sponsored/sponsored.html')}" target="_blank" rel="noopener">Become a Sponsor →</a>
+    </div>
+  `;
+
+  container.querySelectorAll('.top100-carousel').forEach(carousel => {
+    const strip = carousel.querySelector('.dash-carousel-strip');
+    if (strip) _wireCarouselArrows(carousel, strip);
+  });
+
+  container.querySelectorAll('.top100-row-card').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = (CURATED_ITEMS[genre]?.[btn.dataset.category] || []).find(i => i.id === btn.dataset.id);
+      if (item) openDetailModal({ ...item, category: btn.dataset.category, curated: true });
+    });
+  });
+
+  container.querySelectorAll('.top100-row-header').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.view = `genre:${btn.dataset.genre}:${btn.dataset.category}`;
+      persistViewState();
+      renderSidebar();
+      renderGrid();
     });
   });
 }

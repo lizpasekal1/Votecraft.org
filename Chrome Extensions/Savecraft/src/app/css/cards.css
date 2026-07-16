@@ -691,3 +691,185 @@
   }
 }
 
+
+/* ===== TOP 100 CURATED LANDING PAGE =====
+   Deliberately distinct from the Dashboard's neutral, utilitarian look — this is meant to feel
+   like its own fun destination (and double as a live demo for pitching nonprofit sponsors), even
+   though it reuses the Dashboard's .dash-carousel scroll/arrow mechanics under the hood. See
+   renderCuratedGenreLanding() in render.js. */
+
+.top100-landing {
+  display: block; /* overrides .cards-grid's default grid layout — wins on source order alone,
+                      since this rule is declared after .cards-grid in this same file */
+  padding-bottom: 24px;
+}
+
+.top100-hero {
+  border-radius: 16px;
+  padding: 32px 28px;
+  margin-bottom: 28px;
+  background: linear-gradient(135deg, #5B5BEF 0%, #8B7CF6 55%, #C084FC 100%);
+  color: #fff;
+}
+
+.top100-wordmark {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  opacity: 0.85;
+  margin-bottom: 14px;
+}
+
+.top100-wordmark-x {
+  opacity: 0.6;
+  font-weight: 400;
+  margin: 0 2px;
+}
+
+.top100-hero-title {
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.15;
+  margin-bottom: 10px;
+}
+
+.top100-hero-desc {
+  font-size: 15px;
+  line-height: 1.5;
+  max-width: 640px;
+  opacity: 0.92;
+}
+
+.top100-row {
+  margin-bottom: 30px;
+}
+
+.top100-row-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 0 12px;
+  color: inherit;
+}
+
+.top100-row-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.top100-row-see-all {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--primary);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.top100-row-header:hover .top100-row-see-all {
+  opacity: 1;
+}
+
+.top100-carousel {
+  padding: 0 2px;
+}
+
+.top100-row-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  width: 140px;
+  scroll-snap-align: start;
+}
+
+.top100-row-card-art {
+  position: relative;
+  width: 140px;
+  height: 198px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--hover-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.top100-row-card-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.top100-row-card:hover .top100-row-card-art {
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+}
+
+.top100-row-card-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.top100-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 20px 24px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.top100-cta-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.top100-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.top100-cta-btn:hover {
+  background: var(--primary-hover);
+}
+
+@media (max-width: 768px) {
+  .top100-hero {
+    padding: 24px 20px;
+  }
+  .top100-hero-title {
+    font-size: 24px;
+  }
+}
