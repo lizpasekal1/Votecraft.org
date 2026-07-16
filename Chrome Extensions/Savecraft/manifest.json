@@ -22,7 +22,7 @@
     "default_title": "SaveCraft"
   },
   "web_accessible_resources": [{
-    "resources": ["images/logos/pngkey.com-rolling-stones-tongue-png-3135824.png", "images/logos/steam.png"],
+    "resources": ["images/logos/pngkey.com-rolling-stones-tongue-png-3135824.png", "images/logos/steam.png", "images/logos/votecraft-logo_white.png"],
     "matches": ["<all_urls>"]
   }],
   "content_scripts": [
