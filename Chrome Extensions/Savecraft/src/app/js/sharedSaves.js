@@ -1,11 +1,14 @@
 // ===== SHARED SAVES PAGE =====
-// A fully inert visual preview — nonprofit-sponsored curated lists (same source data as the Cause
-// Curated pages) and a demo Friends slider. Nothing here links anywhere; this page is a demo of
-// what "shared" could look like, not real functionality yet.
+// A mostly-inert visual preview — nonprofit-sponsored curated lists (same source data as the
+// Cause Curated pages) and a demo Friends slider. The cards themselves don't link anywhere; each
+// section's plus button is wired, but only as a placeholder back to the Cause Curated page, since
+// there's no real "add" flow built yet.
 
-import { CURATED_DIRECTORY_CONTENT } from './state.js';
+import { state, CURATED_DIRECTORY_CONTENT } from './state.js';
 import { escapeHtml } from './utils.js';
+import { persistViewState } from './storage.js';
 import { _wireCarouselArrows } from './dashboard.js';
+import { renderSidebar, renderGrid } from './render.js';
 
 // Rotated across every vertical card's avatar circle.
 const SHARED_VCARD_COLORS = ['#5B5BEF', '#E0507A', '#2A9D8F', '#E76F51', '#8E44AD', '#F4A340'];
@@ -71,6 +74,20 @@ function wireCarousels(container) {
   });
 }
 
+// Placeholder destination for now — both plus buttons just go to the Cause Curated page, since
+// there's no real "add a list"/"add a friend" flow built yet.
+function wireAddButtons(container) {
+  container.querySelectorAll('.top100-row-add-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.sidebarMode = 'curated';
+      state.view = 'curated';
+      persistViewState();
+      renderSidebar();
+      renderGrid();
+    });
+  });
+}
+
 export function renderSharedSavesPage() {
   const container = document.getElementById('cards-grid');
   document.getElementById('grid-title').style.display = 'none';
@@ -90,4 +107,5 @@ export function renderSharedSavesPage() {
     </div>`;
 
   wireCarousels(container);
+  wireAddButtons(container);
 }
