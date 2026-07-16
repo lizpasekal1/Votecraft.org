@@ -1227,8 +1227,8 @@
 }
 
 .bare-list-tag--muted {
-  background: var(--hover-bg);
-  color: var(--text-secondary);
+  background: rgba(91, 91, 239, 0.18);
+  color: var(--primary);
 }
 
 .bare-list-view-btn {
