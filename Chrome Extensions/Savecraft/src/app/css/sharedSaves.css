@@ -36,6 +36,7 @@
 .shared-card--nonprofits .profile-card-header,
 .shared-card--friends .profile-card-header {
   justify-content: center;
+  gap: 10px;
 }
 
 .shared-section-divider {
