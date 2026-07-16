@@ -401,7 +401,8 @@
   z-index: 1;
 }
 
-.card:hover .card-quick-queue-btn {
+.card:hover .card-quick-queue-btn,
+.top100-row-card:hover .card-quick-queue-btn {
   display: flex;
 }
 
