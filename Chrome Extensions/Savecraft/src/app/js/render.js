@@ -1096,7 +1096,7 @@ function renderCuratedGenreLanding(container, genre, content) {
       <div class="top100-row">
         <div class="top100-row-header" data-genre="${escapeHtml(genre)}" data-category="${escapeHtml(category)}">
           <span class="top100-row-title">${escapeHtml(label)}</span>
-          <button class="top100-row-add-btn" aria-label="Open ${escapeHtml(label)}"><svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg></button>
+          <button class="top100-row-add-btn" aria-label="Open ${escapeHtml(label)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
           <span class="top100-row-see-all">See all →</span>
         </div>
         <div class="dash-carousel top100-carousel">

@@ -816,26 +816,29 @@
    the exact same thing clicking the row header/title already does (opens that category's full
    curated view, same sidebar-highlighting behavior included), it's just a more visible, always-on
    affordance. No separate click handler needed — it's a child of .top100-row-header, whose click
-   listener already covers it via normal event bubbling. */
+   listener already covers it via normal event bubbling. Styled to match .kanban-expand-btn
+   (kanban.css) exactly, per direct request — same size/border/hover treatment. */
 .top100-row-add-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   align-self: center;
   flex-shrink: 0;
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  border: 1.5px solid #fff;
-  background: transparent;
-  color: #fff;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
   cursor: pointer;
   padding: 0;
-  transition: background 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .top100-row-add-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
 }
 
 .top100-row-header:hover .top100-row-see-all {
