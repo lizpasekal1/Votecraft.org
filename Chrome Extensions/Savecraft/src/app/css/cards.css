@@ -1175,17 +1175,16 @@
   flex-direction: column;
 }
 
-/* A solid dark background per row (rather than a plain divider) so .bare-list-org-name can be
-   pure white and stay legible in both light and dark theme. Uses --primary-hover (not --primary)
-   so the solid-purple .bare-list-view-btn below still stands out against the row instead of
-   blending into an identical color. */
+/* A solid, neutral dark background per row (not the brand purple — that's reserved for
+   .bare-list-view-btn) so .bare-list-org-name can be pure white and stay legible regardless of
+   theme, without competing with the purple pill button. */
 .bare-list-row {
   display: flex;
   align-items: center;
   gap: 20px;
   padding: 20px 16px;
   border-radius: 10px;
-  background: var(--primary-hover);
+  background: #2A2A35;
   margin-bottom: 12px;
 }
 
