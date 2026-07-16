@@ -1054,6 +1054,13 @@
    above, with a link through to that richer page. Deliberately spare: no hero band, no carousels,
    just a filter rail + a scannable list of rows. */
 
+.bare-list-page {
+  display: block; /* overrides .cards-grid's default 2-column grid, which was squeezing this
+                      single-child page into just the first column's width — same fix as
+                      .top100-landing above. */
+  padding-bottom: 24px;
+}
+
 .bare-list-page-inner {
   display: flex;
   flex-direction: column;
