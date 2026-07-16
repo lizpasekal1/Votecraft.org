@@ -260,7 +260,7 @@ export function renderSidebar() {
   if (sidebarEffectiveView.startsWith('genre:')) {
     sidebarTitle = sidebarEffectiveView.slice(6).split(':')[0] + ' Saves';
   } else if (state.sidebarMode === 'curated') {
-    sidebarTitle = 'Curated SaveCraft';
+    sidebarTitle = 'Cause Curated';
   } else if (state.sidebarMode === 'shared') {
     sidebarTitle = 'Shared Saves';
   }
@@ -1141,7 +1141,7 @@ function renderCuratedBareList(container) {
   container.innerHTML = `
     <div class="bare-list-page-inner">
       <div class="bare-list-header bare-list-hero">
-        <h2 class="bare-list-title">Curated SaveCraft</h2>
+        <h2 class="bare-list-title">Cause Curated</h2>
         <p class="bare-list-desc">Browse nonprofit-sponsored curated lists.</p>
       </div>
       <div class="bare-list-body">
