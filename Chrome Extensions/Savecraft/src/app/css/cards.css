@@ -774,6 +774,12 @@
   padding: 0 2px;
 }
 
+/* .dash-carousel-strip's base 14px gap (dashboard.css) is shared with the Dashboard's own
+   carousel — scoped here so widening it (+10px) only affects these Top 100 rows. */
+.top100-carousel .dash-carousel-strip {
+  gap: 24px;
+}
+
 .top100-row-card {
   display: flex;
   flex-direction: column;
@@ -783,14 +789,14 @@
   border: none;
   cursor: pointer;
   flex-shrink: 0;
-  width: 220px;
+  width: 264px;
   scroll-snap-align: start;
 }
 
 .top100-row-card-art {
   position: relative;
-  width: 220px;
-  height: 124px; /* ~16:9, the classic Netflix-row thumbnail shape (label stays below, not overlaid) */
+  width: 264px;
+  height: 149px; /* ~16:9, the classic Netflix-row thumbnail shape (label stays below, not overlaid) */
   border-radius: 10px;
   overflow: hidden;
   background: var(--hover-bg);
