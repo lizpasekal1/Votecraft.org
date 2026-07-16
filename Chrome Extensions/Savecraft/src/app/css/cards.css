@@ -1149,6 +1149,7 @@
 .bare-list-rows {
   flex: 1;
   min-width: 0;
+  max-width: 70%; /* 30% narrower than the full remaining width next to the filter rail */
   display: flex;
   flex-direction: column;
 }
