@@ -737,6 +737,16 @@
   opacity: 0.92;
 }
 
+/* Holds the real #sort-select, physically relocated here from its usual .grid-header spot —
+   see renderCuratedGenreLanding() in render.js. .grid-header .sort-select's own margin-left:auto
+   rule no longer applies once it's moved out from under that ancestor, so it just sits at its
+   natural size on the left here. */
+.top100-sort-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 18px;
+}
+
 .top100-row {
   margin-bottom: 30px;
 }
