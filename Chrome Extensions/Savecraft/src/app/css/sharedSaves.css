@@ -29,6 +29,11 @@
   padding: 0;
 }
 
+.shared-section-divider {
+  border-top: 1px solid var(--border);
+  margin: 8px 24px;
+}
+
 .shared-vcard {
   display: flex;
   flex-direction: column;

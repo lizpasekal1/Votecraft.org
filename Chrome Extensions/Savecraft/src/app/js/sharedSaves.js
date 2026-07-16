@@ -86,6 +86,7 @@ export function renderSharedSavesPage() {
         <p class="bare-list-desc">Curated lists you follow, and friends you've connected with.</p>
       </div>
       ${buildNonprofitSliderSection()}
+      <div class="shared-section-divider"></div>
       ${buildFriendsSection()}
     </div>`;
 
