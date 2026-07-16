@@ -1129,7 +1129,6 @@ function renderCuratedBareList(container) {
         <div class="bare-list-info">
           <span class="bare-list-org-name">${escapeHtml(org.name)}</span>
           <div class="bare-list-tags">
-            <span class="bare-list-tag">Organization</span>
             <span class="bare-list-tag bare-list-tag--muted">${escapeHtml(org.category)}</span>
           </div>
         </div>
