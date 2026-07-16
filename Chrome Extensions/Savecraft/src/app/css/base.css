@@ -173,6 +173,7 @@ body {
   color: #fff;
   font-size: 14px;
   text-align: left;
+  white-space: nowrap;
   cursor: pointer;
 }
 
