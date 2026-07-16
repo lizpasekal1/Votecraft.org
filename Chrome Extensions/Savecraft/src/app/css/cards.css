@@ -714,10 +714,10 @@
 }
 
 /* Keeps the text block clear of .top100-icon-badge horizontally instead of relying on vertical
-   spacing — the badge sits at left:28px, is 84px wide, so text starts 50px past its right edge
-   (28 + 84 + 50 = 162px) rather than sharing the hero's own 28px left padding. */
+   spacing — the badge sits at left:28px, is 101px wide, so text starts 50px past its right edge
+   (28 + 101 + 50 = 179px) rather than sharing the hero's own 28px left padding. */
 .top100-hero-text {
-  padding-left: 134px;
+  padding-left: 151px;
 }
 
 /* A square brand-mark badge overlapping the bottom edge of the hero, cover-photo/avatar style
@@ -728,9 +728,9 @@
 .top100-icon-badge {
   position: absolute;
   left: 28px;
-  bottom: -32px;
-  width: 84px;
-  height: 84px;
+  bottom: -38px; /* scaled with the box below, keeps the same proportion hanging past the hero's edge */
+  width: 101px;
+  height: 101px;
   border-radius: 18px;
   background: #4638C2;
   border: 4px solid var(--bg);
@@ -741,8 +741,8 @@
 }
 
 .top100-icon-badge img {
-  width: 46px;
-  height: 46px;
+  width: 55px;
+  height: 55px;
   object-fit: contain;
   display: block;
 }
