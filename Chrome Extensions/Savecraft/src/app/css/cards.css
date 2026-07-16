@@ -783,14 +783,14 @@
   border: none;
   cursor: pointer;
   flex-shrink: 0;
-  width: 168px;
+  width: 220px;
   scroll-snap-align: start;
 }
 
 .top100-row-card-art {
   position: relative;
-  width: 168px;
-  height: 168px;
+  width: 220px;
+  height: 124px; /* ~16:9, the classic Netflix-row thumbnail shape (label stays below, not overlaid) */
   border-radius: 10px;
   overflow: hidden;
   background: var(--hover-bg);
