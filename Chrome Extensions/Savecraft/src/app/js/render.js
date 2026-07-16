@@ -760,6 +760,7 @@ export function renderGrid() {
     const isSearch = !!state.search;
     const isCuratedTop = state.view.startsWith('genre:') && state.view.split(':').length === 2;
     const isCuratedLanding = state.view === 'curated';
+    const isCuratedFullList = state.view === 'curated-full-list';
     const genre = isCuratedTop ? state.view.slice(6) : null;
 
     // A handful of curated genres (currently just Top 100) get a richer, distinct landing page
@@ -771,12 +772,19 @@ export function renderGrid() {
       return;
     }
 
-    // The top-level "Curated SaveCraft" landing (no genre picked yet) gets a rich directory of
-    // many nonprofit-sponsored lists instead of the plain "Pick a category" empty state below —
-    // see CURATED_DIRECTORY_CONTENT in state.js. Fully inert (a visual pitch/demo), unlike the
-    // genre landing pages above which link through to real content.
-    if (isCuratedLanding && !isSearch) {
+    // "Curated-full-list" — the rich hero + carousel-rows directory of many nonprofit-sponsored
+    // lists (CURATED_DIRECTORY_CONTENT in state.js). Reached via the link on the bare-bones
+    // top-level page below, not directly from the sidebar.
+    if (isCuratedFullList && !isSearch) {
       renderCuratedDirectory(container);
+      return;
+    }
+
+    // The top-level "Curated SaveCraft" landing (no genre picked yet) gets a bare-bones,
+    // ActBlue-style flat list of the same nonprofit-sponsored orgs instead of the plain "Pick a
+    // category" empty state below, with a link through to the fuller Curated-full-list page.
+    if (isCuratedLanding && !isSearch) {
+      renderCuratedBareList(container);
       return;
     }
 
@@ -1088,6 +1096,81 @@ function linkifyHeroDescription(description) {
 // Top 100 landing page's hero/CTA classes for visual consistency, and the same
 // tripled-list + _wireCarouselArrows sliding mechanics for the category rows — only the card
 // markup itself (.directory-org-card) and the lack of any click wiring are new.
+// Bare-bones filter state for the flat directory below — resets each session (not persisted),
+// since it's just a display convenience for this fully inert demo list, not real data filtering.
+let _bareListCategoryFilter = null;
+
+// A palette rotated across avatar circles, standing in for a real org logo/photo.
+const DIRECTORY_AVATAR_COLORS = ['#5B5BEF', '#E0507A', '#2A9D8F', '#E76F51', '#8E44AD', '#F4A340'];
+
+// The top-level Curated SaveCraft landing — a bare-bones, ActBlue-style flat list of the same
+// nonprofit-sponsored orgs as CURATED_DIRECTORY_CONTENT (state.js), with a link through to the
+// fuller "Curated-full-list" hero+carousel page (renderCuratedDirectory() below). Still fully
+// inert — org rows don't navigate anywhere real — but the cause-area filter chips do actually
+// filter this flat list client-side, since that doesn't imply any of these orgs are real/live.
+function renderCuratedBareList(container) {
+  container.className = 'cards-grid bare-list-page';
+  document.getElementById('grid-title').style.display = 'none';
+  document.querySelector('.grid-header').style.display = 'none';
+
+  const content = CURATED_DIRECTORY_CONTENT;
+  const allOrgs = content.categories.flatMap(({ label, orgs }) => orgs.map(org => ({ ...org, category: label })));
+  const visibleOrgs = _bareListCategoryFilter ? allOrgs.filter(o => o.category === _bareListCategoryFilter) : allOrgs;
+
+  const filterChipsHtml = content.categories.map(({ label }) => `
+    <button class="bare-list-chip${_bareListCategoryFilter === label ? ' bare-list-chip--active' : ''}" data-category="${escapeHtml(label)}">${escapeHtml(label)}</button>
+  `).join('');
+
+  const rowsHtml = visibleOrgs.map((org, i) => {
+    const color = DIRECTORY_AVATAR_COLORS[i % DIRECTORY_AVATAR_COLORS.length];
+    return `
+      <div class="bare-list-row">
+        <div class="bare-list-avatar" style="background:${color}">${org.icon}</div>
+        <div class="bare-list-info">
+          <span class="bare-list-org-name">${escapeHtml(org.name)}</span>
+          <div class="bare-list-tags">
+            <span class="bare-list-tag">Organization</span>
+            <span class="bare-list-tag bare-list-tag--muted">${escapeHtml(org.category)}</span>
+          </div>
+        </div>
+        <button class="bare-list-view-btn">View</button>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="bare-list-page-inner">
+      <div class="bare-list-header">
+        <h2 class="bare-list-title">Curated SaveCraft</h2>
+        <p class="bare-list-desc">Browse nonprofit-sponsored curated lists.</p>
+        <a class="bare-list-fulllist-link" href="#" data-view="curated-full-list">See the full experience →</a>
+      </div>
+      <div class="bare-list-body">
+        <div class="bare-list-filters">
+          <div class="bare-list-filter-section-title">Cause Area</div>
+          <div class="bare-list-chips">${filterChipsHtml}</div>
+        </div>
+        <div class="bare-list-rows">${rowsHtml}</div>
+      </div>
+    </div>
+  `;
+
+  container.querySelector('.bare-list-fulllist-link')?.addEventListener('click', e => {
+    e.preventDefault();
+    state.view = 'curated-full-list';
+    persistViewState();
+    renderSidebar();
+    renderGrid();
+  });
+
+  container.querySelectorAll('.bare-list-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const cat = chip.dataset.category;
+      _bareListCategoryFilter = _bareListCategoryFilter === cat ? null : cat;
+      renderCuratedBareList(container);
+    });
+  });
+}
+
 function renderCuratedDirectory(container) {
   container.className = 'cards-grid top100-landing';
   document.getElementById('grid-title').style.display = 'none';
