@@ -1175,17 +1175,16 @@
   flex-direction: column;
 }
 
-/* A solid, neutral dark background per row (not the brand purple — that's reserved for
-   .bare-list-view-btn) so .bare-list-org-name can be pure white and stay legible regardless of
-   theme, without competing with the purple pill button. */
 .bare-list-row {
   display: flex;
   align-items: center;
   gap: 20px;
-  padding: 20px 16px;
-  border-radius: 10px;
-  background: #2A2A35;
-  margin-bottom: 12px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.bare-list-row:first-child {
+  padding-top: 0;
 }
 
 .bare-list-avatar {
@@ -1211,7 +1210,7 @@
 .bare-list-org-name {
   font-size: 15px;
   font-weight: 600;
-  color: #fff;
+  color: var(--primary);
 }
 
 .bare-list-tags {
@@ -1223,15 +1222,15 @@
 .bare-list-tag {
   padding: 3px 9px;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
+  background: var(--text-primary);
+  color: var(--bg);
   font-size: 11px;
   font-weight: 500;
 }
 
 .bare-list-tag--muted {
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
+  background: var(--hover-bg);
+  color: var(--text-secondary);
 }
 
 .bare-list-view-btn {
