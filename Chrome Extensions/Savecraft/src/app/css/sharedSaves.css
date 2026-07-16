@@ -1,7 +1,8 @@
 /* ===== SHARED SAVES PAGE =====
-   A dashboard of "portals" — followed curated lists + a lightweight Friends stub. Reuses
-   .dash-card (dashboard.css) and .profile-card-header/-title/-copy (profile.css) as-is; only the
-   page shell and the followed-lists mini-grid below are new. */
+   A fully inert visual preview — a nonprofit-lists slider and a demo Friends slider, both built
+   from the same vertical-card component. Reuses .dash-card (dashboard.css), .profile-card-header/
+   -title (profile.css), and .bare-list-tag/-hero (cards.css) as-is; only the page shell and the
+   vertical card itself are new. */
 
 .shared-page-wrap {
   display: flex;
@@ -18,8 +19,39 @@
   width: 100%;
 }
 
-.shared-portals-grid {
+.shared-vcard {
   display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 170px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  padding: 20px 14px;
+  border-radius: 12px;
+  background: var(--hover-bg);
+  text-align: center;
+}
+
+.shared-vcard-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.85);
+  flex-shrink: 0;
+}
+
+.shared-vcard-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.shared-vcard-tagline {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-secondary);
 }
