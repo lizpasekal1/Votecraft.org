@@ -167,7 +167,7 @@ body {
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 11px 18px;
+  padding: 11px 18px 11px 10px;
   background: none;
   border: none;
   color: #fff;
@@ -180,6 +180,13 @@ body {
   flex-shrink: 0;
   width: 18px;
   height: 18px;
+}
+
+.my-options-item-icon {
+  flex-shrink: 0;
+  width: 18px;
+  text-align: center;
+  font-size: 15px;
 }
 
 .my-options-item:hover {
