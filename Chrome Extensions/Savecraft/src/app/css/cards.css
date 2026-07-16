@@ -1146,7 +1146,7 @@
 
 .bare-list-chip {
   padding: 7px 14px;
-  border-radius: 8px;
+  border-radius: 999px;
   border: 1px solid transparent;
   background: var(--primary-bg);
   color: var(--primary);
@@ -1220,8 +1220,8 @@
 }
 
 .bare-list-tag {
-  padding: 3px 9px;
-  border-radius: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
   background: var(--text-primary);
   color: var(--bg);
   font-size: 11px;
