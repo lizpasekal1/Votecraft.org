@@ -62,7 +62,7 @@ function buildNonprofitSliderSection() {
   const cards = CURATED_DIRECTORY_CONTENT.categories
     .flatMap(({ label, orgs }) => {
       const picks = label === 'Voting & Democracy' ? orgs.slice(0, 3) : orgs.slice(0, 1);
-      return picks.map(org => ({ name: org.name, tagline: org.tagline, tag: label, icon: org.icon, imageUrl: org.imageUrl }));
+      return picks.map(org => ({ name: org.name.replace(/\s+List$/i, ''), tagline: org.tagline, tag: label, icon: org.icon, imageUrl: org.imageUrl }));
     });
   return buildVerticalCardSlider({ sectionClass: 'shared-card--nonprofits', title: "Curated Lists You've Connected", cards });
 }
