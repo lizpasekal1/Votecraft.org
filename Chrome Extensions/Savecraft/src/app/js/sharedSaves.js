@@ -10,8 +10,8 @@ import { _wireCarouselArrows } from './dashboard.js';
 // Rotated across every vertical card's avatar circle.
 const SHARED_VCARD_COLORS = ['#5B5BEF', '#E0507A', '#2A9D8F', '#E76F51', '#8E44AD', '#F4A340'];
 
-// A generic "photo goes here" placeholder — every card on this fully-demo page uses this same
-// icon rather than a content-specific emoji, since none of these represent a real uploaded image.
+// A generic "photo goes here" placeholder — used for any card without its own icon (currently
+// just Friends, which has no real photo data to show).
 const PLACEHOLDER_IMAGE_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="26px" viewBox="0 -960 960 960" width="26px" fill="currentColor"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm80-120h480L570-480 450-320l-90-120-120 160Z"/></svg>';
 
 // A handful of fictional demo people, each shown as following one of the app's real curated list
@@ -33,7 +33,7 @@ function buildVerticalCardSlider({ sectionClass, title, cards }) {
     const color = SHARED_VCARD_COLORS[i % SHARED_VCARD_COLORS.length];
     return `
       <div class="shared-vcard">
-        <div class="shared-vcard-avatar" style="background:${color}">${PLACEHOLDER_IMAGE_SVG}</div>
+        <div class="shared-vcard-avatar" style="background:${color}">${c.icon || PLACEHOLDER_IMAGE_SVG}</div>
         <span class="shared-vcard-name">${escapeHtml(c.name)}</span>
         <span class="shared-vcard-tagline">${escapeHtml(c.tagline)}</span>
         <span class="bare-list-tag bare-list-tag--muted">${escapeHtml(c.tag)}</span>
@@ -53,7 +53,7 @@ function buildVerticalCardSlider({ sectionClass, title, cards }) {
 
 function buildNonprofitSliderSection() {
   const cards = CURATED_DIRECTORY_CONTENT.categories
-    .map(({ label, orgs }) => ({ name: orgs[0].name, tagline: orgs[0].tagline, tag: label }));
+    .map(({ label, orgs }) => ({ name: orgs[0].name, tagline: orgs[0].tagline, tag: label, icon: orgs[0].icon }));
   return buildVerticalCardSlider({ sectionClass: 'shared-card--nonprofits', title: 'Explore Nonprofit Lists', cards });
 }
 
