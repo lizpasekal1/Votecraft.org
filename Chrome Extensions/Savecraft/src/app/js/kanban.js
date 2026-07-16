@@ -98,12 +98,10 @@ function renderKanbanCard(item, format = null) {
   }
 
   const noteText = item.notes || item.summary || '';
-  const dateText = item.savedAt ? new Date(item.savedAt).toLocaleDateString() : '';
   // Four Column stays denser (title + author only) so four comfortably fit per row.
   const showExtras = format !== 'four-col';
   const noteHtml = showExtras && noteText
     ? `<div class="kcard-note${format === 'detail' ? ' kcard-note--full' : ''}">${escapeHtml(noteText)}</div>` : '';
-  const dateHtml = showExtras && dateText ? `<div class="kcard-date">Saved ${dateText}</div>` : '';
 
   return `
     <div class="kcard kcard--${format}${item._isDemo ? ' kcard--demo' : ''}" data-id="${item.id}" draggable="false">
@@ -113,7 +111,6 @@ function renderKanbanCard(item, format = null) {
           ${demoTag}
           ${renderKcardInfo(item)}
           ${noteHtml}
-          ${dateHtml}
         </div>
         ${removeBtn}
       </div>
