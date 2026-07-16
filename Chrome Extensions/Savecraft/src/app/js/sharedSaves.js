@@ -73,11 +73,22 @@ function buildVerticalCardSlider({ sectionClass, title, cards }) {
     </div>`;
 }
 
+// Custom category order for this slider — Arts & Culture excluded entirely (its representative
+// org, The Jazz Word List, doesn't show here) and Social Justice & Equity moved up to sit right
+// after Voting & Democracy, so Progressive List follows Represent-Us List.
+const NONPROFIT_SLIDER_CATEGORY_ORDER = [
+  'Voting & Democracy', 'Social Justice & Equity', 'Civic Participation', 'Environment & Climate',
+  'Health & Justice', 'Education & Literacy', 'Housing & Economic Justice', 'Global & Humanitarian',
+  'Digital & Consumer Rights',
+];
+
 function buildNonprofitSliderSection() {
+  const byLabel = new Map(CURATED_DIRECTORY_CONTENT.categories.map(c => [c.label, c]));
   // One org per category, except Voting & Democracy — which also shows FairVote List and
   // Represent-Us List right after Votecraft List, matching their order on the Cause Curated page.
-  const cards = CURATED_DIRECTORY_CONTENT.categories
-    .flatMap(({ label, orgs }) => {
+  const cards = NONPROFIT_SLIDER_CATEGORY_ORDER
+    .flatMap(label => {
+      const { orgs } = byLabel.get(label);
       const picks = label === 'Voting & Democracy' ? orgs.slice(0, 3) : orgs.slice(0, 1);
       return picks.map(org => ({ name: org.name.replace(/\s+List$/i, ''), tagline: org.tagline, tag: label, icon: org.icon, imageUrl: org.imageUrl }));
     });
