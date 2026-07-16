@@ -190,6 +190,11 @@ body {
   font-size: 15px;
 }
 
+.my-options-item-icon--logo {
+  height: 18px;
+  object-fit: contain;
+}
+
 .my-options-item-arrow {
   flex-shrink: 0;
   margin-left: auto;
