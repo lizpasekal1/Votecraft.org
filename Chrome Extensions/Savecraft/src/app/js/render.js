@@ -1024,9 +1024,27 @@ function wireQuickQueueButtons(container) {
 function renderCuratedGenreLanding(container, genre, content) {
   container.className = 'cards-grid top100-landing';
 
+  // Every other curated view resolves an item's displayed image through this same fallback
+  // chain (see getFilteredSortedItems()'s genre: branch) before ever falling back to a live
+  // fetch — skipping it here was why these rows showed the fallback icon for almost everything
+  // instead of real cover art, even for items that already had a cached image sitting in
+  // storage from being viewed elsewhere in the app.
+  function resolveRowItemImage(i, category) {
+    let imageUrl = i.imageUrl || null;
+    if (!imageUrl && state.curatedImgCache[i.id]) imageUrl = state.curatedImgCache[i.id];
+    if (category === 'Musician') {
+      const wikiPhoto = state.artistBioCache[(i.title || '').trim().toLowerCase()]?.photoUrl;
+      if (wikiPhoto && (!imageUrl || isItunesArtworkUrl(imageUrl))) imageUrl = wikiPhoto;
+    }
+    return imageUrl;
+  }
+
+  const allRowItems = []; // flattened, de-tripled — fed to the live-fetch calls below
   const rowsHtml = content.rows.map(({ category, label }) => {
-    const rowItems = (CURATED_ITEMS[genre]?.[category] || []).filter(i => !state.hiddenCurated.has(i.id)).slice(0, 15);
-    if (!rowItems.length) return '';
+    const rawItems = (CURATED_ITEMS[genre]?.[category] || []).filter(i => !state.hiddenCurated.has(i.id)).slice(0, 15);
+    if (!rawItems.length) return '';
+    const rowItems = rawItems.map(i => ({ ...i, category, curated: true, imageUrl: resolveRowItemImage(i, category) }));
+    allRowItems.push(...rowItems);
     // Tripled for the same "always room to scroll either direction" trick
     // _wireCarouselArrows() (dashboard.js) already relies on for the Dashboard's own rows.
     const tripled = [...rowItems, ...rowItems, ...rowItems];
@@ -1056,7 +1074,7 @@ function renderCuratedGenreLanding(container, genre, content) {
 
   container.innerHTML = `
     <div class="top100-hero">
-      <div class="top100-wordmark">SaveCraft <span class="top100-wordmark-x">×</span> VoteCraft</div>
+      <div class="top100-wordmark"><img src="${chrome.runtime.getURL('images/logos/votecraft-logo_white.png')}" alt="VoteCraft" class="top100-wordmark-logo"></div>
       <h2 class="top100-hero-title">${escapeHtml(content.headline)}</h2>
       <p class="top100-hero-desc">${escapeHtml(content.description)}</p>
     </div>
@@ -1067,6 +1085,12 @@ function renderCuratedGenreLanding(container, genre, content) {
     </div>
   `;
 
+  // Same live-fetch-and-patch pipeline the main curated grid uses for anything still missing an
+  // image after the cache-merge above (Microlink for a general thumbnail, Wikipedia specifically
+  // for Musicians) — patchCardImage() (utils.js) has a .top100-row-card branch to receive it.
+  fetchMissingCuratedImages(allRowItems);
+  fetchMissingCuratedMusicianPhotos(allRowItems);
+
   container.querySelectorAll('.top100-carousel').forEach(carousel => {
     const strip = carousel.querySelector('.dash-carousel-strip');
     if (strip) _wireCarouselArrows(carousel, strip);
@@ -1074,8 +1098,8 @@ function renderCuratedGenreLanding(container, genre, content) {
 
   container.querySelectorAll('.top100-row-card').forEach(btn => {
     btn.addEventListener('click', () => {
-      const item = (CURATED_ITEMS[genre]?.[btn.dataset.category] || []).find(i => i.id === btn.dataset.id);
-      if (item) openDetailModal({ ...item, category: btn.dataset.category, curated: true });
+      const item = allRowItems.find(i => i.id === btn.dataset.id && i.category === btn.dataset.category);
+      if (item) openDetailModal(item);
     });
   });
 

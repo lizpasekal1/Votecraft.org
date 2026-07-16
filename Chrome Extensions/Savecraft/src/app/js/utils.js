@@ -48,6 +48,21 @@ export function patchCardImage(itemId, imageUrl) {
     placeholder.style.display = 'none';
     card.insertBefore(img, placeholder);
   });
+  // Same idea for the Top 100 landing page's row cards (render.js's renderCuratedGenreLanding)
+  // — a different DOM shape (.top100-row-card-art wraps either an <img> or a text fallback span,
+  // no separate placeholder element to hide/show), so patched separately rather than shoehorning
+  // it into the .card branch above.
+  document.querySelectorAll(`.top100-row-card[data-id="${itemId}"]`).forEach(card => {
+    const art = card.querySelector('.top100-row-card-art');
+    if (!art || art.querySelector('img')) return;
+    art.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.alt = '';
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    art.appendChild(img);
+  });
 }
 
 export function catClass(cat) { return (cat || '').replace(/\s+/g, '-'); }

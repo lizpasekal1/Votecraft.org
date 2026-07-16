@@ -713,17 +713,14 @@
 }
 
 .top100-wordmark {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  opacity: 0.85;
   margin-bottom: 14px;
 }
 
-.top100-wordmark-x {
-  opacity: 0.6;
-  font-weight: 400;
-  margin: 0 2px;
+.top100-wordmark-logo {
+  height: 20px;
+  width: auto;
+  display: block;
+  opacity: 0.92;
 }
 
 .top100-hero-title {
@@ -786,14 +783,14 @@
   border: none;
   cursor: pointer;
   flex-shrink: 0;
-  width: 140px;
+  width: 168px;
   scroll-snap-align: start;
 }
 
 .top100-row-card-art {
   position: relative;
-  width: 140px;
-  height: 198px;
+  width: 168px;
+  height: 168px;
   border-radius: 10px;
   overflow: hidden;
   background: var(--hover-bg);
