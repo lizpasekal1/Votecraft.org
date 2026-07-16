@@ -57,8 +57,13 @@ function buildVerticalCardSlider({ sectionClass, title, cards }) {
 }
 
 function buildNonprofitSliderSection() {
+  // One org per category, except Voting & Democracy — which also shows FairVote List and
+  // Represent-Us List right after Votecraft List, matching their order on the Cause Curated page.
   const cards = CURATED_DIRECTORY_CONTENT.categories
-    .map(({ label, orgs }) => ({ name: orgs[0].name, tagline: orgs[0].tagline, tag: label, icon: orgs[0].icon, imageUrl: orgs[0].imageUrl }));
+    .flatMap(({ label, orgs }) => {
+      const picks = label === 'Voting & Democracy' ? orgs.slice(0, 3) : orgs.slice(0, 1);
+      return picks.map(org => ({ name: org.name, tagline: org.tagline, tag: label, icon: org.icon, imageUrl: org.imageUrl }));
+    });
   return buildVerticalCardSlider({ sectionClass: 'shared-card--nonprofits', title: "Curated Lists You've Connected", cards });
 }
 
