@@ -74,6 +74,10 @@ export function renderSharedSavesPage() {
 
   container.innerHTML = `
     <div class="shared-page">
+      <div class="bare-list-header bare-list-hero">
+        <h2 class="bare-list-title">Shared Saves</h2>
+        <p class="bare-list-desc">Curated lists you follow, and friends you've connected with.</p>
+      </div>
       ${buildFollowedListsSection()}
       ${buildFriendsSection()}
     </div>`;
