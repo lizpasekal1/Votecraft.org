@@ -27,6 +27,23 @@
   margin-bottom: 16px;
 }
 
+/* The "Top 100" word on a Top 100 drilldown's title (e.g. "Top 100 Books") — links back to the
+   landing page (renderCuratedGenreLanding() in render.js). Reads as ordinary title text, not an
+   obvious button, until hovered. */
+.grid-title-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.grid-title-link:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
 /* News outlet folder header — domain + paywalled badge next to the publication name */
 .grid-title-domain {
   font-size: 13px;
