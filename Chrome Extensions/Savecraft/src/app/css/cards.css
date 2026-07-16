@@ -1031,6 +1031,12 @@
   justify-content: center;
 }
 
+.directory-org-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+}
+
 .directory-org-icon {
   font-size: 48px;
   line-height: 1;
@@ -1254,6 +1260,12 @@
   justify-content: center;
   font-size: 40px;
   color: #fff;
+}
+
+.bare-list-avatar img {
+  width: 55%;
+  height: 55%;
+  object-fit: contain;
 }
 
 .bare-list-info {

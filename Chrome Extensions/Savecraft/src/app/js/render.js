@@ -1122,10 +1122,13 @@ function renderCuratedBareList(container) {
 
   const rowsHtml = visibleOrgs.map((org, i) => {
     const color = DIRECTORY_AVATAR_COLORS[i % DIRECTORY_AVATAR_COLORS.length];
+    const avatarContent = org.imageUrl
+      ? `<img src="${escapeHtml(chrome.runtime.getURL(org.imageUrl))}" alt="">`
+      : org.icon;
     return `
       <div class="bare-list-row"${org.linkTo ? ` data-link-to="${escapeHtml(org.linkTo)}"` : ''}>
         <button class="bare-list-bookmark-btn" title="Add to your curated list slider" aria-label="Bookmark">${BOOKMARK_OUTLINE_SVG}</button>
-        <div class="bare-list-avatar" style="background:${color}">${org.icon}</div>
+        <div class="bare-list-avatar" style="background:${color}">${avatarContent}</div>
         <div class="bare-list-info">
           <span class="bare-list-org-name">${escapeHtml(org.name)}</span>
           <span class="bare-list-org-tagline">${escapeHtml(org.tagline)}</span>
@@ -1206,12 +1209,17 @@ function renderCuratedDirectory(container) {
   const content = CURATED_DIRECTORY_CONTENT;
   const categoriesHtml = content.categories.map(({ label, orgs }) => {
     const tripled = [...orgs, ...orgs, ...orgs];
-    const cardsHtml = tripled.map(org => `
+    const cardsHtml = tripled.map(org => {
+      const artContent = org.imageUrl
+        ? `<img class="directory-org-logo" src="${escapeHtml(chrome.runtime.getURL(org.imageUrl))}" alt="">`
+        : `<span class="directory-org-icon">${org.icon}</span>`;
+      return `
       <div class="directory-org-card">
-        <div class="directory-org-art"><span class="directory-org-icon">${org.icon}</span></div>
+        <div class="directory-org-art">${artContent}</div>
         <span class="directory-org-name">${escapeHtml(org.name)}</span>
         <span class="directory-org-tagline">${escapeHtml(org.tagline)}</span>
-      </div>`).join('');
+      </div>`;
+    }).join('');
     return `
       <div class="directory-category">
         <div class="directory-category-title">${escapeHtml(label)}</div>
