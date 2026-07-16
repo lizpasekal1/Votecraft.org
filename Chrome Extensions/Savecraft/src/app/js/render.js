@@ -1052,6 +1052,18 @@ function wireQuickQueueButtons(container) {
   });
 }
 
+// Wraps the literal phrase "Inquire to create" in the hero description with a link to the
+// Sponsored pitch page, underlined so it reads as a call-to-action inline with the copy.
+function linkifyHeroDescription(description) {
+  const phrase = 'Inquire to create';
+  const idx = description.indexOf(phrase);
+  if (idx === -1) return escapeHtml(description);
+  const before = description.slice(0, idx);
+  const after = description.slice(idx + phrase.length);
+  const sponsoredUrl = chrome.runtime.getURL('src/sponsored/sponsored.html');
+  return `${escapeHtml(before)}<a class="top100-hero-desc-link" href="${sponsoredUrl}" target="_blank" rel="noopener">${escapeHtml(phrase)}</a>${escapeHtml(after)}`;
+}
+
 // A richer landing page for a curated genre (currently just Top 100 — see
 // CURATED_GENRE_LANDING_CONTENT in state.js), shown instead of the plain "Pick a category" empty
 // state. Deliberately styled distinct from the Dashboard (see cards.css's .top100-* rules) even
@@ -1134,7 +1146,7 @@ function renderCuratedGenreLanding(container, genre, content) {
       <div class="top100-hero-text">
         <div class="top100-wordmark"><img src="${chrome.runtime.getURL('images/logos/votecraft-logo_white.png')}" alt="VoteCraft" class="top100-wordmark-logo"></div>
         <h2 class="top100-hero-title">${escapeHtml(content.headline)}</h2>
-        <p class="top100-hero-desc">${escapeHtml(content.description)}</p>
+        <p class="top100-hero-desc">${linkifyHeroDescription(content.description)}</p>
       </div>
       <div class="top100-icon-badge"><img src="${chrome.runtime.getURL('images/logos/votecraft_icon_white.png')}" alt=""></div>
     </div>

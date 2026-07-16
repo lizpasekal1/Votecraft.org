@@ -12,7 +12,7 @@ import {
 
 const _FIREBASE_PROJECT = 'votecraft-789';
 const _FIREBASE_API_KEY = 'AIzaSyArJ6pkXUDbZf4jcxRita0qcdr-hT46kI8';
-const _CURATED_CACHE_VERSION = 9;
+const _CURATED_CACHE_VERSION = 10;
 
 const _CAT_NORMALIZE = {
   'Movies': 'Movie', 'Books': 'Book', 'Games': 'Game',
