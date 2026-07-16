@@ -61,7 +61,7 @@ function buildNonprofitSliderSection() {
 
 function buildFriendsSection() {
   const cards = DEMO_FRIENDS.map(f => ({ name: f.name, imageUrl: f.imageUrl }));
-  return buildVerticalCardSlider({ sectionClass: 'shared-card--friends', title: 'Friends', cards });
+  return buildVerticalCardSlider({ sectionClass: 'shared-card--friends', title: "Friends You've Shared Lists With", cards });
 }
 
 function wireCarousels(container) {
