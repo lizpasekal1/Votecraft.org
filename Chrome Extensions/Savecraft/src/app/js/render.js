@@ -1125,6 +1125,7 @@ function renderCuratedBareList(container) {
     const color = DIRECTORY_AVATAR_COLORS[i % DIRECTORY_AVATAR_COLORS.length];
     return `
       <div class="bare-list-row">
+        <button class="bare-list-bookmark-btn" title="Add to your curated list slider" aria-label="Bookmark">${BOOKMARK_OUTLINE_SVG}</button>
         <div class="bare-list-avatar" style="background:${color}">${org.icon}</div>
         <div class="bare-list-info">
           <span class="bare-list-org-name">${escapeHtml(org.name)}</span>
@@ -1163,6 +1164,16 @@ function renderCuratedBareList(container) {
     persistViewState();
     renderSidebar();
     renderGrid();
+  });
+
+  // Demo-only toggle — purely visual, doesn't persist or touch the Kanban queue. This directory is
+  // a pitch/demo page (see renderCuratedDirectory() above), not real data.
+  container.querySelectorAll('.bare-list-bookmark-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const active = btn.classList.toggle('bare-list-bookmark-btn--active');
+      btn.innerHTML = active ? BOOKMARK_FILLED_SVG : BOOKMARK_OUTLINE_SVG;
+    });
   });
 
   container.querySelectorAll('.bare-list-chip').forEach(chip => {

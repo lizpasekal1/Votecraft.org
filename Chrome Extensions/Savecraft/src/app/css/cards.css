@@ -1189,6 +1189,7 @@
 }
 
 .bare-list-row {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 20px;
@@ -1198,6 +1199,38 @@
   margin-bottom: 12px;
   cursor: pointer;
   transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+
+/* Demo-only bookmark toggle (see the click handler in renderCuratedBareList()) — appears on row
+   hover, no circle/background behind the icon per direct request, turns purple when active. */
+.bare-list-bookmark-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #9AA0A6;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.bare-list-row:hover .bare-list-bookmark-btn {
+  display: flex;
+}
+
+.bare-list-bookmark-btn:hover {
+  color: var(--primary);
+}
+
+.bare-list-bookmark-btn--active {
+  display: flex;
+  color: var(--primary);
 }
 
 .bare-list-row:hover {
