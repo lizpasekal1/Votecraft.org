@@ -1267,6 +1267,7 @@
   justify-content: center;
   font-size: 40px;
   color: #fff;
+  overflow: hidden;
 }
 
 /* Real logos fill the whole circle (matching the Shared Saves slider's avatar treatment) — except
