@@ -17,6 +17,19 @@ const SHARED_VCARD_COLORS = ['#5B5BEF', '#E0507A', '#2A9D8F', '#E76F51', '#8E44A
 // just Friends, which has no real photo data to show).
 const PLACEHOLDER_IMAGE_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="26px" viewBox="0 -960 960 960" width="26px" fill="currentColor"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm80-120h480L570-480 450-320l-90-120-120 160Z"/></svg>';
 
+// Fictional "group" names — worded like a group of people sharing a list together (club/crew/
+// society/collective), not formal org names, and deliberately distinct from (no overlap with)
+// the "Curated Lists You've Connected" slider below. Art Club keeps its original name/data even
+// though it's no longer in CURATED_DIRECTORY_CONTENT itself.
+const DEMO_GROUP_LISTS = [
+  { name: 'Art Club', tagline: 'Where speculative fiction meets civic imagination.', icon: '🎨' },
+  { name: 'Jazz Heads Society', tagline: 'Jazz history, shared and discussed.', icon: '🎷' },
+  { name: 'Banned Books Club', tagline: 'Defending the right to read, together.', icon: '📚' },
+  { name: 'Climate Circle', tagline: 'Making the climate crisis feel personal.', icon: '🌱' },
+  { name: 'Civic Tech Meetup', tagline: 'Technology and democracy, discussed as a group.', icon: '💻' },
+  { name: 'Youth Vote Crew', tagline: 'First-time voters, organizing together.', icon: '🎓' },
+];
+
 // A handful of fictional demo people — purely illustrative, no real friend-graph data exists yet
 // (see profile.js's own "Friends — coming soon" stub, which this page's Friends section replaces).
 const DEMO_FRIENDS = [
@@ -58,7 +71,7 @@ function buildVerticalCardSlider({ sectionClass, title, cards }) {
     </div>`;
 }
 
-function buildNonprofitSliderSection(sectionClass, title) {
+function buildNonprofitSliderSection() {
   // One org per category, except Voting & Democracy — which also shows FairVote List and
   // Represent-Us List right after Votecraft List, matching their order on the Cause Curated page.
   const cards = CURATED_DIRECTORY_CONTENT.categories
@@ -66,7 +79,12 @@ function buildNonprofitSliderSection(sectionClass, title) {
       const picks = label === 'Voting & Democracy' ? orgs.slice(0, 3) : orgs.slice(0, 1);
       return picks.map(org => ({ name: org.name.replace(/\s+List$/i, ''), tagline: org.tagline, tag: label, icon: org.icon, imageUrl: org.imageUrl }));
     });
-  return buildVerticalCardSlider({ sectionClass, title, cards });
+  return buildVerticalCardSlider({ sectionClass: 'shared-card--nonprofits', title: "Curated Lists You've Connected", cards });
+}
+
+function buildGroupListsSliderSection() {
+  const cards = DEMO_GROUP_LISTS.map(g => ({ name: g.name, tagline: g.tagline, icon: g.icon }));
+  return buildVerticalCardSlider({ sectionClass: 'shared-card--group-lists', title: "Group Lists You've Connected", cards });
 }
 
 function buildFriendsSection() {
@@ -110,9 +128,9 @@ export function renderSharedSavesPage() {
       </div>
       ${buildFriendsSection()}
       <div class="shared-section-divider"></div>
-      ${buildNonprofitSliderSection('shared-card--nonprofits', "Curated Lists You've Connected")}
+      ${buildNonprofitSliderSection()}
       <div class="shared-section-divider"></div>
-      ${buildNonprofitSliderSection('shared-card--group-lists', "Group Lists You've Connected")}
+      ${buildGroupListsSliderSection()}
     </div>`;
 
   wireCarousels(container);
