@@ -25,6 +25,25 @@ export const CREATOR_CARD_CATEGORY = {
   'Show Creator': 'Show',
   'Game Studio': 'Game',
 };
+// Landing-page content for the curated genre picker (render.js's renderTop100Landing() and
+// friends) — keyed by genre so a future sponsored genre can get the same treatment later just by
+// adding an entry here, with no new rendering code. Only 'Top 100' is populated for now; every
+// other genre keeps the plain "Pick a category" empty state. `rows` picks which curated
+// categories get their own horizontal row and in what order — deliberately excludes Music Album
+// (not an actual curated shortlist, see CURATED_NOTES_CATEGORIES/session docs) and Visual Art
+// (no curated data exists for it at all).
+export const CURATED_GENRE_LANDING_CONTENT = {
+  'Top 100': {
+    headline: 'The Votecraft List',
+    description: 'A hand-picked look at the culture shaping how people connect, think, and show up — 100 essential picks each across music, film, books, and games. This is what a SaveCraft sponsored list looks like.',
+    rows: [
+      { category: 'Musician', label: 'Top Musicians' },
+      { category: 'Movie', label: 'Top Films' },
+      { category: 'Book', label: 'Top Books' },
+      { category: 'Game', label: 'Top Games' },
+    ],
+  },
+};
 export const MODAL_BOOKMARK_ICON_SVG = '<svg class="modal-bookmark-icon" xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Z"/></svg>';
 // Shared outline/filled bookmark pair — used by the card grid's quick-queue button (curated
 // cards only) and mirrors the detail modal's own bookmark icons (which keep their own local

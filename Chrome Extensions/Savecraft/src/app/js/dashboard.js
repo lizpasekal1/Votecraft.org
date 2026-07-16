@@ -57,7 +57,10 @@ function resolveFavoriteSlides() {
 // across the whole strip. Whenever we've drifted a full copy-width away from the middle copy,
 // silently re-anchor back to it right before the next click's scroll starts — nothing is
 // animating at that moment, and the two positions look pixel-identical, so it's imperceptible.
-function _wireCarouselArrows(card, strip) {
+// Exported for reuse by render.js's Top 100 landing rows — the scroll/infinite-loop mechanics
+// here don't care what a "card" looks like, only how wide the strip's first child is, so this
+// works for any card style, not just .dash-thumb-card.
+export function _wireCarouselArrows(card, strip) {
   const copyWidth = () => strip.scrollWidth / 3;
 
   const recenter = () => {
@@ -69,7 +72,7 @@ function _wireCarouselArrows(card, strip) {
 
   const scrollByCard = dir => {
     recenter();
-    const item = strip.querySelector('.dash-thumb-card');
+    const item = strip.firstElementChild;
     const amount = item ? item.getBoundingClientRect().width + 14 : 140;
     strip.scrollBy({ left: dir * amount, behavior: 'smooth' });
   };
