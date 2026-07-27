@@ -2433,8 +2433,8 @@ function openDetailModal(item) {
 
   const artistHeaderEl = document.getElementById('detail-artist-header');
   const _headerContentHtml = buildWebsiteCta();
-  // Both Musician and Music Album pin the website CTA inline over the top of the image now.
-  artistHeaderEl.classList.add('detail-artist-header--inline');
+  // Website CTA sits centered in normal flow above the image (not pinned over it).
+  artistHeaderEl.classList.remove('detail-artist-header--inline');
   if (_showArtistHeaderAbove && _headerContentHtml) {
     artistHeaderEl.innerHTML = _headerContentHtml;
     artistHeaderEl.style.display = '';

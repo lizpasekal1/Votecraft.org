@@ -1,8 +1,12 @@
 /* ===== MODALS ===== */
-.detail-modal {
+/* Compound selector so these values reliably win over the generic .modal rule in
+   addEditModal.css — both are single-class selectors (equal specificity), and
+   addEditModal.css loads after this file, so a bare .detail-modal loses that tie
+   for every property they share (width, padding, max-width, max-height). */
+.modal.detail-modal {
   position: relative;
-  padding: 0;
-  width: 540px;
+  padding: 28px;
+  width: 336px;
   max-width: 94vw;
   max-height: 90vh;
   overflow: hidden;
@@ -29,9 +33,9 @@
 
 .detail-edit {
   position: absolute;
-  top: 17px;
-  left: 12px;
-  background: rgba(0,0,0,0.4);
+  top: 97px;
+  right: 12px;
+  background: none;
   border: none;
   border-radius: 50%;
   width: 32px;
@@ -41,10 +45,8 @@
   justify-content: center;
   cursor: pointer;
   color: #fff;
-  z-index: 2;
+  z-index: 20;
 }
-
-.detail-edit:hover { background: rgba(0,0,0,0.6); }
 
 .detail-bookmark-btn {
   position: absolute;
@@ -60,7 +62,7 @@
   justify-content: center;
   cursor: pointer;
   color: #fff;
-  z-index: 2;
+  z-index: 20;
   transition: color 0.15s;
 }
 
@@ -71,9 +73,9 @@
 
 .detail-favorite-btn {
   position: absolute;
-  top: 17px;
+  top: 57px;
   right: 12px;
-  background: rgba(0,0,0,0.4);
+  background: none;
   border: none;
   border-radius: 50%;
   width: 32px;
@@ -83,16 +85,48 @@
   justify-content: center;
   cursor: pointer;
   color: #fff;
-  z-index: 2;
-  transition: background 0.15s, color 0.15s;
-}
-
-.detail-favorite-btn:hover {
-  background: rgba(0,0,0,0.6);
+  z-index: 20;
+  transition: color 0.15s;
 }
 
 .detail-favorite-btn--active {
   color: var(--primary);
+}
+
+/* Custom hover tooltip for the right-side icon column (edit/bookmark/favorite). Built as a
+   ::after (generated content, not a real child) rather than a nested <span>, because the
+   bookmark/favorite buttons have their innerHTML fully replaced on every state change
+   (updateBookmarkIcon/updateFavoriteIcon) — a real child span would get wiped out with it. */
+.detail-edit::after,
+.detail-bookmark-btn::after,
+.detail-favorite-btn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-right: 10px;
+  background: var(--surface);
+  border: 1px solid var(--primary);
+  border-radius: 6px;
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--text-primary);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s, visibility 0.15s;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  z-index: 10;
+}
+
+.detail-edit:hover::after,
+.detail-bookmark-btn:hover::after,
+.detail-favorite-btn:hover::after {
+  opacity: 1;
+  visibility: visible;
 }
 
 .detail-artist-header {
@@ -108,12 +142,13 @@
 .detail-artist-header--inline {
   position: absolute;
   top: 17px;
-  right: 52px;
+  left: 50%;
+  transform: translateX(-50%);
   padding: 0;
   z-index: 2;
 }
 
-.detail-image-wrap { position: relative; width: 100%; aspect-ratio: 16/9; overflow: visible; background: var(--border); flex-shrink: 0; }
+.detail-image-wrap { position: relative; width: 83%; margin: 0 auto; aspect-ratio: 1/1; overflow: visible; background: var(--border); flex-shrink: 0; }
 /* Absolutely-positioned so it's out of flow — keeps the wrap's aspect-ratio from being
    overridden by the actual photo's natural size, while still clipping/cropping its content. */
 .detail-image-crop { position: absolute; inset: 0; overflow: hidden; }
@@ -132,10 +167,10 @@
 }
 
 .detail-body {
-  padding: 20px 22px 6px 0;
+  padding: 15px 0 6px 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   overflow-y: auto;
   min-height: 0;
 }
@@ -152,6 +187,7 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
+  margin-top: 4px;
 }
 
 .detail-title {
@@ -189,7 +225,8 @@
 .btn-detail-website {
   position: relative;
   flex-shrink: 0;
-  padding: 8px 20px;
+  width: 170px;
+  padding: 4px 20px;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -203,6 +240,7 @@
   text-decoration: none;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   text-shadow: 0 0 4px color-mix(in srgb, var(--primary) 60%, transparent);
   box-shadow:
@@ -288,6 +326,7 @@
 
 .detail-summary-wrap {
   position: relative;
+  margin-top: -2px;
 }
 
 .detail-summary-text {
@@ -338,15 +377,27 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9.5px 2px;
+  padding: 2px;
   border-bottom: 1px solid #5B5BEF;
   cursor: pointer;
   user-select: none;
   color: var(--text-primary);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+
+.detail-accordion-header--no-divider {
+  border-bottom: none;
+}
+
+/* Web Links (.detail-streaming) is a single self-contained element, not split into a header +
+   a separate .detail-accordion-collapsible sibling like the other rows — so unlike them, there's
+   nothing here to cancel the .detail-body flex gap above this row. Match it manually so the gap
+   above Add to Queue looks the same as the (cancelled-down-to-flush) gaps between the others. */
+#btn-standalone-queue {
+  margin-top: -8px;
 }
 
 /* Pulls My Notes up closer to the summary above it — the first accordion row doesn't need
@@ -357,16 +408,41 @@
 
 .detail-accordion-header span {
   flex: 1;
+  line-height: 1;
 }
 
 .detail-accordion-icon {
+  display: block;
   flex-shrink: 0;
   color: #5B5BEF;
-  width: 23px;
-  height: 23px;
+  width: 21px;
+  height: 21px;
+}
+
+/* This icon's artwork sits visually high within its own box relative to the other two
+   accordion icons — nudged down to match them. */
+#detail-albums-accordion-header .detail-accordion-icon {
+  margin-top: 2px;
+  width: 19px;
+  height: 19px;
+}
+
+#detail-notes-accordion-header .detail-accordion-icon {
+  width: 19px;
+  height: 19px;
+}
+
+/* ID-scoped to unambiguously force the same size/color as the other three accordion icons —
+   this one is a directly-set fill="currentColor" SVG rather than a nested icon, so pin it down
+   explicitly rather than leaning on the shared .detail-accordion-icon class alone. */
+#standalone-queue-bookmark {
+  width: 19px;
+  height: 19px;
+  color: #5B5BEF;
 }
 
 .detail-accordion-chevron {
+  display: block;
   flex-shrink: 0;
   color: var(--text-muted);
   transition: transform 0.2s ease;
@@ -404,12 +480,12 @@
   transition: max-height 0.25s ease, margin 0.25s ease;
   /* Cancels out the .detail-body flex gap above and below this (currently zero-height)
      element, so consecutive accordion rows sit flush against each other when collapsed. */
-  margin: -10px 0;
+  margin: -8px 0;
 }
 
 .detail-accordion-collapsible.open {
   max-height: 320px;
-  margin: 10px 0 4px;
+  margin: 8px 0 4px;
   overflow-y: auto;
 }
 
@@ -531,48 +607,6 @@
   line-height: 1.5;
 }
 
-.btn-standalone-queue {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin: 14px auto 0;
-  padding: 6px 22px;
-  background: var(--hover-bg);
-  border: none;
-  border-radius: 999px;
-  color: var(--text-primary);
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.btn-standalone-queue:hover {
-  background: var(--border);
-}
-
-.standalone-queue-bookmark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.standalone-queue-bookmark svg {
-  width: 14px;
-  height: 14px;
-}
-
-.standalone-queue-bookmark.detail-bookmark-btn--saved {
-  color: var(--primary);
-}
-
-.btn-standalone-queue.queue-label--active .standalone-queue-bookmark {
-  color: #fff;
-}
 
 .liner-notes-panel {
   border-top: 1px solid var(--border);
@@ -776,8 +810,11 @@
 
 .vc-sponsored-tag--overlay {
   position: absolute;
-  right: 12px;
-  bottom: -12px;
+  left: 0;
+  right: 0;
+  width: fit-content;
+  margin: 0 auto;
+  bottom: -10.5px;
   z-index: 2;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }

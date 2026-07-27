@@ -628,12 +628,26 @@ export async function handleSaveItem() {
 
   let item;
   if (state.editingId && state.editingId.startsWith('cur-')) {
-    // Curated item edit — save as an override, not a new personal item
+    // Curated item edit — save as an override (so the correction shows immediately), and also
+    // silently add it to the user's saves using the edited fields, since editing a curated item
+    // you haven't saved yet implies you want to keep it. Reuses the same 'cur-' id (not a new
+    // Date.now() id) so it still matches the curated source for badge/lookup purposes elsewhere.
+    // Deliberately does NOT set queueStatus — only the explicit "Add to Queue" button does that.
     state.curatedOverrides[state.editingId] = { url, title, author, summary, notes, imageUrl: manualImageUrl, youtubeUrl };
     await persistCuratedOverrides();
+    if (!state.items.find(i => i.id === state.editingId)) {
+      const liveItem = {
+        id: state.editingId, url, title, author, summary, notes,
+        imageUrl: manualImageUrl, youtubeUrl, category, folderId, platforms,
+        curated: false, savedAt: Date.now(),
+      };
+      state.items.push(liveItem);
+      await persistItem(liveItem);
+    }
     saveBtn.disabled = false;
     saveBtn.textContent = 'Save';
     closeAddModal();
+    renderSidebar();
     renderGrid();
     return;
   } else if (state.editingId) {

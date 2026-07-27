@@ -1200,7 +1200,7 @@ body {
 .detail-modal {
   position: relative;
   padding: 0;
-  width: 540px;
+  width: 460px;
   max-width: 94vw;
   max-height: 90vh;
   overflow: hidden;
@@ -1311,7 +1311,7 @@ body {
   z-index: 2;
 }
 
-.detail-image-wrap { position: relative; width: 100%; aspect-ratio: 16/9; overflow: visible; background: var(--border); flex-shrink: 0; }
+.detail-image-wrap { position: relative; width: 100%; aspect-ratio: 1/1; overflow: visible; background: var(--border); flex-shrink: 0; }
 /* Absolutely-positioned so it's out of flow — keeps the wrap's aspect-ratio from being
    overridden by the actual photo's natural size, while still clipping/cropping its content. */
 .detail-image-crop { position: absolute; inset: 0; overflow: hidden; }

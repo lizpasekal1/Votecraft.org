@@ -721,7 +721,7 @@
 
 .detail-queue.open .streaming-links-wrap {
   max-height: 200px;
-  margin-top: 8px;
+  margin-top: -2px;
 }
 
 /* List tag pills inside queue accordion */
@@ -833,9 +833,4 @@
 .queue-new-cancel:hover { color: #fff; }
 .saves-list-new-cancel { color: var(--text-secondary); }
 .saves-list-new-cancel:hover { color: var(--text-primary); }
-
-.queue-label--active {
-  background: var(--primary) !important;
-  color: #fff !important;
-}
 
