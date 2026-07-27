@@ -255,16 +255,18 @@ async function fetchArtistWikipediaSummary(artistName) {
 // avoid pulling in data about an unrelated same-named topic (e.g. "Eagles" the bird). Falls
 // back to an iTunes album-cover stand-in for the photo only if Wikipedia has no image at all.
 export async function ensureArtistWikipediaInfo(artistName) {
-  if (!artistName) return { bio: null, photoUrl: null };
+  if (!artistName) return { bio: null, photoUrl: null, wikiUrl: null };
   const key = artistName.trim().toLowerCase();
   const cached = state.artistBioCache[key];
-  if (cached && ((cached.bio || cached.photoUrl) || (Date.now() - cached.fetchedAt < ARTIST_BIO_CACHE_MISS_TTL))) {
-    return { bio: cached.bio || null, photoUrl: cached.photoUrl || null };
+  // 'wikiUrl' in cached: entries cached before that field existed force one refetch to backfill
+  // it, rather than being treated as a permanent hit that silently never picks it up.
+  if (cached && 'wikiUrl' in cached && ((cached.bio || cached.photoUrl) || (Date.now() - cached.fetchedAt < ARTIST_BIO_CACHE_MISS_TTL))) {
+    return { bio: cached.bio || null, photoUrl: cached.photoUrl || null, wikiUrl: cached.wikiUrl || null };
   }
   const summary = await fetchArtistWikipediaSummary(artistName);
   let photoUrl = summary?.thumbnail?.source || summary?.originalimage?.source || null;
   if (!photoUrl) photoUrl = await fetchArtistPhotoFromItunes(artistName);
-  const result = { bio: summary?.extract || null, photoUrl };
+  const result = { bio: summary?.extract || null, photoUrl, wikiUrl: summary?.content_urls?.desktop?.page || null };
   state.artistBioCache[key] = { ...result, fetchedAt: Date.now() };
   persistArtistBioCache();
   return result;
@@ -318,16 +320,19 @@ async function fetchItemWikipediaSummary(title, category) {
 // category so a wrong same-named topic isn't accepted. Cached indefinitely on success; cached
 // "not found" results expire after ITEM_WIKI_CACHE_MISS_TTL.
 export async function ensureItemWikipediaInfo(title, category) {
-  if (!title) return { bio: null, photoUrl: null };
+  if (!title) return { bio: null, photoUrl: null, wikiUrl: null };
   const key = `${category}:${title}`.trim().toLowerCase();
   const cached = state.itemWikiCache[key];
-  if (cached && ((cached.bio || cached.photoUrl) || (Date.now() - cached.fetchedAt < ITEM_WIKI_CACHE_MISS_TTL))) {
-    return { bio: cached.bio || null, photoUrl: cached.photoUrl || null };
+  // 'wikiUrl' in cached: entries cached before that field existed force one refetch to backfill
+  // it, rather than being treated as a permanent hit that silently never picks it up.
+  if (cached && 'wikiUrl' in cached && ((cached.bio || cached.photoUrl) || (Date.now() - cached.fetchedAt < ITEM_WIKI_CACHE_MISS_TTL))) {
+    return { bio: cached.bio || null, photoUrl: cached.photoUrl || null, wikiUrl: cached.wikiUrl || null };
   }
   const summary = await fetchItemWikipediaSummary(title, category);
   const result = {
     bio: summary?.extract || null,
     photoUrl: summary?.thumbnail?.source || summary?.originalimage?.source || null,
+    wikiUrl: summary?.content_urls?.desktop?.page || null,
   };
   state.itemWikiCache[key] = { ...result, fetchedAt: Date.now() };
   persistItemWikiCache();

@@ -36,7 +36,7 @@ export function openDetailModal(item) {
   const isMusicianItem = item.category === 'Musician';
   const _imageClass = `detail-image${isMusicianItem ? ' detail-image--faces' : ''}`;
   document.getElementById('detail-body').classList.toggle('detail-body--tight-bottom', isMusicianItem);
-  document.getElementById('detail-bookmark-btn').style.display = 'none';
+  document.getElementById('detail-bookmark-btn').style.display = '';
   document.getElementById('detail-favorite-btn').style.display = '';
 
   // Only the Sponsored Statement badge appears in this corner now — the Album Art toggle button
@@ -54,7 +54,7 @@ export function openDetailModal(item) {
       || 'What we watch shapes how we see power and justice — the same questions at the heart of civic life.';
     _sponsoredTagHtml = `
       <a class="vc-sponsored-tag vc-sponsored-tag--overlay" href="${chrome.runtime.getURL('src/sponsored/sponsored.html')}" target="_blank">
-        ⚡ Your Sponsored Statement
+        ⚡ Your Statement
         <span class="vc-sponsored-tooltip">
           <span class="vc-why-title">WHY VOTECRAFT RECOMMENDS</span>
           <span class="vc-why-tooltip-text">${whyText}</span>
@@ -74,12 +74,14 @@ export function openDetailModal(item) {
     wrap.style.display = '';
   }
 
-  const BOOKMARK_OUTLINE = `<svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 -960 960 960" width="22px" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/></svg>`;
+  const BOOKMARK_OUTLINE = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/></svg>`;
   const BOOKMARK_FILLED = `<svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 -960 960 960" width="22px" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Z"/></svg>`;
   const FAVORITE_STAR = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m354-287 126-76 126 77-33-144 111-96-146-13-58-136-58 135-146 13 111 97-33 143ZM233-120l65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Zm247-350Z"/></svg>`;
   function updateDetailActions() {
-    const isSaved = !!state.items.find(i => i.id === item.id);
-    document.getElementById('detail-edit').style.display = (!item.curated || isSaved) ? '' : 'none';
+    // Always visible now — editing an unsaved curated item auto-adds it to the user's saves
+    // (see the 'cur-' branch of handleSaveItem in addEditModal.js), so there's no longer a
+    // state where editing wouldn't be a valid, safe action.
+    document.getElementById('detail-edit').style.display = '';
   }
   function updateFavoriteIcon() {
     const favBtn = document.getElementById('detail-favorite-btn');
@@ -90,16 +92,18 @@ export function openDetailModal(item) {
     favBtn.classList.toggle('detail-favorite-btn--active', favorited);
   }
   function updateBookmarkIcon() {
-    const saved = !!state.items.find(i => i.id === item.id);
+    // Reflects queue status specifically (not just "saved") — deselecting via the header icon
+    // clears queueStatus but deliberately leaves the item in state.items, so a plain saved-check
+    // would still show the filled icon after deselecting.
+    const liveItem = state.items.find(i => i.id === item.id);
+    const queued = !!liveItem?.queueStatus;
     const btn = document.getElementById('detail-bookmark-btn');
     if (btn) {
-      btn.innerHTML = saved ? BOOKMARK_FILLED : BOOKMARK_OUTLINE;
-      btn.classList.toggle('detail-bookmark-btn--saved', saved);
-    }
-    const queueBookmarkEl = document.getElementById('standalone-queue-bookmark');
-    if (queueBookmarkEl) {
-      queueBookmarkEl.innerHTML = saved ? BOOKMARK_FILLED : BOOKMARK_OUTLINE;
-      queueBookmarkEl.classList.toggle('detail-bookmark-btn--saved', saved);
+      btn.innerHTML = queued ? BOOKMARK_FILLED : BOOKMARK_OUTLINE;
+      btn.classList.toggle('detail-bookmark-btn--saved', queued);
+      const tooltip = queued ? 'Remove from Queue' : 'Add to Queue';
+      btn.title = tooltip;
+      btn.setAttribute('data-tooltip', tooltip);
     }
     updateDetailActions();
   }
@@ -178,7 +182,7 @@ export function openDetailModal(item) {
 
   const artistHeaderEl = document.getElementById('detail-artist-header');
   const _headerContentHtml = buildWebsiteCta();
-  // Both Musician and Music Album pin the website CTA inline over the top of the image now.
+  // Website CTA is pinned absolute, centered, in line with the edit/star icon row (same top offset).
   artistHeaderEl.classList.add('detail-artist-header--inline');
   if (_showArtistHeaderAbove && _headerContentHtml) {
     artistHeaderEl.innerHTML = _headerContentHtml;
@@ -219,11 +223,26 @@ export function openDetailModal(item) {
     }
     updateBookmarkIcon();
   }
-  document.getElementById('detail-bookmark-btn').onclick = toggleBookmark;
-  const standaloneQueueBookmarkEl = document.getElementById('standalone-queue-bookmark');
-  standaloneQueueBookmarkEl.onclick = (e) => {
-    e.stopPropagation();
-    toggleBookmark();
+  // Quick-add shortcut: tapping the header bookmark icon queues the item (via addToQueue(),
+  // defined below) without opening the Add to Queue accordion — unlike tapping the accordion
+  // row itself. When already queued (icon in its filled/selected state), tapping it again
+  // deselects — mirrors the "Deselect Queue" tag inside the accordion (btn-queue-base below),
+  // just reachable straight from the corner, also without opening the panel.
+  document.getElementById('detail-bookmark-btn').onclick = async () => {
+    const liveItem = state.items.find(i => i.id === item.id);
+    if (liveItem?.queueStatus) {
+      liveItem.queueStatus = null;
+      liveItem.listIds = [];
+      liveItem.listId = null;
+      await persistItem(liveItem);
+      updateBookmarkIcon();
+      updateQueueLabel();
+      queueEl.innerHTML = buildQueueSection();
+      wireQueueSection();
+      queueEl.classList.remove('open');
+    } else {
+      await addToQueue();
+    }
   };
 
   document.getElementById('detail-favorite-btn').onclick = async () => {
@@ -283,11 +302,24 @@ export function openDetailModal(item) {
   const summaryText = item.summary || (isMusicianItem ? _ctaAuthor?.bio : null) || '';
   renderSummaryText(summaryText);
 
+  // Appends a "Wikipedia" link into the Web Links accordion once a page is actually found —
+  // fired from the async bio/photo lookups below (Web Links itself renders synchronously,
+  // before either lookup resolves), so this patches the DOM in after the fact.
+  function addWikipediaLink(wikiUrl) {
+    if (!wikiUrl || _detailItem !== item) return;
+    const linksWrap = document.getElementById('detail-streaming')?.querySelector('.streaming-links-wrap');
+    if (!linksWrap || linksWrap.querySelector('.streaming-link-wikipedia')) return;
+    linksWrap.insertAdjacentHTML('beforeend', `<a class="streaming-link-btn streaming-link-wikipedia" href="${escapeHtml(wikiUrl)}" target="_blank">Wikipedia</a>`);
+  }
+
   const _needsBio = isMusicianItem && !summaryText;
   const _needsPhoto = isMusicianItem && (!item.imageUrl || isItunesArtworkUrl(item.imageUrl));
-  if ((_needsBio || _needsPhoto) && _ctaAuthorName) {
-    ensureArtistWikipediaInfo(_ctaAuthorName).then(({ bio, photoUrl }) => {
-      if ((!bio && !photoUrl) || _detailItem !== item) return; // nothing found, or modal moved on
+  // Always looked up (cached after the first time) rather than only when bio/photo are missing —
+  // the Wikipedia link in Web Links should show up even for items that already have both.
+  if (_ctaAuthorName) {
+    ensureArtistWikipediaInfo(_ctaAuthorName).then(({ bio, photoUrl, wikiUrl }) => {
+      if ((!bio && !photoUrl && !wikiUrl) || _detailItem !== item) return; // nothing found, or modal moved on
+      addWikipediaLink(wikiUrl);
       let author = findAuthor(_ctaAuthorName, 'Musician');
       if (!author) {
         author = { id: Date.now().toString(), name: _ctaAuthorName, category: 'Musician', bio: null, imageUrl: null, websiteUrl: null, savedAt: Date.now() };
@@ -317,11 +349,14 @@ export function openDetailModal(item) {
   }
 
   // Book/Show/Movie/Game fallback: fetch a Wikipedia summary/photo (keyed by the item's own
-  // title, not an author) when either is missing — mirrors the Musician bio/photo lookup above.
-  const _needsItemWiki = SUMMARY_PLACEHOLDER_CATEGORIES.includes(item.category) && (!item.summary || !item.imageUrl);
+  // title, not an author) — mirrors the Musician bio/photo lookup above. Always looked up
+  // (cached after the first time), not just when summary/image are missing, so the Wikipedia
+  // link in Web Links shows up even for items that already have both.
+  const _needsItemWiki = SUMMARY_PLACEHOLDER_CATEGORIES.includes(item.category);
   if (_needsItemWiki && item.title) {
-    ensureItemWikipediaInfo(item.title, item.category).then(({ bio, photoUrl }) => {
-      if ((!bio && !photoUrl) || _detailItem !== item) return; // nothing found, or modal moved on
+    ensureItemWikipediaInfo(item.title, item.category).then(({ bio, photoUrl, wikiUrl }) => {
+      if ((!bio && !photoUrl && !wikiUrl) || _detailItem !== item) return; // nothing found, or modal moved on
+      addWikipediaLink(wikiUrl);
       let changed = false;
       if (bio && !item.summary) {
         item.summary = bio;
@@ -382,6 +417,7 @@ export function openDetailModal(item) {
       tracklistAccordionHeaderEl.classList.remove('open');
       tracklistEl.classList.remove('open');
       streamingEl.classList.remove('open');
+      queueEl.classList.remove('open');
       notesInputEl.focus();
     }
   };
@@ -431,6 +467,7 @@ export function openDetailModal(item) {
           tracklistAccordionHeaderEl.classList.remove('open');
           tracklistEl.classList.remove('open');
           streamingEl.classList.remove('open');
+          queueEl.classList.remove('open');
         }
       };
     } else {
@@ -462,6 +499,7 @@ export function openDetailModal(item) {
         tracklistAccordionHeaderEl.classList.remove('open');
         tracklistEl.classList.remove('open');
         streamingEl.classList.remove('open');
+        queueEl.classList.remove('open');
       }
     };
   } else {
@@ -482,6 +520,7 @@ export function openDetailModal(item) {
         tracklistAccordionHeaderEl.classList.remove('open');
         tracklistEl.classList.remove('open');
         streamingEl.classList.remove('open');
+        queueEl.classList.remove('open');
       }
     };
   }
@@ -503,6 +542,7 @@ export function openDetailModal(item) {
       notesAccordionHeaderEl.classList.remove('open');
       notesInputEl.classList.remove('open');
       streamingEl.classList.remove('open');
+      queueEl.classList.remove('open');
       if (_tracklistLoaded) return;
       _tracklistLoaded = true;
       tracklistEl.innerHTML = `<div class="detail-tracklist-row detail-tracklist-row--status">Loading…</div>`;
@@ -594,22 +634,38 @@ export function openDetailModal(item) {
       albumsListEl.classList.remove('open');
       tracklistAccordionHeaderEl.classList.remove('open');
       tracklistEl.classList.remove('open');
+      queueEl.classList.remove('open');
     }
   });
+
+  // Just the data side of queueing — no panel-opening — so callers that shouldn't pop the
+  // accordion open (the header bookmark icon) can add to queue without it.
+  async function addToQueue() {
+    const live = await ensureLiveItem(item);
+    live.queueStatus = 'in-queue';
+    await persistItem(live);
+    updateBookmarkIcon();
+    updateQueueLabel();
+    queueEl.innerHTML = buildQueueSection();
+    wireQueueSection();
+  }
 
   (streamingEl.querySelector('.queue-label') || btnStandaloneQueueEl).onclick = async () => {
     const liveItem = state.items.find(i => i.id === item.id);
     if (!liveItem?.queueStatus) {
-      const live = await ensureLiveItem(item);
-      live.queueStatus = 'in-queue';
-      await persistItem(live);
-      updateBookmarkIcon();
-      updateQueueLabel();
-      queueEl.innerHTML = buildQueueSection();
-      wireQueueSection();
+      await addToQueue();
       queueEl.classList.add('open');
     } else {
       queueEl.classList.toggle('open');
+    }
+    if (queueEl.classList.contains('open')) {
+      notesAccordionHeaderEl.classList.remove('open');
+      notesInputEl.classList.remove('open');
+      albumsAccordionHeaderEl.classList.remove('open');
+      albumsListEl.classList.remove('open');
+      tracklistAccordionHeaderEl.classList.remove('open');
+      tracklistEl.classList.remove('open');
+      streamingEl.classList.remove('open');
     }
   };
 
@@ -617,7 +673,7 @@ export function openDetailModal(item) {
     const liveItem = state.items.find(i => i.id === item.id);
     const listIds = getListIds(liveItem);
     const isQueued = !!liveItem?.queueStatus;
-    const baseTag = `<button class="queue-tag queue-tag-base${isQueued ? ' active' : ''}" id="btn-queue-base">${isQueued ? 'Deselect Queue' : 'Select Queue'}</button>`;
+    const baseTag = `<button class="queue-tag queue-tag-base${isQueued ? ' active' : ''}" id="btn-queue-base">${isQueued ? 'Deselect Queue' : 'Full Queue'}</button>`;
     const makeTag = l => `<button class="queue-tag${listIds.includes(l.id) ? ' active' : ''}" data-list-id="${l.id}">${l.name}</button>`;
     const addBtn = `<button class="queue-tag queue-tag-add" id="btn-queue-add-list">+ Add list</button>`;
     const lists = state.kanbanLists;
@@ -638,10 +694,14 @@ export function openDetailModal(item) {
         liveItem.listIds = [];
         liveItem.listId = null;
         await persistItem(liveItem);
+        updateBookmarkIcon();
         updateQueueLabel();
         queueEl.innerHTML = buildQueueSection();
         wireQueueSection();
-        queueEl.classList.remove('open');
+        queueEl.classList.add('open');
+      } else {
+        await addToQueue();
+        queueEl.classList.add('open');
       }
     });
 
