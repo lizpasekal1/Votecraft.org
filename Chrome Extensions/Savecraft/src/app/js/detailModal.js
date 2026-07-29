@@ -565,7 +565,10 @@ export function openDetailModal(item) {
       requestAnimationFrame(() => {
         if (!inputEl.classList.contains('open')) return; // closed again before this frame ran
         inputEl.style.height = 'auto'; // reset first, or scrollHeight only ever grows, never shrinks
-        inputEl.style.height = `${inputEl.scrollHeight}px`;
+        // +2px buffer — scrollHeight rounds to a whole pixel, but line-height (1.4 * 13px =
+        // 18.2px) isn't one, so that fractional rounding accumulates across several lines and
+        // clips the descenders on the last line without a little slack.
+        inputEl.style.height = `${inputEl.scrollHeight + 2}px`;
       });
     } else {
       inputEl.style.height = '';

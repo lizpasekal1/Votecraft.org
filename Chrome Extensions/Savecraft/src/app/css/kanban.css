@@ -720,7 +720,9 @@
 }
 
 .detail-queue.open .streaming-links-wrap {
-  max-height: 200px;
+  /* Generously large rather than a tight cap — same as Web Links/Book Summary/Chapters, defers
+     to .detail-body's own scroll instead of hard-clipping a growing kanban-list tag count. */
+  max-height: 2000px;
   margin-top: -2px;
 }
 
