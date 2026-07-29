@@ -8,7 +8,7 @@
   padding: 28px;
   width: 336px;
   max-width: 94vw;
-  max-height: 90vh;
+  max-height: min(90vh, 600px);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -167,12 +167,23 @@
 }
 
 .detail-body {
+  /* flex: 1 is what actually makes this the modal's scroll region — without it, this sizes to
+     fit its content's natural height (its own overflow-y:auto never engages), and the *whole
+     modal* balloons toward its max-height: 90vh cap instead whenever an accordion opens. */
+  flex: 1;
   padding: 15px 0 6px 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
   overflow-y: auto;
   min-height: 0;
+}
+
+/* Without this, flex's default shrink behavior compresses these rows/sections smaller than
+   their actual content when everything together doesn't fit .detail-body's available height —
+   clipping them internally instead of letting .detail-body's own scroll handle the overflow. */
+.detail-body > * {
+  flex-shrink: 0;
 }
 
 /* Matches the ~12px breathing room the edit/bookmark icons sit inset from the top of the
@@ -326,7 +337,7 @@
 
 .detail-summary-wrap {
   position: relative;
-  margin-top: -2px;
+  margin-top: -5px;
 }
 
 .detail-summary-text {
@@ -336,6 +347,7 @@
   overflow: hidden;
   width: 100%;
   padding-right: 16px;
+  line-height: 18.5px;
 }
 
 .detail-summary-text--expanded {
@@ -392,6 +404,10 @@
   border-bottom: none;
 }
 
+.detail-accordion-header--book-summary {
+  margin-top: 0;
+}
+
 /* Web Links (.detail-streaming) is a single self-contained element, not split into a header +
    a separate .detail-accordion-collapsible sibling like the other rows — so unlike them, there's
    nothing here to cancel the .detail-body flex gap above this row. Match it manually so the gap
@@ -403,7 +419,7 @@
 /* Pulls My Notes up closer to the summary above it — the first accordion row doesn't need
    the full .detail-body gap that separates the other (already-flush) accordion rows. */
 #detail-notes-accordion-header {
-  margin-top: -6px;
+  margin-top: -1px;
 }
 
 .detail-accordion-header span {
@@ -461,6 +477,11 @@
 .detail-accordion-collapsible.open {
   border-bottom: 1px solid #5B5BEF;
   padding-bottom: 8px;
+}
+
+.detail-notes-input--no-divider.open {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 /* Web Links (Musician mode): #detail-streaming (not the header div itself) receives the
@@ -560,7 +581,11 @@
 }
 
 .detail-tracklist.detail-accordion-collapsible.open {
-  max-height: 150px;
+  /* No nested scrollbar here and no growing the modal — max-height is just generously large
+     enough that it never actually constrains this (open-ended, chapters can keep being added)
+     list, so it renders at its natural height and any overflow scrolls via the existing outer
+     .detail-body { overflow-y: auto; }, not a separate inner scroll region. */
+  max-height: 2000px;
   margin-top: -9px;
   margin-bottom: -8px;
 }
@@ -572,13 +597,25 @@
   padding: 6px 2px;
   color: var(--text-primary);
   font-size: 13px;
+  cursor: pointer;
 }
 
 .detail-tracklist-number {
   flex-shrink: 0;
   width: 18px;
+  text-align: center;
   color: var(--text-muted);
   font-size: 12px;
+}
+
+.detail-tracklist-number--has-note {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.detail-tracklist-title--has-note {
+  color: var(--primary);
+  font-weight: 700;
 }
 
 .detail-tracklist-title {
@@ -589,10 +626,79 @@
   white-space: nowrap;
 }
 
-.detail-tracklist-duration {
+.detail-tracklist-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-tracklist-favorite {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  color: var(--text-secondary);
-  font-size: 12px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: color 0.15s;
+}
+
+.detail-tracklist-favorite svg {
+  display: block;
+  width: 15px;
+  height: 15px;
+}
+
+.detail-tracklist-favorite--active {
+  color: var(--primary);
+}
+
+/* Hovering the title or the pencil turns both purple together, as a preview of the row's
+   tap action — separate from --active/--has-note, which is the persistent "has content" state. */
+.detail-tracklist-row:hover .detail-tracklist-title,
+.detail-tracklist-row:hover .detail-tracklist-favorite {
+  color: var(--primary);
+}
+
+/* When the row is already purple (has a note), hovering can't turn it "more purple" — dim it
+   instead, so hover still gives feedback. More specific than the plain --has-note/--active
+   rules above, and than the two-class hover rule just above, so it wins on top of both. */
+.detail-tracklist-row:hover .detail-tracklist-number--has-note,
+.detail-tracklist-row:hover .detail-tracklist-title--has-note,
+.detail-tracklist-row:hover .detail-tracklist-favorite--active {
+  opacity: 0.65;
+}
+
+.detail-tracklist-notes-input {
+  max-height: 0;
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 2px 0 28px;
+  border: none;
+  outline: none;
+  resize: none;
+  background: none;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  line-height: 1.4;
+  transition: max-height 0.25s ease, padding 0.25s ease;
+}
+
+.detail-tracklist-notes-input.open {
+  /* max-height: none removes the base rule's max-height: 0 cap — detailModal.js's
+     fitTracklistNote() sets an explicit height (from scrollHeight) instead, so the box expands
+     to exactly fit each note's content. .detail-body (flex: 1 + flex-shrink: 0 children) is the
+     real scroll region, so a note taller than the modal's available space scrolls the body
+     rather than clipping. */
+  max-height: none;
+  overflow: hidden;
+  padding: 4px 2px 6px 28px;
+}
+
+
+.detail-tracklist-notes-input::placeholder {
+  color: var(--text-muted);
 }
 
 .detail-tracklist-row--status {
@@ -605,6 +711,22 @@
   font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.5;
+}
+
+.detail-tracklist-add-chapter {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 4px 2px;
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.detail-tracklist-add-chapter:hover {
+  text-decoration: underline;
 }
 
 
@@ -727,7 +849,7 @@
   font-weight: 400;
   text-transform: none;
   letter-spacing: normal;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.85);
   line-height: 1.5;
 }
 
@@ -736,12 +858,12 @@
 .vc-sponsored-tooltip {
   position: absolute;
   bottom: 100%;
-  right: 0;
+  left: 50%;
   margin-bottom: 8px;
-  width: 240px;
+  width: 250px;
   max-width: 80vw;
   box-sizing: border-box;
-  background: var(--surface);
+  background: var(--primary);
   border: 1px solid var(--primary);
   border-radius: 8px;
   padding: 10px 12px;
@@ -750,7 +872,7 @@
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(4px);
+  transform: translate(-50%, 4px);
   transition: opacity 0.15s, transform 0.15s, visibility 0.15s;
   z-index: 5;
 }
@@ -758,31 +880,36 @@
 .vc-sponsored-tag--overlay:hover .vc-sponsored-tooltip {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0);
+  transform: translate(-50%, 0);
 }
 
 /* Pointer tail — two stacked triangles (border color behind, surface color on top, inset 1px)
-   so the tail reads as a continuation of the box's own border+fill, not a separate shape. */
+   so the tail reads as a continuation of the box's own border+fill, not a separate shape.
+   Centered under the box: a border-drawn triangle centered on "left" needs margin-left equal
+   to -border-width (its own half-width), which — unlike anchoring both from the same "right"
+   offset — naturally keeps both triangles' apexes aligned even though they have different
+   border-widths (12px vs 11px). */
 .vc-sponsored-tooltip::before,
 .vc-sponsored-tooltip::after {
   content: '';
   position: absolute;
   top: 100%;
-  right: 120px;
+  left: 50%;
   border-style: solid;
   border-color: transparent;
 }
 
 .vc-sponsored-tooltip::before {
   border-width: 12px;
+  margin-left: -12px;
   border-top-color: var(--primary);
 }
 
 .vc-sponsored-tooltip::after {
   border-width: 11px;
-  right: 121px; /* 1px more than ::before so the two triangles' centers (not just their right edges) line up — they have different border-widths, so anchoring both to the same "right" leaves the apex points 1px apart */
+  margin-left: -11px;
   margin-top: -1px;
-  border-top-color: var(--surface);
+  border-top-color: var(--primary);
 }
 
 .vc-sponsored-tag {
