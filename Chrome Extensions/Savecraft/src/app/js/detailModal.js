@@ -3,7 +3,7 @@
 import { state, CATEGORY_PLATFORMS, SUMMARY_PLACEHOLDER_CATEGORIES, CURATED_ITEMS, CURATED_NOTES_CATEGORIES, CREATOR_CARD_CATEGORY } from './state.js';
 import {
   escapeHtml, catClass, isMusicAlbumsSectionView, isOwnAuthorPageView, isItunesArtworkUrl,
-  applyArtistPhotoToItem, patchCardImage, debounce, formatTrackDuration,
+  applyArtistPhotoToItem, patchCardImage, debounce,
 } from './utils.js';
 import { persistItem, removeItem, persistAuthor, persistViewState } from './storage.js';
 import { ensureArtistWebsite, ensureArtistWikipediaInfo, ensureItemWikipediaInfo } from './api.js';
@@ -53,9 +53,7 @@ export function openDetailModal(item) {
     const whyText = CATEGORY_WHY_TEXT[item.category]
       || 'What we watch shapes how we see power and justice — the same questions at the heart of civic life.';
     _sponsoredTagHtml = `
-      <a class="vc-sponsored-tag vc-sponsored-tag--overlay" href="${chrome.runtime.getURL('src/sponsored/sponsored.html')}" target="_blank">
-        ⚡ Your Statement
-        <span class="vc-sponsored-tooltip">
+      <a class="vc-sponsored-tag vc-sponsored-tag--overlay" href="${chrome.runtime.getURL('src/sponsored/sponsored.html')}" target="_blank">⚡ Your Statement<span class="vc-sponsored-tooltip">
           <span class="vc-why-title">WHY VOTECRAFT RECOMMENDS</span>
           <span class="vc-why-tooltip-text">${whyText}</span>
         </span>
@@ -76,7 +74,12 @@ export function openDetailModal(item) {
 
   const BOOKMARK_OUTLINE = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/></svg>`;
   const BOOKMARK_FILLED = `<svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 -960 960 960" width="22px" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Z"/></svg>`;
-  const FAVORITE_STAR = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m354-287 126-76 126 77-33-144 111-96-146-13-58-136-58 135-146 13 111 97-33 143ZM233-120l65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Zm247-350Z"/></svg>`;
+  const FAVORITE_STAR_OUTLINE = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m354-287 126-76 126 77-33-144 111-96-146-13-58-136-58 135-146 13 111 97-33 143ZM233-120l65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Zm247-350Z"/></svg>`;
+  const FAVORITE_STAR_FILLED = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m233-120 65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Z"/></svg>`;
+  // Per-track/chapter/general "add a note" affordance — a pencil rather than a star, since
+  // clicking it opens a note-taking field, not a favorite. Single icon (color toggles via the
+  // shared --active class) since there's no separate outline/filled variant for it.
+  const NOTE_PENCIL_ICON = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg>`;
   function updateDetailActions() {
     // Always visible now — editing an unsaved curated item auto-adds it to the user's saves
     // (see the 'cur-' branch of handleSaveItem in addEditModal.js), so there's no longer a
@@ -88,7 +91,7 @@ export function openDetailModal(item) {
     if (!favBtn) return;
     const liveItem = state.items.find(i => i.id === item.id);
     const favorited = !!liveItem?.favorite;
-    favBtn.innerHTML = FAVORITE_STAR;
+    favBtn.innerHTML = favorited ? FAVORITE_STAR_FILLED : FAVORITE_STAR_OUTLINE;
     favBtn.classList.toggle('detail-favorite-btn--active', favorited);
   }
   function updateBookmarkIcon() {
@@ -265,6 +268,9 @@ export function openDetailModal(item) {
   const albumsListEl = document.getElementById('detail-albums-list');
   const albumsAccordionLabelEl = albumsAccordionHeaderEl.querySelector('span');
   albumsListEl.classList.remove('detail-albums-list--summary'); // re-added below only for Summary categories
+  // Extra top gap needed only for the Book Summary header — the preceding My Notes section
+  // (with the chapter list folded into it) sits flush against it otherwise when collapsed.
+  albumsAccordionHeaderEl.classList.toggle('detail-accordion-header--book-summary', item.category === 'Book');
 
   const summaryEl = document.getElementById('detail-summary');
   const summaryLabelEl = document.getElementById('detail-summary-label');
@@ -403,21 +409,35 @@ export function openDetailModal(item) {
   notesEl.classList.remove('detail-accordion-collapsible', 'open');
 
   notesInputEl.value = text;
-  notesInputEl.style.display = '';
+  // Books no longer show the plain notes textarea at all — the chapter list (Chapter 0..N) is
+  // the entire content of My Notes for that category now.
+  notesInputEl.style.display = item.category === 'Book' ? 'none' : '';
   notesInputEl.classList.add('detail-accordion-collapsible');
   notesInputEl.classList.remove('open');
+  // Books fold the chapter list directly beneath the notes textarea (see notesAccordionHeaderEl
+  // .onclick below) — drop the notes box's own bottom divider so it doesn't draw a line between
+  // the two, since they read as one continuous section.
+  notesInputEl.classList.toggle('detail-notes-input--no-divider', item.category === 'Book');
   notesAccordionHeaderEl.classList.remove('open');
   notesAccordionHeaderEl.style.display = '';
   notesAccordionHeaderEl.onclick = () => {
     const nowOpen = notesAccordionHeaderEl.classList.toggle('open');
     notesInputEl.classList.toggle('open', nowOpen);
+    // Books fold the chapter list (#detail-tracklist) directly into My Notes instead of giving
+    // it its own accordion header — so it opens/closes together with the notes textarea here,
+    // rather than being force-closed as an unrelated accordion like it is for other categories.
+    if (item.category === 'Book') {
+      tracklistEl.classList.toggle('open', nowOpen);
+    }
     if (nowOpen) {
       albumsAccordionHeaderEl.classList.remove('open');
       albumsListEl.classList.remove('open');
-      tracklistAccordionHeaderEl.classList.remove('open');
-      tracklistEl.classList.remove('open');
       streamingEl.classList.remove('open');
       queueEl.classList.remove('open');
+      if (item.category !== 'Book') {
+        tracklistAccordionHeaderEl.classList.remove('open');
+        tracklistEl.classList.remove('open');
+      }
       notesInputEl.focus();
     }
   };
@@ -484,7 +504,7 @@ export function openDetailModal(item) {
   } else if (SUMMARY_PLACEHOLDER_CATEGORIES.includes(item.category)) {
     // Book/Show/Movie/Game show the item's summary inside this accordion instead of the plain
     // text block above notes — content is populated/updated by renderSummaryText() above.
-    albumsAccordionLabelEl.textContent = 'Summary';
+    albumsAccordionLabelEl.textContent = item.category === 'Book' ? 'Book Summary' : 'Summary';
     albumsAccordionHeaderEl.classList.remove('open');
     albumsListEl.classList.remove('open');
     albumsAccordionHeaderEl.style.display = '';
@@ -529,7 +549,31 @@ export function openDetailModal(item) {
   const tracklistEl = document.getElementById('detail-tracklist');
   tracklistAccordionHeaderEl.classList.remove('open');
   tracklistEl.classList.remove('open');
+
+  // A <textarea> never auto-grows to fit its content — rows="2" always renders ~2 lines tall
+  // and scrolls its own content internally, regardless of any max-height on the wrapper. Setting
+  // an explicit height from scrollHeight is what actually makes it expand to fit each note.
+  // .detail-body (flex: 1 + flex-shrink: 0 children) is the real scroll region now, so a note
+  // that grows past the modal's available height scrolls the whole body instead of clipping.
+  function fitTracklistNote(inputEl) {
+    if (!inputEl) return;
+    if (inputEl.classList.contains('open')) {
+      // Deferred a frame — measuring scrollHeight in the exact same tick as the class/content
+      // change that triggered this can catch the browser mid-layout (e.g. before the .open
+      // padding or a not-yet-settled font metric applies), undercounting the height on the very
+      // first open even though it then reads correctly on every subsequent call.
+      requestAnimationFrame(() => {
+        if (!inputEl.classList.contains('open')) return; // closed again before this frame ran
+        inputEl.style.height = 'auto'; // reset first, or scrollHeight only ever grows, never shrinks
+        inputEl.style.height = `${inputEl.scrollHeight}px`;
+      });
+    } else {
+      inputEl.style.height = '';
+    }
+  }
+
   if (isMusicAlbum) {
+    tracklistAccordionHeaderEl.querySelector('span').textContent = 'SONG LIST';
     tracklistAccordionHeaderEl.style.display = '';
     tracklistEl.style.display = '';
     tracklistEl.classList.add('detail-accordion-collapsible');
@@ -552,14 +596,196 @@ export function openDetailModal(item) {
       if (!tracks || tracks.length === 0) {
         tracklistEl.innerHTML = `<div class="detail-tracklist-row detail-tracklist-row--status">Track list unavailable</div>`;
       } else {
-        tracklistEl.innerHTML = tracks.map(t => `
-          <div class="detail-tracklist-row">
-            <span class="detail-tracklist-number">${t.number || ''}</span>
-            <span class="detail-tracklist-title">${escapeHtml(t.title || '')}</span>
-            <span class="detail-tracklist-duration">${formatTrackDuration(t.durationMs)}</span>
-          </div>`).join('');
+        // Per-track favoriting/notes are stored on the item itself (favoriteTracks: a list of
+        // track numbers; trackNotes: { [trackNumber]: text }) via ensureLiveItem() — deliberately
+        // NOT the same path as Add to Queue, so liking a track never sets queueStatus and never
+        // puts the item on the kanban board.
+        const liveItemForTracks = state.items.find(i => i.id === item.id);
+        const favoriteTracks = liveItemForTracks?.favoriteTracks || [];
+        const trackNotes = liveItemForTracks?.trackNotes || {};
+        tracklistEl.innerHTML = tracks.map(t => {
+          const isFav = favoriteTracks.includes(t.number);
+          const note = trackNotes[t.number] || '';
+          const hasNote = !!note.trim();
+          return `
+          <div class="detail-tracklist-item">
+            <div class="detail-tracklist-row">
+              <span class="detail-tracklist-number${hasNote ? ' detail-tracklist-number--has-note' : ''}">${t.number || ''}</span>
+              <span class="detail-tracklist-title${hasNote ? ' detail-tracklist-title--has-note' : ''}">${escapeHtml(t.title || '')}</span>
+              <span class="detail-tracklist-favorite${isFav || hasNote ? ' detail-tracklist-favorite--active' : ''}" data-track-number="${t.number}">${NOTE_PENCIL_ICON}</span>
+            </div>
+            <textarea class="detail-tracklist-notes-input${isFav ? ' open' : ''}" data-track-number="${t.number}" placeholder="Add a note for this track…" rows="2">${escapeHtml(note)}</textarea>
+          </div>`;
+        }).join('');
+        tracklistEl.querySelectorAll('.detail-tracklist-notes-input.open').forEach(fitTracklistNote);
+        // Bound to the whole row (not just the pencil) so tapping the track number or title also
+        // opens/closes the note — the pencil is still visually the "affordance" but isn't the
+        // only tap target.
+        tracklistEl.querySelectorAll('.detail-tracklist-row').forEach(rowEl => {
+          const starEl = rowEl.querySelector('.detail-tracklist-favorite');
+          if (!starEl) return; // status rows ("Loading…" etc.) have no favorite icon
+          rowEl.addEventListener('click', async () => {
+            const trackNumber = Number(starEl.dataset.trackNumber);
+            const liveTrackItem = await ensureLiveItem(item);
+            const idx = (liveTrackItem.favoriteTracks || []).indexOf(trackNumber);
+            const nowFav = idx === -1;
+            // Only one track note open at a time — same as chapters, clears every other entry
+            // from favoriteTracks (not just in the DOM) so a reload doesn't bring them all back.
+            liveTrackItem.favoriteTracks = nowFav ? [trackNumber] : [];
+            await persistItem(liveTrackItem);
+            const thisItemEl = rowEl.closest('.detail-tracklist-item');
+            tracklistEl.querySelectorAll('.detail-tracklist-item').forEach(otherItemEl => {
+              if (otherItemEl === thisItemEl) return;
+              const otherInput = otherItemEl.querySelector('.detail-tracklist-notes-input');
+              otherInput?.classList.remove('open');
+              fitTracklistNote(otherInput);
+              const otherStar = otherItemEl.querySelector('.detail-tracklist-favorite');
+              otherStar?.classList.toggle('detail-tracklist-favorite--active', !!otherInput?.value.trim());
+            });
+            const notesInput = thisItemEl?.querySelector('.detail-tracklist-notes-input');
+            const hasNote = !!notesInput?.value.trim();
+            starEl.classList.toggle('detail-tracklist-favorite--active', nowFav || hasNote);
+            notesInput?.classList.toggle('open', nowFav);
+            fitTracklistNote(notesInput);
+            if (nowFav) notesInput?.focus();
+          });
+        });
+        tracklistEl.querySelectorAll('.detail-tracklist-notes-input').forEach(inputEl => {
+          const saveTrackNote = debounce(async () => {
+            const trackNumber = Number(inputEl.dataset.trackNumber);
+            const liveTrackItem = await ensureLiveItem(item);
+            const notes = { ...(liveTrackItem.trackNotes || {}) };
+            const text = inputEl.value.trim();
+            if (text) notes[trackNumber] = text; else delete notes[trackNumber];
+            liveTrackItem.trackNotes = notes;
+            await persistItem(liveTrackItem);
+          }, 500);
+          inputEl.addEventListener('input', () => {
+            // Number/title/pencil turn purple/bold immediately as the user types, rather than
+            // waiting on the debounced save below to actually persist the note.
+            const itemEl = inputEl.closest('.detail-tracklist-item');
+            const hasNote = !!inputEl.value.trim();
+            itemEl?.querySelector('.detail-tracklist-number')?.classList.toggle('detail-tracklist-number--has-note', hasNote);
+            itemEl?.querySelector('.detail-tracklist-title')?.classList.toggle('detail-tracklist-title--has-note', hasNote);
+            itemEl?.querySelector('.detail-tracklist-favorite')?.classList.toggle('detail-tracklist-favorite--active', hasNote || inputEl.classList.contains('open'));
+            fitTracklistNote(inputEl);
+            saveTrackNote();
+          });
+          inputEl.addEventListener('click', e => e.stopPropagation());
+        });
       }
     };
+  } else if (item.category === 'Book') {
+    // Manual chapter list — no reliable chapter/table-of-contents data source for books (unlike
+    // ensureAlbumTrackList's iTunes track listings), so this is just a numbered placeholder list
+    // (chapterCount, defaulting to 12) the user can extend, stored on the item like trackNotes.
+    // No accordion header of its own — folded directly into My Notes (see notesAccordionHeaderEl
+    // .onclick above), so it's rendered here but stays hidden until My Notes opens.
+    tracklistAccordionHeaderEl.style.display = 'none';
+    tracklistEl.style.display = '';
+    tracklistEl.classList.add('detail-accordion-collapsible');
+    tracklistEl.classList.remove('open');
+
+    function renderChapters() {
+      // Mirrors the track favorite/notes feature exactly (favorite star + collapsible per-row
+      // notes), just keyed by chapter number instead of track number — chapterFavorites/
+      // chapterNotes on the item, saved via ensureLiveItem()/persistItem() so liking or noting
+      // a chapter never sets queueStatus and never puts the item on the kanban board.
+      const liveItem = state.items.find(i => i.id === item.id);
+      const chapterCount = liveItem?.chapterCount || 12;
+      const chapterFavorites = liveItem?.chapterFavorites || [];
+      const chapterNotes = liveItem?.chapterNotes || {};
+      // Chapter 0 above Chapter 1 — the loop runs one extra time (chapterCount + 1 entries,
+      // numbered 0..chapterCount) rather than shifting 1..12 down, so existing chapter numbers
+      // stay the same and "+ Add Chapter" still appends chapterCount+1 as expected.
+      // Chapter 0 shows the old general notes/description text as a starting point (the plain
+      // notes textarea is hidden for Books now) until the user actually edits it — chapterZero
+      // Seeded (set the first time its textarea fires an input event, even to clear it) stops
+      // that fallback from reappearing after an intentional clear.
+      const showChapterZeroFallback = !liveItem?.chapterZeroSeeded;
+      const rows = Array.from({ length: chapterCount + 1 }, (_, i) => {
+        const num = i;
+        const isFav = chapterFavorites.includes(num);
+        const note = chapterNotes[num] || (num === 0 && showChapterZeroFallback ? text : '') || '';
+        const hasNote = !!note.trim();
+        return `
+        <div class="detail-tracklist-item">
+          <div class="detail-tracklist-row">
+            <span class="detail-tracklist-number${hasNote ? ' detail-tracklist-number--has-note' : ''}">${num}</span>
+            <span class="detail-tracklist-title${hasNote ? ' detail-tracklist-title--has-note' : ''}">${num === 0 ? 'Basic Notes' : `Chapter ${num}`}</span>
+            <span class="detail-tracklist-favorite${isFav || hasNote ? ' detail-tracklist-favorite--active' : ''}" data-chapter-number="${num}">${NOTE_PENCIL_ICON}</span>
+          </div>
+          <textarea class="detail-tracklist-notes-input${isFav ? ' open' : ''}" data-chapter-number="${num}" placeholder="Add a note for this chapter…" rows="2">${escapeHtml(note)}</textarea>
+        </div>`;
+      }).join('');
+      tracklistEl.innerHTML = `${rows}<button class="detail-tracklist-add-chapter" id="btn-add-chapter">+ Add Chapter</button>`;
+      tracklistEl.querySelectorAll('.detail-tracklist-notes-input.open').forEach(fitTracklistNote);
+
+      // Bound to the whole row (not just the pencil) so tapping "Chapter N" also opens/closes
+      // the note — the pencil is still visually the "affordance" but isn't the only tap target.
+      tracklistEl.querySelectorAll('.detail-tracklist-row').forEach(rowEl => {
+        const starEl = rowEl.querySelector('.detail-tracklist-favorite');
+        if (!starEl) return;
+        rowEl.addEventListener('click', async () => {
+          const chapterNumber = Number(starEl.dataset.chapterNumber);
+          const liveChapterItem = await ensureLiveItem(item);
+          const idx = (liveChapterItem.chapterFavorites || []).indexOf(chapterNumber);
+          const nowFav = idx === -1;
+          // Only one chapter note open at a time — opening this one clears every other entry
+          // from chapterFavorites (not just in the DOM) so a reload doesn't bring them all back.
+          liveChapterItem.chapterFavorites = nowFav ? [chapterNumber] : [];
+          await persistItem(liveChapterItem);
+          const thisItemEl = rowEl.closest('.detail-tracklist-item');
+          tracklistEl.querySelectorAll('.detail-tracklist-item').forEach(otherItemEl => {
+            if (otherItemEl === thisItemEl) return;
+            const otherInput = otherItemEl.querySelector('.detail-tracklist-notes-input');
+            otherInput?.classList.remove('open');
+            fitTracklistNote(otherInput);
+            const otherStar = otherItemEl.querySelector('.detail-tracklist-favorite');
+            otherStar?.classList.toggle('detail-tracklist-favorite--active', !!otherInput?.value.trim());
+          });
+          const notesInput = thisItemEl?.querySelector('.detail-tracklist-notes-input');
+          const hasNote = !!notesInput?.value.trim();
+          starEl.classList.toggle('detail-tracklist-favorite--active', nowFav || hasNote);
+          notesInput?.classList.toggle('open', nowFav);
+          fitTracklistNote(notesInput);
+          if (nowFav) notesInput?.focus();
+        });
+      });
+      tracklistEl.querySelectorAll('.detail-tracklist-notes-input').forEach(inputEl => {
+        const saveChapterNote = debounce(async () => {
+          const chapterNumber = Number(inputEl.dataset.chapterNumber);
+          const liveChapterItem = await ensureLiveItem(item);
+          const notes = { ...(liveChapterItem.chapterNotes || {}) };
+          const noteText = inputEl.value.trim();
+          if (noteText) notes[chapterNumber] = noteText; else delete notes[chapterNumber];
+          liveChapterItem.chapterNotes = notes;
+          // Any edit to Chapter 0 (even clearing it) permanently stops the general-notes
+          // fallback text from reappearing on future renders.
+          if (chapterNumber === 0) liveChapterItem.chapterZeroSeeded = true;
+          await persistItem(liveChapterItem);
+        }, 500);
+        inputEl.addEventListener('input', () => {
+          const itemEl = inputEl.closest('.detail-tracklist-item');
+          const hasNote = !!inputEl.value.trim();
+          itemEl?.querySelector('.detail-tracklist-number')?.classList.toggle('detail-tracklist-number--has-note', hasNote);
+          itemEl?.querySelector('.detail-tracklist-title')?.classList.toggle('detail-tracklist-title--has-note', hasNote);
+          itemEl?.querySelector('.detail-tracklist-favorite')?.classList.toggle('detail-tracklist-favorite--active', hasNote || inputEl.classList.contains('open'));
+          fitTracklistNote(inputEl);
+          saveChapterNote();
+        });
+        inputEl.addEventListener('click', e => e.stopPropagation());
+      });
+
+      document.getElementById('btn-add-chapter').addEventListener('click', async e => {
+        e.stopPropagation();
+        const liveTrackItem = await ensureLiveItem(item);
+        liveTrackItem.chapterCount = (liveTrackItem.chapterCount || 12) + 1;
+        await persistItem(liveTrackItem);
+        renderChapters();
+      });
+    }
+    renderChapters();
   } else {
     tracklistAccordionHeaderEl.style.display = 'none';
     tracklistEl.style.display = 'none';
