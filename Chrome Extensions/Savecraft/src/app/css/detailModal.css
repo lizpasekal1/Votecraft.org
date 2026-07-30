@@ -927,12 +927,15 @@
 }
 
 /* While actively being renamed (see _startRenamingTitle, detailModalNotes.js) — the ellipsis
-   clipping above would otherwise hide whatever's being typed past the row's normal width. */
+   clipping above would otherwise hide whatever's being typed past the row's normal width. Color
+   forced back to the plain text color (and !important'd) regardless of --has-note or the row's
+   own :hover rule below, both of which would otherwise still tint it purple while typing. */
 .detail-tracklist-title--editing {
   overflow: visible;
   white-space: normal;
   outline: none;
   cursor: text;
+  color: var(--text-primary) !important;
 }
 
 .detail-tracklist-rename {
