@@ -317,7 +317,7 @@
   border-color: var(--primary);
 }
 .detail-note-toolbar-btn[disabled] { opacity: 0.4; pointer-events: none; cursor: default; }
-.detail-note-toolbar-btn--expand { margin-left: auto; margin-right: 15px; }
+.detail-note-toolbar-btn--expand { margin-left: auto; margin-right: 10px; }
 
 .detail-modal--focus-mode #detail-image-wrap,
 .detail-modal--focus-mode #detail-edit,
