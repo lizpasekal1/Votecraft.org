@@ -631,7 +631,16 @@
 .detail-accordion-collapsible {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.25s ease, margin 0.25s ease;
+  opacity: 0;
+  /* Some of this class's max-height caps (2000px for My Notes/chapters, Summary prose, etc.) are
+     far larger than any real content, which made the reveal feel like an instant "pop" rather
+     than a slide — a max-height transition always animates across its full numeric range
+     regardless of the content's actual height, so short content reaches its true size almost
+     immediately while the number keeps climbing invisibly. Fading opacity in alongside it (on a
+     shorter duration, so it finishes well before max-height does) smooths that over, and the
+     eased curve (accelerate in, decelerate out, vs. plain "ease") reads as a slide into position
+     rather than a linear reveal. */
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
   /* Cancels out the .detail-body flex gap above and below this (currently zero-height)
      element, so consecutive accordion rows sit flush against each other when collapsed. */
   margin: -8px 0;
@@ -641,6 +650,7 @@
   max-height: 320px;
   margin: 8px 0 4px;
   overflow-y: auto;
+  opacity: 1;
 }
 
 .detail-albums-list {
