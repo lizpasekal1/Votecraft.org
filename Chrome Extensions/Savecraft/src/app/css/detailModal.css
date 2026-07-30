@@ -281,6 +281,13 @@
   display: none;
 }
 
+/* The "Your Statement" sponsored badge sits inside #detail-image-wrap, which only hides in full
+   focus mode above — but it's distracting/overlapping even just while typing a note (toolbar
+   shown, image still visible), so it hides on that broader "editing" condition instead. */
+.detail-modal--editing-note .vc-sponsored-tag--overlay {
+  display: none;
+}
+
 .detail-modal--focus-mode {
   /* Hiding the image/icon column above would otherwise let the modal (which normally
      shrink-wraps to its content — see the comment on .modal.detail-modal) auto-shrink shorter.
@@ -1041,7 +1048,11 @@
   width: fit-content;
   margin: 0 auto;
   bottom: -10.5px;
-  z-index: 2;
+  /* Was 2 — raised above the sticky title row/note toolbar's z-index: 4 (added for the sticky-
+     title feature). A child's own z-index (the tooltip's 5) can't out-rank a sibling outside its
+     own stacking context; only this element's z-index (its context's "entry" value) does, so the
+     callout was rendering underneath the title/toolbar despite its own higher z-index. */
+  z-index: 6;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 

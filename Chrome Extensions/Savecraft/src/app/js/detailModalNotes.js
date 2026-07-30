@@ -1,8 +1,7 @@
 // ===== DETAIL MODAL: MY NOTES + TRACKLIST/CHAPTERS ACCORDIONS =====
-// Kept as one file/closure (not split further) because Books fold the chapter list directly into
-// the My Notes accordion — sharing its open/close state rather than being an independent
-// accordion of their own — and because Notes' resolved `text` is read by the Book chapter list as
-// its Chapter-0 fallback content. Splitting these would mean threading both across a file boundary.
+// Kept as one file/closure (not split further) because every category folds its numbered note
+// list directly into the My Notes accordion — sharing its open/close state rather than being an
+// independent accordion of their own.
 
 import { state, CURATED_NOTES_CATEGORIES } from './state.js';
 import { escapeHtml, debounce } from './utils.js';
@@ -10,66 +9,72 @@ import { persistItem } from './storage.js';
 import { ensureAlbumTrackList, ensureLiveItem } from './authors.js';
 import { getDetailItem } from './detailModal.js';
 import { registerAccordion, closeAccordionsExcept } from './detailModalAccordions.js';
+import { sanitizeNoteHtml, plainTextFromNoteHtml } from './noteSanitizer.js';
+
+// Which note row (a .detail-tracklist-notes-input contenteditable) currently has focus, if any —
+// drives the formatting toolbar's visibility/enabled state. _focusModeOn is an independent on/off
+// toggle (survives a row blur) for hiding the image/website/bookmark/favorite/edit controls.
+let _activeNoteRow = null;
+let _focusModeOn = false;
 
 // MY NOTES accordion icon: the plain notepad icon for every category, swapped for a book icon
 // (matching the Chapters content it holds) on Book items only.
 const NOTES_ICON_PATH = 'M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z';
 const BOOK_NOTES_ICON_PATH = 'M560-564v-68q33-14 67.5-21t72.5-7q26 0 51 4t49 10v64q-24-9-48.5-13.5T700-600q-38 0-73 9.5T560-564Zm0 220v-68q33-14 67.5-21t72.5-7q26 0 51 4t49 10v64q-24-9-48.5-13.5T700-380q-38 0-73 9t-67 27Zm0-110v-68q33-14 67.5-21t72.5-7q26 0 51 4t49 10v64q-24-9-48.5-13.5T700-490q-38 0-73 9.5T560-454ZM260-320q47 0 91.5 10.5T440-278v-394q-41-24-87-36t-93-12q-36 0-71.5 7T120-692v396q35-12 69.5-18t70.5-6Zm260 42q44-21 88.5-31.5T700-320q36 0 70.5 6t69.5 18v-396q-33-14-68.5-21t-71.5-7q-47 0-93 12t-87 36v394Zm-40 118q-48-38-104-59t-116-21q-42 0-82.5 11T100-198q-21 11-40.5-1T40-234v-482q0-11 5.5-21T62-752q46-24 96-36t102-12q58 0 113.5 15T480-740q51-30 106.5-45T700-800q52 0 102 12t96 36q11 5 16.5 15t5.5 21v482q0 23-19.5 35t-40.5 1q-37-20-77.5-31T700-240q-60 0-116 21t-104 59ZM280-494Z';
-// Per-track/chapter/general "add a note" affordance — a pencil rather than a star, since
+// Per-track/chapter/note/general "add a note" affordance — a pencil rather than a star, since
 // clicking it opens a note-taking field, not a favorite. Single icon (color toggles via the
 // shared --active class) since there's no separate outline/filled variant for it.
 const NOTE_PENCIL_ICON = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg>`;
 
 export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, ctaAuthor }) {
+  // Fresh state every time the modal opens on an item, so focus mode / an active row from a
+  // previous item never leaks into this one.
+  _activeNoteRow = null;
+  _focusModeOn = false;
+  document.querySelector('.modal.detail-modal').classList.remove('detail-modal--focus-mode', 'detail-modal--editing-note');
+  document.getElementById('detail-body').classList.remove('detail-body--editing-note');
+
   const notesInputEl = document.getElementById('detail-notes-input');
   const notesAccordionHeaderEl = document.getElementById('detail-notes-accordion-header');
+  const tracklistAccordionHeaderEl = document.getElementById('detail-tracklist-accordion-header');
+  const tracklistEl = document.getElementById('detail-tracklist');
+  // Every category's numbered "My Notes" list folds in here — separate from #detail-tracklist
+  // (Music Album's own Song List, and Book's chapters, both still live there) since Music Album
+  // needs both a Song List accordion *and* a numbered My Notes list at the same time.
+  const notesListEl = document.getElementById('detail-notes-list');
+  // Which element actually holds My Notes' visible content for this category — Book keeps using
+  // #detail-tracklist (unchanged); every other category (including Music Album, alongside its
+  // separate Song List) uses the new #detail-notes-list.
+  const notesBodyEl = item.category === 'Book' ? tracklistEl : notesListEl;
+
   document.getElementById('detail-notes-accordion-icon').querySelector('path')
     .setAttribute('d', item.category === 'Book' ? BOOK_NOTES_ICON_PATH : NOTES_ICON_PATH);
-  registerAccordion('notes', notesAccordionHeaderEl, notesInputEl);
+  registerAccordion('notes', notesAccordionHeaderEl, notesBodyEl);
   // Curated (not-yet-saved) items in creator-linked categories stash the creator's name in
   // item.notes (see _detailAuthorName in detailModalHeader.js) — that's never real user notes, so
-  // exclude it here or the editable textarea below would pre-fill with the creator name instead
-  // of being empty.
+  // exclude it here or the row-0 fallback below would show the creator name instead of nothing.
   const _curatedNotesIsCreatorName = item.curated && CURATED_NOTES_CATEGORIES.includes(item.category);
-  const _liveItemForNotes = state.items.find(i => i.id === item.id);
-  // Musician's bio pre-fills My Notes as a starting point (editable/replaceable, like Book's
-  // Chapter 0 falling back to old notes text) instead of showing in its own read-only block —
-  // only while there's no real saved note yet and the user hasn't already dismissed it once
-  // (bioNotesSeeded, set on first save — see saveNotes below — mirrors chapterZeroSeeded).
-  const _showBioFallback = isMusicianItem && !item.notes && !_liveItemForNotes?.bioNotesSeeded;
-  const text = (_curatedNotesIsCreatorName ? null : item.notes) || item.description
-    || (_showBioFallback ? (ctaAuthor?.bio || '') : '') || '';
-  // My Notes is shown as its own accordion row for every category now, even with no notes yet
-  // — it's a directly-editable textarea instead of read-only text, auto-saving (debounced) as
-  // the user types. Genre (item.genre, Music Album only) is intentionally kept on the item but
-  // not rendered anywhere in this modal.
+  const text = (_curatedNotesIsCreatorName ? null : item.notes) || item.description || '';
 
+  // The plain textarea is never shown anymore — every category now folds a numbered note list
+  // (Chapter 0..N for Book, "Summary"/Note 1..N for everyone else) into this accordion instead.
+  // Left in place (hidden, still debounce-saving to item.notes on the off chance anything else
+  // still reads that field) rather than removed outright, same as Book's already did before this.
   notesInputEl.value = text;
-  // Books no longer show the plain notes textarea at all — the chapter list (Chapter 0..N) is
-  // the entire content of My Notes for that category now.
-  notesInputEl.style.display = item.category === 'Book' ? 'none' : '';
-  notesInputEl.classList.add('detail-accordion-collapsible');
-  notesInputEl.classList.remove('open');
-  // Books fold the chapter list directly beneath the notes textarea (see notesAccordionHeaderEl
-  // .onclick below) — drop the notes box's own bottom divider so it doesn't draw a line between
-  // the two, since they read as one continuous section.
-  notesInputEl.classList.toggle('detail-notes-input--no-divider', item.category === 'Book');
+  notesInputEl.style.display = 'none';
   notesAccordionHeaderEl.classList.remove('open');
   notesAccordionHeaderEl.style.display = '';
   notesAccordionHeaderEl.onclick = () => {
     const nowOpen = notesAccordionHeaderEl.classList.toggle('open');
-    notesInputEl.classList.toggle('open', nowOpen);
-    // Books fold the chapter list (#detail-tracklist) directly into My Notes instead of giving
-    // it its own accordion header — so it opens/closes together with the notes textarea here,
-    // rather than being force-closed as an unrelated accordion like it is for other categories.
-    // (For Book, tracklistEl is never registered below, so closeAccordionsExcept('notes') can't
-    // touch it either way — this explicit toggle is what actually drives it.)
-    if (item.category === 'Book') {
-      tracklistEl.classList.toggle('open', nowOpen);
-    }
+    // The real content lives in notesBodyEl, not notesInputEl — folded into My Notes instead of
+    // being its own accordion, so it opens/closes together with the header here rather than being
+    // force-closed as an unrelated accordion like it is for other sections. (notesBodyEl is
+    // registered above, but only so *other* sections' closeAccordionsExcept() calls can close it
+    // — that mechanism doesn't fire for this header's own click, hence the explicit toggle here.)
+    notesBodyEl.classList.toggle('open', nowOpen);
     if (nowOpen) {
       closeAccordionsExcept('notes');
-      notesInputEl.focus();
+      notesBodyEl.querySelector('.detail-tracklist-notes-input.open')?.focus();
     }
   };
 
@@ -78,23 +83,16 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
     const newNotes = notesInputEl.value.trim() || null;
     let liveItem = state.items.find(i => i.id === item.id);
     if (!liveItem) liveItem = await ensureLiveItem(item);
-    // Any edit (even clearing back to empty) permanently stops the bio fallback from reappearing
-    // — same reasoning/pattern as chapterZeroSeeded below for Book chapters. Checked even when the
-    // resulting text is unchanged, so a clear-back-to-empty edit (newNotes === liveItem.notes ===
-    // null) still persists the flag instead of silently no-op'ing out before it's ever saved.
-    const needsSeedUpdate = isMusicianItem && !liveItem.bioNotesSeeded;
-    if (liveItem.notes === newNotes && !needsSeedUpdate) return;
+    if (liveItem.notes === newNotes) return;
     liveItem.notes = newNotes;
     item.notes = newNotes;
-    if (needsSeedUpdate) liveItem.bioNotesSeeded = true;
     await persistItem(liveItem);
   }, 600);
   notesInputEl.oninput = saveNotes;
 
-  const tracklistAccordionHeaderEl = document.getElementById('detail-tracklist-accordion-header');
-  const tracklistEl = document.getElementById('detail-tracklist');
   tracklistAccordionHeaderEl.classList.remove('open');
   tracklistEl.classList.remove('open');
+  notesListEl.classList.remove('open');
 
   // A <textarea> never auto-grows to fit its content — rows="2" always renders ~2 lines tall
   // and scrolls its own content internally, regardless of any max-height on the wrapper. Setting
@@ -121,6 +119,141 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
     }
   }
 
+  // Shared by Book's Chapter list and every other category's Summary/Note list below — same UI (a
+  // favorite star + collapsible per-row note, keyed by a row number, with a "+ Add" row at the end
+  // and a row 0 that falls back to some starting text until the user actually edits it), just
+  // different field names, labels, starting content, and target element. Not used for Music
+  // Album's track list — that's sourced from a real, ordered iTunes track listing rather than
+  // open-ended user-numbered rows, and lazily loaded on first expand rather than rendered up
+  // front, so it stays its own thing.
+  function renderNumberedNoteList(config) {
+    const {
+      target, countField, defaultCount, favoritesField, textsField, zeroSeededField,
+      zeroLabel, rowLabel, // rowLabel: (num) => string — e.g. Book's `Chapter ${num}` vs the flat 'Note'
+      notePlaceholder, addButtonLabel, addButtonId, zeroFallback,
+      zeroNumberDisplay = '0', // row 0's number badge — Book keeps the literal '0', others use a bullet
+    } = config;
+    const liveItem = state.items.find(i => i.id === item.id);
+    const count = liveItem?.[countField] || defaultCount;
+    const favorites = liveItem?.[favoritesField] || [];
+    const texts = liveItem?.[textsField] || {};
+    // Row 0 shows the starting text (old general notes/bio) as a starting point until the user
+    // actually edits it — the zeroSeeded flag (set the first time its textarea fires an input
+    // event, even to clear it) stops that fallback from reappearing after an intentional clear.
+    const showZeroFallback = !liveItem?.[zeroSeededField];
+    const rows = Array.from({ length: count + 1 }, (_, i) => {
+      const num = i;
+      const isFav = favorites.includes(num);
+      const rawNote = texts[num];
+      const noteHtml = rawNote != null
+        ? sanitizeNoteHtml(rawNote)
+        : (num === 0 && showZeroFallback ? escapeHtml(zeroFallback) : '');
+      const hasNote = !!plainTextFromNoteHtml(noteHtml);
+      return `
+      <div class="detail-tracklist-item">
+        <div class="detail-tracklist-row">
+          <span class="detail-tracklist-number${hasNote ? ' detail-tracklist-number--has-note' : ''}">${num === 0 ? zeroNumberDisplay : num}</span>
+          <span class="detail-tracklist-title${hasNote ? ' detail-tracklist-title--has-note' : ''}">${num === 0 ? zeroLabel : rowLabel(num)}</span>
+          <span class="detail-tracklist-favorite${isFav || hasNote ? ' detail-tracklist-favorite--active' : ''}" data-row-number="${num}">${NOTE_PENCIL_ICON}</span>
+        </div>
+        <div class="detail-tracklist-notes-input${isFav ? ' open' : ''}" data-row-number="${num}" data-placeholder="${escapeHtml(notePlaceholder)}" contenteditable="true" role="textbox" aria-multiline="true" aria-label="${escapeHtml(notePlaceholder)}">${noteHtml}</div>
+      </div>`;
+    }).join('');
+    target.innerHTML = `${rows}<button class="detail-tracklist-add-chapter" id="${addButtonId}">${addButtonLabel}</button>`;
+    target.querySelectorAll('.detail-tracklist-notes-input.open').forEach(fitTracklistNote);
+
+    // Bound to the whole row (not just the pencil) so tapping the row's label also opens/closes
+    // the note — the pencil is still visually the "affordance" but isn't the only tap target.
+    target.querySelectorAll('.detail-tracklist-row').forEach(rowEl => {
+      const starEl = rowEl.querySelector('.detail-tracklist-favorite');
+      if (!starEl) return;
+      rowEl.addEventListener('click', async () => {
+        const rowNumber = Number(starEl.dataset.rowNumber);
+        const liveRowItem = await ensureLiveItem(item);
+        const idx = (liveRowItem[favoritesField] || []).indexOf(rowNumber);
+        const nowFav = idx === -1;
+        // Only one note open at a time — clears every other entry from the favorites list (not
+        // just in the DOM) so a reload doesn't bring them all back.
+        liveRowItem[favoritesField] = nowFav ? [rowNumber] : [];
+        await persistItem(liveRowItem);
+        const thisItemEl = rowEl.closest('.detail-tracklist-item');
+        target.querySelectorAll('.detail-tracklist-item').forEach(otherItemEl => {
+          if (otherItemEl === thisItemEl) return;
+          const otherInput = otherItemEl.querySelector('.detail-tracklist-notes-input');
+          otherInput?.classList.remove('open');
+          fitTracklistNote(otherInput);
+          const otherStar = otherItemEl.querySelector('.detail-tracklist-favorite');
+          otherStar?.classList.toggle('detail-tracklist-favorite--active', !!otherInput?.textContent.trim());
+        });
+        const notesInput = thisItemEl?.querySelector('.detail-tracklist-notes-input');
+        const hasNote = !!notesInput?.textContent.trim();
+        starEl.classList.toggle('detail-tracklist-favorite--active', nowFav || hasNote);
+        notesInput?.classList.toggle('open', nowFav);
+        fitTracklistNote(notesInput);
+        if (nowFav) notesInput?.focus();
+      });
+    });
+
+    target.querySelectorAll('.detail-tracklist-notes-input').forEach(inputEl => {
+      const saveRowNote = debounce(async () => {
+        if (getDetailItem() !== item) return; // modal moved on to a different item before the debounce fired
+        const rowNumber = Number(inputEl.dataset.rowNumber);
+        const liveRowItem = await ensureLiveItem(item);
+        const newTexts = { ...(liveRowItem[textsField] || {}) };
+        // Computed for storage only — never written back into inputEl.innerHTML, or the cursor
+        // would reset mid-typing. Rows are only ever re-rendered from stored data on explicit
+        // user actions (modal open, "+ Add"), never mid-edit.
+        const cleanHtml = sanitizeNoteHtml(inputEl.innerHTML);
+        const noteText = plainTextFromNoteHtml(cleanHtml);
+        if (noteText) newTexts[rowNumber] = cleanHtml; else delete newTexts[rowNumber];
+        liveRowItem[textsField] = newTexts;
+        // Any edit to row 0 (even clearing it) permanently stops the starting-text fallback from
+        // reappearing on future renders.
+        if (rowNumber === 0) liveRowItem[zeroSeededField] = true;
+        await persistItem(liveRowItem);
+      }, 500);
+      inputEl.addEventListener('input', () => {
+        // Number/title/pencil turn purple/bold immediately as the user types, rather than
+        // waiting on the debounced save above to actually persist the note.
+        const itemEl = inputEl.closest('.detail-tracklist-item');
+        const hasNote = !!inputEl.textContent.trim();
+        itemEl?.querySelector('.detail-tracklist-number')?.classList.toggle('detail-tracklist-number--has-note', hasNote);
+        itemEl?.querySelector('.detail-tracklist-title')?.classList.toggle('detail-tracklist-title--has-note', hasNote);
+        itemEl?.querySelector('.detail-tracklist-favorite')?.classList.toggle('detail-tracklist-favorite--active', hasNote || inputEl.classList.contains('open'));
+        fitTracklistNote(inputEl);
+        saveRowNote();
+      });
+      inputEl.addEventListener('click', e => e.stopPropagation());
+      inputEl.addEventListener('focus', () => {
+        _activeNoteRow = inputEl;
+        _updateNoteEditingUi();
+      });
+      inputEl.addEventListener('blur', () => {
+        if (_activeNoteRow === inputEl) _activeNoteRow = null;
+        if (!inputEl.textContent.trim()) inputEl.innerHTML = ''; // clear a stray auto-inserted <br> so :empty/placeholder work next time
+        _updateNoteEditingUi();
+      });
+      inputEl.addEventListener('paste', e => {
+        e.preventDefault();
+        const cd = e.clipboardData || window.clipboardData;
+        const html = cd.getData('text/html');
+        const clean = html ? sanitizeNoteHtml(html) : escapeHtml(cd.getData('text/plain'));
+        document.execCommand('insertHTML', false, clean);
+        inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    });
+
+    document.getElementById(addButtonId).addEventListener('click', async e => {
+      e.stopPropagation();
+      const liveRowItem = await ensureLiveItem(item);
+      liveRowItem[countField] = (liveRowItem[countField] || defaultCount) + 1;
+      await persistItem(liveRowItem);
+      renderNumberedNoteList(config);
+    });
+  }
+
+  // ----- Part 1: #detail-tracklist — Music Album's own Song List accordion, or (Book only)
+  // folded into My Notes as the chapters list, or otherwise unused and hidden. -----
   if (isMusicAlbum) {
     registerAccordion('tracklist', tracklistAccordionHeaderEl, tracklistEl);
     tracklistAccordionHeaderEl.querySelector('span').textContent = 'SONG LIST';
@@ -152,8 +285,9 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
         const trackNotes = liveItemForTracks?.trackNotes || {};
         tracklistEl.innerHTML = tracks.map(t => {
           const isFav = favoriteTracks.includes(t.number);
-          const note = trackNotes[t.number] || '';
-          const hasNote = !!note.trim();
+          const rawNote = trackNotes[t.number];
+          const noteHtml = rawNote != null ? sanitizeNoteHtml(rawNote) : '';
+          const hasNote = !!plainTextFromNoteHtml(noteHtml);
           return `
           <div class="detail-tracklist-item">
             <div class="detail-tracklist-row">
@@ -161,7 +295,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
               <span class="detail-tracklist-title${hasNote ? ' detail-tracklist-title--has-note' : ''}">${escapeHtml(t.title || '')}</span>
               <span class="detail-tracklist-favorite${isFav || hasNote ? ' detail-tracklist-favorite--active' : ''}" data-track-number="${t.number}">${NOTE_PENCIL_ICON}</span>
             </div>
-            <textarea class="detail-tracklist-notes-input${isFav ? ' open' : ''}" data-track-number="${t.number}" placeholder="Add a note for this track…" rows="2">${escapeHtml(note)}</textarea>
+            <div class="detail-tracklist-notes-input${isFav ? ' open' : ''}" data-track-number="${t.number}" data-placeholder="Add a note for this track…" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Add a note for this track…">${noteHtml}</div>
           </div>`;
         }).join('');
         tracklistEl.querySelectorAll('.detail-tracklist-notes-input.open').forEach(fitTracklistNote);
@@ -187,10 +321,10 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
               otherInput?.classList.remove('open');
               fitTracklistNote(otherInput);
               const otherStar = otherItemEl.querySelector('.detail-tracklist-favorite');
-              otherStar?.classList.toggle('detail-tracklist-favorite--active', !!otherInput?.value.trim());
+              otherStar?.classList.toggle('detail-tracklist-favorite--active', !!otherInput?.textContent.trim());
             });
             const notesInput = thisItemEl?.querySelector('.detail-tracklist-notes-input');
-            const hasNote = !!notesInput?.value.trim();
+            const hasNote = !!notesInput?.textContent.trim();
             starEl.classList.toggle('detail-tracklist-favorite--active', nowFav || hasNote);
             notesInput?.classList.toggle('open', nowFav);
             fitTracklistNote(notesInput);
@@ -203,8 +337,9 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
             const trackNumber = Number(inputEl.dataset.trackNumber);
             const liveTrackItem = await ensureLiveItem(item);
             const notes = { ...(liveTrackItem.trackNotes || {}) };
-            const text = inputEl.value.trim();
-            if (text) notes[trackNumber] = text; else delete notes[trackNumber];
+            const cleanHtml = sanitizeNoteHtml(inputEl.innerHTML);
+            const text = plainTextFromNoteHtml(cleanHtml);
+            if (text) notes[trackNumber] = cleanHtml; else delete notes[trackNumber];
             liveTrackItem.trackNotes = notes;
             await persistItem(liveTrackItem);
           }, 500);
@@ -212,7 +347,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
             // Number/title/pencil turn purple/bold immediately as the user types, rather than
             // waiting on the debounced save below to actually persist the note.
             const itemEl = inputEl.closest('.detail-tracklist-item');
-            const hasNote = !!inputEl.value.trim();
+            const hasNote = !!inputEl.textContent.trim();
             itemEl?.querySelector('.detail-tracklist-number')?.classList.toggle('detail-tracklist-number--has-note', hasNote);
             itemEl?.querySelector('.detail-tracklist-title')?.classList.toggle('detail-tracklist-title--has-note', hasNote);
             itemEl?.querySelector('.detail-tracklist-favorite')?.classList.toggle('detail-tracklist-favorite--active', hasNote || inputEl.classList.contains('open'));
@@ -220,6 +355,23 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
             saveTrackNote();
           });
           inputEl.addEventListener('click', e => e.stopPropagation());
+          inputEl.addEventListener('focus', () => {
+            _activeNoteRow = inputEl;
+            _updateNoteEditingUi();
+          });
+          inputEl.addEventListener('blur', () => {
+            if (_activeNoteRow === inputEl) _activeNoteRow = null;
+            if (!inputEl.textContent.trim()) inputEl.innerHTML = '';
+            _updateNoteEditingUi();
+          });
+          inputEl.addEventListener('paste', e => {
+            e.preventDefault();
+            const cd = e.clipboardData || window.clipboardData;
+            const html = cd.getData('text/html');
+            const clean = html ? sanitizeNoteHtml(html) : escapeHtml(cd.getData('text/plain'));
+            document.execCommand('insertHTML', false, clean);
+            inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+          });
         });
       }
     };
@@ -233,126 +385,136 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
     tracklistEl.style.display = '';
     tracklistEl.classList.add('detail-accordion-collapsible');
     tracklistEl.classList.remove('open');
-
-    function renderChapters() {
-      // Mirrors the track favorite/notes feature exactly (favorite star + collapsible per-row
-      // notes), just keyed by chapter number instead of track number — chapterFavorites/
-      // chapterNotes on the item, saved via ensureLiveItem()/persistItem() so liking or noting
-      // a chapter never sets queueStatus and never puts the item on the kanban board.
-      const liveItem = state.items.find(i => i.id === item.id);
-      const chapterCount = liveItem?.chapterCount || 12;
-      const chapterFavorites = liveItem?.chapterFavorites || [];
-      const chapterNotes = liveItem?.chapterNotes || {};
-      // Chapter 0 above Chapter 1 — the loop runs one extra time (chapterCount + 1 entries,
-      // numbered 0..chapterCount) rather than shifting 1..12 down, so existing chapter numbers
-      // stay the same and "+ Add Chapter" still appends chapterCount+1 as expected.
-      // Chapter 0 shows the old general notes/description text as a starting point (the plain
-      // notes textarea is hidden for Books now) until the user actually edits it — chapterZero
-      // Seeded (set the first time its textarea fires an input event, even to clear it) stops
-      // that fallback from reappearing after an intentional clear.
-      const showChapterZeroFallback = !liveItem?.chapterZeroSeeded;
-      const rows = Array.from({ length: chapterCount + 1 }, (_, i) => {
-        const num = i;
-        const isFav = chapterFavorites.includes(num);
-        const note = chapterNotes[num] || (num === 0 && showChapterZeroFallback ? text : '') || '';
-        const hasNote = !!note.trim();
-        return `
-        <div class="detail-tracklist-item">
-          <div class="detail-tracklist-row">
-            <span class="detail-tracklist-number${hasNote ? ' detail-tracklist-number--has-note' : ''}">${num}</span>
-            <span class="detail-tracklist-title${hasNote ? ' detail-tracklist-title--has-note' : ''}">${num === 0 ? 'Basic Notes' : `Chapter ${num}`}</span>
-            <span class="detail-tracklist-favorite${isFav || hasNote ? ' detail-tracklist-favorite--active' : ''}" data-chapter-number="${num}">${NOTE_PENCIL_ICON}</span>
-          </div>
-          <textarea class="detail-tracklist-notes-input${isFav ? ' open' : ''}" data-chapter-number="${num}" placeholder="Add a note for this chapter…" rows="2">${escapeHtml(note)}</textarea>
-        </div>`;
-      }).join('');
-      tracklistEl.innerHTML = `${rows}<button class="detail-tracklist-add-chapter" id="btn-add-chapter">+ Add Chapter</button>`;
-      tracklistEl.querySelectorAll('.detail-tracklist-notes-input.open').forEach(fitTracklistNote);
-
-      // Bound to the whole row (not just the pencil) so tapping "Chapter N" also opens/closes
-      // the note — the pencil is still visually the "affordance" but isn't the only tap target.
-      tracklistEl.querySelectorAll('.detail-tracklist-row').forEach(rowEl => {
-        const starEl = rowEl.querySelector('.detail-tracklist-favorite');
-        if (!starEl) return;
-        rowEl.addEventListener('click', async () => {
-          const chapterNumber = Number(starEl.dataset.chapterNumber);
-          const liveChapterItem = await ensureLiveItem(item);
-          const idx = (liveChapterItem.chapterFavorites || []).indexOf(chapterNumber);
-          const nowFav = idx === -1;
-          // Only one chapter note open at a time — opening this one clears every other entry
-          // from chapterFavorites (not just in the DOM) so a reload doesn't bring them all back.
-          liveChapterItem.chapterFavorites = nowFav ? [chapterNumber] : [];
-          await persistItem(liveChapterItem);
-          const thisItemEl = rowEl.closest('.detail-tracklist-item');
-          tracklistEl.querySelectorAll('.detail-tracklist-item').forEach(otherItemEl => {
-            if (otherItemEl === thisItemEl) return;
-            const otherInput = otherItemEl.querySelector('.detail-tracklist-notes-input');
-            otherInput?.classList.remove('open');
-            fitTracklistNote(otherInput);
-            const otherStar = otherItemEl.querySelector('.detail-tracklist-favorite');
-            otherStar?.classList.toggle('detail-tracklist-favorite--active', !!otherInput?.value.trim());
-          });
-          const notesInput = thisItemEl?.querySelector('.detail-tracklist-notes-input');
-          const hasNote = !!notesInput?.value.trim();
-          starEl.classList.toggle('detail-tracklist-favorite--active', nowFav || hasNote);
-          notesInput?.classList.toggle('open', nowFav);
-          fitTracklistNote(notesInput);
-          if (nowFav) notesInput?.focus();
-        });
-      });
-      tracklistEl.querySelectorAll('.detail-tracklist-notes-input').forEach(inputEl => {
-        const saveChapterNote = debounce(async () => {
-          if (getDetailItem() !== item) return; // modal moved on to a different item before the debounce fired
-          const chapterNumber = Number(inputEl.dataset.chapterNumber);
-          const liveChapterItem = await ensureLiveItem(item);
-          const notes = { ...(liveChapterItem.chapterNotes || {}) };
-          const noteText = inputEl.value.trim();
-          if (noteText) notes[chapterNumber] = noteText; else delete notes[chapterNumber];
-          liveChapterItem.chapterNotes = notes;
-          // Any edit to Chapter 0 (even clearing it) permanently stops the general-notes
-          // fallback text from reappearing on future renders.
-          if (chapterNumber === 0) liveChapterItem.chapterZeroSeeded = true;
-          await persistItem(liveChapterItem);
-        }, 500);
-        inputEl.addEventListener('input', () => {
-          const itemEl = inputEl.closest('.detail-tracklist-item');
-          const hasNote = !!inputEl.value.trim();
-          itemEl?.querySelector('.detail-tracklist-number')?.classList.toggle('detail-tracklist-number--has-note', hasNote);
-          itemEl?.querySelector('.detail-tracklist-title')?.classList.toggle('detail-tracklist-title--has-note', hasNote);
-          itemEl?.querySelector('.detail-tracklist-favorite')?.classList.toggle('detail-tracklist-favorite--active', hasNote || inputEl.classList.contains('open'));
-          fitTracklistNote(inputEl);
-          saveChapterNote();
-        });
-        inputEl.addEventListener('click', e => e.stopPropagation());
-      });
-
-      document.getElementById('btn-add-chapter').addEventListener('click', async e => {
-        e.stopPropagation();
-        const liveTrackItem = await ensureLiveItem(item);
-        liveTrackItem.chapterCount = (liveTrackItem.chapterCount || 12) + 1;
-        await persistItem(liveTrackItem);
-        renderChapters();
-      });
-    }
-    renderChapters();
+    renderNumberedNoteList({
+      target: tracklistEl,
+      countField: 'chapterCount', defaultCount: 12,
+      favoritesField: 'chapterFavorites', textsField: 'chapterNotes', zeroSeededField: 'chapterZeroSeeded',
+      zeroLabel: 'Basic Notes', rowLabel: num => `Chapter ${num}`, notePlaceholder: 'Add a note for this chapter…',
+      addButtonLabel: '+ Add Chapter', addButtonId: 'btn-add-chapter',
+      zeroFallback: text,
+    });
   } else {
     tracklistAccordionHeaderEl.style.display = 'none';
     tracklistEl.style.display = 'none';
     tracklistEl.innerHTML = '';
     tracklistEl.classList.remove('detail-accordion-collapsible', 'open');
   }
+
+  // ----- Part 2: #detail-notes-list — the numbered "My Notes" list for every category except
+  // Book (which used #detail-tracklist for this above instead). Independent of Part 1, so Music
+  // Album gets both its own Song List *and* this. -----
+  if (item.category !== 'Book') {
+    notesListEl.style.display = '';
+    notesListEl.classList.add('detail-accordion-collapsible');
+    notesListEl.classList.remove('open');
+    renderNumberedNoteList({
+      target: notesListEl,
+      countField: 'noteCount', defaultCount: 3,
+      favoritesField: 'noteFavorites', textsField: 'noteTexts', zeroSeededField: 'noteZeroSeeded',
+      zeroLabel: 'Summary', rowLabel: () => 'Note', notePlaceholder: 'Add a note…',
+      addButtonLabel: '+ Add Note', addButtonId: 'btn-add-note', zeroNumberDisplay: '•',
+      // Musician's row 0 prefers the artist's Wikipedia bio (see applyMusicianBioFallback() below
+      // for the async first-lookup path) over the item's own general notes/description.
+      zeroFallback: isMusicianItem ? (ctaAuthor?.bio || text) : text,
+    });
+  } else {
+    notesListEl.style.display = 'none';
+    notesListEl.innerHTML = '';
+    notesListEl.classList.remove('detail-accordion-collapsible', 'open');
+  }
 }
 
-// Called from detailModalSummary.js once an artist's Wikipedia bio resolves (first-time lookups
-// only — already-cached bios are applied synchronously inside setupNotesAndTracklist() above via
-// its own ctaAuthor.bio read). Only fills the textarea if it's still genuinely empty (the user
-// hasn't typed anything, and no earlier real note survived) and the modal hasn't since moved on
-// to a different item or been re-seeded by a prior edit.
+// Called from detailModalSummary.js once an artist's Wikipedia bio resolves for the first time
+// (already-cached bios are applied synchronously inside setupNotesAndTracklist() above via its
+// own ctaAuthor.bio read). Patches row 0's ("Summary") textarea directly rather than re-rendering
+// the whole list, and only if it's still genuinely empty (the user hasn't typed anything, and no
+// earlier real note survived) and the modal hasn't since moved on to a different item.
 export function applyMusicianBioFallback(item, bio) {
   if (getDetailItem() !== item) return;
-  const notesInputEl = document.getElementById('detail-notes-input');
-  if (!notesInputEl || notesInputEl.value.trim()) return;
+  const zeroRowInput = document.querySelector('#detail-notes-list .detail-tracklist-notes-input[data-row-number="0"]');
+  if (!zeroRowInput || zeroRowInput.textContent.trim()) return;
   const liveItem = state.items.find(i => i.id === item.id);
-  if (liveItem?.bioNotesSeeded) return;
-  notesInputEl.value = bio;
+  if (liveItem?.noteZeroSeeded) return;
+  zeroRowInput.innerHTML = escapeHtml(bio); // bio is always plain text, never run through sanitizeNoteHtml
+  const rowEl = zeroRowInput.closest('.detail-tracklist-item');
+  const hasNote = !!bio.trim();
+  rowEl?.querySelector('.detail-tracklist-number')?.classList.toggle('detail-tracklist-number--has-note', hasNote);
+  rowEl?.querySelector('.detail-tracklist-title')?.classList.toggle('detail-tracklist-title--has-note', hasNote);
+  rowEl?.querySelector('.detail-tracklist-favorite')?.classList.toggle('detail-tracklist-favorite--active', hasNote || zeroRowInput.classList.contains('open'));
+}
+
+// ===== NOTE FORMATTING TOOLBAR =====
+// Appears in the sticky title's spot while a note row has focus (see .detail-body--editing-note
+// in detailModal.css). Single source of truth for visibility: a row being focused OR focus mode
+// being on, either of which keeps the toolbar up — this is what keeps the Expand button reachable
+// to toggle back off even after the row that triggered it loses focus.
+function _updateNoteEditingUi() {
+  const editing = !!_activeNoteRow || _focusModeOn;
+  document.getElementById('detail-body').classList.toggle('detail-body--editing-note', editing);
+  // Also on .modal.detail-modal (not just #detail-body) — the "Your Statement" sponsored badge
+  // lives inside #detail-image-wrap, a sibling *before* #detail-body in the DOM, so it can't be
+  // targeted via a CSS sibling combinator off #detail-body's own class.
+  document.querySelector('.modal.detail-modal')?.classList.toggle('detail-modal--editing-note', editing);
+  document.querySelectorAll('#detail-note-toolbar .detail-note-toolbar-btn[data-format]')
+    .forEach(b => { b.disabled = !_activeNoteRow; });
+  document.getElementById('note-toolbar-expand')?.classList.toggle('detail-note-toolbar-btn--active', _focusModeOn);
+}
+
+// Wraps (or, if the selection already sits inside one, unwraps) the current selection in <mark>.
+// Not done via execCommand('hiliteColor'/'backColor') — Blink emits an inline
+// style="background-color:…" span for those, which sanitizeNoteHtml strips entirely, silently
+// discarding the highlight.
+function _wrapSelectionInMark() {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+  const range = sel.getRangeAt(0);
+  const anchorEl = range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+    ? range.commonAncestorContainer : range.commonAncestorContainer.parentElement;
+  const existingMark = anchorEl?.closest('mark');
+  if (existingMark) { // toggle off
+    const p = existingMark.parentNode;
+    while (existingMark.firstChild) p.insertBefore(existingMark.firstChild, existingMark);
+    p.removeChild(existingMark);
+    return;
+  }
+  const mark = document.createElement('mark');
+  try {
+    range.surroundContents(mark);
+  } catch {
+    const frag = range.extractContents(); // selection crosses element boundaries; flattens, but
+    mark.appendChild(frag);                // preserves any nested allowed tags since real nodes move
+    range.insertNode(mark);
+  }
+  const newRange = document.createRange();
+  newRange.selectNodeContents(mark);
+  sel.removeAllRanges();
+  sel.addRange(newRange); // keep the highlighted text visibly selected after wrapping
+}
+
+function _applyFormat(cmd) {
+  if (!_activeNoteRow) return;
+  _activeNoteRow.focus();
+  if (cmd === 'bold') document.execCommand('bold');
+  else if (cmd === 'bullet') document.execCommand('insertUnorderedList');
+  else if (cmd === 'highlight') _wrapSelectionInMark();
+  _activeNoteRow.dispatchEvent(new Event('input', { bubbles: true })); // triggers the existing debounced save + has-note styling
+}
+
+// Binds the toolbar's 4 static buttons once — called from main.js's init(), since the toolbar DOM
+// lives permanently in index.html rather than being re-rendered per modal open.
+export function initNoteToolbar() {
+  document.querySelectorAll('#detail-note-toolbar .detail-note-toolbar-btn').forEach(btn => {
+    // preventDefault on mousedown keeps focus (and the live Selection/Range) on the contenteditable
+    // row instead of moving it to the button — the standard rich-text-toolbar trick, and the
+    // reason blur rarely needs to special-case "focus moved to the toolbar" at all.
+    btn.addEventListener('mousedown', e => e.preventDefault());
+  });
+  document.getElementById('note-toolbar-bold').addEventListener('click', () => _applyFormat('bold'));
+  document.getElementById('note-toolbar-highlight').addEventListener('click', () => _applyFormat('highlight'));
+  document.getElementById('note-toolbar-bullet').addEventListener('click', () => _applyFormat('bullet'));
+  document.getElementById('note-toolbar-expand').addEventListener('click', () => {
+    _focusModeOn = !_focusModeOn;
+    document.querySelector('.modal.detail-modal').classList.toggle('detail-modal--focus-mode', _focusModeOn);
+    _updateNoteEditingUi();
+  });
 }
