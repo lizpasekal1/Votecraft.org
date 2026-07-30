@@ -67,6 +67,16 @@ export function patchCardImage(itemId, imageUrl) {
 
 export function catClass(cat) { return (cat || '').replace(/\s+/g, '-'); }
 
+// Kanban list membership: modern items carry `listIds` (an array); a lone leftover `listId`
+// (pre-multi-list schema) is normalized into a one-element array instead of being migrated on
+// load, since not every item is guaranteed to pass through a migration pass.
+export function getListIds(item) {
+  if (!item) return [];
+  if (Array.isArray(item.listIds)) return item.listIds;
+  if (item.listId) return [item.listId];
+  return [];
+}
+
 // Shorter display text for category badges (the underlying category value is unchanged).
 export function badgeLabel(cat) {
   if (cat === 'Music Album') return 'Album';

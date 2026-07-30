@@ -206,7 +206,7 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  margin-top: 4px;
+  margin-top: 9px;
 }
 
 .detail-title {
@@ -251,7 +251,7 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: color-mix(in srgb, var(--primary) 25%, white);
-  background: rgba(10, 8, 20, 0.55);
+  background: rgba(10, 8, 20, 0.8);
   border: 2px solid var(--primary);
   border-radius: 999px;
   cursor: pointer;
@@ -267,7 +267,7 @@
     0 0 8px 1px color-mix(in srgb, var(--primary) 40%, transparent),
     0 0 14px 2px color-mix(in srgb, var(--primary) 35%, transparent),
     inset 0 0 4px color-mix(in srgb, var(--primary) 20%, transparent);
-  transition: box-shadow 0.15s, color 0.15s, transform 0.1s;
+  transition: box-shadow 0.15s, color 0.15s, background 0.15s, transform 0.1s;
   margin-top: 1px;
 }
 
@@ -298,6 +298,7 @@
 
 .btn-detail-website:hover {
   color: #fff;
+  background: var(--primary);
   box-shadow:
     0 0 6px color-mix(in srgb, var(--primary) 60%, transparent),
     inset 0 0 6px color-mix(in srgb, var(--primary) 30%, transparent);
@@ -305,22 +306,6 @@
 
 .btn-detail-website:active {
   transform: translateY(1px);
-}
-
-.detail-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.detail-section-label {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #ffffff;
-  margin-top: 8px;
 }
 
 .detail-notes {
@@ -336,7 +321,7 @@
   outline: none;
   resize: vertical;
   font-family: inherit;
-  color: var(--text-primary);
+  color: var(--text-secondary);
 }
 
 .detail-notes-input::placeholder {
@@ -422,6 +407,10 @@
    above Add to Queue looks the same as the (cancelled-down-to-flush) gaps between the others. */
 #btn-standalone-queue {
   margin-top: -8px;
+  /* Closes the gap between this row's own bottom padding and .detail-body/.modal's combined
+     bottom padding, so the space below it (when the accordion is collapsed, .detail-queue has
+     zero footprint) matches the modal's top padding above the featured image exactly. */
+  margin-bottom: -8px;
 }
 
 /* Pulls My Notes up closer to the summary above it — the first accordion row doesn't need
@@ -742,15 +731,6 @@
   text-decoration: underline;
 }
 
-
-.liner-notes-panel {
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  padding: 12px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
 
 
 .detail-streaming {

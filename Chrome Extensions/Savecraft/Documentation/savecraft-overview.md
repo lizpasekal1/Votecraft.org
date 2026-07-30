@@ -111,20 +111,33 @@ Savecraft/
 
 ### `src/app/js/` modules
 
-The library used to be one ~3,700-line `app.js`. It's now split into 17 ES modules, loaded via `<script type="module" src="js/main.js">` in `index.html`. Modules import/export between each other (some circularly — safe under ES modules since nothing is called at module-evaluation time, only from inside functions):
+The library used to be one ~3,700-line `app.js`. It's now split into 30 ES modules, loaded via `<script type="module" src="js/main.js">` in `index.html`. Modules import/export between each other (some circularly — safe under ES modules since nothing is called at module-evaluation time, only from inside functions):
 
 | Module | Responsibility |
 |--------|-----------------|
 | `state.js` | Shared `state` object + static constants (`CATEGORIES`, `CAT_LABEL`, `CAT_EMOJI`, `CATEGORY_PLATFORMS`, `CREATOR_CARD_CATEGORY`, etc.) |
 | `storage.js` | All `persist*`/`remove*` functions, `loadAll()` (incl. one-time backfill migrations), Firestore curated-data loading (`_loadCuratedFromFirestore`, `initCuratedItems`), Firestore dual-write helpers for the account-sync feature |
-| `utils.js` | Pure helpers: `escapeHtml`, `catClass`, `debounce`, `formatTrackDuration`, `patchCardImage`, etc. |
+| `utils.js` | Pure helpers: `escapeHtml`, `catClass`, `debounce`, `formatTrackDuration`, `patchCardImage`, `getDomain`, `getListIds`, etc. |
 | `api.js` | External network calls: iTunes, Open Library, Steam, Wikipedia, MusicBrainz/Wikidata, YouTube, Last.fm, Steam Web API (unset API key constants live here) |
 | `auth.js` | Email/password auth via the Firebase Auth REST API — no SDK, independent from any shared Votecraft account |
 | `authors.js` | Author/musician profile CRUD, navigation, album-metadata backfill |
-| `curatedCreatorLookup.js` | Auto-generated static data: curated Top 100 Movie/Show/Game title → director/creator/studio name (no dependencies — Firestore has no creator field for these, unlike Book's combined title), plus the shared `splitCuratedTitleCreator()`/`getStaticCuratedCreator()` helpers, imported by both `render.js` and `storage.js` |
-| `render.js` | `renderSidebar`, `renderGrid`, `renderCard`, `renderAuthorPage`, curated-image fetch helpers |
+| `curatedCreatorLookup.js` | Logic that reads `curatedCreatorData.js` (below) — matches a curated Top 100 Movie/Show/Game title to its director/creator/studio name — plus the shared `splitCuratedTitleCreator()`/`getStaticCuratedCreator()` helpers, imported by `renderFilters.js`, `renderGrid.js`, and `storage.js` |
+| `curatedCreatorData.js` | Pure auto-generated data (no logic) backing the lookup above — sourced externally (Wikidata/Steam), regenerated via the scripts in `session-context.md` rather than hand-edited |
+| `render.js` | Thin barrel re-exporting the public surface of the 7 modules below, so external `from './render.js'` imports didn't need to change when this got split (2026-07-29) |
+| `renderFilters.js` | `getFilteredSortedItems`, `matchesPrimaryOrUnfoldered` — item filtering/sorting for every view |
+| `renderSidebar.js` | `renderSidebar`, `promptAddFolder` — the left sidebar, curated genre picker, folder rows |
+| `renderCuratedImageFetch.js` | `fetchMissingCuratedImages`, `fetchMissingCuratedMusicianPhotos` — live-fetch + live-patch missing curated cover art/photos, called from both the main grid and curated landing rows |
+| `renderGrid.js` | `renderGrid`, `renderCard` — the main card grid and the shared card markup |
+| `renderAuthorPage.js` | `renderAuthorPage` — an author/creator's profile page and their works grid |
+| `renderCuratedPages.js` | `renderCuratedBareList`, `renderCuratedDirectory`, `renderCuratedGenreLanding`, `resolveOrgImageUrl` — the curated Top-100-style landing/directory pages |
+| `renderCardActions.js` | `wireQuickQueueButtons` — the quick add-to-queue button shared by grid cards, author-page cards, and curated landing rows |
 | `kanban.js` | Kanban board rendering, drag-and-drop (cross-column + within-column reorder) — `KANBAN_DEMO`/`KANBAN_COLUMNS` exported for reuse by the Dashboard |
-| `detailModal.js` | The item detail modal — largest module, all accordions live here |
+| `detailModal.js` | Orchestrator for the item detail modal — re-exports `openDetailModal`/`closeDetailModal`/`getDetailItem`/`openImageLightbox`/`closeImageLightbox`; the modal's actual sections live in the 5 modules below (2026-07-29 split — was one ~990-line file) |
+| `detailModalAccordions.js` | Shared accordion open/close registry (`registerAccordion`/`closeAccordionsExcept`/`resetAccordions`) every other detail-modal section registers with, instead of each hand-listing every other section's DOM elements |
+| `detailModalHeader.js` | Image, sponsored "Your Statement" tag, bookmark/favorite icons, title/author/publication line, Official Website CTA |
+| `detailModalSummary.js` | Summary/Albums accordion — Musician's known-albums list, Book/Show/Movie/Game's item summary, or the Visual Art placeholder |
+| `detailModalNotes.js` | My Notes + Tracklist/Chapters accordions — kept in one module since Books fold their chapter list directly into My Notes, sharing its open/close state |
+| `detailModalQueue.js` | Web Links + Queue accordions, incl. `toggleQueueFromHeader()` (called by `detailModalHeader.js`'s bookmark button) |
 | `addEditModal.js` | Add/Edit item modal — the 3-screen add wizard (category → search → review) plus the single-page Edit form |
 | `fetchAlbumsModal.js` | Fetch Albums (bulk iTunes import) modal |
 | `dashboard.js` | The Dashboard home page — hero collage + 4 widget cards (see "Dashboard (Home Page)" below) |
@@ -141,7 +154,7 @@ One-off HTML tools for seeding curated Firestore data — plain `fetch()` agains
 
 Split along the same lines from the original `app.css`, loaded as separate `<link>` tags in a fixed order (order matters — later files can override earlier ones): `base.css` (reset, theme variables, header), `sidebar.css` (includes the collapsible desktop rail), `cards.css` (grid, cards, author pages), `detailModal.css`, `addEditModal.css`, `fetchAlbumsModal.css`, `kanban.css`, `dashboard.css`, `profile.css` (Profile page + its Connect Last.fm/Steam modals), `misc.css` (share modal, scrollbar, mobile responsive overrides).
 
-The original monolithic `app.js`/`app.css` are still present in `src/app/` as an unused backup but are no longer loaded by anything — safe to delete once the module split has been confirmed working via a real (non-headless) Chrome smoke test.
+The original monolithic `app.js`/`app.css` have been deleted (2026-07-29) — see `scripts/seed-curated.js`, which used to extract curated-item data out of `app.js` and now reads `scripts/seed-payload.json` instead.
 
 ---
 
