@@ -756,7 +756,7 @@
 
 .detail-accordion-collapsible.open {
   max-height: 320px;
-  margin: 8px 0 4px;
+  margin: 8px 0 0;
   overflow-y: auto;
   /* Scrolling stays fully functional — this only hides the visible scrollbar track/thumb, same
      as #detail-body above. Sections whose max-height is now JS-measured to their own exact
@@ -910,6 +910,12 @@
   flex-direction: column;
 }
 
+/* Song List has no trailing "+Add" button (unlike My Notes/Chapters) to naturally carry space
+   before the divider below it — add it directly to the last row instead. */
+#detail-tracklist .detail-tracklist-item:last-child {
+  margin-bottom: 20px;
+}
+
 .detail-tracklist-favorite {
   display: flex;
   align-items: center;
@@ -1010,6 +1016,7 @@
 .detail-tracklist-add-chapter {
   align-self: flex-start;
   margin-top: 4px;
+  margin-bottom: 20px;
   padding: 4px 2px;
   background: none;
   border: none;
