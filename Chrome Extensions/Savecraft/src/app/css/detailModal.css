@@ -264,14 +264,35 @@
   z-index: 4;
   align-items: center;
   gap: 6px;
-  /* Solid app accent purple (not the lighter --primary-bg tint) — distinct from the modal
-     background and the buttons' own --surface. */
+  padding: 24px 0 6px 0; /* 24px top matches .detail-title-row's — see its comment. No side padding: buttons sit at the same horizontal inset .detail-title-row's content does. */
+}
+/* The purple background lives on this pseudo-element instead of directly on .detail-note-toolbar,
+   bled out to the modal's true edges via absolute positioning (left/right: -28px, matching
+   .modal.detail-modal's own 28px side padding) — negative margin on the toolbar itself was tried
+   first, but margin on a sticky flex item inside a `gap`-using container didn't reliably bleed
+   (particularly margin-top, needed for the focus-mode case below, which had no visible effect at
+   all despite computing correctly). Absolute positioning against .detail-note-toolbar's own
+   sticky containing block is unaffected by either of those and bleeds reliably in both axes.
+   z-index: -1 keeps it behind the toolbar's own button content. */
+.detail-note-toolbar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -28px;
+  right: -28px;
   background: var(--primary);
-  /* .modal.detail-modal has 28px side padding — bleed the bar out to the modal's actual edges
-     (clipped by the modal's own overflow: hidden) instead of just spanning .detail-body's inset
-     content width, then restore that same 28px as this element's own padding for the buttons. */
-  margin: 0 -28px;
-  padding: 24px 28px 6px 28px; /* 24px top matches .detail-title-row's — see its comment */
+  z-index: -1;
+}
+/* With the image hidden, the toolbar is the modal's first visible content, so its background
+   needs to additionally bleed upward to cover .modal.detail-modal's own 28px top padding (which
+   the image normally sits in front of) — and round to match the modal's own 16px corners, since
+   the toolbar now touches them directly instead of a sharp corner poking past the curve. */
+.detail-modal--focus-mode .detail-note-toolbar::before {
+  /* .detail-modal--focus-mode's own padding-top: 0 (see its comment) removes the gap this bled
+     over before — just round to match the modal's own top corners here, since the toolbar now
+     touches them directly instead of a sharp corner poking past the curve. */
+  border-radius: 16px 16px 0 0;
 }
 .detail-body--editing-note .detail-title-row { display: none; }
 .detail-body--editing-note .detail-note-toolbar { display: flex; }
@@ -320,6 +341,20 @@
      absorb the freed vertical space — giving the note more room is the whole point of focus mode,
      not a smaller modal. */
   height: min(90vh, 600px);
+}
+
+/* .modal.detail-modal (2 classes, specificity 0,2,0) sets padding: 28px — a single-class
+   .detail-modal--focus-mode override can't out-rank that, so this needs the same .modal prefix.
+   With the image hidden, the toolbar (inside #detail-body) becomes the modal's first visible
+   content — but #detail-body is the scroll container, and its overflow-y clips ANY descendant
+   (position: sticky/absolute included) that extends above its own top edge, since that's
+   fundamentally what the scrolling axis means. So the toolbar's own background can't bleed upward
+   to cover this padding the way it bleeds sideways (confirmed: a -28px top offset on its
+   ::before, mirroring the working left/right bleed, was silently clipped away regardless).
+   Removing the padding at the source instead — the image no longer needs it — lets the toolbar
+   sit flush at the modal's true top edge with no gap to cover in the first place. */
+.modal.detail-modal.detail-modal--focus-mode {
+  padding-top: 0;
 }
 
 .detail-title {
