@@ -195,6 +195,19 @@
   gap: 8px;
   overflow-y: auto;
   min-height: 0;
+  /* .detail-note-toolbar bleeds 28px past this container's own edges (see its own comment) via
+     negative margins — without this, that bleed silently adds real (if visually hidden)
+     horizontal scroll capacity, since overflow-x otherwise computes to 'auto' as soon as
+     overflow-y isn't 'visible'. */
+  overflow-x: hidden;
+  /* The browser's native "keep the caret visible while typing" auto-scroll has no idea the sticky
+     title/toolbar (see .detail-title-row / .detail-note-toolbar) will re-cover the very top of
+     this scrollport regardless of scroll position — without this, growing a note tall enough
+     (typing past the visible area) scrolls it to align flush with y=0, landing directly UNDER the
+     sticky toolbar instead of below it. Reserves the toolbar's own height (45px) as a no-scroll-
+     into buffer, the same fix as scroll-margin-top under a fixed page header.
+  */
+  scroll-padding-top: 50px;
   /* Scrolling stays fully functional (mouse wheel/trackpad/keyboard) — this only hides the
      visible scrollbar track/thumb. */
   scrollbar-width: none; /* Firefox */

@@ -113,6 +113,18 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
         // 18.2px) isn't one, so that fractional rounding accumulates across several lines and
         // clips the descenders on the last line without a little slack.
         inputEl.style.height = `${inputEl.scrollHeight + 2}px`;
+        // The browser's native "keep the caret visible while typing" auto-scroll (which just ran,
+        // synchronously, as part of the input event that triggered this frame) has no idea the
+        // sticky toolbar re-covers the scrollport's top edge regardless of scroll position — CSS
+        // scroll-padding-top on #detail-body (added for the same reason) doesn't reach this native
+        // caret-follow heuristic, only explicit scrollIntoView()/scroll-snap. Correct it manually:
+        // if growing this row just scrolled its own top edge up underneath the toolbar, nudge the
+        // scroll position back down by exactly that overlap.
+        const toolbarEl = document.getElementById('detail-note-toolbar');
+        if (toolbarEl && getComputedStyle(toolbarEl).display !== 'none') {
+          const overlap = toolbarEl.getBoundingClientRect().bottom - inputEl.getBoundingClientRect().top;
+          if (overlap > 0) document.getElementById('detail-body').scrollTop -= overlap;
+        }
       });
     } else {
       inputEl.style.height = '';
