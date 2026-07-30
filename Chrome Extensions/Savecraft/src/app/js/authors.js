@@ -3,8 +3,8 @@
 // backfill (year/collectionId/track-list resolution for Music Album items).
 
 import { state, CURATED_ITEMS, CURATED_NOTES_CATEGORIES } from './state.js';
-import { persistAuthor, persistItem, persistCuratedAlbumMetaCache, persistAlbumTrackListCache } from './storage.js';
-import { ensureArtistWebsite, ensureArtistWikipediaInfo, fetchAlbumsFromItunes } from './api.js';
+import { persistAuthor, persistItem, persistCuratedAlbumMetaCache, persistAlbumTrackListCache, persistAlbumArtCache } from './storage.js';
+import { ensureArtistWebsite, ensureArtistWikipediaInfo, fetchAlbumsFromItunes, fetchAlbumArtFromMusicBrainz } from './api.js';
 import { isItunesArtworkUrl, applyArtistPhotoToItem, patchCardImage } from './utils.js';
 import { persistViewState } from './storage.js';
 import { renderSidebar, renderGrid } from './render.js';
@@ -301,4 +301,60 @@ export async function ensureAlbumTrackList(item) {
   } catch {
     return null;
   }
+}
+
+function _albumArtCacheKey(item, collectionId) {
+  const artist = item.author || (item.curated ? item.notes : null);
+  if (!artist || !item.title) return null;
+  return collectionId ? `mb:${collectionId}` : `${artist.trim().toLowerCase()}|${item.title.trim().toLowerCase()}`;
+}
+
+// Synchronous, no network — used by the album-art click handler to decide what the gallery has
+// available right now. Deliberately does not call resolveAlbumCollectionId (which can itself fire
+// a live iTunes search); clicking the artwork must never trigger a fetch, only the dedicated
+// "Load More Art" button does. Returns null when never fetched (drives whether that button shows).
+export function getCachedAlbumArt(item) {
+  const liveItem = item.curated ? item : (state.items.find(i => i.id === item.id) || item);
+  const collectionId = liveItem.collectionId
+    || (liveItem.curated ? state.curatedAlbumMetaCache[liveItem.id]?.collectionId : null);
+  const key = _albumArtCacheKey(liveItem, collectionId);
+  return key ? (state.albumArtCache[key]?.images ?? null) : null;
+}
+
+// Fetches (and caches forever, since cover art doesn't change) an album's extra artwork via
+// MusicBrainz + the Cover Art Archive. Returns [] for "confirmed no extra art" (cached), or null
+// on a genuine fetch failure (not cached, so a later click can retry) — same null/[] contract as
+// ensureAlbumTrackList above. For a non-curated item, opportunistically upgrades item.imageUrl to
+// the Cover Art Archive "Front" image via applyArtistPhotoToItem (only replaces an empty or
+// still-iTunes-stand-in image, never a real user/curated photo) — CAA art is strictly higher
+// quality than iTunes' compressed 600x600 artwork, so this is a safe, worthwhile upgrade. Curated
+// preview items are excluded: they aren't persistable state.items entries, and clicking "Load
+// More Art" shouldn't silently mutate a curated item the user hasn't explicitly saved — CAA art
+// stays gallery-only there.
+export async function ensureAlbumArt(item) {
+  const collectionId = await resolveAlbumCollectionId(item); // best-effort backfill; null is fine
+  const liveItem = item.curated ? item : (state.items.find(i => i.id === item.id) || item);
+  const key = _albumArtCacheKey(liveItem, collectionId);
+  if (!key) return [];
+  const cached = state.albumArtCache[key];
+  if (cached) return cached.images;
+
+  const artist = liveItem.author || (liveItem.curated ? liveItem.notes : null);
+  let images;
+  try {
+    images = await fetchAlbumArtFromMusicBrainz(artist, liveItem.title);
+  } catch {
+    return null;
+  }
+  state.albumArtCache[key] = { images, fetchedAt: Date.now() };
+  persistAlbumArtCache();
+
+  if (!liveItem.curated) {
+    const front = images.find(img => img.type === 'Front') || images[0];
+    if (front && applyArtistPhotoToItem(liveItem, front.full)) {
+      await persistItem(liveItem);
+      patchCardImage(liveItem.id, liveItem.imageUrl);
+    }
+  }
+  return images;
 }

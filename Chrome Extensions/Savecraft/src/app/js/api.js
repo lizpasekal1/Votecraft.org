@@ -390,6 +390,73 @@ export async function fetchArtistWebsite(artistName) {
   return null;
 }
 
+// Lucene field-query syntax (releasegroup:"..." AND artist:"...") breaks if the title/artist
+// itself contains a literal double-quote — strip rather than escape, simplest safe fix.
+const _luceneSafe = s => s.replace(/"/g, '');
+
+// Release-group search picks one abstract album rather than per-pressing releases (no need to
+// disambiguate country/format/deluxe-edition variants). MusicBrainz already sorts hits by
+// relevance `score` (0-100) — trust that ordering, but only accept the top hit on a confident
+// match (exact case-insensitive title+artist, or score >= 90); anything weaker returns null
+// rather than risking art from the wrong album. Retries a 429 with backoff, same idiom as
+// fetchWikipediaSummary above (browsers drop script-set User-Agent on fetch(), so pacing/backoff
+// is the only lever available here).
+async function fetchReleaseGroupId(artist, title) {
+  const query = `releasegroup:"${_luceneSafe(title)}" AND artist:"${_luceneSafe(artist)}"`;
+  const url = `https://musicbrainz.org/ws/2/release-group/?query=${encodeURIComponent(query)}&fmt=json&limit=5`;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const resp = await fetch(url);
+    if (resp.status === 429) {
+      await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+      continue;
+    }
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    const groups = data['release-groups'] || [];
+    if (!groups.length) return null;
+    const lowerTitle = title.trim().toLowerCase();
+    const lowerArtist = artist.trim().toLowerCase();
+    const exact = groups.find(g => g.title?.toLowerCase() === lowerTitle
+      && g['artist-credit']?.some(ac => ac.name?.toLowerCase() === lowerArtist));
+    const best = exact || groups.find(g => (g.score || 0) >= 90);
+    return best?.id || null;
+  }
+  return null;
+}
+
+// Front first, then Back, then API order; capped at 20 (booklet/insert scans can run long for
+// boxed sets).
+function _normalizeCaaImages(images) {
+  const rank = t => (t === 'Front' ? 0 : t === 'Back' ? 1 : 2);
+  return (images || [])
+    .map(img => ({
+      full: img.image,
+      thumb: img.thumbnails?.small || img.thumbnails?.['250'] || img.image,
+      type: img.types?.[0] || 'Image',
+    }))
+    .sort((a, b) => rank(a.type) - rank(b.type))
+    .slice(0, 20);
+}
+
+// Higher-quality, multi-image album art (front, back, booklet/insert pages, etc.) via MusicBrainz
+// + the Cover Art Archive — supplements the single low-res iTunes artwork already used elsewhere.
+// Returns [] for "confirmed no extra art" (no MusicBrainz match, or CAA 404 for that
+// release-group) — safe for the caller to cache permanently. Throws on a genuine network/5xx
+// failure so the caller can tell "not found" apart from "couldn't check" and avoid caching a
+// transient failure as a dead end. Deliberately does not fall back to a per-release search on a
+// CAA 404 — the release-group endpoint already aggregates art from any release in the group, and
+// a second MusicBrainz call would add rate-limit exposure for marginal benefit.
+export async function fetchAlbumArtFromMusicBrainz(artist, title) {
+  if (!artist || !title) return [];
+  const mbid = await fetchReleaseGroupId(artist, title);
+  if (!mbid) return [];
+  const resp = await fetch(`https://coverartarchive.org/release-group/${mbid}`);
+  if (resp.status === 404) return [];
+  if (!resp.ok) throw new Error(`Cover Art Archive error: ${resp.status}`);
+  const data = await resp.json();
+  return _normalizeCaaImages(data.images);
+}
+
 // Looks up an artist's official homepage via MusicBrainz (preferred) then Wikidata (fallback).
 // Cached indefinitely on success; cached "not found" results expire after ARTIST_WEBSITE_CACHE_MISS_TTL.
 export async function ensureArtistWebsite(artistName) {
