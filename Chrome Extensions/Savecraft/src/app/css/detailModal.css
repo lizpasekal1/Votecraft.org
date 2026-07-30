@@ -351,8 +351,11 @@
   /* Entering gets the more pronounced "emphasized" curve (vs. the title's exit above, and the
      toolbar's own exit below, both "standard") — M3 reserves emphasized easing for the more
      prominent motion in a transition pair, and arriving/taking-over reads as the prominent half
-     here. Slightly longer duration too, so the settle-into-place is perceptible rather than instant. */
-  transition: opacity 0.25s var(--m3-emphasized-decelerate), transform 0.25s var(--m3-emphasized-decelerate), display 0.25s allow-discrete;
+     here. Slightly longer duration too, so the settle-into-place is perceptible rather than instant.
+     Delayed to start after the MY NOTES/SONG LIST section (see .detail-accordion-collapsible.open
+     in this file) has finished sliding open, rather than both animating at once — the toolbar
+     fading in as the last step of one sequence, not two motions competing for attention. */
+  transition: opacity 0.25s var(--m3-emphasized-decelerate) 0.3s, transform 0.25s var(--m3-emphasized-decelerate) 0.3s, display 0.25s allow-discrete 0.3s;
 }
 @starting-style {
   .detail-body--editing-note .detail-note-toolbar { opacity: 0; transform: translateY(8px); }
@@ -703,22 +706,18 @@
 .detail-accordion-collapsible {
   max-height: 0;
   overflow: hidden;
-  opacity: 0;
   /* Slides the section's own content up into place as it opens (and lets it sink back down as it
-     closes) — max-height/opacity alone read as a growing reveal, not a slide; this transform is
-     what actually makes it feel like the enter/exit motion, same idea as the title/toolbar swap
-     above. Safe to combine with the simultaneous max-height growth below: the box both grows
-     *and* settles from a slight offset, rather than just popping to full height in place. */
+     closes) — max-height alone reads as a growing reveal, not a slide; this transform is what
+     actually makes it feel like the enter/exit motion, same idea as the title/toolbar swap above.
+     No opacity fade — some of this class's max-height caps (2000px for My Notes/chapters, Summary
+     prose, etc.) are far larger than any real content, so a fade tied to the same duration as that
+     climb reads as "fades in, *then* the box finishes growing" rather than one clean motion; the
+     real content reaching its true size well before max-height stops climbing is harmless on its
+     own (that headroom is just invisible), it only became visible as an issue once opacity was
+     layered on top of it. This (the closed state) is what's transitioned TO on close, so it uses
+     M3's "accelerate" curve — quick start, fast finish, reads as snappier/getting-out-of-the-way. */
   transform: translateY(8px);
-  /* Some of this class's max-height caps (2000px for My Notes/chapters, Summary prose, etc.) are
-     far larger than any real content, which made the reveal feel like an instant "pop" rather
-     than a slide — a max-height transition always animates across its full numeric range
-     regardless of the content's actual height, so short content reaches its true size almost
-     immediately while the number keeps climbing invisibly. Fading opacity in alongside it (on a
-     shorter duration, so it finishes well before max-height does) smooths that over. This (the
-     closed state) is what's transitioned TO on close, so it uses M3's "accelerate" curve —
-     quick start, fast finish, reads as snappier/getting-out-of-the-way. */
-  transition: max-height 0.2s var(--m3-standard-accelerate), margin 0.2s var(--m3-standard-accelerate), opacity 0.15s var(--m3-standard-accelerate), transform 0.2s var(--m3-standard-accelerate);
+  transition: max-height 0.2s var(--m3-standard-accelerate), margin 0.2s var(--m3-standard-accelerate), transform 0.2s var(--m3-standard-accelerate);
   /* Cancels out the .detail-body flex gap above and below this (currently zero-height)
      element, so consecutive accordion rows sit flush against each other when collapsed. */
   margin: -8px 0;
@@ -728,11 +727,33 @@
   max-height: 320px;
   margin: 8px 0 4px;
   overflow-y: auto;
-  opacity: 1;
+  /* Scrolling stays fully functional — this only hides the visible scrollbar track/thumb, same
+     as #detail-body above. Sections whose max-height is now JS-measured to their own exact
+     scrollHeight (see _fitAccordionSection in detailModalNotes.js) can end up a sub-pixel off
+     from the real rendered height (scrollHeight rounds to a whole pixel; layout doesn't), which
+     is just enough overflow for the browser to draw a scrollbar for content that isn't actually
+     meant to scroll within this element at all. */
+  scrollbar-width: none;
   transform: translateY(0);
-  /* Transitioned TO on open — M3's "decelerate" curve (fast start, gentle settle) reads as
-     arriving/growing into place, the opposite feel from the accelerate curve above. */
-  transition: max-height 0.3s var(--m3-standard-decelerate), margin 0.3s var(--m3-standard-decelerate), opacity 0.25s var(--m3-standard-decelerate), transform 0.3s var(--m3-standard-decelerate);
+  /* Transitioned TO on open — "emphasized" decelerate (vs. plain "standard" elsewhere in this
+     file) settles more gently into its final size at the tail end, reading as a softer finish
+     rather than an abrupt stop. */
+  transition: max-height 0.3s var(--m3-emphasized-decelerate), margin 0.3s var(--m3-emphasized-decelerate), transform 0.3s var(--m3-emphasized-decelerate);
+}
+
+.detail-accordion-collapsible.open::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Edge (Chromium) */
+}
+
+/* MY NOTES/SONG LIST specifically (not the shared base rule above, which Albums/Web Links/Queue
+   also use and have no associated toolbar to wait for): closing should let the note toolbar (see
+   .detail-body--editing-note .detail-note-toolbar) finish fading out FIRST, then slide shut —
+   mirroring the open sequence (section slides open, then the toolbar fades in) in reverse, rather
+   than both animating at once. :not(.open) scopes this to only the closing direction — opening
+   stays immediate, unaffected. */
+#detail-notes-list.detail-accordion-collapsible:not(.open),
+#detail-tracklist.detail-accordion-collapsible:not(.open) {
+  transition-delay: 0.2s;
 }
 
 .detail-albums-list {

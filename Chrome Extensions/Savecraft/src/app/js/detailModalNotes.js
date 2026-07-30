@@ -31,6 +31,31 @@ function _correctScrollUnderToolbar(inputEl) {
   });
 }
 
+// "MY NOTES"/"SONG LIST" both use .detail-accordion-collapsible's shared max-height transition,
+// which caps at a deliberately oversized value (320px/2000px, see detailModal.css) so open-ended
+// content (more notes/chapters can always be added) never needs its own nested scrollbar. But a
+// max-height transition always animates across its full numeric range regardless of how much of
+// it the real content actually uses — so a short section reached its true size almost instantly
+// while the (invisible) climb toward that cap kept the transition "running" for most of its
+// stated duration, reading as a stall-then-jump rather than one continuous slide. Overriding
+// max-height with the section's own real scrollHeight (measured while still collapsed —
+// scrollHeight always reports the full content size regardless of the current
+// max-height/overflow clipping) makes the transition animate exactly as far as it needs to, no
+// further — the "sliding door" feel. Must be paired with clearing the inline override on close
+// (see call sites below), or it'd permanently block the base rule's max-height: 0 from applying.
+function _fitAccordionSection(el) {
+  // Deferred a frame — same reasoning as fitTracklistNote below: measuring scrollHeight in the
+  // exact same tick as the content/class change that triggered this can undercount it (mid-
+  // layout), and, specifically for the track list, individual open rows' own heights (set via
+  // fitTracklistNote, itself rAF-deferred) need to have already applied before this measures the
+  // *section's* total height, or a previously-favorited track's expanded note gets missed.
+  // Scheduling this rAF after theirs (call this after any per-row fitTracklistNote calls) is what
+  // guarantees that ordering, since same-frame rAF callbacks run in the order they were queued.
+  requestAnimationFrame(() => {
+    el.style.maxHeight = `${el.scrollHeight}px`;
+  });
+}
+
 // MY NOTES accordion icon: the plain notepad icon for every category, swapped for a book icon
 // (matching the Chapters content it holds) on Book items only.
 const NOTES_ICON_PATH = 'M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z';
@@ -86,6 +111,12 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
     // registered above, but only so *other* sections' closeAccordionsExcept() calls can close it
     // — that mechanism doesn't fire for this header's own click, hence the explicit toggle here.)
     notesBodyEl.classList.toggle('open', nowOpen);
+    if (nowOpen) {
+      _fitAccordionSection(notesBodyEl);
+    } else {
+      notesBodyEl.style.maxHeight = '';
+      _closeAllOpenRows(notesBodyEl, item.category === 'Book' ? 'chapterFavorites' : 'noteFavorites');
+    }
     // The toggle above already changes notesBodyEl's 'open' class, which the MutationObserver set
     // up in initNoteToolbar() picks up and reacts to on its own (toolbar visibility, blurring any
     // focused row, exiting focus mode on close) — nothing further needed here for that.
@@ -137,6 +168,26 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
     } else {
       inputEl.style.height = '';
     }
+  }
+
+  // Closing "MY NOTES"/"SONG LIST" itself should reset any individual row left expanded inside
+  // it — not just visually collapse it for now (the section's own max-height already does that),
+  // but actually clear the persisted favorites too, so reopening later (this session or a future
+  // one) starts fresh instead of that same row auto-reopening. favoritesField is whichever of
+  // chapterFavorites/noteFavorites/favoriteTracks applies to this container.
+  async function _closeAllOpenRows(container, favoritesField) {
+    const openRows = container.querySelectorAll('.detail-tracklist-notes-input.open');
+    if (openRows.length === 0) return;
+    openRows.forEach(row => {
+      row.classList.remove('open');
+      fitTracklistNote(row);
+      const hasNote = !!row.textContent.trim();
+      row.closest('.detail-tracklist-item')?.querySelector('.detail-tracklist-favorite')
+        ?.classList.toggle('detail-tracklist-favorite--active', hasNote);
+    });
+    const liveItem = await ensureLiveItem(item);
+    liveItem[favoritesField] = [];
+    await persistItem(liveItem);
   }
 
   // Shared by Book's Chapter list and every other category's Summary/Note list below — same UI (a
@@ -316,7 +367,16 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
     tracklistAccordionHeaderEl.onclick = async () => {
       const nowOpen = tracklistAccordionHeaderEl.classList.toggle('open');
       tracklistEl.classList.toggle('open', nowOpen);
-      if (!nowOpen) return;
+      if (!nowOpen) {
+        tracklistEl.style.maxHeight = '';
+        _closeAllOpenRows(tracklistEl, 'favoriteTracks');
+        return;
+      }
+      // Revisiting an already-loaded list: its real height is known synchronously. First-time
+      // load: this measures just the "Loading…" placeholder for now — re-measured again below
+      // once the real tracks (or the "unavailable" message) replace it, since content loaded
+      // async can't have its true height known any earlier than that.
+      _fitAccordionSection(tracklistEl);
       closeAccordionsExcept('tracklist');
       if (_tracklistLoaded) return;
       _tracklistLoaded = true;
@@ -326,6 +386,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
       if (!tracklistAccordionHeaderEl.classList.contains('open')) return; // user closed it already
       if (!tracks || tracks.length === 0) {
         tracklistEl.innerHTML = `<div class="detail-tracklist-row detail-tracklist-row--status">Track list unavailable</div>`;
+        _fitAccordionSection(tracklistEl);
       } else {
         // Per-track favoriting/notes are stored on the item itself (favoriteTracks: a list of
         // track numbers; trackNotes: { [trackNumber]: text }) via ensureLiveItem() — deliberately
@@ -350,6 +411,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
           </div>`;
         }).join('');
         tracklistEl.querySelectorAll('.detail-tracklist-notes-input.open').forEach(fitTracklistNote);
+        _fitAccordionSection(tracklistEl); // after the per-row rAFs above are queued, so this one runs after theirs — see its own comment
         // Bound to the whole row (not just the pencil) so tapping the track number or title also
         // opens/closes the note — the pencil is still visually the "affordance" but isn't the
         // only tap target.
@@ -538,6 +600,16 @@ function _updateNoteEditingUi() {
     // while a note section is actually open) should exit too.
     if (document.activeElement?.classList?.contains('detail-tracklist-notes-input')) document.activeElement.blur();
     _exitFocusModeIfOn();
+    // Visual-only fallback for any row left expanded — the normal case (closing via either
+    // section's own header) already resets this properly (including the persisted favorites,
+    // see _closeAllOpenRows above), this only matters when a *different* accordion force-closed
+    // one of these without going through its own handler.
+    [notesListEl, tracklistEl].forEach(container => {
+      container.querySelectorAll('.detail-tracklist-notes-input.open').forEach(row => {
+        row.classList.remove('open');
+        row.style.height = '';
+      });
+    });
   }
   const editing = sectionOpen || _focusModeOn;
   document.getElementById('detail-body').classList.toggle('detail-body--editing-note', editing);
