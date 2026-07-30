@@ -667,14 +667,17 @@
   color: var(--primary);
 }
 
-/* The artist name in a Music Album's combined "Artist | Title" title line — purple by default,
-   not just on hover, so it reads as a distinct label from the (white) album title next to it.
-   Dims on hover instead of the base .detail-author-link:hover's (redundant, since it's already
-   purple) color change. */
-.detail-album-artist-link {
+/* The artist name in a Music Album's combined "Artist | Title" title line, and the Book author
+   byline — both purple by default, not just on hover, so they read as a distinct label from the
+   (white) title next to them. Dims on hover instead of the base .detail-author-link:hover's
+   (redundant, since it's already purple) color change. Other categories' authors keep the plain
+   default/hover-purple treatment. */
+.detail-album-artist-link,
+.detail-book-author-link {
   color: var(--primary);
 }
-.detail-album-artist-link:hover {
+.detail-album-artist-link:hover,
+.detail-book-author-link:hover {
   color: var(--primary);
   opacity: 0.6;
 }

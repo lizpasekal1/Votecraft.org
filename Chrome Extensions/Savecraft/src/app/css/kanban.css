@@ -716,7 +716,14 @@
 }
 
 .detail-queue--tight.open {
-  margin-top: 8px;
+  /* #btn-standalone-queue now carries a -8px margin-bottom (see detailModal.css) to flush its
+     own closed-state trailing space against the modal's bottom padding — bumped from 8px to
+     16px here so the header-to-pills gap above still nets out to the original 8px. */
+  margin-top: 16px;
+  /* Flushes the space below the last pill against the modal's bottom padding, matching the
+     modal's top padding above the featured image, the same way #btn-standalone-queue's
+     margin-bottom does for the closed state. */
+  margin-bottom: -6px;
 }
 
 .detail-queue.open .streaming-links-wrap {

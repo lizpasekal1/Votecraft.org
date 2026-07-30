@@ -1,7 +1,7 @@
 // ===== KANBAN BOARD ("My Saves Queue") =====
 
 import { state, CATEGORIES, CAT_LABEL } from './state.js';
-import { escapeHtml, catClass, badgeLabel } from './utils.js';
+import { escapeHtml, catClass, badgeLabel, getListIds } from './utils.js';
 import { persistViewState, persistItem } from './storage.js';
 import { openDetailModal } from './detailModal.js';
 
@@ -214,10 +214,7 @@ export function renderKanbanBoard() {
     queueItems = queueItems.filter(i => i.category === state.kanbanCategory);
   }
   if (state.activeListId) {
-    queueItems = queueItems.filter(i => {
-      const ids = Array.isArray(i.listIds) ? i.listIds : (i.listId ? [i.listId] : []);
-      return ids.includes(state.activeListId);
-    });
+    queueItems = queueItems.filter(i => getListIds(i).includes(state.activeListId));
   }
   const isSearching = !!state.search;
   if (isSearching) {

@@ -8,6 +8,16 @@ export const CATEGORIES = ['Web Links', 'Visual Art', 'Book', 'Movie', 'Game', '
 // is labeled "Summary" instead of "Placeholder", and which get a Wikipedia fallback for a
 // missing image/summary. Visual Art and the music categories are intentionally excluded.
 export const SUMMARY_PLACEHOLDER_CATEGORIES = ['Book', 'Show', 'Movie', 'Game'];
+// Copy for the "Why VoteCraft Recommends" tooltip on a curated (Top 100) item's Sponsored
+// Statement badge — keyed by category, with Movie/News/anything else falling back to a generic
+// line in detailModal.js.
+export const CATEGORY_WHY_TEXT = {
+  Musician: 'Music shapes culture, identity, and resistance — the same forces that drive civic change.',
+  'Music Album': 'Music shapes culture, identity, and resistance — the same forces that drive civic change.',
+  Show: 'The stories we follow on screen shape our empathy, our politics, and how we see each other.',
+  Game: 'Games build communities, test strategy, and spark collaboration — skills at the core of civic life.',
+  Book: 'Great books expand our understanding of the world and each other — the foundation of an engaged citizenry.',
+};
 // Categories whose curated (Top 100) items stash the creator's name in a clean `.notes` field —
 // confirmed Music Album is the only one. Book/Movie/Game/Show instead combine "Title — Creator"
 // into `.title`, with a real description in `.notes` — see splitCuratedTitleCreator() in
