@@ -653,6 +653,11 @@
   flex-shrink: 0;
   color: var(--primary);
   transition: transform 0.2s ease;
+  /* 12px × 1.1 — overrides the width="12" height="12" attributes set on every instance in
+     index.html (a CSS property always wins over the equivalent presentational HTML attribute),
+     so this one rule covers all of them instead of editing each SVG tag individually. */
+  width: 13.2px;
+  height: 13.2px;
 }
 
 .detail-accordion-header.open .detail-accordion-chevron {
