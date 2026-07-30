@@ -17,6 +17,20 @@ import { sanitizeNoteHtml, plainTextFromNoteHtml } from './noteSanitizer.js';
 let _activeNoteRow = null;
 let _focusModeOn = false;
 
+// The browser's native "keep the focused/edited element visible" auto-scroll (fired by .focus()
+// itself, or by typing into a growing contenteditable) has no idea the sticky title/toolbar
+// re-covers #detail-body's top edge regardless of scroll position — it can happily land a row's
+// top edge underneath it. Called after every .focus() on a note row (and after every height
+// change in fitTracklistNote below) to nudge the scroll position back down whenever that happens.
+function _correctScrollUnderToolbar(inputEl) {
+  requestAnimationFrame(() => {
+    const toolbarEl = document.getElementById('detail-note-toolbar');
+    if (!inputEl || !toolbarEl || getComputedStyle(toolbarEl).display === 'none') return;
+    const overlap = toolbarEl.getBoundingClientRect().bottom - inputEl.getBoundingClientRect().top;
+    if (overlap > 0) document.getElementById('detail-body').scrollTop -= overlap;
+  });
+}
+
 // MY NOTES accordion icon: the plain notepad icon for every category, swapped for a book icon
 // (matching the Chapters content it holds) on Book items only.
 const NOTES_ICON_PATH = 'M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z';
@@ -74,7 +88,9 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
     notesBodyEl.classList.toggle('open', nowOpen);
     if (nowOpen) {
       closeAccordionsExcept('notes');
-      notesBodyEl.querySelector('.detail-tracklist-notes-input.open')?.focus();
+      const alreadyOpenRow = notesBodyEl.querySelector('.detail-tracklist-notes-input.open');
+      alreadyOpenRow?.focus();
+      _correctScrollUnderToolbar(alreadyOpenRow);
     }
   };
 
@@ -113,18 +129,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
         // 18.2px) isn't one, so that fractional rounding accumulates across several lines and
         // clips the descenders on the last line without a little slack.
         inputEl.style.height = `${inputEl.scrollHeight + 2}px`;
-        // The browser's native "keep the caret visible while typing" auto-scroll (which just ran,
-        // synchronously, as part of the input event that triggered this frame) has no idea the
-        // sticky toolbar re-covers the scrollport's top edge regardless of scroll position — CSS
-        // scroll-padding-top on #detail-body (added for the same reason) doesn't reach this native
-        // caret-follow heuristic, only explicit scrollIntoView()/scroll-snap. Correct it manually:
-        // if growing this row just scrolled its own top edge up underneath the toolbar, nudge the
-        // scroll position back down by exactly that overlap.
-        const toolbarEl = document.getElementById('detail-note-toolbar');
-        if (toolbarEl && getComputedStyle(toolbarEl).display !== 'none') {
-          const overlap = toolbarEl.getBoundingClientRect().bottom - inputEl.getBoundingClientRect().top;
-          if (overlap > 0) document.getElementById('detail-body').scrollTop -= overlap;
-        }
+        _correctScrollUnderToolbar(inputEl);
       });
     } else {
       inputEl.style.height = '';
