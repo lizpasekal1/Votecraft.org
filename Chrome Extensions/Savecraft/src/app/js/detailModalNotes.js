@@ -91,6 +91,15 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
       const alreadyOpenRow = notesBodyEl.querySelector('.detail-tracklist-notes-input.open');
       alreadyOpenRow?.focus();
       _correctScrollUnderToolbar(alreadyOpenRow);
+    } else {
+      // Collapsing "MY NOTES" while a row inside it is still (invisibly) focused would otherwise
+      // leave _activeNoteRow set — collapsing via max-height doesn't blur it the way display:none
+      // would — which keeps the toolbar showing in place of the title even though nothing editable
+      // is visible anymore. Blurring fires the row's own blur listener, which clears
+      // _activeNoteRow and calls _updateNoteEditingUi() itself.
+      notesBodyEl.querySelector('.detail-tracklist-notes-input:focus')?.blur();
+      _exitFocusModeIfOn();
+      _updateNoteEditingUi();
     }
   };
 
@@ -207,7 +216,17 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
         starEl.classList.toggle('detail-tracklist-favorite--active', nowFav || hasNote);
         notesInput?.classList.toggle('open', nowFav);
         fitTracklistNote(notesInput);
-        if (nowFav) notesInput?.focus();
+        // Closing this row via its own pencil should hide the toolbar (revert to the title) and
+        // exit focus mode (restore the image/edit/bookmark/favorite controls) too — collapsing via
+        // max-height doesn't blur it on its own, and without an explicit blur here the toolbar
+        // would keep showing for a row that's no longer visibly open.
+        if (nowFav) {
+          notesInput?.focus();
+        } else {
+          notesInput?.blur();
+          _exitFocusModeIfOn();
+          _updateNoteEditingUi();
+        }
       });
     });
 
@@ -345,7 +364,16 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
             starEl.classList.toggle('detail-tracklist-favorite--active', nowFav || hasNote);
             notesInput?.classList.toggle('open', nowFav);
             fitTracklistNote(notesInput);
-            if (nowFav) notesInput?.focus();
+            // Closing this row via its own pencil should hide the toolbar (revert to the title)
+            // and exit focus mode too — see the mirrored comment in the non-track-list favorite
+            // handler above.
+            if (nowFav) {
+              notesInput?.focus();
+            } else {
+              notesInput?.blur();
+              _exitFocusModeIfOn();
+              _updateNoteEditingUi();
+            }
           });
         });
         tracklistEl.querySelectorAll('.detail-tracklist-notes-input').forEach(inputEl => {
@@ -458,6 +486,17 @@ export function applyMusicianBioFallback(item, bio) {
   rowEl?.querySelector('.detail-tracklist-number')?.classList.toggle('detail-tracklist-number--has-note', hasNote);
   rowEl?.querySelector('.detail-tracklist-title')?.classList.toggle('detail-tracklist-title--has-note', hasNote);
   rowEl?.querySelector('.detail-tracklist-favorite')?.classList.toggle('detail-tracklist-favorite--active', hasNote || zeroRowInput.classList.contains('open'));
+}
+
+// Explicitly closing the row that focus mode was giving room to (its own pencil, or collapsing
+// "MY NOTES" entirely) exits focus mode too, restoring the featured image/edit/bookmark/favorite
+// controls — rather than leaving an expanded, image-less modal behind for a note that's no longer
+// even open. (Merely blurring by clicking elsewhere while the row stays open does NOT exit focus
+// mode — see _updateNoteEditingUi below — this is only for an explicit close.)
+function _exitFocusModeIfOn() {
+  if (!_focusModeOn) return;
+  _focusModeOn = false;
+  document.querySelector('.modal.detail-modal')?.classList.remove('detail-modal--focus-mode');
 }
 
 // ===== NOTE FORMATTING TOOLBAR =====
