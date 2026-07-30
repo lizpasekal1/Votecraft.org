@@ -195,11 +195,11 @@
   gap: 8px;
   overflow-y: auto;
   min-height: 0;
-  /* .detail-note-toolbar bleeds 28px past this container's own edges (see its own comment) via
-     negative margins — without this, that bleed silently adds real (if visually hidden)
-     horizontal scroll capacity, since overflow-x otherwise computes to 'auto' as soon as
-     overflow-y isn't 'visible'. */
-  overflow-x: hidden;
+  /* .detail-note-toolbar intentionally bleeds 28px past this container's own edges (negative
+     margins, see its own comment) to reach the modal's true outer edge — overflow-x: hidden here
+     would clip that bleed at THIS element's own boundary instead of the modal's, so it's left as
+     the implicit 'auto' overflow-x computes to (a harmless, never user-visible bit of horizontal
+     scroll capacity — no visible scrollbar, and nothing scrolls it) rather than fixed explicitly. */
   /* The browser's native "keep the caret visible while typing" auto-scroll has no idea the sticky
      title/toolbar (see .detail-title-row / .detail-note-toolbar) will re-cover the very top of
      this scrollport regardless of scroll position — without this, growing a note tall enough
@@ -254,7 +254,9 @@
   z-index: 4;
   align-items: center;
   gap: 6px;
-  background: var(--hover-bg); /* gray, distinct from the modal background and the buttons' own --surface */
+  /* Lighter than --hover-bg on its own — still gray and distinct from the modal background and
+     the buttons' own --surface, just less heavy as a toolbar bar. */
+  background: color-mix(in srgb, var(--hover-bg) 80%, white 20%);
   /* .modal.detail-modal has 28px side padding — bleed the bar out to the modal's actual edges
      (clipped by the modal's own overflow: hidden) instead of just spanning .detail-body's inset
      content width, then restore that same 28px as this element's own padding for the buttons. */
