@@ -6,8 +6,12 @@
 .modal.detail-modal {
   position: relative;
   padding: 28px;
-  width: 336px;
+  width: 312px;
   max-width: 94vw;
+  /* A cap, not a firm height — the modal shrink-wraps to its actual content, so the bottom
+     padding sits immediately after the last row, matching the top padding above the image. A
+     firm height was tried instead (forcing every category to the same fixed box) but left a dead
+     gap below Add to Queue for any category whose collapsed content came in shorter than the cap. */
   max-height: min(90vh, 600px);
   overflow: hidden;
   display: flex;
@@ -31,10 +35,16 @@
 }
 .modal-x-close:hover { color: var(--text-primary); }
 
+/* This, .detail-bookmark-btn, and .detail-favorite-btn form the top-right icon column — all
+   three share the same right: 4px, centering their 32px width in the gap between the (fixed
+   232px, no longer modal-width-relative) featured image's right edge and the modal's own outer
+   right edge, rather than a flat inset from the modal edge. That gap is 40px (the modal's 312px
+   minus the image's 40px left offset minus its own 232px width), so a 4px inset centers a 32px
+   icon within it. */
 .detail-edit {
   position: absolute;
-  top: 97px;
-  right: 12px;
+  top: 93px;
+  right: 4px;
   background: none;
   border: none;
   border-radius: 50%;
@@ -50,8 +60,12 @@
 
 .detail-bookmark-btn {
   position: absolute;
-  top: 17px;
-  right: 12px;
+  /* 4px above the CTA wrapper's own 17px top — the icon glyph inside is 24px tall centered in
+     this 32px box (a 4px inset on every side), while the "Official Website" pill's border/glow
+     sits right at its wrapper's top edge with no such inset, so matching the raw 17px here left
+     the icon's visible top sitting 4px below the pill's. */
+  top: 13px;
+  right: 4px; /* see .detail-edit above */
   background: none;
   border: none;
   border-radius: 50%;
@@ -73,8 +87,8 @@
 
 .detail-favorite-btn {
   position: absolute;
-  top: 57px;
-  right: 12px;
+  top: 53px;
+  right: 4px; /* see .detail-edit above */
   background: none;
   border: none;
   border-radius: 50%;
@@ -148,7 +162,9 @@
   z-index: 2;
 }
 
-.detail-image-wrap { position: relative; width: 83%; margin: 0 auto; aspect-ratio: 1/1; overflow: visible; background: var(--border); flex-shrink: 0; }
+/* Fixed pixel size, deliberately not a % of the modal's own width — so narrowing or widening the
+   modal doesn't resize the featured image along with it. */
+.detail-image-wrap { position: relative; width: 232px; margin: 0 auto; aspect-ratio: 1/1; overflow: visible; background: var(--border); flex-shrink: 0; }
 /* Absolutely-positioned so it's out of flow — keeps the wrap's aspect-ratio from being
    overridden by the actual photo's natural size, while still clipping/cropping its content. */
 .detail-image-crop { position: absolute; inset: 0; overflow: hidden; }
@@ -319,9 +335,18 @@
   background: none;
   border: none;
   outline: none;
-  resize: vertical;
+  /* Resizable only while open (below) — every other collapsible accordion body here is a plain
+     div, this is the one that's a <textarea>, and a resize handle needs rendered pixels to grab:
+     left permanently on, it's the likely reason this specific element wasn't actually collapsing
+     to 0 height under max-height:0 the way the plain-div ones do, forcing the whole modal to
+     scroll even with every accordion closed for any category that (unlike Book) shows this row. */
+  resize: none;
   font-family: inherit;
   color: var(--text-secondary);
+}
+
+.detail-notes-input.open {
+  resize: vertical;
 }
 
 .detail-notes-input::placeholder {
@@ -407,10 +432,11 @@
    above Add to Queue looks the same as the (cancelled-down-to-flush) gaps between the others. */
 #btn-standalone-queue {
   margin-top: -8px;
-  /* Closes the gap between this row's own bottom padding and .detail-body/.modal's combined
-     bottom padding, so the space below it (when the accordion is collapsed, .detail-queue has
-     zero footprint) matches the modal's top padding above the featured image exactly. */
-  margin-bottom: -8px;
+  /* Deliberately no margin-bottom compensation to match: pulling this row's trailing space flush
+     with the modal's own bottom padding only looks right when the modal is short enough to
+     shrink-wrap without scrolling. Once .detail-body actually scrolls (a normal case — content
+     length varies by item, not just category), the same trick leaves almost no breathing room
+     below the last row, reading as clipped right at the bottom edge. */
 }
 
 /* Pulls My Notes up closer to the summary above it — the first accordion row doesn't need
@@ -457,7 +483,7 @@
 .detail-accordion-chevron {
   display: block;
   flex-shrink: 0;
-  color: var(--text-muted);
+  color: var(--primary);
   transition: transform 0.2s ease;
 }
 
@@ -471,6 +497,12 @@
    the label span, which has no color override of its own to inherit over). */
 .detail-accordion-header.open {
   border-bottom: none;
+  color: var(--primary);
+}
+
+/* Same purple as the open state, just on hover — icon/chevron keep their own explicit colors
+   (unaffected, same reasoning as .open above), so this only affects the label span. */
+.detail-accordion-header:hover {
   color: var(--primary);
 }
 

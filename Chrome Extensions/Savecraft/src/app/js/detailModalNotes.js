@@ -20,7 +20,7 @@ const BOOK_NOTES_ICON_PATH = 'M560-564v-68q33-14 67.5-21t72.5-7q26 0 51 4t49 10v
 // shared --active class) since there's no separate outline/filled variant for it.
 const NOTE_PENCIL_ICON = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg>`;
 
-export function setupNotesAndTracklist(item, { isMusicAlbum }) {
+export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, ctaAuthor }) {
   const notesInputEl = document.getElementById('detail-notes-input');
   const notesAccordionHeaderEl = document.getElementById('detail-notes-accordion-header');
   document.getElementById('detail-notes-accordion-icon').querySelector('path')
@@ -31,7 +31,14 @@ export function setupNotesAndTracklist(item, { isMusicAlbum }) {
   // exclude it here or the editable textarea below would pre-fill with the creator name instead
   // of being empty.
   const _curatedNotesIsCreatorName = item.curated && CURATED_NOTES_CATEGORIES.includes(item.category);
-  const text = (_curatedNotesIsCreatorName ? null : item.notes) || item.description || '';
+  const _liveItemForNotes = state.items.find(i => i.id === item.id);
+  // Musician's bio pre-fills My Notes as a starting point (editable/replaceable, like Book's
+  // Chapter 0 falling back to old notes text) instead of showing in its own read-only block —
+  // only while there's no real saved note yet and the user hasn't already dismissed it once
+  // (bioNotesSeeded, set on first save — see saveNotes below — mirrors chapterZeroSeeded).
+  const _showBioFallback = isMusicianItem && !item.notes && !_liveItemForNotes?.bioNotesSeeded;
+  const text = (_curatedNotesIsCreatorName ? null : item.notes) || item.description
+    || (_showBioFallback ? (ctaAuthor?.bio || '') : '') || '';
   // My Notes is shown as its own accordion row for every category now, even with no notes yet
   // — it's a directly-editable textarea instead of read-only text, auto-saving (debounced) as
   // the user types. Genre (item.genre, Music Album only) is intentionally kept on the item but
@@ -71,9 +78,15 @@ export function setupNotesAndTracklist(item, { isMusicAlbum }) {
     const newNotes = notesInputEl.value.trim() || null;
     let liveItem = state.items.find(i => i.id === item.id);
     if (!liveItem) liveItem = await ensureLiveItem(item);
-    if (liveItem.notes === newNotes) return;
+    // Any edit (even clearing back to empty) permanently stops the bio fallback from reappearing
+    // — same reasoning/pattern as chapterZeroSeeded below for Book chapters. Checked even when the
+    // resulting text is unchanged, so a clear-back-to-empty edit (newNotes === liveItem.notes ===
+    // null) still persists the flag instead of silently no-op'ing out before it's ever saved.
+    const needsSeedUpdate = isMusicianItem && !liveItem.bioNotesSeeded;
+    if (liveItem.notes === newNotes && !needsSeedUpdate) return;
     liveItem.notes = newNotes;
     item.notes = newNotes;
+    if (needsSeedUpdate) liveItem.bioNotesSeeded = true;
     await persistItem(liveItem);
   }, 600);
   notesInputEl.oninput = saveNotes;
@@ -328,4 +341,18 @@ export function setupNotesAndTracklist(item, { isMusicAlbum }) {
     tracklistEl.innerHTML = '';
     tracklistEl.classList.remove('detail-accordion-collapsible', 'open');
   }
+}
+
+// Called from detailModalSummary.js once an artist's Wikipedia bio resolves (first-time lookups
+// only — already-cached bios are applied synchronously inside setupNotesAndTracklist() above via
+// its own ctaAuthor.bio read). Only fills the textarea if it's still genuinely empty (the user
+// hasn't typed anything, and no earlier real note survived) and the modal hasn't since moved on
+// to a different item or been re-seeded by a prior edit.
+export function applyMusicianBioFallback(item, bio) {
+  if (getDetailItem() !== item) return;
+  const notesInputEl = document.getElementById('detail-notes-input');
+  if (!notesInputEl || notesInputEl.value.trim()) return;
+  const liveItem = state.items.find(i => i.id === item.id);
+  if (liveItem?.bioNotesSeeded) return;
+  notesInputEl.value = bio;
 }
