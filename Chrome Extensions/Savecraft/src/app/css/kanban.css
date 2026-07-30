@@ -716,14 +716,10 @@
 }
 
 .detail-queue--tight.open {
-  /* #btn-standalone-queue now carries a -8px margin-bottom (see detailModal.css) to flush its
-     own closed-state trailing space against the modal's bottom padding — bumped from 8px to
-     16px here so the header-to-pills gap above still nets out to the original 8px. */
-  margin-top: 16px;
-  /* Flushes the space below the last pill against the modal's bottom padding, matching the
-     modal's top padding above the featured image, the same way #btn-standalone-queue's
-     margin-bottom does for the closed state. */
-  margin-bottom: -6px;
+  margin-top: 8px; /* plain header-to-pills gap, matching every other accordion row's spacing */
+  /* Deliberately no margin-bottom compensation — see #btn-standalone-queue in detailModal.css for
+     why flushing this against the modal's bottom padding would look wrong once .detail-body
+     actually scrolls, which the same reasoning applies to here for the last pill. */
 }
 
 .detail-queue.open .streaming-links-wrap {

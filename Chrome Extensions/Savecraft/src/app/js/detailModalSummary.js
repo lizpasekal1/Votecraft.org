@@ -10,6 +10,7 @@ import { ensureArtistWikipediaInfo, ensureItemWikipediaInfo } from './api.js';
 import { findAuthor, getKnownAlbumsForArtist, navigateToAuthor } from './authors.js';
 import { openDetailModal, closeDetailModal, getDetailItem } from './detailModal.js';
 import { registerAccordion, closeAccordionsExcept } from './detailModalAccordions.js';
+import { applyMusicianBioFallback } from './detailModalNotes.js';
 
 export function setupSummary(item, { isMusicAlbum, isMusicianItem, ctaAuthorName, ctaAuthor }) {
   let _ctaAuthor = ctaAuthor; // local, reassignable copy — never written back to Header's own
@@ -56,7 +57,10 @@ export function setupSummary(item, { isMusicAlbum, isMusicianItem, ctaAuthorName
     summaryToggleEl.classList.toggle('detail-summary-toggle--open', expanded);
   };
 
-  const summaryText = item.summary || (isMusicianItem ? _ctaAuthor?.bio : null) || '';
+  // Musician's bio no longer displays here — it pre-fills the My Notes textarea instead (see
+  // applyMusicianBioFallback(), detailModalNotes.js), so this plain block is left to whatever
+  // item.summary might independently hold (in practice, always empty for Musician).
+  const summaryText = item.summary || '';
   renderSummaryText(summaryText);
 
   // Appends a "Wikipedia" link into the Web Links accordion once a page is actually found —
@@ -86,7 +90,7 @@ export function setupSummary(item, { isMusicAlbum, isMusicianItem, ctaAuthorName
       if (bio && !author.bio) { author.bio = bio; authorChanged = true; }
       if (authorChanged) persistAuthor(author);
       _ctaAuthor = author;
-      if (_needsBio && bio && !item.summary) renderSummaryText(bio);
+      if (_needsBio && bio && !item.summary) applyMusicianBioFallback(item, bio);
 
       if (_needsPhoto && applyArtistPhotoToItem(item, photoUrl)) {
         if (state.items.some(i => i.id === item.id)) persistItem(item);
@@ -168,14 +172,13 @@ export function setupSummary(item, { isMusicAlbum, isMusicianItem, ctaAuthorName
         closeDetailModal();
         navigateToAuthor(item.title, 'Musician');
       });
-      albumsAccordionHeaderEl.onclick = () => {
-        const nowOpen = albumsAccordionHeaderEl.classList.toggle('open');
-        albumsListEl.classList.toggle('open', nowOpen);
-        if (nowOpen) closeAccordionsExcept('albums');
-      };
     } else {
-      albumsAccordionHeaderEl.style.display = 'none';
-      albumsListEl.style.display = 'none';
+      // No known albums yet — shown as an empty placeholder row (same treatment as Visual Art
+      // below) rather than hidden entirely, so every category's modal keeps the same accordion
+      // row count/height when collapsed, regardless of how much real content a given item has.
+      albumsAccordionHeaderEl.style.display = '';
+      albumsListEl.style.display = '';
+      albumsListEl.classList.add('detail-accordion-collapsible');
       albumsListEl.innerHTML = '';
     }
   } else if (isMusicAlbum) {
@@ -193,11 +196,6 @@ export function setupSummary(item, { isMusicAlbum, isMusicianItem, ctaAuthorName
     albumsAccordionHeaderEl.style.display = '';
     albumsListEl.style.display = '';
     albumsListEl.classList.add('detail-accordion-collapsible', 'detail-albums-list--summary');
-    albumsAccordionHeaderEl.onclick = () => {
-      const nowOpen = albumsAccordionHeaderEl.classList.toggle('open');
-      albumsListEl.classList.toggle('open', nowOpen);
-      if (nowOpen) closeAccordionsExcept('albums');
-    };
   } else {
     // Placeholder accordion for Visual Art — visible but intentionally empty for now.
     albumsAccordionLabelEl.textContent = 'Placeholder';
@@ -207,10 +205,13 @@ export function setupSummary(item, { isMusicAlbum, isMusicianItem, ctaAuthorName
     albumsListEl.style.display = '';
     albumsListEl.classList.add('detail-accordion-collapsible');
     albumsListEl.innerHTML = '';
-    albumsAccordionHeaderEl.onclick = () => {
-      const nowOpen = albumsAccordionHeaderEl.classList.toggle('open');
-      albumsListEl.classList.toggle('open', nowOpen);
-      if (nowOpen) closeAccordionsExcept('albums');
-    };
   }
+
+  // Same open/close behavior regardless of which branch above populated the accordion (Music
+  // Album leaves it display:none, so this is inert but harmless there).
+  albumsAccordionHeaderEl.onclick = () => {
+    const nowOpen = albumsAccordionHeaderEl.classList.toggle('open');
+    albumsListEl.classList.toggle('open', nowOpen);
+    if (nowOpen) closeAccordionsExcept('albums');
+  };
 }

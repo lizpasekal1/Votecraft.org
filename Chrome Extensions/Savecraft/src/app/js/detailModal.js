@@ -29,7 +29,7 @@ export function openDetailModal(item) {
 
   const { ctaAuthorName, ctaAuthor } = setupHeader(item, { domain, isMusicAlbum, isMusicianItem });
   setupSummary(item, { isMusicAlbum, isMusicianItem, ctaAuthorName, ctaAuthor });
-  setupNotesAndTracklist(item, { isMusicAlbum });
+  setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, ctaAuthor });
   setupQueue(item, { domain, isMusicAlbum });
 
   document.getElementById('detail-modal-overlay').classList.add('open');
