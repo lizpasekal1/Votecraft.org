@@ -593,23 +593,28 @@ function _exitFocusModeIfOn() {
 function _updateNoteEditingUi() {
   const notesListEl = document.getElementById('detail-notes-list');
   const tracklistEl = document.getElementById('detail-tracklist');
+  // Checked (and cleaned up) independently per element, NOT just "is either one open" — closeAccordionsExcept()
+  // (detailModalAccordions.js, fired when a *different* accordion opens — e.g. SONG LIST forcing MY NOTES
+  // closed) only removes the 'open' class; it has no idea this file also leaves an inline
+  // style.maxHeight override on whichever one was last open (see _fitAccordionSection), and inline
+  // styles always win over the base CSS class's max-height: 0. Left uncleared, the *other* section
+  // stays visually expanded — its header correctly shows collapsed (driven by the class alone),
+  // but its content never actually collapses. Gating this on "is either one open" would still miss
+  // the closed-but-not-both-closed case (exactly the bug this fixes), so both are always checked.
+  [notesListEl, tracklistEl].forEach(container => {
+    if (container.classList.contains('open')) return;
+    container.style.maxHeight = '';
+    container.querySelectorAll('.detail-tracklist-notes-input.open').forEach(row => {
+      row.classList.remove('open');
+      row.style.height = '';
+    });
+  });
   const sectionOpen = notesListEl.classList.contains('open') || tracklistEl.classList.contains('open');
   if (!sectionOpen) {
-    // Neither section is open anymore (via its own header, or forced closed by another accordion
-    // opening) — nothing inside should still be focused, and focus mode (which only makes sense
-    // while a note section is actually open) should exit too.
+    // Neither section is open anymore — nothing inside should still be focused, and focus mode
+    // (which only makes sense while a note section is actually open) should exit too.
     if (document.activeElement?.classList?.contains('detail-tracklist-notes-input')) document.activeElement.blur();
     _exitFocusModeIfOn();
-    // Visual-only fallback for any row left expanded — the normal case (closing via either
-    // section's own header) already resets this properly (including the persisted favorites,
-    // see _closeAllOpenRows above), this only matters when a *different* accordion force-closed
-    // one of these without going through its own handler.
-    [notesListEl, tracklistEl].forEach(container => {
-      container.querySelectorAll('.detail-tracklist-notes-input.open').forEach(row => {
-        row.classList.remove('open');
-        row.style.height = '';
-      });
-    });
   }
   const editing = sectionOpen || _focusModeOn;
   document.getElementById('detail-body').classList.toggle('detail-body--editing-note', editing);

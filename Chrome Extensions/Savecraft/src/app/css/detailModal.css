@@ -196,7 +196,21 @@
 
 /* Fixed pixel size, deliberately not a % of the modal's own width — so narrowing or widening the
    modal doesn't resize the featured image along with it. */
-.detail-image-wrap { position: relative; width: 232px; margin: 0 auto; aspect-ratio: 1/1; overflow: visible; background: var(--border); flex-shrink: 0; }
+.detail-image-wrap {
+  position: relative;
+  width: 232px;
+  margin: 0 auto;
+  aspect-ratio: 1/1;
+  overflow: visible; /* the "Your Statement" badge (.vc-sponsored-tag--overlay) sits partly outside this box (bottom: -10.5px) and needs it — safe to override to hidden below since that badge is already display:none by the time focus mode (the only state that collapses this) is active */
+  background: var(--border);
+  flex-shrink: 0;
+  max-height: 232px; /* matches the aspect-ratio-derived height exactly — a no-op cap normally, but gives .detail-modal--focus-mode below something to animate down to 0 */
+  opacity: 1;
+  /* Entering focus mode (collapsing) gets the M3 "emphasized decelerate" curve — same reasoning
+     as the accordion sections' own open transition: a gentle settle reads better for the more
+     prominent motion in the pair. */
+  transition: max-height 0.3s var(--m3-emphasized-decelerate), opacity 0.25s var(--m3-emphasized-decelerate), margin 0.3s var(--m3-emphasized-decelerate);
+}
 /* Absolutely-positioned so it's out of flow — keeps the wrap's aspect-ratio from being
    overridden by the actual photo's natural size, while still clipping/cropping its content. */
 .detail-image-crop { position: absolute; inset: 0; overflow: hidden; }
@@ -383,12 +397,29 @@
 .detail-note-toolbar-btn[disabled] { opacity: 0.4; pointer-events: none; cursor: default; }
 .detail-note-toolbar-btn--expand { margin-left: auto; margin-right: 10px; }
 
-.detail-modal--focus-mode #detail-image-wrap,
 .detail-modal--focus-mode #detail-edit,
 .detail-modal--focus-mode #detail-bookmark-btn,
 .detail-modal--focus-mode #detail-favorite-btn,
 .detail-modal--focus-mode #detail-artist-header {
   display: none;
+}
+
+/* Animated instead of the instant display: none the 4 buttons above use — those are position:
+   absolute (don't occupy layout space either way), but this is a normal-flow sibling before
+   #detail-body, so collapsing it smoothly is what actually makes the toolbar/content section
+   visibly slide up into the freed space, rather than snapping. overflow: hidden here (vs. the
+   base rule's visible, needed for the "Your Statement" badge — see its own comment) is safe: that
+   badge is already display: none by the time focus mode is active (.detail-modal--editing-note
+   .vc-sponsored-tag--overlay), so there's nothing left needing to overflow this box when it
+   matters. */
+.detail-modal--focus-mode #detail-image-wrap {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  margin: 0;
+  /* Exiting focus mode (re-expanding) gets the quicker "standard accelerate" curve — same
+     asymmetry as everywhere else in this file, snappier than the entrance. */
+  transition: max-height 0.2s var(--m3-standard-accelerate), opacity 0.15s var(--m3-standard-accelerate), margin 0.2s var(--m3-standard-accelerate);
 }
 
 /* The "Your Statement" sponsored badge sits inside #detail-image-wrap, which only hides in full
