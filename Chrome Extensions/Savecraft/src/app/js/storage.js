@@ -445,6 +445,10 @@ export function persistAlbumTrackListCache() {
   chrome.storage.local.set({ savecraft_album_tracklist: state.albumTrackListCache });
 }
 
+export function persistAlbumArtCache() {
+  chrome.storage.local.set({ savecraft_album_art_cache: state.albumArtCache });
+}
+
 export function persistArtistWebsiteCache() {
   chrome.storage.local.set({ savecraft_artist_website_cache: state.artistWebsiteCache });
 }

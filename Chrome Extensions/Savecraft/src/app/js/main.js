@@ -15,7 +15,8 @@ import {
   openEditModal, selectStep1Category, handleStep1Search, hideSearchResults, handleStep1ManualAdd,
   handleModalBack, refreshStep2ImagePreviewFromManualInput, updateTitleAuthorLayout,
 } from './addEditModal.js';
-import { closeDetailModal, closeImageLightbox, getDetailItem } from './detailModal.js';
+import { closeDetailModal, closeImageLightbox, getDetailItem, showNextImage, showPrevImage, handleGalleryLoadMoreClick } from './detailModal.js';
+import { initNoteToolbar } from './detailModalNotes.js';
 import { closeFetchAlbumsModal, handleImportAlbums, renderFetchAlbumsList } from './fetchAlbumsModal.js';
 
 // ===== SEARCH =====
@@ -253,6 +254,7 @@ async function init() {
   await loadLocalCache('savecraft_curated_img', 'curatedImgCache');
   await loadLocalCache('savecraft_curated_album_meta', 'curatedAlbumMetaCache');
   await loadLocalCache('savecraft_album_tracklist', 'albumTrackListCache');
+  await loadLocalCache('savecraft_album_art_cache', 'albumArtCache');
   await loadLocalCache('savecraft_artist_website_cache', 'artistWebsiteCache');
   await loadLocalCache('savecraft_artist_bio_cache_v2', 'artistBioCache');
   await loadLocalCache('savecraft_item_wiki_cache', 'itemWikiCache');
@@ -467,6 +469,7 @@ async function init() {
     }
   });
 
+  initNoteToolbar();
   document.getElementById('detail-edit').addEventListener('click', () => {
     const detailItem = getDetailItem();
     if (!detailItem) return;
@@ -478,9 +481,18 @@ async function init() {
     if (e.target === document.getElementById('detail-modal-overlay')) closeDetailModal();
   });
   document.getElementById('image-lightbox-overlay').addEventListener('click', closeImageLightbox);
+  document.getElementById('image-lightbox-prev').addEventListener('click', e => { e.stopPropagation(); showPrevImage(); });
+  document.getElementById('image-lightbox-next').addEventListener('click', e => { e.stopPropagation(); showNextImage(); });
+  document.getElementById('image-lightbox-load-art-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    handleGalleryLoadMoreClick(e.currentTarget);
+  });
   document.addEventListener('keydown', e => {
+    const lightboxOpen = document.getElementById('image-lightbox-overlay').classList.contains('open');
+    if (lightboxOpen && e.key === 'ArrowLeft') { showPrevImage(); return; }
+    if (lightboxOpen && e.key === 'ArrowRight') { showNextImage(); return; }
     if (e.key !== 'Escape') return;
-    if (document.getElementById('image-lightbox-overlay').classList.contains('open')) {
+    if (lightboxOpen) {
       closeImageLightbox();
     } else {
       closeDetailModal();

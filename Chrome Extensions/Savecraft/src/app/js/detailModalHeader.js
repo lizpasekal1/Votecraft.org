@@ -4,7 +4,7 @@ import { state, CURATED_ITEMS, CATEGORY_WHY_TEXT, CURATED_NOTES_CATEGORIES, CREA
 import { escapeHtml, catClass, isMusicAlbumsSectionView, isOwnAuthorPageView } from './utils.js';
 import { persistItem, persistAuthor, persistViewState } from './storage.js';
 import { ensureArtistWebsite } from './api.js';
-import { findAuthor, navigateToAuthor, ensureLiveItem } from './authors.js';
+import { findAuthor, navigateToAuthor, ensureLiveItem, getCachedAlbumArt, ensureAlbumArt } from './authors.js';
 import { closeDetailModal, getDetailItem, openImageLightbox } from './detailModal.js';
 import { renderSidebar, renderGrid } from './render.js';
 import { toggleQueueFromHeader } from './detailModalQueue.js';
@@ -59,7 +59,7 @@ export function setupHeader(item, { domain, isMusicAlbum, isMusicianItem }) {
   const isCuratedTop100 = !!item.id && !!(CURATED_ITEMS['Top 100']?.[item.category] || []).some(i => i.id === item.id);
 
   const wrap = document.getElementById('detail-image-wrap');
-  const _imageClass = `detail-image${isMusicianItem ? ' detail-image--faces' : ''}`;
+  const _imageClass = `detail-image${isMusicianItem ? ' detail-image--faces' : ''}${isMusicAlbum ? ' detail-image--clickable' : ''}`;
   document.getElementById('detail-body').classList.toggle('detail-body--tight-bottom', isMusicianItem);
   document.getElementById('detail-bookmark-btn').style.display = '';
   document.getElementById('detail-favorite-btn').style.display = '';
@@ -78,11 +78,45 @@ export function setupHeader(item, { domain, isMusicAlbum, isMusicianItem }) {
       </a>`;
   }
 
+  // Album art gallery — extra images (back cover, booklet/insert pages, etc.) are fetched on
+  // demand via the lightbox's own "Load More Art" button, shown below the full-size image (never
+  // automatically, to respect MusicBrainz's rate limit and avoid background traffic across a
+  // whole saved library). getCachedAlbumArt reads whatever's already cached without ever
+  // triggering a fetch itself.
+  const _cachedArt = isMusicAlbum ? getCachedAlbumArt(item) : null; // null = never fetched yet
+  const _buildGalleryImages = () => {
+    const liveItem = item.curated ? item : (state.items.find(i => i.id === item.id) || item);
+    const extra = getCachedAlbumArt(item) || [];
+    const images = [];
+    if (liveItem.imageUrl) images.push({ full: liveItem.imageUrl, thumb: liveItem.imageUrl, type: 'Cover' });
+    extra.forEach(img => { if (img.full !== liveItem.imageUrl) images.push(img); });
+    return images;
+  };
+  const _canLoadMoreArt = isMusicAlbum && (item.author || (item.curated && item.notes)) && item.title && _cachedArt === null;
+  const _loadMoreArtHandler = _canLoadMoreArt ? async btn => {
+    btn.disabled = true;
+    btn.textContent = 'Checking…';
+    const images = await ensureAlbumArt(item);
+    if (getDetailItem() !== item) return; // modal moved on to a different item while awaiting
+    if (images === null) {
+      btn.disabled = false;
+      btn.textContent = 'Couldn’t check — Retry';
+      return;
+    }
+    // Fetch attempt completed — refresh the still-open lightbox in place with whatever's now
+    // cached (its button disappears since getCachedAlbumArt now returns non-null) and re-render
+    // the header thumbnail too, in case item.imageUrl was upgraded.
+    openImageLightbox(_buildGalleryImages(), 0, null);
+    setupHeader(item, { domain, isMusicAlbum, isMusicianItem });
+    if (images.length === 0) alert('No data available currently');
+  } : null;
+  const _openGallery = () => openImageLightbox(_buildGalleryImages(), 0, _loadMoreArtHandler);
+
   if (item.imageUrl) {
     wrap.innerHTML = `<div class="detail-image-crop"><img class="${_imageClass}" src="${escapeHtml(item.imageUrl)}" alt=""></div>${_sponsoredTagHtml}`;
     wrap.style.display = '';
     if (isMusicAlbum) {
-      wrap.querySelector('.detail-image').addEventListener('click', () => openImageLightbox(item.imageUrl));
+      wrap.querySelector('.detail-image').addEventListener('click', _openGallery);
     }
   } else {
     const letter = (item.title || domain || '?')[0].toUpperCase();
@@ -134,13 +168,6 @@ export function setupHeader(item, { domain, isMusicAlbum, isMusicianItem }) {
     ? `<span class="detail-title-sep"> | </span><button class="detail-author-link detail-publication-link" data-folder-id="${escapeHtml(item.folderId)}">${escapeHtml(_publicationFolder.name)}</button>`
     : '';
 
-  // Year alone now (artist moved into the main title line above). Genre is intentionally kept
-  // on item.genre (still fetched/stored/backfilled) but not rendered anywhere in this modal per
-  // current design.
-  const _albumArtistYearHtml = isMusicAlbum && item.year
-    ? `<div class="detail-album-artist-year">${escapeHtml(item.year)}</div>`
-    : '';
-
   // Official website CTA — resolves the relevant musician (the item itself, or the album's artist).
   // Scoped strictly to Musician/Music Album so an unrelated item.author (e.g. a Book's author) never
   // gets matched against an existing Musician profile of the same name. Every other category falls
@@ -171,7 +198,7 @@ export function setupHeader(item, { domain, isMusicAlbum, isMusicianItem }) {
     artistHeaderEl.style.display = 'none';
   }
 
-  document.getElementById('detail-title').innerHTML = `<span class="detail-title-text">${_titleHtml}${_authorHtml}${_publicationHtml}</span>${_albumArtistYearHtml}`;
+  document.getElementById('detail-title').innerHTML = `<span class="detail-title-text">${_titleHtml}${_authorHtml}${_publicationHtml}</span>`;
 
   if (_ctaAuthorName && !_ctaAuthor?.websiteUrl) {
     ensureArtistWebsite(_ctaAuthorName).then(url => {

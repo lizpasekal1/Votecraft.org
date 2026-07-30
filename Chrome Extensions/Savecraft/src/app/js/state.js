@@ -301,6 +301,7 @@ export const state = {
   curatedImgCache: {},  // { [curatedItemId]: imageUrl } — auto-fetched via Microlink
   curatedAlbumMetaCache: {}, // { [curatedItemId]: { year, collectionId } } — auto-fetched via iTunes (curated albums have neither field in Firestore)
   albumTrackListCache: {}, // { [collectionId]: { tracks: [{number,title,durationMs}], fetchedAt } } — auto-fetched via iTunes lookup, never expires
+  albumArtCache: {}, // { [cacheKey]: { images: [{full,thumb,type}], fetchedAt } } — fetched on demand via MusicBrainz/Cover Art Archive (manual "Load More Art" button), never expires. cacheKey is `mb:<collectionId>` when known, else `<artist>|<title>` lowercased
   artistWebsiteCache: {}, // { [normalizedArtistName]: { url: string|null, fetchedAt: number } } — auto-fetched via MusicBrainz/Wikidata
   artistBioCache: {}, // { [normalizedArtistName]: { bio: string|null, photoUrl: string|null, fetchedAt: number } } — auto-fetched via Wikipedia
   itemWikiCache: {}, // { [normalizedTitle]: { bio: string|null, photoUrl: string|null, fetchedAt: number } } — auto-fetched via Wikipedia for Book/Show/Movie/Game items

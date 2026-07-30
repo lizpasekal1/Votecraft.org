@@ -402,6 +402,20 @@
         <div class="detail-title-row">
           <div class="detail-title" id="detail-title"></div>
         </div>
+        <div class="detail-note-toolbar" id="detail-note-toolbar" role="toolbar" aria-label="Note formatting">
+          <button type="button" class="detail-note-toolbar-btn" id="note-toolbar-bold" data-format="bold" title="Bold" aria-label="Bold">
+            <svg viewBox="0 0 24 24" width="18" height="18"><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="800" fill="currentColor">B</text></svg>
+          </button>
+          <button type="button" class="detail-note-toolbar-btn" id="note-toolbar-highlight" data-format="highlight" title="Highlight" aria-label="Highlight">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l6-6 4 4-6 6H9v-4z"/><path d="M4 20h6"/></svg>
+          </button>
+          <button type="button" class="detail-note-toolbar-btn" id="note-toolbar-bullet" data-format="bullet" title="Bullet list" aria-label="Bullet list">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="4" cy="6" r="1.5"/><circle cx="4" cy="12" r="1.5"/><circle cx="4" cy="18" r="1.5"/><rect x="8" y="5" width="12" height="2"/><rect x="8" y="11" width="12" height="2"/><rect x="8" y="17" width="12" height="2"/></svg>
+          </button>
+          <button type="button" class="detail-note-toolbar-btn detail-note-toolbar-btn--expand" id="note-toolbar-expand" title="Focus mode" aria-label="Toggle focus mode">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          </button>
+        </div>
         <div class="detail-summary-wrap">
           <div class="detail-notes detail-summary-text" id="detail-summary"></div>
           <button class="detail-summary-toggle" id="detail-summary-toggle" style="display:none;" title="Show more">
@@ -414,6 +428,7 @@
           <svg class="detail-accordion-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
         <textarea class="detail-notes detail-notes-input" id="detail-notes-input" placeholder="Add your notes here…" rows="3" style="display:none;"></textarea>
+        <div class="detail-tracklist" id="detail-notes-list" style="display:none;"></div>
         <div class="detail-accordion-header" id="detail-tracklist-accordion-header" style="display:none;">
           <svg class="detail-accordion-icon" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor"><path d="M447-207q-47-47-47-113t47-113q47-47 113-47 23 0 42.5 5.5T640-458v-342h240v120H720v360q0 66-47 113t-113 47q-66 0-113-47Z"/></svg>
           <span>SONG LIST</span>
@@ -463,7 +478,13 @@
   </div>
 
   <div class="image-lightbox-overlay" id="image-lightbox-overlay">
-    <img id="image-lightbox-img" src="" alt="">
+    <button class="image-lightbox-arrow image-lightbox-prev" id="image-lightbox-prev" title="Previous image">&#10094;</button>
+    <div class="image-lightbox-content">
+      <img id="image-lightbox-img" src="" alt="">
+      <button class="detail-load-art-btn image-lightbox-load-art-btn" id="image-lightbox-load-art-btn">Check for more art</button>
+    </div>
+    <button class="image-lightbox-arrow image-lightbox-next" id="image-lightbox-next" title="Next image">&#10095;</button>
+    <div class="image-lightbox-thumbs" id="image-lightbox-thumbs"></div>
   </div>
 
   <button class="fab-add" id="fab-add" title="Add item">+</button>
