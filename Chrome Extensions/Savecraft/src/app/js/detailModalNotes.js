@@ -60,10 +60,13 @@ function _fitAccordionSection(el) {
 // (matching the Chapters content it holds) on Book items only.
 const NOTES_ICON_PATH = 'M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z';
 const BOOK_NOTES_ICON_PATH = 'M560-564v-68q33-14 67.5-21t72.5-7q26 0 51 4t49 10v64q-24-9-48.5-13.5T700-600q-38 0-73 9.5T560-564Zm0 220v-68q33-14 67.5-21t72.5-7q26 0 51 4t49 10v64q-24-9-48.5-13.5T700-380q-38 0-73 9t-67 27Zm0-110v-68q33-14 67.5-21t72.5-7q26 0 51 4t49 10v64q-24-9-48.5-13.5T700-490q-38 0-73 9.5T560-454ZM260-320q47 0 91.5 10.5T440-278v-394q-41-24-87-36t-93-12q-36 0-71.5 7T120-692v396q35-12 69.5-18t70.5-6Zm260 42q44-21 88.5-31.5T700-320q36 0 70.5 6t69.5 18v-396q-33-14-68.5-21t-71.5-7q-47 0-93 12t-87 36v394Zm-40 118q-48-38-104-59t-116-21q-42 0-82.5 11T100-198q-21 11-40.5-1T40-234v-482q0-11 5.5-21T62-752q46-24 96-36t102-12q58 0 113.5 15T480-740q51-30 106.5-45T700-800q52 0 102 12t96 36q11 5 16.5 15t5.5 21v482q0 23-19.5 35t-40.5 1q-37-20-77.5-31T700-240q-60 0-116 21t-104 59ZM280-494Z';
-// Per-track/chapter/note/general "add a note" affordance — a pencil rather than a star, since
+// Per-track/chapter/note/general "add a note" affordance — a plus rather than a star, since
 // clicking it opens a note-taking field, not a favorite. Single icon (color toggles via the
 // shared --active class) since there's no separate outline/filled variant for it.
-const NOTE_PENCIL_ICON = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg>`;
+const NOTE_OPEN_ICON = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>`;
+// A small pencil next to a row's title (rename the label) — separate glyph from the plus above,
+// which sits at the row's end and opens the note content instead.
+const RENAME_ICON = `<svg xmlns="http://www.w3.org/2000/svg" height="13px" viewBox="0 -960 960 960" width="13px" fill="currentColor"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg>`;
 
 export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, ctaAuthor }) {
   // Fresh state every time the modal opens on an item, so focus mode / an active row from a
@@ -190,6 +193,51 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
     await persistItem(liveItem);
   }
 
+  // Turns a row's title span into an inline-editable field (contenteditable, matching the note
+  // body's own convention, rather than swapping in a real <input>). Blurring commits whatever's
+  // there (empty/unchanged reverts to the default label, cleaning up any stored override);
+  // Escape cancels by re-rendering the whole list from scratch via onCancel, discarding the
+  // in-progress edit entirely rather than trying to restore the prior text by hand.
+  function _startRenamingTitle(titleSpan, rowNumber, titlesField, onCancel) {
+    const defaultLabel = titleSpan.dataset.defaultLabel;
+    let cancelled = false;
+    titleSpan.setAttribute('contenteditable', 'true');
+    titleSpan.classList.add('detail-tracklist-title--editing');
+    titleSpan.focus();
+    document.execCommand('selectAll');
+    const stopClick = e => e.stopPropagation(); // clicking to place the caret shouldn't also toggle the row's note open/closed
+    titleSpan.addEventListener('click', stopClick);
+    const cleanup = () => {
+      titleSpan.removeAttribute('contenteditable');
+      titleSpan.classList.remove('detail-tracklist-title--editing');
+      titleSpan.removeEventListener('click', stopClick);
+      titleSpan.removeEventListener('blur', onBlur);
+      titleSpan.removeEventListener('keydown', onKeydown);
+    };
+    const onBlur = async () => {
+      cleanup();
+      if (cancelled) return;
+      const newText = titleSpan.textContent.trim();
+      const finalLabel = newText || defaultLabel;
+      titleSpan.textContent = finalLabel;
+      if (getDetailItem() !== item) return;
+      const liveRowItem = await ensureLiveItem(item);
+      const newTitles = { ...(liveRowItem[titlesField] || {}) };
+      if (newText && newText !== defaultLabel) newTitles[rowNumber] = newText; else delete newTitles[rowNumber];
+      liveRowItem[titlesField] = newTitles;
+      await persistItem(liveRowItem);
+    };
+    const onKeydown = e => {
+      // stopPropagation matters here — a global document-level keydown handler (main.js) closes
+      // the whole detail modal on Escape; without it, cancelling a rename would also close the
+      // modal out from under the user instead of just discarding the edit.
+      if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); titleSpan.blur(); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cancelled = true; titleSpan.blur(); onCancel(); }
+    };
+    titleSpan.addEventListener('blur', onBlur);
+    titleSpan.addEventListener('keydown', onKeydown);
+  }
+
   // Shared by Book's Chapter list and every other category's Summary/Note list below — same UI (a
   // favorite star + collapsible per-row note, keyed by a row number, with a "+ Add" row at the end
   // and a row 0 that falls back to some starting text until the user actually edits it), just
@@ -199,7 +247,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
   // front, so it stays its own thing.
   function renderNumberedNoteList(config) {
     const {
-      target, countField, defaultCount, favoritesField, textsField, zeroSeededField,
+      target, countField, defaultCount, favoritesField, textsField, zeroSeededField, titlesField,
       zeroLabel, rowLabel, // rowLabel: (num) => string — e.g. Book's `Chapter ${num}` vs the flat 'Note'
       notePlaceholder, addButtonLabel, addButtonId, zeroFallback,
       zeroNumberDisplay = '0', // row 0's number badge — Book keeps the literal '0', others use a bullet
@@ -208,6 +256,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
     const count = liveItem?.[countField] || defaultCount;
     const favorites = liveItem?.[favoritesField] || [];
     const texts = liveItem?.[textsField] || {};
+    const titles = liveItem?.[titlesField] || {};
     // Row 0 shows the starting text (old general notes/bio) as a starting point until the user
     // actually edits it — the zeroSeeded flag (set the first time its textarea fires an input
     // event, even to clear it) stops that fallback from reappearing after an intentional clear.
@@ -220,18 +269,35 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
         ? sanitizeNoteHtml(rawNote)
         : (num === 0 && showZeroFallback ? escapeHtml(zeroFallback) : '');
       const hasNote = !!plainTextFromNoteHtml(noteHtml);
+      const defaultLabel = num === 0 ? zeroLabel : rowLabel(num);
+      const displayLabel = titles[num] || defaultLabel;
       return `
       <div class="detail-tracklist-item">
         <div class="detail-tracklist-row">
           <span class="detail-tracklist-number${hasNote ? ' detail-tracklist-number--has-note' : ''}">${num === 0 ? zeroNumberDisplay : num}</span>
-          <span class="detail-tracklist-title${hasNote ? ' detail-tracklist-title--has-note' : ''}">${num === 0 ? zeroLabel : rowLabel(num)}</span>
-          <span class="detail-tracklist-favorite${isFav || hasNote ? ' detail-tracklist-favorite--active' : ''}" data-row-number="${num}">${NOTE_PENCIL_ICON}</span>
+          <span class="detail-tracklist-title${hasNote ? ' detail-tracklist-title--has-note' : ''}" data-row-number="${num}" data-default-label="${escapeHtml(defaultLabel)}">${escapeHtml(displayLabel)}</span>
+          <button type="button" class="detail-tracklist-rename" data-row-number="${num}" aria-label="Rename ${escapeHtml(displayLabel)}" title="Rename">${RENAME_ICON}</button>
+          <span class="detail-tracklist-favorite${isFav || hasNote ? ' detail-tracklist-favorite--active' : ''}" data-row-number="${num}">${NOTE_OPEN_ICON}</span>
         </div>
         <div class="detail-tracklist-notes-input${isFav ? ' open' : ''}" data-row-number="${num}" data-placeholder="${escapeHtml(notePlaceholder)}" contenteditable="true" role="textbox" aria-multiline="true" aria-label="${escapeHtml(notePlaceholder)}">${noteHtml}</div>
       </div>`;
     }).join('');
     target.innerHTML = `${rows}<button class="detail-tracklist-add-chapter" id="${addButtonId}">${addButtonLabel}</button>`;
     target.querySelectorAll('.detail-tracklist-notes-input.open').forEach(fitTracklistNote);
+
+    // Renaming a row's title — a small pencil next to the label, separate from the row's own
+    // click-to-open-note behavior, so it needs its own stopPropagation to avoid also toggling the
+    // note open/closed. Turns the title span itself into an inline contenteditable field rather
+    // than swapping in a real <input>, matching the note body's own contenteditable convention.
+    target.querySelectorAll('.detail-tracklist-rename').forEach(btn => {
+      btn.addEventListener('mousedown', e => e.stopPropagation()); // row's own click fires on mouseup/click, but this also stops any drag-select weirdness
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const rowNumber = Number(btn.dataset.rowNumber);
+        const titleSpan = target.querySelector(`.detail-tracklist-title[data-row-number="${rowNumber}"]`);
+        if (titleSpan) _startRenamingTitle(titleSpan, rowNumber, titlesField, () => renderNumberedNoteList(config));
+      });
+    });
 
     // Bound to the whole row (not just the pencil) so tapping the row's label also opens/closes
     // the note — the pencil is still visually the "affordance" but isn't the only tap target.
@@ -405,7 +471,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
             <div class="detail-tracklist-row">
               <span class="detail-tracklist-number${hasNote ? ' detail-tracklist-number--has-note' : ''}">${t.number || ''}</span>
               <span class="detail-tracklist-title${hasNote ? ' detail-tracklist-title--has-note' : ''}">${escapeHtml(t.title || '')}</span>
-              <span class="detail-tracklist-favorite${isFav || hasNote ? ' detail-tracklist-favorite--active' : ''}" data-track-number="${t.number}">${NOTE_PENCIL_ICON}</span>
+              <span class="detail-tracklist-favorite${isFav || hasNote ? ' detail-tracklist-favorite--active' : ''}" data-track-number="${t.number}">${NOTE_OPEN_ICON}</span>
             </div>
             <div class="detail-tracklist-notes-input${isFav ? ' open' : ''}" data-track-number="${t.number}" data-placeholder="Add a note for this track…" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Add a note for this track…">${noteHtml}</div>
           </div>`;
@@ -520,7 +586,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
     renderNumberedNoteList({
       target: tracklistEl,
       countField: 'chapterCount', defaultCount: 12,
-      favoritesField: 'chapterFavorites', textsField: 'chapterNotes', zeroSeededField: 'chapterZeroSeeded',
+      favoritesField: 'chapterFavorites', textsField: 'chapterNotes', zeroSeededField: 'chapterZeroSeeded', titlesField: 'chapterTitles',
       zeroLabel: 'Basic Notes', rowLabel: num => `Chapter ${num}`, notePlaceholder: 'Add a note for this chapter…',
       addButtonLabel: '+ Add Chapter', addButtonId: 'btn-add-chapter',
       zeroFallback: text,
@@ -542,7 +608,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
     renderNumberedNoteList({
       target: notesListEl,
       countField: 'noteCount', defaultCount: 3,
-      favoritesField: 'noteFavorites', textsField: 'noteTexts', zeroSeededField: 'noteZeroSeeded',
+      favoritesField: 'noteFavorites', textsField: 'noteTexts', zeroSeededField: 'noteZeroSeeded', titlesField: 'noteTitles',
       zeroLabel: 'Summary', rowLabel: () => 'Note', notePlaceholder: 'Add a note…',
       addButtonLabel: '+ Add Note', addButtonId: 'btn-add-note', zeroNumberDisplay: '•',
       // Musician's row 0 prefers the artist's Wikipedia bio (see applyMusicianBioFallback() below

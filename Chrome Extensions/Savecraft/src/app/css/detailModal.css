@@ -736,6 +736,14 @@
   padding-bottom: 0;
 }
 
+/* Albums/Web Links/Add to Queue (whatever this divider would normally separate My Notes/Song
+   List from) are hidden entirely in focus mode — nothing left below to divide from, so the line
+   just reads as a stray leftover. */
+.detail-modal--focus-mode #detail-notes-list.open,
+.detail-modal--focus-mode #detail-tracklist.open {
+  border-bottom: none;
+}
+
 /* Web Links (Musician mode): #detail-streaming (not the header div itself) receives the
    .open class, so the header/content divider swap needs its own selector here. */
 .detail-streaming--tight.open .detail-accordion-header {
@@ -916,6 +924,42 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* While actively being renamed (see _startRenamingTitle, detailModalNotes.js) — the ellipsis
+   clipping above would otherwise hide whatever's being typed past the row's normal width. */
+.detail-tracklist-title--editing {
+  overflow: visible;
+  white-space: normal;
+  outline: none;
+  cursor: text;
+}
+
+.detail-tracklist-rename {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  opacity: 0.6;
+  transition: color 0.15s, opacity 0.15s;
+}
+
+.detail-tracklist-rename svg {
+  display: block;
+}
+
+.detail-tracklist-row:hover .detail-tracklist-rename,
+.detail-tracklist-rename:hover {
+  opacity: 1;
+}
+
+.detail-tracklist-rename:hover {
+  color: var(--primary);
 }
 
 .detail-tracklist-item {
