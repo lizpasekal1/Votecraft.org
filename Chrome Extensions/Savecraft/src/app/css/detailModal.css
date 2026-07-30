@@ -189,7 +189,11 @@
      fit its content's natural height (its own overflow-y:auto never engages), and the *whole
      modal* balloons toward its max-height: 90vh cap instead whenever an accordion opens. */
   flex: 1;
-  padding: 15px 0 6px 0;
+  /* No top padding here (moved into .detail-title-row / .detail-note-toolbar's own padding-top
+     below) — a sticky child only ever locks flush with THIS element's own top edge, never past
+     it, so container-level top padding leaves a permanent gap above the stuck position where
+     scrolled-past content keeps rendering, uncropped, instead of being hidden by the sticky bar. */
+  padding: 0 0 6px 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -204,10 +208,12 @@
      title/toolbar (see .detail-title-row / .detail-note-toolbar) will re-cover the very top of
      this scrollport regardless of scroll position — without this, growing a note tall enough
      (typing past the visible area) scrolls it to align flush with y=0, landing directly UNDER the
-     sticky toolbar instead of below it. Reserves the toolbar's own height (45px) as a no-scroll-
-     into buffer, the same fix as scroll-margin-top under a fixed page header.
+     sticky toolbar instead of below it. Reserves the toolbar's own height (~60px) as a no-scroll-
+     into buffer, the same fix as scroll-margin-top under a fixed page header. (The real fix for
+     this is the JS-computed _correctScrollUnderToolbar() in detailModalNotes.js — this is a
+     best-effort supplement for any native scroll paths that one doesn't cover.)
   */
-  scroll-padding-top: 50px;
+  scroll-padding-top: 60px;
   /* Scrolling stays fully functional (mouse wheel/trackpad/keyboard) — this only hides the
      visible scrollbar track/thumb. */
   scrollbar-width: none; /* Firefox */
@@ -242,8 +248,12 @@
   z-index: 4; /* above ordinary accordion content, below the 20-tier edit/bookmark/favorite icons */
   background: var(--modal-bg);
   /* was margin-top: 9px — moved to padding so the sticky background actually covers this gap;
-     margin sits outside the border box and wouldn't paint over scrolled content once stuck. */
-  padding-top: 9px;
+     margin sits outside the border box and wouldn't paint over scrolled content once stuck.
+     24px = the original 9px plus the 15px #detail-body used to carry as its own top padding —
+     moved here because a sticky child only ever locks flush with its scroll container's real
+     top edge, never past it, so padding on the container itself left a permanent gap above the
+     stuck position where scrolled-past content kept rendering instead of being cropped away. */
+  padding-top: 24px;
   padding-bottom: 6px;
 }
 
@@ -254,14 +264,14 @@
   z-index: 4;
   align-items: center;
   gap: 6px;
-  /* Lighter than --hover-bg on its own — still gray and distinct from the modal background and
-     the buttons' own --surface, just less heavy as a toolbar bar. */
-  background: color-mix(in srgb, var(--hover-bg) 80%, white 20%);
+  /* Solid app accent purple (not the lighter --primary-bg tint) — distinct from the modal
+     background and the buttons' own --surface. */
+  background: var(--primary);
   /* .modal.detail-modal has 28px side padding — bleed the bar out to the modal's actual edges
      (clipped by the modal's own overflow: hidden) instead of just spanning .detail-body's inset
      content width, then restore that same 28px as this element's own padding for the buttons. */
   margin: 0 -28px;
-  padding: 9px 28px 6px 28px;
+  padding: 24px 28px 6px 28px; /* 24px top matches .detail-title-row's — see its comment */
 }
 .detail-body--editing-note .detail-title-row { display: none; }
 .detail-body--editing-note .detail-note-toolbar { display: flex; }
