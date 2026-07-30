@@ -699,6 +699,12 @@
   max-height: 0;
   overflow: hidden;
   opacity: 0;
+  /* Slides the section's own content up into place as it opens (and lets it sink back down as it
+     closes) — max-height/opacity alone read as a growing reveal, not a slide; this transform is
+     what actually makes it feel like the enter/exit motion, same idea as the title/toolbar swap
+     above. Safe to combine with the simultaneous max-height growth below: the box both grows
+     *and* settles from a slight offset, rather than just popping to full height in place. */
+  transform: translateY(8px);
   /* Some of this class's max-height caps (2000px for My Notes/chapters, Summary prose, etc.) are
      far larger than any real content, which made the reveal feel like an instant "pop" rather
      than a slide — a max-height transition always animates across its full numeric range
@@ -707,7 +713,7 @@
      shorter duration, so it finishes well before max-height does) smooths that over. This (the
      closed state) is what's transitioned TO on close, so it uses M3's "accelerate" curve —
      quick start, fast finish, reads as snappier/getting-out-of-the-way. */
-  transition: max-height 0.2s var(--m3-standard-accelerate), margin 0.2s var(--m3-standard-accelerate), opacity 0.15s var(--m3-standard-accelerate);
+  transition: max-height 0.2s var(--m3-standard-accelerate), margin 0.2s var(--m3-standard-accelerate), opacity 0.15s var(--m3-standard-accelerate), transform 0.2s var(--m3-standard-accelerate);
   /* Cancels out the .detail-body flex gap above and below this (currently zero-height)
      element, so consecutive accordion rows sit flush against each other when collapsed. */
   margin: -8px 0;
@@ -718,9 +724,10 @@
   margin: 8px 0 4px;
   overflow-y: auto;
   opacity: 1;
+  transform: translateY(0);
   /* Transitioned TO on open — M3's "decelerate" curve (fast start, gentle settle) reads as
      arriving/growing into place, the opposite feel from the accelerate curve above. */
-  transition: max-height 0.3s var(--m3-standard-decelerate), margin 0.3s var(--m3-standard-decelerate), opacity 0.25s var(--m3-standard-decelerate);
+  transition: max-height 0.3s var(--m3-standard-decelerate), margin 0.3s var(--m3-standard-decelerate), opacity 0.25s var(--m3-standard-decelerate), transform 0.3s var(--m3-standard-decelerate);
 }
 
 .detail-albums-list {
