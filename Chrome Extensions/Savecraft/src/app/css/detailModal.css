@@ -404,6 +404,19 @@
   display: none;
 }
 
+/* Albums/Web Links/Add to Queue — the other accordion rows in the same stack as My Notes/Song
+   List — also hide in focus mode, so the note itself is the only thing left to focus on. Unlike
+   the 4 buttons above, these three carry their own inline style.display (toggled per-category in
+   detailModalSummary.js/detailModalQueue.js), which always wins over a plain class rule — hence
+   !important here, the only way to reliably override an inline style from CSS. */
+.detail-modal--focus-mode #detail-albums-accordion-header,
+.detail-modal--focus-mode #detail-albums-list,
+.detail-modal--focus-mode #detail-streaming,
+.detail-modal--focus-mode #btn-standalone-queue,
+.detail-modal--focus-mode #detail-queue {
+  display: none !important;
+}
+
 /* Animated instead of the instant display: none the 4 buttons above use — those are position:
    absolute (don't occupy layout space either way), but this is a normal-flow sibling before
    #detail-body, so collapsing it smoothly is what actually makes the toolbar/content section
