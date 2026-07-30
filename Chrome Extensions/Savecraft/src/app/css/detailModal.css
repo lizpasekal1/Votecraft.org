@@ -18,6 +18,38 @@
   flex-direction: column;
 }
 
+/* Overrides addEditModal.css's shared .modal-overlay display: none/flex instant toggle with an
+   animated opacity/visibility version instead, scoped to this modal specifically (an ID selector
+   always outranks .modal-overlay's class selector, regardless of file/rule order) — the Add/Edit
+   and other modals keep their existing instant behavior. visibility (not display) is what actually
+   keeps the closed overlay out of the click/accessibility path; the delayed visibility transition
+   (0s duration, but delayed until the opacity fade finishes) is what lets opacity animate all the
+   way to 0 before that happens, rather than the overlay vanishing mid-fade. */
+#detail-modal-overlay {
+  display: flex;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.2s var(--m3-standard-accelerate), visibility 0s linear 0.2s;
+}
+#detail-modal-overlay.open {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.3s var(--m3-standard-decelerate), visibility 0s linear 0s;
+}
+
+/* The "container transform" half of the same open/close motion — the modal itself grows into
+   place (scale + slight upward drift) as the backdrop fades in, and shrinks back on close. Faster/
+   accelerate on close, slower/emphasized-decelerate on open — same asymmetry as everywhere else
+   in this file's M3 motion. */
+#detail-modal-overlay .modal.detail-modal {
+  transform: scale(0.94) translateY(8px);
+  transition: transform 0.2s var(--m3-standard-accelerate);
+}
+#detail-modal-overlay.open .modal.detail-modal {
+  transform: scale(1) translateY(0);
+  transition: transform 0.3s var(--m3-emphasized-decelerate);
+}
+
 .modal-x-close {
   position: absolute;
   top: 8px;
@@ -255,6 +287,21 @@
      stuck position where scrolled-past content kept rendering instead of being cropped away. */
   padding-top: 24px;
   padding-bottom: 6px;
+  /* Title/toolbar swap (see .detail-body--editing-note below) reads as one continuous upward
+     "conveyor" motion rather than a reverse-on-close bounce: whichever of the two is leaving
+     always slides up and fades out (translateY 0 → -8px), and whichever is arriving always
+     slides up into place from just below (translateY 8px → 0) — same direction both ways, only
+     entering vs. exiting differs (hence the different M3 curves, not different translateY signs).
+     `display` is included in the transition list (allow-discrete) so toggling display: none
+     doesn't just instantly cut the animation short; @starting-style below supplies the "from"
+     values for the display: none → flex direction, which a plain transition can't animate
+     otherwise (an element can't transition FROM a state it wasn't rendered in). */
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.2s var(--m3-standard-accelerate), transform 0.2s var(--m3-standard-accelerate), display 0.2s allow-discrete;
+}
+@starting-style {
+  .detail-title-row { opacity: 0; transform: translateY(8px); }
 }
 
 .detail-note-toolbar {
@@ -265,6 +312,9 @@
   align-items: center;
   gap: 6px;
   padding: 9px 0 6px 10px; /* was 24px top (matching .detail-title-row's) — reduced per feedback, so this no longer matches the title's own padding when they swap. 10px left shifts the Bold/Highlight/Bullet group off the modal's true edge (the toolbar's own box no longer bleeds — see the ::before pseudo below). */
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s var(--m3-standard-accelerate), transform 0.2s var(--m3-standard-accelerate), display 0.2s allow-discrete;
 }
 /* The purple background lives on this pseudo-element instead of directly on .detail-note-toolbar,
    bled out to the modal's true edges via absolute positioning (left/right: -28px, matching
@@ -288,8 +338,25 @@
    needs to additionally bleed upward to cover .modal.detail-modal's own 28px top padding (which
    the image normally sits in front of) — and round to match the modal's own 16px corners, since
    the toolbar now touches them directly instead of a sharp corner poking past the curve. */
-.detail-body--editing-note .detail-title-row { display: none; }
-.detail-body--editing-note .detail-note-toolbar { display: flex; }
+.detail-body--editing-note .detail-title-row {
+  display: none;
+  opacity: 0;
+  transform: translateY(-8px); /* exiting — continues the upward motion up and off, rather than reversing back down */
+  transition: opacity 0.2s var(--m3-standard-accelerate), transform 0.2s var(--m3-standard-accelerate), display 0.2s allow-discrete;
+}
+.detail-body--editing-note .detail-note-toolbar {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+  /* Entering gets the more pronounced "emphasized" curve (vs. the title's exit above, and the
+     toolbar's own exit below, both "standard") — M3 reserves emphasized easing for the more
+     prominent motion in a transition pair, and arriving/taking-over reads as the prominent half
+     here. Slightly longer duration too, so the settle-into-place is perceptible rather than instant. */
+  transition: opacity 0.25s var(--m3-emphasized-decelerate), transform 0.25s var(--m3-emphasized-decelerate), display 0.25s allow-discrete;
+}
+@starting-style {
+  .detail-body--editing-note .detail-note-toolbar { opacity: 0; transform: translateY(8px); }
+}
 
 .detail-note-toolbar-btn {
   display: flex;
@@ -637,10 +704,10 @@
      than a slide — a max-height transition always animates across its full numeric range
      regardless of the content's actual height, so short content reaches its true size almost
      immediately while the number keeps climbing invisibly. Fading opacity in alongside it (on a
-     shorter duration, so it finishes well before max-height does) smooths that over, and the
-     eased curve (accelerate in, decelerate out, vs. plain "ease") reads as a slide into position
-     rather than a linear reveal. */
-  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+     shorter duration, so it finishes well before max-height does) smooths that over. This (the
+     closed state) is what's transitioned TO on close, so it uses M3's "accelerate" curve —
+     quick start, fast finish, reads as snappier/getting-out-of-the-way. */
+  transition: max-height 0.2s var(--m3-standard-accelerate), margin 0.2s var(--m3-standard-accelerate), opacity 0.15s var(--m3-standard-accelerate);
   /* Cancels out the .detail-body flex gap above and below this (currently zero-height)
      element, so consecutive accordion rows sit flush against each other when collapsed. */
   margin: -8px 0;
@@ -651,6 +718,9 @@
   margin: 8px 0 4px;
   overflow-y: auto;
   opacity: 1;
+  /* Transitioned TO on open — M3's "decelerate" curve (fast start, gentle settle) reads as
+     arriving/growing into place, the opposite feel from the accelerate curve above. */
+  transition: max-height 0.3s var(--m3-standard-decelerate), margin 0.3s var(--m3-standard-decelerate), opacity 0.25s var(--m3-standard-decelerate);
 }
 
 .detail-albums-list {
@@ -829,7 +899,7 @@
   line-height: 1.4;
   white-space: pre-wrap;     /* a bare contenteditable div doesn't wrap/preserve whitespace like a textarea natively does */
   overflow-wrap: break-word; /* prevent long unbroken tokens from overflowing the row width */
-  transition: max-height 0.25s ease, padding 0.25s ease;
+  transition: max-height 0.25s var(--m3-standard-accelerate), padding 0.25s var(--m3-standard-accelerate);
 }
 
 .detail-tracklist-notes-input.open {

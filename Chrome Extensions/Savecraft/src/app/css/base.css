@@ -11,6 +11,20 @@
      appearance for the active theme instead of always defaulting to a light-mode look that
      clashes against a dark surface. */
   color-scheme: light;
+  /* Material 3 motion easing tokens (https://m3.material.io/styles/motion/easing-and-duration) —
+     theme-independent, so defined once here rather than repeated in [data-theme="dark"]. M3's
+     asymmetry between entering and exiting motion is the point: entrances use a "decelerate"
+     curve (fast start, gentle settle — reads as arriving/growing into place) and exits use an
+     "accelerate" curve (slow start, fast finish — reads as snappier, getting out of the way).
+     "emphasized" is the more pronounced version M3 recommends for larger/more prominent
+     transitions (e.g. a modal appearing) vs. "standard" for smaller, quieter ones (e.g. an
+     accordion row). Both are single-cubic-bezier approximations of M3's true (multi-segment)
+     curves — close enough for anything CSS `transition-timing-function` can express. */
+  --m3-standard:              cubic-bezier(0.2, 0, 0, 1);
+  --m3-standard-accelerate:   cubic-bezier(0.3, 0, 1, 1);
+  --m3-standard-decelerate:   cubic-bezier(0, 0, 0, 1);
+  --m3-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+  --m3-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
   --bg:              #F8F9FA;
   --surface:         #ffffff;
   --border:          #E0E0E0;
