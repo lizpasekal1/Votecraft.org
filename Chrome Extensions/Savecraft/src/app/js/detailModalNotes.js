@@ -95,9 +95,11 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
       // Collapsing "MY NOTES" while a row inside it is still (invisibly) focused would otherwise
       // leave _activeNoteRow set — collapsing via max-height doesn't blur it the way display:none
       // would — which keeps the toolbar showing in place of the title even though nothing editable
-      // is visible anymore. Blurring fires the row's own blur listener, which clears
-      // _activeNoteRow and calls _updateNoteEditingUi() itself.
-      notesBodyEl.querySelector('.detail-tracklist-notes-input:focus')?.blur();
+      // is visible anymore. Intentional close, so clear _activeNoteRow immediately rather than
+      // waiting on the blurred row's own deferred cleanup (see its comment).
+      const focusedRow = notesBodyEl.querySelector('.detail-tracklist-notes-input:focus');
+      focusedRow?.blur();
+      if (_activeNoteRow === focusedRow) _activeNoteRow = null;
       _exitFocusModeIfOn();
       _updateNoteEditingUi();
     }
@@ -224,6 +226,10 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
           notesInput?.focus();
         } else {
           notesInput?.blur();
+          // The blur listener's own cleanup is deferred a tick (so switching rows doesn't flicker
+          // the toolbar closed — see its comment) — this is an intentional close though, so clear
+          // it immediately rather than waiting on that deferral.
+          if (_activeNoteRow === notesInput) _activeNoteRow = null;
           _exitFocusModeIfOn();
           _updateNoteEditingUi();
         }
@@ -265,9 +271,19 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
         _updateNoteEditingUi();
       });
       inputEl.addEventListener('blur', () => {
-        if (_activeNoteRow === inputEl) _activeNoteRow = null;
         if (!inputEl.textContent.trim()) inputEl.innerHTML = ''; // clear a stray auto-inserted <br> so :empty/placeholder work next time
-        _updateNoteEditingUi();
+        // Deferred: switching directly to a different row's pencil calls that row's .focus()
+        // immediately, which fires THIS blur synchronously first — clearing _activeNoteRow (and
+        // hiding the toolbar) here right away would flicker it closed before the other row's own
+        // focus handler reclaims it a moment later. Waiting a tick lets that reclaim happen first;
+        // only treat it as "nothing is focused anymore" if _activeNoteRow still points at this row
+        // once that chance has passed.
+        setTimeout(() => {
+          if (_activeNoteRow === inputEl) {
+            _activeNoteRow = null;
+            _updateNoteEditingUi();
+          }
+        }, 0);
       });
       inputEl.addEventListener('paste', e => {
         e.preventDefault();
@@ -371,6 +387,9 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
               notesInput?.focus();
             } else {
               notesInput?.blur();
+              // Intentional close — clear immediately rather than waiting on the blur listener's
+              // own deferred cleanup (see its comment).
+              if (_activeNoteRow === notesInput) _activeNoteRow = null;
               _exitFocusModeIfOn();
               _updateNoteEditingUi();
             }
@@ -405,9 +424,14 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
             _updateNoteEditingUi();
           });
           inputEl.addEventListener('blur', () => {
-            if (_activeNoteRow === inputEl) _activeNoteRow = null;
             if (!inputEl.textContent.trim()) inputEl.innerHTML = '';
-            _updateNoteEditingUi();
+            // Deferred — see the mirrored comment in the non-track-list blur handler above.
+            setTimeout(() => {
+              if (_activeNoteRow === inputEl) {
+                _activeNoteRow = null;
+                _updateNoteEditingUi();
+              }
+            }, 0);
           });
           inputEl.addEventListener('paste', e => {
             e.preventDefault();
