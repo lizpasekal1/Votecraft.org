@@ -264,7 +264,7 @@
   z-index: 4;
   align-items: center;
   gap: 6px;
-  padding: 24px 0 6px 10px; /* 24px top matches .detail-title-row's — see its comment. 10px left shifts the Bold/Highlight/Bullet group off the modal's true edge (the toolbar's own box no longer bleeds — see the ::before pseudo below). */
+  padding: 4px 0 6px 10px; /* was 24px top (matching .detail-title-row's) — reduced by 20px total toolbar height per feedback, so this no longer matches the title's own padding when they swap. 10px left shifts the Bold/Highlight/Bullet group off the modal's true edge (the toolbar's own box no longer bleeds — see the ::before pseudo below). */
 }
 /* The purple background lives on this pseudo-element instead of directly on .detail-note-toolbar,
    bled out to the modal's true edges via absolute positioning (left/right: -28px, matching
