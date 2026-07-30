@@ -86,22 +86,14 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
     // registered above, but only so *other* sections' closeAccordionsExcept() calls can close it
     // — that mechanism doesn't fire for this header's own click, hence the explicit toggle here.)
     notesBodyEl.classList.toggle('open', nowOpen);
+    // The toggle above already changes notesBodyEl's 'open' class, which the MutationObserver set
+    // up in initNoteToolbar() picks up and reacts to on its own (toolbar visibility, blurring any
+    // focused row, exiting focus mode on close) — nothing further needed here for that.
     if (nowOpen) {
       closeAccordionsExcept('notes');
       const alreadyOpenRow = notesBodyEl.querySelector('.detail-tracklist-notes-input.open');
       alreadyOpenRow?.focus();
       _correctScrollUnderToolbar(alreadyOpenRow);
-    } else {
-      // Collapsing "MY NOTES" while a row inside it is still (invisibly) focused would otherwise
-      // leave _activeNoteRow set — collapsing via max-height doesn't blur it the way display:none
-      // would — which keeps the toolbar showing in place of the title even though nothing editable
-      // is visible anymore. Intentional close, so clear _activeNoteRow immediately rather than
-      // waiting on the blurred row's own deferred cleanup (see its comment).
-      const focusedRow = notesBodyEl.querySelector('.detail-tracklist-notes-input:focus');
-      focusedRow?.blur();
-      if (_activeNoteRow === focusedRow) _activeNoteRow = null;
-      _exitFocusModeIfOn();
-      _updateNoteEditingUi();
     }
   };
 
@@ -195,16 +187,19 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
     target.querySelectorAll('.detail-tracklist-row').forEach(rowEl => {
       const starEl = rowEl.querySelector('.detail-tracklist-favorite');
       if (!starEl) return;
-      rowEl.addEventListener('click', async () => {
+      rowEl.addEventListener('click', () => {
         const rowNumber = Number(starEl.dataset.rowNumber);
-        const liveRowItem = await ensureLiveItem(item);
-        const idx = (liveRowItem[favoritesField] || []).indexOf(rowNumber);
-        const nowFav = idx === -1;
-        // Only one note open at a time — clears every other entry from the favorites list (not
-        // just in the DOM) so a reload doesn't bring them all back.
-        liveRowItem[favoritesField] = nowFav ? [rowNumber] : [];
-        await persistItem(liveRowItem);
         const thisItemEl = rowEl.closest('.detail-tracklist-item');
+        const notesInput = thisItemEl?.querySelector('.detail-tracklist-notes-input');
+        // Determined from the DOM's own current 'open' state, not from awaiting the persisted
+        // favorites array — switching from one open row straight to another's pencil needs
+        // .focus() to fire in the SAME synchronous tick as the click (immediately after the old
+        // row's native blur), or the toolbar flickers closed in between. Awaiting ensureLiveItem/
+        // persistItem first (real chrome.storage.sync.set I/O, not just a microtask) delayed
+        // .focus() by enough that the earlier fix (deferring the blur handler's own cleanup by one
+        // tick) wasn't reliably enough of a head start — this sidesteps the race entirely by never
+        // blocking the visual update on the async save in the first place.
+        const nowFav = !notesInput?.classList.contains('open');
         target.querySelectorAll('.detail-tracklist-item').forEach(otherItemEl => {
           if (otherItemEl === thisItemEl) return;
           const otherInput = otherItemEl.querySelector('.detail-tracklist-notes-input');
@@ -213,26 +208,30 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
           const otherStar = otherItemEl.querySelector('.detail-tracklist-favorite');
           otherStar?.classList.toggle('detail-tracklist-favorite--active', !!otherInput?.textContent.trim());
         });
-        const notesInput = thisItemEl?.querySelector('.detail-tracklist-notes-input');
         const hasNote = !!notesInput?.textContent.trim();
         starEl.classList.toggle('detail-tracklist-favorite--active', nowFav || hasNote);
         notesInput?.classList.toggle('open', nowFav);
         fitTracklistNote(notesInput);
-        // Closing this row via its own pencil should hide the toolbar (revert to the title) and
-        // exit focus mode (restore the image/edit/bookmark/favorite controls) too — collapsing via
-        // max-height doesn't blur it on its own, and without an explicit blur here the toolbar
-        // would keep showing for a row that's no longer visibly open.
+        // Closing this row via its own pencil no longer hides the toolbar or exits focus mode —
+        // both are tied to whether "MY NOTES"/"SONG LIST" itself is open now (see
+        // _updateNoteEditingUi), not to any individual row. Still blur (and clear _activeNoteRow
+        // right away rather than waiting on the blur listener's own deferred cleanup) so the
+        // format buttons correctly disable — nothing is focused to apply them to anymore.
         if (nowFav) {
           notesInput?.focus();
         } else {
           notesInput?.blur();
-          // The blur listener's own cleanup is deferred a tick (so switching rows doesn't flicker
-          // the toolbar closed — see its comment) — this is an intentional close though, so clear
-          // it immediately rather than waiting on that deferral.
           if (_activeNoteRow === notesInput) _activeNoteRow = null;
-          _exitFocusModeIfOn();
           _updateNoteEditingUi();
         }
+        // Async persistence happens after the visual/focus update above, not before — only one
+        // note open at a time, so this also clears every other entry from the favorites list (not
+        // just in the DOM) so a reload doesn't bring them all back.
+        (async () => {
+          const liveRowItem = await ensureLiveItem(item);
+          liveRowItem[favoritesField] = nowFav ? [rowNumber] : [];
+          await persistItem(liveRowItem);
+        })();
       });
     });
 
@@ -357,16 +356,14 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
         tracklistEl.querySelectorAll('.detail-tracklist-row').forEach(rowEl => {
           const starEl = rowEl.querySelector('.detail-tracklist-favorite');
           if (!starEl) return; // status rows ("Loading…" etc.) have no favorite icon
-          rowEl.addEventListener('click', async () => {
+          rowEl.addEventListener('click', () => {
             const trackNumber = Number(starEl.dataset.trackNumber);
-            const liveTrackItem = await ensureLiveItem(item);
-            const idx = (liveTrackItem.favoriteTracks || []).indexOf(trackNumber);
-            const nowFav = idx === -1;
-            // Only one track note open at a time — same as chapters, clears every other entry
-            // from favoriteTracks (not just in the DOM) so a reload doesn't bring them all back.
-            liveTrackItem.favoriteTracks = nowFav ? [trackNumber] : [];
-            await persistItem(liveTrackItem);
             const thisItemEl = rowEl.closest('.detail-tracklist-item');
+            const notesInput = thisItemEl?.querySelector('.detail-tracklist-notes-input');
+            // See the mirrored comment in the non-track-list favorite handler above — determined
+            // from the DOM's own 'open' state so .focus() fires synchronously, not after awaiting
+            // ensureLiveItem/persistItem first.
+            const nowFav = !notesInput?.classList.contains('open');
             tracklistEl.querySelectorAll('.detail-tracklist-item').forEach(otherItemEl => {
               if (otherItemEl === thisItemEl) return;
               const otherInput = otherItemEl.querySelector('.detail-tracklist-notes-input');
@@ -375,24 +372,28 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
               const otherStar = otherItemEl.querySelector('.detail-tracklist-favorite');
               otherStar?.classList.toggle('detail-tracklist-favorite--active', !!otherInput?.textContent.trim());
             });
-            const notesInput = thisItemEl?.querySelector('.detail-tracklist-notes-input');
             const hasNote = !!notesInput?.textContent.trim();
             starEl.classList.toggle('detail-tracklist-favorite--active', nowFav || hasNote);
             notesInput?.classList.toggle('open', nowFav);
             fitTracklistNote(notesInput);
-            // Closing this row via its own pencil should hide the toolbar (revert to the title)
-            // and exit focus mode too — see the mirrored comment in the non-track-list favorite
-            // handler above.
+            // See the mirrored comment in the non-track-list favorite handler above — closing this
+            // row no longer hides the toolbar/exits focus mode, just clears the format buttons'
+            // enabled state.
             if (nowFav) {
               notesInput?.focus();
             } else {
               notesInput?.blur();
-              // Intentional close — clear immediately rather than waiting on the blur listener's
-              // own deferred cleanup (see its comment).
               if (_activeNoteRow === notesInput) _activeNoteRow = null;
-              _exitFocusModeIfOn();
               _updateNoteEditingUi();
             }
+            // Async persistence after the visual/focus update — same reasoning as above. Only one
+            // track note open at a time, clearing every other entry from favoriteTracks (not just
+            // in the DOM) so a reload doesn't bring them all back.
+            (async () => {
+              const liveTrackItem = await ensureLiveItem(item);
+              liveTrackItem.favoriteTracks = nowFav ? [trackNumber] : [];
+              await persistItem(liveTrackItem);
+            })();
           });
         });
         tracklistEl.querySelectorAll('.detail-tracklist-notes-input').forEach(inputEl => {
@@ -512,11 +513,6 @@ export function applyMusicianBioFallback(item, bio) {
   rowEl?.querySelector('.detail-tracklist-favorite')?.classList.toggle('detail-tracklist-favorite--active', hasNote || zeroRowInput.classList.contains('open'));
 }
 
-// Explicitly closing the row that focus mode was giving room to (its own pencil, or collapsing
-// "MY NOTES" entirely) exits focus mode too, restoring the featured image/edit/bookmark/favorite
-// controls — rather than leaving an expanded, image-less modal behind for a note that's no longer
-// even open. (Merely blurring by clicking elsewhere while the row stays open does NOT exit focus
-// mode — see _updateNoteEditingUi below — this is only for an explicit close.)
 function _exitFocusModeIfOn() {
   if (!_focusModeOn) return;
   _focusModeOn = false;
@@ -524,12 +520,26 @@ function _exitFocusModeIfOn() {
 }
 
 // ===== NOTE FORMATTING TOOLBAR =====
-// Appears in the sticky title's spot while a note row has focus (see .detail-body--editing-note
-// in detailModal.css). Single source of truth for visibility: a row being focused OR focus mode
-// being on, either of which keeps the toolbar up — this is what keeps the Expand button reachable
-// to toggle back off even after the row that triggered it loses focus.
+// Appears in the sticky title's spot whenever "MY NOTES" or "SONG LIST" is open (the two
+// accordions whose rows can hold a note — Book folds its chapters into #detail-tracklist, which
+// doubles as "SONG LIST" for Music Album, so checking both elements covers every category).
+// Single source of truth: read their own 'open' class directly, rather than tracking a separate
+// flag that could go stale — either section can be force-closed by a DIFFERENT accordion opening
+// (closeAccordionsExcept(), in detailModalAccordions.js) without going through either section's
+// own click handler, and a MutationObserver on both elements (see initNoteToolbar) is what catches
+// that and re-runs this even when nothing in this file triggered the change.
 function _updateNoteEditingUi() {
-  const editing = !!_activeNoteRow || _focusModeOn;
+  const notesListEl = document.getElementById('detail-notes-list');
+  const tracklistEl = document.getElementById('detail-tracklist');
+  const sectionOpen = notesListEl.classList.contains('open') || tracklistEl.classList.contains('open');
+  if (!sectionOpen) {
+    // Neither section is open anymore (via its own header, or forced closed by another accordion
+    // opening) — nothing inside should still be focused, and focus mode (which only makes sense
+    // while a note section is actually open) should exit too.
+    if (document.activeElement?.classList?.contains('detail-tracklist-notes-input')) document.activeElement.blur();
+    _exitFocusModeIfOn();
+  }
+  const editing = sectionOpen || _focusModeOn;
   document.getElementById('detail-body').classList.toggle('detail-body--editing-note', editing);
   // Also on .modal.detail-modal (not just #detail-body) — the "Your Statement" sponsored badge
   // lives inside #detail-image-wrap, a sibling *before* #detail-body in the DOM, so it can't be
@@ -597,4 +607,13 @@ export function initNoteToolbar() {
     document.querySelector('.modal.detail-modal').classList.toggle('detail-modal--focus-mode', _focusModeOn);
     _updateNoteEditingUi();
   });
+  // #detail-notes-list / #detail-tracklist are static, persistent elements (never recreated —
+  // only their innerHTML changes per item), so this only needs setting up once, here, rather than
+  // on every setupNotesAndTracklist() call. Catches every way either section's 'open' class can
+  // change, including a DIFFERENT accordion opening and force-closing one of them via
+  // closeAccordionsExcept() (detailModalAccordions.js) — a path that never calls back into this
+  // file directly otherwise.
+  const notesOpenObserver = new MutationObserver(() => _updateNoteEditingUi());
+  notesOpenObserver.observe(document.getElementById('detail-notes-list'), { attributes: true, attributeFilter: ['class'] });
+  notesOpenObserver.observe(document.getElementById('detail-tracklist'), { attributes: true, attributeFilter: ['class'] });
 }
