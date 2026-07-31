@@ -2,7 +2,7 @@
 // of sync with the categories/icons/folders the main app actually has (state.js/utils.js have no
 // side effects — safe to import here without pulling in the full app).
 import { CATEGORIES, CAT_LABEL, CAT_EMOJI } from '../app/js/state.js';
-import { folderIconHtml, escapeHtml } from '../app/js/utils.js';
+import { folderIconHtml, escapeHtml, sortFoldersForDisplay } from '../app/js/utils.js';
 
 let selectedCategory = null;
 let selectedFolderId = null;
@@ -44,7 +44,7 @@ function renderCategoryGrid() {
   grid.innerHTML = CATEGORIES.filter(cat => cat !== 'Music Album').map(cat => cat === 'Musician' ? `
     <button type="button" class="cat-btn" data-category="__music__">
       ${CAT_EMOJI['Music Album'] || ''}
-      <span class="cat-btn-label">Music</span>
+      <span class="cat-btn-label">Musicians</span>
     </button>` : `
     <button type="button" class="cat-btn" data-category="${cat}">
       ${CAT_EMOJI[cat] || ''}
@@ -65,11 +65,11 @@ function showMusicChoiceScreen() {
   currentScreen = 'music-choice';
   hadMusicChoiceScreen = true;
   setScreen('music-choice');
-  setHeader('Choose a folder', true, 'Music');
+  setHeader('Choose a folder', true, 'Musicians');
 
-  // CAT_LABEL['Musician'] is "Music" (used for the combined top-level tile/tab) — on this
-  // specific sub-choice screen that reads as ambiguous next to "Music Album", so it's
-  // overridden to the more specific "Musician" here only.
+  // CAT_LABEL['Musician'] is "Musicians" (used for the combined top-level tile/tab) — on this
+  // specific sub-choice screen that reads as ambiguous next to "Album", so it's overridden to
+  // the more specific singular "Musician" here only.
   const musicChoiceLabels = { Musician: 'Musician', 'Music Album': CAT_LABEL['Music Album'] };
   const grid = document.getElementById('music-choice-grid');
   grid.innerHTML = ['Musician', 'Music Album'].map(cat => `
@@ -88,11 +88,10 @@ function showMusicChoiceScreen() {
 function selectCategory(cat) {
   selectedCategory = cat;
   chrome.storage.sync.get(null, data => {
-    const folders = Object.entries(data)
+    const folders = sortFoldersForDisplay(Object.entries(data)
       .filter(([k]) => k.startsWith('folder_'))
       .map(([, v]) => v)
-      .filter(f => f.parentCategory === cat)
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .filter(f => f.parentCategory === cat), cat);
 
     // A single (or no) folder is no real choice — auto-assign and skip straight to review,
     // same rule the main app's wizard uses.
@@ -215,11 +214,10 @@ function backToCategoryScreen() {
 document.getElementById('btn-back').addEventListener('click', () => {
   if (currentScreen === 'review' && hadFolderScreen) {
     chrome.storage.sync.get(null, data => {
-      const folders = Object.entries(data)
+      const folders = sortFoldersForDisplay(Object.entries(data)
         .filter(([k]) => k.startsWith('folder_'))
         .map(([, v]) => v)
-        .filter(f => f.parentCategory === selectedCategory)
-        .sort((a, b) => a.name.localeCompare(b.name));
+        .filter(f => f.parentCategory === selectedCategory), selectedCategory);
       showFolderScreen(folders);
     });
   } else if (currentScreen === 'review' && hadMusicChoiceScreen) {

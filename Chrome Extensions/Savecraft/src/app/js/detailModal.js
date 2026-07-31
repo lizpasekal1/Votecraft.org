@@ -94,6 +94,19 @@ export function handleGalleryLoadMoreClick(btn) {
   if (_galleryLoadMore) _galleryLoadMore(btn);
 }
 
+// Videos-folder items only (see detailModalHeader.js) — embeds the actual YouTube/Vimeo player
+// instead of the plain image lightbox above. `embedUrl` is already a playable iframe src (see
+// utils.js's getVideoEmbedUrl), not the item's original watch-page URL.
+export function openVideoLightbox(embedUrl) {
+  document.getElementById('video-lightbox-iframe').src = embedUrl;
+  document.getElementById('video-lightbox-overlay').classList.add('open');
+}
+
+export function closeVideoLightbox() {
+  document.getElementById('video-lightbox-overlay').classList.remove('open');
+  document.getElementById('video-lightbox-iframe').src = ''; // stop playback
+}
+
 export function showNextImage() {
   if (_galleryImages.length < 2) return;
   _galleryIndex = (_galleryIndex + 1) % _galleryImages.length;

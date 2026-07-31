@@ -7,6 +7,7 @@ import {
   persistArtistBioCache, persistArtistWebsiteCache, persistItemWikiCache,
   persistLastfmCache, persistSteamCache, persistCreatorCache,
 } from './storage.js';
+import { getYoutubeVideoId, getVimeoVideoId } from './utils.js';
 
 // Shared check for "does this Wikidata/Wikipedia result actually describe a musician/band" —
 // used to reject same-name but wrong-topic matches (e.g. "Eagles" the bird) rather than guessing.
@@ -550,6 +551,24 @@ export async function ensureItemCreator(title, category, { url } = {}) {
   state.creatorCache[key] = { creator, fetchedAt: Date.now() };
   persistCreatorCache();
   return creator;
+}
+
+// Movie's "Videos" folder — Microlink (used for every other category's post-save image fallback,
+// see addEditModal.js's handleSaveItem) actively blocks YouTube with an antibot error, so this
+// gets the thumbnail straight from the video host instead. YouTube's is a plain predictable URL,
+// no request needed; Vimeo's isn't, so that one goes through its public oEmbed endpoint (no key).
+export async function fetchVideoThumbnail(url) {
+  const ytId = getYoutubeVideoId(url);
+  if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+  if (getVimeoVideoId(url)) {
+    try {
+      const resp = await fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`);
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      return data.thumbnail_url || null;
+    } catch { return null; }
+  }
+  return null;
 }
 
 // Set this to a free Last.fm API key (https://www.last.fm/api/account/create) to enable the
