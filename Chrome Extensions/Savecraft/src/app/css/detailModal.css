@@ -545,29 +545,6 @@
   line-height: 1.5;
 }
 
-.detail-notes-input {
-  width: 100%;
-  background: none;
-  border: none;
-  outline: none;
-  /* Resizable only while open (below) — every other collapsible accordion body here is a plain
-     div, this is the one that's a <textarea>, and a resize handle needs rendered pixels to grab:
-     left permanently on, it's the likely reason this specific element wasn't actually collapsing
-     to 0 height under max-height:0 the way the plain-div ones do, forcing the whole modal to
-     scroll even with every accordion closed for any category that (unlike Book) shows this row. */
-  resize: none;
-  font-family: inherit;
-  color: var(--text-secondary);
-}
-
-.detail-notes-input.open {
-  resize: vertical;
-}
-
-.detail-notes-input::placeholder {
-  color: var(--text-muted);
-}
-
 .detail-summary-wrap {
   position: relative;
   margin-top: -5px;
@@ -729,11 +706,6 @@
 .detail-accordion-collapsible.open {
   border-bottom: 1px solid #5B5BEF;
   padding-bottom: 8px;
-}
-
-.detail-notes-input--no-divider.open {
-  border-bottom: none;
-  padding-bottom: 0;
 }
 
 /* Albums/Web Links/Add to Queue (whatever this divider would normally separate My Notes/Song
