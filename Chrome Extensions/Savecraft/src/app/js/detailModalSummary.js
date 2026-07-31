@@ -113,7 +113,11 @@ export function setupSummary(item, { isMusicAlbum, isMusicianItem, ctaAuthorName
   // title, not an author) — mirrors the Musician bio/photo lookup above. Always looked up
   // (cached after the first time), not just when summary/image are missing, so the Wikipedia
   // link in Web Links shows up even for items that already have both.
-  const _needsItemWiki = SUMMARY_PLACEHOLDER_CATEGORIES.includes(item.category);
+  // Excludes Movie's "Videos" folder — those are manually added trailers/clips, and their title
+  // often happens to match an unrelated real movie's Wikipedia page (e.g. a fan video sharing a
+  // real film's name), which would otherwise silently overwrite the item with that film's summary/
+  // director/poster the first time it's viewed.
+  const _needsItemWiki = SUMMARY_PLACEHOLDER_CATEGORIES.includes(item.category) && item.folderId !== 'default-movies-videos';
   if (_needsItemWiki && item.title) {
     ensureItemWikipediaInfo(item.title, item.category).then(({ bio, photoUrl, wikiUrl }) => {
       if ((!bio && !photoUrl && !wikiUrl) || getDetailItem() !== item) return; // nothing found, or modal moved on

@@ -100,8 +100,8 @@ The library used to be one ~3,700-line `app.js`. It's now split into 30 ES modul
 |--------|-----------------|
 | `state.js` | Shared `state` object + static constants (`CATEGORIES`, `CAT_LABEL`, `CAT_EMOJI`, `CATEGORY_PLATFORMS`, `CREATOR_CARD_CATEGORY`, etc.) |
 | `storage.js` | All `persist*`/`remove*` functions, `loadAll()` (incl. one-time backfill migrations), Firestore curated-data loading (`_loadCuratedFromFirestore`, `initCuratedItems`), Firestore dual-write helpers for the account-sync feature |
-| `utils.js` | Pure helpers: `escapeHtml`, `catClass`, `debounce`, `formatTrackDuration`, `patchCardImage`, `getDomain`, `getListIds`, etc. |
-| `api.js` | External network calls: iTunes, Open Library, Steam, Wikipedia, MusicBrainz/Wikidata/Cover Art Archive, YouTube, Last.fm, Steam Web API (unset API key constants live here) |
+| `utils.js` | Pure helpers: `escapeHtml`, `catClass`, `debounce`, `formatTrackDuration`, `patchCardImage`, `getDomain`, `getListIds`, `sortFoldersForDisplay` (Movie's custom Directors-last folder order), `getYoutubeVideoId`/`getVimeoVideoId`/`getVideoEmbedUrl` (Movie's Videos-folder lightbox), etc. |
+| `api.js` | External network calls: iTunes, Open Library, Steam, Wikipedia, MusicBrainz/Wikidata/Cover Art Archive, YouTube, Last.fm, Steam Web API (unset API key constants live here); `fetchVideoThumbnail()` (YouTube host URL / Vimeo oEmbed, for Movie's Videos folder — Microlink blocks YouTube) |
 | `auth.js` | Email/password auth via the Firebase Auth REST API — no SDK, independent from any shared Votecraft account |
 | `authors.js` | Author/musician profile CRUD, navigation, album-metadata backfill, album art gallery cache (`getCachedAlbumArt`/`ensureAlbumArt`) |
 | `curatedCreatorLookup.js` | Logic that reads `curatedCreatorData.js` (below) — matches a curated Top 100 Movie/Show/Game title to its director/creator/studio name — plus the shared `splitCuratedTitleCreator()`/`getStaticCuratedCreator()` helpers, imported by `renderFilters.js`, `renderGrid.js`, and `storage.js` |
@@ -166,13 +166,13 @@ Categories use **singular names** in storage and the Add Item dropdown, and **pl
 | Movie | Films | Movies |
 | Game | Games | *(none)* |
 | News | News | *(none currently — see Recent Additions)* |
-| Musician | Music | Musicians |
-| Music Album | *(hidden — accessed via subfolder)* | Music Albums |
+| Musician | Musicians | Musicians |
+| Music Album | *(hidden — accessed via subfolder)* | Albums |
 | Show | Shows | TV Shows |
 
 `CATEGORIES`' order (`state.js`) directly drives both the sidebar and the Add-wizard tile grid order — that's why the table above is in that order, not alphabetical.
 
-The `Music Album` category is not shown as a top-level sidebar entry. Instead, a permanent **Music Albums** subfolder appears under **Musicians** in the sidebar. This subfolder also works in Curated SaveCraft mode, navigating to the curated music album list for the selected genre.
+The `Music Album` category is not shown as a top-level sidebar entry. Instead, a permanent **Albums** subfolder (renamed from "Music Albums" — the badge/tag system below made the "Music" part redundant) appears under **Musicians** in the sidebar. This subfolder also works in Curated SaveCraft mode, navigating to the curated music album list for the selected genre.
 
 Beyond each category's primary folder, several categories also have a **creator-card folder** — a non-primary subfolder that doubles as an entry point into a curated "creator card" bucket when browsing a curated genre (see "Author / Artist Profile Pages" below): Book → **Authors**, Movie → **Directors**, Show → **Creators**, Game → **Game Companies**. Game additionally has **Board Games**/**Console Games**/**Mobile Games** (its first-ever folders besides Game Companies) — of these, only Console Games maps to the full curated Games list (Top 100 games are all console/PC titles); Board Games and Mobile Games correctly show empty while browsing a curated genre, since there's no curated data for those types yet.
 
@@ -289,33 +289,41 @@ Clicking a card opens a detail modal. **Every category now shares the same accor
 For curated albums, the artist name is a clickable link in the title area (unless already on that artist's own page).
 
 ### Add / Edit Modal
-**Add is now up to a 4-screen wizard** (`js/addEditModal.js`), each screen skipped automatically when there's nothing to choose:
+**Rebuilt this session into a simpler 3-screen wizard** (`js/addEditModal.js`) — the old separate "live search" screen is gone entirely, and the review screen itself is stripped down to just Title + URL for every category, since the full field set (Author, Summary, Platforms, Video URL, Image URL) made adding an item feel like too much work. Each screen is skipped automatically when there's nothing to choose:
 
-1. **Category screen** — "What are you adding to?" plus a category tile grid (icon + label, same icons as the sidebar). Musician and Music Album are combined into one **"Music"** tile here — picking it shows a small Musician-vs-Album sub-choice screen before continuing, but doesn't change which underlying category the item ends up as. No back icon here (nothing to go back to).
-2. **Folder-picker screen** — shown only when the chosen category has 2+ folders (0 or 1 auto-skips straight through, since there's no real choice to make). Picking a folder is mandatory — there is no "Skip"/"No folder" tile. For News specifically, this doubles as source verification (see below).
-3. **Search screen** — its own screen, header shows the selected category name. Live-typing (debounced ~500ms) searches a category-appropriate free API and shows a results dropdown (thumbnail + title + meta line). A "Can't find it? Add '...' manually" link/Enter-to-continue lets the user skip straight to the review screen with just a typed title if nothing matches. Visual Art ("Arts") and Website have no search source — their tile jumps straight to the review screen.
-4. **Review screen** (also used standalone for Edit — no search/folder steps there, folder reassignment is a `<select>` instead) — pre-filled Title/Author (or a single "Name"/"Title" field for author-less categories — see below), a small auto-fetched image preview, Summary, My Notes, Platforms, Image URL, **YouTube URL** (new — a specific video link, separate from the platform search links), and URL (optional — Title is the only required field).
+1. **Category screen** — "What are you adding to?" plus a category tile grid (icon + label, same icons as the sidebar). Musician and Music Album are combined into one **"Musicians"** tile here — picking it shows a small Musician-vs-Album sub-choice screen (heading "Choose a folder", matching every other folder-picker screen) before continuing, but doesn't change which underlying category the item ends up as. No back icon here (nothing to go back to).
+2. **Folder-picker screen** — shown only when the chosen category has 2+ folders (0 or 1 auto-skips straight through, since there's no real choice to make). Picking a folder is mandatory — there is no "Skip"/"No folder" tile. Folders sort alphabetically **except** Movie's, which use a fixed order (`sortFoldersForDisplay()`, `utils.js`) so "Directors" sits last, after "Videos". For News specifically, this doubles as source verification (see below).
+3. **Review screen** (also used standalone for Edit) — just **Title** and **URL**. For **Music Album, Show, Book, Game, and Movie**, the Title field doubles as a live search box (placeholder "Search title", a small search icon on the right) — typing (debounced ~500ms) searches the same category-appropriate free APIs as before and shows a results dropdown; picking a result silently fills the *hidden* Author/Image-URL fields (still saved, just not shown) so cards/detail pages still get correct art and links. **Musician** (and Visual Art/Web Links/News, which never had a search source) gets a plain "Title" field with no search. Background enrichment (`ensureArtistWikipediaInfo`/`ensureItemWikipediaInfo`/`ensureItemCreator`) still fires — on selecting a search result, or on the Title field losing focus for manual entries — filling in the same hidden Author/Summary/Image fields.
 
-A single back icon (top-left of the modal, mirroring the X close button top-right) steps back exactly one screen at a time through whichever of the above actually appeared for that category. Stepping back is non-destructive: the search screen's term/results are left exactly as the user left them. There's no bottom Cancel button anymore — the X icon, clicking outside, or Escape all close the modal.
+The Author/Summary/Platforms/Image-URL/Video-URL fields all still exist in the DOM and still get saved — they're just not shown or editable at add time. **Editing** an existing item (`openEditModal`) shows the full field set as before: Title | Author/Creator (order swapped this session — Title first), Image URL/URL (moved above Summary), Summary, Folder, and Web Links/Platforms (now always the *last* section, with a "YouTube URL" custom-link row appended after the per-service checkboxes inside that same dropdown — lets the user add one specific video link that isn't a generic per-service search; the dropdown opens *upward* now since it's always last, to avoid being clipped by the modal's bottom edge). Musician/Music Album/Favorite Albums keep a separate compact side-by-side Platforms+Video-URL pairing, untouched by any of the above. Movie's own **Videos** folder hides the standalone Video-URL field entirely (redundant — see below) and shows "Creator" instead of "Director" as the Author-field placeholder.
 
-**Per-category search source** (all free, no API key):
+The header changed shape too: no more X close button (click outside or Escape still close it); the back arrow now carries a label next to it (the current folder/category name, e.g. "‹ Blogs") instead of being a bare icon; "Choose a folder"/"Choose a folder" (music sub-choice) drop their bookmark icon; the review screen has no heading at all (just the back arrow + folder name); "Edit Item"'s heading is left-aligned so its icon lines up with the fields below instead of sitting centered above them. Both the category `<select>` (top-right, Edit only) and the Folder `<select>` now use a custom dropdown arrow (replacing the browser's native one) positioned at the same 6px right-inset as the "✕" clear buttons elsewhere in the form, for visual consistency.
+
+**Per-category search source** (all free, no API key) — same sources as before, just triggered from the Title field instead of a separate screen:
 | Category | Source | Notes |
 |----------|--------|-------|
-| Musician | iTunes (`entity=musicArtist`) | No artwork on this entity — photo/bio arrive via the existing Wikipedia enrichment once a title is chosen |
 | Music Album | iTunes (`entity=album`) | Full art/artist/year/URL directly from the search result |
 | Show | iTunes (`entity=tvSeason`) | Deduped by `artistId` to one row per show, not per season |
 | Book | Open Library (`openlibrary.org/search.json`) | Cover art via `covers.openlibrary.org` |
 | Game | Steam (`store.steampowered.com/api/storesearch`) | Cover art via `cdn.akamai.steamstatic.com` |
-| Movie | Wikipedia (`generator=search`) | iTunes's movie search is dead — verified live, 0 results for well-known titles since Apple moved movie purchases to the Apple TV app |
-| Visual Art ("Arts") | *(none)* | Manual entry only |
-| Website | *(none)* | Manual entry only |
-| News | *(none)* | Manual entry, but gated: the pasted URL's hostname must match the chosen folder's `domain` field, or the save is blocked with an inline error — see Recent Additions |
+| Movie | Wikipedia (`generator=search`) | iTunes's movie search is dead — verified live, 0 results for well-known titles since Apple moved movie purchases to the Apple TV app. Skipped entirely for the **Videos** folder (see below) |
+| Musician | *(none — plain title now)* | Enrichment (bio/photo) still fires on blur off a typed name |
+| Visual Art ("Arts") / Website / News | *(none)* | Manual entry only. News is additionally gated: the pasted URL's hostname must match the chosen folder's `domain` field, or the save is blocked with an inline error |
 
-Once a Review screen loads, background enrichment (`ensureArtistWikipediaInfo`/`ensureItemWikipediaInfo`, both already used elsewhere in the app) fills in Summary and upgrades the image a moment later, without blocking the screen from showing instantly.
-
-**Title/Author field**: only Music Album (artist) and Book (author) show a separate Author field — every other category collapses to a single field, labeled "Name" for Musician and "Title" everywhere else, since a permanently-empty Author box was confusing. This is purely visual (the underlying field is never cleared programmatically), so editing an older item that happens to have Author data set doesn't silently lose it.
+**Title/Author field**: in Edit mode, only Music Album (artist)/Book (author)/Movie (director, or "Creator" in the Videos folder)/Show (creator)/Game (studio) show a separate field — every other category collapses to a single field. This is purely visual (the underlying field is never cleared programmatically), so editing an older item that happens to have Author data set doesn't silently lose it. In Add mode, the row is always single-field regardless of category (Author is never shown there at all).
 
 Edit (`openEditModal`) always opens directly to the review-screen layout — no category grid, no search/folder-picker step, no back icon.
+
+#### Movie's "Videos" folder — a special case throughout
+This folder (`default-movies-videos`) is for manually-added video clips (YouTube/Vimeo), not real movies, so it opts out of most of the category's normal machinery:
+- **No title search, no Wikipedia enrichment** (`updateTitleSearchUi`/`handleTitleSearch`/`kickOffTitleEnrichment`, `addEditModal.js`) — a clip's title often coincidentally matches an unrelated real movie's Wikipedia page, which used to silently overwrite the item with that movie's summary/director/poster (a real bug, found and fixed this session — see `detailModalSummary.js`'s `_needsItemWiki` exclusion, which also stops this from happening later just from *viewing* the item, independent of how it was added).
+- **URL field relabeled "Video URL"** with a `youtube.com/watch?v=…` placeholder, and the old separate "Video URL" field (`#youtube-url-group`, driven by `item.youtubeUrl`) is hidden — the plain URL field (`item.url`) is the one actually read by the thumbnail-fetch and lightbox features below.
+- **Thumbnail**: Microlink (used for every other category's post-save image fallback) actively blocks YouTube with an anti-bot error, so `fetchVideoThumbnail(url)` (`api.js`) gets it straight from the host instead — YouTube's `img.youtube.com/vi/<id>/hqdefault.jpg` is a plain predictable URL (no request needed, id extracted via `getYoutubeVideoId()`, `utils.js`); Vimeo goes through its public oEmbed endpoint. No summary source exists without an API key, so summary stays empty rather than guessing.
+- **Detail-modal lightbox**: clicking the featured image opens an embedded YouTube/Vimeo player (`openVideoLightbox()`/`closeVideoLightbox()`, `detailModal.js`, new `#video-lightbox-overlay` in `index.html`) instead of the plain image-zoom lightbox every other category gets — `getVideoEmbedUrl()` (`utils.js`) builds the iframe `src`. The image dims on hover (`.detail-image--clickable`, same treatment Music Album's clickable gallery image already had).
+- **Author-field placeholder is "Creator"**, not "Director" (a YouTube upload has a channel/uploader, not a director).
+
+### Card badges (grid/list cards)
+Every card's badge (top-right, e.g. "BOOK"/"FILMS") is colored by category (`badge-${catClass(category)}`, unchanged) but shows the item's **folder name** instead of the generic category label when it has one — e.g. a Book in the "Authors" folder shows "AUTHORS", not "BOOK". This replaced a separate folder-icon label that used to sit next to the badge; one badge now conveys both. "Favorites" folders are excluded (shows the plain category label instead, since Favorites isn't a real subfolder of the category).
 
 ### Search & Sort
 The search bar and sort dropdown in the header filter both the grid view and the Kanban board in real time. Sort options: Newest/Oldest first (by save date), A → Z / Z → A (title), and Release Date (Newest/Oldest) — the latter two sort by an item's `year` field (populated for Music Albums via Fetch Albums import or the auto-backfill).

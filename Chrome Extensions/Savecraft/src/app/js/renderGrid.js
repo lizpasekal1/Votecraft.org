@@ -308,9 +308,12 @@ export function renderCard(item) {
        <div class="card-placeholder placeholder-${catClass(item.category)}" style="display:none;">${letter}</div>`
     : `<div class="card-placeholder placeholder-${catClass(item.category)}">${letter}</div>`;
 
-  const folderLabel = (folder && folder.name !== 'Favorites')
-    ? `<span class="card-folder-label"><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h240l80 80h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Z"/></svg> ${escapeHtml(folder.name)}</span>`
-    : '';
+  // One badge now conveys both category (via its color, always badge-${catClass}) and folder
+  // (via its text, when the item has one) — consistent across every category, not just Movie's
+  // Videos folder. Replaces the old separate folder-icon label entirely. "Favorites" is excluded
+  // since it's a cross-category virtual folder, not a real subfolder of this item's own category.
+  const showsFolderName = folder && folder.name !== 'Favorites';
+  const badgeText = showsFolderName ? folder.name : badgeLabel(item.category);
 
   return `
     <div class="card" data-id="${item.id}">
@@ -347,8 +350,7 @@ export function renderCard(item) {
         }
         ${item.category === 'Music Album' && item.year ? `<div class="card-album-year">${escapeHtml(item.year)}</div>` : ''}
         <div class="card-meta">
-          ${folderLabel}
-          <span class="card-badge badge-${catClass(item.category)}" style="margin-left:auto">${badgeLabel(item.category)}</span>
+          <span class="card-badge badge-${catClass(item.category)}" style="margin-left:auto">${escapeHtml(badgeText)}</span>
         </div>
       </div>
       ${item.curated ? (() => {

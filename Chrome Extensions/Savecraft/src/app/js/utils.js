@@ -2,11 +2,46 @@
 
 import { state, FOLDER_ICON, GENERIC_FOLDER_ICON_PATH } from './state.js';
 
+// Movie's "Videos" folder (YouTube/Vimeo links) — pure URL parsing, no network. Used both to
+// build a thumbnail URL (YouTube's is fully derivable from the id; Vimeo's isn't, so that one's
+// fetched via oEmbed in api.js instead) and to build the lightbox's embeddable player src.
+export function getYoutubeVideoId(url) {
+  return url?.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([\w-]{11})/)?.[1] || null;
+}
+export function getVimeoVideoId(url) {
+  return url?.match(/vimeo\.com\/(?:video\/)?(\d+)/)?.[1] || null;
+}
+export function getVideoEmbedUrl(url) {
+  const ytId = getYoutubeVideoId(url);
+  if (ytId) return `https://www.youtube.com/embed/${ytId}?autoplay=1`;
+  const vimeoId = getVimeoVideoId(url);
+  if (vimeoId) return `https://player.vimeo.com/video/${vimeoId}?autoplay=1`;
+  return null;
+}
+
 // True for a photo already auto-fetched from the iTunes album-cover fallback (identifiable by
 // Apple's CDN domain) — safe to replace with a real Wikipedia photo once one's available, unlike
 // a URL the user pasted in manually, which is never overwritten by auto-fetch.
 export function isItunesArtworkUrl(url) {
   return !!url && /mzstatic\.com/i.test(url);
+}
+
+// Movie's folders show in a fixed order (not alphabetical) so "Directors" sits last, after
+// "Videos" — every other category still sorts its folders alphabetically by name.
+const CUSTOM_FOLDER_ORDER = {
+  Movie: ['Movies', 'Videos', 'Directors'],
+};
+export function sortFoldersForDisplay(folders, category) {
+  const order = CUSTOM_FOLDER_ORDER[category];
+  if (!order) return [...folders].sort((a, b) => a.name.localeCompare(b.name));
+  return [...folders].sort((a, b) => {
+    const ai = order.indexOf(a.name);
+    const bi = order.indexOf(b.name);
+    if (ai === -1 && bi === -1) return a.name.localeCompare(b.name);
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
+  });
 }
 
 // Renders a folder's sidebar/wizard icon — its own custom icon (FOLDER_ICON, keyed by folder id)

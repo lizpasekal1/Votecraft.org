@@ -11,11 +11,11 @@ import { debounce, escapeHtml } from './utils.js';
 import { renderSidebar, renderGrid } from './render.js';
 import { initShare } from './share.js';
 import {
-  openAddModal, closeAddModal, handleSaveItem, updatePlatformSummary, updatePlatformsSection,
-  openEditModal, selectStep1Category, handleStep1Search, hideSearchResults, handleStep1ManualAdd,
-  handleModalBack, refreshStep2ImagePreviewFromManualInput, updateTitleAuthorLayout, updateVideoUrlLayout,
+  openAddModal, closeAddModal, handleSaveItem, updatePlatformSummary,
+  openEditModal, selectStep1Category, handleTitleSearch, hideTitleSearchResults, kickOffTitleEnrichment,
+  handleModalBack, refreshStep2ImagePreviewFromManualInput, updateCategoryDependentUi,
 } from './addEditModal.js';
-import { closeDetailModal, closeImageLightbox, getDetailItem, showNextImage, showPrevImage, handleGalleryLoadMoreClick } from './detailModal.js';
+import { closeDetailModal, closeImageLightbox, getDetailItem, showNextImage, showPrevImage, handleGalleryLoadMoreClick, closeVideoLightbox } from './detailModal.js';
 import { initNoteToolbar } from './detailModalNotes.js';
 import { closeFetchAlbumsModal, handleImportAlbums, renderFetchAlbumsList } from './fetchAlbumsModal.js';
 
@@ -420,7 +420,6 @@ async function init() {
     if (e.target === document.getElementById('modal-overlay')) closeAddModal();
   });
 
-  document.getElementById('btn-modal-cancel-x').addEventListener('click', closeAddModal);
   document.getElementById('btn-modal-save').addEventListener('click', handleSaveItem);
 
   document.getElementById('platform-chips').addEventListener('change', updatePlatformSummary);
@@ -488,12 +487,17 @@ async function init() {
     e.stopPropagation();
     handleGalleryLoadMoreClick(e.currentTarget);
   });
+  document.getElementById('video-lightbox-overlay').addEventListener('click', closeVideoLightbox);
+  document.getElementById('video-lightbox-close').addEventListener('click', closeVideoLightbox);
   document.addEventListener('keydown', e => {
     const lightboxOpen = document.getElementById('image-lightbox-overlay').classList.contains('open');
+    const videoLightboxOpen = document.getElementById('video-lightbox-overlay').classList.contains('open');
     if (lightboxOpen && e.key === 'ArrowLeft') { showPrevImage(); return; }
     if (lightboxOpen && e.key === 'ArrowRight') { showNextImage(); return; }
     if (e.key !== 'Escape') return;
-    if (lightboxOpen) {
+    if (videoLightboxOpen) {
+      closeVideoLightbox();
+    } else if (lightboxOpen) {
       closeImageLightbox();
     } else {
       closeDetailModal();
@@ -534,9 +538,7 @@ async function init() {
 
   document.getElementById('modal-category').addEventListener('change', e => {
     state.modalCategory = e.target.value;
-    updatePlatformsSection(e.target.value);
-    updateTitleAuthorLayout(e.target.value);
-    updateVideoUrlLayout(e.target.value);
+    updateCategoryDependentUi(e.target.value);
   });
 
   document.getElementById('step1-category-grid').addEventListener('click', e => {
@@ -544,15 +546,16 @@ async function init() {
     if (tile) selectStep1Category(tile.dataset.category);
   });
 
-  const _debouncedStep1Search = debounce(handleStep1Search, 500);
-  document.getElementById('step1-search-input').addEventListener('input', _debouncedStep1Search);
-  document.getElementById('step1-search-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); handleStep1ManualAdd(); }
+  // For Music Album/Show/Book/Game/Movie, the Title field doubles as a live search box —
+  // selecting a result already kicks off enrichment itself (see selectTitleSearchResult), so the
+  // blur-triggered enrichment below is really for manual typing (every other category, or a
+  // search-backed one left un-selected).
+  const _debouncedTitleSearch = debounce(handleTitleSearch, 500);
+  document.getElementById('input-title').addEventListener('input', _debouncedTitleSearch);
+  document.getElementById('input-title').addEventListener('blur', () => {
+    setTimeout(hideTitleSearchResults, 150);
+    kickOffTitleEnrichment();
   });
-  document.getElementById('step1-search-input').addEventListener('blur', () => {
-    setTimeout(hideSearchResults, 150);
-  });
-  document.getElementById('step1-manual-add').addEventListener('click', handleStep1ManualAdd);
   document.getElementById('btn-modal-back').addEventListener('click', handleModalBack);
   document.getElementById('input-image-url').addEventListener('input', refreshStep2ImagePreviewFromManualInput);
 

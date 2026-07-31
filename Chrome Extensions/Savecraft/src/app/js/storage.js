@@ -356,7 +356,7 @@ export async function loadAll() {
 
       // Seed new default folders if not present
       const defaults = [
-        { id: 'default-music-albums',     name: 'Music Albums', parentCategory: 'Music Album' },
+        { id: 'default-music-albums',     name: 'Albums',       parentCategory: 'Music Album' },
         { id: 'default-music-playlists',  name: 'Playlists',    parentCategory: 'Music Album' },
         { id: 'default-books-authors',    name: 'Authors',      parentCategory: 'Book' },
         { id: 'default-weblinks-articles', name: 'Articles',    parentCategory: 'Web Links' },
@@ -389,6 +389,14 @@ export async function loadAll() {
           state.folders.push(df);
           toSave[`folder_${df.id}`] = df;
         }
+      }
+
+      // Renamed "Music Albums" -> "Albums" — installs that already seeded this folder under its
+      // old name keep it forever otherwise, since the block above only seeds when missing.
+      const musicAlbumsFolder = state.folders.find(f => f.id === 'default-music-albums');
+      if (musicAlbumsFolder && musicAlbumsFolder.name === 'Music Albums') {
+        musicAlbumsFolder.name = 'Albums';
+        toSave[`folder_${musicAlbumsFolder.id}`] = musicAlbumsFolder;
       }
 
       if (legacyKeys.length) {

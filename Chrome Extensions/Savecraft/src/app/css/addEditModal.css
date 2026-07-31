@@ -5,7 +5,7 @@
   left: 8px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
   background: none;
   border: none;
   color: var(--text-muted);
@@ -17,6 +17,15 @@
 }
 .modal-back-icon:hover {
   color: var(--text-primary);
+}
+
+.modal-back-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+}
+.modal-back-label:empty {
+  display: none;
 }
 
 .platform-dropdown {
@@ -51,7 +60,10 @@
 
 .platform-dropdown-list {
   position: absolute;
-  top: calc(100% + 4px);
+  /* Opens upward — Web Links/Platforms is always the last field section (see
+     updateVideoUrlLayout/updatePlatformsSection), so opening down would get clipped by the
+     modal's own scroll boundary with little to no room below it. */
+  bottom: calc(100% + 4px);
   left: 0;
   right: 0;
   background: var(--surface);
@@ -82,6 +94,16 @@
   accent-color: var(--primary);
   cursor: pointer;
   flex-shrink: 0;
+}
+
+/* Custom-link row appended as the last item inside the Web Links dropdown (see
+   updatePlatformsSection) — matches .platform-option's own 14px horizontal inset above it (this
+   field has none of its own otherwise, since #youtube-url-group is normally a full-width
+   standalone .form-group) and drops the bottom margin meant for standalone use, since the
+   dropdown's own padding already provides the gap below it here. */
+#platform-chips #youtube-url-group {
+  padding: 6px 14px 2px;
+  margin-bottom: 0;
 }
 
 .modal-overlay {
@@ -119,6 +141,7 @@
   direction: rtl;
   padding-left: 8px;
   margin-left: -8px;
+  scrollbar-width: none; /* Firefox — scrolling stays fully functional, just no visible track/thumb */
 }
 
 .modal-body > * {
@@ -126,11 +149,7 @@
 }
 
 .modal-body::-webkit-scrollbar {
-  width: 3px;
-}
-
-.modal-body::-webkit-scrollbar-track {
-  background: transparent;
+  display: none;
 }
 
 .modal-body::-webkit-scrollbar-thumb {
@@ -165,6 +184,12 @@
   width: 100%;
 }
 
+/* Edit Item only — left-aligns the bookmark icon + "Edit Item" text so the icon lines up with
+   the fields below instead of sitting centered above them. */
+#modal-overlay h2.modal-h2--left {
+  justify-content: flex-start;
+}
+
 .modal-bookmark-icon {
   flex-shrink: 0;
   color: var(--primary);
@@ -179,6 +204,29 @@
   color: var(--text-primary);
   cursor: pointer;
   outline: none;
+}
+
+/* Category select and Folder select both get this wrapper — replaces the browser's own native
+   dropdown arrow (position varies by browser/OS, not stylable directly) with one positioned at
+   the same right:6px inset as .btn-clear-image's "X", so every end-of-field icon lines up. */
+.select-with-arrow {
+  position: relative;
+  display: block;
+}
+.select-with-arrow select {
+  appearance: none;
+  -webkit-appearance: none;
+  /* Matches .input-with-clear input's own !important — same fight against the generic
+     ".form-group select" padding rule (equal specificity, defined later in this file). */
+  padding-right: 28px !important;
+}
+.select-with-arrow .select-arrow {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  pointer-events: none;
 }
 
 .modal-category-select:focus {
@@ -199,6 +247,13 @@
   margin-top: 18px;
 }
 
+/* A .form-row has margin-bottom: 0 (its own children carry the spacing instead) — without this,
+   a .form-group sitting directly after one (e.g. Summary, now that Image URL/URL moved above it)
+   has no margin-top of its own either, collapsing the gap between them to nothing. */
+.form-row + .form-group {
+  margin-top: 18px;
+}
+
 .form-row .form-group {
   flex: 1;
   min-width: 0;
@@ -206,6 +261,7 @@
 }
 
 .title-author-row {
+  position: relative;
   display: flex;
   align-items: center;
   border: 1.5px solid var(--border);
@@ -214,10 +270,36 @@
   overflow: hidden;
   transition: border-color 0.15s;
 }
+
+/* Music Album/Show/Book/Game/Movie: the Title field doubles as a live search box — this icon is
+   purely an affordance, the input's own "input" listener already drives the search. */
+.title-author-row.has-search-icon #input-title {
+  padding-right: 30px;
+}
+.btn-title-search {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.btn-title-search:hover { color: var(--primary); }
 .title-author-row:focus-within {
   border-color: var(--primary);
 }
-.title-author-input {
+/* Scoped to the .title-author-row ancestor (not just the .title-author-input class) so this
+   beats the generic ".form-group input" rule below in specificity — without it, that rule's own
+   border re-appears on top of the row's own border, showing as a double line around the field
+   (most visible once ".form-group input:focus" also tints its border purple independently of
+   the row's own :focus-within highlight). */
+.title-author-row .title-author-input {
   flex: 2;
   min-width: 0;
   border: none;

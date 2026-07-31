@@ -171,7 +171,7 @@ export const CAT_LABEL = {
   'Web Links': 'Websites',
   'News': 'News',
   'Book': 'Books', 'Game': 'Games', 'Movie': 'Films',
-  'Musician': 'Music', 'Music Album': 'Music Albums',
+  'Musician': 'Musicians', 'Music Album': 'Albums',
   'Show': 'Shows', 'Visual Art': 'Arts',
 };
 

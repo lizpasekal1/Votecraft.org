@@ -1,11 +1,11 @@
 // ===== DETAIL MODAL: HEADER (image, sponsored tag, bookmark/favorite, title/author, website CTA) =====
 
 import { state, CURATED_ITEMS, CATEGORY_WHY_TEXT, CURATED_NOTES_CATEGORIES, CREATOR_CARD_CATEGORY } from './state.js';
-import { escapeHtml, catClass, isMusicAlbumsSectionView, isOwnAuthorPageView } from './utils.js';
+import { escapeHtml, catClass, isMusicAlbumsSectionView, isOwnAuthorPageView, getVideoEmbedUrl } from './utils.js';
 import { persistItem, persistAuthor, persistViewState } from './storage.js';
 import { ensureArtistWebsite } from './api.js';
 import { findAuthor, navigateToAuthor, ensureLiveItem, getCachedAlbumArt, ensureAlbumArt } from './authors.js';
-import { closeDetailModal, getDetailItem, openImageLightbox } from './detailModal.js';
+import { closeDetailModal, getDetailItem, openImageLightbox, openVideoLightbox } from './detailModal.js';
 import { renderSidebar, renderGrid } from './render.js';
 import { toggleQueueFromHeader } from './detailModalQueue.js';
 
@@ -58,8 +58,14 @@ export function setupHeader(item, { domain, isMusicAlbum, isMusicianItem }) {
   // correctly excludes anything the user actually created themselves.
   const isCuratedTop100 = !!item.id && !!(CURATED_ITEMS['Top 100']?.[item.category] || []).some(i => i.id === item.id);
 
+  // Movie's "Videos" folder — clicking the featured image opens an embedded player for the
+  // actual YouTube/Vimeo link instead of the plain image lightbox every other category gets.
+  const _videoEmbedUrl = item.category === 'Movie' && item.folderId === 'default-movies-videos'
+    ? getVideoEmbedUrl(item.url)
+    : null;
+
   const wrap = document.getElementById('detail-image-wrap');
-  const _imageClass = `detail-image${isMusicianItem ? ' detail-image--faces' : ''}${isMusicAlbum ? ' detail-image--clickable' : ''}`;
+  const _imageClass = `detail-image${isMusicianItem ? ' detail-image--faces' : ''}${(isMusicAlbum || _videoEmbedUrl) ? ' detail-image--clickable' : ''}`;
   document.getElementById('detail-body').classList.toggle('detail-body--tight-bottom', isMusicianItem);
   document.getElementById('detail-bookmark-btn').style.display = '';
   document.getElementById('detail-favorite-btn').style.display = '';
@@ -115,7 +121,9 @@ export function setupHeader(item, { domain, isMusicAlbum, isMusicianItem }) {
   if (item.imageUrl) {
     wrap.innerHTML = `<div class="detail-image-crop"><img class="${_imageClass}" src="${escapeHtml(item.imageUrl)}" alt=""></div>${_sponsoredTagHtml}`;
     wrap.style.display = '';
-    if (isMusicAlbum) {
+    if (_videoEmbedUrl) {
+      wrap.querySelector('.detail-image').addEventListener('click', () => openVideoLightbox(_videoEmbedUrl));
+    } else if (isMusicAlbum) {
       wrap.querySelector('.detail-image').addEventListener('click', _openGallery);
     }
   } else {

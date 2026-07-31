@@ -266,22 +266,25 @@
     <div class="modal" style="position:relative">
       <button class="modal-back-icon" id="btn-modal-back" title="Back" style="display:none">
         <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor"><path d="M400-80 0-480l400-400 56 56-344 344 344 344-56 56Z"/></svg>
+        <span class="modal-back-label" id="modal-back-label"></span>
       </button>
-      <button class="modal-x-close" id="btn-modal-cancel-x" title="Close">&#x2715;</button>
       <div class="modal-header">
         <h2>What are you adding to?</h2>
-        <select id="modal-category" class="modal-category-select" style="display:none">
+        <span class="select-with-arrow" id="modal-category-wrap" style="display:none">
+        <select id="modal-category" class="modal-category-select">
           <option value="">Category...</option>
           <option value="Web Links">Websites</option>
           <option value="News">News</option>
           <option value="Book">Book</option>
           <option value="Game">Game</option>
-          <option value="Movie">Movie</option>
-          <option value="Musician">Musician</option>
-          <option value="Music Album">Music Album</option>
+          <option value="Movie">Films</option>
+          <option value="Musician">Musicians</option>
+          <option value="Music Album">Albums</option>
           <option value="Show">Show</option>
           <option value="Visual Art">Visual Art</option>
         </select>
+        <svg class="select-arrow" xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M480-360 280-560h400L480-360Z"/></svg>
+        </span>
       </div>
 
       <!-- ===== SCREEN A: category tiles (Add flow only) ===== -->
@@ -300,18 +303,11 @@
         <button type="button" class="step1-add-folder-link" id="step1-add-folder-link">Add New Folder</button>
       </div>
 
-      <!-- ===== SCREEN B: live search for the selected category (Add flow only) ===== -->
-      <div class="modal-body modal-step-search" id="modal-step-search" style="display:none">
-        <div class="form-group step1-search-wrap" id="step1-search-wrap">
-          <input type="text" id="step1-search-input" class="step1-search-input" placeholder="" autocomplete="off" />
-          <div id="step1-search-results" class="step1-search-results" style="display:none"></div>
-          <button type="button" class="step1-manual-add" id="step1-manual-add" style="display:none">
-            Can't find it? Add "<span id="step1-manual-add-text"></span>" manually
-          </button>
-        </div>
-      </div>
-
-      <!-- ===== SCREEN C (Add) / single page (Edit): review + refine ===== -->
+      <!-- ===== SCREEN B (Add) / single page (Edit): review + refine =====
+           For Music Album/Show/Book/Game/Movie, the Title field doubles as a live search box
+           (placeholder "Search title", icon on the right) — picking a result silently fills the
+           hidden Author/Image URL fields below so links/art still populate correctly, without
+           showing the user a separate search step or the extra fields themselves. -->
       <div class="modal-body modal-step2" id="modal-step2" style="display:none">
 
       <div class="step2-image-preview-wrap" id="step2-image-preview-wrap" style="display:none">
@@ -321,9 +317,29 @@
 
       <div class="form-group">
         <div class="title-author-row">
-          <input type="text" id="input-author" placeholder="Author" autocomplete="off" class="title-author-input" />
-          <span class="title-author-sep">|</span>
           <input type="text" id="input-title" placeholder="Title" autocomplete="off" class="title-author-input title-author-input--author" />
+          <span class="title-author-sep">|</span>
+          <input type="text" id="input-author" placeholder="Author" autocomplete="off" class="title-author-input" />
+          <button type="button" id="btn-title-search" class="btn-title-search" tabindex="-1" title="Search" style="display:none">
+            <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M784-120 532-372q-30 24-69 38t-83 14q-104 0-176-72t-72-176q0-104 72-176t176-72q104 0 176 72t72 176q0 44-14 83t-38 69l252 252-44 44ZM380-380q70 0 119-49t49-119q0-70-49-119t-119-49q-70 0-119 49t-49 119q0 70 49 119t119 49Z"/></svg>
+          </button>
+        </div>
+        <div id="review-search-results" class="step1-search-results" style="display:none"></div>
+      </div>
+
+      <div class="form-row form-row--url-pair" id="image-url-pair-row">
+        <div class="form-group" id="image-url-group">
+          <label><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M460-360q69 0 120-45t60-113l-320 90q26 32 62 50t78 18ZM294-510l106-30q4-28-14-49t-46-21q-25 0-42.5 17.5T280-550q0 11 4 21t10 19Zm240-70 106-30q5-28-13.5-49T580-680q-25 0-42.5 17.5T520-620q0 11 4 21t10 19Zm106 460H200q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v440L640-120Zm-40-80v-80q0-33 23.5-56.5T680-360h80v-400H200v560h400Zm0 0Zm-400 0v-560 560Z"/></svg>Image URL</label>
+          <div class="input-with-clear">
+            <input type="url" id="input-image-url" placeholder="Image override…" autocomplete="off" />
+            <button type="button" class="btn-clear-image" id="btn-clear-image" title="Clear image URL">
+              <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M318-120q-82 0-140-58t-58-140q0-40 15-76t43-64l134-133 56 56-134 134q-17 17-25.5 38.5T200-318q0 49 34.5 83.5T318-200q23 0 45-8.5t39-25.5l133-134 57 57-134 133q-28 28-64 43t-76 15Zm79-220-57-57 223-223 57 57-223 223Zm251-28-56-57 134-133q17-17 25-38t8-44q0-50-34-85t-84-35q-23 0-44.5 8.5T558-726L425-592l-57-56 134-134q28-28 64-43t76-15q82 0 139.5 58T839-641q0 39-14.5 75T782-502L648-368Z"/></svg><span id="input-url-label-text">URL</span></label>
+          <input type="url" id="input-url" placeholder="https://…" autocomplete="off" />
         </div>
       </div>
 
@@ -335,7 +351,10 @@
       <!-- Edit-mode-only folder reassignment; the Add flow uses the dedicated folder-picker wizard screen instead -->
       <div class="form-group" id="folder-select-group" style="display:none;">
         <label><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h240l80 80h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Z"/></svg>Folder</label>
-        <select id="input-folder-select"></select>
+        <span class="select-with-arrow">
+          <select id="input-folder-select"></select>
+          <svg class="select-arrow" xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M480-360 280-560h400L480-360Z"/></svg>
+        </span>
       </div>
 
       <!-- Musician/Music Album/Favorite Albums keep the original compact side-by-side pairing
@@ -365,22 +384,6 @@
           <button type="button" class="btn-clear-image" id="btn-clear-youtube" title="Clear video URL">
             <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg>
           </button>
-        </div>
-      </div>
-
-      <div class="form-row form-row--url-pair" id="image-url-pair-row">
-        <div class="form-group">
-          <label><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M460-360q69 0 120-45t60-113l-320 90q26 32 62 50t78 18ZM294-510l106-30q4-28-14-49t-46-21q-25 0-42.5 17.5T280-550q0 11 4 21t10 19Zm240-70 106-30q5-28-13.5-49T580-680q-25 0-42.5 17.5T520-620q0 11 4 21t10 19Zm106 460H200q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v440L640-120Zm-40-80v-80q0-33 23.5-56.5T680-360h80v-400H200v560h400Zm0 0Zm-400 0v-560 560Z"/></svg>Image URL</label>
-          <div class="input-with-clear">
-            <input type="url" id="input-image-url" placeholder="Image override…" autocomplete="off" />
-            <button type="button" class="btn-clear-image" id="btn-clear-image" title="Clear image URL">
-              <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg>
-            </button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M318-120q-82 0-140-58t-58-140q0-40 15-76t43-64l134-133 56 56-134 134q-17 17-25.5 38.5T200-318q0 49 34.5 83.5T318-200q23 0 45-8.5t39-25.5l133-134 57 57-134 133q-28 28-64 43t-76 15Zm79-220-57-57 223-223 57 57-223 223Zm251-28-56-57 134-133q17-17 25-38t8-44q0-50-34-85t-84-35q-23 0-44.5 8.5T558-726L425-592l-57-56 134-134q28-28 64-43t76-15q82 0 139.5 58T839-641q0 39-14.5 75T782-502L648-368Z"/></svg>URL</label>
-          <input type="url" id="input-url" placeholder="https://…" autocomplete="off" />
         </div>
       </div>
 
@@ -491,6 +494,17 @@
     </div>
     <button class="image-lightbox-arrow image-lightbox-next" id="image-lightbox-next" title="Next image">&#10095;</button>
     <div class="image-lightbox-thumbs" id="image-lightbox-thumbs"></div>
+  </div>
+
+  <!-- Videos-folder items only — clicking the featured image embeds the actual YouTube/Vimeo
+       player here instead of opening the plain image lightbox above. -->
+  <div class="video-lightbox-overlay" id="video-lightbox-overlay">
+    <button class="modal-x-close video-lightbox-close" id="video-lightbox-close" title="Close">&#x2715;</button>
+    <div class="video-lightbox-content">
+      <iframe id="video-lightbox-iframe" src="" title="Video player" frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen></iframe>
+    </div>
   </div>
 
   <button class="fab-add" id="fab-add" title="Add item">+</button>

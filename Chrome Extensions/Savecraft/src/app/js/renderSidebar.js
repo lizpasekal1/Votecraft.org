@@ -4,7 +4,7 @@ import {
   state, CURATED_ITEMS, CATEGORIES, CAT_LABEL, CAT_EMOJI, CURATED_GENRES, GENRE_EMOJI,
   PRIMARY_FOLDER_ID,
 } from './state.js';
-import { escapeHtml, folderIconHtml } from './utils.js';
+import { escapeHtml, folderIconHtml, sortFoldersForDisplay } from './utils.js';
 import { persistViewState, persistItem, persistFolder, removeFolder } from './storage.js';
 import { closeSidebar } from './main.js';
 import { matchesPrimaryOrUnfoldered } from './renderFilters.js';
@@ -207,7 +207,7 @@ export function renderSidebar() {
       ? (CURATED_ITEMS[curatedGenreBase]?.[cat]?.filter(i => !state.hiddenCurated.has(i.id)).length ?? 0)
       // Matches what tapping the tab actually reveals: the primary folder plus un-foldered items.
       : state.items.filter(i => matchesPrimaryOrUnfoldered(i, cat)).length;
-    const subfolders = state.folders.filter(f => f.parentCategory === cat).sort((a, b) => a.name.localeCompare(b.name));
+    const subfolders = sortFoldersForDisplay(state.folders.filter(f => f.parentCategory === cat), cat);
     const isActive = isCuratedGenre
       ? state.view === `genre:${curatedGenreBase}:${cat}`
       : state.view === cat;
@@ -228,7 +228,7 @@ export function renderSidebar() {
     const permanentSubfolders = cat === 'Musician' ? `
       <div class="sidebar-item sidebar-subfolder ${musicAlbumActive ? 'active' : ''}"
            data-view="Music Album" data-permanent="true">
-        <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M500-360q42 0 71-29t29-71v-220h120v-80H560v220q-13-10-28-15t-32-5q-42 0-71 29t-29 71q0 42 29 71t71 29ZM320-240q-33 0-56.5-23.5T240-320v-480q0-33 23.5-56.5T320-880h480q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H320Zm0-80h480v-480H320v480ZM160-80q-33 0-56.5-23.5T80-160v-560h80v560h560v80H160Zm160-720v480-480Z"/></svg> Music Albums
+        <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M500-360q42 0 71-29t29-71v-220h120v-80H560v220q-13-10-28-15t-32-5q-42 0-71 29t-29 71q0 42 29 71t71 29ZM320-240q-33 0-56.5-23.5T240-320v-480q0-33 23.5-56.5T320-880h480q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H320Zm0-80h480v-480H320v480ZM160-80q-33 0-56.5-23.5T80-160v-560h80v560h560v80H160Zm160-720v480-480Z"/></svg> Albums
         ${musicAlbumCountLabel}
       </div>
     ` : '';
