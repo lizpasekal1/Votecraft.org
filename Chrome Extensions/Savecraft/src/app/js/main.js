@@ -1,6 +1,6 @@
 // ===== ENTRY POINT: search, sort, theme, mobile sidebar, live storage sync, init/event wiring =====
 
-import { state, STREAMING_DOMAINS } from './state.js';
+import { state } from './state.js';
 import {
   loadAll, loadLocalCache, initCuratedItems, persistSort, persistTheme, persistSidebarCollapsed,
   persistLastfmUsername, disconnectLastfm, persistViewState, persistSteamId, disconnectSteam,
@@ -558,21 +558,6 @@ async function init() {
   });
   document.getElementById('btn-modal-back').addEventListener('click', handleModalBack);
   document.getElementById('input-image-url').addEventListener('input', refreshStep2ImagePreviewFromManualInput);
-
-  // Auto-set category to "Web Links" when a streaming URL is pasted
-  document.getElementById('input-url').addEventListener('input', e => {
-    if (state.editingId) return; // don't override on edit
-    const raw = e.target.value.trim();
-    let hostname = '';
-    try { hostname = new URL(raw).hostname.replace('www.', ''); } catch { return; }
-    const isStreaming = STREAMING_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
-    if (!isStreaming) return;
-
-    const catSelect = document.getElementById('modal-category');
-    if (catSelect.value) return; // user already picked a category, don't override
-
-    catSelect.value = 'Web Links';
-  });
 
 
   document.getElementById('btn-hamburger').addEventListener('click', () => {

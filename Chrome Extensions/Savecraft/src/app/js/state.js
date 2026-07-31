@@ -261,16 +261,6 @@ export const FOLDER_ICON = {
   'default-musicians-musicians': { type: 'svg', path: 'M447-207q-47-47-47-113t47-113q47-47 113-47 23 0 42.5 5.5T640-458v-342h240v120H720v360q0 66-47 113t-113 47q-66 0-113-47ZM80-320q0-99 38-186.5T221-659q65-65 152.5-103T560-800v80q-82 0-155 31.5t-127.5 86q-54.5 54.5-86 127T160-320H80Zm160 0q0-66 25.5-124.5t69-102Q378-590 436-615t124-25v80q-100 0-170 70t-70 170h-80Z' },
 };
 
-export const STREAMING_DOMAINS = [
-  'open.spotify.com', 'spotify.com',
-  'music.apple.com',
-  'music.youtube.com',
-  'tidal.com', 'listen.tidal.com',
-  'music.amazon.com',
-  'soundcloud.com',
-  'deezer.com',
-];
-
 // ===== CURATED ITEMS (loaded from Firestore by storage.js) =====
 export let CURATED_ITEMS = {};
 export function setCuratedItems(data) { CURATED_ITEMS = data; }

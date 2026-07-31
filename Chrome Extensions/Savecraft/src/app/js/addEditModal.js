@@ -404,6 +404,13 @@ function backToMusicChoiceScreen() {
 function backToCategoryScreen() {
   _wizardScreen = 'category';
   _wizardToken += 1; // invalidate any in-flight search or enrichment
+  // Both must reset here, not just get overwritten going forward — landing back on the category
+  // screen means whatever path got here (a real one, or a stale flag) is over. Without this, e.g.
+  // Add → Musicians tile → Back → Books → folder screen → Back would wrongly land on the
+  // Musician/Album sub-choice screen instead of the category tiles, since handleModalBack() still
+  // saw the stale flag from the earlier Musicians pick. Mirrors the popup's own backToCategoryScreen().
+  _wizardHadMusicChoiceScreen = false;
+  _wizardHadFolderScreen = false;
   document.getElementById('modal-step2').style.display = 'none';
   document.getElementById('modal-step-folder').style.display = 'none';
   document.getElementById('modal-step-music-choice').style.display = 'none';

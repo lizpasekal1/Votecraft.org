@@ -356,11 +356,6 @@
 [data-theme="dark"] .badge-Games  { background: #4A2C00; color: #FCD34D; }
 [data-theme="dark"] .badge-Memes  { background: #4A1010; color: #FCA5A5; }
 
-.card-folder-label {
-  font-size: 11px;
-  color: var(--text-secondary);
-}
-
 /* Hover actions — right side of card */
 .card-actions {
   display: none;
