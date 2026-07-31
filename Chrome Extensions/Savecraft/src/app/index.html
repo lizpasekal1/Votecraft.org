@@ -327,7 +327,7 @@
         </div>
       </div>
 
-      <div class="form-group">
+      <div class="form-group" id="summary-group">
         <label><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M160-400v-80h280v80H160Zm0-160v-80h440v80H160Zm0-160v-80h440v80H160Zm360 560v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q8 9 12.5 20t4.5 22q0 11-4 22.5T863-380L643-160H520Zm300-263-37-37 37 37ZM580-220h38l121-122-18-19-19-18-122 121v38Zm141-141-19-18 37 37-18-19Z"/></svg>Summary</label>
         <textarea id="input-summary" placeholder="Short description..." autocomplete="off" rows="2"></textarea>
       </div>
@@ -338,29 +338,37 @@
         <select id="input-folder-select"></select>
       </div>
 
-      <div class="form-row form-row--url-pair">
-        <div class="form-group" id="platforms-section" style="display:none;">
-          <label><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M360-120H200q-33 0-56.5-23.5T120-200v-280q0-75 28.5-140.5t77-114q48.5-48.5 114-77T480-840q75 0 140.5 28.5t114 77q48.5 48.5 77 114T840-480v280q0 33-23.5 56.5T760-120H600v-320h160v-40q0-117-81.5-198.5T480-760q-117 0-198.5 81.5T200-480v40h160v320Zm-80-240h-80v160h80v-160Zm400 0v160h80v-160h-80Zm-400 0h-80 80Zm400 0h80-80Z"/></svg><span id="platforms-label-text"></span></label>
-          <details class="platform-dropdown" id="platform-dropdown">
-            <summary class="platform-dropdown-summary">
-              <span id="platform-summary-text">All selected</span>
-              <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M480-360 280-560h400L480-360Z"/></svg>
-            </summary>
-            <div class="platform-dropdown-list" id="platform-chips"></div>
-          </details>
-        </div>
-        <div class="form-group">
-          <label><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M320-200v-560l440 280-440 280Z"/></svg>YouTube URL</label>
-          <div class="input-with-clear">
-            <input type="url" id="input-youtube-url" placeholder="https://youtube.com/watch?v=…" autocomplete="off" />
-            <button type="button" class="btn-clear-image" id="btn-clear-youtube" title="Clear YouTube URL">
-              <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg>
-            </button>
-          </div>
+      <!-- Musician/Music Album/Favorite Albums keep the original compact side-by-side pairing
+           (left untouched per explicit request) — updateVideoUrlLayout() moves #platforms-section
+           and #youtube-url-group into this row for those categories only; it's otherwise empty and
+           collapses to nothing. -->
+      <div class="form-row form-row--url-pair" id="music-url-pair-row"></div>
+
+      <div class="form-group" id="platforms-section" style="display:none;">
+        <label><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M360-120H200q-33 0-56.5-23.5T120-200v-280q0-75 28.5-140.5t77-114q48.5-48.5 114-77T480-840q75 0 140.5 28.5t114 77q48.5 48.5 77 114T840-480v280q0 33-23.5 56.5T760-120H600v-320h160v-40q0-117-81.5-198.5T480-760q-117 0-198.5 81.5T200-480v40h160v320Zm-80-240h-80v160h80v-160Zm400 0v160h80v-160h-80Zm-400 0h-80 80Zm400 0h80-80Z"/></svg><span id="platforms-label-text"></span></label>
+        <details class="platform-dropdown" id="platform-dropdown">
+          <summary class="platform-dropdown-summary">
+            <span id="platform-summary-text">All selected</span>
+            <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M480-360 280-560h400L480-360Z"/></svg>
+          </summary>
+          <div class="platform-dropdown-list" id="platform-chips"></div>
+        </details>
+      </div>
+
+      <!-- Position/pairing reassigned per category via updateVideoUrlLayout(): moved into
+           #music-url-pair-row (with #platforms-section) for Music categories, before Summary for
+           Movie (relabeled "Video URL" there), or standalone after Platforms everywhere else. -->
+      <div class="form-group" id="youtube-url-group">
+        <label><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M320-200v-560l440 280-440 280Z"/></svg><span id="youtube-url-label-text">YouTube URL</span></label>
+        <div class="input-with-clear">
+          <input type="url" id="input-youtube-url" placeholder="https://youtube.com/watch?v=…" autocomplete="off" />
+          <button type="button" class="btn-clear-image" id="btn-clear-youtube" title="Clear video URL">
+            <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg>
+          </button>
         </div>
       </div>
 
-      <div class="form-row form-row--url-pair">
+      <div class="form-row form-row--url-pair" id="image-url-pair-row">
         <div class="form-group">
           <label><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M460-360q69 0 120-45t60-113l-320 90q26 32 62 50t78 18ZM294-510l106-30q4-28-14-49t-46-21q-25 0-42.5 17.5T280-550q0 11 4 21t10 19Zm240-70 106-30q5-28-13.5-49T580-680q-25 0-42.5 17.5T520-620q0 11 4 21t10 19Zm106 460H200q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v440L640-120Zm-40-80v-80q0-33 23.5-56.5T680-360h80v-400H200v560h400Zm0 0Zm-400 0v-560 560Z"/></svg>Image URL</label>
           <div class="input-with-clear">
