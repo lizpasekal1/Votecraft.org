@@ -1477,7 +1477,20 @@
     width: 98vw;
     max-width: 98vw;
     max-height: 98vh;
-    padding: 20px 16px;
+    padding: 40px 36px;
+  }
+
+  /* Desktop deliberately keeps this a fixed 232px regardless of the modal's own width (see the
+     base rule's comment) — but the modal itself is now nearly full-screen on mobile, so the same
+     small fixed image read as tiny relative to all that space. Ties it back to the modal's width
+     here instead (80% of it, not the full width — 100% read as too large), same as a typical
+     mobile "detail view" hero image. max-height mirrors that same 80%-of-content-width formula as
+     an explicit calc (not none/percentage) rather than an unbounded cap: percentage max-height
+     can't resolve against this element's auto-height container, and focus mode's collapse-to-0
+     transition needs a real numeric "from" value to animate smoothly from either way. */
+  .detail-image-wrap {
+    width: 80%;
+    max-height: calc((98vw - 72px) * 0.8);
   }
 
   /* Focus mode pins a firm height (not max-height) so hiding the image/icons doesn't just let the
@@ -1534,25 +1547,26 @@
 
   /* ----- Text sizes: everything below reads noticeably smaller on a phone than the same pixel
      count does on a desktop monitor viewed from further away — bumped up across the board rather
-     than case-by-case. Values chosen to still fit their existing layout (checked against the
-     tightest case, .btn-detail-website's fixed-width pill) rather than a single flat ratio. ----- */
-  .detail-title { font-size: 20px; }
-  .detail-notes { font-size: 14px; }
-  .detail-accordion-header { font-size: 12px; }
-  .detail-album-row { font-size: 14px; }
-  .detail-tracklist-row { font-size: 14px; }
-  .detail-tracklist-number { font-size: 13px; }
-  .detail-tracklist-notes-input { font-size: 14px; }
-  .detail-accordion-summary-text { font-size: 14px; }
-  .detail-tracklist-add-chapter { font-size: 13px; }
-  .streaming-label { font-size: 12px; }
-  .streaming-link-btn { font-size: 13px; }
+     than case-by-case (~10% on top of the first mobile pass, per follow-up feedback). Values
+     chosen to still fit their existing layout (checked against the tightest case,
+     .btn-detail-website's fixed-width pill) rather than a single flat ratio. ----- */
+  .detail-title { font-size: 22px; }
+  .detail-notes { font-size: 15px; }
+  .detail-accordion-header { font-size: 13px; }
+  .detail-album-row { font-size: 15px; }
+  .detail-tracklist-row { font-size: 15px; }
+  .detail-tracklist-number { font-size: 14px; }
+  .detail-tracklist-notes-input { font-size: 15px; }
+  .detail-accordion-summary-text { font-size: 15px; }
+  .detail-tracklist-add-chapter { font-size: 14px; }
+  .streaming-label { font-size: 13px; }
+  .streaming-link-btn { font-size: 14px; }
   /* Widened along with its own font-size bump — "OFFICIAL WEBSITE" already nearly fills the
      desktop pill's 170px at 12px/uppercase/0.08em letter-spacing, so growing the text without
      growing the box would clip or wrap it. */
   .btn-detail-website {
-    width: 190px;
-    font-size: 13px;
+    width: 210px;
+    font-size: 14px;
   }
 
   /* ----- Icons/chevrons: same reasoning as the text sizes above — small enough to read as fine
@@ -1565,8 +1579,8 @@
     height: 24px;
   }
   .detail-accordion-chevron {
-    width: 16px;
-    height: 16px;
+    width: 19px;
+    height: 19px;
   }
   .detail-tracklist-favorite svg {
     width: 18px;
