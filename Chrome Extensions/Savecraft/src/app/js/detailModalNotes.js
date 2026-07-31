@@ -661,6 +661,16 @@ export function initNoteToolbar() {
   document.getElementById('note-toolbar-bold').addEventListener('click', () => _applyFormat('bold'));
   document.getElementById('note-toolbar-highlight').addEventListener('click', () => _applyFormat('highlight'));
   document.getElementById('note-toolbar-bullet').addEventListener('click', () => _applyFormat('bullet'));
+  // Closes whichever of MY NOTES/SONG LIST is actually open by clicking its own accordion header
+  // — reuses that header's existing onclick (reassigned fresh per item in setupNotesAndTracklist)
+  // rather than duplicating its close logic (collapsing the section, resetting any open row,
+  // clearing persisted favorites) here.
+  document.getElementById('note-toolbar-close').addEventListener('click', () => {
+    const notesHeader = document.getElementById('detail-notes-accordion-header');
+    const tracklistHeader = document.getElementById('detail-tracklist-accordion-header');
+    if (notesHeader.classList.contains('open')) notesHeader.click();
+    else if (tracklistHeader.classList.contains('open')) tracklistHeader.click();
+  });
   document.getElementById('note-toolbar-expand').addEventListener('click', () => {
     _focusModeOn = !_focusModeOn;
     document.querySelector('.modal.detail-modal').classList.toggle('detail-modal--focus-mode', _focusModeOn);
