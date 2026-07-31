@@ -5,14 +5,18 @@
    for every property they share (width, padding, max-width, max-height). */
 .modal.detail-modal {
   position: relative;
-  padding: 28px;
-  width: 312px;
+  /* 20% larger across the whole modal (padding/width/max-height, and everything within it — icons,
+     text, buttons) per explicit request — every dimensional value in this file's non-mobile rules
+     is scaled by the same 1.2x, except border-width (divider lines stay 1px) and border-radius on
+     already-fully-rounded pill/circle shapes (scaling those would just change nothing visually). */
+  padding: 34px;
+  width: 374px;
   max-width: 94vw;
   /* A cap, not a firm height — the modal shrink-wraps to its actual content, so the bottom
      padding sits immediately after the last row, matching the top padding above the image. A
      firm height was tried instead (forcing every category to the same fixed box) but left a dead
      gap below Add to Queue for any category whose collapsed content came in shorter than the cap. */
-  max-height: min(90vh, 600px);
+  max-height: min(90vh, 720px);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -82,13 +86,13 @@
    icon within it. */
 .detail-edit {
   position: absolute;
-  top: 93px;
-  right: 4px;
+  top: 112px;
+  right: 5px;
   background: none;
   border: none;
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -103,13 +107,13 @@
      this 32px box (a 4px inset on every side), while the "Official Website" pill's border/glow
      sits right at its wrapper's top edge with no such inset, so matching the raw 17px here left
      the icon's visible top sitting 4px below the pill's. */
-  top: 13px;
-  right: 4px; /* see .detail-edit above */
+  top: 16px;
+  right: 5px; /* see .detail-edit above */
   background: none;
   border: none;
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -126,13 +130,13 @@
 
 .detail-favorite-btn {
   position: absolute;
-  top: 53px;
-  right: 4px; /* see .detail-edit above */
+  top: 64px;
+  right: 5px; /* see .detail-edit above */
   background: none;
   border: none;
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -158,12 +162,12 @@
   right: 100%;
   top: 50%;
   transform: translateY(-50%);
-  margin-right: 10px;
+  margin-right: 12px;
   background: var(--surface);
   border: 1px solid var(--primary);
-  border-radius: 6px;
-  padding: 4px 9px;
-  font-size: 11px;
+  border-radius: 7px;
+  padding: 5px 11px;
+  font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
   color: var(--text-primary);
@@ -186,15 +190,15 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   text-align: center;
-  padding: 18px 22px 16px;
+  padding: 22px 26px 19px;
   flex-shrink: 0;
 }
 
 .detail-artist-header--inline {
   position: absolute;
-  top: 17px;
+  top: 20px;
   left: 50%;
   transform: translateX(-50%);
   padding: 0;
@@ -205,13 +209,13 @@
    modal doesn't resize the featured image along with it. */
 .detail-image-wrap {
   position: relative;
-  width: 232px;
+  width: 278px;
   margin: 0 auto;
   aspect-ratio: 1/1;
   overflow: visible; /* the "Your Statement" badge (.vc-sponsored-tag--overlay) sits partly outside this box (bottom: -10.5px) and needs it — safe to override to hidden below since that badge is already display:none by the time focus mode (the only state that collapses this) is active */
   background: var(--border);
   flex-shrink: 0;
-  max-height: 232px; /* matches the aspect-ratio-derived height exactly — a no-op cap normally, but gives .detail-modal--focus-mode below something to animate down to 0 */
+  max-height: 278px; /* matches the aspect-ratio-derived height exactly — a no-op cap normally, but gives .detail-modal--focus-mode below something to animate down to 0 */
   opacity: 1;
   /* Entering focus mode (collapsing) gets the M3 "emphasized decelerate" curve — same reasoning
      as the accordion sections' own open transition: a gentle settle reads better for the more
@@ -232,7 +236,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 56px;
+  font-size: 64px;
   font-weight: 700;
   color: rgba(255,255,255,0.9);
 }
@@ -246,10 +250,10 @@
      below) — a sticky child only ever locks flush with THIS element's own top edge, never past
      it, so container-level top padding leaves a permanent gap above the stuck position where
      scrolled-past content keeps rendering, uncropped, instead of being hidden by the sticky bar. */
-  padding: 0 0 6px 0;
+  padding: 0 0 7px 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   overflow-y: auto;
   min-height: 0;
   /* .detail-note-toolbar intentionally bleeds 28px past this container's own edges (negative
@@ -266,7 +270,7 @@
      this is the JS-computed _correctScrollUnderToolbar() in detailModalNotes.js — this is a
      best-effort supplement for any native scroll paths that one doesn't cover.)
   */
-  scroll-padding-top: 60px;
+  scroll-padding-top: 72px;
   /* Scrolling stays fully functional (mouse wheel/trackpad/keyboard) — this only hides the
      visible scrollbar track/thumb. */
   scrollbar-width: none; /* Firefox */
@@ -289,13 +293,13 @@
    gap after the collapsed Queue section otherwise reads as more space than the top has. */
 .detail-body--tight-bottom {
   padding-bottom: 0;
-  margin-bottom: -3px;
+  margin-bottom: -4px;
 }
 
 .detail-title-row {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px;
   position: sticky;
   top: 0;
   z-index: 4; /* above ordinary accordion content, below the 20-tier edit/bookmark/favorite icons */
@@ -305,9 +309,10 @@
      24px = the original 9px plus the 15px #detail-body used to carry as its own top padding —
      moved here because a sticky child only ever locks flush with its scroll container's real
      top edge, never past it, so padding on the container itself left a permanent gap above the
-     stuck position where scrolled-past content kept rendering instead of being cropped away. */
-  padding-top: 24px;
-  padding-bottom: 6px;
+     stuck position where scrolled-past content kept rendering instead of being cropped away.
+     (29px = the original 24px × the modal's overall 1.2x scale-up.) */
+  padding-top: 29px;
+  padding-bottom: 7px;
   /* Title/toolbar swap (see .detail-body--editing-note below) reads as one continuous upward
      "conveyor" motion rather than a reverse-on-close bounce: whichever of the two is leaving
      always slides up and fades out (translateY 0 → -8px), and whichever is arriving always
@@ -331,15 +336,15 @@
   top: 0;
   z-index: 4;
   align-items: center;
-  gap: 6px;
-  padding: 9px 0 6px 10px; /* was 24px top (matching .detail-title-row's) — reduced per feedback, so this no longer matches the title's own padding when they swap. 10px left shifts the Bold/Highlight/Bullet group off the modal's true edge (the toolbar's own box no longer bleeds — see the ::before pseudo below). */
+  gap: 7px;
+  padding: 11px 0 7px 12px; /* was 24px top (matching .detail-title-row's) — reduced per feedback, so this no longer matches the title's own padding when they swap. 12px left shifts the Bold/Highlight/Bullet group off the modal's true edge (the toolbar's own box no longer bleeds — see the ::before pseudo below). */
   opacity: 0;
   transform: translateY(8px);
   transition: opacity 0.2s var(--m3-standard-accelerate), transform 0.2s var(--m3-standard-accelerate), display 0.2s allow-discrete;
 }
 /* The purple background lives on this pseudo-element instead of directly on .detail-note-toolbar,
-   bled out to the modal's true edges via absolute positioning (left/right: -28px, matching
-   .modal.detail-modal's own 28px side padding) — negative margin on the toolbar itself was tried
+   bled out to the modal's true edges via absolute positioning (left/right: -34px, matching
+   .modal.detail-modal's own 34px side padding) — negative margin on the toolbar itself was tried
    first, but margin on a sticky flex item inside a `gap`-using container didn't reliably bleed
    (particularly margin-top, needed for the focus-mode case below, which had no visible effect at
    all despite computing correctly). Absolute positioning against .detail-note-toolbar's own
@@ -350,8 +355,8 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  left: -28px;
-  right: -28px;
+  left: -34px;
+  right: -34px;
   background: var(--primary);
   z-index: -1;
 }
@@ -386,14 +391,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  border-radius: 7px;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text-secondary);
   cursor: pointer;
   transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.detail-note-toolbar-btn svg {
+  /* Overrides each icon's own inline width="18"/height="18" attributes (index.html) — 18px × the
+     modal's overall 1.2x scale-up. Same value the mobile media query below already used. */
+  width: 22px;
+  height: 22px;
 }
 .detail-note-toolbar-btn:hover { color: var(--primary); border-color: var(--primary); }
 .detail-note-toolbar-btn--active {
@@ -406,7 +417,7 @@
    together at the toolbar's right edge — Bold/Highlight/Bullet stay left-aligned, Expand+Close are
    pushed as far right as the flex row allows, immediately adjacent to each other, Close last. */
 .detail-note-toolbar-btn--expand { margin-left: auto; }
-.detail-note-toolbar-btn--close { margin-right: 10px; }
+.detail-note-toolbar-btn--close { margin-right: 12px; }
 
 .detail-modal--focus-mode #detail-edit,
 .detail-modal--focus-mode #detail-bookmark-btn,
@@ -459,7 +470,7 @@
      Pin it to the same max-height cap it already uses instead, and let .detail-body's flex: 1
      absorb the freed vertical space — giving the note more room is the whole point of focus mode,
      not a smaller modal. */
-  height: min(90vh, 600px);
+  height: min(90vh, 720px);
 }
 
 .detail-title {
@@ -467,8 +478,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: 8px;
-  font-size: 18px;
+  gap: 10px;
+  font-size: 21px;
   font-weight: 600;
   color: var(--text-primary);
   line-height: 1.3;
@@ -480,15 +491,15 @@
 
 .detail-title-sep {
   opacity: 0.35;
-  margin: 0 2px;
+  margin: 0 3px;
 }
 
 .btn-detail-website {
   position: relative;
   flex-shrink: 0;
-  width: 170px;
-  padding: 4px 20px;
-  font-size: 12px;
+  width: 204px;
+  padding: 5px 24px;
+  font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -502,7 +513,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 7px;
   text-shadow: 0 0 4px color-mix(in srgb, var(--primary) 60%, transparent);
   box-shadow:
     0 0 3px rgba(255, 255, 255, 0.5),
@@ -517,8 +528,8 @@
 .btn-detail-website::after {
   content: '';
   position: absolute;
-  width: 6px;
-  height: 3px;
+  width: 7px;
+  height: 4px;
   border-radius: 999px;
   background: #fff;
   pointer-events: none;
@@ -529,12 +540,12 @@
 }
 
 .btn-detail-website::before {
-  top: -3px;
+  top: -4px;
   right: 6%;
 }
 
 .btn-detail-website::after {
-  bottom: -3px;
+  bottom: -4px;
   left: 6%;
 }
 
@@ -551,14 +562,14 @@
 }
 
 .detail-notes {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--text-secondary);
   line-height: 1.5;
 }
 
 .detail-summary-wrap {
   position: relative;
-  margin-top: -5px;
+  margin-top: -6px;
 }
 
 .detail-summary-text {
@@ -567,8 +578,8 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   width: 100%;
-  padding-right: 16px;
-  line-height: 18.5px;
+  padding-right: 19px;
+  line-height: 22px;
 }
 
 .detail-summary-text--expanded {
@@ -609,13 +620,13 @@
 .detail-accordion-header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   padding: 2px;
   border-bottom: 1px solid #5B5BEF;
   cursor: pointer;
   user-select: none;
   color: var(--text-primary);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -634,7 +645,7 @@
    nothing here to cancel the .detail-body flex gap above this row. Match it manually so the gap
    above Add to Queue looks the same as the (cancelled-down-to-flush) gaps between the others. */
 #btn-standalone-queue {
-  margin-top: -8px;
+  margin-top: -10px;
   /* Deliberately no margin-bottom compensation to match: pulling this row's trailing space flush
      with the modal's own bottom padding only looks right when the modal is short enough to
      shrink-wrap without scrolling. Once .detail-body actually scrolls (a normal case — content
@@ -657,29 +668,29 @@
   display: block;
   flex-shrink: 0;
   color: #5B5BEF;
-  width: 21px;
-  height: 21px;
+  width: 25px;
+  height: 25px;
 }
 
 /* This icon's artwork sits visually high within its own box relative to the other two
    accordion icons — nudged down to match them. */
 #detail-albums-accordion-header .detail-accordion-icon {
   margin-top: 2px;
-  width: 19px;
-  height: 19px;
+  width: 23px;
+  height: 23px;
 }
 
 #detail-notes-accordion-header .detail-accordion-icon {
-  width: 19px;
-  height: 19px;
+  width: 23px;
+  height: 23px;
 }
 
 /* ID-scoped to unambiguously force the same size/color as the other three accordion icons —
    this one is a directly-set fill="currentColor" SVG rather than a nested icon, so pin it down
    explicitly rather than leaning on the shared .detail-accordion-icon class alone. */
 #standalone-queue-bookmark {
-  width: 19px;
-  height: 19px;
+  width: 23px;
+  height: 23px;
   color: #5B5BEF;
 }
 
@@ -688,11 +699,12 @@
   flex-shrink: 0;
   color: var(--primary);
   transition: transform 0.2s ease;
-  /* 12px × 1.1 — overrides the width="12" height="12" attributes set on every instance in
-     index.html (a CSS property always wins over the equivalent presentational HTML attribute),
-     so this one rule covers all of them instead of editing each SVG tag individually. */
-  width: 13.2px;
-  height: 13.2px;
+  /* 12px × 1.1, × the modal's overall 1.2x scale-up — overrides the width="12" height="12"
+     attributes set on every instance in index.html (a CSS property always wins over the
+     equivalent presentational HTML attribute), so this one rule covers all of them instead of
+     editing each SVG tag individually. */
+  width: 16px;
+  height: 16px;
 }
 
 .detail-accordion-header.open .detail-accordion-chevron {
@@ -716,7 +728,7 @@
 
 .detail-accordion-collapsible.open {
   border-bottom: 1px solid #5B5BEF;
-  padding-bottom: 8px;
+  padding-bottom: 10px;
 }
 
 /* Albums/Web Links/Add to Queue (whatever this divider would normally separate My Notes/Song
@@ -735,7 +747,7 @@
 
 .detail-streaming--tight.open .streaming-links-wrap {
   border-bottom: 1px solid #5B5BEF;
-  padding-bottom: 8px;
+  padding-bottom: 10px;
 }
 
 .detail-accordion-collapsible {
@@ -751,16 +763,16 @@
      own (that headroom is just invisible), it only became visible as an issue once opacity was
      layered on top of it. This (the closed state) is what's transitioned TO on close, so it uses
      M3's "accelerate" curve — quick start, fast finish, reads as snappier/getting-out-of-the-way. */
-  transform: translateY(8px);
+  transform: translateY(10px);
   transition: max-height 0.2s var(--m3-standard-accelerate), margin 0.2s var(--m3-standard-accelerate), transform 0.2s var(--m3-standard-accelerate);
   /* Cancels out the .detail-body flex gap above and below this (currently zero-height)
      element, so consecutive accordion rows sit flush against each other when collapsed. */
-  margin: -8px 0;
+  margin: -10px 0;
 }
 
 .detail-accordion-collapsible.open {
-  max-height: 320px;
-  margin: 8px 0 0;
+  max-height: 384px;
+  margin: 10px 0 0;
   overflow-y: auto;
   /* Scrolling stays fully functional — this only hides the visible scrollbar track/thumb, same
      as #detail-body above. Sections whose max-height is now JS-measured to their own exact
@@ -801,7 +813,7 @@
    about 3 rows before the list's own scrollbar kicks in, rather than the much taller generic
    accordion cap. Extra classes for specificity over .detail-accordion-collapsible.open. */
 .detail-albums-list.detail-accordion-collapsible.open {
-  max-height: 140px;
+  max-height: 168px;
 }
 
 /* Summary content (Book/Show/Movie/Game) reuses this same element/id, but is prose rather than
@@ -809,23 +821,23 @@
    defers to .detail-body's own scroll (flex: 1 + flex-shrink: 0 children) instead of showing its
    own secondary scrollbar (inherited from .detail-accordion-collapsible.open's overflow-y:auto). */
 .detail-albums-list--summary.detail-accordion-collapsible.open {
-  max-height: 2000px;
-  margin-top: -9px;
-  margin-bottom: -8px;
+  max-height: 2400px;
+  margin-top: -11px;
+  margin-bottom: -10px;
 }
 
 .detail-album-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 2px;
+  gap: 12px;
+  padding: 7px 2px;
   background: none;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   text-align: left;
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: 15px;
   width: 100%;
   transition: background 0.15s;
 }
@@ -835,9 +847,9 @@
 }
 
 .detail-album-row-thumb {
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
+  width: 38px;
+  height: 38px;
+  border-radius: 5px;
   object-fit: cover;
   flex-shrink: 0;
   background: var(--border);
@@ -868,27 +880,27 @@
      enough that it never actually constrains this (open-ended, chapters can keep being added)
      list, so it renders at its natural height and any overflow scrolls via the existing outer
      .detail-body { overflow-y: auto; }, not a separate inner scroll region. */
-  max-height: 2000px;
-  margin-top: -9px;
-  margin-bottom: -8px;
+  max-height: 2400px;
+  margin-top: -11px;
+  margin-bottom: -10px;
 }
 
 .detail-tracklist-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 2px;
+  gap: 12px;
+  padding: 7px 2px;
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: 15px;
   cursor: pointer;
 }
 
 .detail-tracklist-number {
   flex-shrink: 0;
-  width: 18px;
+  width: 22px;
   text-align: center;
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .detail-tracklist-number--has-note {
@@ -920,14 +932,14 @@
   cursor: text;
   color: var(--text-primary) !important;
   caret-color: var(--text-primary);
-  padding: 2px 6px;
+  padding: 2px 7px;
   /* Left/top/bottom cancel the padding's own footprint so the row doesn't visibly shift/reflow the
      moment editing starts (same trick as the accordion rows' own margin/gap cancellation
-     elsewhere). Right is negative too, but less so — the row's own flex `gap: 10px` already
-     provides 10px before the plus/circle icon next to it; pulling in 5px of that nets a 5px true
-     gap instead, rather than stacking on top of it for 15px. */
-  margin: -2px -5px -2px -6px;
-  border-radius: 4px;
+     elsewhere). Right is negative too, but less so — the row's own flex `gap: 12px` already
+     provides 12px before the plus/circle icon next to it; pulling in 6px of that nets a 6px true
+     gap instead, rather than stacking on top of it for 18px. */
+  margin: -2px -6px -2px -7px;
+  border-radius: 5px;
   background: var(--search-bg); /* same light-gray input-field treatment as the search box, theme-aware */
 }
 
@@ -957,8 +969,8 @@
   justify-content: center;
   flex-shrink: 0;
   padding: 0;
-  margin-left: -50px;
-  margin-right: 10px;
+  margin-left: -60px;
+  margin-right: 12px;
   background: none;
   border: none;
   cursor: pointer;
@@ -984,6 +996,10 @@
 
 .detail-tracklist-rename svg {
   display: block;
+  /* Overrides RENAME_ICON's own inline width="16"/height="16" attributes (detailModalNotes.js) —
+     16px × the modal's overall 1.2x scale-up. */
+  width: 19px;
+  height: 19px;
 }
 
 .detail-tracklist-row:hover .detail-tracklist-rename,
@@ -1003,7 +1019,7 @@
 /* Song List has no trailing "+Add" button (unlike My Notes/Chapters) to naturally carry space
    before the divider below it — add it directly to the last row instead. */
 #detail-tracklist .detail-tracklist-item:last-child {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .detail-tracklist-favorite {
@@ -1018,19 +1034,25 @@
 
 .detail-tracklist-favorite svg {
   display: block;
-  width: 15px;
-  height: 15px;
+  width: 18px;
+  height: 18px;
 }
 
 /* My Notes/Chapters' own "open a note" icon (the plus, NOTE_OPEN_ICON) only — Song List's per-
    track pencil (SONG_NOTE_ICON) keeps the plain icon-only treatment, no circle. border uses
    currentColor so it automatically follows the same muted/active/hover color transitions the
-   icon itself already gets, no separate state rules needed. */
+   icon itself already gets, no separate state rules needed. 15% smaller than the rest of the
+   1.2x-scaled desktop icons, per explicit feedback — scoped to this modifier specifically (not
+   the shared .detail-tracklist-favorite svg rule above) so Song List's plain pencil is unaffected. */
 .detail-tracklist-favorite--circle {
-  width: 19px;
-  height: 19px;
+  width: 20px;
+  height: 20px;
   border: 1.5px solid currentColor;
   border-radius: 50%;
+}
+.detail-tracklist-favorite--circle svg {
+  width: 15px;
+  height: 15px;
 }
 
 .detail-tracklist-favorite--active {
@@ -1059,13 +1081,13 @@
   width: 100%;
   box-sizing: border-box;
   margin: 0;
-  padding: 0 2px 0 28px;
+  padding: 0 2px 0 34px;
   border: none;
   outline: none;
   resize: none;
   background: none;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 15px;
   font-family: inherit;
   line-height: 1.4;
   white-space: pre-wrap;     /* a bare contenteditable div doesn't wrap/preserve whitespace like a textarea natively does */
@@ -1081,7 +1103,7 @@
      rather than clipping. */
   max-height: none;
   overflow: hidden;
-  padding: 4px 2px 15px 28px;
+  padding: 5px 2px 18px 34px;
 }
 
 
@@ -1099,7 +1121,7 @@
   border-radius: 2px;
   padding: 0 2px;
 }
-.detail-tracklist-notes-input ul { margin: 4px 0; padding-left: 20px; }
+.detail-tracklist-notes-input ul { margin: 5px 0; padding-left: 24px; }
 .detail-tracklist-notes-input li { margin: 2px 0; }
 
 .detail-tracklist-row--status {
@@ -1108,21 +1130,21 @@
 }
 
 .detail-accordion-summary-text {
-  padding: 6px 2px;
-  font-size: 13px;
+  padding: 7px 2px;
+  font-size: 15px;
   color: var(--text-secondary);
   line-height: 1.5;
 }
 
 .detail-tracklist-add-chapter {
   align-self: flex-start;
-  margin-top: 4px;
-  margin-bottom: 20px;
-  padding: 4px 2px;
+  margin-top: 5px;
+  margin-bottom: 24px;
+  padding: 5px 2px;
   background: none;
   border: none;
   color: var(--primary);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -1139,7 +1161,7 @@
   align-items: flex-start;
   gap: 0;
   margin-top: auto;
-  padding-top: 15px;
+  padding-top: 18px;
   width: 100%;
 }
 
@@ -1154,22 +1176,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 24px;
   width: 100%;
 }
 
 .streaming-label {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 11px;
+  gap: 7px;
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: #fff;
   background: rgba(255,255,255,0.12);
-  border-radius: 20px;
-  padding: 4px 10px 4px 12px;
+  border-radius: 24px;
+  padding: 5px 12px 5px 14px;
   width: fit-content;
   cursor: pointer;
   user-select: none;
@@ -1197,7 +1219,7 @@
 .streaming-links-wrap {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 7px;
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.25s ease, margin-top 0.25s ease;
@@ -1207,17 +1229,17 @@
 .detail-streaming.open .streaming-links-wrap {
   /* Generously large rather than a tight cap — same as Book Summary/Chapters, defers to
      .detail-body's own scroll instead of hard-clipping platform pills that wrap to 3+ rows. */
-  max-height: 2000px;
-  margin-top: 8px;
+  max-height: 2400px;
+  margin-top: 10px;
 }
 
 .streaming-link-btn {
-  padding: 5px 12px;
-  border-radius: 20px;
+  padding: 6px 14px;
+  border-radius: 24px;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text-primary);
-  font-size: 12px;
+  font-size: 13px;
   text-decoration: none;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
@@ -1231,12 +1253,12 @@
 
 .vc-why-title {
   display: block;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #ffffff;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 
 .vc-why-tooltip-text {
@@ -1256,15 +1278,15 @@
   position: absolute;
   top: 100%;
   left: 50%;
-  margin-top: 8px;
-  width: 250px;
+  margin-top: 10px;
+  width: 300px;
   max-width: 80vw;
   box-sizing: border-box;
   background: var(--primary);
   border: 1px solid var(--primary);
-  border-radius: 8px;
-  padding: 10px 12px;
-  font-size: 13px;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 15px;
   white-space: normal; /* .vc-sponsored-tag (the parent) sets nowrap for its own label — reset it here so this text wraps instead of overflowing */
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
   opacity: 0;
@@ -1298,14 +1320,14 @@
 }
 
 .vc-sponsored-tooltip::before {
-  border-width: 12px;
-  margin-left: -12px;
+  border-width: 14px;
+  margin-left: -14px;
   border-bottom-color: var(--primary);
 }
 
 .vc-sponsored-tooltip::after {
-  border-width: 11px;
-  margin-left: -11px;
+  border-width: 13px;
+  margin-left: -13px;
   margin-bottom: -1px;
   border-bottom-color: var(--primary);
 }
@@ -1313,15 +1335,15 @@
 .vc-sponsored-tag {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 11px;
+  gap: 6px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
   color: #fff;
   background: var(--primary);
   border: none;
-  border-radius: 20px;
-  padding: 4px 10px 6px;
+  border-radius: 24px;
+  padding: 5px 12px 7px;
   line-height: 1;
   text-decoration: none;
   white-space: nowrap;
@@ -1339,7 +1361,7 @@
   right: 0;
   width: fit-content;
   margin: 0 auto;
-  bottom: -10.5px;
+  bottom: -13px;
   /* Was 2 — raised above the sticky title row/note toolbar's z-index: 4 (added for the sticky-
      title feature). A child's own z-index (the tooltip's 5) can't out-rank a sibling outside its
      own stacking context; only this element's z-index (its context's "entry" value) does, so the
@@ -1379,15 +1401,15 @@
 
 .detail-load-art-btn {
   position: absolute;
-  bottom: -34px;
+  bottom: -41px;
   right: 0;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  border-radius: 12px;
-  padding: 4px 10px;
+  border-radius: 14px;
+  padding: 5px 12px;
   cursor: pointer;
 }
 .detail-load-art-btn:hover { color: var(--primary); border-color: var(--primary); }
@@ -1470,7 +1492,7 @@
    these widen the actual hit areas to something closer to the ~44px minimum recommended touch
    target, without changing anything about the desktop layout below 768px wide. */
 @media (max-width: 768px) {
-  /* Desktop pins this to a narrow 312px card with a 600px height cap — comfortable next to a
+  /* Desktop pins this to a narrow 374px card with a 720px height cap — comfortable next to a
      mouse-driven grid, but it reads as a small floating box with dead space around it on a phone.
      Nearly fills the viewport instead, same spirit as the sidebar becoming a full-height drawer
      in its own mobile CSS. Padding trimmed too, so the extra width actually reaches the content
@@ -1484,7 +1506,7 @@
     padding: 40px 36px;
   }
 
-  /* Desktop deliberately keeps this a fixed 232px regardless of the modal's own width (see the
+  /* Desktop deliberately keeps this a fixed 278px regardless of the modal's own width (see the
      base rule's comment) — but the modal itself is now nearly full-screen on mobile, so the same
      small fixed image read as tiny relative to all that space. Ties it back to the modal's width
      here instead (80% of it, not the full width — 100% read as too large), same as a typical
