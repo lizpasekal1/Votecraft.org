@@ -13,7 +13,7 @@ import { initShare } from './share.js';
 import {
   openAddModal, closeAddModal, handleSaveItem, updatePlatformSummary, updatePlatformsSection,
   openEditModal, selectStep1Category, handleStep1Search, hideSearchResults, handleStep1ManualAdd,
-  handleModalBack, refreshStep2ImagePreviewFromManualInput, updateTitleAuthorLayout,
+  handleModalBack, refreshStep2ImagePreviewFromManualInput, updateTitleAuthorLayout, updateVideoUrlLayout,
 } from './addEditModal.js';
 import { closeDetailModal, closeImageLightbox, getDetailItem, showNextImage, showPrevImage, handleGalleryLoadMoreClick } from './detailModal.js';
 import { initNoteToolbar } from './detailModalNotes.js';
@@ -536,6 +536,7 @@ async function init() {
     state.modalCategory = e.target.value;
     updatePlatformsSection(e.target.value);
     updateTitleAuthorLayout(e.target.value);
+    updateVideoUrlLayout(e.target.value);
   });
 
   document.getElementById('step1-category-grid').addEventListener('click', e => {

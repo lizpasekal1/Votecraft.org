@@ -66,6 +66,44 @@ export function updateTitleAuthorLayout(category) {
   document.getElementById('input-author').placeholder = AUTHOR_FIELD_LABEL[category] || 'Author';
 }
 
+// Musician/Music Album/Favorite Albums keep the original compact side-by-side pairing with
+// Platforms, untouched, per explicit request — every other category gets the field promoted to
+// its own full-width section (matching Summary/Image URL/URL's sizing instead of the small paired-
+// row styling). Movie's own video-clip use case (trailers, etc. — see the Videos folder) cares
+// about this field more than Summary does, so it additionally moves ahead of Summary and relabels
+// to "Video URL" there specifically. The placeholder text (the actual youtube.com/watch?v=…
+// suggestion) is intentionally left unchanged in every case — still the expected kind of link
+// regardless of the label. appendChild/insertBefore always move a node to its new spot (removing
+// it from wherever it currently sits), so this is safe to call on every category switch regardless
+// of the field's current position/parent.
+const MUSIC_URL_PAIR_CATEGORIES = new Set(['Musician', 'Music Album', 'Favorite Albums']);
+export function updateVideoUrlLayout(category) {
+  const group = document.getElementById('youtube-url-group');
+  const labelText = document.getElementById('youtube-url-label-text');
+  const platformsSection = document.getElementById('platforms-section');
+  const musicPairRow = document.getElementById('music-url-pair-row');
+  const imageUrlPairRow = document.getElementById('image-url-pair-row');
+
+  labelText.textContent = category === 'Movie' ? 'Video URL' : 'YouTube URL';
+
+  if (MUSIC_URL_PAIR_CATEGORIES.has(category)) {
+    musicPairRow.appendChild(platformsSection);
+    musicPairRow.appendChild(group);
+    return;
+  }
+
+  // Platforms always sits in its own standalone spot (right before the Image URL/URL row) for
+  // every non-Music category, regardless of whether this field is also being relocated for Movie.
+  imageUrlPairRow.parentNode.insertBefore(platformsSection, imageUrlPairRow);
+
+  if (category === 'Movie') {
+    const summaryGroup = document.getElementById('summary-group');
+    summaryGroup.parentNode.insertBefore(group, summaryGroup);
+  } else {
+    imageUrlPairRow.parentNode.insertBefore(group, imageUrlPairRow);
+  }
+}
+
 export function updatePlatformSummary() {
   const count = document.querySelectorAll('#platform-chips input:checked').length;
   document.getElementById('platform-summary-text').textContent =
@@ -221,7 +259,11 @@ function selectStep1Folder(folderId, cat) {
 }
 
 function advanceFromFolderScreen(cat) {
-  if (cat === 'Visual Art' || cat === 'Web Links' || cat === 'News') {
+  // Movie's own Videos folder is for trailers/clips, not movies themselves — a Wikipedia movie-
+  // title search doesn't make sense as a step in between, so (like Visual Art/Web Links/News) it
+  // skips straight to the review screen, where the user can type a title and paste a YouTube URL
+  // directly (both fields already exist there for every category).
+  if (cat === 'Visual Art' || cat === 'Web Links' || cat === 'News' || _wizardFolderId === 'default-movies-videos') {
     showReviewScreen(null);
     return;
   }
@@ -333,6 +375,7 @@ function showReviewScreen(result) {
   document.getElementById('input-youtube-url').value = '';
   document.getElementById('input-url').value = result?.url || '';
   updateTitleAuthorLayout(state.modalCategory);
+  updateVideoUrlLayout(state.modalCategory);
   updatePlatformsSection(state.modalCategory || '');
 
   _wizardFetchedImageUrl = result?.imageUrlLarge || result?.imageUrl || null;
@@ -506,6 +549,7 @@ export function openAddModal() {
   document.getElementById('input-image-url').value = '';
   document.getElementById('input-youtube-url').value = '';
   updatePlatformsSection('');
+  updateVideoUrlLayout('');
   document.getElementById('modal-category').value = '';
   document.getElementById('modal-category').style.display = 'none';
   renderStep2ImagePreview(null);
@@ -542,6 +586,7 @@ export function openEditModal(item) {
   document.getElementById('input-image-url').value = item.imageUrl || '';
   document.getElementById('input-youtube-url').value = item.youtubeUrl || '';
   updateTitleAuthorLayout(item.category);
+  updateVideoUrlLayout(item.category);
   document.getElementById('modal-category').value = item.category || '';
   document.getElementById('modal-category').style.display = '';
   updatePlatformsSection(item.category || '');
