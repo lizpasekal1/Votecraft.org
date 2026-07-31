@@ -971,7 +971,8 @@
   justify-content: center;
   flex-shrink: 0;
   padding: 0;
-  margin-left: -40px;
+  margin-left: -50px;
+  margin-right: 10px;
   background: none;
   border: none;
   cursor: pointer;
