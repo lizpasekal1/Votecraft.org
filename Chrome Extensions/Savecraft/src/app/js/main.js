@@ -480,6 +480,7 @@ async function init() {
   document.getElementById('detail-modal-overlay').addEventListener('click', e => {
     if (e.target === document.getElementById('detail-modal-overlay')) closeDetailModal();
   });
+  document.getElementById('detail-modal-close-btn').addEventListener('click', closeDetailModal);
   document.getElementById('image-lightbox-overlay').addEventListener('click', closeImageLightbox);
   document.getElementById('image-lightbox-prev').addEventListener('click', e => { e.stopPropagation(); showPrevImage(); });
   document.getElementById('image-lightbox-next').addEventListener('click', e => { e.stopPropagation(); showNextImage(); });
