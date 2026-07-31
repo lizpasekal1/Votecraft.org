@@ -1453,3 +1453,35 @@
   display: flex;
 }
 
+/* ===== MOBILE ===== */
+/* Same breakpoint as the rest of the app (misc.css/cards.css). Desktop's mouse-precision sizing
+   (thin accordion rows, small icon buttons) becomes hard to tap accurately on a touchscreen —
+   these widen the actual hit areas to something closer to the ~44px minimum recommended touch
+   target, without changing anything about the desktop layout below 768px wide. */
+@media (max-width: 768px) {
+  /* Sidebar's own mobile CSS already does the same padding-for-height trick for its rows
+     (.sidebar-items-scroll .sidebar-item, misc.css) — mirrored here so every accordion row (My
+     Notes, Albums/Song List, Web Links, Add to Queue) grows from a ~23-26px tap height to ~44px. */
+  .detail-accordion-header {
+    padding: 10px 2px;
+  }
+
+  .detail-note-toolbar-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* The circular "open this note" button (My Notes/Chapters rows) — visibly bigger, not just a
+     padded invisible hit area, since it's the primary tap target on every row. The smaller rename
+     pencil next to it is left alone; its size/position were tuned precisely enough this session
+     that padding it out on mobile risks reopening that whole round of feedback. */
+  .detail-tracklist-favorite--circle {
+    width: 30px;
+    height: 30px;
+  }
+  .detail-tracklist-favorite--circle svg {
+    width: 17px;
+    height: 17px;
+  }
+}
+
