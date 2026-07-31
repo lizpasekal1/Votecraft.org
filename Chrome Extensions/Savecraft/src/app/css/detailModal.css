@@ -1045,14 +1045,14 @@
    1.2x-scaled desktop icons, per explicit feedback — scoped to this modifier specifically (not
    the shared .detail-tracklist-favorite svg rule above) so Song List's plain pencil is unaffected. */
 .detail-tracklist-favorite--circle {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border: 1.5px solid currentColor;
   border-radius: 50%;
 }
 .detail-tracklist-favorite--circle svg {
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
 }
 
 .detail-tracklist-favorite--active {
