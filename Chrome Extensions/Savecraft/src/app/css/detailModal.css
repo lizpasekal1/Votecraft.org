@@ -67,6 +67,13 @@
 }
 .modal-x-close:hover { color: var(--text-primary); }
 
+/* Desktop-hidden — the detail modal's own close button, mobile-only (see @media below). Backdrop
+   click/Escape already cover desktop, where the modal is small enough to always leave backdrop to
+   tap; on mobile the modal nearly fills the viewport instead, leaving almost none. */
+.detail-modal-close {
+  display: none;
+}
+
 /* This, .detail-bookmark-btn, and .detail-favorite-btn form the top-right icon column — all
    three share the same right: 4px, centering their 32px width in the gap between the (fixed
    232px, no longer modal-width-relative) featured image's right edge and the modal's own outer
@@ -1459,6 +1466,39 @@
    these widen the actual hit areas to something closer to the ~44px minimum recommended touch
    target, without changing anything about the desktop layout below 768px wide. */
 @media (max-width: 768px) {
+  /* Desktop pins this to a narrow 312px card with a 600px height cap — comfortable next to a
+     mouse-driven grid, but it reads as a small floating box with dead space around it on a phone.
+     Nearly fills the viewport instead, same spirit as the sidebar becoming a full-height drawer
+     in its own mobile CSS. Padding trimmed too, so the extra width actually reaches the content
+     rather than just widening the existing side margins. Can afford to go this close to the true
+     edges (leaving barely any backdrop to tap) now that .detail-modal-close below gives mobile a
+     real, dedicated close affordance instead of relying on tapping outside the modal. */
+  .modal.detail-modal {
+    width: 98vw;
+    max-width: 98vw;
+    max-height: 95vh;
+    padding: 20px 16px;
+  }
+
+  /* Hidden on desktop (closing via backdrop click/Escape is enough there, and the modal is small
+     enough to always have backdrop to spare) — shown here since the mobile modal above now leaves
+     almost none. Left corner, not the existing .modal-x-close's default right — the top-right
+     corner is already the edit/bookmark/favorite icon column. */
+  .detail-modal-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 10px;
+    left: 10px;
+    right: auto;
+    width: 32px;
+    height: 32px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 50%;
+    font-size: 16px;
+  }
+
   /* Sidebar's own mobile CSS already does the same padding-for-height trick for its rows
      (.sidebar-items-scroll .sidebar-item, misc.css) — mirrored here so every accordion row (My
      Notes, Albums/Song List, Web Links, Add to Queue) grows from a ~23-26px tap height to ~44px. */
