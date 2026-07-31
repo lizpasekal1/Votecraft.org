@@ -71,7 +71,7 @@ const NOTE_OPEN_ICON = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" vi
 const SONG_NOTE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg>`;
 // A small pencil next to a row's title (rename the label) — separate glyph from the plus above,
 // which sits at the row's end and opens the note content instead.
-const RENAME_ICON = `<svg xmlns="http://www.w3.org/2000/svg" height="13px" viewBox="0 -960 960 960" width="13px" fill="currentColor"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg>`;
+const RENAME_ICON = `<svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg>`;
 
 export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, ctaAuthor }) {
   // Fresh state every time the modal opens on an item, so focus mode / an active row from a
@@ -199,29 +199,39 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
   }
 
   // Turns a row's title span into an inline-editable field (contenteditable, matching the note
-  // body's own convention, rather than swapping in a real <input>). Blurring commits whatever's
-  // there (empty/unchanged reverts to the default label, cleaning up any stored override);
-  // Escape cancels by re-rendering the whole list from scratch via onCancel, discarding the
-  // in-progress edit entirely rather than trying to restore the prior text by hand.
+  // body's own convention, rather than swapping in a real <input>). The field is cleared to empty
+  // on entry (so the "Rename…" placeholder shows, see detailModal.css's :empty::before, and
+  // typing never appends onto/mangles the old label) — blurring after actually typing something
+  // commits it (empty input reverts to the default label, cleaning up any stored override), but
+  // blurring untouched (no input event ever fired) just restores whatever was showing before,
+  // without touching storage at all — otherwise clicking the pencil and clicking away again would
+  // silently wipe out an existing custom title back to the default. Escape cancels the same way,
+  // via re-rendering the whole list from scratch (onCancel).
   function _startRenamingTitle(titleSpan, rowNumber, titlesField, onCancel) {
     const defaultLabel = titleSpan.dataset.defaultLabel;
+    const originalText = titleSpan.textContent;
     let cancelled = false;
+    let touched = false;
     titleSpan.setAttribute('contenteditable', 'true');
     titleSpan.classList.add('detail-tracklist-title--editing');
+    titleSpan.textContent = '';
     titleSpan.focus();
-    document.execCommand('selectAll');
     const stopClick = e => e.stopPropagation(); // clicking to place the caret shouldn't also toggle the row's note open/closed
+    const onInput = () => { touched = true; };
     titleSpan.addEventListener('click', stopClick);
+    titleSpan.addEventListener('input', onInput);
     const cleanup = () => {
       titleSpan.removeAttribute('contenteditable');
       titleSpan.classList.remove('detail-tracklist-title--editing');
       titleSpan.removeEventListener('click', stopClick);
+      titleSpan.removeEventListener('input', onInput);
       titleSpan.removeEventListener('blur', onBlur);
       titleSpan.removeEventListener('keydown', onKeydown);
     };
     const onBlur = async () => {
       cleanup();
       if (cancelled) return;
+      if (!touched) { titleSpan.textContent = originalText; return; }
       const newText = titleSpan.textContent.trim();
       const finalLabel = newText || defaultLabel;
       titleSpan.textContent = finalLabel;
@@ -282,7 +292,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
           <span class="detail-tracklist-number${hasNote ? ' detail-tracklist-number--has-note' : ''}">${num === 0 ? zeroNumberDisplay : num}</span>
           <span class="detail-tracklist-title${hasNote ? ' detail-tracklist-title--has-note' : ''}" data-row-number="${num}" data-default-label="${escapeHtml(defaultLabel)}">${escapeHtml(displayLabel)}</span>
           <button type="button" class="detail-tracklist-rename" data-row-number="${num}" aria-label="Rename ${escapeHtml(displayLabel)}" title="Rename">${RENAME_ICON}</button>
-          <span class="detail-tracklist-favorite${isFav || hasNote ? ' detail-tracklist-favorite--active' : ''}" data-row-number="${num}">${NOTE_OPEN_ICON}</span>
+          <span class="detail-tracklist-favorite detail-tracklist-favorite--circle${isFav || hasNote ? ' detail-tracklist-favorite--active' : ''}" data-row-number="${num}">${NOTE_OPEN_ICON}</span>
         </div>
         <div class="detail-tracklist-notes-input${isFav ? ' open' : ''}" data-row-number="${num}" data-placeholder="${escapeHtml(notePlaceholder)}" contenteditable="true" role="textbox" aria-multiline="true" aria-label="${escapeHtml(notePlaceholder)}">${noteHtml}</div>
       </div>`;

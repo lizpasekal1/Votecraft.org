@@ -936,6 +936,33 @@
   outline: none;
   cursor: text;
   color: var(--text-primary) !important;
+  caret-color: var(--text-primary);
+  padding: 2px 6px;
+  /* Cancels the padding's own footprint so the row doesn't visibly shift/reflow the moment
+     editing starts — same trick as the accordion rows' own margin/gap cancellation elsewhere. */
+  margin: -2px -6px;
+  border-radius: 4px;
+  background: var(--search-bg); /* same light-gray input-field treatment as the search box, theme-aware */
+}
+
+/* The field is cleared to empty on entry (see _startRenamingTitle, detailModalNotes.js) — this is
+   its placeholder, same convention as the note body's own data-placeholder ghost text just below,
+   except hardcoded (every row's rename field shows the same "Rename…" prompt) rather than driven
+   by a per-row data attribute. Disappears the moment the user types the first character, same as
+   any other placeholder. */
+.detail-tracklist-title--editing:empty::before {
+  content: 'Rename…';
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+/* Belt-and-suspenders: if the user manually selects text instead of just typing over the
+   collapsed caret above, the browser's default selection highlight would otherwise be a jarring
+   blue box on top of the gray editing background. Blends it away instead: same text color, so
+   selected title text still just reads as plain white text. */
+.detail-tracklist-title--editing::selection {
+  background: var(--search-bg);
+  color: var(--text-primary);
 }
 
 .detail-tracklist-rename {
@@ -944,6 +971,7 @@
   justify-content: center;
   flex-shrink: 0;
   padding: 0;
+  margin-left: -20px;
   background: none;
   border: none;
   cursor: pointer;
@@ -990,6 +1018,17 @@
   display: block;
   width: 15px;
   height: 15px;
+}
+
+/* My Notes/Chapters' own "open a note" icon (the plus, NOTE_OPEN_ICON) only — Song List's per-
+   track pencil (SONG_NOTE_ICON) keeps the plain icon-only treatment, no circle. border uses
+   currentColor so it automatically follows the same muted/active/hover color transitions the
+   icon itself already gets, no separate state rules needed. */
+.detail-tracklist-favorite--circle {
+  width: 19px;
+  height: 19px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
 }
 
 .detail-tracklist-favorite--active {
