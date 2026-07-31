@@ -1476,8 +1476,16 @@
   .modal.detail-modal {
     width: 98vw;
     max-width: 98vw;
-    max-height: 95vh;
+    max-height: 98vh;
     padding: 20px 16px;
+  }
+
+  /* Focus mode pins a firm height (not max-height) so hiding the image/icons doesn't just let the
+     modal shrink shorter — desktop's version of that firm height is capped at 600px, which would
+     otherwise silently override the taller cap above (a real height, not a max-height, always
+     wins over the modal's own shrink-wrap regardless of what max-height also allows). */
+  .detail-modal--focus-mode {
+    height: 98vh;
   }
 
   /* Hidden on desktop (closing via backdrop click/Escape is enough there, and the modal is small
@@ -1522,6 +1530,51 @@
   .detail-tracklist-favorite--circle svg {
     width: 17px;
     height: 17px;
+  }
+
+  /* ----- Text sizes: everything below reads noticeably smaller on a phone than the same pixel
+     count does on a desktop monitor viewed from further away — bumped up across the board rather
+     than case-by-case. Values chosen to still fit their existing layout (checked against the
+     tightest case, .btn-detail-website's fixed-width pill) rather than a single flat ratio. ----- */
+  .detail-title { font-size: 20px; }
+  .detail-notes { font-size: 14px; }
+  .detail-accordion-header { font-size: 12px; }
+  .detail-album-row { font-size: 14px; }
+  .detail-tracklist-row { font-size: 14px; }
+  .detail-tracklist-number { font-size: 13px; }
+  .detail-tracklist-notes-input { font-size: 14px; }
+  .detail-accordion-summary-text { font-size: 14px; }
+  .detail-tracklist-add-chapter { font-size: 13px; }
+  .streaming-label { font-size: 12px; }
+  .streaming-link-btn { font-size: 13px; }
+  /* Widened along with its own font-size bump — "OFFICIAL WEBSITE" already nearly fills the
+     desktop pill's 170px at 12px/uppercase/0.08em letter-spacing, so growing the text without
+     growing the box would clip or wrap it. */
+  .btn-detail-website {
+    width: 190px;
+    font-size: 13px;
+  }
+
+  /* ----- Icons/chevrons: same reasoning as the text sizes above — small enough to read as fine
+     detail on a desktop monitor becomes hard to make out at arm's length on a phone. ----- */
+  .detail-accordion-icon,
+  #detail-albums-accordion-header .detail-accordion-icon,
+  #detail-notes-accordion-header .detail-accordion-icon,
+  #standalone-queue-bookmark {
+    width: 24px;
+    height: 24px;
+  }
+  .detail-accordion-chevron {
+    width: 16px;
+    height: 16px;
+  }
+  .detail-tracklist-favorite svg {
+    width: 18px;
+    height: 18px;
+  }
+  .detail-note-toolbar-btn svg {
+    width: 22px;
+    height: 22px;
   }
 }
 
