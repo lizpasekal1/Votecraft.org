@@ -329,7 +329,6 @@ function showReviewScreen(result) {
   document.getElementById('input-title').value = result?.title || '';
   document.getElementById('input-author').value = result?.author || '';
   document.getElementById('input-summary').value = '';
-  document.getElementById('input-notes').value = '';
   document.getElementById('input-image-url').value = '';
   document.getElementById('input-youtube-url').value = '';
   document.getElementById('input-url').value = result?.url || '';
@@ -504,7 +503,6 @@ export function openAddModal() {
   document.getElementById('input-title').value = '';
   document.getElementById('input-author').value = '';
   document.getElementById('input-summary').value = '';
-  document.getElementById('input-notes').value = '';
   document.getElementById('input-image-url').value = '';
   document.getElementById('input-youtube-url').value = '';
   updatePlatformsSection('');
@@ -541,7 +539,6 @@ export function openEditModal(item) {
   document.getElementById('input-title').value = item.title || '';
   document.getElementById('input-author').value = item.author || '';
   document.getElementById('input-summary').value = item.summary || '';
-  document.getElementById('input-notes').value = item.notes || '';
   document.getElementById('input-image-url').value = item.imageUrl || '';
   document.getElementById('input-youtube-url').value = item.youtubeUrl || '';
   updateTitleAuthorLayout(item.category);
@@ -583,7 +580,6 @@ export async function handleSaveItem() {
     ? (document.getElementById('input-folder-select').value || null)
     : (_wizardFolderId || null);
   const summary = document.getElementById('input-summary').value.trim() || null;
-  const notes = document.getElementById('input-notes').value.trim() || null;
   const manualImageUrl = document.getElementById('input-image-url').value.trim() || null;
   const youtubeUrl = document.getElementById('input-youtube-url').value.trim() || null;
   const platforms = getSelectedPlatforms();
@@ -633,11 +629,11 @@ export async function handleSaveItem() {
     // you haven't saved yet implies you want to keep it. Reuses the same 'cur-' id (not a new
     // Date.now() id) so it still matches the curated source for badge/lookup purposes elsewhere.
     // Deliberately does NOT set queueStatus — only the explicit "Add to Queue" button does that.
-    state.curatedOverrides[state.editingId] = { url, title, author, summary, notes, imageUrl: manualImageUrl, youtubeUrl };
+    state.curatedOverrides[state.editingId] = { url, title, author, summary, imageUrl: manualImageUrl, youtubeUrl };
     await persistCuratedOverrides();
     if (!state.items.find(i => i.id === state.editingId)) {
       const liveItem = {
-        id: state.editingId, url, title, author, summary, notes,
+        id: state.editingId, url, title, author, summary,
         imageUrl: manualImageUrl, youtubeUrl, category, folderId, platforms,
         curated: false, savedAt: Date.now(),
       };
@@ -652,12 +648,15 @@ export async function handleSaveItem() {
     return;
   } else if (state.editingId) {
     const existing = state.items.find(i => i.id === state.editingId);
-    item = { ...existing, url, title, author, summary, notes, imageUrl: manualImageUrl, youtubeUrl, category, folderId, platforms };
+    // notes deliberately not overridden here — it's no longer edited from this form (moved to the
+    // detail modal's own My Notes accordion instead), so the spread above just leaves whatever
+    // existing.notes already was untouched.
+    item = { ...existing, url, title, author, summary, imageUrl: manualImageUrl, youtubeUrl, category, folderId, platforms };
     const idx = state.items.findIndex(i => i.id === state.editingId);
     if (idx >= 0) state.items[idx] = item;
   } else {
     item = {
-      id: Date.now().toString(), url, title, author, summary, notes,
+      id: Date.now().toString(), url, title, author, summary,
       imageUrl: manualImageUrl || _wizardFetchedImageUrl || null, youtubeUrl, description: null,
       category, folderId, platforms, done: false, savedAt: Date.now(),
     };
