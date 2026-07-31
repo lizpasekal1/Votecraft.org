@@ -81,7 +81,6 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
   document.querySelector('.modal.detail-modal').classList.remove('detail-modal--focus-mode', 'detail-modal--editing-note');
   document.getElementById('detail-body').classList.remove('detail-body--editing-note');
 
-  const notesInputEl = document.getElementById('detail-notes-input');
   const notesAccordionHeaderEl = document.getElementById('detail-notes-accordion-header');
   const tracklistAccordionHeaderEl = document.getElementById('detail-tracklist-accordion-header');
   const tracklistEl = document.getElementById('detail-tracklist');
@@ -103,12 +102,6 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
   const _curatedNotesIsCreatorName = item.curated && CURATED_NOTES_CATEGORIES.includes(item.category);
   const text = (_curatedNotesIsCreatorName ? null : item.notes) || item.description || '';
 
-  // The plain textarea is never shown anymore — every category now folds a numbered note list
-  // (Chapter 0..N for Book, "Summary"/Note 1..N for everyone else) into this accordion instead.
-  // Left in place (hidden, still debounce-saving to item.notes on the off chance anything else
-  // still reads that field) rather than removed outright, same as Book's already did before this.
-  notesInputEl.value = text;
-  notesInputEl.style.display = 'none';
   notesAccordionHeaderEl.classList.remove('open');
   notesAccordionHeaderEl.style.display = '';
   notesAccordionHeaderEl.onclick = () => {
@@ -135,18 +128,6 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
       _correctScrollUnderToolbar(alreadyOpenRow);
     }
   };
-
-  const saveNotes = debounce(async () => {
-    if (getDetailItem() !== item) return; // modal moved on to a different item before the debounce fired
-    const newNotes = notesInputEl.value.trim() || null;
-    let liveItem = state.items.find(i => i.id === item.id);
-    if (!liveItem) liveItem = await ensureLiveItem(item);
-    if (liveItem.notes === newNotes) return;
-    liveItem.notes = newNotes;
-    item.notes = newNotes;
-    await persistItem(liveItem);
-  }, 600);
-  notesInputEl.oninput = saveNotes;
 
   tracklistAccordionHeaderEl.classList.remove('open');
   tracklistEl.classList.remove('open');
@@ -253,6 +234,128 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
     titleSpan.addEventListener('keydown', onKeydown);
   }
 
+  // Wires every row inside `container`: the whole-row click that opens/closes its note (closing
+  // any other open row in the same container first, clearing its persisted favorites list down to
+  // just this one), and the note body's own input/click/focus/blur/paste handlers. Shared by the
+  // numbered note list (My Notes/Chapters, rows keyed by data-row-number) and the Music Album
+  // track list (rows keyed by data-track-number) below — the two were near-identical copies of
+  // each other before, differing only in which data attribute/item field they read and wrote.
+  // zeroSeededField is omitted for tracks: they have no synthetic "row 0" concept, since their
+  // numbers come from real iTunes data rather than a user-extendable count.
+  function _wireNoteRows(container, { idAttr, favoritesField, textsField, zeroSeededField }) {
+    // Bound to the whole row (not just the pencil) so tapping the row's label also opens/closes
+    // the note — the pencil is still visually the "affordance" but isn't the only tap target.
+    container.querySelectorAll('.detail-tracklist-row').forEach(rowEl => {
+      const starEl = rowEl.querySelector('.detail-tracklist-favorite');
+      if (!starEl) return; // status rows ("Loading…" etc.) have no favorite icon
+      rowEl.addEventListener('click', () => {
+        const rowId = Number(starEl.dataset[idAttr]);
+        const thisItemEl = rowEl.closest('.detail-tracklist-item');
+        const notesInput = thisItemEl?.querySelector('.detail-tracklist-notes-input');
+        // Determined from the DOM's own current 'open' state, not from awaiting the persisted
+        // favorites array — switching from one open row straight to another's pencil needs
+        // .focus() to fire in the SAME synchronous tick as the click (immediately after the old
+        // row's native blur), or the toolbar flickers closed in between. Awaiting ensureLiveItem/
+        // persistItem first (real chrome.storage.sync.set I/O, not just a microtask) delayed
+        // .focus() by enough that the earlier fix (deferring the blur handler's own cleanup by one
+        // tick) wasn't reliably enough of a head start — this sidesteps the race entirely by never
+        // blocking the visual update on the async save in the first place.
+        const nowFav = !notesInput?.classList.contains('open');
+        container.querySelectorAll('.detail-tracklist-item').forEach(otherItemEl => {
+          if (otherItemEl === thisItemEl) return;
+          const otherInput = otherItemEl.querySelector('.detail-tracklist-notes-input');
+          otherInput?.classList.remove('open');
+          fitTracklistNote(otherInput);
+          const otherStar = otherItemEl.querySelector('.detail-tracklist-favorite');
+          otherStar?.classList.toggle('detail-tracklist-favorite--active', !!otherInput?.textContent.trim());
+        });
+        const hasNote = !!notesInput?.textContent.trim();
+        starEl.classList.toggle('detail-tracklist-favorite--active', nowFav || hasNote);
+        notesInput?.classList.toggle('open', nowFav);
+        fitTracklistNote(notesInput);
+        // Closing this row via its own pencil no longer hides the toolbar or exits focus mode —
+        // both are tied to whether "MY NOTES"/"SONG LIST" itself is open now (see
+        // _updateNoteEditingUi), not to any individual row. Still blur (and clear _activeNoteRow
+        // right away rather than waiting on the blur listener's own deferred cleanup) so the
+        // format buttons correctly disable — nothing is focused to apply them to anymore.
+        if (nowFav) {
+          notesInput?.focus();
+        } else {
+          notesInput?.blur();
+          if (_activeNoteRow === notesInput) _activeNoteRow = null;
+          _updateNoteEditingUi();
+        }
+        // Async persistence happens after the visual/focus update above, not before — only one
+        // note open at a time, so this also clears every other entry from the favorites list (not
+        // just in the DOM) so a reload doesn't bring them all back.
+        (async () => {
+          const liveRowItem = await ensureLiveItem(item);
+          liveRowItem[favoritesField] = nowFav ? [rowId] : [];
+          await persistItem(liveRowItem);
+        })();
+      });
+    });
+
+    container.querySelectorAll('.detail-tracklist-notes-input').forEach(inputEl => {
+      const saveNote = debounce(async () => {
+        if (getDetailItem() !== item) return; // modal moved on to a different item before the debounce fired
+        const rowId = Number(inputEl.dataset[idAttr]);
+        const liveRowItem = await ensureLiveItem(item);
+        const newTexts = { ...(liveRowItem[textsField] || {}) };
+        // Computed for storage only — never written back into inputEl.innerHTML, or the cursor
+        // would reset mid-typing. Rows are only ever re-rendered from stored data on explicit
+        // user actions (modal open, "+ Add"), never mid-edit.
+        const cleanHtml = sanitizeNoteHtml(inputEl.innerHTML);
+        const noteText = plainTextFromNoteHtml(cleanHtml);
+        if (noteText) newTexts[rowId] = cleanHtml; else delete newTexts[rowId];
+        liveRowItem[textsField] = newTexts;
+        // Any edit to row 0 (even clearing it) permanently stops the starting-text fallback from
+        // reappearing on future renders.
+        if (zeroSeededField && rowId === 0) liveRowItem[zeroSeededField] = true;
+        await persistItem(liveRowItem);
+      }, 500);
+      inputEl.addEventListener('input', () => {
+        // Number/title/pencil turn purple/bold immediately as the user types, rather than
+        // waiting on the debounced save above to actually persist the note.
+        const itemEl = inputEl.closest('.detail-tracklist-item');
+        const hasNote = !!inputEl.textContent.trim();
+        itemEl?.querySelector('.detail-tracklist-number')?.classList.toggle('detail-tracklist-number--has-note', hasNote);
+        itemEl?.querySelector('.detail-tracklist-title')?.classList.toggle('detail-tracklist-title--has-note', hasNote);
+        itemEl?.querySelector('.detail-tracklist-favorite')?.classList.toggle('detail-tracklist-favorite--active', hasNote || inputEl.classList.contains('open'));
+        fitTracklistNote(inputEl);
+        saveNote();
+      });
+      inputEl.addEventListener('click', e => e.stopPropagation());
+      inputEl.addEventListener('focus', () => {
+        _activeNoteRow = inputEl;
+        _updateNoteEditingUi();
+      });
+      inputEl.addEventListener('blur', () => {
+        if (!inputEl.textContent.trim()) inputEl.innerHTML = ''; // clear a stray auto-inserted <br> so :empty/placeholder work next time
+        // Deferred: switching directly to a different row's pencil calls that row's .focus()
+        // immediately, which fires THIS blur synchronously first — clearing _activeNoteRow (and
+        // hiding the toolbar) here right away would flicker it closed before the other row's own
+        // focus handler reclaims it a moment later. Waiting a tick lets that reclaim happen first;
+        // only treat it as "nothing is focused anymore" if _activeNoteRow still points at this row
+        // once that chance has passed.
+        setTimeout(() => {
+          if (_activeNoteRow === inputEl) {
+            _activeNoteRow = null;
+            _updateNoteEditingUi();
+          }
+        }, 0);
+      });
+      inputEl.addEventListener('paste', e => {
+        e.preventDefault();
+        const cd = e.clipboardData || window.clipboardData;
+        const html = cd.getData('text/html');
+        const clean = html ? sanitizeNoteHtml(html) : escapeHtml(cd.getData('text/plain'));
+        document.execCommand('insertHTML', false, clean);
+        inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    });
+  }
+
   // Shared by Book's Chapter list and every other category's Summary/Note list below — same UI (a
   // favorite star + collapsible per-row note, keyed by a row number, with a "+ Add" row at the end
   // and a row 0 that falls back to some starting text until the user actually edits it), just
@@ -314,117 +417,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
       });
     });
 
-    // Bound to the whole row (not just the pencil) so tapping the row's label also opens/closes
-    // the note — the pencil is still visually the "affordance" but isn't the only tap target.
-    target.querySelectorAll('.detail-tracklist-row').forEach(rowEl => {
-      const starEl = rowEl.querySelector('.detail-tracklist-favorite');
-      if (!starEl) return;
-      rowEl.addEventListener('click', () => {
-        const rowNumber = Number(starEl.dataset.rowNumber);
-        const thisItemEl = rowEl.closest('.detail-tracklist-item');
-        const notesInput = thisItemEl?.querySelector('.detail-tracklist-notes-input');
-        // Determined from the DOM's own current 'open' state, not from awaiting the persisted
-        // favorites array — switching from one open row straight to another's pencil needs
-        // .focus() to fire in the SAME synchronous tick as the click (immediately after the old
-        // row's native blur), or the toolbar flickers closed in between. Awaiting ensureLiveItem/
-        // persistItem first (real chrome.storage.sync.set I/O, not just a microtask) delayed
-        // .focus() by enough that the earlier fix (deferring the blur handler's own cleanup by one
-        // tick) wasn't reliably enough of a head start — this sidesteps the race entirely by never
-        // blocking the visual update on the async save in the first place.
-        const nowFav = !notesInput?.classList.contains('open');
-        target.querySelectorAll('.detail-tracklist-item').forEach(otherItemEl => {
-          if (otherItemEl === thisItemEl) return;
-          const otherInput = otherItemEl.querySelector('.detail-tracklist-notes-input');
-          otherInput?.classList.remove('open');
-          fitTracklistNote(otherInput);
-          const otherStar = otherItemEl.querySelector('.detail-tracklist-favorite');
-          otherStar?.classList.toggle('detail-tracklist-favorite--active', !!otherInput?.textContent.trim());
-        });
-        const hasNote = !!notesInput?.textContent.trim();
-        starEl.classList.toggle('detail-tracklist-favorite--active', nowFav || hasNote);
-        notesInput?.classList.toggle('open', nowFav);
-        fitTracklistNote(notesInput);
-        // Closing this row via its own pencil no longer hides the toolbar or exits focus mode —
-        // both are tied to whether "MY NOTES"/"SONG LIST" itself is open now (see
-        // _updateNoteEditingUi), not to any individual row. Still blur (and clear _activeNoteRow
-        // right away rather than waiting on the blur listener's own deferred cleanup) so the
-        // format buttons correctly disable — nothing is focused to apply them to anymore.
-        if (nowFav) {
-          notesInput?.focus();
-        } else {
-          notesInput?.blur();
-          if (_activeNoteRow === notesInput) _activeNoteRow = null;
-          _updateNoteEditingUi();
-        }
-        // Async persistence happens after the visual/focus update above, not before — only one
-        // note open at a time, so this also clears every other entry from the favorites list (not
-        // just in the DOM) so a reload doesn't bring them all back.
-        (async () => {
-          const liveRowItem = await ensureLiveItem(item);
-          liveRowItem[favoritesField] = nowFav ? [rowNumber] : [];
-          await persistItem(liveRowItem);
-        })();
-      });
-    });
-
-    target.querySelectorAll('.detail-tracklist-notes-input').forEach(inputEl => {
-      const saveRowNote = debounce(async () => {
-        if (getDetailItem() !== item) return; // modal moved on to a different item before the debounce fired
-        const rowNumber = Number(inputEl.dataset.rowNumber);
-        const liveRowItem = await ensureLiveItem(item);
-        const newTexts = { ...(liveRowItem[textsField] || {}) };
-        // Computed for storage only — never written back into inputEl.innerHTML, or the cursor
-        // would reset mid-typing. Rows are only ever re-rendered from stored data on explicit
-        // user actions (modal open, "+ Add"), never mid-edit.
-        const cleanHtml = sanitizeNoteHtml(inputEl.innerHTML);
-        const noteText = plainTextFromNoteHtml(cleanHtml);
-        if (noteText) newTexts[rowNumber] = cleanHtml; else delete newTexts[rowNumber];
-        liveRowItem[textsField] = newTexts;
-        // Any edit to row 0 (even clearing it) permanently stops the starting-text fallback from
-        // reappearing on future renders.
-        if (rowNumber === 0) liveRowItem[zeroSeededField] = true;
-        await persistItem(liveRowItem);
-      }, 500);
-      inputEl.addEventListener('input', () => {
-        // Number/title/pencil turn purple/bold immediately as the user types, rather than
-        // waiting on the debounced save above to actually persist the note.
-        const itemEl = inputEl.closest('.detail-tracklist-item');
-        const hasNote = !!inputEl.textContent.trim();
-        itemEl?.querySelector('.detail-tracklist-number')?.classList.toggle('detail-tracklist-number--has-note', hasNote);
-        itemEl?.querySelector('.detail-tracklist-title')?.classList.toggle('detail-tracklist-title--has-note', hasNote);
-        itemEl?.querySelector('.detail-tracklist-favorite')?.classList.toggle('detail-tracklist-favorite--active', hasNote || inputEl.classList.contains('open'));
-        fitTracklistNote(inputEl);
-        saveRowNote();
-      });
-      inputEl.addEventListener('click', e => e.stopPropagation());
-      inputEl.addEventListener('focus', () => {
-        _activeNoteRow = inputEl;
-        _updateNoteEditingUi();
-      });
-      inputEl.addEventListener('blur', () => {
-        if (!inputEl.textContent.trim()) inputEl.innerHTML = ''; // clear a stray auto-inserted <br> so :empty/placeholder work next time
-        // Deferred: switching directly to a different row's pencil calls that row's .focus()
-        // immediately, which fires THIS blur synchronously first — clearing _activeNoteRow (and
-        // hiding the toolbar) here right away would flicker it closed before the other row's own
-        // focus handler reclaims it a moment later. Waiting a tick lets that reclaim happen first;
-        // only treat it as "nothing is focused anymore" if _activeNoteRow still points at this row
-        // once that chance has passed.
-        setTimeout(() => {
-          if (_activeNoteRow === inputEl) {
-            _activeNoteRow = null;
-            _updateNoteEditingUi();
-          }
-        }, 0);
-      });
-      inputEl.addEventListener('paste', e => {
-        e.preventDefault();
-        const cd = e.clipboardData || window.clipboardData;
-        const html = cd.getData('text/html');
-        const clean = html ? sanitizeNoteHtml(html) : escapeHtml(cd.getData('text/plain'));
-        document.execCommand('insertHTML', false, clean);
-        inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-      });
-    });
+    _wireNoteRows(target, { idAttr: 'rowNumber', favoritesField, textsField, zeroSeededField });
 
     document.getElementById(addButtonId).addEventListener('click', async e => {
       e.stopPropagation();
@@ -493,99 +486,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
         }).join('');
         tracklistEl.querySelectorAll('.detail-tracklist-notes-input.open').forEach(fitTracklistNote);
         _fitAccordionSection(tracklistEl); // after the per-row rAFs above are queued, so this one runs after theirs — see its own comment
-        // Bound to the whole row (not just the pencil) so tapping the track number or title also
-        // opens/closes the note — the pencil is still visually the "affordance" but isn't the
-        // only tap target.
-        tracklistEl.querySelectorAll('.detail-tracklist-row').forEach(rowEl => {
-          const starEl = rowEl.querySelector('.detail-tracklist-favorite');
-          if (!starEl) return; // status rows ("Loading…" etc.) have no favorite icon
-          rowEl.addEventListener('click', () => {
-            const trackNumber = Number(starEl.dataset.trackNumber);
-            const thisItemEl = rowEl.closest('.detail-tracklist-item');
-            const notesInput = thisItemEl?.querySelector('.detail-tracklist-notes-input');
-            // See the mirrored comment in the non-track-list favorite handler above — determined
-            // from the DOM's own 'open' state so .focus() fires synchronously, not after awaiting
-            // ensureLiveItem/persistItem first.
-            const nowFav = !notesInput?.classList.contains('open');
-            tracklistEl.querySelectorAll('.detail-tracklist-item').forEach(otherItemEl => {
-              if (otherItemEl === thisItemEl) return;
-              const otherInput = otherItemEl.querySelector('.detail-tracklist-notes-input');
-              otherInput?.classList.remove('open');
-              fitTracklistNote(otherInput);
-              const otherStar = otherItemEl.querySelector('.detail-tracklist-favorite');
-              otherStar?.classList.toggle('detail-tracklist-favorite--active', !!otherInput?.textContent.trim());
-            });
-            const hasNote = !!notesInput?.textContent.trim();
-            starEl.classList.toggle('detail-tracklist-favorite--active', nowFav || hasNote);
-            notesInput?.classList.toggle('open', nowFav);
-            fitTracklistNote(notesInput);
-            // See the mirrored comment in the non-track-list favorite handler above — closing this
-            // row no longer hides the toolbar/exits focus mode, just clears the format buttons'
-            // enabled state.
-            if (nowFav) {
-              notesInput?.focus();
-            } else {
-              notesInput?.blur();
-              if (_activeNoteRow === notesInput) _activeNoteRow = null;
-              _updateNoteEditingUi();
-            }
-            // Async persistence after the visual/focus update — same reasoning as above. Only one
-            // track note open at a time, clearing every other entry from favoriteTracks (not just
-            // in the DOM) so a reload doesn't bring them all back.
-            (async () => {
-              const liveTrackItem = await ensureLiveItem(item);
-              liveTrackItem.favoriteTracks = nowFav ? [trackNumber] : [];
-              await persistItem(liveTrackItem);
-            })();
-          });
-        });
-        tracklistEl.querySelectorAll('.detail-tracklist-notes-input').forEach(inputEl => {
-          const saveTrackNote = debounce(async () => {
-            if (getDetailItem() !== item) return; // modal moved on to a different item before the debounce fired
-            const trackNumber = Number(inputEl.dataset.trackNumber);
-            const liveTrackItem = await ensureLiveItem(item);
-            const notes = { ...(liveTrackItem.trackNotes || {}) };
-            const cleanHtml = sanitizeNoteHtml(inputEl.innerHTML);
-            const text = plainTextFromNoteHtml(cleanHtml);
-            if (text) notes[trackNumber] = cleanHtml; else delete notes[trackNumber];
-            liveTrackItem.trackNotes = notes;
-            await persistItem(liveTrackItem);
-          }, 500);
-          inputEl.addEventListener('input', () => {
-            // Number/title/pencil turn purple/bold immediately as the user types, rather than
-            // waiting on the debounced save below to actually persist the note.
-            const itemEl = inputEl.closest('.detail-tracklist-item');
-            const hasNote = !!inputEl.textContent.trim();
-            itemEl?.querySelector('.detail-tracklist-number')?.classList.toggle('detail-tracklist-number--has-note', hasNote);
-            itemEl?.querySelector('.detail-tracklist-title')?.classList.toggle('detail-tracklist-title--has-note', hasNote);
-            itemEl?.querySelector('.detail-tracklist-favorite')?.classList.toggle('detail-tracklist-favorite--active', hasNote || inputEl.classList.contains('open'));
-            fitTracklistNote(inputEl);
-            saveTrackNote();
-          });
-          inputEl.addEventListener('click', e => e.stopPropagation());
-          inputEl.addEventListener('focus', () => {
-            _activeNoteRow = inputEl;
-            _updateNoteEditingUi();
-          });
-          inputEl.addEventListener('blur', () => {
-            if (!inputEl.textContent.trim()) inputEl.innerHTML = '';
-            // Deferred — see the mirrored comment in the non-track-list blur handler above.
-            setTimeout(() => {
-              if (_activeNoteRow === inputEl) {
-                _activeNoteRow = null;
-                _updateNoteEditingUi();
-              }
-            }, 0);
-          });
-          inputEl.addEventListener('paste', e => {
-            e.preventDefault();
-            const cd = e.clipboardData || window.clipboardData;
-            const html = cd.getData('text/html');
-            const clean = html ? sanitizeNoteHtml(html) : escapeHtml(cd.getData('text/plain'));
-            document.execCommand('insertHTML', false, clean);
-            inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-          });
-        });
+        _wireNoteRows(tracklistEl, { idAttr: 'trackNumber', favoritesField: 'favoriteTracks', textsField: 'trackNotes' });
       }
     };
   } else if (item.category === 'Book') {
