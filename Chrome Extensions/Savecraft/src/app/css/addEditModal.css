@@ -551,24 +551,6 @@
   vertical-align: middle;
 }
 
-.step1-search-wrap {
-  position: relative;
-  margin-bottom: 0;
-}
-
-.step1-search-input {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  font-size: 14px;
-  outline: none;
-  color: var(--text-primary);
-  background: var(--surface);
-  transition: border-color 0.15s;
-}
-.step1-search-input:focus { border-color: var(--primary); }
-
 /* Generalized results dropdown — same visual language as the old iTunes-only suggestions list */
 .step1-search-results {
   border: 1px solid var(--border);
@@ -618,20 +600,6 @@
   color: var(--text-secondary);
   margin-top: 1px;
 }
-
-.step1-manual-add {
-  display: block;
-  margin-top: 8px;
-  padding: 0;
-  border: none;
-  background: none;
-  font-size: 12px;
-  color: var(--text-secondary);
-  cursor: pointer;
-  text-align: left;
-}
-.step1-manual-add:hover { color: var(--primary); }
-.step1-manual-add span { color: var(--primary); font-weight: 600; }
 
 /* ===== STEP 2 image preview ===== */
 .step2-image-preview-wrap {
