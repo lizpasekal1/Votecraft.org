@@ -14,7 +14,7 @@ import { escapeHtml, isItunesArtworkUrl, folderIconHtml, sortFoldersForDisplay }
 import { persistItem, persistCuratedOverrides } from './storage.js';
 import { renderSidebar, renderGrid, promptAddFolder } from './render.js';
 import {
-  searchMusicAlbums, searchShows, searchBooks, searchGames, searchMoviesWikipedia,
+  searchMusicAlbums, searchShows, searchShowsWikipedia, searchBooks, searchGames, searchMoviesWikipedia,
   ensureArtistWikipediaInfo, ensureItemWikipediaInfo, ensureItemCreator, fetchAlbumsFromItunes,
   fetchVideoThumbnail,
 } from './api.js';
@@ -29,13 +29,24 @@ let _wizardFolderId = null;        // folder chosen on the folder-picker screen 
 let _wizardHadFolderScreen = false; // whether the current category actually showed a folder screen — drives Back navigation
 let _wizardHadMusicChoiceScreen = false; // whether the combined "Music" tile's Musician/Album sub-choice screen was shown — drives Back navigation
 
+// Show's iTunes search (real artwork/year inline) runs first; Wikipedia is only queried as a
+// fallback when iTunes has nothing, for the shows its TV catalog doesn't cover — same "search
+// through Wikipedia the way Movie does" coverage, without losing iTunes's richer results when it
+// does have a match.
+async function searchShowsWithFallback(term) {
+  let results = [];
+  try { results = await searchShows(term); } catch { results = []; }
+  if (results.length > 0) return results;
+  try { return await searchShowsWikipedia(term); } catch { return []; }
+}
+
 // Musician is deliberately excluded — its background Wikipedia lookup (kickOffTitleEnrichment)
 // works fine off a plain typed name, and matching an exact catalog entry doesn't matter the way
 // it does for these five (which need the right result selected for links/art to populate
 // correctly). Visual Art/Web Links/News have no search source at all.
 const TITLE_SEARCH_FN = {
   'Music Album': searchMusicAlbums,
-  Show: searchShows,
+  Show: searchShowsWithFallback,
   Book: searchBooks,
   Game: searchGames,
   Movie: searchMoviesWikipedia,
