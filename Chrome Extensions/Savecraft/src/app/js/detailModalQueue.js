@@ -44,8 +44,24 @@ export function setupQueue(item, { domain, isMusicAlbum }) {
   registerAccordion('queue', queueEl, queueEl);
   const catConfig = CATEGORY_PLATFORMS[item.category];
   const query = item.title || domain;
-  const websiteLinkLabel = isMusicAlbum ? 'View on Apple Music' : (domain || 'View Source');
-  const websiteBtn = item.url
+  // Musician's `item.url` is very often an Apple Music artist page (the primary source behind
+  // its search results) — shown the raw "music.apple.com" domain, unlike Music Album's own
+  // hardcoded label below, since this branch only ever fell back to the plain domain string.
+  const websiteLinkLabel = isMusicAlbum ? 'View on Apple Music' : (domain === 'music.apple.com' ? 'Apple Music' : (domain || 'View Source'));
+  // Some categories' own item.url is frequently the very same page as another link already shown
+  // in this section — Book/Show/Movie/Game's Wikipedia-enrichment fallback (ensureItemWikipediaInfo)
+  // duplicates the dedicated "Wikipedia" link addWikipediaLink() appends below; Show's iTunes
+  // search source (tv.apple.com) duplicates the generic "Apple TV+" platform-search link; Game's
+  // Steam search source duplicates the generic "Steam" platform-search link. Showing the raw
+  // domain a second time is just clutter.
+  const REDUNDANT_WEBSITE_DOMAINS = {
+    Movie: ['en.wikipedia.org'],
+    Book: ['en.wikipedia.org'],
+    Show: ['en.wikipedia.org', 'tv.apple.com'],
+    Game: ['en.wikipedia.org', 'store.steampowered.com'],
+  };
+  const isRedundantWebsiteLink = (REDUNDANT_WEBSITE_DOMAINS[item.category] || []).includes(domain);
+  const websiteBtn = item.url && !isRedundantWebsiteLink
     ? `<a class="streaming-link-btn streaming-link-website" href="${escapeHtml(item.url)}" target="_blank">${escapeHtml(websiteLinkLabel)}</a>`
     : '';
   // The item's own saved YouTube URL (set via the "YouTube URL" field in the Add/Edit modal) —

@@ -184,6 +184,28 @@ export async function searchMoviesWikipedia(term) {
   }));
 }
 
+// Show's search is iTunes-first (searchShows above) since it returns real artwork/year inline —
+// this is only called as a fallback when iTunes has nothing (older/indie/non-US shows its TV
+// catalog doesn't cover), same shape/pattern as searchMoviesWikipedia just biased toward TV
+// series instead of film.
+export async function searchShowsWikipedia(term) {
+  const url = `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(term + ' TV series')}&gsrlimit=6&prop=pageimages|description&pithumbsize=100&format=json&origin=*`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Wikipedia error: ${resp.status}`);
+  const data = await resp.json();
+  const pages = Object.values(data.query?.pages || {});
+  pages.sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
+  return pages.map(p => ({
+    title: p.title,
+    author: null,
+    imageUrl: p.thumbnail?.source || null,
+    imageUrlLarge: p.thumbnail?.source || null,
+    url: `https://en.wikipedia.org/wiki/${encodeURIComponent(p.title.replace(/ /g, '_'))}`,
+    year: null,
+    meta: p.description || null,
+  }));
+}
+
 // This is the shared low-level fetch every Wikipedia lookup in this file funnels through (up to
 // 6 calls per single artist/item lookup once the search-fallback candidates are counted), and
 // render.js's fetchMissingCuratedMusicianPhotos() can fire dozens of these back-to-back with no

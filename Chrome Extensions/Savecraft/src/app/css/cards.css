@@ -204,7 +204,9 @@
   transform: translateY(-1px);
 }
 
-/* Left thumbnail */
+/* Left thumbnail — white background behind the image itself (not just the card), since some
+   curated logos (TV show/movie logo PNGs especially) have transparent backgrounds and were
+   nearly invisible against the dark card background showing through. */
 .card-image {
   width: 100px;
   height: 100%;
@@ -212,6 +214,7 @@
   object-fit: cover;
   object-position: center;
   display: block;
+  background: #fff;
 }
 
 .card-placeholder {

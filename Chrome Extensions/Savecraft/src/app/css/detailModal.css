@@ -162,7 +162,7 @@
   right: 100%;
   top: 50%;
   transform: translateY(-50%);
-  margin-right: 12px;
+  margin-right: 6px;
   background: var(--surface);
   border: 1px solid var(--primary);
   border-radius: 7px;
@@ -225,7 +225,10 @@
 /* Absolutely-positioned so it's out of flow — keeps the wrap's aspect-ratio from being
    overridden by the actual photo's natural size, while still clipping/cropping its content. */
 .detail-image-crop { position: absolute; inset: 0; overflow: hidden; }
-.detail-image { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+/* White background behind the image itself (not just the modal) — matches .card-image's own fix,
+   same reason: some curated logo PNGs have transparent backgrounds and were nearly invisible
+   against the modal's dark background showing through. */
+.detail-image { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; background: #fff; }
 .detail-image--faces { object-position: center 20%; }
 .detail-image--clickable { cursor: pointer; transition: filter 0.15s ease; }
 .detail-image--clickable:hover { filter: brightness(0.7); }
