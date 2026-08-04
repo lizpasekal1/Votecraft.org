@@ -29,14 +29,15 @@ const FOLDER_ID_TO_CURATED_CATEGORY = {
 
 // Folders that represent "the whole category" closely enough to show the full curated Top
 // 100/genre list when browsing a curated genre (Books' "Books" folder, Movies' "Movies" folder,
-// Shows' "TV Shows" folder, Games' "Console Games" folder — curated Top 100 games are all
-// console/PC titles, there's no board/mobile game curated data). Every other regular folder
-// (Videos, Podcasts, Webseries, Tutorials, Board Games, Mobile Games) has no curated-specific
-// data at all and correctly shows empty rather than duplicating a sibling folder's content.
+// Games' "Console Games" folder — curated Top 100 games are all console/PC titles, there's no
+// board/mobile game curated data). Every other regular folder (Videos, Series, Podcasts,
+// Webseries, Tutorials, Board Games, Mobile Games) has no curated-specific data at all and
+// correctly shows empty rather than duplicating a sibling folder's content. Shows no longer has
+// an entry here — its old "TV Shows" folder (which did) moved into Films as "Series", a regular
+// (not curated-backed) folder there, same as Videos/Directors.
 const FOLDER_SHOWS_FULL_CURATED_CATEGORY = new Set([
   'default-books-books',
   'default-movies-movies',
-  'default-shows-shows',
   'default-games-console',
   'default-musicians-musicians',
 ]);
@@ -122,10 +123,11 @@ export function renderSidebar() {
   // (category, subfolder, "All Items") reliably updates state.view but doesn't reset
   // sidebarMode away from 'home', so checking sidebarMode here left this link stuck active
   // after navigating away from the dashboard.
-  // Collapsible exactly like a category row (arrow on the right, click toggles), but with its
-  // own standalone entry in state.collapsed — not part of the categories' mutual-exclusion
-  // accordion group, since Dashboard isn't rendered in that list. No count badge before the
-  // arrow (unlike categories) since "Queue Kanban" isn't a countable quantity.
+  // Collapsible exactly like a category row (arrow on the right, click toggles), and — same as
+  // every category — expanding it collapses every other top-level tab first (see
+  // wireDashboardLink's otherCollapsibleIds param below), so at most one tab is ever open across
+  // the whole sidebar, Dashboard included. No count badge before the arrow (unlike categories)
+  // since "Queue Kanban" isn't a countable quantity.
   const isDashboardCollapsed = state.collapsed.has('dashboard');
   const dashboardArrow = isDashboardCollapsed ? '▶' : '▼';
 
@@ -145,10 +147,19 @@ export function renderSidebar() {
     <div class="sidebar-divider"></div>
   `;
 
-  function wireDashboardLink() {
+  // otherCollapsibleIds: every other top-level tab id currently rendered alongside Dashboard in
+  // this render pass (the category list in normal mode, or none in the curated genre-picker,
+  // which has nothing else collapsible to close) — expanding Dashboard collapses all of them,
+  // same mutual-exclusion the category tabs themselves already had. Passed in rather than closed
+  // over sidebarCategoryList directly: this function is also called from the curated-picker
+  // branch, textually before sidebarCategoryList is even computed further down.
+  function wireDashboardLink(otherCollapsibleIds) {
     sidebar.querySelector('.sidebar-dashboard-link')?.addEventListener('click', () => {
-      if (state.collapsed.has('dashboard')) state.collapsed.delete('dashboard');
-      else state.collapsed.add('dashboard');
+      if (state.collapsed.has('dashboard')) {
+        state.collapsed = new Set(otherCollapsibleIds);
+      } else {
+        state.collapsed.add('dashboard');
+      }
       state.sidebarMode = 'home';
       state.view = 'dashboard';
       persistViewState();
@@ -179,7 +190,7 @@ export function renderSidebar() {
       </div>
     `;
     wireMobileHeader();
-    wireDashboardLink();
+    wireDashboardLink([]); // genre rows aren't collapsible/tracked in state.collapsed at all
     sidebar.querySelectorAll('.sidebar-genre').forEach(el => {
       el.addEventListener('click', () => {
         state.view = 'genre:' + el.dataset.genre;
@@ -296,16 +307,17 @@ export function renderSidebar() {
     </div>
   `;
   wireMobileHeader();
-  wireDashboardLink();
+  wireDashboardLink(sidebarCategoryList);
 
   // Category header: toggle collapse OR switch view
   sidebar.querySelectorAll('.sidebar-category').forEach(el => {
     el.addEventListener('click', () => {
       const cat = el.dataset.toggle;
       if (state.collapsed.has(cat)) {
-        // Expanding — collapse all others first (sidebarCategoryList excludes Music Album, which
-        // has its own separate collapse state via the Musician "Music Albums" permanent subfolder link)
-        state.collapsed = new Set(sidebarCategoryList);
+        // Expanding — collapse all others first, Dashboard included (sidebarCategoryList excludes
+        // Music Album, which has its own separate collapse state via the Musician "Music Albums"
+        // permanent subfolder link).
+        state.collapsed = new Set([...sidebarCategoryList, 'dashboard']);
         state.collapsed.delete(cat);
       } else {
         state.collapsed.add(cat);

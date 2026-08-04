@@ -3,7 +3,14 @@
 // ES module bindings are live references, so this works exactly like the single-file closure
 // this codebase used to be, just spread across files.
 
-export const CATEGORIES = ['Web Links', 'Visual Art', 'Book', 'Movie', 'Game', 'News', 'Musician', 'Music Album', 'Show'];
+// News dropped as its own top-level tab — News-category items (if any pre-date this) are still
+// fully functional wherever they're already reachable (search, curated pages, direct open), just
+// no longer browsable via a dedicated nav entry; new items can no longer be added as "News"
+// through the wizard. CAT_LABEL/CAT_EMOJI/CATEGORY_PLATFORMS['News'] etc. are deliberately left
+// alone below — still needed to render any such item correctly, just not listed here.
+// Order here drives both the sidebar tab order and the Add Item wizard's category tile order
+// (Websites, Shows, Music, Games, Films, Books, Arts).
+export const CATEGORIES = ['Web Links', 'Show', 'Musician', 'Music Album', 'Game', 'Movie', 'Book', 'Visual Art'];
 // Categories whose empty accordion (in the placeholder slot between My Notes and Web Links)
 // is labeled "Summary" instead of "Placeholder", and which get a Wikipedia fallback for a
 // missing image/summary. Visual Art and the music categories are intentionally excluded.
@@ -171,7 +178,7 @@ export const CAT_LABEL = {
   'Web Links': 'Websites',
   'News': 'News',
   'Book': 'Books', 'Game': 'Games', 'Movie': 'Films',
-  'Musician': 'Musicians', 'Music Album': 'Albums',
+  'Musician': 'Music', 'Music Album': 'Albums',
   'Show': 'Shows', 'Visual Art': 'Arts',
 };
 
@@ -226,10 +233,11 @@ CATEGORY_PLATFORMS['Movie'].platforms              = CATEGORY_PLATFORMS['Show'].
 // The default folder (seeded in storage.js) representing a category's "normal" content — a
 // top-level tab filters to this folder plus any un-foldered items (see getFilteredSortedItems()
 // in render.js), so other subfolders (Videos, Authors, Genres, etc.) stay excluded from the flat
-// tab view unless opened directly. Categories with no entry here (Visual Art) are unfiltered.
+// tab view unless opened directly. Categories with no entry here (Visual Art, Show — Show's old
+// "TV Shows" folder moved into Films' "Series" folder, leaving Podcasts/Webseries/Tutorials/
+// Creators with no one folder that represents "the whole category" anymore) are unfiltered.
 export const PRIMARY_FOLDER_ID = {
   'Movie': 'default-movies-movies',
-  'Show': 'default-shows-shows',
   'Musician': 'default-musicians-musicians',
   'Music Album': 'default-music-albums',
   'Book': 'default-books-books',
@@ -248,7 +256,7 @@ export const FOLDER_ICON = {
   'default-movies-movies':      { type: 'svg', path: 'M200-320h400L462-500l-92 120-62-80-108 140Zm-40 160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h480q33 0 56.5 23.5T720-720v180l160-160v440L720-420v180q0 33-23.5 56.5T640-160H160Z' },
   'default-shows-podcasts':     { type: 'svg', path: 'M440-80v-331q-18-11-29-28.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 23-11 41t-29 28v331h-80ZM204-190q-57-55-90.5-129.5T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 86-33.5 161T756-190l-56-56q46-44 73-104.5T800-480q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 69 27 129t74 104l-57 57Zm113-113q-35-33-56-78.5T240-480q0-100 70-170t170-70q100 0 170 70t70 170q0 53-21 99t-56 78l-57-57q25-23 39.5-54t14.5-66q0-66-47-113t-113-47q-66 0-113 47t-47 113q0 36 14.5 66.5T374-360l-57 57Z' },
   'default-shows-webseries':    { type: 'svg', path: 'M160-80q-33 0-56.5-23.5T80-160v-400q0-33 23.5-56.5T160-640h640q33 0 56.5 23.5T880-560v400q0 33-23.5 56.5T800-80H160Zm240-120 240-160-240-160v320ZM160-680v-80h640v80H160Zm120-120v-80h400v80H280Z' },
-  'default-shows-shows':        { type: 'svg', path: 'm460-380 280-180-280-180v360ZM320-240q-33 0-56.5-23.5T240-320v-480q0-33 23.5-56.5T320-880h480q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H320ZM160-80q-33 0-56.5-23.5T80-160v-560h80v560h560v80H160Z' },
+  'default-movies-series':      { type: 'svg', path: 'm460-380 280-180-280-180v360ZM320-240q-33 0-56.5-23.5T240-320v-480q0-33 23.5-56.5T320-880h480q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H320ZM160-80q-33 0-56.5-23.5T80-160v-560h80v560h560v80H160Z' },
   'default-weblinks-articles':  { type: 'svg', path: 'M123-440q-1-10-1.5-20t-.5-20q0-75 28-140.5t77-114q49-48.5 114-77T480-840q75 0 140.5 28.5t114 77q48.5 48.5 77 114T840-480q0 10-.5 20t-1.5 20h-81q2-10 2.5-20t.5-20q0-10-.5-20t-2.5-20H639q1 10 1 20v40q0 10-1 20h-79v-33q0-12-.5-24t-1.5-23H403q-1 11-1.5 23t-.5 24v33h-79q-1-10-1-20v-40q0-10 1-20H204q-2 10-2.5 20t-.5 20q0 10 .5 20t2.5 20h-81Zm105-160h103q8-43 20-77.5t26-62.5q-48 18-87 54.5T228-600Zm186 0h132q-10-43-25-84t-41-76q-26 35-41.5 76T414-600Zm216 0h103q-23-49-62.5-85.5T583-740q14 30 26.5 63.5T630-600ZM440-120v-40q0-50-35-85t-85-35H80v-80h240q48 0 89.5 21t70.5 59q29-38 70.5-59t89.5-21h240v80H640q-50 0-85 35t-35 85v40h-80Z' },
   'default-weblinks-blogs':     { type: 'svg', path: 'M40-200v-560h80v560H40Zm160 0v-560h80v560h-80Zm240 0q-33 0-56.5-23.5T360-280v-400q0-33 23.5-56.5T440-760h400q33 0 56.5 23.5T920-680v400q0 33-23.5 56.5T840-200H440Zm40-160h320L696-500l-76 100-56-74-84 114Z' },
   'default-weblinks-websites':  { type: 'svg', path: 'M325-111.5q-73-31.5-127.5-86t-86-127.5Q80-398 80-480.5t31.5-155q31.5-72.5 86-127t127.5-86Q398-880 480.5-880t155 31.5q72.5 31.5 127 86t86 127Q880-563 880-480.5T848.5-325q-31.5 73-86 127.5t-127 86Q563-80 480.5-80T325-111.5ZM480-162q26-36 45-75t31-83H404q12 44 31 83t45 75Zm-104-16q-18-33-31.5-68.5T322-320H204q29 50 72.5 87t99.5 55Zm208 0q56-18 99.5-55t72.5-87H638q-9 38-22.5 73.5T584-178ZM170-400h136q-3-20-4.5-39.5T300-480q0-21 1.5-40.5T306-560H170q-5 20-7.5 39.5T160-480q0 21 2.5 40.5T170-400Zm216 0h188q3-20 4.5-39.5T580-480q0-21-1.5-40.5T574-560H386q-3 20-4.5 39.5T380-480q0 21 1.5 40.5T386-400Zm268 0h136q5-20 7.5-39.5T800-480q0-21-2.5-40.5T790-560H654q3 20 4.5 39.5T660-480q0 21-1.5 40.5T654-400Zm-16-240h118q-29-50-72.5-87T584-782q18 33 31.5 68.5T638-640Zm-234 0h152q-12-44-31-83t-45-75q-26 36-45 75t-31 83Zm-200 0h118q9-38 22.5-73.5T376-782q-56 18-99.5 55T204-640Z' },
