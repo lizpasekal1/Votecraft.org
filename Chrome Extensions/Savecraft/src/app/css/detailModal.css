@@ -339,8 +339,9 @@
   top: 0;
   z-index: 4;
   align-items: center;
+  justify-content: center; /* centers the button row so leftover space (this box is wider than 6 small icon buttons) splits evenly left/right, instead of all piling up on the right the way a default left-aligned row would */
   gap: 7px;
-  padding: 11px 0 7px 12px; /* was 24px top (matching .detail-title-row's) — reduced per feedback, so this no longer matches the title's own padding when they swap. 12px left shifts the Bold/Highlight/Bullet group off the modal's true edge (the toolbar's own box no longer bleeds — see the ::before pseudo below). */
+  padding: 11px 12px 7px 12px; /* was 24px top (matching .detail-title-row's) — reduced per feedback, so this no longer matches the title's own padding when they swap. Equal 12px left/right shifts the button row off the modal's true edge on both sides evenly (the toolbar's own box no longer bleeds — see the ::before pseudo below). */
   opacity: 0;
   transform: translateY(8px);
   transition: opacity 0.2s var(--m3-standard-accelerate), transform 0.2s var(--m3-standard-accelerate), display 0.2s allow-discrete;
@@ -416,12 +417,12 @@
   border-color: var(--primary);
 }
 .detail-note-toolbar-btn[disabled] { opacity: 0.4; pointer-events: none; cursor: default; }
-/* No extra margin on Expand — every button (formatting or action) sits at the same 7px gap the
-   toolbar's own flex `gap` already provides. Two earlier attempts at visually separating Expand/
-   Close into their own "actions" cluster (margin-left: auto, then a fixed 20px) both still read
-   as "there's a gap here" once the row had 4 formatting buttons instead of 3; a uniform gap is
-   the one that doesn't. */
-.detail-note-toolbar-btn--close { margin-right: 12px; }
+/* No extra margin on Expand or Close — every button (formatting or action) sits at the same 7px
+   gap the toolbar's own flex `gap` already provides, and the row is centered as a whole (see
+   .detail-note-toolbar's justify-content) rather than any one button carrying an edge inset.
+   Two earlier attempts at visually separating Expand/Close into their own "actions" cluster
+   (margin-left: auto, then a fixed 20px) both still read as "there's a gap here" once the row
+   had 4 formatting buttons instead of 3; a uniform gap is the one that doesn't. */
 
 .detail-modal--focus-mode #detail-edit,
 .detail-modal--focus-mode #detail-bookmark-btn,
