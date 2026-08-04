@@ -134,9 +134,10 @@ export function plainTextFromNoteHtml(html) {
 // Notes toolbar's image button). Used wherever plainTextFromNoteHtml's result was only ever
 // checked for truthiness (has-note styling, whether to persist vs. delete a row's saved text) —
 // an image-only note is real content and shouldn't be treated as empty just because it has no text.
+// Parses `html` once (not via plainTextFromNoteHtml + a second parse) since both checks need the
+// same parsed tree anyway.
 export function noteHtmlHasContent(html) {
-  if (plainTextFromNoteHtml(html)) return true;
   const template = document.createElement('template');
   template.innerHTML = html || '';
-  return !!template.content.querySelector('img');
+  return !!(template.content.textContent || '').trim() || !!template.content.querySelector('img');
 }
