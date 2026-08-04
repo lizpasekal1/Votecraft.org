@@ -416,13 +416,11 @@
   border-color: var(--primary);
 }
 .detail-note-toolbar-btn[disabled] { opacity: 0.4; pointer-events: none; cursor: default; }
-/* The expand toggle owns the separating margin (it's the first of the pair, in DOM order), so the
-   two sit together as an "actions" cluster, visually set apart from the formatting buttons before
-   it. A fixed gap, not margin-left: auto — auto pushes Expand/Close all the way to the toolbar's
-   right edge, which reads as a big, unbalanced gap once there are 4 formatting buttons (Bold/
-   Highlight/Bullet/Image) instead of the original 3, since the row no longer fills the modal's
-   width evenly. */
-.detail-note-toolbar-btn--expand { margin-left: 20px; }
+/* No extra margin on Expand — every button (formatting or action) sits at the same 7px gap the
+   toolbar's own flex `gap` already provides. Two earlier attempts at visually separating Expand/
+   Close into their own "actions" cluster (margin-left: auto, then a fixed 20px) both still read
+   as "there's a gap here" once the row had 4 formatting buttons instead of 3; a uniform gap is
+   the one that doesn't. */
 .detail-note-toolbar-btn--close { margin-right: 12px; }
 
 .detail-modal--focus-mode #detail-edit,
