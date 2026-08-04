@@ -302,16 +302,29 @@ export async function loadAll() {
         favoritesFolderIds.forEach(id => removeFolder(id));
       }
 
-      // Rename a couple of already-seeded default folders — seeding only ever inserts a folder
-      // once, so a name change made here later never reaches anyone who already loaded the old one.
-      const FOLDER_RENAMES = { 'default-shows-shows': 'TV Shows' };
-      Object.entries(FOLDER_RENAMES).forEach(([id, name]) => {
-        const folder = state.folders.find(f => f.id === id);
-        if (folder && folder.name !== name) {
-          folder.name = name;
-          persistFolder(folder);
+      // One-time migration: TV Shows moved from the Shows category into Films — every item
+      // already saved in Shows' old "TV Shows" folder (default-shows-shows) gets recategorized
+      // as a Movie item and refiled into Films' new "Series" folder (default-movies-series,
+      // seeded below), and the now-retired Shows folder itself is deleted. Shows keeps its
+      // remaining folders (Podcasts/Webseries/Tutorials/Creators) untouched.
+      const oldTvShowsFolder = state.folders.find(f => f.id === 'default-shows-shows');
+      if (oldTvShowsFolder) {
+        const tvShowsMigrated = [];
+        state.items.forEach(item => {
+          if (item.folderId === 'default-shows-shows') {
+            item.category = 'Movie';
+            item.folderId = 'default-movies-series';
+            tvShowsMigrated.push(item);
+          }
+        });
+        if (tvShowsMigrated.length) {
+          const toMigrate = {};
+          tvShowsMigrated.forEach(item => { toMigrate[`item_${item.id}`] = item; });
+          chrome.storage.sync.set(toMigrate);
         }
-      });
+        state.folders = state.folders.filter(f => f.id !== 'default-shows-shows');
+        removeFolder('default-shows-shows');
+      }
 
       // Backfill: curated Music Album items stash their artist name in .notes while curated (see
       // detailModal.js's _detailAuthorName). Before a fix, promoting one to a real saved item
@@ -360,7 +373,7 @@ export async function loadAll() {
         { id: 'default-music-playlists',  name: 'Playlists',    parentCategory: 'Music Album' },
         { id: 'default-books-authors',    name: 'Authors',      parentCategory: 'Book' },
         { id: 'default-weblinks-articles', name: 'Articles',    parentCategory: 'Web Links' },
-        { id: 'default-weblinks-blogs',    name: 'Blogs',       parentCategory: 'Web Links' },
+        { id: 'default-weblinks-blogs',    name: 'News',        parentCategory: 'Web Links' },
         { id: 'default-movies-videos',   name: 'Videos',        parentCategory: 'Movie' },
         { id: 'default-movies-directors', name: 'Directors',    parentCategory: 'Movie' },
         { id: 'default-shows-podcasts',  name: 'Podcasts',      parentCategory: 'Show' },
@@ -368,7 +381,9 @@ export async function loadAll() {
         { id: 'default-shows-tutorials', name: 'Tutorials',     parentCategory: 'Show' },
         { id: 'default-shows-creators',  name: 'Creators',      parentCategory: 'Show' },
         { id: 'default-movies-movies',       name: 'Movies',    parentCategory: 'Movie' },
-        { id: 'default-shows-shows',         name: 'TV Shows',  parentCategory: 'Show' },
+        // TV Shows moved from Shows into Films — see the one-time migration below that also
+        // recategorizes any items already saved in the old Shows "TV Shows" folder into this one.
+        { id: 'default-movies-series',       name: 'Series',    parentCategory: 'Movie' },
         { id: 'default-musicians-musicians', name: 'Musicians', parentCategory: 'Musician' },
         { id: 'default-books-books',         name: 'Books',     parentCategory: 'Book' },
         { id: 'default-weblinks-websites',   name: 'Website',   parentCategory: 'Web Links' },
@@ -397,6 +412,15 @@ export async function loadAll() {
       if (musicAlbumsFolder && musicAlbumsFolder.name === 'Music Albums') {
         musicAlbumsFolder.name = 'Albums';
         toSave[`folder_${musicAlbumsFolder.id}`] = musicAlbumsFolder;
+      }
+
+      // Renamed Web Links' "Blogs" -> "News" (same reasoning) — News' own top-level tab was
+      // dropped separately (see CATEGORIES in state.js), with this folder taking over as where
+      // News-flavored links get filed under Web Links instead.
+      const blogsFolder = state.folders.find(f => f.id === 'default-weblinks-blogs');
+      if (blogsFolder && blogsFolder.name === 'Blogs') {
+        blogsFolder.name = 'News';
+        toSave[`folder_${blogsFolder.id}`] = blogsFolder;
       }
 
       if (legacyKeys.length) {

@@ -9,7 +9,7 @@ import { persistItem } from './storage.js';
 import { ensureAlbumTrackList, ensureLiveItem } from './authors.js';
 import { getDetailItem } from './detailModal.js';
 import { registerAccordion, closeAccordionsExcept } from './detailModalAccordions.js';
-import { sanitizeNoteHtml, plainTextFromNoteHtml } from './noteSanitizer.js';
+import { sanitizeNoteHtml, noteHtmlHasContent } from './noteSanitizer.js';
 
 // Which note row (a .detail-tracklist-notes-input contenteditable) currently has focus, if any —
 // drives the formatting toolbar's visibility/enabled state. _focusModeOn is an independent on/off
@@ -306,8 +306,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
         // would reset mid-typing. Rows are only ever re-rendered from stored data on explicit
         // user actions (modal open, "+ Add"), never mid-edit.
         const cleanHtml = sanitizeNoteHtml(inputEl.innerHTML);
-        const noteText = plainTextFromNoteHtml(cleanHtml);
-        if (noteText) newTexts[rowId] = cleanHtml; else delete newTexts[rowId];
+        if (noteHtmlHasContent(cleanHtml)) newTexts[rowId] = cleanHtml; else delete newTexts[rowId];
         liveRowItem[textsField] = newTexts;
         // Any edit to row 0 (even clearing it) permanently stops the starting-text fallback from
         // reappearing on future renders.
@@ -325,13 +324,27 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
         fitTracklistNote(inputEl);
         saveNote();
       });
-      inputEl.addEventListener('click', e => e.stopPropagation());
+      inputEl.addEventListener('click', e => {
+        e.stopPropagation();
+        // Links in a note (pasted, or auto-linkified from plain text by noteSanitizer.js) don't
+        // carry a stored target/rel — sanitizeNoteHtml only keeps href — so open them explicitly
+        // here instead, rather than letting a contenteditable's default click-to-navigate replace
+        // this whole app tab with the link's page. chrome.tabs.create (same API share.js already
+        // uses for its own "email this" link) rather than window.open()/a synthetic <a
+        // target="_blank"> click — this app's own page runs at a chrome-extension:// origin,
+        // where a plain new-tab open isn't always honored; the extension's own tabs API is.
+        const link = e.target.closest('a[href]');
+        if (link) { e.preventDefault(); chrome.tabs.create({ url: link.href }); }
+      });
       inputEl.addEventListener('focus', () => {
         _activeNoteRow = inputEl;
         _updateNoteEditingUi();
       });
       inputEl.addEventListener('blur', () => {
-        if (!inputEl.textContent.trim()) inputEl.innerHTML = ''; // clear a stray auto-inserted <br> so :empty/placeholder work next time
+        // Clear a stray auto-inserted <br> so :empty/placeholder work next time — but an
+        // image-only note (no visible text at all) is real content too, and textContent is blind
+        // to it (an <img> contributes nothing to .textContent), so check for one before wiping.
+        if (!inputEl.textContent.trim() && !inputEl.querySelector('img')) inputEl.innerHTML = '';
         // Deferred: switching directly to a different row's pencil calls that row's .focus()
         // immediately, which fires THIS blur synchronously first — clearing _activeNoteRow (and
         // hiding the toolbar) here right away would flicker it closed before the other row's own
@@ -386,7 +399,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
       const noteHtml = rawNote != null
         ? sanitizeNoteHtml(rawNote)
         : (num === 0 && showZeroFallback ? escapeHtml(zeroFallback) : '');
-      const hasNote = !!plainTextFromNoteHtml(noteHtml);
+      const hasNote = noteHtmlHasContent(noteHtml);
       const defaultLabel = num === 0 ? zeroLabel : rowLabel(num);
       const displayLabel = titles[num] || defaultLabel;
       return `
@@ -473,7 +486,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
           const isFav = favoriteTracks.includes(t.number);
           const rawNote = trackNotes[t.number];
           const noteHtml = rawNote != null ? sanitizeNoteHtml(rawNote) : '';
-          const hasNote = !!plainTextFromNoteHtml(noteHtml);
+          const hasNote = noteHtmlHasContent(noteHtml);
           return `
           <div class="detail-tracklist-item">
             <div class="detail-tracklist-row">
@@ -609,47 +622,140 @@ function _updateNoteEditingUi() {
   document.getElementById('note-toolbar-expand')?.classList.toggle('detail-note-toolbar-btn--active', _focusModeOn);
 }
 
-// Wraps (or, if the selection already sits inside one, unwraps) the current selection in <mark>.
+// Wraps (or, if it's already fully highlighted, unwraps) the current selection in <mark>.
 // Not done via execCommand('hiliteColor'/'backColor') — Blink emits an inline
 // style="background-color:…" span for those, which sanitizeNoteHtml strips entirely, silently
 // discarding the highlight.
+//
+// Range.extractContents() turned out NOT to be the clean primitive an earlier version of this
+// function assumed: verified directly (isolated DOM test, not just this app) that it only clones
+// an ancestor like <mark> around the extracted slice when the range's start/end land in DIFFERENT
+// nodes — a selection that starts and ends within the SAME text node (the common case) extracts
+// as a bare, wrapper-less text node instead, even when that text node's live parent is a <mark>.
+// Worse, when it DOES clone the wrapper (crossing out of the mark into trailing plain text, say),
+// it can leave an empty, unremoved <mark></mark> husk behind in the original document — exactly
+// the invisible-but-still-colored "artifact" a user can see but never select to clear. So: figure
+// out "was the selection fully marked" from the LIVE document first (a plain ancestor-of-each-
+// intersected-text-node check — cheap and unambiguous, unlike inspecting the extracted fragment),
+// *then* extract, unconditionally strip any (possibly inconsistent) <mark> wrapping the extraction
+// left in the fragment, and finally sweep the live document for any empty <mark> husks extraction
+// left behind.
 function _wrapSelectionInMark() {
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
   const range = sel.getRangeAt(0);
   const anchorEl = range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
     ? range.commonAncestorContainer : range.commonAncestorContainer.parentElement;
-  const existingMark = anchorEl?.closest('mark');
-  if (existingMark) { // toggle off
-    const p = existingMark.parentNode;
-    while (existingMark.firstChild) p.insertBefore(existingMark.firstChild, existingMark);
-    p.removeChild(existingMark);
+  const editableRoot = anchorEl?.closest('[contenteditable]') || anchorEl;
+  if (!editableRoot) return;
+
+  // "Fully marked", decided against the live DOM before anything is mutated — every text node
+  // (or standalone IMG) the range overlaps sits under a <mark>. NodeFilter.SHOW_TEXT|SHOW_ELEMENT
+  // covers both plain highlighted text and an image inserted via the toolbar's image button.
+  let fullyMarked = true, sawContent = false;
+  const liveWalker = document.createTreeWalker(editableRoot, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, {
+    acceptNode: n => (n.nodeType === Node.TEXT_NODE ? !!n.textContent : n.tagName === 'IMG')
+      ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP,
+  });
+  let liveNode;
+  while ((liveNode = liveWalker.nextNode())) {
+    if (!range.intersectsNode(liveNode)) continue;
+    sawContent = true;
+    if (!liveNode.parentElement?.closest('mark')) { fullyMarked = false; break; }
+  }
+
+  const frag = range.extractContents(); // leaves `range` collapsed at the extraction point
+
+  // Strip whatever <mark> wrapping extraction happened to leave in the fragment — regardless of
+  // fullyMarked, since that was already decided above from the live DOM, not from this fragment's
+  // (unreliable) structure. Unwraps in place so any other allowed tag nested inside survives.
+  Array.from(frag.querySelectorAll('mark')).forEach(m => {
+    const p = m.parentNode;
+    while (m.firstChild) p.insertBefore(m.firstChild, m);
+    p.removeChild(m);
+  });
+  // Sweep for empty <mark> husks the extraction may have left behind in the live document.
+  editableRoot.querySelectorAll('mark').forEach(m => { if (!m.textContent && !m.querySelector('img')) m.remove(); });
+
+  // `range` is collapsed at the extraction point, but that point can still be a CHILD position
+  // inside a <mark> that had content on only one side of the cut removed (e.g. un-marking "hello"
+  // out of "<mark>hello world</mark>" leaves "<mark> world</mark>", with the collapsed range now
+  // sitting at offset 0 *inside* that surviving mark) — insertNode() below would then insert
+  // whatever comes next as a new child of that same mark, right back where it started. Hoist the
+  // collapse point out to the mark's own parent first, splitting the mark's remaining content at
+  // that point if needed, so insertion always lands as a sibling of the mark, never inside it.
+  const collapsedContainerEl = range.startContainer.nodeType === Node.ELEMENT_NODE
+    ? range.startContainer : range.startContainer.parentElement;
+  const straddledMark = collapsedContainerEl?.closest('mark');
+  if (straddledMark && editableRoot.contains(straddledMark)) {
+    const afterRange = document.createRange();
+    afterRange.setStart(range.startContainer, range.startOffset);
+    afterRange.setEnd(straddledMark, straddledMark.childNodes.length);
+    const afterFrag = afterRange.extractContents();
+    const marker = document.createComment('');
+    straddledMark.after(marker);
+    if (afterFrag.hasChildNodes()) {
+      const afterMark = document.createElement('mark');
+      afterMark.appendChild(afterFrag);
+      marker.after(afterMark);
+    }
+    if (!straddledMark.textContent && !straddledMark.querySelector('img')) straddledMark.remove();
+    range.setStartBefore(marker);
+    range.setEndBefore(marker);
+    marker.remove(); // range's boundary was already resolved to (parent, index) by setStartBefore
+  }
+
+  if (sawContent && !fullyMarked) {
+    const mark = document.createElement('mark');
+    mark.appendChild(frag); // moves frag's children into mark; frag itself is left empty
+    range.insertNode(mark);
+    const newRange = document.createRange();
+    newRange.selectNodeContents(mark);
+    sel.removeAllRanges();
+    sel.addRange(newRange); // keep the highlighted text visibly selected after wrapping
     return;
   }
-  const mark = document.createElement('mark');
-  try {
-    range.surroundContents(mark);
-  } catch {
-    const frag = range.extractContents(); // selection crosses element boundaries; flattens, but
-    mark.appendChild(frag);                // preserves any nested allowed tags since real nodes move
-    range.insertNode(mark);
+
+  // Toggling off (or nothing markable was selected at all) — reinsert the (now markless) slice
+  // as-is, then reselect exactly what was just put back. Captured before insertNode(frag), which
+  // empties frag the same way mark.appendChild(frag) does above.
+  const restoredNodes = Array.from(frag.childNodes);
+  range.insertNode(frag);
+  if (restoredNodes.length) {
+    const newRange = document.createRange();
+    newRange.setStartBefore(restoredNodes[0]);
+    newRange.setEndAfter(restoredNodes[restoredNodes.length - 1]);
+    sel.removeAllRanges();
+    sel.addRange(newRange);
   }
-  const newRange = document.createRange();
-  newRange.selectNodeContents(mark);
-  sel.removeAllRanges();
-  sel.addRange(newRange); // keep the highlighted text visibly selected after wrapping
+}
+
+// Same prompt() pattern renderSidebar.js's promptAddFolder() already uses elsewhere in this app —
+// no custom dialog needed for a single text value. Cancelling (null) or an empty/whitespace-only
+// value is a no-op. The pasted URL itself isn't otherwise validated here — sanitizeNoteHtml
+// (noteSanitizer.js) is the real gate, run on every save/reload, and silently drops the <img>
+// entirely if the src doesn't look like a real http(s)/data:image URL.
+function _insertImageLink() {
+  const url = prompt('Paste an image link (from the web, Google Photos, Apple Photos, etc.):');
+  if (!url || !url.trim()) return false;
+  document.execCommand('insertHTML', false, `<img src="${escapeHtml(url.trim())}" alt="">`);
+  return true;
 }
 
 function _applyFormat(cmd) {
   if (!_activeNoteRow) return;
   _activeNoteRow.focus();
+  let changed = true;
   if (cmd === 'bold') document.execCommand('bold');
   else if (cmd === 'bullet') document.execCommand('insertUnorderedList');
   else if (cmd === 'highlight') _wrapSelectionInMark();
-  _activeNoteRow.dispatchEvent(new Event('input', { bubbles: true })); // triggers the existing debounced save + has-note styling
+  // Own return value — prompt()'s Cancel/empty case means nothing was actually inserted, so no
+  // save/has-note-styling update should fire (the other three commands always change something).
+  else if (cmd === 'image') changed = _insertImageLink();
+  if (changed) _activeNoteRow.dispatchEvent(new Event('input', { bubbles: true })); // triggers the existing debounced save + has-note styling
 }
 
-// Binds the toolbar's 4 static buttons once — called from main.js's init(), since the toolbar DOM
+// Binds the toolbar's 6 static buttons once — called from main.js's init(), since the toolbar DOM
 // lives permanently in index.html rather than being re-rendered per modal open.
 export function initNoteToolbar() {
   document.querySelectorAll('#detail-note-toolbar .detail-note-toolbar-btn').forEach(btn => {
@@ -661,6 +767,7 @@ export function initNoteToolbar() {
   document.getElementById('note-toolbar-bold').addEventListener('click', () => _applyFormat('bold'));
   document.getElementById('note-toolbar-highlight').addEventListener('click', () => _applyFormat('highlight'));
   document.getElementById('note-toolbar-bullet').addEventListener('click', () => _applyFormat('bullet'));
+  document.getElementById('note-toolbar-image').addEventListener('click', () => _applyFormat('image'));
   // Closes whichever of MY NOTES/SONG LIST is actually open by clicking its own accordion header
   // — reuses that header's existing onclick (reassigned fresh per item in setupNotesAndTracklist)
   // rather than duplicating its close logic (collapsing the section, resetting any open row,

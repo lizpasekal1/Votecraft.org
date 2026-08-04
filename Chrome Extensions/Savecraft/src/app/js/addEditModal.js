@@ -202,17 +202,27 @@ export function getSelectedPlatforms() {
 // Musician and Music Album are one combined "Music" tile here — picking it leads to a small
 // sub-choice screen (showMusicChoiceScreen) instead of two separate tiles. Nothing about the
 // underlying categories themselves changes; this is purely a wizard-entry-point convenience.
+// "Articles" is the opposite kind of shortcut: not a category at all (no CATEGORIES entry, no
+// sidebar tab) — just Web Links' "Articles" folder, given its own tile so saving an article
+// skips both the Websites tile and the folder-picker screen.
 function renderCategoryTiles() {
   const grid = document.getElementById('step1-category-grid');
-  grid.innerHTML = CATEGORIES.filter(cat => cat !== 'Music Album').map(cat => cat === 'Musician' ? `
+  const tiles = CATEGORIES.filter(cat => cat !== 'Music Album').map(cat => cat === 'Musician' ? `
     <button type="button" class="step1-category-tile" data-category="__music__">
       <span class="cat-icon">${CAT_EMOJI['Music Album'] || ''}</span>
-      <span class="step1-category-tile-label">Musicians</span>
+      <span class="step1-category-tile-label">Music</span>
     </button>` : `
     <button type="button" class="step1-category-tile" data-category="${cat}">
       <span class="cat-icon">${CAT_EMOJI[cat] || ''}</span>
       <span class="step1-category-tile-label">${CAT_LABEL[cat] || cat}</span>
-    </button>`).join('');
+    </button>`);
+  // Inserted right after Websites (index 0) — reads naturally next to the tile it's a shortcut off of.
+  tiles.splice(1, 0, `
+    <button type="button" class="step1-category-tile" data-category="__articles__">
+      <span class="cat-icon">${folderIconHtml('default-weblinks-articles', 28)}</span>
+      <span class="step1-category-tile-label">Articles</span>
+    </button>`);
+  grid.innerHTML = tiles.join('');
 }
 
 export function selectStep1Category(cat) {
@@ -221,6 +231,14 @@ export function selectStep1Category(cat) {
 
   if (cat === '__music__') {
     showMusicChoiceScreen();
+    return;
+  }
+  if (cat === '__articles__') {
+    state.modalCategory = 'Web Links';
+    document.getElementById('modal-category').value = 'Web Links';
+    _wizardHadFolderScreen = false;
+    _wizardFolderId = 'default-weblinks-articles';
+    showReviewScreen();
     return;
   }
 
@@ -242,10 +260,10 @@ function showMusicChoiceScreen() {
   document.getElementById('modal-step2').style.display = 'none';
   document.getElementById('btn-modal-back').style.display = '';
   document.getElementById('btn-modal-save').style.display = 'none';
-  document.getElementById('modal-back-label').textContent = 'Musicians';
+  document.getElementById('modal-back-label').textContent = 'Music';
   document.querySelector('#modal-overlay h2').innerHTML = 'Choose a folder';
 
-  // CAT_LABEL['Musician'] is "Musicians" (used for the combined top-level tile) — on this
+  // CAT_LABEL['Musician'] is "Music" (used for the combined top-level tile) — on this
   // specific sub-choice screen that duplicates the tile you just clicked, so it's overridden to
   // the singular "Musician" here only (mirrors the popup's own musicChoiceLabels).
   const musicChoiceLabels = { Musician: 'Musician', 'Music Album': CAT_LABEL['Music Album'] };
@@ -407,7 +425,7 @@ function backToMusicChoiceScreen() {
   document.getElementById('modal-step-music-choice').style.display = '';
   document.getElementById('modal-category-wrap').style.display = 'none';
   document.getElementById('btn-modal-save').style.display = 'none';
-  document.getElementById('modal-back-label').textContent = 'Musicians';
+  document.getElementById('modal-back-label').textContent = 'Music';
   document.querySelector('#modal-overlay h2').innerHTML = 'Choose a folder';
   // Tiles/listeners are left exactly as rendered — non-destructive re-entry, same as backToFolderScreen's pattern.
 }

@@ -1109,6 +1109,19 @@
   padding: 5px 2px 18px 34px;
 }
 
+/* Images inserted via the My Notes toolbar's image button (noteSanitizer.js allows a single
+   <img src> through) — constrained to the note row's own width and given the app's standard
+   rounded-corner treatment so a large/wide source image never overflows the note row or breaks
+   its layout. display:block + margin-top clears any inline gap below the image and separates it
+   from surrounding note text. */
+.detail-tracklist-notes-input img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin-top: 6px;
+}
+
 
 .detail-tracklist-notes-input:empty::before {
   /* contenteditable has no native placeholder attribute */
@@ -1117,15 +1130,28 @@
   pointer-events: none;
 }
 
-.detail-tracklist-notes-input b { font-weight: 700; }
+/* var(--text-primary) rather than inherit — noticeably brighter than the note's own base
+   var(--text-secondary) color (in dark mode: #E8EAED vs #9AA0A6), so bold text actually reads as
+   emphasized instead of just heavier-weight same-gray. */
+.detail-tracklist-notes-input b { font-weight: 700; color: var(--text-primary); }
 .detail-tracklist-notes-input mark {
-  background: var(--primary-bg); /* themed instead of the default UA yellow, matches the app accent in both light/dark */
-  color: inherit;
+  background: #FDE047; /* plain yellow highlighter, not themed — requested explicitly over the app's purple accent */
+  color: #1a1a1a; /* fixed dark text — var(--text-secondary)/--text-primary would be near-white in dark mode, illegible on yellow */
   border-radius: 2px;
   padding: 0 2px;
 }
 .detail-tracklist-notes-input ul { margin: 5px 0; padding-left: 24px; }
 .detail-tracklist-notes-input li { margin: 2px 0; }
+/* Standard web-link styling (pasted links, and plain-text URLs noteSanitizer.js auto-linkifies) —
+   deliberately the familiar blue+underline every browser/webpage defaults to, not the app's own
+   purple accent, so a link reads as a link at a glance. Same blue in both themes; it has enough
+   contrast against both the light and dark note background to stay legible either way. */
+.detail-tracklist-notes-input a {
+  color: #3B82F6;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.detail-tracklist-notes-input a:hover { color: #2563EB; }
 
 .detail-tracklist-row--status {
   color: var(--text-muted);

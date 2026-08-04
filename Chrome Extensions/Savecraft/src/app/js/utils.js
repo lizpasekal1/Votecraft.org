@@ -29,7 +29,7 @@ export function isItunesArtworkUrl(url) {
 // Movie's folders show in a fixed order (not alphabetical) so "Directors" sits last, after
 // "Videos" — every other category still sorts its folders alphabetically by name.
 const CUSTOM_FOLDER_ORDER = {
-  Movie: ['Movies', 'Videos', 'Directors'],
+  Movie: ['Movies', 'Series', 'Videos', 'Directors'],
 };
 export function sortFoldersForDisplay(folders, category) {
   const order = CUSTOM_FOLDER_ORDER[category];

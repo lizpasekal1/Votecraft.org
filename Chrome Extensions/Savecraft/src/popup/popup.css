@@ -310,20 +310,6 @@ body.screen-music-choice .modal-bookmark-icon {
   padding-bottom: 40px;
 }
 
-.review-image-preview-wrap {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 14px;
-}
-.review-image-preview {
-  width: 84px;
-  height: 84px;
-  object-fit: cover;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--hover-bg);
-}
-
 .form-group {
   margin-bottom: 12px;
 }
@@ -353,29 +339,6 @@ body.screen-music-choice .modal-bookmark-icon {
 .form-group input:focus {
   border-color: var(--primary);
 }
-
-.input-with-clear {
-  position: relative;
-}
-.input-with-clear input {
-  padding-right: 28px;
-}
-.btn-clear-field {
-  position: absolute;
-  top: 50%;
-  right: 6px;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-secondary);
-  padding: 2px;
-  display: flex;
-  align-items: center;
-  border-radius: 4px;
-  transition: color 0.15s;
-}
-.btn-clear-field:hover { color: var(--text-primary); }
 
 /* Save button */
 .btn-save {
