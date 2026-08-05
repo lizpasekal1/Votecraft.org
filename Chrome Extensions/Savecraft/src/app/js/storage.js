@@ -260,6 +260,8 @@ export async function loadAll() {
         'default-books-genres',
         // Redundant with the real Musician category now — confusingly asked "pick Musician" twice.
         'default-music-musicians',
+        // Removed from Visual Art per request.
+        'default-art-painting', 'default-art-sculpture',
       ];
       const legacyKeys = legacyIds.map(id => `folder_${id}`).filter(k => data[k]);
       state.folders = state.folders.filter(f => !legacyIds.includes(f.id));
@@ -389,11 +391,11 @@ export async function loadAll() {
         { id: 'default-books-pdfs',          name: 'PDFs',      parentCategory: 'Book' },
         { id: 'default-books-quotes',        name: 'Quotes',    parentCategory: 'Book' },
         { id: 'default-weblinks-websites',   name: 'Websites',  parentCategory: 'Web Links' },
-        { id: 'default-weblinks-shops',      name: 'Shops',     parentCategory: 'Web Links' },
-        { id: 'default-art-dance',     name: 'Dance',     parentCategory: 'Visual Art' },
+        { id: 'default-weblinks-shops',      name: 'Publications', parentCategory: 'Web Links' },
+        { id: 'default-art-dance',     name: 'Movement', parentCategory: 'Visual Art' },
         { id: 'default-art-comics',    name: 'Comics',    parentCategory: 'Visual Art' },
-        { id: 'default-art-painting',  name: 'Painting',  parentCategory: 'Visual Art' },
-        { id: 'default-art-sculpture', name: 'Sculpture', parentCategory: 'Visual Art' },
+        { id: 'default-art-memes',     name: 'Memes',     parentCategory: 'Visual Art' },
+        { id: 'default-art-artists',   name: 'Artists',   parentCategory: 'Visual Art' },
         { id: 'default-games-board',      name: 'Board Games',    parentCategory: 'Game' },
         { id: 'default-games-console',    name: 'Console Games',  parentCategory: 'Game' },
         { id: 'default-games-mobile',     name: 'Mobile Games',   parentCategory: 'Game' },
@@ -431,6 +433,21 @@ export async function loadAll() {
       if (websitesFolder && websitesFolder.name === 'Website') {
         websitesFolder.name = 'Websites';
         toSave[`folder_${websitesFolder.id}`] = websitesFolder;
+      }
+
+      // Renamed Web Links' "Shops" -> "Publications" — same folder id/icon, just a different
+      // concept for the folder now.
+      const shopsFolder = state.folders.find(f => f.id === 'default-weblinks-shops');
+      if (shopsFolder && shopsFolder.name === 'Shops') {
+        shopsFolder.name = 'Publications';
+        toSave[`folder_${shopsFolder.id}`] = shopsFolder;
+      }
+
+      // Renamed Visual Art's "Dance" -> "Movement".
+      const danceFolder = state.folders.find(f => f.id === 'default-art-dance');
+      if (danceFolder && danceFolder.name === 'Dance') {
+        danceFolder.name = 'Movement';
+        toSave[`folder_${danceFolder.id}`] = danceFolder;
       }
 
       if (legacyKeys.length) {
