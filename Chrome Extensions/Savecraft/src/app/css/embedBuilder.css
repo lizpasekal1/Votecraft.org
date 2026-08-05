@@ -73,6 +73,11 @@
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 16px;
+  /* CSS Grid items default to min-width: auto, NOT 0 — without this, an unbreakable long string
+     inside (the embed code URL, one token with no spaces to wrap on) forces its own min-content
+     width, which blows this panel (and the "1fr 1fr" track it sits in) wider than the grid
+     intends, pushing every other row's right-aligned control off past the visible edge. */
+  min-width: 0;
 }
 
 .embed-builder-panel-title {
