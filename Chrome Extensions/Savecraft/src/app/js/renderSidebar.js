@@ -17,6 +17,10 @@ const DASHBOARD_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="24px
 // Sized/colored to match a folder row's icon (folderIconHtml(id, 16), fill="#5B5BEF"), since the
 // Queue Kanban link renders as a subfolder-styled row nested under Dashboard, not a category icon.
 const KANBAN_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="#5B5BEF"><path d="M280-160v-640h400v640H280Zm-160-80v-480h80v480h-80Zm640 0v-480h80v480h-80Zm-400 0h240v-480H360v480Zm0 0v-480 480Z"/></svg>';
+// Same sizing/color convention as KANBAN_ICON_SVG above — another subfolder-styled row nested
+// under Dashboard. Not wired to a view yet (see wireDashboardLink and the exclusion in the
+// generic subfolder click-wiring loop below) — placeholder row until there's a real destination.
+const SAVED_LISTS_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="#5B5BEF"><path d="M160-120q-33 0-56.5-23.5T80-200v-280h80v280h360v80H160Zm160-160q-33 0-56.5-23.5T240-360v-280h80v280h360v80H320Zm160-160q-33 0-56.5-23.5T400-520v-240q0-33 23.5-56.5T480-840h320q33 0 56.5 23.5T880-760v240q0 33-23.5 56.5T800-440H480Zm0-80h320v-160H480v160Z"/></svg>';
 
 // Folders that double as an entry point into a curated "creator card" bucket when browsing a
 // curated genre — see the sidebar-subfolder rendering/wiring below.
@@ -141,6 +145,9 @@ export function renderSidebar() {
       <span class="sidebar-right"><span class="sidebar-arrow">${dashboardArrow}</span></span>
     </div>
     ${isDashboardCollapsed ? '' : `
+    <div class="sidebar-item sidebar-subfolder sidebar-saved-lists-link">
+      ${SAVED_LISTS_ICON_SVG} Saved Lists
+    </div>
     <div class="sidebar-item sidebar-subfolder sidebar-kanban-link ${state.view === 'kanban' ? 'active' : ''}" data-view="kanban">
       ${KANBAN_ICON_SVG} Queue Kanban
     </div>`}
@@ -336,8 +343,10 @@ export function renderSidebar() {
 
   // Subfolder view-switching (the Queue Kanban row also uses .sidebar-subfolder for its visual
   // styling, but it's already wired explicitly in wireDashboardLink() — excluded here so it
-  // doesn't get a second, redundant click handler).
-  sidebar.querySelectorAll('.sidebar-subfolder:not(.sidebar-kanban-link)').forEach(el => {
+  // doesn't get a second, redundant click handler. Saved Lists uses the same styling too, but
+  // has no data-view/real destination yet — excluded so a click doesn't set state.view to
+  // undefined and break navigation).
+  sidebar.querySelectorAll('.sidebar-subfolder:not(.sidebar-kanban-link):not(.sidebar-saved-lists-link)').forEach(el => {
     el.addEventListener('click', () => {
       if (isCuratedGenre && el.dataset.permanent) {
         state.view = `genre:${curatedGenreBase}:${el.dataset.view}`;
