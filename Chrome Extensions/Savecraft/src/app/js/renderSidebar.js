@@ -214,19 +214,11 @@ export function renderSidebar() {
 
   const categorySections = sidebarCategoryList.map(cat => {
     const primaryId = PRIMARY_FOLDER_ID[cat];
-    const count = isCuratedGenre
-      ? (CURATED_ITEMS[curatedGenreBase]?.[cat]?.filter(i => !state.hiddenCurated.has(i.id)).length ?? 0)
-      // Matches what tapping the tab actually reveals: the primary folder plus un-foldered items.
-      : state.items.filter(i => matchesPrimaryOrUnfoldered(i, cat)).length;
     const subfolders = sortFoldersForDisplay(state.folders.filter(f => f.parentCategory === cat), cat);
     const isActive = isCuratedGenre
       ? state.view === `genre:${curatedGenreBase}:${cat}`
       : state.view === cat;
     const isCollapsed = state.collapsed.has(cat);
-    // Top-level category tabs don't show a count while browsing a curated genre — only the
-    // subfolders underneath do (Authors/Directors/etc., the full-category folder, and the
-    // explicitly-empty ones) per the user's request; personal "My Saves" browsing keeps its count.
-    const countLabel = (!isCuratedGenre && count > 0) ? `<span class="sidebar-count">${count}</span>` : '';
     const arrow = isCollapsed ? '▶' : '▼';
 
     const musicAlbumActive = isCuratedGenre
@@ -294,7 +286,7 @@ export function renderSidebar() {
       <div class="sidebar-item sidebar-category ${isActive ? 'active' : ''}"
            data-view="${cat}" data-toggle="${cat}">
         <span class="sidebar-label"><span class="cat-icon">${CAT_EMOJI[cat] || ''}</span><span class="sidebar-label-text"> ${CAT_LABEL[cat] || cat}</span></span>
-        <span class="sidebar-right">${countLabel}<span class="sidebar-arrow">${arrow}</span></span>
+        <span class="sidebar-right"><span class="sidebar-arrow">${arrow}</span></span>
       </div>
       ${expandedContent}
     `;
