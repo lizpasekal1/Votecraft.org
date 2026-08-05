@@ -386,7 +386,9 @@ export async function loadAll() {
         { id: 'default-movies-series',       name: 'Series',    parentCategory: 'Movie' },
         { id: 'default-musicians-musicians', name: 'Musicians', parentCategory: 'Musician' },
         { id: 'default-books-books',         name: 'Books',     parentCategory: 'Book' },
-        { id: 'default-weblinks-websites',   name: 'Website',   parentCategory: 'Web Links' },
+        { id: 'default-books-pdfs',          name: 'PDFs',      parentCategory: 'Book' },
+        { id: 'default-books-quotes',        name: 'Quotes',    parentCategory: 'Book' },
+        { id: 'default-weblinks-websites',   name: 'Websites',  parentCategory: 'Web Links' },
         { id: 'default-weblinks-shops',      name: 'Shops',     parentCategory: 'Web Links' },
         { id: 'default-art-dance',     name: 'Dance',     parentCategory: 'Visual Art' },
         { id: 'default-art-comics',    name: 'Comics',    parentCategory: 'Visual Art' },
@@ -421,6 +423,14 @@ export async function loadAll() {
       if (blogsFolder && blogsFolder.name === 'Blogs') {
         blogsFolder.name = 'News';
         toSave[`folder_${blogsFolder.id}`] = blogsFolder;
+      }
+
+      // Renamed Web Links' "Website" -> "Websites" (plural, matching every other folder name's
+      // plural convention).
+      const websitesFolder = state.folders.find(f => f.id === 'default-weblinks-websites');
+      if (websitesFolder && websitesFolder.name === 'Website') {
+        websitesFolder.name = 'Websites';
+        toSave[`folder_${websitesFolder.id}`] = websitesFolder;
       }
 
       if (legacyKeys.length) {
