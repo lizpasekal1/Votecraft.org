@@ -148,12 +148,10 @@ export function renderSidebar() {
   // own state.collapsed key, collapsed by default — not tied to Dashboard's own collapse state),
   // with a user-creatable, user-named list of children (state.savedLists/curatedListsRows) shown
   // only while expanded, same "+ New folder" prompt pattern real category folders use. Saved
-  // Lists' children carry a real data-view ("savedlist:<id>", wired below via the generic
-  // subfolder click handler + getFilteredSortedItems()'s own "savedlist:" branch) EXCEPT
-  // "Favorites" (id default-favorites), which — like Curated Lists' "Votecraft" row — gets its
-  // own hardcoded destination via itemExtraClass/itemIsActive below + dedicated wiring in
-  // wireDashboardLink(): it's a shortcut back to the general My Saves / all-items view, not a
-  // favorited-items filter, so it doesn't fit the generic viewPrefix mechanism.
+  // Lists' children (Favorites/Health/Motivation/anything user-added) all carry a real data-view
+  // ("savedlist:<id>", wired below via the generic subfolder click handler +
+  // renderGrid()'s own "savedlist:" landing-card branch — see there for what that currently
+  // shows).
   function _renderDashboardListRow({ key, icon, label, items, linkClass, childClass, addClass, viewPrefix, itemExtraClass, itemIsActive }) {
     const rowCollapsed = state.collapsed.has(key);
     const rowArrow = rowCollapsed ? '▶' : '▼';
@@ -199,8 +197,6 @@ export function renderSidebar() {
       key: 'saved-lists', icon: SAVED_LISTS_ICON_SVG, label: 'Saved Lists', items: state.savedLists,
       linkClass: 'sidebar-saved-lists-link', childClass: 'sidebar-saved-lists-child', addClass: 'sidebar-add-saved-list',
       viewPrefix: 'savedlist:',
-      itemExtraClass: item => item.id === 'default-favorites' ? 'sidebar-saved-lists-favorites-link' : '',
-      itemIsActive: item => item.id === 'default-favorites' && state.sidebarMode === 'categories' && state.view === 'all',
     })}
     ${_renderDashboardListRow({
       key: 'curated-lists', icon: CURATED_LISTS_ICON_SVG, label: 'Curated Lists', items: state.curatedListsRows,
@@ -259,15 +255,6 @@ export function renderSidebar() {
     sidebar.querySelector('.sidebar-curated-votecraft-link')?.addEventListener('click', () => {
       state.sidebarMode = 'curated';
       state.view = 'genre:Top 100';
-      persistViewState();
-      renderSidebar();
-      renderGrid();
-    });
-    // Saved Lists' "Favorites" row — a shortcut back to the general My Saves / all-items view
-    // (same state the mobile tab bar's own "My Saves" option sets), not a favorited-items filter.
-    sidebar.querySelector('.sidebar-saved-lists-favorites-link')?.addEventListener('click', () => {
-      state.sidebarMode = 'categories';
-      state.view = 'all';
       persistViewState();
       renderSidebar();
       renderGrid();
@@ -437,13 +424,11 @@ export function renderSidebar() {
   // Subfolder view-switching (the Queue Kanban row also uses .sidebar-subfolder for its visual
   // styling, but it's already wired explicitly in wireDashboardLink() — excluded here so it
   // doesn't get a second, redundant click handler. Saved Lists' own toggle row (.sidebar-saved-
-  // lists-link) is excluded the same way — its children mostly carry a real data-view
-  // ("savedlist:<id>") and fall through to the generic handler below, except "Favorites"
-  // (.sidebar-saved-lists-favorites-link), which has its own hardcoded destination wired in
-  // wireDashboardLink() and is excluded here too. Curated Lists — both its toggle row and its
-  // children — still has no real destination, so both stay excluded so a click doesn't set
-  // state.view to undefined and break navigation).
-  sidebar.querySelectorAll('.sidebar-subfolder:not(.sidebar-kanban-link):not(.sidebar-saved-lists-link):not(.sidebar-saved-lists-favorites-link):not(.sidebar-curated-lists-link):not(.sidebar-curated-lists-child)').forEach(el => {
+  // lists-link) is excluded the same way — its children all carry a real data-view
+  // ("savedlist:<id>") and fall through to the generic handler below. Curated Lists — both its
+  // toggle row and its children — still has no real destination, so both stay excluded so a
+  // click doesn't set state.view to undefined and break navigation).
+  sidebar.querySelectorAll('.sidebar-subfolder:not(.sidebar-kanban-link):not(.sidebar-saved-lists-link):not(.sidebar-curated-lists-link):not(.sidebar-curated-lists-child)').forEach(el => {
     el.addEventListener('click', () => {
       if (isCuratedGenre && el.dataset.permanent) {
         state.view = `genre:${curatedGenreBase}:${el.dataset.view}`;

@@ -97,6 +97,32 @@ export function renderGrid() {
     return;
   }
 
+  // Saved Lists (Favorites/Health/Motivation/anything user-added, sidebar's Dashboard -> Saved
+  // Lists row) — a placeholder landing card "for the time being", explicitly requested to match
+  // the curated genre landing's own look (isCuratedTop's empty-state below, e.g. "Futurism
+  // Saves") rather than showing a flat item.savedListId-filtered grid. Unconditional (doesn't
+  // route through getFilteredSortedItems()/its own "savedlist:" branch at all) — a full
+  // category/folder system for populating these lists (mirroring how a curated genre drills into
+  // Movies/Books/etc.) is planned but not built yet; the "savedlist:" filtering branch in
+  // renderFilters.js is left intact/unused for when that lands.
+  if (state.view.startsWith('savedlist:')) {
+    const listId = state.view.slice(10);
+    const list = state.savedLists.find(l => l.id === listId);
+    const listName = list ? list.name : 'List';
+    gridTitle.style.display = 'none';
+    sortSelect.style.display = 'none';
+    gridHeader.style.display = 'none';
+    container.className = 'cards-grid landing-state';
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">✨</div>
+        <h3>${escapeHtml(listName)} Saves</h3>
+        <p>Pick a category from the sidebar to explore curated picks.</p>
+      </div>
+    `;
+    return;
+  }
+
   container.className = 'cards-grid';
 
   if (state.view === 'all') {
