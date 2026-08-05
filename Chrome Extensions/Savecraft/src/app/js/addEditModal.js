@@ -355,8 +355,8 @@ function showReviewScreen() {
   document.getElementById('btn-modal-back').style.display = '';
   document.getElementById('btn-modal-save').style.display = '';
   document.getElementById('folder-select-group').style.display = 'none'; // Add flow assigns folder via the wizard screen, not this select
-  // The chosen folder (e.g. "Blogs") is more specific/useful here than the category name — falls
-  // back to the category (e.g. "Websites") when no folder was chosen (categories with 0 or 1
+  // The chosen folder (e.g. "News") is more specific/useful here than the category name — falls
+  // back to the category (e.g. "Sources") when no folder was chosen (categories with 0 or 1
   // folders skip the folder-picker screen entirely, per showFolderScreenOrSkip).
   const chosenFolder = _wizardFolderId ? state.folders.find(f => f.id === _wizardFolderId) : null;
   document.getElementById('modal-back-label').textContent = chosenFolder?.name || CAT_LABEL[state.modalCategory] || state.modalCategory || '';
