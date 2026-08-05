@@ -249,19 +249,36 @@ export async function loadAll() {
         state.savedLists = ['Favorites', 'Health', 'Motivation'].map(name => ({ id: `default-${name.toLowerCase()}`, name }));
         chrome.storage.sync.set({ savecraft_saved_lists: state.savedLists });
       }
-      // "Curated Lists" row (Saved Lists' sibling under Dashboard) — seeded with one starter
-      // entry, "Votecraft and RCV"; the user can add more via its own "+ New folder" prompt.
-      // Checked by id rather than gated purely on the key's existence (unlike savedLists' seed-
-      // if-missing above) since an install could already have this key set from adding its own
-      // custom row before this starter entry existed — the id check re-adds it either way.
+      // "Curated Lists" row (Saved Lists' sibling under Dashboard) — seeded with two starter
+      // entries, "Votecraft" then "RCV" below it (two separate folders, not one combined entry —
+      // see the "default-votecraft-rcv" migration below); the user can add more via its own
+      // "+ New folder" prompt. Checked by id rather than gated purely on the key's existence
+      // (unlike savedLists' seed-if-missing above) since an install could already have this key
+      // set from adding its own custom row before these starter entries existed — the id checks
+      // re-add whatever's missing either way.
       if (data.savecraft_curated_lists_rows) {
         state.curatedListsRows = data.savecraft_curated_lists_rows;
-        if (!state.curatedListsRows.some(l => l.id === 'default-votecraft-rcv')) {
-          state.curatedListsRows.unshift({ id: 'default-votecraft-rcv', name: 'Votecraft and RCV' });
-          chrome.storage.sync.set({ savecraft_curated_lists_rows: state.curatedListsRows });
+        let changed = false;
+        // Splits the original single "Votecraft and RCV" entry (briefly shipped) into its own
+        // two rows, in place, so any install that already picked it up isn't stuck with the
+        // combined version forever.
+        const combinedIdx = state.curatedListsRows.findIndex(l => l.id === 'default-votecraft-rcv');
+        if (combinedIdx !== -1) {
+          state.curatedListsRows.splice(combinedIdx, 1, { id: 'default-votecraft', name: 'Votecraft' }, { id: 'default-rcv', name: 'RCV' });
+          changed = true;
+        } else {
+          if (!state.curatedListsRows.some(l => l.id === 'default-rcv')) {
+            state.curatedListsRows.unshift({ id: 'default-rcv', name: 'RCV' });
+            changed = true;
+          }
+          if (!state.curatedListsRows.some(l => l.id === 'default-votecraft')) {
+            state.curatedListsRows.unshift({ id: 'default-votecraft', name: 'Votecraft' });
+            changed = true;
+          }
         }
+        if (changed) chrome.storage.sync.set({ savecraft_curated_lists_rows: state.curatedListsRows });
       } else {
-        state.curatedListsRows = [{ id: 'default-votecraft-rcv', name: 'Votecraft and RCV' }];
+        state.curatedListsRows = [{ id: 'default-votecraft', name: 'Votecraft' }, { id: 'default-rcv', name: 'RCV' }];
         chrome.storage.sync.set({ savecraft_curated_lists_rows: state.curatedListsRows });
       }
       state.hiddenCurated = new Set(data.savecraft_hidden_curated || []);
