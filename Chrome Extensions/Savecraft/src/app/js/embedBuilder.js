@@ -24,6 +24,26 @@ import { renderSidebar, renderGrid } from './render.js';
 import { matchesPrimaryOrUnfoldered } from './renderFilters.js';
 import { _wireCarouselArrows } from './dashboard.js';
 
+// A curated list rather than a free-text field — arbitrary font names would just silently fall
+// back to the visitor's default if not installed, since the embed is a static page with no font
+// loading of its own (see the Phase 3 note on savecraft/embed.html at the top of this file).
+// These are the classic cross-platform "web safe" stack, each with its own generic-family
+// fallback chain. Declared up here, before any module-level state that reads it (specifically
+// _defaultStyleOptions(), called immediately below to seed _styleOptions) — a const declared
+// later in the file is in the temporal dead zone until its own line runs, so referencing it from
+// a function called before that point throws, even though the function itself is hoisted.
+const WEB_SAFE_FONTS = [
+  { value: 'inherit', label: 'Default (matches SaveCraft)' },
+  { value: 'Arial, Helvetica, sans-serif', label: 'Arial' },
+  { value: '"Helvetica Neue", Helvetica, Arial, sans-serif', label: 'Helvetica' },
+  { value: 'Verdana, Geneva, sans-serif', label: 'Verdana' },
+  { value: 'Tahoma, Geneva, sans-serif', label: 'Tahoma' },
+  { value: '"Trebuchet MS", Helvetica, sans-serif', label: 'Trebuchet MS' },
+  { value: 'Georgia, "Times New Roman", serif', label: 'Georgia' },
+  { value: '"Times New Roman", Times, serif', label: 'Times New Roman' },
+  { value: '"Courier New", Courier, monospace', label: 'Courier New' },
+];
+
 // state.view at the moment "Embed options" was clicked — where the Builder returns to when
 // closed via the header's back arrow (its only exit, since this isn't a modal).
 let _returnViewKey = null;
@@ -58,6 +78,10 @@ let _styleOptions = _defaultStyleOptions();
 function _defaultStyleOptions() {
   return {
     visibleSlides: 3,
+    slideMargin: 12, // px gap between slides — deliberately capped to a modest 4-24px range
+                      // (see the "Slide spacing" control below), not a free-form input, so this
+                      // can't be pushed to something that breaks the layout
+    fontFamily: WEB_SAFE_FONTS[0].value,
     autoplay: false,
     autoplaySpeed: 4,
     navStyle: 'arrows', // 'arrows' | 'dots' | 'both'
@@ -575,6 +599,12 @@ function _buildStylePanelHtml() {
     </div>
 
     <div class="embed-style-row">
+      <label for="embed-style-margin">Slide spacing</label>
+      <input type="range" id="embed-style-margin" min="4" max="24" step="2" value="${s.slideMargin}" />
+      <span id="embed-style-margin-label">${s.slideMargin}px</span>
+    </div>
+
+    <div class="embed-style-row">
       <label for="embed-style-autoplay">Autoplay</label>
       <label class="share-access-toggle">
         <input type="checkbox" id="embed-style-autoplay" ${s.autoplay ? 'checked' : ''} />
@@ -615,6 +645,13 @@ function _buildStylePanelHtml() {
     </div>
 
     <div class="embed-style-row">
+      <label for="embed-style-font">Font</label>
+      <select id="embed-style-font" class="embed-style-select">
+        ${WEB_SAFE_FONTS.map(f => `<option value="${escapeHtml(f.value)}" ${s.fontFamily === f.value ? 'selected' : ''} style="font-family: ${escapeHtml(f.value)};">${escapeHtml(f.label)}</option>`).join('')}
+      </select>
+    </div>
+
+    <div class="embed-style-row">
       <label for="embed-style-branding">Show "Powered by SaveCraft"</label>
       <label class="share-access-toggle">
         <input type="checkbox" id="embed-style-branding" ${s.showBranding ? 'checked' : ''} />
@@ -646,6 +683,11 @@ function _wireStylePanel(container) {
     _styleOptions.visibleSlides = parseInt(e.target.value, 10);
     _onStyleChanged();
   });
+  container.querySelector('#embed-style-margin').addEventListener('input', e => {
+    _styleOptions.slideMargin = parseInt(e.target.value, 10);
+    container.querySelector('#embed-style-margin-label').textContent = `${_styleOptions.slideMargin}px`;
+    _onStyleChanged();
+  });
   container.querySelector('#embed-style-autoplay').addEventListener('change', e => {
     _styleOptions.autoplay = e.target.checked;
     container.querySelector('#embed-style-speed-row').style.display = e.target.checked ? '' : 'none';
@@ -668,6 +710,10 @@ function _wireStylePanel(container) {
     _styleOptions.aspectRatio = e.target.value;
     _onStyleChanged();
   });
+  container.querySelector('#embed-style-font').addEventListener('change', e => {
+    _styleOptions.fontFamily = e.target.value;
+    _onStyleChanged();
+  });
   container.querySelector('#embed-style-branding').addEventListener('change', e => {
     _styleOptions.showBranding = e.target.checked;
     _onStyleChanged();
@@ -685,33 +731,41 @@ function _renderPreview() {
   preview.setAttribute('data-embed-theme', _styleOptions.theme);
   preview.setAttribute('data-embed-aspect', _styleOptions.aspectRatio);
   preview.style.setProperty('--embed-visible-slides', _styleOptions.visibleSlides);
+  preview.style.setProperty('--embed-slide-gap', `${_styleOptions.slideMargin}px`);
+  preview.style.setProperty('--embed-font-family', _styleOptions.fontFamily);
 
-  if (!items.length) {
-    preview.innerHTML = '<div class="embed-builder-empty">Select at least one asset to preview.</div>';
-    return;
-  }
+  // No real assets picked yet — show gray placeholder slides (null entries below) instead of
+  // just an empty message, so every style control (visible slides, spacing, aspect ratio, nav
+  // style) is visible and testable immediately, not only after a source is chosen. Demo count
+  // always covers at least one full "page" at the current visible-slides setting.
+  const isDemo = items.length === 0;
+  const displayItems = isDemo ? Array.from({ length: Math.max(_styleOptions.visibleSlides, 4) }, () => null) : items;
 
   // Tripled for _wireCarouselArrows()'s fake-infinite-scroll mechanic — same convention
   // dashboard.js's own carousels use (see its comment on _wireCarouselArrows for why).
-  const tripled = [...items, ...items, ...items];
-  const cardsHtml = tripled.map(item => `
+  const tripled = [...displayItems, ...displayItems, ...displayItems];
+  const cardsHtml = tripled.map((item, i) => item ? `
     <div class="embed-preview-card">
       <div class="embed-preview-art">
         ${item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">` : ''}
       </div>
       <span class="embed-preview-label">${escapeHtml(item.title || 'Untitled')}</span>
+    </div>` : `
+    <div class="embed-preview-card embed-preview-card--demo">
+      <div class="embed-preview-art embed-preview-art--demo"></div>
+      <span class="embed-preview-label embed-preview-label--demo">Slide ${(i % displayItems.length) + 1}</span>
     </div>`).join('');
 
   const showArrows = _styleOptions.navStyle === 'arrows' || _styleOptions.navStyle === 'both';
   const showDots = _styleOptions.navStyle === 'dots' || _styleOptions.navStyle === 'both';
 
   preview.innerHTML = `
-    <div class="dash-carousel embed-preview-carousel"${_styleOptions.autoplay ? ' data-autoplay="true"' : ''}>
+    <div class="dash-carousel embed-preview-carousel"${_styleOptions.autoplay ? ' data-autoplay="true"' : ''}${isDemo ? ' data-demo="true"' : ''}>
       ${showArrows ? '<button class="dash-carousel-prev" aria-label="Previous">‹</button>' : ''}
       <div class="dash-carousel-strip">${cardsHtml}</div>
       ${showArrows ? '<button class="dash-carousel-next" aria-label="Next">›</button>' : ''}
     </div>
-    ${showDots ? `<div class="embed-preview-dots">${items.map(() => '<span class="embed-preview-dot"></span>').join('')}</div>` : ''}
+    ${showDots ? `<div class="embed-preview-dots">${displayItems.map(() => '<span class="embed-preview-dot"></span>').join('')}</div>` : ''}
     ${_styleOptions.showBranding ? '<div class="embed-preview-branding">Powered by SaveCraft</div>' : ''}
   `;
 
