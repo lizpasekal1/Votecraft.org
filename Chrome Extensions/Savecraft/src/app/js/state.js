@@ -290,6 +290,11 @@ export const state = {
   items: [],
   folders: [],
   authors: [],
+  savedLists: [], // { id, name } — the sidebar's "Saved Lists" row under Dashboard; user-creatable
+                  // via the same "+ New folder"-style prompt real categories use, but not yet
+                  // wired to any actual view (see promptAddSavedList/renderSidebar.js)
+  curatedListsRows: [], // { id, name } — "Curated Lists" row's own children, same shape/mechanics
+                        // as savedLists above (its sibling under Dashboard), starts empty
   view: 'dashboard', // 'all', category name, folder id, or 'dashboard'/'profile' — this default
                      // only ever applies to a genuinely first-ever load (no saved savecraft_view
                      // yet); any returning session restores wherever it last was, via loadAll()
@@ -298,7 +303,7 @@ export const state = {
   search: '',
   modalCategory: null,
   editingId: null,
-  collapsed: new Set([...CATEGORIES, 'dashboard']), // all collapsed by default, including the Dashboard row's Queue Kanban link
+  collapsed: new Set([...CATEGORIES, 'dashboard', 'saved-lists', 'curated-lists']), // all collapsed by default, including the Dashboard row's Queue Kanban link and its Saved Lists/Curated Lists rows' own children
   sidebarMode: 'categories', // 'categories' | 'curated' | 'home' | 'shared'
   // Which sidebar subfolder was actually clicked while browsing a curated genre — several
   // folders under the same category (e.g. Movie's "Movies" and "Videos") route to the exact

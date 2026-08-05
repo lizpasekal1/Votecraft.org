@@ -233,6 +233,17 @@ export async function loadAll() {
       } else {
         state.kanbanLists = defaultLists;
       }
+      // Sidebar's "Saved Lists" row (under Dashboard) — seeded once with three starter entries;
+      // never re-seeded once the key exists, same "seed if missing" convention as kanbanLists above.
+      if (data.savecraft_saved_lists) {
+        state.savedLists = data.savecraft_saved_lists;
+      } else {
+        state.savedLists = ['Favorites', 'Health', 'Dance'].map(name => ({ id: `default-${name.toLowerCase()}`, name }));
+        chrome.storage.sync.set({ savecraft_saved_lists: state.savedLists });
+      }
+      // "Curated Lists" row (Saved Lists' sibling under Dashboard) — no starter entries, just an
+      // empty list the user populates via its own "+ New folder" prompt.
+      state.curatedListsRows = data.savecraft_curated_lists_rows || [];
       state.hiddenCurated = new Set(data.savecraft_hidden_curated || []);
       state.curatedOverrides = data.savecraft_curated_overrides || {};
       state.lastfmUsername = data.savecraft_lastfm_username || null;
