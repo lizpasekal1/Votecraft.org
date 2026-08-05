@@ -363,6 +363,13 @@
   flex: 1;
 }
 
+/* Half the width the shared rule above would otherwise give it (it's the only flex-growing
+   sibling in its row, so a bare flex-grow ratio wouldn't actually shrink it — needs an explicit
+   cap). Was measuring ~412px; 200px is roughly half. */
+#embed-style-margin {
+  max-width: 200px;
+}
+
 #embed-style-speed-label {
   font-size: 12px;
   color: var(--text-secondary);
