@@ -262,6 +262,11 @@ export async function loadAll() {
         'default-music-musicians',
         // Removed from Visual Art per request.
         'default-art-painting', 'default-art-sculpture',
+        // Removed from Web Links (Sources) per request — went through several live renames
+        // (Shops -> Memes -> Publications) before landing on "just remove it"; matching by id
+        // here (not name) is what actually catches every install regardless of which of those
+        // names it happened to get stuck on.
+        'default-weblinks-shops',
       ];
       const legacyKeys = legacyIds.map(id => `folder_${id}`).filter(k => data[k]);
       state.folders = state.folders.filter(f => !legacyIds.includes(f.id));
@@ -391,7 +396,6 @@ export async function loadAll() {
         { id: 'default-books-pdfs',          name: 'PDFs',      parentCategory: 'Book' },
         { id: 'default-books-quotes',        name: 'Quotes',    parentCategory: 'Book' },
         { id: 'default-weblinks-websites',   name: 'Websites',  parentCategory: 'Web Links' },
-        { id: 'default-weblinks-shops',      name: 'Publications', parentCategory: 'Web Links' },
         { id: 'default-art-dance',     name: 'Movement', parentCategory: 'Visual Art' },
         { id: 'default-art-comics',    name: 'Comics',    parentCategory: 'Visual Art' },
         { id: 'default-art-memes',     name: 'Memes',     parentCategory: 'Visual Art' },
@@ -433,14 +437,6 @@ export async function loadAll() {
       if (websitesFolder && websitesFolder.name === 'Website') {
         websitesFolder.name = 'Websites';
         toSave[`folder_${websitesFolder.id}`] = websitesFolder;
-      }
-
-      // Renamed Web Links' "Shops" -> "Publications" — same folder id/icon, just a different
-      // concept for the folder now.
-      const shopsFolder = state.folders.find(f => f.id === 'default-weblinks-shops');
-      if (shopsFolder && shopsFolder.name === 'Shops') {
-        shopsFolder.name = 'Publications';
-        toSave[`folder_${shopsFolder.id}`] = shopsFolder;
       }
 
       // Renamed Visual Art's "Dance" -> "Movement".
