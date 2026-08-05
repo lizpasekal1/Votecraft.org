@@ -77,6 +77,31 @@
   margin-bottom: 10px;
 }
 
+/* Same slot as .embed-builder-panel-title, used instead of it whenever the Assets panel also
+   needs a "‹ Back"/"‹ Change source" link on the same row (source-picking sub-screens, and the
+   finalized asset list itself). */
+.embed-builder-panel-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.embed-builder-change-source {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+.embed-builder-change-source:hover { text-decoration: underline; }
+
 .embed-builder-empty {
   font-size: 13px;
   color: var(--text-secondary);
@@ -181,6 +206,73 @@
 .embed-asset-move-up:hover, .embed-asset-move-down:hover {
   color: var(--primary);
   background: var(--hover-bg);
+}
+
+/* ===== custom slider picker ===== */
+
+.embed-custom-search {
+  width: 100%;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--search-bg);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+}
+.embed-custom-search:focus { border-color: var(--primary); }
+
+.embed-custom-pick-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 340px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.embed-custom-pick-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 6px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.embed-custom-pick-row:last-child { border-bottom: none; }
+.embed-custom-pick-row:hover { background: var(--hover-bg); }
+
+.embed-custom-pick-checkbox {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.embed-custom-pick-cat {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.embed-custom-use-btn {
+  width: 100%;
+  padding: 10px;
+  background: var(--primary);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+.embed-custom-use-btn:hover { background: var(--primary-hover); }
+.embed-custom-use-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* ===== style panel ===== */
