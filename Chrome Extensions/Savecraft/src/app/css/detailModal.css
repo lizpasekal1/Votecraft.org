@@ -155,6 +155,80 @@
   color: var(--primary);
 }
 
+/* "Save to:" dropdown (detailModalHeader.js's _toggleSaveToMenu) — inserted as a direct sibling
+   right after #detail-favorite-btn, so it shares that button's own containing block
+   (.modal.detail-modal, position:relative) for absolute positioning. Sits just left of the
+   edit/bookmark/favorite icon column (which ends at right:43px — 5px inset + 38px width) rather
+   than below the star, where it would collide with the Edit button sitting close beneath it.
+   Same solid-purple/rounded-corner treatment as .my-options-dropdown (base.css) for visual
+   consistency with the app's one other dropdown menu. */
+.detail-save-to-menu {
+  position: absolute;
+  top: 60px;
+  right: 50px;
+  min-width: 160px;
+  background: var(--primary);
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  overflow: hidden;
+  z-index: 30;
+}
+
+.detail-save-to-menu-title {
+  padding: 10px 16px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(255,255,255,0.7);
+}
+
+.detail-save-to-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.detail-save-to-menu-item:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+/* Styled to look like a native radio button, but isn't one — a real <input type="radio"> can't be
+   unchecked by clicking the already-selected one again, which selecting-to-deselect here needs. */
+.detail-save-to-menu-radio {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.6);
+  position: relative;
+}
+
+.detail-save-to-menu-radio--checked {
+  border-color: #fff;
+}
+
+.detail-save-to-menu-radio--checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  transform: translate(-50%, -50%);
+}
+
 /* Custom hover tooltip for the right-side icon column (edit/bookmark/favorite). Built as a
    ::after (generated content, not a real child) rather than a nested <span>, because the
    bookmark/favorite buttons have their innerHTML fully replaced on every state change
