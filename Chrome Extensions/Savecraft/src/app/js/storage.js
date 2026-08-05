@@ -396,6 +396,10 @@ export async function loadAll() {
         { id: 'default-books-pdfs',          name: 'PDFs',      parentCategory: 'Book' },
         { id: 'default-books-quotes',        name: 'Quotes',    parentCategory: 'Book' },
         { id: 'default-weblinks-websites',   name: 'Websites',  parentCategory: 'Web Links' },
+        // Fresh id, not the old 'default-weblinks-shops' (permanently retired via legacyIds
+        // above, after that id got stuck mid-rename in a live install — see that entry's
+        // comment) — reusing it would just fight the legacyIds cleanup forever.
+        { id: 'default-weblinks-publications', name: 'Publications', parentCategory: 'Web Links' },
         { id: 'default-art-dance',     name: 'Movement', parentCategory: 'Visual Art' },
         { id: 'default-art-comics',    name: 'Comics',    parentCategory: 'Visual Art' },
         { id: 'default-art-memes',     name: 'Memes',     parentCategory: 'Visual Art' },
