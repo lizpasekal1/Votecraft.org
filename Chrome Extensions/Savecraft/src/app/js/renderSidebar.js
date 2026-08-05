@@ -66,6 +66,11 @@ export function renderSidebar() {
   let sidebarTitle = 'Favorites';
   if (sidebarEffectiveView.startsWith('genre:')) {
     sidebarTitle = sidebarEffectiveView.slice(6).split(':')[0] + ' Saves';
+  } else if (sidebarEffectiveView.startsWith('savedlist:')) {
+    // Mirrors the header reading "<Name> Saves" while browsing that Saved List's own landing
+    // card (renderGrid.js) — falls back to the default "Favorites" if the list was since deleted.
+    const listId = sidebarEffectiveView.slice(10);
+    sidebarTitle = state.savedLists.find(l => l.id === listId)?.name || 'Favorites';
   } else if (state.sidebarMode === 'curated') {
     sidebarTitle = 'Cause Curated';
   } else if (state.sidebarMode === 'shared') {
@@ -179,7 +184,7 @@ export function renderSidebar() {
     </div>`;
     }).join('')}
     <div class="sidebar-item sidebar-add-folder sidebar-subfolder--nested ${addClass}">
-      + New folder
+      + New Section Category
     </div>`}
     `;
   }
