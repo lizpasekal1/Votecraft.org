@@ -38,7 +38,7 @@ export function updateBookmarkIcon(item) {
   updateDetailActions();
 }
 
-function updateFavoriteIcon(item) {
+export function updateFavoriteIcon(item) {
   const favBtn = document.getElementById('detail-favorite-btn');
   if (!favBtn) return;
   const liveItem = state.items.find(i => i.id === item.id);
