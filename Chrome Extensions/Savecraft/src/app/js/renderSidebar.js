@@ -163,10 +163,14 @@ export function renderSidebar() {
     ${items.map(item => {
       const view = viewPrefix ? `${viewPrefix}${item.id}` : null;
       const isActive = view && state.view === view;
+      // Both lists' children render with the same generic folder icon a real subfolder row uses
+      // (folderIconHtml with no FOLDER_ICON entry for these ids falls through to
+      // GENERIC_FOLDER_ICON_PATH) — plain, no boxed .cat-icon container, so they read as folders
+      // nested a level deeper, not top-level category rows.
       return `
     <div class="sidebar-item sidebar-subfolder sidebar-subfolder--nested ${childClass} ${isActive ? 'active' : ''}"
          ${view ? `data-view="${escapeHtml(view)}"` : ''}>
-      <span class="cat-icon"></span> ${escapeHtml(item.name)}
+      ${folderIconHtml(item.id, 16)} ${escapeHtml(item.name)}
     </div>`;
     }).join('')}
     <div class="sidebar-item sidebar-add-folder sidebar-subfolder--nested ${addClass}">
