@@ -238,6 +238,38 @@
   padding-left: 66px;
 }
 
+/* Saved Lists' child rows only (showRadio in renderSidebar.js's _renderDashboardListRow) — same
+   visual language as the detail modal's own "Save to:" menu (.detail-save-to-menu-radio in
+   detailModal.css), so picking one of these rows reads as choosing a section, not navigating into
+   an ordinary folder the way a real category's subfolders work. Filled when that row is the
+   currently active view, empty otherwise — purely a status indicator riding along with the row's
+   own click, not a separately-interactive control. */
+.sidebar-list-radio {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-muted);
+  position: relative;
+  transition: border-color 0.15s;
+}
+
+.sidebar-list-radio--checked {
+  border-color: var(--primary);
+}
+
+.sidebar-list-radio--checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary);
+  transform: translate(-50%, -50%);
+}
+
 .sidebar-add-folder {
   color: var(--text-secondary);
   font-weight: 400;

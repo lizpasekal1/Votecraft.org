@@ -100,7 +100,7 @@ export function renderGrid() {
   // Saved Lists (Favorites/Health/Motivation/anything user-added, sidebar's Dashboard -> Saved
   // Lists row) — a placeholder landing card "for the time being", explicitly requested to match
   // the curated genre landing's own visual shape (isCuratedTop's empty-state below, e.g.
-  // "Futurism Saves") rather than showing a flat item.savedListId-filtered grid — but with its
+  // "Futurism Saves") rather than showing a flat item.savedListIds-filtered grid — but with its
   // own subtext copy ("add your specific saves", not "explore curated picks"), since these are
   // personal/editable lists, not read-only curated content. Unconditional (doesn't route through
   // getFilteredSortedItems()/its own "savedlist:" branch at all) — a full category/folder system
@@ -111,6 +111,11 @@ export function renderGrid() {
     const listId = state.view.slice(10);
     const list = state.savedLists.find(l => l.id === listId);
     const listName = list ? list.name : 'List';
+    // "All Saves" (default-favorites, renamed from "Favorites") already reads as a complete title
+    // on its own — appending " Saves" would double up ("All Saves Saves"). Every other list
+    // (Health, Motivation, anything user-added) still gets the " Saves" suffix to match the
+    // curated-genre landing card's own title shape (e.g. "Futurism Saves").
+    const cardTitle = listId === 'default-favorites' ? listName : `${listName} Saves`;
     gridTitle.style.display = 'none';
     sortSelect.style.display = 'none';
     gridHeader.style.display = 'none';
@@ -118,7 +123,7 @@ export function renderGrid() {
     container.innerHTML = `
       <div class="empty-state">
         <div class="empty-state-icon">✨</div>
-        <h3>${escapeHtml(listName)} Saves</h3>
+        <h3>${escapeHtml(cardTitle)}</h3>
         <p>Pick an option from the sidebar to add your specific saves.</p>
       </div>
     `;

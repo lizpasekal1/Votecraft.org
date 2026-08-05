@@ -202,6 +202,10 @@
   background: rgba(255,255,255,0.12);
 }
 
+.detail-save-to-menu-item-name {
+  flex: 1;
+}
+
 /* Styled to look like a native radio button, but isn't one — a real <input type="radio"> can't be
    unchecked by clicking the already-selected one again, which selecting-to-deselect here needs. */
 .detail-save-to-menu-radio {
