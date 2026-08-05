@@ -49,31 +49,46 @@ function updateFavoriteIcon(item) {
 
 // ===== "Save to:" dropdown (star button) =====
 // Built/torn down on demand (not static markup in index.html) — only ever one instance, closed on
-// outside click/Escape/re-toggle. Radio-style, single-select across state.savedLists (whatever's
+// outside click/Escape/re-toggle. Checkbox-style, multi-select across state.savedLists (whatever's
 // currently seeded there — Favorites/Health/Motivation today, and anything the sidebar's own
-// "+ New folder" adds later, automatically, since this just reads the same array): picking one
-// deselects any other, tapping the currently-selected one again deselects it entirely (not a real
-// <input type="radio"> — those can't be unchecked by clicking themselves, so this fakes the look
-// with styled buttons and its own toggle logic instead). "Favorites" is the one special case,
-// driving the existing item.favorite boolean (Dashboard's Favorites Spotlight,
-// getAllFavoriteItems(), etc. all already read that field) rather than a second, redundant
-// membership record; every other list uses the new singular item.savedListId (an item can only
-// ever be in one custom list at a time, to match the radio-button semantics here — not an array).
+// "+ New folder" adds later, automatically, since this just reads the same array): each option
+// toggles independently, so an item can end up in any combination of lists at once — including
+// all of them simultaneously — not just one at a time. Still styled to look like a radio button
+// (a plain circle, not a checkbox square — see .detail-save-to-menu-radio in detailModal.css) per
+// this app's original "Save to:" visual design; it's the underlying *selection logic* that's
+// checkbox-like now, not the look. "Favorites" is the one special case, driving the existing
+// item.favorite boolean (Dashboard's Favorites Spotlight, getAllFavoriteItems(), etc. all already
+// read that field) rather than a second, redundant membership record; every other list uses the
+// item.savedListIds array. The menu stays open across multiple picks (only the clicked row's own
+// state changes) — closes only on outside click/Escape/re-toggling the star, not per-selection.
 let _saveToMenuEl = null;
 
 function _closeSaveToMenu() {
   _saveToMenuEl?.remove();
   _saveToMenuEl = null;
-  document.removeEventListener('click', _closeSaveToMenu, true);
+  document.removeEventListener('click', _saveToMenuOutsideClickHandler, true);
   document.removeEventListener('keydown', _saveToMenuEscHandler, true);
+}
+
+// Registered on document with capture:true, so it fires *before* a row button's own bubble-phase
+// click handler even runs — a plain e.stopPropagation() inside that handler can't stop this (it
+// already fired, earlier in the same click's capture phase, by the time bubble phase reaches the
+// button). Checking containment here instead is what actually keeps the menu open while picking
+// multiple options: only a genuine click outside the menu closes it.
+function _saveToMenuOutsideClickHandler(e) {
+  if (_saveToMenuEl?.contains(e.target)) return;
+  _closeSaveToMenu();
 }
 
 function _saveToMenuEscHandler(e) {
   if (e.key === 'Escape') _closeSaveToMenu();
 }
 
+// Checked by id, not display name ("Favorites" is renameable, e.g. to "All Saves" — see
+// storage.js's migration) — default-favorites is the one list id that drives the existing
+// item.favorite boolean instead of item.savedListIds.
 function _isListSelected(liveItem, list) {
-  return list.name === 'Favorites' ? !!liveItem.favorite : liveItem.savedListId === list.id;
+  return list.id === 'default-favorites' ? !!liveItem.favorite : (liveItem.savedListIds || []).includes(list.id);
 }
 
 async function _toggleSaveToMenu(item) {
@@ -88,7 +103,7 @@ async function _toggleSaveToMenu(item) {
     return `
     <button type="button" class="detail-save-to-menu-item" data-list-id="${escapeHtml(list.id)}" data-list-name="${escapeHtml(list.name)}">
       <span class="detail-save-to-menu-radio${checked ? ' detail-save-to-menu-radio--checked' : ''}"></span>
-      <span>${escapeHtml(list.name)}</span>
+      <span class="detail-save-to-menu-item-name">${escapeHtml(list.name)}</span>
     </button>`;
   }).join('');
   menu.innerHTML = `<div class="detail-save-to-menu-title">Save to:</div>${rowsHtml}`;
@@ -101,27 +116,27 @@ async function _toggleSaveToMenu(item) {
       const list = { id: btn.dataset.listId, name: btn.dataset.listName };
       const target = await ensureLiveItem(item);
       const wasSelected = _isListSelected(target, list);
-      // Selecting any option clears the others first — mutually exclusive, radio-style — then,
-      // if this one wasn't already the selection, applies it; tapping the already-selected one
-      // again just leaves everything cleared (deselect).
-      target.favorite = false;
-      target.savedListId = null;
-      if (!wasSelected) {
-        if (list.name === 'Favorites') target.favorite = true;
-        else target.savedListId = list.id;
+      // Toggles just this one list's membership — every other list's own selection (including
+      // Favorites) is left exactly as it was, so any combination can end up checked at once.
+      if (list.id === 'default-favorites') {
+        target.favorite = !wasSelected;
+      } else {
+        const ids = new Set(target.savedListIds || []);
+        if (wasSelected) ids.delete(list.id); else ids.add(list.id);
+        target.savedListIds = [...ids];
       }
       await persistItem(target);
       updateFavoriteIcon(item);
+      btn.querySelector('.detail-save-to-menu-radio').classList.toggle('detail-save-to-menu-radio--checked', !wasSelected);
       renderSidebar();
       renderGrid();
-      _closeSaveToMenu();
     });
   });
 
   // Deferred a tick — the click that opened the menu would otherwise immediately bubble to this
   // same listener and close it right back.
   setTimeout(() => {
-    document.addEventListener('click', _closeSaveToMenu, true);
+    document.addEventListener('click', _saveToMenuOutsideClickHandler, true);
     document.addEventListener('keydown', _saveToMenuEscHandler, true);
   }, 0);
 }

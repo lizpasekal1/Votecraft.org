@@ -63,14 +63,14 @@ export function renderSidebar() {
   const sidebarEffectiveView = (state.view.startsWith('author:') && state.authorReturnView?.startsWith('genre:'))
     ? state.authorReturnView
     : state.view;
-  let sidebarTitle = 'Favorites';
+  let sidebarTitle = 'All Saves';
   if (sidebarEffectiveView.startsWith('genre:')) {
     sidebarTitle = sidebarEffectiveView.slice(6).split(':')[0] + ' Saves';
   } else if (sidebarEffectiveView.startsWith('savedlist:')) {
     // Mirrors the header reading "<Name> Saves" while browsing that Saved List's own landing
-    // card (renderGrid.js) — falls back to the default "Favorites" if the list was since deleted.
+    // card (renderGrid.js) — falls back to the default "All Saves" if the list was since deleted.
     const listId = sidebarEffectiveView.slice(10);
-    sidebarTitle = state.savedLists.find(l => l.id === listId)?.name || 'Favorites';
+    sidebarTitle = state.savedLists.find(l => l.id === listId)?.name || 'All Saves';
   } else if (state.sidebarMode === 'curated') {
     sidebarTitle = 'Cause Curated';
   } else if (state.sidebarMode === 'shared') {
@@ -157,7 +157,7 @@ export function renderSidebar() {
   // ("savedlist:<id>", wired below via the generic subfolder click handler +
   // renderGrid()'s own "savedlist:" landing-card branch — see there for what that currently
   // shows).
-  function _renderDashboardListRow({ key, icon, label, items, linkClass, childClass, addClass, viewPrefix, itemExtraClass, itemIsActive }) {
+  function _renderDashboardListRow({ key, icon, label, items, linkClass, childClass, addClass, viewPrefix, itemExtraClass, itemIsActive, showRadio }) {
     const rowCollapsed = state.collapsed.has(key);
     const rowArrow = rowCollapsed ? '▶' : '▼';
     return `
@@ -173,18 +173,24 @@ export function renderSidebar() {
       const hasCustomDestination = !!itemExtraClass?.(item);
       const view = (viewPrefix && !hasCustomDestination) ? `${viewPrefix}${item.id}` : null;
       const isActive = (view && state.view === view) || !!itemIsActive?.(item);
-      // Both lists' children render with the same generic folder icon a real subfolder row uses
+      // Curated Lists' children render with the same generic folder icon a real subfolder row uses
       // (folderIconHtml with no FOLDER_ICON entry for these ids falls through to
       // GENERIC_FOLDER_ICON_PATH) — plain, no boxed .cat-icon container, so they read as folders
-      // nested a level deeper, not top-level category rows.
+      // nested a level deeper, not top-level category rows. Saved Lists rows instead get a radio
+      // dot (showRadio) — same visual language as the detail modal's own "Save to:" menu — in place
+      // of the folder icon, so picking one of these rows reads as choosing a section, not
+      // navigating into an ordinary folder the way a real category's subfolders (Films > Series,
+      // etc.) or Curated Lists' own rows work. Filled/empty mirrors the row's own active state, not
+      // a separately-clickable control.
+      const radioHtml = showRadio ? `<span class="sidebar-list-radio${isActive ? ' sidebar-list-radio--checked' : ''}"></span>` : folderIconHtml(item.id, 16);
       return `
     <div class="sidebar-item sidebar-subfolder sidebar-subfolder--nested ${childClass} ${itemExtraClass?.(item) || ''} ${isActive ? 'active' : ''}"
          ${view ? `data-view="${escapeHtml(view)}"` : ''}>
-      ${folderIconHtml(item.id, 16)} ${escapeHtml(item.name)}
+      ${radioHtml} ${escapeHtml(item.name)}
     </div>`;
     }).join('')}
     <div class="sidebar-item sidebar-add-folder sidebar-subfolder--nested ${addClass}">
-      + New Section Category
+      + Add List
     </div>`}
     `;
   }
@@ -201,7 +207,7 @@ export function renderSidebar() {
     ${_renderDashboardListRow({
       key: 'saved-lists', icon: SAVED_LISTS_ICON_SVG, label: 'Saved Lists', items: state.savedLists,
       linkClass: 'sidebar-saved-lists-link', childClass: 'sidebar-saved-lists-child', addClass: 'sidebar-add-saved-list',
-      viewPrefix: 'savedlist:',
+      viewPrefix: 'savedlist:', showRadio: true,
     })}
     ${_renderDashboardListRow({
       key: 'curated-lists', icon: CURATED_LISTS_ICON_SVG, label: 'Curated Lists', items: state.curatedListsRows,

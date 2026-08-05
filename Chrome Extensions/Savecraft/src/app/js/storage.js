@@ -245,8 +245,22 @@ export async function loadAll() {
           danceList.name = 'Motivation';
           chrome.storage.sync.set({ savecraft_saved_lists: state.savedLists });
         }
+        // Renamed "Favorites" -> "All Saves" — same id (default-favorites) for the same reason.
+        // Every place that needs to know "is this specifically the Favorites list" (it's the one
+        // that drives item.favorite instead of item.savedListIds — detailModalHeader.js,
+        // renderFilters.js, share.js) checks this id, not the display name, so it keeps working
+        // regardless of what the list is labeled.
+        const favoritesList = state.savedLists.find(l => l.id === 'default-favorites');
+        if (favoritesList && favoritesList.name === 'Favorites') {
+          favoritesList.name = 'All Saves';
+          chrome.storage.sync.set({ savecraft_saved_lists: state.savedLists });
+        }
       } else {
-        state.savedLists = ['Favorites', 'Health', 'Motivation'].map(name => ({ id: `default-${name.toLowerCase()}`, name }));
+        state.savedLists = [
+          { id: 'default-favorites', name: 'All Saves' },
+          { id: 'default-health', name: 'Health' },
+          { id: 'default-motivation', name: 'Motivation' },
+        ];
         chrome.storage.sync.set({ savecraft_saved_lists: state.savedLists });
       }
       // "Curated Lists" row (Saved Lists' sibling under Dashboard) — seeded with two starter
@@ -355,6 +369,23 @@ export async function loadAll() {
         }
         state.folders = state.folders.filter(f => !favoritesFolderIds.has(f.id));
         favoritesFolderIds.forEach(id => removeFolder(id));
+      }
+
+      // One-time migration: item.savedListId (singular — radio-style, one custom Saved List at a
+      // time) -> item.savedListIds (array — the detail modal's "Save to:" menu is checkbox-style
+      // now, so an item can belong to multiple lists at once, including Favorites simultaneously).
+      const savedListIdMigrated = [];
+      state.items.forEach(item => {
+        if (item.savedListId) {
+          item.savedListIds = [item.savedListId];
+          delete item.savedListId;
+          savedListIdMigrated.push(item);
+        }
+      });
+      if (savedListIdMigrated.length) {
+        const toMigrate = {};
+        savedListIdMigrated.forEach(item => { toMigrate[`item_${item.id}`] = item; });
+        chrome.storage.sync.set(toMigrate);
       }
 
       // One-time migration: TV Shows moved from the Shows category into Films — every item

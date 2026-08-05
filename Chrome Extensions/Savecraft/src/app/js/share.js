@@ -78,19 +78,20 @@ function renderShareLists() {
   });
 }
 
-// Union of every checked list's own items (Favorites checks item.favorite, same as the detail
-// modal's own "Save to:" menu; every other list checks item.savedListId), deduped by id since an
-// item could in principle show up under more than one checked list — null if nothing's checked,
-// so callers fall back to the current sidebar view.
+// Union of every checked list's own items (default-favorites — checked by id, not display name —
+// checks item.favorite, same as the detail modal's own "Save to:" menu; every other list checks
+// item.savedListIds — an array now, since an item can belong to multiple lists at once), deduped
+// by id since an item could show up under more than one checked list either way — null if
+// nothing's checked, so callers fall back to the current sidebar view.
 function getSelectedShareListItems() {
   if (!_selectedShareListIds.size) return null;
   const seen = new Set();
   const items = [];
   for (const list of state.savedLists) {
     if (!_selectedShareListIds.has(list.id)) continue;
-    const matches = list.name === 'Favorites'
+    const matches = list.id === 'default-favorites'
       ? state.items.filter(i => i.favorite)
-      : state.items.filter(i => i.savedListId === list.id);
+      : state.items.filter(i => (i.savedListIds || []).includes(list.id));
     for (const item of matches) {
       if (seen.has(item.id)) continue;
       seen.add(item.id);
