@@ -99,12 +99,14 @@ export function renderGrid() {
 
   // Saved Lists (Favorites/Health/Motivation/anything user-added, sidebar's Dashboard -> Saved
   // Lists row) — a placeholder landing card "for the time being", explicitly requested to match
-  // the curated genre landing's own look (isCuratedTop's empty-state below, e.g. "Futurism
-  // Saves") rather than showing a flat item.savedListId-filtered grid. Unconditional (doesn't
-  // route through getFilteredSortedItems()/its own "savedlist:" branch at all) — a full
-  // category/folder system for populating these lists (mirroring how a curated genre drills into
-  // Movies/Books/etc.) is planned but not built yet; the "savedlist:" filtering branch in
-  // renderFilters.js is left intact/unused for when that lands.
+  // the curated genre landing's own visual shape (isCuratedTop's empty-state below, e.g.
+  // "Futurism Saves") rather than showing a flat item.savedListId-filtered grid — but with its
+  // own subtext copy ("add your specific saves", not "explore curated picks"), since these are
+  // personal/editable lists, not read-only curated content. Unconditional (doesn't route through
+  // getFilteredSortedItems()/its own "savedlist:" branch at all) — a full category/folder system
+  // for populating these lists (mirroring how a curated genre drills into Movies/Books/etc.) is
+  // planned but not built yet; the "savedlist:" filtering branch in renderFilters.js is left
+  // intact/unused for when that lands.
   if (state.view.startsWith('savedlist:')) {
     const listId = state.view.slice(10);
     const list = state.savedLists.find(l => l.id === listId);
@@ -117,7 +119,7 @@ export function renderGrid() {
       <div class="empty-state">
         <div class="empty-state-icon">✨</div>
         <h3>${escapeHtml(listName)} Saves</h3>
-        <p>Pick a category from the sidebar to explore curated picks.</p>
+        <p>Pick an option from the sidebar to add your specific saves.</p>
       </div>
     `;
     return;
