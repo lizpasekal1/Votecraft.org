@@ -520,11 +520,52 @@ function _reorder(dragId, targetId, position) {
 
 // ===== style panel =====
 
+// Encodes the current selection + style into a shareable link, same UTF-8-safe base64 idiom
+// share.js's buildShareUrl() uses (encodeURIComponent -> %XX-to-raw-char swap -> btoa), pointing
+// at a new savecraft/embed.html sibling of the existing savecraft/view.html — that hosted page is
+// Phase 3 (not built yet, see the header comment), so this link won't resolve until then, but the
+// payload/encoding/Copy mechanic all work today and don't need to change once it ships.
+function _buildEmbedUrl() {
+  const items = _orderedSelectedItems().map(({ url, title, category, imageUrl }) => ({ url, title, category, imageUrl }));
+  const payload = { title: _sourceLabel, items, style: _styleOptions };
+  const encoded = btoa(encodeURIComponent(JSON.stringify(payload)).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode(parseInt(p1, 16))));
+  return `https://lizpasekal1.github.io/Votecraft.org/savecraft/embed.html#${encoded}`;
+}
+
+// Always rendered (same as the style controls below it) — just empty/disabled until there's
+// something to link to, rather than swapping in an instructional message that would make the box
+// change shape/prominence depending on state.
+function _buildEmbedCodeBoxHtml() {
+  const hasItems = _orderedSelectedItems().length > 0;
+  const url = hasItems ? _buildEmbedUrl() : '';
+  return `
+  <div class="embed-code-section">
+    <div class="embed-builder-panel-title">Embed code</div>
+    <div class="embed-code-box">
+      <span class="embed-code-url" id="embed-code-url">${escapeHtml(url)}</span>
+      <button type="button" class="embed-code-copy-btn" id="embed-code-copy-btn" ${hasItems ? '' : 'disabled'}>Copy</button>
+    </div>
+  </div>`;
+}
+
+// Refreshes just the embed code box's URL text in place — called after style-only changes below,
+// which intentionally don't trigger a full renderEmbedBuilder() (that would blow away focus/state
+// on the very input the user is mid-interaction with, e.g. the autoplay speed slider).
+function _updateEmbedCodeBox() {
+  const urlEl = document.getElementById('embed-code-url');
+  const copyBtn = document.getElementById('embed-code-copy-btn');
+  if (!urlEl || !copyBtn) return;
+  const hasItems = _orderedSelectedItems().length > 0;
+  urlEl.textContent = hasItems ? _buildEmbedUrl() : '';
+  copyBtn.disabled = !hasItems;
+}
+
 function _buildStylePanelHtml() {
   const s = _styleOptions;
   return `
   <div class="embed-builder-panel embed-builder-style">
-    <div class="embed-builder-panel-title">Style</div>
+    ${_buildEmbedCodeBoxHtml()}
+    <div class="embed-builder-panel-title">Style slider</div>
 
     <div class="embed-style-row">
       <label for="embed-style-slides">Visible slides</label>
@@ -583,36 +624,53 @@ function _buildStylePanelHtml() {
   </div>`;
 }
 
+// Every style control's change handler needs both of these — bundled so neither gets forgotten
+// as controls are added/changed.
+function _onStyleChanged() {
+  _renderPreview();
+  _updateEmbedCodeBox();
+}
+
 function _wireStylePanel(container) {
+  container.querySelector('#embed-code-copy-btn').addEventListener('click', () => {
+    const btn = document.getElementById('embed-code-copy-btn');
+    if (!btn || btn.disabled) return;
+    navigator.clipboard.writeText(_buildEmbedUrl()).then(() => {
+      const original = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = original; }, 2000);
+    });
+  });
+
   container.querySelector('#embed-style-slides').addEventListener('change', e => {
     _styleOptions.visibleSlides = parseInt(e.target.value, 10);
-    _renderPreview();
+    _onStyleChanged();
   });
   container.querySelector('#embed-style-autoplay').addEventListener('change', e => {
     _styleOptions.autoplay = e.target.checked;
     container.querySelector('#embed-style-speed-row').style.display = e.target.checked ? '' : 'none';
-    _renderPreview();
+    _onStyleChanged();
   });
   container.querySelector('#embed-style-speed').addEventListener('input', e => {
     _styleOptions.autoplaySpeed = parseInt(e.target.value, 10);
     container.querySelector('#embed-style-speed-label').textContent = `${_styleOptions.autoplaySpeed}s`;
-    _renderPreview();
+    _onStyleChanged();
   });
   container.querySelector('#embed-style-nav').addEventListener('change', e => {
     _styleOptions.navStyle = e.target.value;
-    _renderPreview();
+    _onStyleChanged();
   });
   container.querySelector('#embed-style-theme').addEventListener('change', e => {
     _styleOptions.theme = e.target.checked ? 'dark' : 'light';
-    _renderPreview();
+    _onStyleChanged();
   });
   container.querySelector('#embed-style-aspect').addEventListener('change', e => {
     _styleOptions.aspectRatio = e.target.value;
-    _renderPreview();
+    _onStyleChanged();
   });
   container.querySelector('#embed-style-branding').addEventListener('change', e => {
     _styleOptions.showBranding = e.target.checked;
-    _renderPreview();
+    _onStyleChanged();
   });
 }
 
