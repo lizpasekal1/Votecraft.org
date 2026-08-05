@@ -341,7 +341,10 @@
   align-items: center;
   justify-content: center; /* centers the button row so leftover space (this box is wider than 6 small icon buttons) splits evenly left/right, instead of all piling up on the right the way a default left-aligned row would */
   gap: 7px;
-  padding: 11px 12px 7px 12px; /* was 24px top (matching .detail-title-row's) — reduced per feedback, so this no longer matches the title's own padding when they swap. Equal 12px left/right shifts the button row off the modal's true edge on both sides evenly (the toolbar's own box no longer bleeds — see the ::before pseudo below). */
+  padding: 9px 12px; /* equal top/bottom (was 11px/7px) so align-items:center actually centers the
+  buttons within the purple bar's full height, not just within an already-off-center content box.
+  Equal 12px left/right shifts the button row off the modal's true edge on both sides evenly (the
+  toolbar's own box no longer bleeds — see the ::before pseudo below). */
   opacity: 0;
   transform: translateY(8px);
   transition: opacity 0.2s var(--m3-standard-accelerate), transform 0.2s var(--m3-standard-accelerate), display 0.2s allow-discrete;
@@ -391,6 +394,11 @@
   .detail-body--editing-note .detail-note-toolbar { opacity: 0; transform: translateY(8px); }
 }
 
+/* Filled the same solid purple as the toolbar's own container background (.detail-note-toolbar's
+   ::before) — the button only reads as a distinct button (not just part of the bar) because its
+   icon and outline are var(--modal-bg) instead: dark against the purple fill, and matching the
+   modal's own surface color so a button reads as "a piece of the modal poking through the purple
+   bar" rather than a separately-colored UI chrome element. */
 .detail-note-toolbar-btn {
   display: flex;
   align-items: center;
@@ -398,9 +406,9 @@
   width: 36px;
   height: 36px;
   border-radius: 7px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text-secondary);
+  border: 2px solid var(--modal-bg);
+  background: var(--primary);
+  color: var(--modal-bg);
   cursor: pointer;
   transition: color 0.15s, background 0.15s, border-color 0.15s;
 }
@@ -410,10 +418,16 @@
   width: 22px;
   height: 22px;
 }
-.detail-note-toolbar-btn:hover { color: var(--primary); border-color: var(--primary); }
+/* Hover inverts the fill/icon (same scheme --active below uses) — modal-bg fill, purple icon —
+   so hovering previews exactly what the toggled-on look is, rather than just brightening the
+   same purple. */
+.detail-note-toolbar-btn:hover { background: var(--modal-bg); color: var(--primary); }
+/* Active (toggled-on, e.g. Focus mode engaged) inverts the resting scheme — var(--modal-bg) fill,
+   purple icon/border — so a toggled button reads clearly differently from every plain one sitting
+   next to it, not just a slightly different shade of the same purple. */
 .detail-note-toolbar-btn--active {
   color: var(--primary);
-  background: var(--primary-bg);
+  background: var(--modal-bg);
   border-color: var(--primary);
 }
 .detail-note-toolbar-btn[disabled] { opacity: 0.4; pointer-events: none; cursor: default; }
