@@ -231,6 +231,13 @@
   color: var(--primary);
 }
 
+/* One level deeper than a normal subfolder row (46px) — used for Saved Lists' own child rows
+   (Favorites/Health/Dance/etc.), which nest a level below the "Saved Lists" row itself, the same
+   way a category's real subfolders nest below the category row. */
+.sidebar-subfolder--nested {
+  padding-left: 66px;
+}
+
 .sidebar-add-folder {
   color: var(--text-secondary);
   font-weight: 400;
@@ -240,6 +247,13 @@
 
 .sidebar-add-folder:hover {
   color: var(--primary);
+}
+
+/* Two-class selector so this reliably wins over .sidebar-add-folder's own 46px, regardless of
+   declaration order — the Saved Lists "+ New folder" row needs the deeper 66px nested indent
+   (see .sidebar-subfolder--nested above), not the normal category depth. */
+.sidebar-add-folder.sidebar-subfolder--nested {
+  padding-left: 66px;
 }
 
 .sidebar-delete-folder {
