@@ -15,6 +15,7 @@ import { openEditModal } from './addEditModal.js';
 import { renderDashboard } from './dashboard.js';
 import { renderProfilePage } from './profile.js';
 import { renderSharedSavesPage } from './sharedSaves.js';
+import { renderEmbedBuilder } from './embedBuilder.js';
 import { renderSidebar } from './renderSidebar.js';
 import { renderAuthorPage } from './renderAuthorPage.js';
 import { renderCuratedGenreLanding, renderCuratedDirectory, renderCuratedBareList } from './renderCuratedPages.js';
@@ -78,6 +79,11 @@ export function renderGrid() {
 
   if (state.view === 'shared') {
     renderSharedSavesPage();
+    return;
+  }
+
+  if (state.view === 'embed-builder') {
+    renderEmbedBuilder();
     return;
   }
 

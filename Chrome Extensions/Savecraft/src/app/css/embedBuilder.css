@@ -1,0 +1,318 @@
+/* ===== EMBED BUILDER PAGE ===== */
+/* state.view === 'embed-builder', opened via the Share dropdown's "Embed options" button
+   (share.js -> embedBuilder.js). Layout: header, a two-column body (asset list + style panel),
+   then a full-width live preview strip at the bottom. Reuses dashboard.js's .dash-carousel*
+   markup/CSS for the preview itself (see dashboard.css) rather than duplicating carousel styling
+   here — only the embed-specific wrapper/card/branding styles live in this file. */
+
+.embed-builder-page-wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.embed-builder-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.embed-builder-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.embed-builder-back {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.embed-builder-back:hover {
+  background: var(--hover-bg);
+  border-color: var(--primary);
+}
+
+.embed-builder-title h1 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.embed-builder-title p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+.embed-builder-title p strong { color: var(--text-primary); font-weight: 600; }
+
+.embed-builder-body {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.embed-builder-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.embed-builder-panel-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+
+.embed-builder-empty {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 24px 12px;
+}
+
+/* ===== asset list ===== */
+
+.embed-asset-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.embed-asset-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--border);
+  border-top: 2px solid transparent;
+  border-bottom-width: 1px;
+  cursor: grab;
+  transition: background 0.15s;
+}
+.embed-asset-row:last-child { border-bottom: none; }
+.embed-asset-row:hover { background: var(--hover-bg); }
+
+.embed-asset-row--unchecked {
+  opacity: 0.45;
+}
+
+.embed-asset-row--dragging {
+  opacity: 0.4;
+}
+
+/* Drop-position indicators — same visual idea as kanban.js's .kcard--drop-before/after, a thin
+   colored rule showing exactly where the dragged row would land. */
+.embed-asset-row--drop-before {
+  border-top-color: var(--primary);
+}
+.embed-asset-row--drop-after {
+  box-shadow: inset 0 -2px 0 var(--primary);
+}
+
+.embed-asset-drag-handle {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  cursor: grab;
+}
+
+.embed-asset-checkbox {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.embed-asset-thumb {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--hover-bg);
+}
+.embed-asset-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.embed-asset-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.embed-asset-reorder-btns {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.embed-asset-move-up, .embed-asset-move-down {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 9px;
+  line-height: 1;
+  padding: 2px 4px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: color 0.15s, background 0.15s;
+}
+.embed-asset-move-up:hover, .embed-asset-move-down:hover {
+  color: var(--primary);
+  background: var(--hover-bg);
+}
+
+/* ===== style panel ===== */
+
+.embed-style-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.embed-style-row:last-child { border-bottom: none; }
+
+.embed-style-row label:first-child {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.embed-style-select {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--search-bg);
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.embed-style-row input[type="range"] {
+  accent-color: var(--primary);
+  flex: 1;
+}
+
+#embed-style-speed-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  min-width: 24px;
+  text-align: right;
+}
+
+/* ===== live preview ===== */
+
+.embed-builder-preview-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.embed-builder-preview {
+  border-radius: 10px;
+  padding: 12px;
+  background: var(--bg);
+  transition: background 0.15s;
+}
+
+/* Preview-only dark override — independent of the extension's own [data-theme="dark"], driven
+   entirely by the Style panel's "Dark preview" toggle so the user can preview either theme
+   regardless of which one the extension itself is currently in. */
+.embed-builder-preview[data-embed-theme="dark"] {
+  background: #1A1B1E;
+}
+.embed-builder-preview[data-embed-theme="dark"] .embed-preview-label {
+  color: #E8EAED;
+}
+.embed-builder-preview[data-embed-theme="dark"] .embed-preview-branding {
+  color: #9AA0A6;
+}
+
+.embed-preview-carousel {
+  --embed-card-w: 150px;
+}
+.embed-preview-carousel .dash-carousel-strip {
+  gap: 12px;
+}
+
+.embed-preview-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  width: var(--embed-card-w, 150px);
+}
+
+/* Aspect-ratio variants — applied to the preview wrapper, read by .embed-preview-art below via
+   the shared --embed-aspect-ratio custom property set per-variant. */
+.embed-builder-preview[data-embed-aspect="square"] .embed-preview-art { aspect-ratio: 1 / 1; }
+.embed-builder-preview[data-embed-aspect="wide"] .embed-preview-art { aspect-ratio: 16 / 9; }
+.embed-builder-preview[data-embed-aspect="tall"] .embed-preview-art { aspect-ratio: 2 / 3; }
+
+.embed-preview-art {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--hover-bg);
+}
+.embed-preview-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.embed-preview-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.embed-preview-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+.embed-preview-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+.embed-preview-branding {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 10px;
+}
+
+@media (max-width: 900px) {
+  .embed-builder-body {
+    grid-template-columns: 1fr;
+  }
+}
