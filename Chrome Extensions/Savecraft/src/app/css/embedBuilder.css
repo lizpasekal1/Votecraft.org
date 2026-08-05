@@ -56,11 +56,16 @@
 }
 .embed-builder-title p strong { color: var(--text-primary); font-weight: 600; }
 
+/* align-items: stretch (the grid default, stated explicitly here) rather than start — the Assets
+   panel (a scrollable list up to 420px) and the Embed code/Style slider panel (fixed-height
+   controls) would otherwise size independently and rarely match; stretching both grid items to
+   the row's tallest keeps the two-column layout visually balanced regardless of which side has
+   more content. */
 .embed-builder-body {
   display: grid;
   grid-template-columns: 1.4fr 1fr;
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .embed-builder-panel {
