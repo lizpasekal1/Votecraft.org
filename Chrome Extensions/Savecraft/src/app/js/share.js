@@ -56,9 +56,9 @@ function renderShareLists() {
     const selected = _selectedShareListIds.has(list.id);
     return `
     <button type="button" class="share-list-item ${selected ? 'share-list-item--selected' : ''}" data-list-id="${escapeHtml(list.id)}">
-      <span class="share-list-radio ${selected ? 'share-list-radio--selected' : ''}"></span>
       ${folderIconHtml(list.id, 16)}
       <span class="share-list-item-name">${escapeHtml(list.name)}</span>
+      <span class="share-list-radio ${selected ? 'share-list-radio--selected' : ''}"></span>
     </button>`;
   }).join('');
 
