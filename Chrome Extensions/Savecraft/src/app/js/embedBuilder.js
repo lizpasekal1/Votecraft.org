@@ -78,9 +78,9 @@ let _styleOptions = _defaultStyleOptions();
 function _defaultStyleOptions() {
   return {
     visibleSlides: 3,
-    slideMargin: 12, // px gap between slides — deliberately capped to a modest 4-24px range
-                      // (see the "Slide spacing" control below), not a free-form input, so this
-                      // can't be pushed to something that breaks the layout
+    slideMargin: 12, // px gap between slides — capped 4-50px (see the "Slide spacing" control
+                      // below), not a free-form input, so this can't be pushed to something that
+                      // breaks the layout
     fontFamily: WEB_SAFE_FONTS[0].value,
     autoplay: false,
     autoplaySpeed: 4,
@@ -600,7 +600,7 @@ function _buildStylePanelHtml() {
 
     <div class="embed-style-row">
       <label for="embed-style-margin">Slide spacing</label>
-      <input type="range" id="embed-style-margin" min="4" max="24" step="2" value="${s.slideMargin}" />
+      <input type="range" id="embed-style-margin" min="4" max="50" step="2" value="${s.slideMargin}" />
       <span id="embed-style-margin-label">${s.slideMargin}px</span>
     </div>
 
