@@ -249,9 +249,21 @@ export async function loadAll() {
         state.savedLists = ['Favorites', 'Health', 'Motivation'].map(name => ({ id: `default-${name.toLowerCase()}`, name }));
         chrome.storage.sync.set({ savecraft_saved_lists: state.savedLists });
       }
-      // "Curated Lists" row (Saved Lists' sibling under Dashboard) — no starter entries, just an
-      // empty list the user populates via its own "+ New folder" prompt.
-      state.curatedListsRows = data.savecraft_curated_lists_rows || [];
+      // "Curated Lists" row (Saved Lists' sibling under Dashboard) — seeded with one starter
+      // entry, "Votecraft and RCV"; the user can add more via its own "+ New folder" prompt.
+      // Checked by id rather than gated purely on the key's existence (unlike savedLists' seed-
+      // if-missing above) since an install could already have this key set from adding its own
+      // custom row before this starter entry existed — the id check re-adds it either way.
+      if (data.savecraft_curated_lists_rows) {
+        state.curatedListsRows = data.savecraft_curated_lists_rows;
+        if (!state.curatedListsRows.some(l => l.id === 'default-votecraft-rcv')) {
+          state.curatedListsRows.unshift({ id: 'default-votecraft-rcv', name: 'Votecraft and RCV' });
+          chrome.storage.sync.set({ savecraft_curated_lists_rows: state.curatedListsRows });
+        }
+      } else {
+        state.curatedListsRows = [{ id: 'default-votecraft-rcv', name: 'Votecraft and RCV' }];
+        chrome.storage.sync.set({ savecraft_curated_lists_rows: state.curatedListsRows });
+      }
       state.hiddenCurated = new Set(data.savecraft_hidden_curated || []);
       state.curatedOverrides = data.savecraft_curated_overrides || {};
       state.lastfmUsername = data.savecraft_lastfm_username || null;
