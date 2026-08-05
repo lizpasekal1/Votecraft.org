@@ -150,8 +150,11 @@ export function renderSidebar() {
   // only while expanded, same "+ New folder" prompt pattern real category folders use. Saved
   // Lists' children carry a real data-view ("savedlist:<id>", wired below via the generic
   // subfolder click handler + getFilteredSortedItems()'s own "savedlist:" branch); Curated
-  // Lists' children pass no viewPrefix and stay inert placeholders, same as before.
-  function _renderDashboardListRow({ key, icon, label, items, linkClass, childClass, addClass, viewPrefix }) {
+  // Lists' children stay inert placeholders EXCEPT "Votecraft" (id default-votecraft), which
+  // gets its own hardcoded destination via itemExtraClass/itemIsActive below + dedicated wiring
+  // in wireDashboardLink() — it's a fixed link to the real "Votecraft List" curated genre, not a
+  // user-editable one, so it doesn't fit the generic viewPrefix mechanism Saved Lists uses.
+  function _renderDashboardListRow({ key, icon, label, items, linkClass, childClass, addClass, viewPrefix, itemExtraClass, itemIsActive }) {
     const rowCollapsed = state.collapsed.has(key);
     const rowArrow = rowCollapsed ? '▶' : '▼';
     return `
@@ -162,13 +165,13 @@ export function renderSidebar() {
     ${rowCollapsed ? '' : `
     ${items.map(item => {
       const view = viewPrefix ? `${viewPrefix}${item.id}` : null;
-      const isActive = view && state.view === view;
+      const isActive = (view && state.view === view) || !!itemIsActive?.(item);
       // Both lists' children render with the same generic folder icon a real subfolder row uses
       // (folderIconHtml with no FOLDER_ICON entry for these ids falls through to
       // GENERIC_FOLDER_ICON_PATH) — plain, no boxed .cat-icon container, so they read as folders
       // nested a level deeper, not top-level category rows.
       return `
-    <div class="sidebar-item sidebar-subfolder sidebar-subfolder--nested ${childClass} ${isActive ? 'active' : ''}"
+    <div class="sidebar-item sidebar-subfolder sidebar-subfolder--nested ${childClass} ${itemExtraClass?.(item) || ''} ${isActive ? 'active' : ''}"
          ${view ? `data-view="${escapeHtml(view)}"` : ''}>
       ${folderIconHtml(item.id, 16)} ${escapeHtml(item.name)}
     </div>`;
@@ -196,6 +199,8 @@ export function renderSidebar() {
     ${_renderDashboardListRow({
       key: 'curated-lists', icon: CURATED_LISTS_ICON_SVG, label: 'Curated Lists', items: state.curatedListsRows,
       linkClass: 'sidebar-curated-lists-link', childClass: 'sidebar-curated-lists-child', addClass: 'sidebar-add-curated-list',
+      itemExtraClass: item => item.id === 'default-votecraft' ? 'sidebar-curated-votecraft-link' : '',
+      itemIsActive: item => item.id === 'default-votecraft' && state.sidebarMode === 'curated' && sidebarEffectiveView === 'genre:Top 100',
     })}`}
     <div class="sidebar-divider"></div>
   `;
@@ -240,6 +245,17 @@ export function renderSidebar() {
         else state.collapsed.add(key);
         renderSidebar();
       });
+    });
+    // Curated Lists' "Votecraft" row — its one hardcoded destination (see the itemExtraClass/
+    // itemIsActive wiring on its _renderDashboardListRow call above): the real "Votecraft List"
+    // curated genre, same place the mobile header's "VoteCraft Picks" option and the "⚡ VC"
+    // sponsored tab both link to.
+    sidebar.querySelector('.sidebar-curated-votecraft-link')?.addEventListener('click', () => {
+      state.sidebarMode = 'curated';
+      state.view = 'genre:Top 100';
+      persistViewState();
+      renderSidebar();
+      renderGrid();
     });
   }
 
