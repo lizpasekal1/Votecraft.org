@@ -63,7 +63,7 @@
    more content. */
 .embed-builder-body {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 16px;
   align-items: stretch;
 }
