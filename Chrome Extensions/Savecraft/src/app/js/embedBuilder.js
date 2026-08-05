@@ -1,36 +1,50 @@
 // ===== EMBED BUILDER =====
 // Full-screen in-extension page (state.view === 'embed-builder') for building a customizable
 // slider/carousel of specific assets, for embedding on an external website via an <iframe>
-// snippet — opened from the Share dropdown's "Embed options" button (share.js). Two steps:
-// (1) "choose-source" — pick which of your saved folders to build the slider from, styled as the
-// exact same category-tile grid the Add Item wizard's first screen uses (addEditModal.js's
-// renderCategoryTiles()/.step1-category-tile), so picking a slider's source feels like picking a
-// folder to save into, not a separate new pattern; (2) "build" — the asset list/style panel/live
-// preview UI. Phase 1 (this file, initial version): fully client-side — checkbox include/
-// exclude, drag-to-reorder, a style panel, and a live carousel preview reusing dashboard.js's
-// _wireCarouselArrows. Nothing persists yet; closing the page discards the in-progress config.
-// Firestore persistence (a public, sign-in-gated "savecraft_embeds" doc per embed) + a "Your
-// Embeds" section on the Profile page, plus the actual hosted public embed.html rendering page
-// and its generated <iframe> snippet, are a deliberately separate follow-up phase.
+// snippet — opened from the Share dropdown's "Embed options" button (share.js). One screen
+// throughout, not a wizard: the Assets panel itself walks through picking a source in place
+// (categories -> a whole section or one of its individual folders -> OR a hand-picked Custom
+// Slider), then morphs into the real asset list once a source is finalized. The style panel and
+// live preview sit alongside it the whole time. The category/folder tiles reuse the exact visual
+// language of the Add Item wizard's own first two screens (addEditModal.js's
+// renderCategoryTiles()/showFolderScreen()/.step1-category-tile) so picking a slider's source
+// feels like picking a folder to save into, not a separate new pattern — the top-level grid
+// drops the wizard's own "Articles" shortcut (still reachable one level down, as an ordinary
+// folder under Sources) and appends a "Custom Slider" tile last instead. Phase 1 (this
+// file, initial version): fully client-side — checkbox include/exclude, drag-to-reorder, a style
+// panel, and a live carousel preview reusing dashboard.js's _wireCarouselArrows. Nothing persists
+// yet; closing the page discards the in-progress config. Firestore persistence (a public,
+// sign-in-gated "savecraft_embeds" doc per embed) + a "Your Embeds" section on the Profile page,
+// plus the actual hosted public embed.html rendering page and its generated <iframe> snippet, are
+// a deliberately separate follow-up phase.
 
-import { state, CATEGORIES, CAT_LABEL, CAT_EMOJI } from './state.js';
-import { escapeHtml, folderIconHtml } from './utils.js';
+import { state, CATEGORIES, CAT_LABEL, CAT_EMOJI, PRIMARY_FOLDER_ID } from './state.js';
+import { escapeHtml, folderIconHtml, sortFoldersForDisplay } from './utils.js';
 import { renderSidebar, renderGrid } from './render.js';
 import { matchesPrimaryOrUnfoldered } from './renderFilters.js';
 import { _wireCarouselArrows } from './dashboard.js';
 
-// Which screen of the Builder is showing right now.
-let _builderStep = 'choose-source'; // 'choose-source' | 'build'
-
-// state.view at the moment "Embed options" was clicked — where the whole Builder returns to when
-// closed from the choose-source step (its "first screen", same as the Add Item wizard never
-// showing a Back button on its own first screen — this Builder isn't a modal though, so its back
-// arrow is the only exit, and stays visible throughout).
+// state.view at the moment "Embed options" was clicked — where the Builder returns to when
+// closed via the header's back arrow (its only exit, since this isn't a modal).
 let _returnViewKey = null;
 
-// The chosen embed source (a category like "Literature", the synthetic "__music__" combining
-// Musician + Music Album, or the Articles folder) — set once the user picks a tile on the
-// choose-source screen, read everywhere in the "build" step below.
+// Which layer of the Assets panel's own source-picking flow is showing, while _sourceViewKey is
+// still null: 'categories' (top-level tile grid) -> 'folders' (one category's own subfolders,
+// plus a "All X" tile) or 'custom' (hand-picked cross-category list). Reset to 'categories'
+// once a source is finalized (below) or the panel is sent "back" to it.
+let _pickerScreen = 'categories';
+let _pickerCategory = null; // which category's folders 'folders' is currently showing
+
+// In-progress picks while building a Custom Slider — separate from _selectedIds/_orderedIds
+// (below) until "Use this list" finalizes them, since Custom Slider starts opt-in (nothing
+// checked) rather than the opt-out default (everything checked) a folder/section source gets.
+let _customSelectedIds = new Set();
+let _customSearch = '';
+
+// The chosen embed source once finalized — a category (e.g. "Literature"), the synthetic
+// "__music__" union of Musician + Music Album, a specific folder id, or "__custom__" for a
+// hand-picked Custom Slider. Null until then, at which point the Assets panel swaps from the
+// tile grid to the real asset list in place.
 let _sourceViewKey = null;
 let _sourceLabel = '';
 let _sourceItems = [];
@@ -64,7 +78,10 @@ let _autoplayTimer = null;
 
 export function openEmbedBuilder() {
   _returnViewKey = state.view;
-  _builderStep = 'choose-source';
+  _pickerScreen = 'categories';
+  _pickerCategory = null;
+  _customSelectedIds = new Set();
+  _customSearch = '';
   _sourceViewKey = null;
   _sourceLabel = '';
   _sourceItems = [];
@@ -89,32 +106,82 @@ function _closeEmbedBuilder() {
   renderGrid();
 }
 
-// Every item matching a chosen source — categories reuse matchesPrimaryOrUnfoldered (the same
-// "primary folder or unfoldered" rule the sidebar's own category tabs use), "__music__" unions
-// Musician + Music Album (the wizard's combined "Music" tile skips its own Musician-vs-Album
-// sub-choice screen here — a mixed slider is a reasonable default and keeps this to one tap), and
-// the Articles shortcut matches its one specific folder id directly. Sorted newest-first — exact
-// order doesn't matter much since the asset list below is manually reorderable anyway.
-function _itemsForSource(sourceKey) {
-  let items;
-  if (sourceKey === '__music__') {
-    items = state.items.filter(i => matchesPrimaryOrUnfoldered(i, 'Musician') || matchesPrimaryOrUnfoldered(i, 'Music Album'));
-  } else if (sourceKey === 'default-weblinks-articles') {
-    items = state.items.filter(i => i.folderId === 'default-weblinks-articles');
-  } else {
-    items = state.items.filter(i => matchesPrimaryOrUnfoldered(i, sourceKey));
-  }
+// Sorted newest-first — exact order doesn't matter much since the asset list is manually
+// reorderable anyway. Shared by both "whole section"/"__music__" finalization and the individual-
+// folder one below.
+function _sortNewestFirst(items) {
   return [...items].sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
 }
 
-function _selectSource(sourceKey) {
-  _sourceViewKey = sourceKey;
-  _sourceLabel = sourceKey === '__music__' ? 'Music' : (CAT_LABEL[sourceKey] || sourceKey);
-  _sourceItems = _itemsForSource(sourceKey);
-  _selectedIds = new Set(_sourceItems.map(i => i.id));
-  _orderedIds = _sourceItems.map(i => i.id);
+// Finalizes a whole-category (or the synthetic "__music__" union of Musician + Music Album)
+// source — categories reuse matchesPrimaryOrUnfoldered (the same "primary folder or unfoldered"
+// rule the sidebar's own category tabs use). The wizard's combined "Music" tile skips its own
+// Musician-vs-Album sub-choice screen here — a mixed slider is a reasonable default and keeps
+// this to one tap.
+function _selectSectionSource(cat) {
+  const items = cat === '__music__'
+    ? state.items.filter(i => matchesPrimaryOrUnfoldered(i, 'Musician') || matchesPrimaryOrUnfoldered(i, 'Music Album'))
+    : state.items.filter(i => matchesPrimaryOrUnfoldered(i, cat));
+  _sourceViewKey = cat;
+  _sourceLabel = cat === '__music__' ? 'Music' : (CAT_LABEL[cat] || cat);
+  _finalizeSource(_sortNewestFirst(items));
+}
+
+// Finalizes one specific folder within a category — the folder's own primary-folder-ness (does
+// it represent "the whole category", like clicking a primary folder directly in the sidebar does)
+// decides whether it matches matchesPrimaryOrUnfoldered's broader rule or just its own folderId.
+function _selectFolderSource(folderId) {
+  const folder = state.folders.find(f => f.id === folderId);
+  if (!folder) return;
+  const isPrimary = PRIMARY_FOLDER_ID[folder.parentCategory] === folder.id;
+  const items = isPrimary
+    ? state.items.filter(i => matchesPrimaryOrUnfoldered(i, folder.parentCategory))
+    : state.items.filter(i => i.folderId === folderId);
+  _sourceViewKey = folderId;
+  _sourceLabel = folder.name;
+  _finalizeSource(_sortNewestFirst(items));
+}
+
+// Finalizes a hand-picked Custom Slider — unlike the two above, starts from exactly what the user
+// already checked in the custom picker (_customSelectedIds), not "everything, opt-out".
+function _selectCustomSource() {
+  if (!_customSelectedIds.size) return;
+  const ids = [..._customSelectedIds];
+  const byId = new Map(state.items.map(i => [i.id, i]));
+  _sourceViewKey = '__custom__';
+  _sourceLabel = 'Custom Slider';
+  _sourceItems = ids.map(id => byId.get(id)).filter(Boolean);
+  _selectedIds = new Set(ids);
+  _orderedIds = [...ids];
   _styleOptions = _defaultStyleOptions();
-  _builderStep = 'build';
+  _pickerScreen = 'categories';
+  _customSelectedIds = new Set();
+  _customSearch = '';
+  renderEmbedBuilder();
+}
+
+// Shared tail of _selectSectionSource/_selectFolderSource — both start opt-out (everything
+// selected), unlike _selectCustomSource above.
+function _finalizeSource(items) {
+  _sourceItems = items;
+  _selectedIds = new Set(items.map(i => i.id));
+  _orderedIds = items.map(i => i.id);
+  _styleOptions = _defaultStyleOptions();
+  _pickerScreen = 'categories';
+  _pickerCategory = null;
+  renderEmbedBuilder();
+}
+
+// Lets the user pick a different source without leaving the Builder entirely — sends the Assets
+// panel back to its own top-level tile grid, in place.
+function _changeSource() {
+  _sourceViewKey = null;
+  _sourceLabel = '';
+  _sourceItems = [];
+  _selectedIds = new Set();
+  _orderedIds = [];
+  _pickerScreen = 'categories';
+  _pickerCategory = null;
   renderEmbedBuilder();
 }
 
@@ -130,23 +197,15 @@ export function renderEmbedBuilder() {
   document.querySelector('.grid-header').style.display = 'none';
   container.className = 'embed-builder-page-wrap';
 
-  if (_builderStep === 'choose-source') {
-    container.innerHTML = `
-      <div class="embed-builder-page">
-        ${_buildHeaderHtml('Embed options', 'Pick which of your saved folders to build a slider from.')}
-        ${_buildChooseSourceHtml()}
-      </div>
-    `;
-    _wireHeader(container);
-    _wireChooseSource(container);
-    return;
-  }
+  const subtitle = _sourceViewKey !== null
+    ? `Building a slider from <strong>${escapeHtml(_sourceLabel)}</strong>`
+    : 'Pick which of your saved folders to build a slider from.';
 
   container.innerHTML = `
     <div class="embed-builder-page">
-      ${_buildHeaderHtml('Embed options', `Building a slider from <strong>${escapeHtml(_sourceLabel)}</strong>`)}
+      ${_buildHeaderHtml('Embed options', subtitle)}
       <div class="embed-builder-body">
-        ${_buildAssetListHtml()}
+        ${_buildAssetsPanelHtml()}
         ${_buildStylePanelHtml()}
       </div>
       <div class="embed-builder-preview-section">
@@ -157,15 +216,15 @@ export function renderEmbedBuilder() {
   `;
 
   _wireHeader(container);
-  _wireAssetList(container);
+  _wireAssetsPanel(container);
   _wireStylePanel(container);
   _renderPreview();
 }
 
 // ===== header =====
 
-// subtitleHtml is trusted, pre-escaped markup (built by the two call sites above, both of which
-// already escapeHtml() any user/data-derived text before interpolating it in) — not raw user input.
+// subtitleHtml is trusted, pre-escaped markup (built by renderEmbedBuilder() above, which already
+// escapeHtml()s any user/data-derived text before interpolating it in) — not raw user input.
 function _buildHeaderHtml(title, subtitleHtml) {
   return `
     <div class="embed-builder-header">
@@ -179,56 +238,178 @@ function _buildHeaderHtml(title, subtitleHtml) {
     </div>`;
 }
 
+// Always closes the whole Builder — going back within the Assets panel's own source-picking flow
+// (categories -> folders/custom, or changing an already-finalized source) has its own dedicated
+// links inside the panel instead (see _wireAssetsPanel below), so this stays a single, consistent
+// "leave the Builder" action throughout.
 function _wireHeader(container) {
-  container.querySelector('#embed-builder-back').addEventListener('click', () => {
-    if (_builderStep === 'build') {
-      _builderStep = 'choose-source';
-      renderEmbedBuilder();
-    } else {
-      _closeEmbedBuilder();
-    }
-  });
+  container.querySelector('#embed-builder-back').addEventListener('click', _closeEmbedBuilder);
 }
 
-// ===== choose-source step (mirrors the Add Item wizard's own category-tile screen) =====
+// ===== assets panel: source-picking (categories -> folders/custom) or the real asset list =====
 
-function _buildChooseSourceHtml() {
+function _buildAssetsPanelHtml() {
+  if (_sourceViewKey !== null) return _buildAssetListHtml();
+  if (_pickerScreen === 'folders') return _buildFolderPickerHtml();
+  if (_pickerScreen === 'custom') return _buildCustomPickerHtml();
+  return _buildCategoryPickerHtml();
+}
+
+function _wireAssetsPanel(container) {
+  if (_sourceViewKey !== null) { _wireAssetList(container); return; }
+  if (_pickerScreen === 'folders') { _wireFolderPicker(container); return; }
+  if (_pickerScreen === 'custom') { _wireCustomPicker(container); return; }
+  _wireCategoryPicker(container);
+}
+
+// Top-level tile grid, mirroring the Add Item wizard's own first screen (addEditModal.js's
+// renderCategoryTiles()/.step1-category-tile) — same categories, same combined "Music" tile, but
+// without the wizard's own "Articles" shortcut (still reachable one level down, as an ordinary
+// folder under Sources) and with a "Custom Slider" tile appended last instead.
+function _buildCategoryPickerHtml() {
   const tiles = CATEGORIES.filter(cat => cat !== 'Music Album').map(cat => cat === 'Musician' ? `
-    <button type="button" class="step1-category-tile" data-source="__music__">
+    <button type="button" class="step1-category-tile" data-category="__music__">
       <span class="cat-icon">${CAT_EMOJI['Music Album'] || ''}</span>
       <span class="step1-category-tile-label">Music</span>
     </button>` : `
-    <button type="button" class="step1-category-tile" data-source="${escapeHtml(cat)}">
+    <button type="button" class="step1-category-tile" data-category="${escapeHtml(cat)}">
       <span class="cat-icon">${CAT_EMOJI[cat] || ''}</span>
       <span class="step1-category-tile-label">${escapeHtml(CAT_LABEL[cat] || cat)}</span>
     </button>`);
-  // Same insertion point as renderCategoryTiles() in addEditModal.js — right after the first
-  // tile (Sources), so it reads next to the tile it's a shortcut off of.
-  tiles.splice(1, 0, `
-    <button type="button" class="step1-category-tile" data-source="default-weblinks-articles">
-      <span class="cat-icon">${folderIconHtml('default-weblinks-articles', 28)}</span>
-      <span class="step1-category-tile-label">Articles</span>
+  tiles.push(`
+    <button type="button" class="step1-category-tile" data-custom-slider="true">
+      <span class="cat-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5B5BEF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></span>
+      <span class="step1-category-tile-label">Custom Slider</span>
     </button>`);
 
   return `
-  <div class="embed-builder-panel embed-builder-choose-source">
+  <div class="embed-builder-panel embed-builder-assets">
+    <div class="embed-builder-panel-title">Assets</div>
     <div class="step1-category-grid">${tiles.join('')}</div>
   </div>`;
 }
 
-function _wireChooseSource(container) {
-  container.querySelectorAll('[data-source]').forEach(tile => {
-    tile.addEventListener('click', () => _selectSource(tile.dataset.source));
+function _wireCategoryPicker(container) {
+  container.querySelectorAll('[data-category]').forEach(tile => {
+    tile.addEventListener('click', () => {
+      const cat = tile.dataset.category;
+      // __music__ has no real state.folders entries of its own to drill into (it's a synthetic
+      // union of two categories) — finalize it directly instead of showing an empty folder screen.
+      if (cat === '__music__') { _selectSectionSource(cat); return; }
+      _pickerCategory = cat;
+      _pickerScreen = 'folders';
+      renderEmbedBuilder();
+    });
   });
+  container.querySelector('[data-custom-slider]')?.addEventListener('click', () => {
+    _pickerScreen = 'custom';
+    renderEmbedBuilder();
+  });
+}
+
+// One category's own subfolders (same sortFoldersForDisplay()/folderIconHtml() the Add Item
+// wizard's own folder screen uses — addEditModal.js's showFolderScreen()), plus a "All X" tile
+// so the category-as-a-whole is still one tap away from here, not just from the top-level grid.
+function _buildFolderPickerHtml() {
+  const cat = _pickerCategory;
+  const folders = sortFoldersForDisplay(state.folders.filter(f => f.parentCategory === cat), cat);
+  const wholeTile = `
+    <button type="button" class="step1-category-tile" data-whole-category="true">
+      <span class="cat-icon">${CAT_EMOJI[cat] || ''}</span>
+      <span class="step1-category-tile-label">All ${escapeHtml(CAT_LABEL[cat] || cat)}</span>
+    </button>`;
+  const folderTiles = folders.map(f => `
+    <button type="button" class="step1-category-tile" data-folder-id="${escapeHtml(f.id)}">
+      <span class="cat-icon">${folderIconHtml(f.id, 28)}</span>
+      <span class="step1-category-tile-label">${escapeHtml(f.name)}</span>
+    </button>`).join('');
+
+  return `
+  <div class="embed-builder-panel embed-builder-assets">
+    <div class="embed-builder-panel-title-row">
+      <button type="button" class="embed-builder-change-source" id="embed-picker-back">‹ Categories</button>
+    </div>
+    <div class="step1-category-grid">${wholeTile}${folderTiles}</div>
+  </div>`;
+}
+
+function _wireFolderPicker(container) {
+  container.querySelector('#embed-picker-back')?.addEventListener('click', () => {
+    _pickerScreen = 'categories';
+    _pickerCategory = null;
+    renderEmbedBuilder();
+  });
+  container.querySelector('[data-whole-category]')?.addEventListener('click', () => _selectSectionSource(_pickerCategory));
+  container.querySelectorAll('[data-folder-id]').forEach(tile => {
+    tile.addEventListener('click', () => _selectFolderSource(tile.dataset.folderId));
+  });
+}
+
+// Hand-picked, cross-category asset list — a simple search box over every saved item, capped at
+// 200 rows so a large library doesn't render thousands of checkboxes at once (the search box is
+// there specifically so that cap is never really a practical limit).
+function _buildCustomPickerHtml() {
+  const q = _customSearch.trim().toLowerCase();
+  const pool = _sortNewestFirst(state.items.filter(i => !q || (i.title || '').toLowerCase().includes(q))).slice(0, 200);
+
+  const rowsHtml = pool.length ? pool.map(item => `
+    <label class="embed-custom-pick-row">
+      <input type="checkbox" class="embed-custom-pick-checkbox" data-id="${escapeHtml(item.id)}" ${_customSelectedIds.has(item.id) ? 'checked' : ''} />
+      <span class="embed-asset-thumb">
+        ${item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">` : ''}
+      </span>
+      <span class="embed-asset-name">${escapeHtml(item.title || 'Untitled')}</span>
+      <span class="embed-custom-pick-cat">${escapeHtml(CAT_LABEL[item.category] || item.category || '')}</span>
+    </label>`).join('') : '<div class="embed-builder-empty">No matches.</div>';
+
+  return `
+  <div class="embed-builder-panel embed-builder-assets">
+    <div class="embed-builder-panel-title-row">
+      <button type="button" class="embed-builder-change-source" id="embed-picker-back">‹ Categories</button>
+      <span id="embed-custom-count">${_customSelectedIds.size} picked</span>
+    </div>
+    <input type="text" class="embed-custom-search" id="embed-custom-search" placeholder="Search your saves…" value="${escapeHtml(_customSearch)}" />
+    <div class="embed-custom-pick-list" id="embed-custom-pick-list">${rowsHtml}</div>
+    <button type="button" class="embed-custom-use-btn" id="embed-custom-use-btn" ${_customSelectedIds.size ? '' : 'disabled'}>Use this list (${_customSelectedIds.size})</button>
+  </div>`;
+}
+
+function _wireCustomPicker(container) {
+  container.querySelector('#embed-picker-back')?.addEventListener('click', () => {
+    _pickerScreen = 'categories';
+    renderEmbedBuilder();
+  });
+  const searchInput = container.querySelector('#embed-custom-search');
+  searchInput?.addEventListener('input', e => {
+    _customSearch = e.target.value;
+    const cursor = e.target.selectionStart;
+    renderEmbedBuilder();
+    // renderEmbedBuilder() replaces the whole panel's innerHTML, including this input itself —
+    // restore focus/cursor position so typing a search query doesn't lose focus after every
+    // keystroke.
+    const newInput = document.getElementById('embed-custom-search');
+    if (newInput) { newInput.focus(); newInput.setSelectionRange(cursor, cursor); }
+  });
+  container.querySelectorAll('.embed-custom-pick-checkbox').forEach(cb => {
+    cb.addEventListener('change', () => {
+      if (cb.checked) _customSelectedIds.add(cb.dataset.id); else _customSelectedIds.delete(cb.dataset.id);
+      renderEmbedBuilder();
+    });
+  });
+  container.querySelector('#embed-custom-use-btn')?.addEventListener('click', _selectCustomSource);
 }
 
 // ===== asset list (checkbox include/exclude + reorder) =====
 
 function _buildAssetListHtml() {
+  const changeSourceLink = `<button type="button" class="embed-builder-change-source" id="embed-change-source">‹ Change source</button>`;
+
   if (!_sourceItems.length) {
     return `
     <div class="embed-builder-panel embed-builder-assets">
-      <div class="embed-builder-panel-title">Assets</div>
+      <div class="embed-builder-panel-title-row">
+        ${changeSourceLink}
+      </div>
       <div class="embed-builder-empty">Nothing saved here yet.</div>
     </div>`;
   }
@@ -256,12 +437,17 @@ function _buildAssetListHtml() {
 
   return `
   <div class="embed-builder-panel embed-builder-assets">
-    <div class="embed-builder-panel-title">Assets (<span id="embed-asset-count">${_selectedIds.size}</span> selected)</div>
+    <div class="embed-builder-panel-title-row">
+      ${changeSourceLink}
+      <span>(<span id="embed-asset-count">${_selectedIds.size}</span> selected)</span>
+    </div>
     <div class="embed-asset-list" id="embed-asset-list">${rowsHtml}</div>
   </div>`;
 }
 
 function _wireAssetList(container) {
+  container.querySelector('#embed-change-source')?.addEventListener('click', _changeSource);
+
   container.querySelectorAll('.embed-asset-checkbox').forEach(cb => {
     cb.addEventListener('change', () => {
       const id = cb.dataset.id;
