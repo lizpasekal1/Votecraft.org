@@ -3,6 +3,12 @@
   width: 460px;
 }
 
+/* Scoped to .share-modal specifically rather than editing the shared ".modal h2" rule
+   (addEditModal.css) — that rule's own "margin-bottom: 0" is relied on by every other modal. */
+.share-modal h2 {
+  margin-bottom: 6px;
+}
+
 .share-people-input {
   width: 100%;
   padding: 12px 14px;
@@ -83,9 +89,33 @@
   white-space: nowrap;
 }
 
-.share-list-item-check {
+/* Styled to look like a native radio button, but isn't one — a real <input type="radio"> can't
+   be unchecked by clicking the already-selected one again, which selecting-to-deselect here
+   needs. Same look as the detail modal's own .detail-save-to-menu-radio. */
+.share-list-radio {
   flex-shrink: 0;
-  color: var(--primary);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  position: relative;
+  transition: border-color 0.15s;
+}
+
+.share-list-radio--selected {
+  border-color: var(--primary);
+}
+
+.share-list-radio--selected::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  transform: translate(-50%, -50%);
 }
 
 .share-lists-empty {
@@ -100,7 +130,6 @@
   align-items: center;
   gap: 12px;
   padding: 14px 0;
-  border-top: 1px solid var(--border);
   margin-bottom: 16px;
 }
 
@@ -121,6 +150,18 @@
   color: #A5D6A7;
 }
 
+/* Toggled off via #share-access-toggle-input — pink/red instead of the green "public" look,
+   matching the icon swap to a lock (see updateLinkSharingUi() in share.js). */
+.share-access-icon--off {
+  background: #FCE4EC !important;
+  color: #C62828 !important;
+}
+
+[data-theme="dark"] .share-access-icon--off {
+  background: #4A1420 !important;
+  color: #EF9A9A !important;
+}
+
 .share-access-info {
   flex: 1;
   min-width: 0;
@@ -138,10 +179,51 @@
   margin-top: 2px;
 }
 
-.share-access-role {
-  font-size: 13px;
-  color: var(--text-secondary);
+/* iOS-style on/off toggle for link sharing — replaces the old static "Viewer" role label. When
+   off, updateLinkSharingUi() (share.js) also grays out Copy link/Send regardless of whether a
+   Saved List/email is filled in, since there's nothing left to share the link *via*. */
+.share-access-toggle {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 24px;
   flex-shrink: 0;
+  cursor: pointer;
+}
+
+.share-access-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.share-access-toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--border);
+  border-radius: 24px;
+  transition: background 0.15s;
+}
+
+.share-access-toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.15s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.share-access-toggle input:checked + .share-access-toggle-slider {
+  background: var(--primary);
+}
+
+.share-access-toggle input:checked + .share-access-toggle-slider::before {
+  transform: translateX(16px);
 }
 
 .share-modal-footer {

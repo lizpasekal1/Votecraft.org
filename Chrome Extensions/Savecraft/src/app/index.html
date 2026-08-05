@@ -240,14 +240,17 @@
       </div>
 
       <div class="share-general-access">
-        <div class="share-access-icon">
+        <div class="share-access-icon" id="share-access-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         </div>
         <div class="share-access-info">
-          <div class="share-access-title">Anyone with the link</div>
-          <div class="share-access-sub">Anyone on the internet with the link can view</div>
+          <div class="share-access-title" id="share-access-title">Anyone with the link</div>
+          <div class="share-access-sub" id="share-access-sub">Anyone on the internet with the link can view</div>
         </div>
-        <span class="share-access-role">Viewer</span>
+        <label class="share-access-toggle" title="Turn link sharing on or off">
+          <input type="checkbox" id="share-access-toggle-input" checked />
+          <span class="share-access-toggle-slider"></span>
+        </label>
       </div>
 
       <div class="share-modal-footer">

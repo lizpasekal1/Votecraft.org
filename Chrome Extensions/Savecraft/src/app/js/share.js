@@ -7,13 +7,44 @@ import { escapeHtml, folderIconHtml } from './utils.js';
 
 // Which Saved List (if any) the "Share a Saved List" scroll list has selected — radio-style,
 // single selection, tap-to-deselect, same pattern as the detail modal's own "Save to:" menu
-// (detailModalHeader.js's _toggleSaveToMenu). Reset to null every time the modal opens. Note:
-// this only governs *which items* get shared (this list's, vs. whatever's currently open in the
-// sidebar when nothing's selected) — it does not yet implement per-share view permissions
-// ("View — My Notes Excluded" / "View — My Notes Included" / "Admin") the user's described
-// wanting eventually; notes aren't part of the share payload at all today (see buildShareUrl's
-// item mapping below), so nothing needs stripping on the recipient's end yet either.
-let _selectedShareListId = null;
+// (detailModalHeader.js's _toggleSaveToMenu). Kept as a Set (size 0 or 1) rather than a plain
+// id so getSelectedShareListItems()/selectedShareListNames() below don't need two code paths —
+// renderShareLists()'s own click handler is what actually enforces "only one at a time" by
+// clearing the set before adding. Reset to empty every time the modal opens. Note: this only
+// governs *which items* get shared (this list's, vs. whatever's currently open in the sidebar
+// when nothing's selected) — it does not yet implement per-share view permissions ("View — My
+// Notes Excluded" / "View — My Notes Included" / "Admin") the user's described wanting
+// eventually; notes aren't part of the share payload at all today (see buildShareUrl's item
+// mapping below), so nothing needs stripping on the recipient's end yet either.
+let _selectedShareListIds = new Set();
+
+// "Anyone with the link" on/off toggle (replaces the old static "Viewer" label) — reset to on
+// every time the modal opens. Off just grays out Copy link/Send (see updateLinkSharingUi()
+// below); there's no real access-control backend behind this yet, so it can't actually revoke a
+// link someone already copied — same "no real enforcement" caveat as the future permission-tier
+// note above.
+let _linkSharingEnabled = true;
+
+function updateLinkSharingUi() {
+  const icon = document.getElementById('share-access-icon');
+  const title = document.getElementById('share-access-title');
+  const sub = document.getElementById('share-access-sub');
+  icon.classList.toggle('share-access-icon--off', !_linkSharingEnabled);
+  icon.innerHTML = _linkSharingEnabled
+    ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>'
+    : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+  title.textContent = _linkSharingEnabled ? 'Anyone with the link' : 'Link sharing is off';
+  sub.textContent = _linkSharingEnabled
+    ? 'Anyone on the internet with the link can view'
+    : 'Turn on to let anyone with the link view this';
+  updateActionButtonsDisabled();
+}
+
+function updateActionButtonsDisabled() {
+  document.getElementById('btn-copy-link').disabled = !_linkSharingEnabled || !_selectedShareListIds.size;
+  const email = document.getElementById('share-email-input').value.trim();
+  document.getElementById('btn-share-modal-send').disabled = !_linkSharingEnabled || !email;
+}
 
 function renderShareLists() {
   const container = document.getElementById('share-lists-scroll');
@@ -22,35 +53,56 @@ function renderShareLists() {
     return;
   }
   container.innerHTML = state.savedLists.map(list => {
-    const selected = list.id === _selectedShareListId;
+    const selected = _selectedShareListIds.has(list.id);
     return `
     <button type="button" class="share-list-item ${selected ? 'share-list-item--selected' : ''}" data-list-id="${escapeHtml(list.id)}">
+      <span class="share-list-radio ${selected ? 'share-list-radio--selected' : ''}"></span>
       ${folderIconHtml(list.id, 16)}
       <span class="share-list-item-name">${escapeHtml(list.name)}</span>
-      ${selected ? '<svg class="share-list-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
     </button>`;
   }).join('');
 
   container.querySelectorAll('[data-list-id]').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.dataset.listId;
-      _selectedShareListId = _selectedShareListId === id ? null : id;
+      // Exclusive, not additive — clearing first (rather than just toggling this one id) is what
+      // keeps this a single-selection radio, not a checkbox list: picking a different list always
+      // replaces whichever one was selected before, and re-picking the same one deselects it.
+      const wasSelected = _selectedShareListIds.has(id);
+      _selectedShareListIds.clear();
+      if (!wasSelected) _selectedShareListIds.add(id);
       renderShareLists();
-      document.getElementById('btn-copy-link').disabled = !_selectedShareListId;
+      updateActionButtonsDisabled();
     });
   });
 }
 
-// Resolves the selected Saved List's own items (Favorites checks item.favorite, same as the
-// detail modal's own "Save to:" menu; every other list checks item.savedListId) — null if
-// nothing's selected, so callers fall back to the current sidebar view.
+// Union of every checked list's own items (Favorites checks item.favorite, same as the detail
+// modal's own "Save to:" menu; every other list checks item.savedListId), deduped by id since an
+// item could in principle show up under more than one checked list — null if nothing's checked,
+// so callers fall back to the current sidebar view.
 function getSelectedShareListItems() {
-  if (!_selectedShareListId) return null;
-  const list = state.savedLists.find(l => l.id === _selectedShareListId);
-  if (!list) return null;
-  return list.name === 'Favorites'
-    ? state.items.filter(i => i.favorite)
-    : state.items.filter(i => i.savedListId === _selectedShareListId);
+  if (!_selectedShareListIds.size) return null;
+  const seen = new Set();
+  const items = [];
+  for (const list of state.savedLists) {
+    if (!_selectedShareListIds.has(list.id)) continue;
+    const matches = list.name === 'Favorites'
+      ? state.items.filter(i => i.favorite)
+      : state.items.filter(i => i.savedListId === list.id);
+    for (const item of matches) {
+      if (seen.has(item.id)) continue;
+      seen.add(item.id);
+      items.push(item);
+    }
+  }
+  return items;
+}
+
+// Names of every checked list, in state.savedLists order (not check order) — shared by
+// buildShareUrl (payload title) and sendViaEmail (subject/body) below.
+function selectedShareListNames() {
+  return state.savedLists.filter(l => _selectedShareListIds.has(l.id)).map(l => l.name);
 }
 
 export function initShare() {
@@ -93,6 +145,11 @@ export function initShare() {
   });
   document.getElementById('btn-share-modal-send').addEventListener('click', sendViaEmail);
 
+  document.getElementById('share-access-toggle-input').addEventListener('change', e => {
+    _linkSharingEnabled = e.target.checked;
+    updateLinkSharingUi();
+  });
+
   document.getElementById('btn-copy-link').addEventListener('click', () => {
     const url = buildShareUrl();
     navigator.clipboard.writeText(url).then(() => {
@@ -109,19 +166,18 @@ export function initShare() {
 
 export function openShareModal() {
   document.getElementById('share-email-input').value = '';
-  document.getElementById('btn-share-modal-send').disabled = true;
-  _selectedShareListId = null;
+  _selectedShareListIds = new Set();
+  _linkSharingEnabled = true;
+  document.getElementById('share-access-toggle-input').checked = true;
   renderShareLists();
+  updateLinkSharingUi(); // also resets both action buttons' disabled state
   const copyBtn = document.getElementById('btn-copy-link');
   copyBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Copy link`;
   copyBtn.classList.remove('copied');
-  copyBtn.disabled = true; // grayed out until a Saved List is selected above
   document.getElementById('share-modal-overlay').classList.add('open');
   document.getElementById('share-email-input').focus();
 
-  document.getElementById('share-email-input').oninput = e => {
-    document.getElementById('btn-share-modal-send').disabled = !e.target.value.trim();
-  };
+  document.getElementById('share-email-input').oninput = updateActionButtonsDisabled;
 }
 
 export function closeShareModal() {
@@ -134,7 +190,7 @@ export function buildShareUrl() {
     ({ url, title, category, imageUrl })
   );
   const viewLabel = selectedListItems
-    ? state.savedLists.find(l => l.id === _selectedShareListId)?.name || 'My List'
+    ? selectedShareListNames().join(', ') || 'My List'
     : state.view === 'all'
     ? 'SaveCraft Library'
     : (CATEGORIES.includes(state.view) ? state.view : (() => {
@@ -160,9 +216,9 @@ export function sendViaEmail() {
     return;
   }
 
-  const selectedList = _selectedShareListId && state.savedLists.find(l => l.id === _selectedShareListId);
-  const viewLabel = selectedList
-    ? `my "${selectedList.name}" list`
+  const selectedNames = selectedShareListNames();
+  const viewLabel = selectedNames.length
+    ? `my "${selectedNames.join(', ')}" list${selectedNames.length > 1 ? 's' : ''}`
     : state.view === 'all'
     ? 'my SaveCraft library'
     : (CATEGORIES.includes(state.view) ? `my ${state.view} list` : 'a list');
