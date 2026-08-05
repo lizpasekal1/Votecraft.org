@@ -275,6 +275,53 @@
   cursor: not-allowed;
 }
 
+/* ===== embed code (top of the style panel) ===== */
+
+.embed-code-section {
+  margin-bottom: 16px;
+}
+
+.embed-code-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 6px 6px 16px;
+  background: var(--search-bg);
+}
+
+.embed-code-url {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+  color: var(--text-primary);
+}
+
+.embed-code-copy-btn {
+  flex-shrink: 0;
+  padding: 8px 18px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.embed-code-copy-btn:hover {
+  background: var(--hover-bg);
+  border-color: var(--primary);
+}
+.embed-code-copy-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ===== style panel ===== */
 
 .embed-style-row {
@@ -342,20 +389,22 @@
   color: #9AA0A6;
 }
 
-.embed-preview-carousel {
-  --embed-card-w: 150px;
-}
 .embed-preview-carousel .dash-carousel-strip {
   gap: 12px;
 }
 
+/* Sized as a fraction of the strip's own (fixed) viewport width, not its scrollWidth — flex
+   percentage widths resolve against the container's determined box regardless of overflow, so
+   this reliably fits exactly --embed-visible-slides cards in view at once, no JS measurement
+   needed. --embed-visible-slides is set on #embed-builder-preview (an ancestor) by
+   _renderPreview() in embedBuilder.js each time the "Visible slides" control changes. */
 .embed-preview-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
-  width: var(--embed-card-w, 150px);
+  width: calc((100% - (var(--embed-visible-slides, 3) - 1) * 12px) / var(--embed-visible-slides, 3));
 }
 
 /* Aspect-ratio variants — applied to the preview wrapper, read by .embed-preview-art below via
