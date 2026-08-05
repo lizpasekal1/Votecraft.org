@@ -20,23 +20,79 @@
   border-color: var(--primary);
 }
 
-.share-message-input {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  font-size: 14px;
-  outline: none;
-  color: var(--text-primary);
-  background: var(--surface);
-  resize: none;
-  font-family: inherit;
-  transition: border-color 0.15s;
+.share-lists-section {
   margin-bottom: 20px;
 }
 
-.share-message-input:focus {
-  border-color: var(--primary);
+.share-lists-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+/* Scrollable rather than just "however many fit" — state.savedLists grows unbounded as the user
+   adds their own custom lists via Saved Lists' "+ New folder" prompt, so this caps the modal's
+   own height instead of pushing "Anyone with the link"/the footer buttons further down. */
+.share-lists-scroll {
+  max-height: 160px;
+  overflow-y: auto;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+}
+
+/* Radio-style, single-selection, tap-to-deselect — same pattern as the detail modal's "Save to:"
+   menu (detailModalHeader.js's _toggleSaveToMenu). Picking a list here shares that list's own
+   saved items instead of whatever's currently open in the sidebar; deselecting falls back to
+   sharing the current view, same as before this list existed. */
+.share-list-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.share-list-item:last-child {
+  border-bottom: none;
+}
+
+.share-list-item:hover {
+  background: var(--hover-bg);
+}
+
+.share-list-item--selected {
+  background: var(--primary-bg);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.share-list-item-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-list-item-check {
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
+.share-lists-empty {
+  padding: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
 }
 
 .share-general-access {
@@ -119,6 +175,19 @@
 
 .btn-ask-share:hover {
   opacity: 0.75;
+}
+
+/* Grayed out until a Saved List is selected above (Copy link only — Send keeps its existing
+   email-based gating, unaffected by list selection; buildShareUrl() still falls back to
+   whatever's currently open in the sidebar when nothing's selected). */
+.btn-ask-share:disabled {
+  color: var(--text-secondary);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-ask-share:disabled:hover {
+  opacity: 0.6;
 }
 
 .btn-ask-share.copied {

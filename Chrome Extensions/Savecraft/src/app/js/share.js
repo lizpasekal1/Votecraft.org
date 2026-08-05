@@ -3,6 +3,55 @@
 import { state, CATEGORIES, CAT_LABEL } from './state.js';
 import { getFilteredSortedItems } from './render.js';
 import { persistShareCount } from './storage.js';
+import { escapeHtml, folderIconHtml } from './utils.js';
+
+// Which Saved List (if any) the "Share a Saved List" scroll list has selected — radio-style,
+// single selection, tap-to-deselect, same pattern as the detail modal's own "Save to:" menu
+// (detailModalHeader.js's _toggleSaveToMenu). Reset to null every time the modal opens. Note:
+// this only governs *which items* get shared (this list's, vs. whatever's currently open in the
+// sidebar when nothing's selected) — it does not yet implement per-share view permissions
+// ("View — My Notes Excluded" / "View — My Notes Included" / "Admin") the user's described
+// wanting eventually; notes aren't part of the share payload at all today (see buildShareUrl's
+// item mapping below), so nothing needs stripping on the recipient's end yet either.
+let _selectedShareListId = null;
+
+function renderShareLists() {
+  const container = document.getElementById('share-lists-scroll');
+  if (!state.savedLists.length) {
+    container.innerHTML = '<div class="share-lists-empty">No saved lists yet</div>';
+    return;
+  }
+  container.innerHTML = state.savedLists.map(list => {
+    const selected = list.id === _selectedShareListId;
+    return `
+    <button type="button" class="share-list-item ${selected ? 'share-list-item--selected' : ''}" data-list-id="${escapeHtml(list.id)}">
+      ${folderIconHtml(list.id, 16)}
+      <span class="share-list-item-name">${escapeHtml(list.name)}</span>
+      ${selected ? '<svg class="share-list-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+    </button>`;
+  }).join('');
+
+  container.querySelectorAll('[data-list-id]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.listId;
+      _selectedShareListId = _selectedShareListId === id ? null : id;
+      renderShareLists();
+      document.getElementById('btn-copy-link').disabled = !_selectedShareListId;
+    });
+  });
+}
+
+// Resolves the selected Saved List's own items (Favorites checks item.favorite, same as the
+// detail modal's own "Save to:" menu; every other list checks item.savedListId) — null if
+// nothing's selected, so callers fall back to the current sidebar view.
+function getSelectedShareListItems() {
+  if (!_selectedShareListId) return null;
+  const list = state.savedLists.find(l => l.id === _selectedShareListId);
+  if (!list) return null;
+  return list.name === 'Favorites'
+    ? state.items.filter(i => i.favorite)
+    : state.items.filter(i => i.savedListId === _selectedShareListId);
+}
 
 export function initShare() {
   const wrap = document.getElementById('share-btn-wrap');
@@ -60,11 +109,13 @@ export function initShare() {
 
 export function openShareModal() {
   document.getElementById('share-email-input').value = '';
-  document.getElementById('share-message-input').value = '';
   document.getElementById('btn-share-modal-send').disabled = true;
+  _selectedShareListId = null;
+  renderShareLists();
   const copyBtn = document.getElementById('btn-copy-link');
   copyBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Copy link`;
   copyBtn.classList.remove('copied');
+  copyBtn.disabled = true; // grayed out until a Saved List is selected above
   document.getElementById('share-modal-overlay').classList.add('open');
   document.getElementById('share-email-input').focus();
 
@@ -78,10 +129,13 @@ export function closeShareModal() {
 }
 
 export function buildShareUrl() {
-  const items = getFilteredSortedItems().map(({ url, title, category, imageUrl }) =>
+  const selectedListItems = getSelectedShareListItems();
+  const items = (selectedListItems || getFilteredSortedItems()).map(({ url, title, category, imageUrl }) =>
     ({ url, title, category, imageUrl })
   );
-  const viewLabel = state.view === 'all'
+  const viewLabel = selectedListItems
+    ? state.savedLists.find(l => l.id === _selectedShareListId)?.name || 'My List'
+    : state.view === 'all'
     ? 'SaveCraft Library'
     : (CATEGORIES.includes(state.view) ? state.view : (() => {
         const f = state.folders.find(f => f.id === state.view);
@@ -106,16 +160,16 @@ export function sendViaEmail() {
     return;
   }
 
-  const viewLabel = state.view === 'all'
+  const selectedList = _selectedShareListId && state.savedLists.find(l => l.id === _selectedShareListId);
+  const viewLabel = selectedList
+    ? `my "${selectedList.name}" list`
+    : state.view === 'all'
     ? 'my SaveCraft library'
     : (CATEGORIES.includes(state.view) ? `my ${state.view} list` : 'a list');
 
-  const message = document.getElementById('share-message-input').value.trim();
   const shareUrl = buildShareUrl();
   const subject = encodeURIComponent(`Check out ${viewLabel} on SaveCraft`);
-  const bodyText = message
-    ? `${message}\n\n${shareUrl}\n\n— Shared via SaveCraft`
-    : `Hey,\n\nI wanted to share ${viewLabel} with you:\n\n${shareUrl}\n\n— Shared via SaveCraft`;
+  const bodyText = `Hey,\n\nI wanted to share ${viewLabel} with you:\n\n${shareUrl}\n\n— Shared via SaveCraft`;
   const body = encodeURIComponent(bodyText);
   const mailto = `mailto:${encodeURIComponent(email)}?subject=${subject}&body=${body}`;
 
