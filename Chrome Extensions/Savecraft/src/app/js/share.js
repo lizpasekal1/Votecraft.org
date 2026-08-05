@@ -4,6 +4,7 @@ import { state, CATEGORIES, CAT_LABEL } from './state.js';
 import { getFilteredSortedItems } from './render.js';
 import { persistShareCount } from './storage.js';
 import { escapeHtml, folderIconHtml } from './utils.js';
+import { openEmbedBuilder } from './embedBuilder.js';
 
 // Which Saved List (if any) the "Share a Saved List" scroll list has selected — radio-style,
 // single selection, tap-to-deselect, same pattern as the detail modal's own "Save to:" menu
@@ -135,6 +136,11 @@ export function initShare() {
     closeDropdown();
   });
 
+  document.getElementById('share-embed-dd').addEventListener('click', () => {
+    openEmbedBuilder();
+    closeDropdown();
+  });
+
   chrome.storage.sync.get({ savecraft_share_count: 0 }, data => {
     updateShareCount(data.savecraft_share_count);
   });
@@ -184,19 +190,25 @@ export function closeShareModal() {
   document.getElementById('share-modal-overlay').classList.remove('open');
 }
 
-export function buildShareUrl() {
-  const selectedListItems = getSelectedShareListItems();
-  const items = (selectedListItems || getFilteredSortedItems()).map(({ url, title, category, imageUrl }) =>
-    ({ url, title, category, imageUrl })
-  );
-  const viewLabel = selectedListItems
-    ? selectedShareListNames().join(', ') || 'My List'
-    : state.view === 'all'
+// Human-readable name for whatever state.view currently points at ("SaveCraft Library" for the
+// all-view, the raw category name for a top-level tab, a folder's own name otherwise). Shared by
+// buildShareUrl() below (its own fallback when no Saved List is selected) and embedBuilder.js
+// (which always operates on the current view, never a selected Saved List).
+export function getCurrentViewLabel() {
+  return state.view === 'all'
     ? 'SaveCraft Library'
     : (CATEGORIES.includes(state.view) ? state.view : (() => {
         const f = state.folders.find(f => f.id === state.view);
         return f ? f.name : 'My List';
       })());
+}
+
+export function buildShareUrl() {
+  const selectedListItems = getSelectedShareListItems();
+  const items = (selectedListItems || getFilteredSortedItems()).map(({ url, title, category, imageUrl }) =>
+    ({ url, title, category, imageUrl })
+  );
+  const viewLabel = selectedListItems ? (selectedShareListNames().join(', ') || 'My List') : getCurrentViewLabel();
 
   const payload = { title: viewLabel, items };
   const encoded = btoa(encodeURIComponent(JSON.stringify(payload)).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode(parseInt(p1, 16))));
