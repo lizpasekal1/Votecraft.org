@@ -73,6 +73,18 @@ export function getFilteredSortedItems() {
     } else {
       items = [];
     }
+  } else if (state.view.startsWith('savedlist:')) {
+    // Sidebar's Saved Lists child rows (Favorites/Health/Motivation/anything user-added) — set
+    // via the detail modal's star "Save to:" menu (detailModalHeader.js's _toggleSaveToMenu()).
+    // "Favorites" drives the existing item.favorite boolean (matching _isListSelected()'s own
+    // name check there); every other list matches item.savedListId against this list's id. An
+    // id that no longer matches any state.savedLists entry (list was since removed) shows empty
+    // rather than falling through to "all".
+    const listId = state.view.slice(10);
+    const list = state.savedLists.find(l => l.id === listId);
+    items = !list ? [] : list.name === 'Favorites'
+      ? items.filter(i => i.favorite)
+      : items.filter(i => i.savedListId === listId);
   } else if (state.view.startsWith('author:')) {
     const rest = state.view.slice(7);
     const colonIdx = rest.indexOf(':');

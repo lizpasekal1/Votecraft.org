@@ -18,8 +18,9 @@ const DASHBOARD_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="24px
 // Queue Kanban link renders as a subfolder-styled row nested under Dashboard, not a category icon.
 const KANBAN_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="#5B5BEF"><path d="M280-160v-640h400v640H280Zm-160-80v-480h80v480h-80Zm640 0v-480h80v480h-80Zm-400 0h240v-480H360v480Zm0 0v-480 480Z"/></svg>';
 // Same sizing/color convention as KANBAN_ICON_SVG above — another subfolder-styled row nested
-// under Dashboard. Not wired to a view yet (see wireDashboardLink and the exclusion in the
-// generic subfolder click-wiring loop below) — placeholder row until there's a real destination.
+// under Dashboard. Its own toggle row has no view (just expands/collapses, see
+// wireDashboardLink); its children each route to "savedlist:<id>" (see the generic subfolder
+// click-wiring loop below and getFilteredSortedItems()'s own "savedlist:" branch).
 const SAVED_LISTS_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="#5B5BEF"><path d="M160-120q-33 0-56.5-23.5T80-200v-280h80v280h360v80H160Zm160-160q-33 0-56.5-23.5T240-360v-280h80v280h360v80H320Zm160-160q-33 0-56.5-23.5T400-520v-240q0-33 23.5-56.5T480-840h320q33 0 56.5 23.5T880-760v240q0 33-23.5 56.5T800-440H480Zm0-80h320v-160H480v160Z"/></svg>';
 // Same sizing/color convention again — Curated Lists is Saved Lists' sibling under Dashboard,
 // same collapsible-with-its-own-children structure, just its own (currently empty) list.
@@ -146,9 +147,11 @@ export function renderSidebar() {
   // Saved Lists / Curated Lists are a level deeper: each is its OWN collapsible row (own arrow,
   // own state.collapsed key, collapsed by default — not tied to Dashboard's own collapse state),
   // with a user-creatable, user-named list of children (state.savedLists/curatedListsRows) shown
-  // only while expanded, same "+ New folder" prompt pattern real category folders use. Neither
-  // list's children are wired to any view yet.
-  function _renderDashboardListRow({ key, icon, label, items, linkClass, childClass, addClass }) {
+  // only while expanded, same "+ New folder" prompt pattern real category folders use. Saved
+  // Lists' children carry a real data-view ("savedlist:<id>", wired below via the generic
+  // subfolder click handler + getFilteredSortedItems()'s own "savedlist:" branch); Curated
+  // Lists' children pass no viewPrefix and stay inert placeholders, same as before.
+  function _renderDashboardListRow({ key, icon, label, items, linkClass, childClass, addClass, viewPrefix }) {
     const rowCollapsed = state.collapsed.has(key);
     const rowArrow = rowCollapsed ? '▶' : '▼';
     return `
@@ -157,10 +160,15 @@ export function renderSidebar() {
       <span class="sidebar-right"><span class="sidebar-arrow">${rowArrow}</span></span>
     </div>
     ${rowCollapsed ? '' : `
-    ${items.map(item => `
-    <div class="sidebar-item sidebar-subfolder sidebar-subfolder--nested ${childClass}">
+    ${items.map(item => {
+      const view = viewPrefix ? `${viewPrefix}${item.id}` : null;
+      const isActive = view && state.view === view;
+      return `
+    <div class="sidebar-item sidebar-subfolder sidebar-subfolder--nested ${childClass} ${isActive ? 'active' : ''}"
+         ${view ? `data-view="${escapeHtml(view)}"` : ''}>
       <span class="cat-icon"></span> ${escapeHtml(item.name)}
-    </div>`).join('')}
+    </div>`;
+    }).join('')}
     <div class="sidebar-item sidebar-add-folder sidebar-subfolder--nested ${addClass}">
       + New folder
     </div>`}
@@ -179,6 +187,7 @@ export function renderSidebar() {
     ${_renderDashboardListRow({
       key: 'saved-lists', icon: SAVED_LISTS_ICON_SVG, label: 'Saved Lists', items: state.savedLists,
       linkClass: 'sidebar-saved-lists-link', childClass: 'sidebar-saved-lists-child', addClass: 'sidebar-add-saved-list',
+      viewPrefix: 'savedlist:',
     })}
     ${_renderDashboardListRow({
       key: 'curated-lists', icon: CURATED_LISTS_ICON_SVG, label: 'Curated Lists', items: state.curatedListsRows,
@@ -392,10 +401,12 @@ export function renderSidebar() {
 
   // Subfolder view-switching (the Queue Kanban row also uses .sidebar-subfolder for its visual
   // styling, but it's already wired explicitly in wireDashboardLink() — excluded here so it
-  // doesn't get a second, redundant click handler. Saved Lists uses the same styling too, but
-  // has no data-view/real destination yet — excluded so a click doesn't set state.view to
-  // undefined and break navigation).
-  sidebar.querySelectorAll('.sidebar-subfolder:not(.sidebar-kanban-link):not(.sidebar-saved-lists-link):not(.sidebar-saved-lists-child):not(.sidebar-curated-lists-link):not(.sidebar-curated-lists-child)').forEach(el => {
+  // doesn't get a second, redundant click handler. Saved Lists' own toggle row (.sidebar-saved-
+  // lists-link) is excluded the same way — but its children (.sidebar-saved-lists-child) now
+  // carry a real data-view ("savedlist:<id>") and fall through to the generic handler below.
+  // Curated Lists — both its toggle row and its children — still has no real destination, so
+  // both stay excluded so a click doesn't set state.view to undefined and break navigation).
+  sidebar.querySelectorAll('.sidebar-subfolder:not(.sidebar-kanban-link):not(.sidebar-saved-lists-link):not(.sidebar-curated-lists-link):not(.sidebar-curated-lists-child)').forEach(el => {
     el.addEventListener('click', () => {
       if (isCuratedGenre && el.dataset.permanent) {
         state.view = `genre:${curatedGenreBase}:${el.dataset.view}`;
@@ -476,12 +487,9 @@ export function promptAddFolder(category) {
 // Same "+ New folder" prompt pattern as promptAddFolder above, but "Saved Lists" isn't a real
 // category — no parentCategory, no per-item folder_<id> storage key, just one flat array
 // persisted under a single savecraft_saved_lists key (same convention state.kanbanLists uses).
-// Not yet wired to any view when clicked (see the sidebar-saved-lists-child exclusion in
-// renderSidebar()'s click-wiring) — this only covers creating the entries themselves.
-// Shared by promptAddSavedList below (the sidebar's own "+ New folder" row) and the detail
-// modal's "Save to:" dropdown's own "+ Add New" option (detailModalHeader.js) — both need to
-// create the list itself; the dropdown additionally associates the current item with it right
-// after, which this alone doesn't do.
+// Each entry's sidebar row routes to "savedlist:<id>" once rendered (see renderSidebar()'s
+// generic subfolder click-wiring and getFilteredSortedItems()'s "savedlist:" branch) — this
+// function only covers creating the entry itself.
 export function addSavedList(name) {
   const list = { id: Date.now().toString(), name: name.trim() };
   state.savedLists.push(list);
