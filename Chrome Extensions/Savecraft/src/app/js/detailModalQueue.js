@@ -4,7 +4,7 @@ import { state, CATEGORY_PLATFORMS } from './state.js';
 import { escapeHtml, getListIds } from './utils.js';
 import { persistItem } from './storage.js';
 import { ensureLiveItem } from './authors.js';
-import { updateBookmarkIcon } from './detailModalHeader.js';
+import { updateBookmarkIcon, updateFavoriteIcon } from './detailModalHeader.js';
 import { registerAccordion, closeAccordionsExcept } from './detailModalAccordions.js';
 
 // Holds the currently-set-up queue section's closures/elements, so toggleQueueFromHeader() (called
@@ -113,8 +113,12 @@ export function setupQueue(item, { domain, isMusicAlbum }) {
   async function addToQueue() {
     const live = await ensureLiveItem(item);
     live.queueStatus = 'in-queue';
+    // Favorites is the catch-all Saved List — anything added to the queue is automatically
+    // favorited too (but not the reverse: un-queueing doesn't un-favorite).
+    live.favorite = true;
     await persistItem(live);
     updateBookmarkIcon(item);
+    updateFavoriteIcon(item);
     updateQueueLabel();
     queueEl.innerHTML = buildQueueSection();
     wireQueueSection();
@@ -178,8 +182,11 @@ export function setupQueue(item, { domain, isMusicAlbum }) {
         if (idx === -1) listIds.push(id); else listIds.splice(idx, 1);
         liveItem.listIds = listIds;
         liveItem.listId = null;
-        if (!liveItem.queueStatus) liveItem.queueStatus = 'in-queue';
+        // Favorites is the catch-all Saved List — anything added to the queue is automatically
+        // favorited too (but not the reverse: un-queueing doesn't un-favorite).
+        if (!liveItem.queueStatus) { liveItem.queueStatus = 'in-queue'; liveItem.favorite = true; }
         await persistItem(liveItem);
+        updateFavoriteIcon(item);
         queueEl.innerHTML = buildQueueSection();
         wireQueueSection();
       });
@@ -209,8 +216,13 @@ export function setupQueue(item, { domain, isMusicAlbum }) {
             listIds.push(newId);
             liveItem.listIds = listIds;
             liveItem.listId = null;
+            const wasQueued = !!liveItem.queueStatus;
             liveItem.queueStatus = 'in-queue';
+            // Favorites is the catch-all Saved List — anything added to the queue is
+            // automatically favorited too (but not the reverse: un-queueing doesn't un-favorite).
+            if (!wasQueued) liveItem.favorite = true;
             await persistItem(liveItem);
+            updateFavoriteIcon(item);
           }
         }
         queueEl.innerHTML = buildQueueSection();

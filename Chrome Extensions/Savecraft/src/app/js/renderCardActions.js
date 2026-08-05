@@ -49,6 +49,9 @@ export function wireQuickQueueButtons(container) {
       if (!item) return;
       const liveItem = await ensureLiveItem(item);
       liveItem.queueStatus = 'in-queue';
+      // Favorites is the catch-all Saved List — anything added to the queue is automatically
+      // favorited too (but not the reverse: un-queueing doesn't un-favorite).
+      liveItem.favorite = true;
       await persistItem(liveItem);
       setButtonState(btn, true);
     });
