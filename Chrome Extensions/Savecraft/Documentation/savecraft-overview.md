@@ -6,6 +6,22 @@ SaveCraft is a Chrome extension that acts as a personal media library. Users sav
 
 ## Recent Additions (latest session)
 
+This session landed real Saved Lists sidebar navigation, rebuilt the Share modal (Message → a Saved Lists picker, a link-sharing on/off toggle), broadened the sponsor pitch page to three offerings, and — the bulk of the session — built a brand-new **Embed Builder** feature end to end: pick a source (a whole category, an individual folder, or a hand-picked "Custom Slider"), customize a slider's look, and copy a shareable "Embed code" link. Two real bugs were found and fixed along the way (a CSS Grid track-blowout, a JS temporal-dead-zone crash).
+
+- **Saved Lists sidebar rows wired to real navigation** — clicking Favorites/Health/Motivation (or any user-added Saved List) under the Dashboard's Saved Lists row now actually filters the grid to that list's items, instead of being an inert placeholder; their icons switched to plain folder icons (no boxed container). Curated Lists' own child rows are still unwired except one: the seeded "Votecraft" row links to the real Votecraft List curated genre. Curated Lists also gained a seeded "Votecraft"/"RCV" starter pair.
+- **Share modal rebuilt** — the free-text "Message" field is gone, replaced by a scrollable, single-select (radio-style, tap-to-deselect) list of the user's Saved Lists; picking one shares that list's own items instead of whatever's open in the sidebar. "Anyone with the link" gained a real on/off toggle (grays out Copy/Send and turns pink/red when off — a client-side gate only, no real access-control backend yet).
+- **Sponsor pitch page broadened from one offering to three** (`src/sponsored/sponsored.html`) — now covers Your Own Sponsored Page (the existing Cause Curated directory concept), Sponsored Statements (unchanged), and Embed Anywhere (the new Embed Builder, in marketing terms), with pricing tiers reframed to show which offerings each tier includes.
+- **New feature: Embed Builder** (`embedBuilder.js`/`embedBuilder.css`, new) — reached via a new "Embed options" button in the Share dropdown, this is a new pseudo-view (`state.view === 'embed-builder'`) for building a customizable slider/carousel from specific saved assets, meant for pasting onto an external site as an `<iframe>`. Single screen throughout, no wizard-style transitions:
+  - **Source picking** happens within the Assets panel itself: a top-level category-tile grid (visually identical to the Add Item wizard's own first screen) leads either into that category's own folders (with an "All X" tile for the whole section) or into a searchable cross-category "Custom Slider" picker for a hand-built list.
+  - **Style panel** — visible slide count, slide spacing, autoplay, nav style, a preview-only dark theme, aspect ratio, a curated web-safe font list, and a branding toggle — all reflected live in a carousel preview that shows gray placeholder slides before any real assets are picked.
+  - **"Embed code" box** — a YouTube-share-style URL + Copy pill, always visible, generating a link via the same base64 encoding the existing Share link already uses. Points at a hosted page (`savecraft/embed.html`) that doesn't exist yet — Copy works today, the link itself is a placeholder for a deferred follow-up phase (Firestore persistence + the actual hosted rendering page), which was scoped and approved via a plan-mode pass but not built this session.
+- **Real bug found and fixed: CSS Grid track blown out by an unbreakable string** — the long, unbreakable embed-code URL forced its own min-content width, and Grid items default to `min-width: auto` (not `0`), so the panel's "equal width" split silently broke once a real URL populated it, pushing every row's controls off past the visible edge. Fixed with `min-width: 0` on the grid item.
+- **Real bug found and fixed: temporal-dead-zone crash silently broke the entire Builder** — a `const` font list was referenced by code that ran at module-load time *before* that `const`'s own declaration line executed, throwing a `ReferenceError` with no visible on-page error. Fixed by reordering the declaration above the state that depends on it.
+
+---
+
+## Recent Additions (previous session)
+
 This session added image/hyperlink support to the My Notes formatting toolbar, then restructured category/sidebar navigation across four separate requests, then fixed three real bugs found live (a partial-highlight bug, a sidebar multi-tab-open bug, a toolbar spacing issue), and closed with a self-review pass.
 
 - **My Notes toolbar gained a 4th button: insert image** — a prompt-based image-URL insert, sanitizer-gated to `http(s):`/`data:image/` sources (drops the tag entirely rather than leaving a broken-image icon if the URL fails). **Real bug found and fixed**: the note row's blur-cleanup handler used to treat "no visible text" as "this row is empty" and wipe it — but an image-only note has real content with no text at all, so it was silently deleting the image the moment the row lost focus.
@@ -19,7 +35,7 @@ This session added image/hyperlink support to the My Notes formatting toolbar, t
 
 ---
 
-## Recent Additions (previous session)
+## Recent Additions (older session)
 
 This session rebuilt the detail modal's "My Notes" (and Book's Chapters/Music Album's Song List) from a single plain textarea into a full numbered-notes system with a formatting toolbar, a distraction-free focus mode, and per-row rename — then iterated through many rounds of live visual polish and fixed several real bugs the new interaction surfaced along the way.
 
@@ -30,18 +46,7 @@ This session rebuilt the detail modal's "My Notes" (and Book's Chapters/Music Al
 - **Rename a note's title** — a small pencil next to each row's label (only shown once that row is expanded, hidden again while actively renaming) turns the title into an inline-editable field: clears to empty with a "Rename…" placeholder (same `:empty::before` ghost-text convention the note body itself uses) and a real blinking caret, not a browser text-selection block. Custom titles persist per row number in new `noteTitles`/`chapterTitles` item fields (mirrors `noteTexts`/`chapterNotes`). Blurring *without ever typing* just restores whatever was showing before, without touching storage — otherwise merely clicking the pencil and clicking away would silently wipe an existing custom title back to the default. The row's own "open this note" icon changed from a pencil to a plus-in-a-circle so it's no longer visually identical to the smaller rename pencil now sitting next to it in the same row (Song List's per-track rows keep the plain pencil — those are real iTunes track titles, not renameable).
 - **Real bugs found and fixed while building this**: (1) a `closeAccordionsExcept()`-driven cross-accordion bug where a force-closed section's header correctly showed collapsed but its content stayed fully visible underneath — `closeAccordionsExcept()` only ever removed CSS classes, with no idea `_fitAccordionSection()` had left an inline `style.maxHeight` override behind, and inline styles always beat a base class's `max-height: 0`; (2) cancelling a title rename via Escape was bubbling up to `main.js`'s global document-level Escape handler and closing the *entire modal*, since `preventDefault()` alone doesn't stop propagation — needed `stopPropagation()` too; (3) an early version of the rename field placed the caret at the end of the *existing* title text instead of clearing it first, so typing silently appended onto the old label (`"Note"` + `"My Custom"` saved as `"NoteMy Custom"`) rather than replacing it.
 
----
-
-## Recent Additions (older session)
-
-This session replaced the Music Album gallery's single low-res iTunes cover with a real multi-image gallery sourced from MusicBrainz + the Cover Art Archive, then iterated through several rounds of UI polish on the detail modal.
-
-- **MusicBrainz + Cover Art Archive album art gallery** — the detail modal's featured image lightbox is no longer a single static photo. `fetchAlbumArtFromMusicBrainz(artist, title)` (new, `api.js`) searches MusicBrainz's release-group endpoint (confident-match-only: exact title+artist or MusicBrainz `score >= 90`, else no match), then queries Cover Art Archive's `/release-group/{mbid}` endpoint, which aggregates every scanned image (front, back, medium/disc, booklet/insert pages, etc.) across any release in that group — capped at 20 images, sorted Front → Back → API order. Results are cached forever (cover art doesn't change) in a new `state.albumArtCache` / `chrome.storage.local` key `savecraft_album_art_cache`.
-- **Lightbox became a real gallery** (`detailModal.js`, `index.html`) — `openImageLightbox()` now takes an array of `{full, thumb, type}` images plus a start index, with new `showNextImage()`/`showPrevImage()` exports and a thumbnail strip rendered below the full-size image.
-- **"Check for more art" button** — fetched on demand only (a manual button, sitting below the full-size image in the lightbox), to respect MusicBrainz's rate limit. Disappears permanently once a check completes for that album, even with zero results found.
-- **Album art hover-dim**, **"Your Statement" sponsored-tag callout flipped to open downward** (was overlapping the artwork), and **Year removed from the Music Album detail modal's title area** (kept on grid cards) — three smaller styling requests from this same session.
-
-*(The session before that — 214 more IMDb Top 250 movies seeded into curated Top 100, "Curated SaveCraft" reshaped into a two-tier browsing experience, and the previously-dead "Shared Saves" dropdown item wired up for the first time — has rolled off this section. See git history around that era if needed.)*
+*(The session before that — replaced the Music Album gallery's single low-res iTunes cover with a real multi-image gallery sourced from MusicBrainz + the Cover Art Archive, plus several rounds of detail-modal visual polish (hover-dim, a repositioned sponsored-tag tooltip, Year removed from the modal's title area). Before that — 214 more IMDb Top 250 movies seeded into curated Top 100, "Curated SaveCraft" reshaped into a two-tier browsing experience, and the previously-dead "Shared Saves" dropdown item wired up for the first time. See git history around that era if needed.)*
 
 ---
 
@@ -127,8 +132,9 @@ The library used to be one ~3,700-line `app.js`. It's now split into 30 ES modul
 | `fetchAlbumsModal.js` | Fetch Albums (bulk iTunes import) modal |
 | `dashboard.js` | The Dashboard home page — hero collage + 4 widget cards (see "Dashboard (Home Page)" below) |
 | `profile.js` | The Profile page — account info, Connections (Last.fm/Steam/Instagram), Interests, Your Music Taste |
-| `sharedSaves.js` | The Shared Saves page — followed-curated-list portal cards + a Friends stub (new this session) |
-| `share.js` | Share modal, CSV export, Markdown export |
+| `sharedSaves.js` | The Shared Saves page — followed-curated-list portal cards + a Friends stub |
+| `share.js` | Share dropdown/modal (Saved Lists picker, link-sharing toggle, "Embed options" entry point), CSV export, Markdown export |
+| `embedBuilder.js` | The Embed Builder pseudo-view (`state.view === 'embed-builder'`) — source picking (category/folder/Custom Slider), the asset list, the style panel, the live carousel preview, and the "Embed code" link box |
 | `main.js` | Entry point — search, sort, theme, sidebar collapse, mobile sidebar, `init()`, all DOMContentLoaded event wiring |
 
 ### `scripts/` (admin tooling, not loaded by the extension)
@@ -137,7 +143,7 @@ One-off HTML tools for seeding curated Firestore data — plain `fetch()` agains
 
 ### `src/app/css/` stylesheets
 
-Split along the same lines from the original `app.css`, loaded as separate `<link>` tags in a fixed order (order matters — later files can override earlier ones): `base.css` (reset, theme variables, header), `sidebar.css` (includes the collapsible desktop rail), `cards.css` (grid, cards, author pages), `detailModal.css`, `addEditModal.css`, `fetchAlbumsModal.css`, `kanban.css`, `dashboard.css`, `profile.css` (Profile page + its Connect Last.fm/Steam modals), `misc.css` (share modal, scrollbar, mobile responsive overrides).
+Split along the same lines from the original `app.css`, loaded as separate `<link>` tags in a fixed order (order matters — later files can override earlier ones): `base.css` (reset, theme variables, header), `sidebar.css` (includes the collapsible desktop rail), `cards.css` (grid, cards, author pages), `detailModal.css`, `addEditModal.css`, `fetchAlbumsModal.css`, `kanban.css`, `dashboard.css`, `profile.css` (Profile page + its Connect Last.fm/Steam modals), `sharedSaves.css`, `embedBuilder.css` (Embed Builder page), `misc.css` (share modal, scrollbar, mobile responsive overrides).
 
 The original monolithic `app.js`/`app.css` have been deleted (2026-07-29) — see `scripts/seed-curated.js`, which used to extract curated-item data out of `app.js` and now reads `scripts/seed-payload.json` instead.
 
@@ -329,6 +335,29 @@ Every card's badge (top-right, e.g. "BOOK"/"FILMS") is colored by category (`bad
 ### Search & Sort
 The search bar and sort dropdown in the header filter both the grid view and the Kanban board in real time. Sort options: Newest/Oldest first (by save date), A → Z / Z → A (title), and Release Date (Newest/Oldest) — the latter two sort by an item's `year` field (populated for Music Albums via Fetch Albums import or the auto-backfill).
 
+### Saved Lists / Curated Lists (sidebar, under Dashboard)
+Two independently-collapsible rows nested under the sidebar's Dashboard entry, each with its own user-creatable, user-named list of child rows ("+ New folder"):
+
+- **Saved Lists** — seeded with Favorites/Health/Motivation (`savecraft_saved_lists`). Clicking a child row filters the grid to that list's items (`state.view = 'savedlist:<id>'`) — "Favorites" checks `item.favorite`, every other list checks `item.savedListId` (set from the detail modal's star icon, see below). Child rows use the same plain folder icon a real subfolder row uses, no boxed container.
+- **Curated Lists** — seeded with "Votecraft"/"RCV" (`savecraft_curated_lists_rows`). Only "Votecraft" has a real destination (links to the Votecraft List curated genre, same as the mobile header's "VoteCraft Picks" option) — every other row (RCV, anything user-added) is still an inert placeholder, not yet wired to a view.
+
+The detail modal's star icon (top-right icon column) opens a small "Save to:" menu — a radio-style (single-select, tap-to-deselect) list of every entry in `state.savedLists` — instead of directly toggling favorite/unfavorite.
+
+### Share (dropdown + modal)
+The header's Share button has an arrow revealing a dropdown: **Export as CSV**, **Export as Markdown** (local file downloads of whatever's in the current view), and **Embed options** (opens the Embed Builder, see below). The Share button itself opens a modal for sharing a link:
+- A scrollable, single-select list of the user's Saved Lists — picking one shares that list's own items instead of whatever's currently open in the sidebar; the link itself is a frozen, one-time base64-encoded snapshot (`buildShareUrl()`, `share.js`), pointing at `savecraft/view.html` (a real hosted static page, not the extension).
+- **"Anyone with the link"** on/off toggle — off grays out both Copy link and Send (client-side only, no real access-control backend behind it).
+
+### Embed Builder
+Reached via the Share dropdown's **Embed options** button (`</>` icon) — a new full-screen pseudo-view (`state.view === 'embed-builder'`, `embedBuilder.js`) for building a customizable slider/carousel of specific saved assets, meant for pasting onto an external website as an `<iframe>`. Single screen throughout, no wizard-style step transitions — only the Assets panel's own content changes in place as the user picks a source:
+
+1. **Choose a source** — a top-level category-tile grid (visually identical to the Add Item wizard's own first screen) leads into either that category's own individual folders (with an "All X" tile for the whole section, same `matchesPrimaryOrUnfoldered` rule the sidebar's category tabs use) or a searchable, cross-category **Custom Slider** picker for a hand-built list not tied to any one folder. Folder/section sources start fully checked (opt-out); Custom Slider starts empty (opt-in).
+2. **Asset list** — checkbox include/exclude, drag-and-drop (or up/down button) reorder.
+3. **Style panel** ("Style slider") — visible slide count, slide spacing (4-24px), autoplay + speed, arrow/dot/both nav style, a preview-only dark theme, aspect ratio, a curated web-safe font list, and a "Powered by SaveCraft" branding toggle — all reflected live in a carousel preview (reusing `dashboard.js`'s `_wireCarouselArrows`) that shows gray placeholder slides before any real assets are picked.
+4. **Embed code** — a URL + Copy pill (styled like a native share-link box), always visible, generating a link via the same base64 encoding `buildShareUrl()` uses, extended with the style config. Points at `savecraft/embed.html`, a hosted page that **doesn't exist yet** — Copy works today, the link itself is scoped/deferred work (see Roadmap).
+
+Nothing in the Embed Builder persists to storage yet — closing it discards the in-progress config. A phased follow-up (Firestore persistence for a "live" embed, a Profile page "Your Embeds" section, then the actual hosted rendering page) was scoped and approved but not built this session.
+
 ---
 
 ## Data Model
@@ -349,7 +378,8 @@ The search bar and sort dropdown in the header filter both the grid view and the
   savedAt: number,
   queueStatus: 'in-queue' | 'in-progress' | 'my-review' | 'done' | null,
   folderId: string | null, // null now means "counts as the category's primary folder", not "unfiled" — see PRIMARY_FOLDER_ID
-  favorite: boolean,       // new — replaces the old folder-based Favorites mechanism entirely
+  favorite: boolean,       // replaces the old folder-based Favorites mechanism entirely; also drives the "Favorites" Saved List specifically (see Saved Lists below)
+  savedListId: string | null, // which Saved List (other than Favorites) this item belongs to, set via the detail modal's star "Save to:" menu — singular, not an array (matches the menu's radio semantics)
   genre: string | null,    // Music Album only; not currently rendered anywhere
   year: string | null,     // Music Album only; 4-digit release year
   collectionId: number | null, // Music Album only; iTunes collection ID, used to fetch the Song List
@@ -423,6 +453,8 @@ Book's curated `.title` combines `"Title — Author"` in one field (split apart 
 | `savecraft_kanban_lists` | Kanban column definitions |
 | `savecraft_hidden_curated` | Array of curated IDs the user has dismissed |
 | `savecraft_curated_overrides` | User edits to curated items (notes, etc.) |
+| `savecraft_saved_lists` | Saved Lists (`{ id, name }[]`) — Favorites/Health/Motivation seeded, plus user-added ones; membership lives on the item itself (`item.favorite`/`item.savedListId`), not here |
+| `savecraft_curated_lists_rows` | Curated Lists' own child rows (`{ id, name }[]`) — seeded with "Votecraft"/"RCV" |
 
 ---
 
@@ -464,5 +496,6 @@ All of the above are declared in `manifest.json` under `host_permissions`. YouTu
 | Phase 1.5 | ✅ Active (demo mode) | Accounts + Firestore sync + Profile page — see "Recent Additions" above |
 | Phase 2 | Planned | Spotify integration for Musician/Music Album richer artist data (photos, full discography) |
 | Phase 3 | Unblocked, not built | Sharing with contacts — Firebase Auth + Firestore write access now exist (Phase 1.5); the sharing feature itself still isn't built |
+| Phase 3.5 | Scoped, not built | Embed Builder backend — a public, sign-in-gated `savecraft_embeds` Firestore collection (mirroring the existing `curated_items` public-read/admin-write-only rule pattern), a "Your Embeds" section on the Profile page, and the actual hosted `savecraft/embed.html` rendering page + generated `<iframe>` snippet. The client-side Builder UI itself (source picking, style panel, live preview, "Embed code" link) is already built — see "Embed Builder" above |
 | Phase 4 | Planned | AI recommendations (requires Claude API via Firebase Function) |
 | Chrome Web Store | Future | One-time $5 developer fee; publish when Phase 1 is stable |
