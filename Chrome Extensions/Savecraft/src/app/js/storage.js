@@ -237,8 +237,16 @@ export async function loadAll() {
       // never re-seeded once the key exists, same "seed if missing" convention as kanbanLists above.
       if (data.savecraft_saved_lists) {
         state.savedLists = data.savecraft_saved_lists;
+        // Renamed "Dance" -> "Motivation" — same id (default-dance), just a different label, so
+        // any install that already seeded the old name picks up the new one on next load rather
+        // than being stuck forever (seed-if-missing above only ever fires once).
+        const danceList = state.savedLists.find(l => l.id === 'default-dance');
+        if (danceList && danceList.name === 'Dance') {
+          danceList.name = 'Motivation';
+          chrome.storage.sync.set({ savecraft_saved_lists: state.savedLists });
+        }
       } else {
-        state.savedLists = ['Favorites', 'Health', 'Dance'].map(name => ({ id: `default-${name.toLowerCase()}`, name }));
+        state.savedLists = ['Favorites', 'Health', 'Motivation'].map(name => ({ id: `default-${name.toLowerCase()}`, name }));
         chrome.storage.sync.set({ savecraft_saved_lists: state.savedLists });
       }
       // "Curated Lists" row (Saved Lists' sibling under Dashboard) — no starter entries, just an

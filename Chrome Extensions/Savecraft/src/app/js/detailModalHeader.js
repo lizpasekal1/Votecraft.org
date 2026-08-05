@@ -47,6 +47,85 @@ function updateFavoriteIcon(item) {
   favBtn.classList.toggle('detail-favorite-btn--active', favorited);
 }
 
+// ===== "Save to:" dropdown (star button) =====
+// Built/torn down on demand (not static markup in index.html) — only ever one instance, closed on
+// outside click/Escape/re-toggle. Radio-style, single-select across state.savedLists (whatever's
+// currently seeded there — Favorites/Health/Motivation today, and anything the sidebar's own
+// "+ New folder" adds later, automatically, since this just reads the same array): picking one
+// deselects any other, tapping the currently-selected one again deselects it entirely (not a real
+// <input type="radio"> — those can't be unchecked by clicking themselves, so this fakes the look
+// with styled buttons and its own toggle logic instead). "Favorites" is the one special case,
+// driving the existing item.favorite boolean (Dashboard's Favorites Spotlight,
+// getAllFavoriteItems(), etc. all already read that field) rather than a second, redundant
+// membership record; every other list uses the new singular item.savedListId (an item can only
+// ever be in one custom list at a time, to match the radio-button semantics here — not an array).
+let _saveToMenuEl = null;
+
+function _closeSaveToMenu() {
+  _saveToMenuEl?.remove();
+  _saveToMenuEl = null;
+  document.removeEventListener('click', _closeSaveToMenu, true);
+  document.removeEventListener('keydown', _saveToMenuEscHandler, true);
+}
+
+function _saveToMenuEscHandler(e) {
+  if (e.key === 'Escape') _closeSaveToMenu();
+}
+
+function _isListSelected(liveItem, list) {
+  return list.name === 'Favorites' ? !!liveItem.favorite : liveItem.savedListId === list.id;
+}
+
+async function _toggleSaveToMenu(item) {
+  if (_saveToMenuEl) { _closeSaveToMenu(); return; }
+
+  const liveItem = state.items.find(i => i.id === item.id) || item;
+
+  const menu = document.createElement('div');
+  menu.className = 'detail-save-to-menu';
+  const rowsHtml = state.savedLists.map(list => {
+    const checked = _isListSelected(liveItem, list);
+    return `
+    <button type="button" class="detail-save-to-menu-item" data-list-id="${escapeHtml(list.id)}" data-list-name="${escapeHtml(list.name)}">
+      <span class="detail-save-to-menu-radio${checked ? ' detail-save-to-menu-radio--checked' : ''}"></span>
+      <span>${escapeHtml(list.name)}</span>
+    </button>`;
+  }).join('');
+  menu.innerHTML = `<div class="detail-save-to-menu-title">Save to:</div>${rowsHtml}`;
+  document.getElementById('detail-favorite-btn').insertAdjacentElement('afterend', menu);
+  _saveToMenuEl = menu;
+
+  menu.querySelectorAll('[data-list-id]').forEach(btn => {
+    btn.addEventListener('click', async e => {
+      e.stopPropagation();
+      const list = { id: btn.dataset.listId, name: btn.dataset.listName };
+      const target = await ensureLiveItem(item);
+      const wasSelected = _isListSelected(target, list);
+      // Selecting any option clears the others first — mutually exclusive, radio-style — then,
+      // if this one wasn't already the selection, applies it; tapping the already-selected one
+      // again just leaves everything cleared (deselect).
+      target.favorite = false;
+      target.savedListId = null;
+      if (!wasSelected) {
+        if (list.name === 'Favorites') target.favorite = true;
+        else target.savedListId = list.id;
+      }
+      await persistItem(target);
+      updateFavoriteIcon(item);
+      renderSidebar();
+      renderGrid();
+      _closeSaveToMenu();
+    });
+  });
+
+  // Deferred a tick — the click that opened the menu would otherwise immediately bubble to this
+  // same listener and close it right back.
+  setTimeout(() => {
+    document.addEventListener('click', _closeSaveToMenu, true);
+    document.addEventListener('keydown', _saveToMenuEscHandler, true);
+  }, 0);
+}
+
 export function setupHeader(item, { domain, isMusicAlbum, isMusicianItem }) {
   // Checked against the actual curated data instead of guessing at id-prefix conventions (which
   // turned out wrong for at least Books) — this works for every category with real Top 100
@@ -232,14 +311,9 @@ export function setupHeader(item, { domain, isMusicAlbum, isMusicianItem }) {
   // straight from the corner, also without opening the panel.
   document.getElementById('detail-bookmark-btn').onclick = () => toggleQueueFromHeader(item);
 
-  document.getElementById('detail-favorite-btn').onclick = async () => {
-    const liveItem = await ensureLiveItem(item);
-    liveItem.favorite = !liveItem.favorite;
-    await persistItem(liveItem);
-    updateBookmarkIcon(item);
-    updateFavoriteIcon(item);
-    renderSidebar();
-    renderGrid();
+  document.getElementById('detail-favorite-btn').onclick = e => {
+    e.stopPropagation(); // otherwise the same click immediately re-triggers the menu's own outside-click close handler
+    _toggleSaveToMenu(item);
   };
 
   // .detail-publication-link also carries .detail-author-link for styling, but navigates via

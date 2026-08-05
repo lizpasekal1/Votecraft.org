@@ -478,13 +478,21 @@ export function promptAddFolder(category) {
 // persisted under a single savecraft_saved_lists key (same convention state.kanbanLists uses).
 // Not yet wired to any view when clicked (see the sidebar-saved-lists-child exclusion in
 // renderSidebar()'s click-wiring) — this only covers creating the entries themselves.
-export function promptAddSavedList() {
-  const name = prompt('New saved list name:');
-  if (!name?.trim()) return;
-
+// Shared by promptAddSavedList below (the sidebar's own "+ New folder" row) and the detail
+// modal's "Save to:" dropdown's own "+ Add New" option (detailModalHeader.js) — both need to
+// create the list itself; the dropdown additionally associates the current item with it right
+// after, which this alone doesn't do.
+export function addSavedList(name) {
   const list = { id: Date.now().toString(), name: name.trim() };
   state.savedLists.push(list);
   chrome.storage.sync.set({ savecraft_saved_lists: state.savedLists });
+  return list;
+}
+
+export function promptAddSavedList() {
+  const name = prompt('New saved list name:');
+  if (!name?.trim()) return;
+  addSavedList(name);
   renderSidebar();
 }
 
