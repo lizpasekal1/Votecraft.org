@@ -103,11 +103,10 @@
 
 .detail-bookmark-btn {
   position: absolute;
-  /* 4px above the CTA wrapper's own 17px top — the icon glyph inside is 24px tall centered in
-     this 32px box (a 4px inset on every side), while the "Official Website" pill's border/glow
-     sits right at its wrapper's top edge with no such inset, so matching the raw 17px here left
-     the icon's visible top sitting 4px below the pill's. */
-  top: 16px;
+  /* Swapped with .detail-favorite-btn's position (star now on top, bookmark in the middle) — was
+     16px/top-most; see .detail-favorite-btn's own comment for the top-most-slot math this
+     inherited. */
+  top: 64px;
   right: 5px; /* see .detail-edit above */
   background: none;
   border: none;
@@ -130,7 +129,13 @@
 
 .detail-favorite-btn {
   position: absolute;
-  top: 64px;
+  /* Swapped with .detail-bookmark-btn's position (star now top-most) — 4px above the CTA
+     wrapper's own 17px top, same reasoning .detail-bookmark-btn's old comment had: the icon
+     glyph inside is 24px tall centered in this 32px box (a 4px inset on every side), while the
+     "Official Website" pill's border/glow sits right at its wrapper's top edge with no such
+     inset, so matching the raw 17px here left the icon's visible top sitting 4px below the
+     pill's. */
+  top: 16px;
   right: 5px; /* see .detail-edit above */
   background: none;
   border: none;
