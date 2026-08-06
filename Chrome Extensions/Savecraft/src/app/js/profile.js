@@ -3,14 +3,13 @@
 // widget and main.js's Settings-dropdown #btn-profile) gate on getCurrentUser() before landing
 // here — a signed-out click opens the auth modal instead. Account sits full-width at the top;
 // below it, a 2x2 widget grid: Connections (Last.fm, Steam), Interests (curator-branded curated
-// lists), My
-// Notes (placeholder — future home for finding items with notes on them), and Saved Lists
-// (per-list category/folder scoping — the old "Friends" 4th-slot placeholder this grid was
+// lists), My Notes (placeholder — future home for finding items with notes on them), and Saved
+// Lists (per-list category/folder scoping — the old "Friends" 4th-slot placeholder this grid was
 // originally sized for never got built; these replaced it).
 
 import { state, CURATED_GENRES, CATEGORIES, CAT_LABEL } from './state.js';
 import { escapeHtml } from './utils.js';
-import { getCurrentUser } from './auth.js';
+import { getCurrentUser, resendVerificationEmail } from './auth.js';
 import { persistFollowedCuratedLists, persistSavedLists, persistFolder, disconnectLastfm, disconnectSteam } from './storage.js';
 import { ensureLastfmRecentTracks, ensureSteamRecentGames } from './api.js';
 import { CURATED_LIST_DISPLAY_NAMES, DEMO_PROFILE_NAME } from './dashboard.js';
@@ -24,6 +23,14 @@ function buildAccountSection(user) {
   // shows up: no real user yet, so show the same demo persona used on the Dashboard's greeting
   // rather than a blank email. "Manage account" below is the actual sign-in entry point.
   const displayName = user ? escapeHtml(user.email) : `${DEMO_PROFILE_NAME} (demo)`;
+  // Purely informational — never blocks anything, same "never lock people out" stance as the rest
+  // of this app's auth handling (matches the identical reminder in main.js's applyAuthUI, which
+  // covers the auth modal's own signed-in view).
+  const verifyBanner = (user && !user.emailVerified) ? `
+    <div class="profile-verify-banner">
+      Please verify your email — check your inbox for a link.
+      <button type="button" id="profile-resend-verify" class="auth-resend-link">Resend email</button>
+    </div>` : '';
   return `
     <div class="profile-card profile-card--account">
       <div class="profile-account-row">
@@ -36,11 +43,20 @@ function buildAccountSection(user) {
         </div>
         <button class="btn-cancel" id="profile-manage-account">Manage account</button>
       </div>
+      ${verifyBanner}
     </div>`;
 }
 
 function wireAccountSection(container) {
   container.querySelector('#profile-manage-account')?.addEventListener('click', openAuthModal);
+  container.querySelector('#profile-resend-verify')?.addEventListener('click', async e => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    const result = await resendVerificationEmail();
+    btn.textContent = result.ok ? 'Sent!' : 'Resend email';
+    btn.disabled = false;
+  });
 }
 
 // ===== connections (Last.fm, Steam) =====

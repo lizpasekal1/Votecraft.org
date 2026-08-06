@@ -103,6 +103,18 @@
   color: var(--text-primary);
 }
 
+/* Same treatment as .auth-verify-banner (addEditModal.css) — the identical reminder shown in the
+   auth modal's signed-in view; .auth-resend-link (defined there) is shared by both buttons. */
+.profile-verify-banner {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--hover-bg);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 /* --- Connections --- */
 .profile-connections-list {
   display: flex;
