@@ -61,11 +61,14 @@
 }
 
 /* --- Account --- */
-/* Only "Manage account" lives in this card's header now ("Account" moved down next to the name,
-   see .profile-account-text below) — space-between (the generic .profile-card-header rule) has
-   nothing to push against with a single child, so pin the button to the right explicitly here. */
-.profile-card--account .profile-card-header {
-  justify-content: flex-end;
+/* Single row: avatar+name on the left, "Manage account" on the right — align-items: flex-start
+   (not center) so the button's top edge lines up with the avatar circle's top edge, rather than
+   sitting centered against the whole (taller, avatar-height) row. */
+.profile-account-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .profile-account-identity {

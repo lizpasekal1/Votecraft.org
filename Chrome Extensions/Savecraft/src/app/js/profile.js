@@ -23,15 +23,15 @@ function buildAccountSection(user) {
   const displayName = user ? escapeHtml(user.email) : `${DEMO_PROFILE_NAME} (demo)`;
   return `
     <div class="profile-card profile-card--account">
-      <div class="profile-card-header">
-        <button class="btn-cancel" id="profile-manage-account">Manage account</button>
-      </div>
-      <div class="profile-account-identity">
-        <span class="profile-avatar">ZP</span>
-        <div class="profile-account-text">
-          <div class="profile-card-title">Account</div>
-          <div class="profile-account-email">${displayName}</div>
+      <div class="profile-account-row">
+        <div class="profile-account-identity">
+          <span class="profile-avatar">ZP</span>
+          <div class="profile-account-text">
+            <div class="profile-card-title">Account</div>
+            <div class="profile-account-email">${displayName}</div>
+          </div>
         </div>
+        <button class="btn-cancel" id="profile-manage-account">Manage account</button>
       </div>
     </div>`;
 }
