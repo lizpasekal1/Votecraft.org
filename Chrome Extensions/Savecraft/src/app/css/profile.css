@@ -308,6 +308,16 @@
   color: var(--text-secondary);
 }
 
+.profile-saved-list-add-folder {
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.profile-saved-list-add-folder:hover {
+  color: var(--primary);
+}
+
 /* --- Your Music Taste --- */
 .profile-genre-list {
   display: flex;

@@ -10,7 +10,7 @@
 import { state, CURATED_GENRES, CATEGORIES, CAT_LABEL } from './state.js';
 import { escapeHtml } from './utils.js';
 import { getCurrentUser } from './auth.js';
-import { persistFollowedCuratedLists, persistSavedLists, disconnectLastfm, disconnectSteam } from './storage.js';
+import { persistFollowedCuratedLists, persistSavedLists, persistFolder, disconnectLastfm, disconnectSteam } from './storage.js';
 import { ensureLastfmRecentTracks, ensureSteamRecentGames } from './api.js';
 import { CURATED_LIST_DISPLAY_NAMES, DEMO_PROFILE_NAME } from './dashboard.js';
 import { openAuthModal, openLastfmModal, openSteamModal } from './main.js';
@@ -283,6 +283,13 @@ function _buildSavedListCategoryTree(list) {
           <span>${escapeHtml(f.name)}</span>
         </label>`;
     }).join('');
+    // New folder here is a real category folder (state.folders — shared globally, same as the
+    // sidebar's own "+ New folder"), not something scoped to this list alone; it's auto-included
+    // in *this* list's allowedFolderIds on creation (see wireSavedListsSection's handler) since
+    // the user explicitly added it while configuring this list, but every other list follows its
+    // own normal default (auto-included if unrestricted, needs manual inclusion otherwise).
+    const addFolderRow = `
+        <div class="profile-saved-list-add-folder" data-list-id="${escapeHtml(list.id)}" data-category="${escapeHtml(cat)}">+ Add new</div>`;
     return `
       <div class="profile-saved-list-category-group">
         <div class="profile-saved-list-category-row">
@@ -292,7 +299,7 @@ function _buildSavedListCategoryTree(list) {
             <span>${escapeHtml(CAT_LABEL[cat] || cat)}</span>
           </label>
         </div>
-        ${catExpanded ? `<div class="profile-saved-list-folders">${folderRows}</div>` : ''}
+        ${catExpanded ? `<div class="profile-saved-list-folders">${folderRows}${addFolderRow}</div>` : ''}
       </div>`;
   }).join('');
   return `<div class="profile-saved-list-tree">${categoriesHtml}</div>`;
@@ -344,6 +351,24 @@ function wireSavedListsSection(container) {
       const key = `${arrow.dataset.listId}::${arrow.dataset.category}`;
       if (_expandedProfileSavedListCategories.has(key)) _expandedProfileSavedListCategories.delete(key);
       else _expandedProfileSavedListCategories.add(key);
+      _rebuildSavedListsCard();
+    });
+  });
+
+  container.querySelectorAll('.profile-saved-list-add-folder').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cat = btn.dataset.category;
+      const name = prompt(`New folder name in ${CAT_LABEL[cat] || cat}:`);
+      if (!name?.trim()) return;
+      const folder = { id: Date.now().toString(), name: name.trim(), parentCategory: cat, createdAt: Date.now() };
+      state.folders.push(folder);
+      persistFolder(folder);
+      // Auto-included in *this* list only — see the comment above addFolderRow's markup.
+      const list = _getSavedListById(btn.dataset.listId);
+      if (list) {
+        _setFolderAllowed(list, folder.id, true);
+        persistSavedLists();
+      }
       _rebuildSavedListsCard();
     });
   });
