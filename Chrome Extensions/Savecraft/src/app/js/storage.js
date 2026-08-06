@@ -1,5 +1,5 @@
 // ===== STORAGE =====
-// Everything that reads from or writes to chrome.storage.sync/local, plus the Firestore
+// Everything that reads from or writes to storageSync/local, plus the Firestore
 // curated-data loader. No rendering or DOM logic lives here.
 
 import { state, setCuratedItems } from './state.js';
@@ -9,6 +9,7 @@ import { getCurrentUser, getValidIdToken } from './auth.js';
 import {
   SPLIT_TITLE_CREATOR_CATEGORIES, splitCuratedTitleCreator, getStaticCuratedCreator,
 } from './curatedCreatorLookup.js';
+import { storageSync, storageLocal } from './platform.js';
 
 const _FIREBASE_PROJECT = 'votecraft-789';
 const _FIREBASE_API_KEY = 'AIzaSyArJ6pkXUDbZf4jcxRita0qcdr-hT46kI8';
@@ -26,7 +27,7 @@ const _CAT_NORMALIZE = {
 };
 
 // ===== SYNCED PERSONAL LIBRARY (Firestore dual-write, only active when signed in) =====
-// Every persist*/remove* function below still writes to chrome.storage.sync exactly as before
+// Every persist*/remove* function below still writes to storageSync exactly as before
 // — that write is never awaited-on by these helpers and never blocked by them. When signed in,
 // each function ALSO fires an unawaited Firestore write gated on getCurrentUser(); failures are
 // caught and logged, never surfaced to the caller. Signed-out users get zero extra work.
@@ -184,14 +185,14 @@ async function _loadCuratedFromFirestore() {
 
 async function _getCuratedItems() {
   return new Promise(resolve => {
-    chrome.storage.local.get({ savecraft_curated_data: null }, async cached => {
+    storageLocal.get({ savecraft_curated_data: null }, async cached => {
       const c = cached.savecraft_curated_data;
       if (c?.data && c?.version === _CURATED_CACHE_VERSION && Date.now() - (c.fetchedAt || 0) < 24 * 60 * 60 * 1000) {
         return resolve(c.data);
       }
       try {
         const fresh = await _loadCuratedFromFirestore();
-        chrome.storage.local.set({ savecraft_curated_data: { data: fresh, fetchedAt: Date.now(), version: _CURATED_CACHE_VERSION } });
+        storageLocal.set({ savecraft_curated_data: { data: fresh, fetchedAt: Date.now(), version: _CURATED_CACHE_VERSION } });
         resolve(fresh);
       } catch {
         resolve(c?.data || {});
@@ -208,7 +209,7 @@ export async function initCuratedItems() {
 
 export async function loadAll() {
   return new Promise(resolve => {
-    chrome.storage.sync.get(null, data => {
+    storageSync.get(null, data => {
       state.items = Object.entries(data)
         .filter(([k]) => k.startsWith('item_'))
         .map(([, v]) => v);
@@ -229,7 +230,7 @@ export async function loadAll() {
       const oldNames = { 'Group Saves': 'Group Queue', 'Project Saves': 'Project Queue', 'Work Saves': 'Work Queue' };
       if (data.savecraft_kanban_lists) {
         state.kanbanLists = data.savecraft_kanban_lists.map(l => oldNames[l.name] ? { ...l, name: oldNames[l.name] } : l);
-        chrome.storage.sync.set({ savecraft_kanban_lists: state.kanbanLists });
+        storageSync.set({ savecraft_kanban_lists: state.kanbanLists });
       } else {
         state.kanbanLists = defaultLists;
       }
@@ -243,7 +244,7 @@ export async function loadAll() {
         const danceList = state.savedLists.find(l => l.id === 'default-dance');
         if (danceList && danceList.name === 'Dance') {
           danceList.name = 'Motivation';
-          chrome.storage.sync.set({ savecraft_saved_lists: state.savedLists });
+          storageSync.set({ savecraft_saved_lists: state.savedLists });
         }
         // Renamed "Favorites" -> "All Saves" — same id (default-favorites) for the same reason.
         // Every place that needs to know "is this specifically the Favorites list" (it's the one
@@ -253,7 +254,7 @@ export async function loadAll() {
         const favoritesList = state.savedLists.find(l => l.id === 'default-favorites');
         if (favoritesList && favoritesList.name === 'Favorites') {
           favoritesList.name = 'All Saves';
-          chrome.storage.sync.set({ savecraft_saved_lists: state.savedLists });
+          storageSync.set({ savecraft_saved_lists: state.savedLists });
         }
       } else {
         state.savedLists = [
@@ -261,7 +262,7 @@ export async function loadAll() {
           { id: 'default-health', name: 'Health' },
           { id: 'default-motivation', name: 'Motivation' },
         ];
-        chrome.storage.sync.set({ savecraft_saved_lists: state.savedLists });
+        storageSync.set({ savecraft_saved_lists: state.savedLists });
       }
       // "Curated Lists" row (Saved Lists' sibling under Dashboard) — seeded with two starter
       // entries, "Votecraft" then "RCV" below it (two separate folders, not one combined entry —
@@ -290,10 +291,10 @@ export async function loadAll() {
             changed = true;
           }
         }
-        if (changed) chrome.storage.sync.set({ savecraft_curated_lists_rows: state.curatedListsRows });
+        if (changed) storageSync.set({ savecraft_curated_lists_rows: state.curatedListsRows });
       } else {
         state.curatedListsRows = [{ id: 'default-votecraft', name: 'Votecraft' }, { id: 'default-rcv', name: 'RCV' }];
-        chrome.storage.sync.set({ savecraft_curated_lists_rows: state.curatedListsRows });
+        storageSync.set({ savecraft_curated_lists_rows: state.curatedListsRows });
       }
       state.hiddenCurated = new Set(data.savecraft_hidden_curated || []);
       state.curatedOverrides = data.savecraft_curated_overrides || {};
@@ -345,7 +346,7 @@ export async function loadAll() {
       if (migrated.length) {
         const toMigrate = {};
         migrated.forEach(item => { toMigrate[`item_${item.id}`] = item; });
-        chrome.storage.sync.set(toMigrate);
+        storageSync.set(toMigrate);
       }
 
       // Migrate the old folder-based "Favorites" mechanism to the new item.favorite boolean —
@@ -365,7 +366,7 @@ export async function loadAll() {
         if (favMigrated.length) {
           const toMigrate = {};
           favMigrated.forEach(item => { toMigrate[`item_${item.id}`] = item; });
-          chrome.storage.sync.set(toMigrate);
+          storageSync.set(toMigrate);
         }
         state.folders = state.folders.filter(f => !favoritesFolderIds.has(f.id));
         favoritesFolderIds.forEach(id => removeFolder(id));
@@ -385,7 +386,7 @@ export async function loadAll() {
       if (savedListIdMigrated.length) {
         const toMigrate = {};
         savedListIdMigrated.forEach(item => { toMigrate[`item_${item.id}`] = item; });
-        chrome.storage.sync.set(toMigrate);
+        storageSync.set(toMigrate);
       }
 
       // One-time migration: TV Shows moved from the Shows category into Films — every item
@@ -406,7 +407,7 @@ export async function loadAll() {
         if (tvShowsMigrated.length) {
           const toMigrate = {};
           tvShowsMigrated.forEach(item => { toMigrate[`item_${item.id}`] = item; });
-          chrome.storage.sync.set(toMigrate);
+          storageSync.set(toMigrate);
         }
         state.folders = state.folders.filter(f => f.id !== 'default-shows-shows');
         removeFolder('default-shows-shows');
@@ -450,7 +451,7 @@ export async function loadAll() {
       if (authorBackfilled.length) {
         const toBackfill = {};
         authorBackfilled.forEach(item => { toBackfill[`item_${item.id}`] = item; });
-        chrome.storage.sync.set(toBackfill);
+        storageSync.set(toBackfill);
       }
 
       // Seed new default folders if not present
@@ -530,12 +531,12 @@ export async function loadAll() {
       }
 
       if (legacyKeys.length) {
-        chrome.storage.sync.remove(legacyKeys, () => {
-          if (Object.keys(toSave).length) chrome.storage.sync.set(toSave, resolve);
+        storageSync.remove(legacyKeys, () => {
+          if (Object.keys(toSave).length) storageSync.set(toSave, resolve);
           else resolve();
         });
       } else if (Object.keys(toSave).length) {
-        chrome.storage.sync.set(toSave, resolve);
+        storageSync.set(toSave, resolve);
       } else {
         resolve();
       }
@@ -544,28 +545,28 @@ export async function loadAll() {
 }
 
 export function persistItem(item) {
-  const local = new Promise(resolve => chrome.storage.sync.set({ [`item_${item.id}`]: item }, resolve));
+  const local = new Promise(resolve => storageSync.set({ [`item_${item.id}`]: item }, resolve));
   const user = getCurrentUser();
   if (user) _firestoreUpsert(`savecraft_users/${user.uid}/items/${item.id}`, item).catch(_syncError);
   return local;
 }
 
 export function removeItem(id) {
-  const local = new Promise(resolve => chrome.storage.sync.remove(`item_${id}`, resolve));
+  const local = new Promise(resolve => storageSync.remove(`item_${id}`, resolve));
   const user = getCurrentUser();
   if (user) _firestoreDelete(`savecraft_users/${user.uid}/items/${id}`).catch(_syncError);
   return local;
 }
 
 export function persistHiddenCurated() {
-  const local = new Promise(resolve => chrome.storage.sync.set({ savecraft_hidden_curated: [...state.hiddenCurated] }, resolve));
+  const local = new Promise(resolve => storageSync.set({ savecraft_hidden_curated: [...state.hiddenCurated] }, resolve));
   const user = getCurrentUser();
   if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { hiddenCurated: [...state.hiddenCurated] }).catch(_syncError);
   return local;
 }
 
 export function persistCuratedOverrides() {
-  const local = new Promise(resolve => chrome.storage.sync.set({ savecraft_curated_overrides: state.curatedOverrides }, resolve));
+  const local = new Promise(resolve => storageSync.set({ savecraft_curated_overrides: state.curatedOverrides }, resolve));
   const user = getCurrentUser();
   if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { curatedOverrides: state.curatedOverrides }).catch(_syncError);
   return local;
@@ -575,78 +576,78 @@ export function persistCuratedOverrides() {
 // used both by renderSidebar.js's addSavedList() and by Profile > Saved Lists (profile.js) when
 // toggling a list's allowedFolderIds scope.
 export function persistSavedLists() {
-  const local = new Promise(resolve => chrome.storage.sync.set({ savecraft_saved_lists: state.savedLists }, resolve));
+  const local = new Promise(resolve => storageSync.set({ savecraft_saved_lists: state.savedLists }, resolve));
   const user = getCurrentUser();
   if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { savedLists: state.savedLists }).catch(_syncError);
   return local;
 }
 
 export function persistCuratedImgCache() {
-  chrome.storage.local.set({ savecraft_curated_img: state.curatedImgCache });
+  storageLocal.set({ savecraft_curated_img: state.curatedImgCache });
 }
 
 export function persistCuratedAlbumMetaCache() {
-  chrome.storage.local.set({ savecraft_curated_album_meta: state.curatedAlbumMetaCache });
+  storageLocal.set({ savecraft_curated_album_meta: state.curatedAlbumMetaCache });
 }
 
 export function persistAlbumTrackListCache() {
-  chrome.storage.local.set({ savecraft_album_tracklist: state.albumTrackListCache });
+  storageLocal.set({ savecraft_album_tracklist: state.albumTrackListCache });
 }
 
 export function persistAlbumArtCache() {
-  chrome.storage.local.set({ savecraft_album_art_cache: state.albumArtCache });
+  storageLocal.set({ savecraft_album_art_cache: state.albumArtCache });
 }
 
 export function persistArtistWebsiteCache() {
-  chrome.storage.local.set({ savecraft_artist_website_cache: state.artistWebsiteCache });
+  storageLocal.set({ savecraft_artist_website_cache: state.artistWebsiteCache });
 }
 
 // _v2: bumped when the cached shape grew a photoUrl field, so old bio-only cache entries
 // (which would otherwise short-circuit the photo lookup) don't linger.
 export function persistArtistBioCache() {
-  chrome.storage.local.set({ savecraft_artist_bio_cache_v2: state.artistBioCache });
+  storageLocal.set({ savecraft_artist_bio_cache_v2: state.artistBioCache });
 }
 
 export function persistItemWikiCache() {
-  chrome.storage.local.set({ savecraft_item_wiki_cache: state.itemWikiCache });
+  storageLocal.set({ savecraft_item_wiki_cache: state.itemWikiCache });
 }
 
 export function persistCreatorCache() {
-  chrome.storage.local.set({ savecraft_creator_cache: state.creatorCache });
+  storageLocal.set({ savecraft_creator_cache: state.creatorCache });
 }
 
 export function persistViewState() {
-  chrome.storage.sync.set({ savecraft_view: state.view, savecraft_sidebar_mode: state.sidebarMode });
+  storageSync.set({ savecraft_view: state.view, savecraft_sidebar_mode: state.sidebarMode });
   const user = getCurrentUser();
   if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { view: state.view, sidebarMode: state.sidebarMode }).catch(_syncError);
 }
 
 export function persistFolder(folder) {
-  const local = new Promise(resolve => chrome.storage.sync.set({ [`folder_${folder.id}`]: folder }, resolve));
+  const local = new Promise(resolve => storageSync.set({ [`folder_${folder.id}`]: folder }, resolve));
   const user = getCurrentUser();
   if (user) _firestoreUpsert(`savecraft_users/${user.uid}/folders/${folder.id}`, folder).catch(_syncError);
   return local;
 }
 
 export function removeFolder(id) {
-  const local = new Promise(resolve => chrome.storage.sync.remove(`folder_${id}`, resolve));
+  const local = new Promise(resolve => storageSync.remove(`folder_${id}`, resolve));
   const user = getCurrentUser();
   if (user) _firestoreDelete(`savecraft_users/${user.uid}/folders/${id}`).catch(_syncError);
   return local;
 }
 
 export function persistAuthor(author) {
-  const local = new Promise(resolve => chrome.storage.sync.set({ [`author_${author.id}`]: author }, resolve));
+  const local = new Promise(resolve => storageSync.set({ [`author_${author.id}`]: author }, resolve));
   const user = getCurrentUser();
   if (user) _firestoreUpsert(`savecraft_users/${user.uid}/authors/${author.id}`, author).catch(_syncError);
   return local;
 }
 
 // All local-only caches (curated images, artist lookups, etc.) are stored separately from
-// chrome.storage.sync — this loads one of them into `state` at startup.
+// storageSync — this loads one of them into `state` at startup.
 export function loadLocalCache(storageKey, stateProp) {
   return new Promise(resolve => {
-    chrome.storage.local.get({ [storageKey]: {} }, data => {
+    storageLocal.get({ [storageKey]: {} }, data => {
       state[stateProp] = data[storageKey];
       resolve();
     });
@@ -654,49 +655,49 @@ export function loadLocalCache(storageKey, stateProp) {
 }
 
 // Thin wrappers around three call sites (main.js's handleSort/toggleTheme/toggleSidebarCollapsed)
-// and one in share.js that previously called chrome.storage.sync.set directly, bypassing this
+// and one in share.js that previously called storageSync.set directly, bypassing this
 // file entirely — bringing them under the same dual-write umbrella as everything else here.
 export function persistSort(sort) {
-  chrome.storage.sync.set({ savecraft_sort: sort });
+  storageSync.set({ savecraft_sort: sort });
   const user = getCurrentUser();
   if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { sort }).catch(_syncError);
 }
 
 export function persistTheme(theme) {
-  chrome.storage.sync.set({ savecraft_theme: theme });
+  storageSync.set({ savecraft_theme: theme });
   const user = getCurrentUser();
   if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { theme }).catch(_syncError);
 }
 
 export function persistSidebarCollapsed(collapsed) {
-  chrome.storage.sync.set({ savecraft_sidebar_collapsed: collapsed });
+  storageSync.set({ savecraft_sidebar_collapsed: collapsed });
   const user = getCurrentUser();
   if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { sidebarCollapsed: collapsed }).catch(_syncError);
 }
 
 export function persistShareCount(count) {
-  chrome.storage.sync.set({ savecraft_share_count: count });
+  storageSync.set({ savecraft_share_count: count });
   const user = getCurrentUser();
   if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { shareCount: count }).catch(_syncError);
 }
 
 // ===== PROFILE PAGE (Connections + Interests) =====
 export function persistLastfmUsername(username) {
-  chrome.storage.sync.set({ savecraft_lastfm_username: username });
+  storageSync.set({ savecraft_lastfm_username: username });
   const user = getCurrentUser();
   if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { lastfmUsername: username }).catch(_syncError);
 }
 
 export function disconnectLastfm() {
   state.lastfmUsername = null;
-  chrome.storage.sync.set({ savecraft_lastfm_username: null });
+  storageSync.set({ savecraft_lastfm_username: null });
   const user = getCurrentUser();
   if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { lastfmUsername: null }).catch(_syncError);
 }
 
 export function persistFollowedCuratedLists() {
   const list = [...state.followedCuratedLists];
-  chrome.storage.sync.set({ savecraft_followed_curated_lists: list });
+  storageSync.set({ savecraft_followed_curated_lists: list });
   const user = getCurrentUser();
   if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { followedCuratedLists: list }).catch(_syncError);
 }
@@ -704,24 +705,24 @@ export function persistFollowedCuratedLists() {
 // Local-only cache — re-fetchable, not user-authored data, same treatment as
 // persistArtistWebsiteCache() etc. above.
 export function persistLastfmCache() {
-  chrome.storage.local.set({ savecraft_lastfm_cache: state.lastfmCache });
+  storageLocal.set({ savecraft_lastfm_cache: state.lastfmCache });
 }
 
 export function persistSteamId(steamId) {
-  chrome.storage.sync.set({ savecraft_steam_id: steamId });
+  storageSync.set({ savecraft_steam_id: steamId });
   const user = getCurrentUser();
   if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { steamId }).catch(_syncError);
 }
 
 export function disconnectSteam() {
   state.steamId = null;
-  chrome.storage.sync.set({ savecraft_steam_id: null });
+  storageSync.set({ savecraft_steam_id: null });
   const user = getCurrentUser();
   if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { steamId: null }).catch(_syncError);
 }
 
 export function persistSteamCache() {
-  chrome.storage.local.set({ savecraft_steam_cache: state.steamCache });
+  storageLocal.set({ savecraft_steam_cache: state.steamCache });
 }
 
 // ===== INITIAL SYNC (runs once, right after a successful sign-up/sign-in) =====
@@ -734,7 +735,7 @@ export function persistSteamCache() {
 
 function _readLocalSettingsSnapshot() {
   return new Promise(resolve => {
-    chrome.storage.sync.get({
+    storageSync.get({
       savecraft_sort: 'az',
       savecraft_tutorial_seen: false,
       savecraft_kanban_sort: {},
@@ -769,7 +770,7 @@ function _readLocalSettingsSnapshot() {
 }
 
 // Strips the Firestore-only updatedAt bookkeeping field before a cloud record is written back
-// into chrome.storage.sync — that field must never leak into the shape the rest of the app
+// into storageSync — that field must never leak into the shape the rest of the app
 // (render.js, kanban.js, detailModal.js, etc.) expects for an item/folder/author.
 function _stripSyncMeta(doc) {
   const { updatedAt, ...rest } = doc;
@@ -803,7 +804,7 @@ async function _mergeCollection(uid, idToken, subcollection, keyPrefix, localLis
   if (Object.keys(toWriteLocal).length) {
     // Fires the extension's existing chrome.storage.onChanged listener (main.js), which already
     // live-patches state.items/folders/authors and re-renders — no new render-wiring needed here.
-    await new Promise(resolve => chrome.storage.sync.set(toWriteLocal, resolve));
+    await new Promise(resolve => storageSync.set(toWriteLocal, resolve));
   }
 }
 
@@ -816,7 +817,7 @@ export async function runInitialSync(uid) {
     const localSettings = await _readLocalSettingsSnapshot();
     await _firestoreUpsert(`savecraft_users/${uid}`, localSettings);
   } else {
-    await new Promise(resolve => chrome.storage.sync.set({
+    await new Promise(resolve => storageSync.set({
       savecraft_sort: cloudSettings.sort,
       savecraft_tutorial_seen: cloudSettings.tutorialSeen,
       savecraft_kanban_sort: cloudSettings.kanbanSort,
@@ -834,7 +835,7 @@ export async function runInitialSync(uid) {
     }, resolve));
     // Reflect into live state immediately for the fields state.js actually tracks (theme,
     // sidebarCollapsed, and shareCount have no state.* mirror — main.js/share.js read those
-    // fresh from chrome.storage.sync on their own, so no state update is needed for them).
+    // fresh from storageSync on their own, so no state update is needed for them).
     if (cloudSettings.sort != null) state.sort = cloudSettings.sort;
     if (cloudSettings.tutorialSeen != null) state.tutorialSeen = cloudSettings.tutorialSeen;
     if (cloudSettings.kanbanSort) state.kanbanSort = { ...state.kanbanSort, ...cloudSettings.kanbanSort };

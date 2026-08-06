@@ -6,6 +6,7 @@ import { persistItem } from './storage.js';
 import { ensureLiveItem } from './authors.js';
 import { updateBookmarkIcon, updateFavoriteIcon } from './detailModalHeader.js';
 import { registerAccordion, closeAccordionsExcept } from './detailModalAccordions.js';
+import { storageSync } from './platform.js';
 
 // Holds the currently-set-up queue section's closures/elements, so toggleQueueFromHeader() (called
 // from the header bookmark button, in a different file) can reach them without every caller having
@@ -208,7 +209,7 @@ export function setupQueue(item, { domain, isMusicAlbum }) {
         if (!name) { cancelQueue(); return; }
         const newId = 'list-' + Date.now();
         state.kanbanLists.push({ id: newId, name });
-        chrome.storage.sync.set({ savecraft_kanban_lists: state.kanbanLists });
+        storageSync.set({ savecraft_kanban_lists: state.kanbanLists });
         if (!item.curated) {
           const liveItem = state.items.find(i => i.id === item.id);
           if (liveItem) {

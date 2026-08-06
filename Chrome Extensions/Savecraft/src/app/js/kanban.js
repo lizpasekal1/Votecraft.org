@@ -4,6 +4,7 @@ import { state, CATEGORIES, CAT_LABEL } from './state.js';
 import { escapeHtml, catClass, badgeLabel, getListIds } from './utils.js';
 import { persistViewState, persistItem } from './storage.js';
 import { openDetailModal } from './detailModal.js';
+import { storageSync } from './platform.js';
 
 export const KANBAN_COLUMNS = [
   { key: 'in-queue',     label: 'QUEUE' },
@@ -184,7 +185,7 @@ function renderSavesListDropdown() {
       if (!name) { cancelList(); return; }
       const id = 'list-' + Date.now();
       state.kanbanLists.push({ id, name });
-      chrome.storage.sync.set({ savecraft_kanban_lists: state.kanbanLists });
+      storageSync.set({ savecraft_kanban_lists: state.kanbanLists });
       state.activeListId = id;
       dd.setAttribute('hidden', '');
       renderKanbanBoard();
@@ -324,7 +325,7 @@ export function renderKanbanBoard() {
   if (!state.tutorialSeen) {
     document.getElementById('board-info-popup').removeAttribute('hidden');
     state.tutorialSeen = true;
-    chrome.storage.sync.set({ savecraft_tutorial_seen: true });
+    storageSync.set({ savecraft_tutorial_seen: true });
   }
 
   persistViewState();
@@ -354,7 +355,7 @@ export function renderKanbanBoard() {
       e.stopPropagation();
       const { col, sort } = opt.dataset;
       state.kanbanSort[col] = sort;
-      chrome.storage.sync.set({ savecraft_kanban_sort: state.kanbanSort });
+      storageSync.set({ savecraft_kanban_sort: state.kanbanSort });
       renderKanbanBoard();
     });
   });
@@ -494,7 +495,7 @@ export function renderKanbanBoard() {
         draggedItem.queueStatus = newStatus;
         targetOrder.forEach((item, i) => { item.manualOrder = i; });
         state.kanbanSort[newStatus] = 'manual';
-        chrome.storage.sync.set({ savecraft_kanban_sort: state.kanbanSort });
+        storageSync.set({ savecraft_kanban_sort: state.kanbanSort });
         await Promise.all(targetOrder.map(item => persistItem(item)));
 
         dragId = null;

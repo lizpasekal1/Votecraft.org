@@ -4,18 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SaveCraft</title>
-  <link rel="stylesheet" href="css/base.css">
-  <link rel="stylesheet" href="css/sidebar.css">
-  <link rel="stylesheet" href="css/cards.css">
-  <link rel="stylesheet" href="css/detailModal.css">
-  <link rel="stylesheet" href="css/addEditModal.css">
-  <link rel="stylesheet" href="css/fetchAlbumsModal.css">
-  <link rel="stylesheet" href="css/kanban.css">
-  <link rel="stylesheet" href="css/dashboard.css">
-  <link rel="stylesheet" href="css/profile.css">
-  <link rel="stylesheet" href="css/sharedSaves.css">
-  <link rel="stylesheet" href="css/embedBuilder.css">
-  <link rel="stylesheet" href="css/misc.css">
+  <link rel="stylesheet" href="/src/app/css/base.css">
+  <link rel="stylesheet" href="/src/app/css/sidebar.css">
+  <link rel="stylesheet" href="/src/app/css/cards.css">
+  <link rel="stylesheet" href="/src/app/css/detailModal.css">
+  <link rel="stylesheet" href="/src/app/css/addEditModal.css">
+  <link rel="stylesheet" href="/src/app/css/fetchAlbumsModal.css">
+  <link rel="stylesheet" href="/src/app/css/kanban.css">
+  <link rel="stylesheet" href="/src/app/css/dashboard.css">
+  <link rel="stylesheet" href="/src/app/css/profile.css">
+  <link rel="stylesheet" href="/src/app/css/sharedSaves.css">
+  <link rel="stylesheet" href="/src/app/css/embedBuilder.css">
+  <link rel="stylesheet" href="/src/app/css/misc.css">
 </head>
 <body>
 
@@ -176,8 +176,15 @@
         <div id="auth-signed-in-info" class="auth-signed-in-info" style="display:none"></div>
       </div>
       <div class="modal-actions" id="auth-signed-out-actions">
-        <button class="btn-cancel" id="btn-auth-signup">Create account</button>
-        <button class="btn-primary" id="btn-auth-signin">Sign in</button>
+        <!-- TEMPORARY, demo-only: lets a web visitor skip sign-in during early demo work. Only
+             ever revealed on the web build's mandatory sign-in gate (see main.js's
+             requireWebSignIn()) — remove this button once savecraft.org is ready for real
+             visitors. -->
+        <button class="auth-demo-link" id="btn-auth-demo" type="button" style="display:none">View Demo</button>
+        <div class="auth-actions-right">
+          <button class="btn-cancel" id="btn-auth-signup">Create account</button>
+          <button class="btn-primary" id="btn-auth-signin">Sign in</button>
+        </div>
       </div>
       <div class="modal-actions" id="auth-signed-in-actions" style="display:none">
         <button class="btn-primary" id="btn-auth-signout">Sign out</button>
@@ -523,6 +530,6 @@
 
   <button class="fab-add" id="fab-add" title="Add item">+</button>
 
-  <script type="module" src="js/main.js"></script>
+  <script type="module" src="/src/app/js/main.js"></script>
 </body>
 </html>

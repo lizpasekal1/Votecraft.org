@@ -9,6 +9,7 @@ import { persistViewState, persistItem, persistFolder, removeFolder, persistSave
 import { closeSidebar } from './main.js';
 import { matchesPrimaryOrUnfoldered } from './renderFilters.js';
 import { renderGrid } from './renderGrid.js';
+import { storageSync } from './platform.js';
 
 // Fill swapped from the source icon's #1f1f1f (near-black, invisible against .cat-icon's dark
 // background) to the same #5B5BEF used by every other sidebar cat-icon SVG (CAT_EMOJI in
@@ -571,6 +572,6 @@ export function promptAddCuratedListRow() {
 
   const row = { id: Date.now().toString(), name: name.trim() };
   state.curatedListsRows.push(row);
-  chrome.storage.sync.set({ savecraft_curated_lists_rows: state.curatedListsRows });
+  storageSync.set({ savecraft_curated_lists_rows: state.curatedListsRows });
   renderSidebar();
 }

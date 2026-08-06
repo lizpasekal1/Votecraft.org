@@ -12,6 +12,7 @@ import { renderGrid } from './renderGrid.js';
 import { wireQuickQueueButtons } from './renderCardActions.js';
 import { fetchMissingCuratedImages, fetchMissingCuratedMusicianPhotos } from './renderCuratedImageFetch.js';
 import { _wireCarouselArrows } from './dashboard.js';
+import { resourceUrl } from './platform.js';
 
 // Wraps the literal phrase "Inquire to create" in the hero description with a link to the
 // Sponsored pitch page, underlined so it reads as a call-to-action inline with the copy.
@@ -21,7 +22,7 @@ function linkifyHeroDescription(description) {
   if (idx === -1) return escapeHtml(description);
   const before = description.slice(0, idx);
   const after = description.slice(idx + phrase.length);
-  const sponsoredUrl = chrome.runtime.getURL('src/sponsored/sponsored.html');
+  const sponsoredUrl = resourceUrl('src/sponsored/sponsored.html');
   return `${escapeHtml(before)}<a class="top100-hero-desc-link" href="${sponsoredUrl}" target="_blank" rel="noopener">${escapeHtml(phrase)}</a>${escapeHtml(after)}`;
 }
 
@@ -33,10 +34,10 @@ let _bareListCategoryFilter = null;
 const DIRECTORY_AVATAR_COLORS = ['#5B5BEF', '#E0507A', '#2A9D8F', '#E76F51', '#8E44AD', '#F4A340'];
 
 // An org's optional imageUrl (CURATED_DIRECTORY_CONTENT) can be either a real external URL (a
-// logo hosted elsewhere) or a path local to this extension's own images/ folder — only the
-// latter needs chrome.runtime.getURL(), and calling it on an already-absolute URL would break it.
+// logo hosted elsewhere) or a path local to this app's own images/ folder — only the latter needs
+// resourceUrl(), and calling it on an already-absolute URL would break it.
 export function resolveOrgImageUrl(imageUrl) {
-  return /^https?:\/\//.test(imageUrl) ? imageUrl : chrome.runtime.getURL(imageUrl);
+  return /^https?:\/\//.test(imageUrl) ? imageUrl : resourceUrl(imageUrl);
 }
 
 // The top-level Curated SaveCraft landing — a bare-bones, ActBlue-style flat list of the same
@@ -176,16 +177,16 @@ export function renderCuratedDirectory(container) {
   container.innerHTML = `
     <div class="top100-hero">
       <div class="top100-hero-text">
-        <div class="top100-wordmark"><img src="${chrome.runtime.getURL('images/logos/votecraft-logo_white.png')}" alt="VoteCraft" class="top100-wordmark-logo"></div>
+        <div class="top100-wordmark"><img src="${resourceUrl('images/logos/votecraft-logo_white.png')}" alt="VoteCraft" class="top100-wordmark-logo"></div>
         <h2 class="top100-hero-title">${escapeHtml(content.headline)}</h2>
         <p class="top100-hero-desc">${escapeHtml(content.description)}</p>
       </div>
-      <div class="top100-icon-badge"><img src="${chrome.runtime.getURL('images/logos/votecraft_icon_white.png')}" alt=""></div>
+      <div class="top100-icon-badge"><img src="${resourceUrl('images/logos/votecraft_icon_white.png')}" alt=""></div>
     </div>
     ${categoriesHtml}
     <div class="top100-cta">
       <span class="top100-cta-text">Want your organization's picks featured here?</span>
-      <a class="top100-cta-btn" href="${chrome.runtime.getURL('src/sponsored/sponsored.html')}" target="_blank" rel="noopener">Become a Sponsor →</a>
+      <a class="top100-cta-btn" href="${resourceUrl('src/sponsored/sponsored.html')}" target="_blank" rel="noopener">Become a Sponsor →</a>
     </div>
   `;
 
@@ -275,17 +276,17 @@ export function renderCuratedGenreLanding(container, genre, content) {
   container.innerHTML = `
     <div class="top100-hero">
       <div class="top100-hero-text">
-        <div class="top100-wordmark"><img src="${chrome.runtime.getURL('images/logos/votecraft-logo_white.png')}" alt="VoteCraft" class="top100-wordmark-logo"></div>
+        <div class="top100-wordmark"><img src="${resourceUrl('images/logos/votecraft-logo_white.png')}" alt="VoteCraft" class="top100-wordmark-logo"></div>
         <h2 class="top100-hero-title">${escapeHtml(content.headline)}</h2>
         <p class="top100-hero-desc">${linkifyHeroDescription(content.description)}</p>
       </div>
-      <div class="top100-icon-badge"><img src="${chrome.runtime.getURL('images/logos/votecraft_icon_white.png')}" alt=""></div>
+      <div class="top100-icon-badge"><img src="${resourceUrl('images/logos/votecraft_icon_white.png')}" alt=""></div>
     </div>
     <div class="top100-sort-wrap"></div>
     ${rowsHtml}
     <div class="top100-cta">
       <span class="top100-cta-text">Want your organization's picks featured like this?</span>
-      <a class="top100-cta-btn" href="${chrome.runtime.getURL('src/sponsored/sponsored.html')}" target="_blank" rel="noopener">Become a Sponsor →</a>
+      <a class="top100-cta-btn" href="${resourceUrl('src/sponsored/sponsored.html')}" target="_blank" rel="noopener">Become a Sponsor →</a>
     </div>
   `;
 

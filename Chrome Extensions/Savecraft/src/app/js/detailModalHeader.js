@@ -8,6 +8,7 @@ import { findAuthor, navigateToAuthor, ensureLiveItem, getCachedAlbumArt, ensure
 import { closeDetailModal, getDetailItem, openImageLightbox, openVideoLightbox } from './detailModal.js';
 import { renderSidebar, renderGrid } from './render.js';
 import { toggleQueueFromHeader } from './detailModalQueue.js';
+import { resourceUrl } from './platform.js';
 
 const BOOKMARK_OUTLINE = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/></svg>`;
 const BOOKMARK_FILLED = `<svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 -960 960 960" width="22px" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Z"/></svg>`;
@@ -171,7 +172,7 @@ export function setupHeader(item, { domain, isMusicAlbum, isMusicianItem }) {
     const whyText = CATEGORY_WHY_TEXT[item.category]
       || 'What we watch shapes how we see power and justice — the same questions at the heart of civic life.';
     _sponsoredTagHtml = `
-      <a class="vc-sponsored-tag vc-sponsored-tag--overlay" href="${chrome.runtime.getURL('src/sponsored/sponsored.html')}" target="_blank">⚡ Your Statement<span class="vc-sponsored-tooltip">
+      <a class="vc-sponsored-tag vc-sponsored-tag--overlay" href="${resourceUrl('src/sponsored/sponsored.html')}" target="_blank">⚡ Your Statement<span class="vc-sponsored-tooltip">
           <span class="vc-why-title">WHY VOTECRAFT RECOMMENDS</span>
           <span class="vc-why-tooltip-text">${whyText}</span>
         </span>
