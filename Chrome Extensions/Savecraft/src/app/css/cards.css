@@ -979,8 +979,33 @@
 }
 
 @media (max-width: 768px) {
+  /* .top100-icon-badge is normally absolutely positioned + vertically centered mid-hero, with
+     .top100-hero-text given a fixed 171px left-padding to clear it horizontally (see both rules'
+     own comments above) — a layout that assumes a wide, short hero. On mobile the same fixed
+     padding leaves almost no room for the text, so it wraps severely and the hero grows tall to
+     fit it; the badge, still centered on that now-tall hero, ends up floating mid-paragraph
+     (reported as "the Votecraft page looks messed up" on an iPhone). Stack the badge above the
+     text in normal flow instead, both shrunk down to fit comfortably. column-reverse puts it
+     first visually without needing to reorder the HTML (badge is the second child in the DOM). */
   .top100-hero {
     padding: 24px 20px;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 14px;
+  }
+  .top100-hero-text {
+    padding-left: 0;
+  }
+  .top100-icon-badge {
+    position: static;
+    transform: none;
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+  }
+  .top100-icon-badge img {
+    width: 32px;
+    height: 32px;
   }
   .top100-hero-title {
     font-size: 24px;
@@ -1349,5 +1374,27 @@
   }
   .bare-list-filters {
     width: 100%;
+    margin-left: 0;
+    margin-top: 20px;
+  }
+  .bare-list-why-title {
+    margin-top: 24px;
+  }
+  /* This part of the fix was previously missing: .bare-list-body switching to a column above
+     stacks the filter rail above the list, but .bare-list-rows itself still kept its desktop
+     max-width:50% + margin-left:160px (sized to sit beside the filter rail, not below it) — so
+     the row list stayed squeezed into half the screen and shoved right, severely word-wrapping
+     every row's text (reported live on an iPhone: "same with these curated lists"). */
+  .bare-list-rows {
+    max-width: 100%;
+    margin-left: 0;
+    margin-top: 20px;
+  }
+  .bare-list-row {
+    padding: 16px 20px;
+    gap: 14px;
+  }
+  .bare-list-view-btn {
+    margin-left: 12px;
   }
 }

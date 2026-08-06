@@ -18,6 +18,21 @@
   overflow: hidden;
 }
 
+/* On narrow/mobile widths the same widgets stack vertically instead of sitting side-by-side,
+   so the "fits exactly" assumption above no longer holds — the stacked content is reliably
+   taller than the viewport, and with overflow still hidden, everything past the fold was
+   simply unreachable (reported as "the dashboard doesn't scroll" testing on an iPhone 16 Pro).
+   Re-enable scrolling here, and let .dashboard-wrap grow past 100% instead of being clipped to
+   it, only below the same 768px breakpoint used elsewhere in this codebase for mobile layout. */
+@media (max-width: 768px) {
+  .grid-area:has(.dashboard-wrap) {
+    overflow-y: auto;
+  }
+  .dashboard-wrap {
+    max-height: none;
+  }
+}
+
 /* --- Hero --- */
 .dash-hero {
   position: relative;
