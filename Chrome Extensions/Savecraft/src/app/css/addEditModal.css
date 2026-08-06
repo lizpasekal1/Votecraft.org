@@ -617,6 +617,78 @@
 }
 
 /* ===== Auth modal ===== */
+/* Overrides the generic .modal-header's row/space-between layout — this one stacks the SaveCraft
+   brand + tagline above the existing contextual title ("Sign in to sync your saves"/"Your
+   account"), rather than sitting side-by-side with it. */
+.auth-modal-header {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.auth-modal-brand {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: -0.02em;
+}
+
+.auth-modal-tagline {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+
+.auth-modal-header #auth-modal-title {
+  font-size: 16px;
+}
+
+/* Google's basic sign-in-button branding: white/light pill, official multi-color "G" mark, subtle
+   border — kept visually distinct from .btn-primary/.btn-cancel below it so it reads as its own
+   "fast path" option rather than a third variant of the same button style. */
+.btn-google-signin {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: #fff;
+  color: #3c4043;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.btn-google-signin:hover {
+  background: #f8f8f8;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+.btn-google-signin svg {
+  flex-shrink: 0;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 2px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
 .auth-error {
   color: #EF4444;
   font-size: 13px;

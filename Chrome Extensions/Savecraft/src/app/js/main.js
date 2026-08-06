@@ -6,7 +6,7 @@ import {
   persistLastfmUsername, disconnectLastfm, persistViewState, persistSteamId, disconnectSteam,
   runInitialSync,
 } from './storage.js';
-import { initAuth, onAuthChange, getCurrentUser, signUp, signIn, signOut } from './auth.js';
+import { initAuth, onAuthChange, getCurrentUser, signUp, signIn, signInWithGoogle, signOut } from './auth.js';
 import { ensureLastfmRecentTracks, isLastfmConfigured, ensureSteamRecentGames, isSteamConfigured } from './api.js';
 import { debounce, escapeHtml } from './utils.js';
 import { renderSidebar, renderGrid } from './render.js';
@@ -164,6 +164,7 @@ function applyAuthUI(user) {
   document.getElementById('auth-modal-title').textContent = user
     ? 'Your account'
     : 'Sign in to sync your saves';
+  document.getElementById('auth-google-actions').style.display = user ? 'none' : '';
   document.getElementById('auth-signed-out-fields').style.display = user ? 'none' : '';
   document.getElementById('auth-password-field').style.display = user ? 'none' : '';
   document.getElementById('auth-signed-out-actions').style.display = user ? 'none' : '';
@@ -327,6 +328,7 @@ async function init() {
   document.getElementById('auth-modal-overlay').addEventListener('click', e => {
     if (e.target === document.getElementById('auth-modal-overlay')) closeAuthModal();
   });
+  document.getElementById('btn-auth-google').addEventListener('click', () => handleAuthSubmit(signInWithGoogle));
   document.getElementById('btn-auth-signup').addEventListener('click', () => handleAuthSubmit(signUp));
   document.getElementById('btn-auth-signin').addEventListener('click', () => handleAuthSubmit(signIn));
   document.getElementById('btn-auth-signout').addEventListener('click', async () => {

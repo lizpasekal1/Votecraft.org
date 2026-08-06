@@ -14,6 +14,7 @@ const _FIREBASE_API_KEY = 'AIzaSyArJ6pkXUDbZf4jcxRita0qcdr-hT46kI8';
 
 const _SIGNUP_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${_FIREBASE_API_KEY}`;
 const _SIGNIN_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${_FIREBASE_API_KEY}`;
+const _SIGNIN_IDP_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${_FIREBASE_API_KEY}`;
 const _REFRESH_URL = `https://securetoken.googleapis.com/v1/token?key=${_FIREBASE_API_KEY}`;
 
 const _ERROR_MESSAGES = {
@@ -31,7 +32,10 @@ function _friendlyError(code) {
   return _ERROR_MESSAGES[code] || 'Something went wrong. Please try again.';
 }
 
-// { uid, email, idToken, refreshToken, idTokenExpiresAt } | null
+// { uid, email, idToken, refreshToken, idTokenExpiresAt, provider?, googleAccessToken? } | null
+// provider/googleAccessToken are only set for a Google-signed-in session (signInWithGoogle,
+// below) — password sessions leave them undefined. googleAccessToken lets signOut() clean up
+// Chrome's own cached token too, not just this module's session.
 let _auth = null;
 let _listeners = [];
 
@@ -124,7 +128,51 @@ export async function signIn(email, password) {
   }
 }
 
+// "Sign in with Google" — trades a Google OAuth token (from Chrome's own built-in account picker,
+// chrome.identity.getAuthToken — no separate login popup, uses whatever Google account the
+// browser is already signed into) for a Firebase session via the Identity Toolkit's
+// accounts:signInWithIdp REST endpoint. Same response shape (localId/email/idToken/refreshToken/
+// expiresIn) as signUp/signInWithPassword, so _fromSignUpOrInResponse is reused as-is.
+export async function signInWithGoogle() {
+  try {
+    const googleAccessToken = await new Promise((resolve, reject) => {
+      chrome.identity.getAuthToken({ interactive: true }, token => {
+        if (chrome.runtime.lastError || !token) reject(chrome.runtime.lastError);
+        else resolve(token);
+      });
+    });
+    const resp = await fetch(_SIGNIN_IDP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        postBody: `access_token=${googleAccessToken}&providerId=google.com`,
+        requestUri: chrome.identity.getRedirectURL(),
+        returnIdpCredential: true,
+        returnSecureToken: true,
+      }),
+    });
+    const data = await resp.json();
+    if (data.error) return { ok: false, error: _friendlyError(data.error.message) };
+    const auth = { ..._fromSignUpOrInResponse(data), provider: 'google', googleAccessToken };
+    await _persistAuth(auth);
+    _notify();
+    await runInitialSync(auth.uid).catch(err => console.warn('[SaveCraft] Initial sync failed:', err));
+    return { ok: true };
+  } catch {
+    // chrome.identity.getAuthToken fails/rejects for lots of mundane reasons (user closed the
+    // account picker, no network, no OAuth client configured yet) — one friendly message covers
+    // all of them, same as the network-error catch in signUp/signIn above.
+    return { ok: false, error: 'Could not sign in with Google. Please try again.' };
+  }
+}
+
 export async function signOut() {
+  // Clears Chrome's own cached Google token too (not just this module's session) — otherwise
+  // signing out and back in with a *different* Google account would silently reuse the old one,
+  // since chrome.identity.getAuthToken caches by scope/account, independent of our own session.
+  if (_auth?.provider === 'google' && _auth.googleAccessToken) {
+    await new Promise(resolve => chrome.identity.removeCachedAuthToken({ token: _auth.googleAccessToken }, resolve));
+  }
   await _clearAuth();
   _notify();
 }
