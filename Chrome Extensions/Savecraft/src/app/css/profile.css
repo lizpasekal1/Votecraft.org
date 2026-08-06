@@ -354,51 +354,6 @@
   color: var(--primary);
 }
 
-/* --- Your Music Taste --- */
-.profile-genre-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.profile-genre-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.profile-genre-label {
-  flex-shrink: 0;
-  width: 110px;
-  font-size: 13px;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.profile-genre-bar-track {
-  flex: 1;
-  height: 8px;
-  border-radius: 4px;
-  background: var(--hover-bg);
-  overflow: hidden;
-}
-
-.profile-genre-bar-fill {
-  height: 100%;
-  background: var(--primary);
-  border-radius: 4px;
-}
-
-.profile-genre-count {
-  flex-shrink: 0;
-  font-size: 12px;
-  color: var(--text-secondary);
-  min-width: 16px;
-  text-align: right;
-}
-
 /* --- Last.fm connect modal --- */
 .lastfm-modal-copy {
   font-size: 13px;

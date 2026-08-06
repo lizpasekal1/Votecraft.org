@@ -3,9 +3,10 @@
 // Profile widget and main.js's Settings-dropdown #btn-profile) currently skip the sign-in gate
 // and always land here — re-add the `getCurrentUser() ? ... : openAuthModal()` branching at each
 // of those once real auth is part of the demo. Account sits full-width at the top; below it, a
-// 2x2 widget grid: Connections (Last.fm, Steam), Interests (curator-branded curated lists), Your
-// Music Taste, and Saved Lists (per-list category/folder scoping — the old "Friends" 4th-slot
-// placeholder this grid was originally sized for never got built; this replaced it).
+// 2x2 widget grid: Connections (Last.fm, Steam), Interests (curator-branded curated lists), My
+// Notes (placeholder — future home for finding items with notes on them), and Saved Lists
+// (per-list category/folder scoping — the old "Friends" 4th-slot placeholder this grid was
+// originally sized for never got built; these replaced it).
 
 import { state, CURATED_GENRES, CATEGORIES, CAT_LABEL } from './state.js';
 import { escapeHtml } from './utils.js';
@@ -403,41 +404,14 @@ function wireSavedListsSection(container) {
   });
 }
 
-// ===== your music taste =====
-
-// Only reflects item.genre already present on saved Music Album items (populated today via
-// "Fetch Albums" and the auto-discography-import flow, both sourced from iTunes) — deliberately
-// not backfilled with a live per-item iTunes lookup here, which would mean an unbounded fan-out
-// of network calls sized to the whole library on every page load.
-function buildMusicTasteSection() {
-  const counts = {};
-  state.items.forEach(item => {
-    if (item.category === 'Music Album' && item.genre) {
-      counts[item.genre] = (counts[item.genre] || 0) + 1;
-    }
-  });
-  const ranked = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8);
-
-  if (ranked.length === 0) {
-    return `
-      <div class="dash-card profile-card--taste">
-        <div class="profile-card-header"><span class="profile-card-title">Your Music Taste</span></div>
-        <p class="profile-card-copy">Add albums via "Fetch Albums" on an artist's page to see your top genres here.</p>
-      </div>`;
-  }
-
-  const max = ranked[0][1];
-  const rowsHtml = ranked.map(([genre, count]) => `
-    <div class="profile-genre-row">
-      <span class="profile-genre-label">${escapeHtml(genre)}</span>
-      <div class="profile-genre-bar-track"><div class="profile-genre-bar-fill" style="width:${Math.round((count / max) * 100)}%"></div></div>
-      <span class="profile-genre-count">${count}</span>
-    </div>`).join('');
-
+// ===== my notes =====
+// Placeholder for now — future home for an easy way to find which saved items have notes on
+// them. Text-only per explicit scope; the actual note-listing logic is a later, separate task.
+function buildMyNotesSection() {
   return `
-    <div class="dash-card profile-card--taste">
-      <div class="profile-card-header"><span class="profile-card-title">Your Music Taste</span></div>
-      <div class="profile-genre-list">${rowsHtml}</div>
+    <div class="dash-card profile-card--notes">
+      <div class="profile-card-header"><span class="profile-card-title">My Notes</span></div>
+      <p class="profile-card-copy">Coming soon — an easy way to see everywhere you've taken notes.</p>
     </div>`;
 }
 
@@ -458,7 +432,7 @@ export function renderProfilePage() {
       <div class="profile-widget-grid">
         ${buildConnectionsSection()}
         ${buildInterestsSection()}
-        ${buildMusicTasteSection()}
+        ${buildMyNotesSection()}
         ${buildSavedListsSection()}
       </div>
     </div>`;
