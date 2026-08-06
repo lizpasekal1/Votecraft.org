@@ -239,10 +239,12 @@
   flex-shrink: 0;
 }
 
+/* Two-column layout: category groups flow top-to-bottom filling the left column first, then the
+   right (standard CSS multi-column behavior), rather than one long single-column stack — matches
+   how many category groups a single Saved List's tree tends to hold. */
 .profile-saved-list-tree {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  column-count: 2;
+  column-gap: 24px;
   padding: 6px 0 14px 26px;
 }
 
@@ -250,6 +252,8 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  margin-bottom: 10px;
+  break-inside: avoid; /* keeps one category's checkboxes from splitting across the column break */
 }
 
 .profile-saved-list-category,
