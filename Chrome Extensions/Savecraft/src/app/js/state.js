@@ -290,9 +290,16 @@ export const state = {
   items: [],
   folders: [],
   authors: [],
-  savedLists: [], // { id, name } — the sidebar's "Saved Lists" row under Dashboard; user-creatable
-                  // via the same "+ New folder"-style prompt real categories use, but not yet
-                  // wired to any actual view (see promptAddSavedList/renderSidebar.js)
+  savedLists: [], // { id, name, allowedFolderIds? } — the sidebar's "Saved Lists" row under
+                  // Dashboard; user-creatable via the same "+ New folder"-style prompt real
+                  // categories use (see promptAddSavedList/renderSidebar.js). allowedFolderIds
+                  // (string[] | undefined) is an optional whitelist of state.folders ids,
+                  // configured via Profile > Saved Lists (profile.js) — undefined/null means
+                  // unrestricted (every folder shows, today's default behavior); an explicit
+                  // array scopes which category folders are relevant to that list and which
+                  // ones renderSidebar() hides while that list is the active view. Never set on
+                  // the built-in default-favorites ("All Saves") list — that one's the catch-all
+                  // and is always unrestricted.
   curatedListsRows: [], // { id, name } — "Curated Lists" row's own children, same shape/mechanics
                         // as savedLists above (its sibling under Dashboard), starts empty
   view: 'dashboard', // 'all', category name, folder id, or 'dashboard'/'profile' — this default

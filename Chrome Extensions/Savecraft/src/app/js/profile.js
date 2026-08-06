@@ -2,14 +2,15 @@
 // A full-page view (state.view === 'profile'). Demo mode: both nav entry points (dashboard.js's
 // Profile widget and main.js's Settings-dropdown #btn-profile) currently skip the sign-in gate
 // and always land here — re-add the `getCurrentUser() ? ... : openAuthModal()` branching at each
-// of those once real auth is part of the demo. Five stacked sections: Account, Connections
-// (Last.fm, Steam), Interests (curator-branded curated lists), Your Music Taste, and a static
-// Friends placeholder.
+// of those once real auth is part of the demo. Account sits full-width at the top; below it, a
+// 2x2 widget grid: Connections (Last.fm, Steam), Interests (curator-branded curated lists), Your
+// Music Taste, and Saved Lists (per-list category/folder scoping — the old "Friends" 4th-slot
+// placeholder this grid was originally sized for never got built; this replaced it).
 
-import { state, CURATED_GENRES } from './state.js';
+import { state, CURATED_GENRES, CATEGORIES, CAT_LABEL } from './state.js';
 import { escapeHtml } from './utils.js';
 import { getCurrentUser } from './auth.js';
-import { persistFollowedCuratedLists, disconnectLastfm, disconnectSteam } from './storage.js';
+import { persistFollowedCuratedLists, persistSavedLists, disconnectLastfm, disconnectSteam } from './storage.js';
 import { ensureLastfmRecentTracks, ensureSteamRecentGames } from './api.js';
 import { CURATED_LIST_DISPLAY_NAMES, DEMO_PROFILE_NAME } from './dashboard.js';
 import { openAuthModal, openLastfmModal, openSteamModal } from './main.js';
@@ -219,6 +220,135 @@ function wireInterestsSection(container) {
   });
 }
 
+// ===== saved lists (folder scoping) =====
+// Lets the user choose which category folders are relevant to each custom Saved List (Health,
+// Motivation, anything user-added) — e.g. Health might not want a "Games" section at all, or
+// might want it narrowed down to just "Mobile Games". Deliberately excludes the built-in
+// "All Saves" (default-favorites) list — that one's the catch-all and is always unrestricted, so
+// there's nothing to configure for it. See renderSidebar.js's activeSavedListFolderScope() for
+// where this actually filters the sidebar's category>folder tree while a scoped list is active.
+
+const _expandedProfileSavedLists = new Set(); // page-local (which list rows are expanded) —
+                                               // doesn't persist across visits, same lifecycle as
+                                               // the detail modal's own accordion state
+
+function _allFolderIds() {
+  return state.folders.map(f => f.id);
+}
+
+function _getSavedListById(id) {
+  return state.savedLists.find(l => l.id === id);
+}
+
+// Adds/removes a single folder id from a list's allowedFolderIds, materializing it from the
+// unrestricted (null) default on first touch. Normalizes back to null once every folder that
+// exists is present again, so "fully unrestricted" stays a clean explicit state rather than a
+// maxed-out array that silently stops covering folders added later elsewhere.
+function _setFolderAllowed(list, folderId, allowed) {
+  const all = _allFolderIds();
+  let current = list.allowedFolderIds ? [...list.allowedFolderIds] : [...all];
+  if (allowed) {
+    if (!current.includes(folderId)) current.push(folderId);
+  } else {
+    current = current.filter(id => id !== folderId);
+  }
+  list.allowedFolderIds = (current.length === all.length) ? null : current;
+}
+
+function _buildSavedListCategoryTree(list) {
+  const scope = list.allowedFolderIds || null; // null = unrestricted, everything checked
+  const categoriesHtml = CATEGORIES.map(cat => {
+    const folders = state.folders.filter(f => f.parentCategory === cat);
+    if (!folders.length) return ''; // nothing to restrict for a category with no folders at all
+    const checkedCount = scope ? folders.filter(f => scope.includes(f.id)).length : folders.length;
+    const catChecked = checkedCount === folders.length;
+    const catIndeterminate = checkedCount > 0 && checkedCount < folders.length;
+    const folderRows = folders.map(f => {
+      const checked = !scope || scope.includes(f.id);
+      return `
+        <label class="profile-saved-list-folder">
+          <input type="checkbox" data-list-id="${escapeHtml(list.id)}" data-folder-id="${escapeHtml(f.id)}" ${checked ? 'checked' : ''}>
+          <span>${escapeHtml(f.name)}</span>
+        </label>`;
+    }).join('');
+    return `
+      <div class="profile-saved-list-category-group">
+        <label class="profile-saved-list-category">
+          <input type="checkbox" class="profile-saved-list-category-checkbox" data-list-id="${escapeHtml(list.id)}" data-category="${escapeHtml(cat)}" ${catChecked ? 'checked' : ''} data-indeterminate="${catIndeterminate}">
+          <span>${escapeHtml(CAT_LABEL[cat] || cat)}</span>
+        </label>
+        <div class="profile-saved-list-folders">${folderRows}</div>
+      </div>`;
+  }).join('');
+  return `<div class="profile-saved-list-tree">${categoriesHtml}</div>`;
+}
+
+function _buildSavedListRow(list) {
+  const expanded = _expandedProfileSavedLists.has(list.id);
+  const arrow = expanded ? '▼' : '▶';
+  return `
+    <div class="profile-saved-list-row" data-list-id="${escapeHtml(list.id)}">
+      <span class="profile-saved-list-arrow">${arrow}</span>
+      <span class="profile-saved-list-name">${escapeHtml(list.name)}</span>
+    </div>
+    ${expanded ? _buildSavedListCategoryTree(list) : ''}`;
+}
+
+function buildSavedListsSection() {
+  const lists = state.savedLists.filter(l => l.id !== 'default-favorites');
+  const rowsHtml = lists.map(_buildSavedListRow).join('');
+  return `
+    <div class="dash-card profile-card--saved-lists">
+      <div class="profile-card-header"><span class="profile-card-title">Saved Lists</span></div>
+      <p class="profile-card-copy">Choose which folders are relevant to each list.</p>
+      <div class="profile-saved-lists-tree">${rowsHtml}</div>
+    </div>`;
+}
+
+// Same targeted-rebuild idiom as _rebuildConnectionsCard() above.
+function _rebuildSavedListsCard() {
+  const card = document.querySelector('.profile-card--saved-lists');
+  if (!card) return;
+  const parent = card.parentElement;
+  card.outerHTML = buildSavedListsSection();
+  wireSavedListsSection(parent);
+}
+
+function wireSavedListsSection(container) {
+  container.querySelectorAll('.profile-saved-list-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const listId = row.dataset.listId;
+      if (_expandedProfileSavedLists.has(listId)) _expandedProfileSavedLists.delete(listId);
+      else _expandedProfileSavedLists.add(listId);
+      _rebuildSavedListsCard();
+    });
+  });
+
+  container.querySelectorAll('.profile-saved-list-folder input[type="checkbox"]').forEach(input => {
+    input.addEventListener('change', () => {
+      const list = _getSavedListById(input.dataset.listId);
+      if (!list) return;
+      _setFolderAllowed(list, input.dataset.folderId, input.checked);
+      persistSavedLists();
+      _rebuildSavedListsCard();
+    });
+  });
+
+  container.querySelectorAll('.profile-saved-list-category-checkbox').forEach(input => {
+    input.addEventListener('change', () => {
+      const list = _getSavedListById(input.dataset.listId);
+      if (!list) return;
+      const folderIds = state.folders.filter(f => f.parentCategory === input.dataset.category).map(f => f.id);
+      folderIds.forEach(id => _setFolderAllowed(list, id, input.checked));
+      persistSavedLists();
+      _rebuildSavedListsCard();
+    });
+    // Checkbox "indeterminate" (some but not all of a category's folders allowed) can only be set
+    // as a DOM property, not an HTML attribute — read back the marker baked into the markup above.
+    if (input.dataset.indeterminate === 'true') input.indeterminate = true;
+  });
+}
+
 // ===== your music taste =====
 
 // Only reflects item.genre already present on saved Music Album items (populated today via
@@ -275,12 +405,14 @@ export function renderProfilePage() {
         ${buildConnectionsSection()}
         ${buildInterestsSection()}
         ${buildMusicTasteSection()}
+        ${buildSavedListsSection()}
       </div>
     </div>`;
 
   wireAccountSection(container);
   wireConnectionsSection(container);
   wireInterestsSection(container);
+  wireSavedListsSection(container);
 
   if (state.lastfmUsername) {
     ensureLastfmRecentTracks(state.lastfmUsername).then(() => {
