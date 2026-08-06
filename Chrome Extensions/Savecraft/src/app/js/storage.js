@@ -571,6 +571,16 @@ export function persistCuratedOverrides() {
   return local;
 }
 
+// Whole-array write (same convention as the savecraft_saved_lists loading/seeding block above) —
+// used both by renderSidebar.js's addSavedList() and by Profile > Saved Lists (profile.js) when
+// toggling a list's allowedFolderIds scope.
+export function persistSavedLists() {
+  const local = new Promise(resolve => chrome.storage.sync.set({ savecraft_saved_lists: state.savedLists }, resolve));
+  const user = getCurrentUser();
+  if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { savedLists: state.savedLists }).catch(_syncError);
+  return local;
+}
+
 export function persistCuratedImgCache() {
   chrome.storage.local.set({ savecraft_curated_img: state.curatedImgCache });
 }

@@ -5,7 +5,7 @@ import {
   PRIMARY_FOLDER_ID,
 } from './state.js';
 import { escapeHtml, folderIconHtml, sortFoldersForDisplay } from './utils.js';
-import { persistViewState, persistItem, persistFolder, removeFolder } from './storage.js';
+import { persistViewState, persistItem, persistFolder, removeFolder, persistSavedLists } from './storage.js';
 import { closeSidebar } from './main.js';
 import { matchesPrimaryOrUnfoldered } from './renderFilters.js';
 import { renderGrid } from './renderGrid.js';
@@ -76,6 +76,19 @@ export function renderSidebar() {
   } else if (state.sidebarMode === 'shared') {
     sidebarTitle = 'Shared Saves';
   }
+  // Returns null (no restriction — the default) or a Set<folderId> of folders allowed to appear
+  // while browsing a Saved List that's been scoped via Profile > Saved Lists (profile.js). "All
+  // Saves" (default-favorites) is the catch-all and is never restricted, regardless of its own
+  // allowedFolderIds field (which the Profile widget never sets — it excludes that list entirely).
+  function activeSavedListFolderScope() {
+    if (!sidebarEffectiveView.startsWith('savedlist:')) return null;
+    const listId = sidebarEffectiveView.slice(10);
+    if (listId === 'default-favorites') return null;
+    const list = state.savedLists.find(l => l.id === listId);
+    return list?.allowedFolderIds ? new Set(list.allowedFolderIds) : null;
+  }
+  const folderScope = activeSavedListFolderScope();
+
   const headerTitleEl = document.getElementById('sidebar-header-title');
   const isCuratedDrilldown = state.sidebarMode === 'curated' && sidebarEffectiveView.startsWith('genre:');
   if (isCuratedDrilldown) {
@@ -311,7 +324,14 @@ export function renderSidebar() {
 
   const categorySections = sidebarCategoryList.map(cat => {
     const primaryId = PRIMARY_FOLDER_ID[cat];
-    const subfolders = sortFoldersForDisplay(state.folders.filter(f => f.parentCategory === cat), cat);
+    let subfolders = sortFoldersForDisplay(state.folders.filter(f => f.parentCategory === cat), cat);
+    if (folderScope) {
+      const hadFolders = subfolders.length > 0;
+      subfolders = subfolders.filter(f => folderScope.has(f.id));
+      // This category had folders, but the active Saved List's scope allows none of them — hide
+      // the whole category (header + rows), not just an empty expanded shell.
+      if (hadFolders && subfolders.length === 0) return '';
+    }
     const isActive = isCuratedGenre
       ? state.view === `genre:${curatedGenreBase}:${cat}`
       : state.view === cat;
@@ -325,7 +345,11 @@ export function renderSidebar() {
       ? (CURATED_ITEMS[curatedGenreBase]?.['Music Album']?.length ?? 0)
       : state.items.filter(i => matchesPrimaryOrUnfoldered(i, 'Music Album')).length;
     const musicAlbumCountLabel = musicAlbumCount > 0 ? `<span class="sidebar-count">${musicAlbumCount}</span>` : '';
-    const permanentSubfolders = cat === 'Musician' ? `
+    // Music Album isn't part of sidebarCategoryList's own loop (it's excluded above, line
+    // 322-323) — it only ever shows via this "Albums" link nested under Musician, routed through
+    // its own primary folder id, so the same folderScope check applies here too.
+    const musicAlbumFolderAllowed = !folderScope || folderScope.has(PRIMARY_FOLDER_ID['Music Album']);
+    const permanentSubfolders = (cat === 'Musician' && musicAlbumFolderAllowed) ? `
       <div class="sidebar-item sidebar-subfolder ${musicAlbumActive ? 'active' : ''}"
            data-view="Music Album" data-permanent="true">
         <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M500-360q42 0 71-29t29-71v-220h120v-80H560v220q-13-10-28-15t-32-5q-42 0-71 29t-29 71q0 42 29 71t71 29ZM320-240q-33 0-56.5-23.5T240-320v-480q0-33 23.5-56.5T320-880h480q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H320Zm0-80h480v-480H320v480ZM160-80q-33 0-56.5-23.5T80-160v-560h80v560h560v80H160Zm160-720v480-480Z"/></svg> Albums
@@ -387,7 +411,10 @@ export function renderSidebar() {
       </div>
       ${expandedContent}
     `;
-  }).join('<div class="sidebar-divider"></div>');
+    // A category hidden entirely by folderScope (the early `return ''` above) must drop out of
+    // the divider-joined list too — filtered out just below — or its neighbors end up with a
+    // stray/doubled divider where the hidden one used to be.
+  }).filter(html => html !== '').join('<div class="sidebar-divider"></div>');
 
   sidebar.innerHTML = mobileHeader + `
     <div class="sidebar-items-scroll">
@@ -526,7 +553,7 @@ export function promptAddFolder(category) {
 export function addSavedList(name) {
   const list = { id: Date.now().toString(), name: name.trim() };
   state.savedLists.push(list);
-  chrome.storage.sync.set({ savecraft_saved_lists: state.savedLists });
+  persistSavedLists();
   return list;
 }
 
