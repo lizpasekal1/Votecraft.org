@@ -24,12 +24,14 @@ function buildAccountSection(user) {
   return `
     <div class="profile-card profile-card--account">
       <div class="profile-card-header">
-        <span class="profile-card-title">Account</span>
         <button class="btn-cancel" id="profile-manage-account">Manage account</button>
       </div>
       <div class="profile-account-identity">
-        <span class="profile-avatar">LP</span>
-        <div class="profile-account-email">${displayName}</div>
+        <span class="profile-avatar">ZP</span>
+        <div class="profile-account-text">
+          <div class="profile-card-title">Account</div>
+          <div class="profile-account-email">${displayName}</div>
+        </div>
       </div>
     </div>`;
 }
