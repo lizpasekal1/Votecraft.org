@@ -306,11 +306,39 @@
   .header-sidebar { display: none; }
   .btn-add-item { display: none; }
   .share-btn-wrap { display: none; }
+  /* "My Saves" duplicates the sidebar's own Home entry — redundant in the options dropdown on
+     mobile, per direct request. */
+  .my-options-item[data-option="home"] { display: none; }
 
   /* Dashboard */
   .dash-widget-grid { grid-template-columns: 1fr; }
-  .dash-hero { height: auto; padding: 0; }
-  .dash-hero-content { padding: 20px; background: linear-gradient(to bottom, var(--surface) 60%, transparent); }
+  /* height:auto here used to collapse the hero almost to nothing: .dash-hero-content
+     (dashboard.css) is height:100% of .dash-hero, and a percentage height resolves to 'auto'
+     when its containing block's own height is indeterminate — so with .dash-hero auto too, the
+     greeting text ended up the ONLY thing sizing the hero (~90px), the collage thumbnails
+     (absolutely positioned, 150px square, uncounted in that sizing) got clipped to almost
+     nothing, and the whole banner read as "missing" (reported live on an iPhone). Real fixed
+     height instead — shorter than desktop's 220px, and shrink the thumbnails to fit a narrower
+     screen without needing 2+ giant 150px squares. Text anchored to the bottom over a solid-
+     fading-to-transparent backdrop (going the opposite direction from the old attempt, which
+     faded transparent AT the text) so the collage stays visible in the band above it. */
+  .dash-hero {
+    height: 172px;
+    padding: 0;
+  }
+  .dash-hero-content {
+    justify-content: flex-end;
+    padding: 16px 20px;
+    background: linear-gradient(to top, var(--surface) 25%, transparent 100%);
+  }
+  .dash-hero-greeting {
+    font-size: 20px;
+  }
+  .dash-hero-thumb {
+    width: 90px;
+    height: 90px;
+    border-radius: 10px;
+  }
 
   /* Profile page */
   .profile-widget-grid { grid-template-columns: 1fr; height: auto; }
@@ -360,6 +388,16 @@
     flex-direction: column;
     overflow: hidden;
     padding: 0;
+  }
+  /* sidebar.css's own comment says the desktop collapse-to-icon-rail feature "isn't affected"
+     here, but that was never actually enforced — .sidebar.sidebar-collapsed (two classes) beats
+     the plain .sidebar rule above (one class) on specificity alone, so anyone who'd previously
+     collapsed the sidebar on desktop got that same 64px rail squeezing the mobile drawer too,
+     overflowing its contents (reported live: the mode-tabs buttons spilling out past a 63px-wide
+     container). Re-assert the real mobile width at equal specificity so it always wins here. */
+  .sidebar.sidebar-collapsed {
+    width: 85vw;
+    max-width: 300px;
   }
   .sidebar.open { transform: translateX(0); }
 

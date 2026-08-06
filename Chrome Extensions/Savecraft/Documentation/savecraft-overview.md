@@ -6,6 +6,22 @@ SaveCraft is a Chrome extension that acts as a personal media library. Users sav
 
 ## Recent Additions (latest session)
 
+This session made SaveCraft dual-mode — the same `src/app/` codebase now also runs as a plain web app at **savecraft.org** (Firebase Hosting, same `votecraft-789` Firestore project), not just as the Chrome extension — then did a full mobile-layout pass against a live iPhone 16 Pro, fixing several real, previously-unnoticed mobile bugs.
+
+- **New: web app at savecraft.org**, dual-mode with the extension via a new `src/app/js/platform.js` runtime shim — see "Architecture" → "Storage" below and `Documentation/web-deploy.md` for the full story (deploy steps, DNS/Namecheap gotchas, the temporary "View Demo" sign-in bypass to remove before real visitors arrive).
+- **Real bug found and fixed: Dashboard didn't scroll on mobile** — `dashboard.css` deliberately disabled scrolling on the assumption the widget grid always fits the viewport exactly; true on desktop, but the same widgets stack taller than any phone screen, so everything past the fold was simply unreachable. Mobile-only override re-enables scrolling below 768px.
+- **Real bug found and fixed: Dashboard's welcome banner collapsed to ~90px on mobile** — a mobile CSS rule set `.dash-hero`'s height to `auto`, which (combined with a child using `height:100%`, which resolves to `auto` against an indeterminate parent) collapsed the whole banner down to just the greeting text's own height, clipping the photo collage almost entirely. Rebuilt with a real fixed mobile height, the greeting anchored over a gradient, and smaller collage thumbnails sized for a phone.
+- **Real bug found and fixed: sign-in modal's buttons wrapped onto two lines each** on narrow widths (three buttons flex-shrunk below their own text's width) — now stack full-width below ~480px.
+- **Real bug found and fixed: curated hero banner's icon badge overlapped its own description text on mobile** — the badge is absolutely positioned and vertically centered against the hero's full height; a fixed desktop text `padding-left` left almost no room for the text on mobile, so it wrapped severely, the hero grew tall to fit it, and the badge (still centered on that now-tall hero) ended up floating mid-paragraph. Stacked instead (badge above text) on mobile.
+- **Real bug found and fixed: curated org-list rows squeezed to half-width on mobile** — an existing mobile override stacked the filter rail above the row list, but never reset the row list's own desktop `max-width:50%` + `margin-left:160px` (sized to sit *beside* the filter rail, not below it), so rows stayed squeezed and shoved right, severely word-wrapping every row.
+- **Real bug found and fixed: mobile sidebar drawer squeezed to 64px** whenever a user had previously collapsed the sidebar on desktop — `.sidebar.sidebar-collapsed`'s 64px desktop width rule out-specifies the mobile drawer's own intended `85vw`/300px rule, despite `sidebar.css`'s own comment saying the mobile drawer "isn't affected" by desktop collapse. Re-asserted the mobile width at equal specificity so it always wins there.
+- **Mobile-only trims per direct request**: removed the redundant "My Saves" entry from the desktop hamburger's options dropdown and the redundant "🏠 Home"/"My Saves" pair from the sidebar drawer's mode-tabs row (Curated + ⚡VC remain) on mobile — both duplicated the sidebar's own Home nav item.
+- All fixes are plain `@media (max-width: 768px)` CSS — no device detection — so a desktop browser window resized down to the same width gets identical behavior automatically.
+
+---
+
+## Recent Additions (previous session)
+
 This session landed real Saved Lists sidebar navigation, rebuilt the Share modal (Message → a Saved Lists picker, a link-sharing on/off toggle), broadened the sponsor pitch page to three offerings, and — the bulk of the session — built a brand-new **Embed Builder** feature end to end: pick a source (a whole category, an individual folder, or a hand-picked "Custom Slider"), customize a slider's look, and copy a shareable "Embed code" link. Two real bugs were found and fixed along the way (a CSS Grid track-blowout, a JS temporal-dead-zone crash).
 
 - **Saved Lists sidebar rows wired to real navigation** — clicking Favorites/Health/Motivation (or any user-added Saved List) under the Dashboard's Saved Lists row now actually filters the grid to that list's items, instead of being an inert placeholder; their icons switched to plain folder icons (no boxed container). Curated Lists' own child rows are still unwired except one: the seeded "Votecraft" row links to the real Votecraft List curated genre. Curated Lists also gained a seeded "Votecraft"/"RCV" starter pair.
@@ -20,7 +36,7 @@ This session landed real Saved Lists sidebar navigation, rebuilt the Share modal
 
 ---
 
-## Recent Additions (previous session)
+## Recent Additions (older session)
 
 This session added image/hyperlink support to the My Notes formatting toolbar, then restructured category/sidebar navigation across four separate requests, then fixed three real bugs found live (a partial-highlight bug, a sidebar multi-tab-open bug, a toolbar spacing issue), and closed with a self-review pass.
 
@@ -35,18 +51,7 @@ This session added image/hyperlink support to the My Notes formatting toolbar, t
 
 ---
 
-## Recent Additions (older session)
-
-This session rebuilt the detail modal's "My Notes" (and Book's Chapters/Music Album's Song List) from a single plain textarea into a full numbered-notes system with a formatting toolbar, a distraction-free focus mode, and per-row rename — then iterated through many rounds of live visual polish and fixed several real bugs the new interaction surfaced along the way.
-
-- **Numbered notes replace the plain textarea** — every category now gets a "+ Add Note" list (Note 1, Note 2, …, plus a "Summary" row 0 that falls back to old notes/bio text until edited) instead of one shrink-to-fit textarea; Book's existing Chapter list and Music Album's Song List use the same underlying row/favorite/note-input markup (`renderNumberedNoteList()`, `detailModalNotes.js`). Note bodies are `contenteditable` divs (not `<textarea>`), sanitized through a new allow-list HTML sanitizer (`noteSanitizer.js`, no external library — parses via an inert `<template>` fragment) so pasted content can't inject scripts/styles.
-- **Formatting toolbar** (Bold/Highlight/Bullet + an Expand/focus-mode toggle — gained a 4th, Image, in the latest session above) replaces the modal's sticky title the moment "My Notes" or "Song List" is open — tied to the *section* being open (`_updateNoteEditingUi()` reading `#detail-notes-list`/`#detail-tracklist`'s own `open` class directly, via a `MutationObserver` so it also reacts when a *different* accordion force-closes one of them), not to which individual row has focus. An earlier row-focus-driven design was scrapped mid-session after proving fragile to a real async-storage race (`.focus()` gated behind awaited `ensureLiveItem`/`persistItem` calls delayed it past a deferred blur-cleanup tick, flickering the toolbar shut when switching rows) — the section-driven redesign sidesteps the race entirely.
-- **Focus mode** (the toolbar's Expand button) hides the image, edit/bookmark/favorite icons, the artist header, *and* the Albums/Web Links/Add to Queue accordion rows, so the open note is the only thing left on screen — the divider line below My Notes/Song List also hides in this mode, since there's nothing left below it to divide from. Two of the three focus-mode accordions carry their own inline `style.display` (set per-category elsewhere), so hiding them from CSS needed `!important` to reliably win.
-- **Material Design 3 motion** applied throughout the modal's transitions — new `--m3-standard`/`--m3-standard-accelerate`/`--m3-emphasized-decelerate` etc. easing tokens (`base.css`); the title↔toolbar swap slides up in both directions; accordion sections slide open/closed (no opacity fade — an early attempt paired opacity with a deliberately-oversized `max-height` cap, which reads as "fades in, *then* finishes growing" since a max-height transition always animates its full numeric range regardless of real content size — fixed by JS-measuring each section's exact `scrollHeight` instead, `_fitAccordionSection()`).
-- **Rename a note's title** — a small pencil next to each row's label (only shown once that row is expanded, hidden again while actively renaming) turns the title into an inline-editable field: clears to empty with a "Rename…" placeholder (same `:empty::before` ghost-text convention the note body itself uses) and a real blinking caret, not a browser text-selection block. Custom titles persist per row number in new `noteTitles`/`chapterTitles` item fields (mirrors `noteTexts`/`chapterNotes`). Blurring *without ever typing* just restores whatever was showing before, without touching storage — otherwise merely clicking the pencil and clicking away would silently wipe an existing custom title back to the default. The row's own "open this note" icon changed from a pencil to a plus-in-a-circle so it's no longer visually identical to the smaller rename pencil now sitting next to it in the same row (Song List's per-track rows keep the plain pencil — those are real iTunes track titles, not renameable).
-- **Real bugs found and fixed while building this**: (1) a `closeAccordionsExcept()`-driven cross-accordion bug where a force-closed section's header correctly showed collapsed but its content stayed fully visible underneath — `closeAccordionsExcept()` only ever removed CSS classes, with no idea `_fitAccordionSection()` had left an inline `style.maxHeight` override behind, and inline styles always beat a base class's `max-height: 0`; (2) cancelling a title rename via Escape was bubbling up to `main.js`'s global document-level Escape handler and closing the *entire modal*, since `preventDefault()` alone doesn't stop propagation — needed `stopPropagation()` too; (3) an early version of the rename field placed the caret at the end of the *existing* title text instead of clearing it first, so typing silently appended onto the old label (`"Note"` + `"My Custom"` saved as `"NoteMy Custom"`) rather than replacing it.
-
-*(The session before that — replaced the Music Album gallery's single low-res iTunes cover with a real multi-image gallery sourced from MusicBrainz + the Cover Art Archive, plus several rounds of detail-modal visual polish (hover-dim, a repositioned sponsored-tag tooltip, Year removed from the modal's title area). Before that — 214 more IMDb Top 250 movies seeded into curated Top 100, "Curated SaveCraft" reshaped into a two-tier browsing experience, and the previously-dead "Shared Saves" dropdown item wired up for the first time. See git history around that era if needed.)*
+*(Earlier sessions: rebuilt the detail modal's "My Notes"/Chapters/Song List from a plain textarea into a numbered-notes system with a formatting toolbar, focus mode, and per-row rename. Before that — replaced the Music Album gallery's single low-res iTunes cover with a real multi-image gallery sourced from MusicBrainz + the Cover Art Archive, plus several rounds of detail-modal visual polish. Before that — 214 more IMDb Top 250 movies seeded into curated Top 100, "Curated SaveCraft" reshaped into a two-tier browsing experience, and the previously-dead "Shared Saves" dropdown item wired up for the first time. See git history around those eras if needed.)*
 
 ---
 
@@ -64,13 +69,17 @@ The extension runs as an unpacked developer extension — it is not yet publishe
 
 To open the full library from the extension: click the toolbar icon → click **Open Library →** in the popup.
 
+**Running the web app instead:** same codebase, no separate setup — see `Documentation/web-deploy.md` for deploying/redeploying to Firebase Hosting (`votecraft-789.web.app` / `savecraft.org`). Locally, any static file server pointed at this folder works (e.g. `npx serve .`, then visit `/src/app/index.html`) — `platform.js` auto-detects it isn't running as the extension and switches to web mode (localStorage + a mandatory sign-in gate, since Firestore is the only real data store there).
+
 ---
 
 ## File Structure
 
 ```
 Savecraft/
-├── manifest.json                — Extension config (Manifest V3)
+├── manifest.json                — Extension config (Manifest V3) — not part of the web deploy
+├── firebase.json                — Web app Hosting config (public dir, ignore list, no-cache headers, / rewrite)
+├── .firebaserc                  — Points the Firebase CLI at project votecraft-789 by default
 ├── images/
 │   ├── logos/                   — Source-attribution logos (Rolling Stone, Steam, NYT) used in Curated SaveCraft, plus the real VoteCraft wordmark/icon (votecraft-logo_white.png, votecraft_icon_white.png) used on the Top 100 landing page — all declared in manifest.json's web_accessible_resources
 │   └── icons/                   — Source SVGs for hand-pasted category icons (Movie, Visual Art), kept for reference; the actual icons are inlined in state.js's CAT_EMOJI
@@ -96,7 +105,8 @@ Savecraft/
 └── Documentation/
     ├── savecraft-overview.md    — This file
     ├── session-context.md       — Technical reference for AI assistants
-    └── savecraft_planning.md    — Original Phase 1 planning doc (historical)
+    ├── savecraft_planning.md    — Original Phase 1 planning doc (historical)
+    └── web-deploy.md            — savecraft.org / Firebase Hosting: deploy steps, DNS setup, caching, the temporary demo-bypass button
 ```
 
 ### `src/app/js/` modules
@@ -105,6 +115,7 @@ The library used to be one ~3,700-line `app.js`. It's now split into 30 ES modul
 
 | Module | Responsibility |
 |--------|-----------------|
+| `platform.js` | Extension-vs-web runtime shim — `isExtension`, `storageSync`/`storageLocal` (→ `localStorage` on web), `openInNewTab` (→ `window.open`), `resourceUrl` (→ site-root-relative paths). Every other module routes through this instead of calling `chrome.*` directly |
 | `state.js` | Shared `state` object + static constants (`CATEGORIES`, `CAT_LABEL`, `CAT_EMOJI`, `CATEGORY_PLATFORMS`, `CREATOR_CARD_CATEGORY`, etc.) |
 | `storage.js` | All `persist*`/`remove*` functions, `loadAll()` (incl. one-time backfill migrations), Firestore curated-data loading (`_loadCuratedFromFirestore`, `initCuratedItems`), Firestore dual-write helpers for the account-sync feature |
 | `utils.js` | Pure helpers: `escapeHtml`, `catClass`, `debounce`, `formatTrackDuration`, `patchCardImage`, `getDomain`, `getListIds`, `sortFoldersForDisplay` (Movie's custom Directors-last folder order), `getYoutubeVideoId`/`getVimeoVideoId`/`getVideoEmbedUrl` (Movie's Videos-folder lightbox), etc. |
@@ -151,14 +162,17 @@ The original monolithic `app.js`/`app.css` have been deleted (2026-07-29) — se
 
 ## Architecture
 
-**Runtime:** Chrome Extension, Manifest V3. No bundler — plain HTML/CSS/JS.
+**Runtime:** Chrome Extension, Manifest V3 — **and** a plain web app at savecraft.org (Firebase Hosting), same `src/app/` codebase for both. `src/app/js/platform.js` detects which environment it's running in (`isExtension = typeof chrome !== 'undefined' && !!chrome.runtime?.id`) and every other file routes `chrome.storage`/`chrome.tabs.create`/`chrome.runtime.getURL` calls through it instead of calling `chrome.*` directly — see `Documentation/web-deploy.md` for the full deploy/hosting story. No bundler — plain HTML/CSS/JS either way.
 
 **Storage:**
-- `chrome.storage.sync` — user's personal saves, folders, authors, settings, Kanban config (syncs across the user's Chrome devices automatically, up to ~100KB total)
-- `chrome.storage.local` — curated item cache (larger, device-only; 24-hour TTL)
-- Firestore (read-only at runtime) — curated item data fetched at startup via REST from the `curated_items` collection in project `votecraft-789`
+- `chrome.storage.sync` (extension) / `localStorage` (web, via `platform.js`) — user's personal saves, folders, authors, settings, Kanban config. In the extension this syncs across the user's Chrome devices automatically (up to ~100KB total); on web there's no such sync, so signing in is required there and Firestore is the real source of truth (`main.js`'s `requireWebSignIn()`).
+- `chrome.storage.local` (extension) / `localStorage` (web) — curated item cache (larger, device-only; 24-hour TTL)
+- Firestore (read-only at runtime, no auth needed) — curated item data fetched at startup via REST from the `curated_items` collection in project `votecraft-789`
+- Firestore (read/write, auth-gated) — when signed in, personal saves/folders/authors/settings dual-write to `savecraft_users/<uid>/...` alongside the local store above (`storage.js`) — this is what the web app relies on exclusively, and what lets the extension and web app share the same library across devices
 
-**No build step.** Editing a `.js` or `.css` file and refreshing the extension in `chrome://extensions` is all that's needed to see changes.
+**Extension-only, no web equivalent:** the right-click "Save to SaveCraft" capture (`src/background/background.js` + `src/content/content.js`) — web visitors add items through the Add modal only.
+
+**No build step.** Editing a `.js` or `.css` file and refreshing the extension in `chrome://extensions` (or just reloading the page, for web) is all that's needed to see changes.
 
 ---
 

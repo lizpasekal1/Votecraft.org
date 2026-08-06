@@ -705,6 +705,25 @@
 .auth-demo-link:hover {
   color: var(--primary);
 }
+
+/* Below ~480px (iPhone-width modals — .modal's max-width:90vw kicks in under 533px viewport),
+   View Demo + Create account + Sign in no longer fit on one row — they were flex-shrinking
+   narrower than their own text, wrapping each button's label onto two lines. Stack them
+   full-width instead, both more legible and more thumb-friendly than cramped side-by-side taps. */
+@media (max-width: 480px) {
+  #auth-signed-out-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .auth-actions-right {
+    flex-direction: column;
+  }
+  .auth-demo-link {
+    text-align: center;
+    padding: 9px 4px;
+  }
+}
 .auth-signed-in-info {
   font-size: 14px;
   color: var(--text-secondary);

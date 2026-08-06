@@ -117,8 +117,6 @@ export function renderSidebar() {
       </button>
     </div>
     <div class="sidebar-mode-tabs">
-      <button class="sidebar-mode-tab ${state.sidebarMode === 'home' ? 'active' : ''}" data-sidebar-opt="home">🏠 Home</button>
-      <button class="sidebar-mode-tab ${state.sidebarMode === 'categories' ? 'active' : ''}" data-sidebar-opt="my-lists">My Saves</button>
       <button class="sidebar-mode-tab ${state.sidebarMode === 'curated' ? 'active' : ''}" data-sidebar-opt="curated">Curated</button>
       <button class="sidebar-mode-tab sidebar-mode-tab--sponsored" data-sidebar-opt="sponsored">⚡ VC</button>
     </div>
