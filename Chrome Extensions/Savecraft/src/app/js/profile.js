@@ -231,6 +231,11 @@ function wireInterestsSection(container) {
 const _expandedProfileSavedLists = new Set(); // page-local (which list rows are expanded) —
                                                // doesn't persist across visits, same lifecycle as
                                                // the detail modal's own accordion state
+const _expandedProfileSavedListCategories = new Set(); // page-local, keyed "<listId>::<category>"
+                                               // — each category group is its own nested
+                                               // accordion, collapsed by default, so a list with
+                                               // many user-added folders doesn't dump everything
+                                               // on screen at once
 
 function _allFolderIds() {
   return state.folders.map(f => f.id);
@@ -263,6 +268,13 @@ function _buildSavedListCategoryTree(list) {
     const checkedCount = scope ? folders.filter(f => scope.includes(f.id)).length : folders.length;
     const catChecked = checkedCount === folders.length;
     const catIndeterminate = checkedCount > 0 && checkedCount < folders.length;
+    // Each category is its own nested accordion (arrow is a separate click target from the
+    // checkbox/label, so expanding/collapsing a category never fights with toggling its
+    // selection) — collapsed by default so a list with lots of user-added folders doesn't dump
+    // every checkbox on screen at once.
+    const catKey = `${list.id}::${cat}`;
+    const catExpanded = _expandedProfileSavedListCategories.has(catKey);
+    const catArrow = catExpanded ? '▼' : '▶';
     const folderRows = folders.map(f => {
       const checked = !scope || scope.includes(f.id);
       return `
@@ -273,11 +285,14 @@ function _buildSavedListCategoryTree(list) {
     }).join('');
     return `
       <div class="profile-saved-list-category-group">
-        <label class="profile-saved-list-category">
-          <input type="checkbox" class="profile-saved-list-category-checkbox" data-list-id="${escapeHtml(list.id)}" data-category="${escapeHtml(cat)}" ${catChecked ? 'checked' : ''} data-indeterminate="${catIndeterminate}">
-          <span>${escapeHtml(CAT_LABEL[cat] || cat)}</span>
-        </label>
-        <div class="profile-saved-list-folders">${folderRows}</div>
+        <div class="profile-saved-list-category-row">
+          <span class="profile-saved-list-category-arrow" data-list-id="${escapeHtml(list.id)}" data-category="${escapeHtml(cat)}">${catArrow}</span>
+          <label class="profile-saved-list-category">
+            <input type="checkbox" class="profile-saved-list-category-checkbox" data-list-id="${escapeHtml(list.id)}" data-category="${escapeHtml(cat)}" ${catChecked ? 'checked' : ''} data-indeterminate="${catIndeterminate}">
+            <span>${escapeHtml(CAT_LABEL[cat] || cat)}</span>
+          </label>
+        </div>
+        ${catExpanded ? `<div class="profile-saved-list-folders">${folderRows}</div>` : ''}
       </div>`;
   }).join('');
   return `<div class="profile-saved-list-tree">${categoriesHtml}</div>`;
@@ -320,6 +335,15 @@ function wireSavedListsSection(container) {
       const listId = row.dataset.listId;
       if (_expandedProfileSavedLists.has(listId)) _expandedProfileSavedLists.delete(listId);
       else _expandedProfileSavedLists.add(listId);
+      _rebuildSavedListsCard();
+    });
+  });
+
+  container.querySelectorAll('.profile-saved-list-category-arrow').forEach(arrow => {
+    arrow.addEventListener('click', () => {
+      const key = `${arrow.dataset.listId}::${arrow.dataset.category}`;
+      if (_expandedProfileSavedListCategories.has(key)) _expandedProfileSavedListCategories.delete(key);
+      else _expandedProfileSavedListCategories.add(key);
       _rebuildSavedListsCard();
     });
   });
