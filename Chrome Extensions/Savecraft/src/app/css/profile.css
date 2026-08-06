@@ -256,6 +256,23 @@
   break-inside: avoid; /* keeps one category's checkboxes from splitting across the column break */
 }
 
+.profile-saved-list-category-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Separate click target from the checkbox/label next to it — expanding/collapsing a category's
+   folder list never fights with toggling its selection checkbox. */
+.profile-saved-list-category-arrow {
+  font-size: 9px;
+  color: var(--text-secondary);
+  width: 10px;
+  flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
 .profile-saved-list-category,
 .profile-saved-list-folder {
   display: flex;
