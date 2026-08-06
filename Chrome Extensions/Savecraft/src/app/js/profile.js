@@ -1,9 +1,9 @@
 // ===== PROFILE PAGE =====
-// A full-page view (state.view === 'profile'). Demo mode: both nav entry points (dashboard.js's
-// Profile widget and main.js's Settings-dropdown #btn-profile) currently skip the sign-in gate
-// and always land here — re-add the `getCurrentUser() ? ... : openAuthModal()` branching at each
-// of those once real auth is part of the demo. Account sits full-width at the top; below it, a
-// 2x2 widget grid: Connections (Last.fm, Steam), Interests (curator-branded curated lists), My
+// A full-page view (state.view === 'profile'). Both nav entry points (dashboard.js's Profile
+// widget and main.js's Settings-dropdown #btn-profile) gate on getCurrentUser() before landing
+// here — a signed-out click opens the auth modal instead. Account sits full-width at the top;
+// below it, a 2x2 widget grid: Connections (Last.fm, Steam), Interests (curator-branded curated
+// lists), My
 // Notes (placeholder — future home for finding items with notes on them), and Saved Lists
 // (per-list category/folder scoping — the old "Friends" 4th-slot placeholder this grid was
 // originally sized for never got built; these replaced it).
@@ -19,8 +19,10 @@ import { openAuthModal, openLastfmModal, openSteamModal } from './main.js';
 // ===== account =====
 
 function buildAccountSection(user) {
-  // Demo mode: no real user is signed in yet, so show the same demo persona used on the
-  // Dashboard's greeting rather than a blank email.
+  // The Profile page is browsable without signing in (a deliberate choice — see the "Intentionally
+  // NOT gated" comments on the two nav entry points, main.js/dashboard.js) — this is where that
+  // shows up: no real user yet, so show the same demo persona used on the Dashboard's greeting
+  // rather than a blank email. "Manage account" below is the actual sign-in entry point.
   const displayName = user ? escapeHtml(user.email) : `${DEMO_PROFILE_NAME} (demo)`;
   return `
     <div class="profile-card profile-card--account">
