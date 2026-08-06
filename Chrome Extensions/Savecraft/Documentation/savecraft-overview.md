@@ -493,7 +493,7 @@ All of the above are declared in `manifest.json` under `host_permissions`. YouTu
 | Phase | Status | Description |
 |-------|--------|-------------|
 | Phase 1 | ✅ Active | Core extension — personal saves, curated recommendations, Kanban, author pages, iTunes integration |
-| Phase 1.5 | ✅ Active (demo mode) | Accounts + Firestore sync + Profile page — see "Recent Additions" above |
+| Phase 1.5 | ✅ Active | Accounts + Firestore sync + Profile page — see "Recent Additions" above. The Profile page itself is intentionally still browsable without signing in (a demo persona shows until "Manage account" is used); signing in is what unlocks cross-device sync, not a requirement to use the extension at all |
 | Phase 2 | Planned | Spotify integration for Musician/Music Album richer artist data (photos, full discography) |
 | Phase 3 | Unblocked, not built | Sharing with contacts — Firebase Auth + Firestore write access now exist (Phase 1.5); the sharing feature itself still isn't built |
 | Phase 3.5 | Scoped, not built | Embed Builder backend — a public, sign-in-gated `savecraft_embeds` Firestore collection (mirroring the existing `curated_items` public-read/admin-write-only rule pattern), a "Your Embeds" section on the Profile page, and the actual hosted `savecraft/embed.html` rendering page + generated `<iframe>` snippet. The client-side Builder UI itself (source picking, style panel, live preview, "Embed code" link) is already built — see "Embed Builder" above |

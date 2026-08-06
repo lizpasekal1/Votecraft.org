@@ -12,7 +12,6 @@ import { openDetailModal } from './detailModal.js';
 import { KANBAN_DEMO, KANBAN_COLUMNS } from './kanban.js';
 import { renderSidebar, renderGrid } from './render.js';
 import { getCurrentUser, onAuthChange } from './auth.js';
-import { openAuthModal } from './main.js';
 
 let _favSlides = [];
 let _favIsDemo = false;
@@ -392,8 +391,9 @@ function buildProfileWidget() {
 
 function wireProfileWidget(container) {
   container.querySelector('#dash-profile-card')?.addEventListener('click', () => {
-    // Demo mode: always go straight to the Profile page, skipping the sign-in gate — re-enable
-    // the `getCurrentUser() ? ... : openAuthModal()` branch once real auth is part of the demo.
+    // Intentionally NOT gated on getCurrentUser() — see the matching comment on main.js's
+    // btn-profile handler. This card's own subtitle already reads "Sign in to sync your saves"
+    // vs. "View your profile →" (buildProfileWidget above) to set expectations either way.
     state.view = 'profile';
     persistViewState();
     renderSidebar();

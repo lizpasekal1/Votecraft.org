@@ -4,6 +4,7 @@ import { state } from './state.js';
 import {
   loadAll, loadLocalCache, initCuratedItems, persistSort, persistTheme, persistSidebarCollapsed,
   persistLastfmUsername, disconnectLastfm, persistViewState, persistSteamId, disconnectSteam,
+  runInitialSync,
 } from './storage.js';
 import { initAuth, onAuthChange, getCurrentUser, signUp, signIn, signOut } from './auth.js';
 import { ensureLastfmRecentTracks, isLastfmConfigured, ensureSteamRecentGames, isSteamConfigured } from './api.js';
@@ -180,6 +181,11 @@ async function handleAuthSubmit(fn) {
   const result = await fn(email, password);
   if (result.ok) {
     closeAuthModal();
+    // signUp/signIn already await their own cloud sync internally (see auth.js) before resolving
+    // — re-render now so the screen reflects whatever that sync just pulled down/merged in,
+    // rather than only updating on the next unrelated navigation.
+    renderSidebar();
+    renderGrid();
   } else {
     showAuthError(result.error);
   }
@@ -249,6 +255,11 @@ export function closeSidebar() {
 async function init() {
   await initAuth();
   await loadAll();
+  // Pulls fresh cloud data down on every launch, not just right after sign-up/sign-in — otherwise
+  // a second, already-signed-in device would only ever see its own last-synced-at-sign-in local
+  // snapshot. Awaited (small network cost at startup) so the very first render already reflects
+  // it, rather than the screen changing out from under the user a moment after paint.
+  if (getCurrentUser()) await runInitialSync(getCurrentUser().uid).catch(() => {});
   await initCuratedItems();
 
   await loadLocalCache('savecraft_curated_img', 'curatedImgCache');
@@ -295,8 +306,10 @@ async function init() {
   });
   document.getElementById('btn-profile').addEventListener('click', () => {
     settingsDropdown.setAttribute('hidden', '');
-    // Demo mode: always go straight to the Profile page, skipping the sign-in gate — re-enable
-    // the `getCurrentUser() ? ... : openAuthModal()` branch once real auth is part of the demo.
+    // Intentionally NOT gated on getCurrentUser() — the Profile page itself is demo-able
+    // signed-out (buildAccountSection in profile.js falls back to a demo persona); "Manage
+    // account" inside it is the actual sign-in entry point. Signing in is what additionally
+    // unlocks cross-device sync, it's never required just to look around.
     state.view = 'profile';
     persistViewState();
     renderSidebar();

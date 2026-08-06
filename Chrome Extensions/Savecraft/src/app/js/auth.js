@@ -92,10 +92,13 @@ export async function signUp(email, password) {
     const auth = _fromSignUpOrInResponse(data);
     await _persistAuth(auth);
     _notify();
-    // Fire-and-forget: a brand-new account has nothing to merge, but this keeps the "sign in ==
-    // sync" flow identical for both signUp and signIn, and is a no-op if there's truly nothing
-    // local to upload.
-    runInitialSync(auth.uid).catch(err => console.warn('[SaveCraft] Initial sync failed:', err));
+    // Awaited (not fire-and-forget) so callers that await signUp() know the merge has actually
+    // finished before they do anything render-dependent (see handleAuthSubmit in main.js) — a
+    // brand-new account has nothing to merge, but this keeps the "sign in == sync" flow identical
+    // for both signUp and signIn, and is a no-op if there's truly nothing local to upload. Errors
+    // are swallowed here (not surfaced as a failed sign-in) since the account itself was created
+    // successfully regardless of whether the sync round-trip succeeded.
+    await runInitialSync(auth.uid).catch(err => console.warn('[SaveCraft] Initial sync failed:', err));
     return { ok: true };
   } catch {
     return { ok: false, error: 'Could not reach the server. Check your connection and try again.' };
@@ -114,7 +117,7 @@ export async function signIn(email, password) {
     const auth = _fromSignUpOrInResponse(data);
     await _persistAuth(auth);
     _notify();
-    runInitialSync(auth.uid).catch(err => console.warn('[SaveCraft] Initial sync failed:', err));
+    await runInitialSync(auth.uid).catch(err => console.warn('[SaveCraft] Initial sync failed:', err));
     return { ok: true };
   } catch {
     return { ok: false, error: 'Could not reach the server. Check your connection and try again.' };
