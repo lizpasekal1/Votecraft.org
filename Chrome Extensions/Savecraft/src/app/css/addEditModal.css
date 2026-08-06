@@ -646,47 +646,34 @@
   font-size: 16px;
 }
 
-/* Google's basic sign-in-button branding: white/light pill, official multi-color "G" mark, subtle
-   border — kept visually distinct from .btn-primary/.btn-cancel below it so it reads as its own
-   "fast path" option rather than a third variant of the same button style. */
-.btn-google-signin {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 10px 16px;
-  background: #fff;
-  color: #3c4043;
-  border: 1px solid var(--border);
+/* Informational reminder (never an error/blocker) — shown in the auth modal's signed-in view when
+   emailVerified is false. Shares .auth-resend-link with the identical reminder on the Profile
+   page's Account card (profile.js/profile.css), since it's the same button in two places. */
+.auth-verify-banner {
+  margin-top: 10px;
+  padding: 10px 12px;
   border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.15s, box-shadow 0.15s;
-}
-.btn-google-signin:hover {
-  background: #f8f8f8;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
-}
-.btn-google-signin svg {
-  flex-shrink: 0;
+  background: var(--hover-bg);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
-.auth-divider {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 14px 0 2px;
-  color: var(--text-secondary);
-  font-size: 12px;
+.auth-resend-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 4px;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
 }
-.auth-divider::before,
-.auth-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
+.auth-resend-link:disabled {
+  color: var(--text-secondary);
+  cursor: default;
+  text-decoration: none;
 }
 
 .auth-error {
