@@ -5,6 +5,7 @@ import { getFilteredSortedItems } from './render.js';
 import { persistShareCount } from './storage.js';
 import { escapeHtml, folderIconHtml } from './utils.js';
 import { openEmbedBuilder } from './embedBuilder.js';
+import { storageSync, openInNewTab } from './platform.js';
 
 // Which Saved List (if any) the "Share a Saved List" scroll list has selected — radio-style,
 // single selection, tap-to-deselect, same pattern as the detail modal's own "Save to:" menu
@@ -142,7 +143,7 @@ export function initShare() {
     closeDropdown();
   });
 
-  chrome.storage.sync.get({ savecraft_share_count: 0 }, data => {
+  storageSync.get({ savecraft_share_count: 0 }, data => {
     updateShareCount(data.savecraft_share_count);
   });
 
@@ -242,9 +243,9 @@ export function sendViaEmail() {
   const body = encodeURIComponent(bodyText);
   const mailto = `mailto:${encodeURIComponent(email)}?subject=${subject}&body=${body}`;
 
-  chrome.tabs.create({ url: mailto });
+  openInNewTab(mailto);
 
-  chrome.storage.sync.get({ savecraft_share_count: 0 }, data => {
+  storageSync.get({ savecraft_share_count: 0 }, data => {
     const newCount = data.savecraft_share_count + 1;
     persistShareCount(newCount);
     updateShareCount(newCount);

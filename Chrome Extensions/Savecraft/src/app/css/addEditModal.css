@@ -681,6 +681,30 @@
   font-size: 13px;
   margin-top: -6px;
 }
+
+/* Pushes the (normally hidden) demo-bypass button to the left edge, keeping Create
+   account/Sign in grouped together on the right — see index.html's note on #btn-auth-demo. */
+#auth-signed-out-actions {
+  justify-content: space-between;
+  align-items: center;
+}
+.auth-actions-right {
+  display: flex;
+  gap: 10px;
+}
+.auth-demo-link {
+  background: none;
+  border: none;
+  padding: 9px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.auth-demo-link:hover {
+  color: var(--primary);
+}
 .auth-signed-in-info {
   font-size: 14px;
   color: var(--text-secondary);

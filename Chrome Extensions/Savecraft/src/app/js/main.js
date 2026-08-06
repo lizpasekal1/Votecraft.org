@@ -6,8 +6,9 @@ import {
   persistLastfmUsername, disconnectLastfm, persistViewState, persistSteamId, disconnectSteam,
   runInitialSync,
 } from './storage.js';
-import { initAuth, onAuthChange, getCurrentUser, signUp, signIn, signInWithGoogle, signOut } from './auth.js';
+import { initAuth, onAuthChange, getCurrentUser, signUp, signIn, signOut, resendVerificationEmail } from './auth.js';
 import { ensureLastfmRecentTracks, isLastfmConfigured, ensureSteamRecentGames, isSteamConfigured } from './api.js';
+import { isExtension, storageSync, storageOnChanged, resourceUrl } from './platform.js';
 import { debounce, escapeHtml } from './utils.js';
 import { renderSidebar, renderGrid } from './render.js';
 import { initShare } from './share.js';
@@ -72,7 +73,7 @@ export function handleSort(sort) {
 
 // ===== LIVE STORAGE UPDATES =====
 // Keeps the library in sync when items are added via right-click or popup
-chrome.storage.onChanged.addListener((changes, area) => {
+storageOnChanged.addListener((changes, area) => {
   if (area !== 'sync') return;
   let changed = false;
 
@@ -145,10 +146,42 @@ export function openAuthModal() {
   document.getElementById('auth-error').style.display = 'none';
   document.getElementById('auth-modal-overlay').classList.add('open');
 }
+// True while a signed-out web visitor is being forced through sign-in (see requireWebSignIn
+// below) — makes the modal temporarily non-dismissable, since web has no local-only fallback
+// (Firestore is the sole data store there, see platform.js). Never set on the extension.
+let _authGateActive = false;
 function closeAuthModal() {
+  if (_authGateActive) return;
   document.getElementById('auth-modal-overlay').classList.remove('open');
   document.getElementById('auth-email').value = '';
   document.getElementById('auth-password').value = '';
+}
+
+// Blocks app init until a web visitor is signed in. No-ops instantly on the extension (sign-in
+// stays optional there) or if already signed in. Hides the close button and makes overlay-click/
+// Escape no-ops for the duration via _authGateActive above — the modal's submit buttons
+// (signup/signin) still work normally since their listeners are wired before this is called.
+//
+// TEMPORARY, demo-only: also reveals #btn-auth-demo, which resolves the same wait without a real
+// sign-in — the rest of the app already tolerates a signed-out state gracefully (that's exactly
+// how the extension behaves before its own optional sign-in), so this just reuses that path
+// under local-only storage instead of Firestore. Remove the demo-button reveal/listener below
+// (and the button itself in index.html) once savecraft.org is ready for real visitors.
+async function requireWebSignIn() {
+  if (isExtension || getCurrentUser()) return;
+  _authGateActive = true;
+  document.getElementById('btn-auth-close').style.display = 'none';
+  const demoBtn = document.getElementById('btn-auth-demo');
+  demoBtn.style.display = '';
+  openAuthModal();
+  await new Promise(resolve => {
+    onAuthChange(user => { if (user) resolve(); });
+    demoBtn.addEventListener('click', () => resolve(), { once: true });
+  });
+  _authGateActive = false;
+  document.getElementById('btn-auth-close').style.display = '';
+  demoBtn.style.display = 'none';
+  closeAuthModal();
 }
 
 function showAuthError(message) {
@@ -164,14 +197,29 @@ function applyAuthUI(user) {
   document.getElementById('auth-modal-title').textContent = user
     ? 'Your account'
     : 'Sign in to sync your saves';
-  document.getElementById('auth-google-actions').style.display = user ? 'none' : '';
   document.getElementById('auth-signed-out-fields').style.display = user ? 'none' : '';
   document.getElementById('auth-password-field').style.display = user ? 'none' : '';
   document.getElementById('auth-signed-out-actions').style.display = user ? 'none' : '';
   document.getElementById('auth-signed-in-info').style.display = user ? '' : 'none';
   document.getElementById('auth-signed-in-actions').style.display = user ? '' : 'none';
   if (user) {
-    document.getElementById('auth-signed-in-info').innerHTML = `Signed in as <strong>${user.email}</strong>`;
+    const infoEl = document.getElementById('auth-signed-in-info');
+    // Purely informational — never blocks sign-in or using the app (same "never lock people out"
+    // stance as the rest of this app's auth handling), just a reminder + a way to resend.
+    infoEl.innerHTML = `Signed in as <strong>${escapeHtml(user.email)}</strong>` +
+      (user.emailVerified ? '' : `
+        <div class="auth-verify-banner">
+          Please verify your email — check your inbox for a link.
+          <button type="button" id="btn-auth-resend-verify" class="auth-resend-link">Resend email</button>
+        </div>`);
+    document.getElementById('btn-auth-resend-verify')?.addEventListener('click', async e => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+      const result = await resendVerificationEmail();
+      btn.textContent = result.ok ? 'Sent!' : 'Resend email';
+      btn.disabled = false;
+    });
   }
 }
 
@@ -255,6 +303,29 @@ export function closeSidebar() {
 // ===== INIT =====
 async function init() {
   await initAuth();
+
+  // Auth modal wiring must exist before requireWebSignIn() below — a signed-out web visitor
+  // needs to actually be able to submit sign-up/sign-in from inside that gate.
+  onAuthChange(applyAuthUI);
+  applyAuthUI(getCurrentUser());
+
+  document.getElementById('btn-auth-close').addEventListener('click', closeAuthModal);
+  document.getElementById('auth-modal-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('auth-modal-overlay')) closeAuthModal();
+  });
+  document.getElementById('btn-auth-signup').addEventListener('click', () => handleAuthSubmit(signUp));
+  document.getElementById('btn-auth-signin').addEventListener('click', () => handleAuthSubmit(signIn));
+  document.getElementById('btn-auth-signout').addEventListener('click', async () => {
+    await signOut();
+    closeAuthModal();
+  });
+  document.getElementById('auth-modal-overlay').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') handleAuthSubmit(signIn);
+    if (e.key === 'Escape') closeAuthModal();
+  });
+
+  await requireWebSignIn();
+
   await loadAll();
   // Pulls fresh cloud data down on every launch, not just right after sign-up/sign-in — otherwise
   // a second, already-signed-in device would only ever see its own last-synced-at-sign-in local
@@ -274,11 +345,11 @@ async function init() {
   await loadLocalCache('savecraft_lastfm_cache', 'lastfmCache');
   await loadLocalCache('savecraft_steam_cache', 'steamCache');
 
-  chrome.storage.sync.get({ savecraft_theme: 'dark' }, data => {
+  storageSync.get({ savecraft_theme: 'dark' }, data => {
     applyTheme(data.savecraft_theme);
   });
 
-  chrome.storage.sync.get({ savecraft_sidebar_collapsed: true }, data => {
+  storageSync.get({ savecraft_sidebar_collapsed: true }, data => {
     applySidebarCollapsed(data.savecraft_sidebar_collapsed);
   });
   document.getElementById('btn-sidebar-collapse').addEventListener('click', toggleSidebarCollapsed);
@@ -316,28 +387,9 @@ async function init() {
     renderSidebar();
     renderGrid();
   });
-  document.getElementById('link-sponsored-statements').href = chrome.runtime.getURL('src/sponsored/sponsored.html');
+  document.getElementById('link-sponsored-statements').href = resourceUrl('src/sponsored/sponsored.html');
   document.addEventListener('click', e => {
     if (!settingsWrap.contains(e.target)) settingsDropdown.setAttribute('hidden', '');
-  });
-
-  onAuthChange(applyAuthUI);
-  applyAuthUI(getCurrentUser());
-
-  document.getElementById('btn-auth-close').addEventListener('click', closeAuthModal);
-  document.getElementById('auth-modal-overlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('auth-modal-overlay')) closeAuthModal();
-  });
-  document.getElementById('btn-auth-google').addEventListener('click', () => handleAuthSubmit(signInWithGoogle));
-  document.getElementById('btn-auth-signup').addEventListener('click', () => handleAuthSubmit(signUp));
-  document.getElementById('btn-auth-signin').addEventListener('click', () => handleAuthSubmit(signIn));
-  document.getElementById('btn-auth-signout').addEventListener('click', async () => {
-    await signOut();
-    closeAuthModal();
-  });
-  document.getElementById('auth-modal-overlay').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') handleAuthSubmit(signIn);
-    if (e.key === 'Escape') closeAuthModal();
   });
 
   document.getElementById('btn-lastfm-close').addEventListener('click', closeLastfmModal);

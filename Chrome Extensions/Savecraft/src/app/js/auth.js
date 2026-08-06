@@ -9,12 +9,14 @@
 // established convention, since neither side calls the other's import at module-evaluation
 // time, only from inside function bodies (signUp/signIn here; persistItem etc. there).
 import { runInitialSync } from './storage.js';
+import { storageLocal } from './platform.js';
 
 const _FIREBASE_API_KEY = 'AIzaSyArJ6pkXUDbZf4jcxRita0qcdr-hT46kI8';
 
 const _SIGNUP_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${_FIREBASE_API_KEY}`;
 const _SIGNIN_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${_FIREBASE_API_KEY}`;
-const _SIGNIN_IDP_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${_FIREBASE_API_KEY}`;
+const _SEND_OOB_CODE_URL = `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${_FIREBASE_API_KEY}`;
+const _LOOKUP_URL = `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${_FIREBASE_API_KEY}`;
 const _REFRESH_URL = `https://securetoken.googleapis.com/v1/token?key=${_FIREBASE_API_KEY}`;
 
 const _ERROR_MESSAGES = {
@@ -32,10 +34,7 @@ function _friendlyError(code) {
   return _ERROR_MESSAGES[code] || 'Something went wrong. Please try again.';
 }
 
-// { uid, email, idToken, refreshToken, idTokenExpiresAt, provider?, googleAccessToken? } | null
-// provider/googleAccessToken are only set for a Google-signed-in session (signInWithGoogle,
-// below) — password sessions leave them undefined. googleAccessToken lets signOut() clean up
-// Chrome's own cached token too, not just this module's session.
+// { uid, email, idToken, refreshToken, idTokenExpiresAt, emailVerified? } | null
 let _auth = null;
 let _listeners = [];
 
@@ -46,19 +45,24 @@ function _notify() {
 
 async function _persistAuth(auth) {
   _auth = auth;
-  await new Promise(resolve => chrome.storage.local.set({ savecraft_auth: auth }, resolve));
+  await new Promise(resolve => storageLocal.set({ savecraft_auth: auth }, resolve));
 }
 
 async function _clearAuth() {
   _auth = null;
-  await new Promise(resolve => chrome.storage.local.remove('savecraft_auth', resolve));
+  await new Promise(resolve => storageLocal.remove('savecraft_auth', resolve));
 }
 
 // Loads any persisted session at app startup. Call once, before anything else in this module
-// is used.
+// is used. Refreshes emailVerified before the first _notify() (same "show fresh state on launch"
+// precedent as storage.js's runInitialSync) so a link clicked in another tab/device since last
+// launch is reflected immediately, not just after the next sign-in.
 export async function initAuth() {
-  const data = await new Promise(resolve => chrome.storage.local.get({ savecraft_auth: null }, resolve));
+  const data = await new Promise(resolve => storageLocal.get({ savecraft_auth: null }, resolve));
   _auth = data.savecraft_auth;
+  if (_auth) {
+    await _refreshEmailVerified(_auth).catch(err => console.warn('[SaveCraft] Could not refresh verification status:', err));
+  }
   _notify();
 }
 
@@ -67,7 +71,7 @@ export function onAuthChange(callback) {
 }
 
 export function getCurrentUser() {
-  return _auth ? { uid: _auth.uid, email: _auth.email } : null;
+  return _auth ? { uid: _auth.uid, email: _auth.email, emailVerified: !!_auth.emailVerified } : null;
 }
 
 export function isSignedIn() {
@@ -84,6 +88,34 @@ function _fromSignUpOrInResponse(data) {
   };
 }
 
+// Fetches the account's current emailVerified status from Firebase (accounts:lookup) and mutates
+// + re-persists the passed-in auth object in place. Throws on failure — every call site swallows
+// that itself (a failed refresh just leaves the previous known status in place, never blocks
+// sign-in/sign-up).
+async function _refreshEmailVerified(auth) {
+  const resp = await fetch(_LOOKUP_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ idToken: auth.idToken }),
+  });
+  const data = await resp.json();
+  if (data.error) throw new Error(data.error.message);
+  auth.emailVerified = !!data.users?.[0]?.emailVerified;
+  await _persistAuth(auth);
+}
+
+// Sends the actual verification email through Firebase's own delivery — no email-sending code of
+// ours needed. Shared by signUp's automatic first send and resendVerificationEmail's manual one.
+async function _sendVerificationEmail(idToken) {
+  const resp = await fetch(_SEND_OOB_CODE_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ requestType: 'VERIFY_EMAIL', idToken }),
+  });
+  const data = await resp.json();
+  if (data.error) throw new Error(data.error.message);
+}
+
 export async function signUp(email, password) {
   try {
     const resp = await fetch(_SIGNUP_URL, {
@@ -95,7 +127,16 @@ export async function signUp(email, password) {
     if (data.error) return { ok: false, error: _friendlyError(data.error.message) };
     const auth = _fromSignUpOrInResponse(data);
     await _persistAuth(auth);
+    // Refreshed (and awaited) before _notify() so the very first render already shows accurate
+    // emailVerified status, rather than listeners (applyAuthUI, the Profile page) firing on stale/
+    // undefined data and never getting a second chance to update.
+    await _refreshEmailVerified(auth).catch(err => console.warn('[SaveCraft] Could not refresh verification status:', err));
     _notify();
+    // Fire-and-forget — sending the verification email is a side effect of a successful sign-up,
+    // not something that should delay it or turn a slow mail send into a failed sign-up. The
+    // "please verify" reminder already shows regardless of whether this succeeds (emailVerified is
+    // false either way); resendVerificationEmail() covers the case where it didn't go through.
+    _sendVerificationEmail(auth.idToken).catch(err => console.warn('[SaveCraft] Could not send verification email:', err));
     // Awaited (not fire-and-forget) so callers that await signUp() know the merge has actually
     // finished before they do anything render-dependent (see handleAuthSubmit in main.js) — a
     // brand-new account has nothing to merge, but this keeps the "sign in == sync" flow identical
@@ -120,6 +161,7 @@ export async function signIn(email, password) {
     if (data.error) return { ok: false, error: _friendlyError(data.error.message) };
     const auth = _fromSignUpOrInResponse(data);
     await _persistAuth(auth);
+    await _refreshEmailVerified(auth).catch(err => console.warn('[SaveCraft] Could not refresh verification status:', err));
     _notify();
     await runInitialSync(auth.uid).catch(err => console.warn('[SaveCraft] Initial sync failed:', err));
     return { ok: true };
@@ -128,51 +170,20 @@ export async function signIn(email, password) {
   }
 }
 
-// "Sign in with Google" — trades a Google OAuth token (from Chrome's own built-in account picker,
-// chrome.identity.getAuthToken — no separate login popup, uses whatever Google account the
-// browser is already signed into) for a Firebase session via the Identity Toolkit's
-// accounts:signInWithIdp REST endpoint. Same response shape (localId/email/idToken/refreshToken/
-// expiresIn) as signUp/signInWithPassword, so _fromSignUpOrInResponse is reused as-is.
-export async function signInWithGoogle() {
+// Manual "Resend" button (auth modal + Profile page's Account card) for someone who's already
+// signed in but hasn't verified yet — signUp only auto-sends once, this covers everything after.
+export async function resendVerificationEmail() {
+  const idToken = await getValidIdToken();
+  if (!idToken) return { ok: false, error: 'Not signed in.' };
   try {
-    const googleAccessToken = await new Promise((resolve, reject) => {
-      chrome.identity.getAuthToken({ interactive: true }, token => {
-        if (chrome.runtime.lastError || !token) reject(chrome.runtime.lastError);
-        else resolve(token);
-      });
-    });
-    const resp = await fetch(_SIGNIN_IDP_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        postBody: `access_token=${googleAccessToken}&providerId=google.com`,
-        requestUri: chrome.identity.getRedirectURL(),
-        returnIdpCredential: true,
-        returnSecureToken: true,
-      }),
-    });
-    const data = await resp.json();
-    if (data.error) return { ok: false, error: _friendlyError(data.error.message) };
-    const auth = { ..._fromSignUpOrInResponse(data), provider: 'google', googleAccessToken };
-    await _persistAuth(auth);
-    _notify();
-    await runInitialSync(auth.uid).catch(err => console.warn('[SaveCraft] Initial sync failed:', err));
+    await _sendVerificationEmail(idToken);
     return { ok: true };
   } catch {
-    // chrome.identity.getAuthToken fails/rejects for lots of mundane reasons (user closed the
-    // account picker, no network, no OAuth client configured yet) — one friendly message covers
-    // all of them, same as the network-error catch in signUp/signIn above.
-    return { ok: false, error: 'Could not sign in with Google. Please try again.' };
+    return { ok: false, error: 'Could not reach the server. Check your connection and try again.' };
   }
 }
 
 export async function signOut() {
-  // Clears Chrome's own cached Google token too (not just this module's session) — otherwise
-  // signing out and back in with a *different* Google account would silently reuse the old one,
-  // since chrome.identity.getAuthToken caches by scope/account, independent of our own session.
-  if (_auth?.provider === 'google' && _auth.googleAccessToken) {
-    await new Promise(resolve => chrome.identity.removeCachedAuthToken({ token: _auth.googleAccessToken }, resolve));
-  }
   await _clearAuth();
   _notify();
 }
@@ -199,6 +210,7 @@ export async function getValidIdToken() {
       idToken: data.id_token,
       refreshToken: data.refresh_token,
       idTokenExpiresAt: Date.now() + Number(data.expires_in) * 1000,
+      emailVerified: _auth.emailVerified,
     };
     await _persistAuth(auth);
     return auth.idToken;

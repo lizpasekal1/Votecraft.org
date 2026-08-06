@@ -10,6 +10,7 @@ import { ensureAlbumTrackList, ensureLiveItem } from './authors.js';
 import { getDetailItem } from './detailModal.js';
 import { registerAccordion, closeAccordionsExcept } from './detailModalAccordions.js';
 import { sanitizeNoteHtml, noteHtmlHasContent } from './noteSanitizer.js';
+import { openInNewTab } from './platform.js';
 
 // Which note row (a .detail-tracklist-notes-input contenteditable) currently has focus, if any —
 // drives the formatting toolbar's visibility/enabled state. _focusModeOn is an independent on/off
@@ -329,12 +330,12 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
         // Links in a note (pasted, or auto-linkified from plain text by noteSanitizer.js) don't
         // carry a stored target/rel — sanitizeNoteHtml only keeps href — so open them explicitly
         // here instead, rather than letting a contenteditable's default click-to-navigate replace
-        // this whole app tab with the link's page. chrome.tabs.create (same API share.js already
-        // uses for its own "email this" link) rather than window.open()/a synthetic <a
-        // target="_blank"> click — this app's own page runs at a chrome-extension:// origin,
-        // where a plain new-tab open isn't always honored; the extension's own tabs API is.
+        // this whole app tab with the link's page. openInNewTab() (same helper share.js uses for
+        // its own "email this" link) uses chrome.tabs.create in the extension — this app's own
+        // page runs at a chrome-extension:// origin there, where a plain new-tab open isn't always
+        // honored — and falls back to window.open() on the web build (see platform.js).
         const link = e.target.closest('a[href]');
-        if (link) { e.preventDefault(); chrome.tabs.create({ url: link.href }); }
+        if (link) { e.preventDefault(); openInNewTab(link.href); }
       });
       inputEl.addEventListener('focus', () => {
         _activeNoteRow = inputEl;
