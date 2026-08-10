@@ -136,17 +136,14 @@
 .dash-card-header { display: flex; align-items: center; justify-content: space-between; }
 .dash-card-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
 
-/* Same box recipe as .btn-add-item (base.css), plus its own 148px width, per direct request that
-   Sort/Add +/Open all match "+ Add Item" exactly — .btn-add-item itself has no fixed width (sized
-   by its own text + this same padding), so 148px here is that button's own original width before
-   this whole file's back-and-forth started (it used to be this file's own shared width too,
-   pre-dating the mobile-only shrink further down) rather than a fresh guess, and gives Sort/Add
-   +/Open one identical width regardless of their own (shorter, differing) label lengths. */
+/* Same box recipe as .btn-add-item (base.css) — width now 20px narrower than that button's own
+   148px, per direct request — still one identical width shared by Sort/Add +/Open regardless of
+   their own (shorter, differing) label lengths. */
 .dash-card-header-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 148px;
+  width: 128px;
   padding: 7px 22px;
   box-sizing: border-box;
   border-radius: 24px;
@@ -160,9 +157,12 @@
   /* "Open ▶"'s own space could otherwise wrap onto a second line at a narrow width — .btn-add-
      item doesn't need this itself (a plain inline-block button naturally shrinks its box instead
      of wrapping), but this one has an explicit fixed width above, which can't grow to keep single-
-     line text from wrapping the way an auto-width box would. .dash-fav-category-btn (Sort) already
-     gets this for free from its own .btn-board-filter base class (kanban.css). */
+     line text from wrapping the way an auto-width box would. overflow: hidden alongside it clips
+     rather than spilling past the fixed width if the label still doesn't fit — matching
+     .dash-fav-category-btn (Sort), which already gets both of these for free from its own
+     .btn-board-filter base class (kanban.css) and was rendering narrower as a result. */
   white-space: nowrap;
+  overflow: hidden;
   cursor: pointer;
   transition: background 0.12s;
 }
@@ -285,9 +285,9 @@
    structure/positioning but recolored to the SaveCraft purple, scoped to this class only so the
    real board's filter button (surface-colored) elsewhere is unaffected. */
 .dash-fav-category-btn {
-  /* No width override needed — .btn-board-filter's own base width (kanban.css) is already
-     148px, same as .dash-card-header-btn's own explicit 148px above, so Sort/Add +/Open share
-     one identical width without this rule needing to restate it. */
+  /* Overrides .btn-board-filter's own base 148px (kanban.css) down to the same 128px
+     .dash-card-header-btn uses, so Sort/Add +/Open keep sharing one identical width. */
+  width: 128px;
   padding: 7px 22px;
   box-sizing: border-box;
   background: var(--primary);
