@@ -31,18 +31,6 @@
   .dashboard-wrap {
     max-height: none;
   }
-
-  /* Every widget-header pill button (Sort/Add +/Open ▶) shares one width on desktop too (see the
-     base rules below/in kanban.css) — sized separately here on mobile, through several rounds
-     per direct request (148px desktop -> 74px -> 37px -> 67px -> 87px -> 77px -> this box's
-     current 57px). */
-  .dash-card-header-btn,
-  .dash-fav-category-btn {
-    width: 57px;
-    height: 26px;
-    padding: 0;
-    font-size: 11px;
-  }
 }
 
 /* --- Hero --- */
@@ -417,3 +405,24 @@
 .dash-profile-avatar.cat-icon svg { width: 40px; height: 40px; }
 .dash-profile-name { font-weight: 600; font-size: 14px; color: var(--text-primary); }
 .dash-profile-sub { font-size: 12px; color: var(--text-muted); }
+
+/* Every widget-header pill button (Sort/Add +/Open ▶) shares one width on desktop too (see the
+   base .dash-card-header-btn/.dash-fav-category-btn rules above, and .btn-board-filter in
+   kanban.css) — narrowed separately here on mobile, per direct request.
+   REAL BUG, found and fixed: this override used to live in the @media block near the top of this
+   file, BEFORE the base rules above it in source order. Those base rules have no media-query
+   guard of their own (they're meant to apply on desktop, but nothing stops them applying on
+   mobile too) — with equal selector specificity, the LATER rule in the cascade wins a tie
+   regardless of which one is wrapped in @media, so the unconditional desktop width (128px) was
+   winning here even on mobile, and every previous "make these narrower" request silently had no
+   effect at all. Moving this override down here, after both base rules, is what actually makes
+   it win. */
+@media (max-width: 768px) {
+  .dash-card-header-btn,
+  .dash-fav-category-btn {
+    width: 47px;
+    height: 26px;
+    padding: 0;
+    font-size: 11px;
+  }
+}
