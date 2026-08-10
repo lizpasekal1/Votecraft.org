@@ -165,6 +165,15 @@
    the same purple pill style "Sort"/"Add +" already use elsewhere in this widget grid, so all
    three widget-header buttons read consistently instead of this one being a plain text link. */
 
+/* Desktop only, per direct request — reset back to normal in this file's own mobile block
+   (bottom of file) rather than left unset, since without an explicit reset there this would
+   otherwise apply on mobile too (nothing here is scoped to a max-width query). */
+.dash-kanban-open-arrow {
+  display: inline-block;
+  font-size: 0.8em; /* 20% smaller than the button's own font-size */
+  margin-left: 20px;
+}
+
 .dash-kanban-mini-board {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -425,11 +434,17 @@
     padding: 0;
     font-size: 11px;
   }
-  /* Sort's chevron nudged 3px left, per direct request — same trailing-position lesson as the
-     width override above applies to any new mobile rule targeting these buttons: it has to come
-     after .dash-fav-category-btn svg's own unconditional base rule (this file, near the top) to
-     actually win. */
+  /* Sort's chevron nudged left, per direct request (3px, then another 3px) — same trailing-
+     position lesson as the width override above applies to any new mobile rule targeting these
+     buttons: it has to come after .dash-fav-category-btn svg's own unconditional base rule (this
+     file, near the top) to actually win. */
   .dash-fav-category-btn svg {
-    transform: translateX(-3px);
+    transform: translateX(-6px);
+  }
+  /* Resets the desktop-only .dash-kanban-open-arrow sizing/offset (this file, near the top) —
+     the "Open ▶" triangle stays its original size/position on mobile. */
+  .dash-kanban-open-arrow {
+    font-size: 1em;
+    margin-left: 0;
   }
 }
