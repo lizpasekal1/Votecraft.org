@@ -345,7 +345,11 @@
     justify-content: flex-end;
     padding: 16px 20px;
     /* Gradient backdrop removed per direct request — greeting text now sits directly over the
-       photo collage with no fade-to-solid behind it on mobile. */
+       photo collage with no fade-to-solid behind it on mobile. Explicit 'none' (not just leaving
+       this declaration out) — .dash-hero-content's own base rule (dashboard.css) sets a left-to-
+       right gradient of its own for desktop, which otherwise keeps showing through here since a
+       property this rule doesn't mention doesn't cancel the base rule's value for it. */
+    background: none;
   }
   .dash-hero-greeting {
     font-size: 20px;
