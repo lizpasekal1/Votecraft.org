@@ -1697,7 +1697,12 @@
        area entirely (reported live: "tools get hidden above the screen" while typing a note).
        dvh tracks the actual visible viewport, shrinking with the keyboard, so there's no longer a
        tall hidden-above region for that scroll to push the toolbar into. */
-    max-height: 98dvh;
+    /* A firm height, not a max-height — desktop shrink-wraps to its content (see the base rule's
+       own comment), but on mobile that meant the whole modal visibly grew/shrank as accordion
+       sections opened and closed (reported live). Pinning a firm height keeps the modal itself
+       static; .detail-body's flex: 1 + overflow-y: auto (below) absorbs any content taller than
+       what's left, scrolling internally instead of resizing the modal around it. */
+    height: 98dvh;
     padding: 40px 26px;
   }
 
@@ -1738,13 +1743,9 @@
     max-height: calc((98vw - 52px) * 0.55);
   }
 
-  /* Focus mode pins a firm height (not max-height) so hiding the image/icons doesn't just let the
-     modal shrink shorter — desktop's version of that firm height is capped at 600px, which would
-     otherwise silently override the taller cap above (a real height, not a max-height, always
-     wins over the modal's own shrink-wrap regardless of what max-height also allows). */
-  .detail-modal--focus-mode {
-    height: 98dvh;
-  }
+  /* No focus-mode height override needed here (unlike the desktop rule above it in this file) —
+     the base .modal.detail-modal rule above already pins a firm 98dvh on mobile at all times, so
+     there's nothing for focus mode to additionally override. */
 
   /* Hidden on desktop (closing via backdrop click/Escape is enough there, and the modal is small
      enough to always have backdrop to spare) — shown here since the mobile modal above now leaves
@@ -1838,15 +1839,27 @@
   }
 
   /* The "⚡ Your Statement" sponsored badge, ~10% larger as a whole (font-size, padding, and the
-     gap to its icon all scaled together, rather than just the text alone) — position: absolute
-     with left/right: 0 + margin: 0 auto keeps it horizontally centered regardless of its own size,
-     so growing it doesn't need any offset recalculation. */
+     gap to its icon all scaled together, rather than just the text alone). */
   .vc-sponsored-tag {
     gap: 6px;
     font-size: 12px;
-    /* 10px more on each side than the desktop-equivalent 11px, per direct request (+20px overall) —
-       position: absolute + margin: 0 auto above keeps it centered regardless of the extra width. */
+    /* 10px more on each side than the desktop-equivalent 11px, per direct request (+20px overall). */
     padding: 4px 21px 7px;
+  }
+
+  /* Desktop centers this via left/right: 0 + width: fit-content + margin: 0 auto, but that combo
+     is a known WebKit quirk on iOS — Safari can resolve the fit-content width against the full
+     0-to-100% span left/right:0 defines rather than the badge's own intrinsic content size, so
+     margin:auto ends up centering a box that's already stretched full-width instead of the actual
+     pill (reported live: the badge visibly off-center under the photo). left: 50% +
+     translateX(-50%) sidesteps that — it centers on the badge's real rendered width, computed
+     after layout, with no fit-content sizing step for Safari to get wrong. */
+  .vc-sponsored-tag--overlay {
+    left: 50%;
+    right: auto;
+    width: max-content;
+    margin: 0;
+    transform: translateX(-50%);
   }
 }
 
