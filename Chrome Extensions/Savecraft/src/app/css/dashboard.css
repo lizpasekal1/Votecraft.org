@@ -439,7 +439,7 @@
      buttons: it has to come after .dash-fav-category-btn svg's own unconditional base rule (this
      file, near the top) to actually win. */
   .dash-fav-category-btn svg {
-    transform: translateX(-6px);
+    transform: translateX(-8px);
   }
   /* Resets the desktop-only .dash-kanban-open-arrow sizing/offset (this file, near the top) —
      the "Open ▶" triangle stays its original size/position on mobile. */
