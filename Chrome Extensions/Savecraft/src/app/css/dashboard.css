@@ -31,6 +31,19 @@
   .dashboard-wrap {
     max-height: none;
   }
+
+  /* Both widget-header pill buttons ("Categories" on Recent Saves, "Add Curated" on Curated
+     Lists) are a fixed 148x30px on desktop — reasonable next to a 15px title there, but reads
+     oversized against the same title on a phone (reported live). No fixed width on mobile: each
+     shrink-wraps to its own (differently-sized) label via padding instead, same approach as this
+     file's other pill-button mobile fixes elsewhere in the codebase. */
+  .dash-card-header-btn,
+  .dash-fav-category-btn {
+    width: auto;
+    height: 26px;
+    padding: 0 12px;
+    font-size: 11px;
+  }
 }
 
 /* --- Hero --- */
