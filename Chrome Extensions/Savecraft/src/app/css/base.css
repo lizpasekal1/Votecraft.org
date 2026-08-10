@@ -294,14 +294,20 @@ body {
 .btn-search-icon .icon-close { display: none; }
 .search-expand-wrap.open .btn-search-icon .icon-search { display: none; }
 .search-expand-wrap.open .btn-search-icon .icon-close { display: block; }
-/* Purple circle while searching (was the same neutral --search-bg the resting state uses),
-   per direct request — reads as a real "active" state, not just a swapped icon. */
+/* Purple circle while searching (was the same neutral --search-bg the resting state uses), per
+   direct request — reads as a real "active" state, not just a swapped icon. Hardcoded to the
+   same #5B5BEF hex the "Open"/"Sort"/"Add +" widget buttons use (dashboard.css) rather than the
+   --primary token both are already set to — same resolved color either way, but this rules out
+   any theming/inheritance difference between the two as the cause of a reported mismatch, and
+   explicit opacity: 1 rules out any transparency softening it. */
 .search-expand-wrap.open .btn-search-icon {
-  background: var(--primary);
+  background: #5B5BEF;
+  opacity: 1;
   color: #fff;
 }
 .search-expand-wrap.open .btn-search-icon:hover {
   background: var(--primary-hover);
+  opacity: 1;
   color: #fff;
 }
 
