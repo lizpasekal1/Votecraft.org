@@ -11,6 +11,18 @@ import { matchesPrimaryOrUnfoldered } from './renderFilters.js';
 import { renderGrid } from './renderGrid.js';
 import { storageSync } from './platform.js';
 
+// Collapses every accordion in the sidebar — Dashboard, Saved Lists, Curated Lists, and every
+// real category (Music Album excluded, same as sidebarCategoryList's own filter further down;
+// it's never rendered as its own top-level collapsible row). Used wherever the sidebar switches
+// top-level mode (the mobile drawer's Curated/Shared tabs below, and the desktop options
+// dropdown in main.js) so the new mode always starts fully collapsed rather than carrying over
+// whatever was left expanded under the previous one. A superset is fine even when the new mode
+// won't render every one of these ids (e.g. a curated-genre view has no "Web Links" row) —
+// state.collapsed is just a lookup Set, an unused id in it is inert.
+export function collapseAllSidebarSections() {
+  state.collapsed = new Set([...CATEGORIES.filter(cat => cat !== 'Music Album'), 'dashboard', 'saved-lists', 'curated-lists']);
+}
+
 // Fill swapped from the source icon's #1f1f1f (near-black, invisible against .cat-icon's dark
 // background) to the same #5B5BEF used by every other sidebar cat-icon SVG (CAT_EMOJI in
 // state.js) so it's actually visible in the app's dark theme.
@@ -64,14 +76,18 @@ export function renderSidebar() {
   const sidebarEffectiveView = (state.view.startsWith('author:') && state.authorReturnView?.startsWith('genre:'))
     ? state.authorReturnView
     : state.view;
-  let sidebarTitle = 'All Saves';
+  let sidebarTitle = 'My Saves';
   if (sidebarEffectiveView.startsWith('genre:')) {
     sidebarTitle = sidebarEffectiveView.slice(6).split(':')[0] + ' Saves';
   } else if (sidebarEffectiveView.startsWith('savedlist:')) {
     // Mirrors the header reading "<Name> Saves" while browsing that Saved List's own landing
-    // card (renderGrid.js) — falls back to the default "All Saves" if the list was since deleted.
+    // card (renderGrid.js) — except default-favorites (labeled "All My Saves" in its own Saved
+    // Lists row below, see _renderDashboardListRow) is deliberately overridden to the same "My
+    // Saves" the rest of this title defaults to, per direct request — this title bar reads as
+    // "back to my stuff" for that one list, not an announcement of its configured name the way
+    // every other Saved List's title still is. Also the fallback if the list was since deleted.
     const listId = sidebarEffectiveView.slice(10);
-    sidebarTitle = state.savedLists.find(l => l.id === listId)?.name || 'All Saves';
+    sidebarTitle = listId === 'default-favorites' ? 'My Saves' : (state.savedLists.find(l => l.id === listId)?.name || 'My Saves');
   } else if (state.sidebarMode === 'curated') {
     sidebarTitle = 'Cause Curated';
   } else if (state.sidebarMode === 'shared') {
@@ -122,12 +138,7 @@ export function renderSidebar() {
     </div>
   `;
 
-  // allCollapsibleIds: every collapsible id currently rendered in this pass (same idea as
-  // wireDashboardLink's own otherCollapsibleIds param below, and passed in for the same closure-
-  // timing reason — this is called from the curated-picker branch too, textually before
-  // sidebarCategoryList exists). Switching top-level mode via the Curated/Shared tabs closes every
-  // accordion rather than leaving whatever was expanded before still open underneath the new mode.
-  function wireMobileHeader(allCollapsibleIds) {
+  function wireMobileHeader() {
     sidebar.querySelector('.sidebar-close-btn')?.addEventListener('click', closeSidebar);
     sidebar.querySelectorAll('[data-sidebar-opt]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -141,7 +152,9 @@ export function renderSidebar() {
         } else {
           state.sidebarMode = 'categories'; state.view = 'all';
         }
-        state.collapsed = new Set(allCollapsibleIds);
+        // Switching top-level mode closes every accordion rather than leaving whatever was
+        // expanded before still open underneath the new mode.
+        collapseAllSidebarSections();
         persistViewState();
         renderSidebar();
         renderGrid();
@@ -225,6 +238,11 @@ export function renderSidebar() {
       key: 'saved-lists', icon: SAVED_LISTS_ICON_SVG, label: 'Saved Lists', items: state.savedLists,
       linkClass: 'sidebar-saved-lists-link', childClass: 'sidebar-saved-lists-child', addClass: 'sidebar-add-saved-list',
       viewPrefix: 'savedlist:', showRadio: true,
+      // "All My Saves" routes to state.view === 'dashboard' instead of its own generic
+      // 'savedlist:default-favorites' (see the click handler below) — the viewPrefix-derived
+      // isActive check above wouldn't ever match that, so it needs this explicit override to still
+      // highlight itself while Dashboard (the same destination) is what's actually active.
+      itemIsActive: item => item.id === 'default-favorites' && state.view === 'dashboard',
     })}
     ${_renderDashboardListRow({
       key: 'curated-lists', icon: CURATED_LISTS_ICON_SVG, label: 'Curated Lists', items: state.curatedListsRows,
@@ -235,20 +253,22 @@ export function renderSidebar() {
     <div class="sidebar-divider"></div>
   `;
 
-  // otherCollapsibleIds: every other top-level tab id currently rendered alongside Dashboard in
-  // this render pass (the category list in normal mode, or none in the curated genre-picker,
-  // which has nothing else collapsible to close) — expanding Dashboard collapses all of them,
-  // same mutual-exclusion the category tabs themselves already had. Passed in rather than closed
-  // over sidebarCategoryList directly: this function is also called from the curated-picker
-  // branch, textually before sidebarCategoryList is even computed further down.
-  function wireDashboardLink(otherCollapsibleIds) {
+  function wireDashboardLink() {
     sidebar.querySelector('.sidebar-dashboard-link')?.addEventListener('click', () => {
       if (state.collapsed.has('dashboard')) {
-        // 'saved-lists'/'curated-lists' always re-added here too — this Set is a full rebuild,
-        // not a toggle, so anything not explicitly included in it defaults to expanded; without
-        // this, expanding Dashboard from a category tab silently blew away their own independent
-        // collapsed-by-default state every time (a real bug, caught via testing before shipping).
-        state.collapsed = new Set([...otherCollapsibleIds, 'saved-lists', 'curated-lists']);
+        // Every real category re-added here too (via the same canonical list
+        // collapseAllSidebarSections uses), not just whatever this specific render pass happened
+        // to have on hand — this used to take an otherCollapsibleIds param instead, closed over
+        // the current render's own category list, but that went stale in exactly the situation
+        // that matters most: wired from the curated-picker branch (which passes an empty list,
+        // correctly, since genre rows aren't collapsible) and then clicked, the rebuild used that
+        // now-irrelevant empty list, leaving every real category un-collapsed once the click
+        // itself switched back to the normal categorized sidebar (reported live: tap Curated, tap
+        // Dashboard, every accordion is open). A full rebuild is still needed, not a toggle —
+        // without one, expanding Dashboard from a category tab silently blew away that category's
+        // own independent collapsed-by-default state every time (a real bug, caught via testing
+        // before shipping).
+        state.collapsed = new Set([...CATEGORIES.filter(cat => cat !== 'Music Album'), 'saved-lists', 'curated-lists']);
       } else {
         state.collapsed.add('dashboard');
       }
@@ -303,10 +323,8 @@ export function renderSidebar() {
         `).join('')}
       </div>
     `;
-    // No categories rendered in this branch — just Dashboard/Saved Lists/Curated Lists (see
-    // dashboardLinkHtml above, shared across every branch).
-    wireMobileHeader(['dashboard', 'saved-lists', 'curated-lists']);
-    wireDashboardLink([]); // genre rows aren't collapsible/tracked in state.collapsed at all
+    wireMobileHeader();
+    wireDashboardLink();
     sidebar.querySelectorAll('.sidebar-genre').forEach(el => {
       el.addEventListener('click', () => {
         state.view = 'genre:' + el.dataset.genre;
@@ -428,8 +446,8 @@ export function renderSidebar() {
       ${categorySections}
     </div>
   `;
-  wireMobileHeader(['dashboard', 'saved-lists', 'curated-lists', ...sidebarCategoryList]);
-  wireDashboardLink(sidebarCategoryList);
+  wireMobileHeader();
+  wireDashboardLink();
 
   // Category header: toggle collapse OR switch view
   sidebar.querySelectorAll('.sidebar-category').forEach(el => {
@@ -484,6 +502,14 @@ export function renderSidebar() {
         // computation in the row-render above for the full explanation.
         state.view = `genre:${curatedGenreBase}:${el.dataset.curatedTarget}`;
         state.activeCuratedFolderId = el.dataset.view;
+      } else if (el.dataset.view === 'savedlist:default-favorites') {
+        // "All My Saves" — the built-in catch-all Saved List — is the same destination as the
+        // Dashboard link itself (per direct request), not the generic savedlist: placeholder
+        // landing card every other Saved List still shows. sidebarMode matches wireDashboardLink's
+        // own 'home' above so this reads as the same navigation, just from a different row.
+        state.sidebarMode = 'home';
+        state.view = 'dashboard';
+        state.activeCuratedFolderId = null;
       } else {
         state.view = el.dataset.view;
         state.activeCuratedFolderId = null;

@@ -85,7 +85,7 @@ function _saveToMenuEscHandler(e) {
   if (e.key === 'Escape') _closeSaveToMenu();
 }
 
-// Checked by id, not display name ("Favorites" is renameable, e.g. to "All Saves" — see
+// Checked by id, not display name ("Favorites" is renameable, e.g. to "All My Saves" — see
 // storage.js's migration) — default-favorites is the one list id that drives the existing
 // item.favorite boolean instead of item.savedListIds.
 function _isListSelected(liveItem, list) {

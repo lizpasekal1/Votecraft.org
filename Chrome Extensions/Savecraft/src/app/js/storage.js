@@ -246,19 +246,29 @@ export async function loadAll() {
           danceList.name = 'Motivation';
           storageSync.set({ savecraft_saved_lists: state.savedLists });
         }
-        // Renamed "Favorites" -> "All Saves" — same id (default-favorites) for the same reason.
-        // Every place that needs to know "is this specifically the Favorites list" (it's the one
-        // that drives item.favorite instead of item.savedListIds — detailModalHeader.js,
-        // renderFilters.js, share.js) checks this id, not the display name, so it keeps working
-        // regardless of what the list is labeled.
+        // Renamed "Favorites" -> "All Saves" -> "All My Saves" — same id (default-favorites) for
+        // the same reason each time. Every place that needs to know "is this specifically the
+        // Favorites list" (it's the one that drives item.favorite instead of item.savedListIds —
+        // detailModalHeader.js, renderFilters.js, share.js) checks this id, not the display name,
+        // so it keeps working regardless of what the list is labeled.
         const favoritesList = state.savedLists.find(l => l.id === 'default-favorites');
         if (favoritesList && favoritesList.name === 'Favorites') {
           favoritesList.name = 'All Saves';
           storageSync.set({ savecraft_saved_lists: state.savedLists });
         }
+        // Second rename, same list — "All Saves" read as ambiguous with a possible future generic
+        // "all saves" search/filter concept, so this specific catch-all list (driven by
+        // item.favorite, not a real search) needed a name that can't be confused with that. Checked
+        // separately (not else-if) so an install still on the original "Favorites" name jumps
+        // straight to "All My Saves" in one load instead of getting stuck at "All Saves" for a
+        // session — the block above already mutated favoritesList.name by the time this runs.
+        if (favoritesList && favoritesList.name === 'All Saves') {
+          favoritesList.name = 'All My Saves';
+          storageSync.set({ savecraft_saved_lists: state.savedLists });
+        }
       } else {
         state.savedLists = [
-          { id: 'default-favorites', name: 'All Saves' },
+          { id: 'default-favorites', name: 'All My Saves' },
           { id: 'default-health', name: 'Health' },
           { id: 'default-motivation', name: 'Motivation' },
         ];

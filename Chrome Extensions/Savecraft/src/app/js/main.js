@@ -10,7 +10,7 @@ import { initAuth, onAuthChange, getCurrentUser, signUp, signIn, signOut, resend
 import { ensureLastfmRecentTracks, isLastfmConfigured, ensureSteamRecentGames, isSteamConfigured } from './api.js';
 import { isExtension, storageSync, storageOnChanged, resourceUrl } from './platform.js';
 import { debounce, escapeHtml } from './utils.js';
-import { renderSidebar, renderGrid } from './render.js';
+import { renderSidebar, renderGrid, collapseAllSidebarSections } from './render.js';
 import { initShare } from './share.js';
 import {
   openAddModal, closeAddModal, handleSaveItem, updatePlatformSummary,
@@ -475,6 +475,10 @@ async function init() {
         state.sidebarMode = 'curated';
         state.view = 'genre:Top 100';
       }
+      // Same as the mobile drawer's Curated/Shared tabs (renderSidebar.js) — switching top-level
+      // mode from this dropdown closes every accordion instead of leaving whatever was expanded
+      // before still open underneath the new mode.
+      collapseAllSidebarSections();
       persistViewState();
       renderSidebar();
       renderGrid();
