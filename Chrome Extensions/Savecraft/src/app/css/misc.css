@@ -422,6 +422,13 @@
     white-space: nowrap;
     text-align: center;
   }
+  /* Hides the logo outright while searching, per direct request (the ellipsis-shrink above was
+     the first attempt, but it still left a truncated sliver of "SaveCraft" — see screenshot —
+     rather than the empty room the search input actually needs). :has() lets this key off the
+     search wrap's own .open state without needing new JS to toggle a class elsewhere. */
+  .header-main:has(.search-expand-wrap.open) .logo {
+    display: none;
+  }
 
   /* Sidebar becomes a full-height drawer above the header */
   .sidebar {
