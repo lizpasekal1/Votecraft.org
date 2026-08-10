@@ -183,6 +183,9 @@
   /* Stops the arrow itself from being compressed by its stretching sibling label above. */
   flex-shrink: 0;
 }
+/* Was a plain "▶" text glyph — swapped for an SVG (dashboard.js) with sharp-pointed corners
+   (a simple 3-point path) per direct request, since a system font's glyph rendering of that
+   character isn't something CSS can reshape directly the way an SVG path can. */
 
 /* Curated Lists' "Add +" — the "+" used to be part of the same text run as "Add" (no separate
    icon element), so it sat immediately after the label instead of pinned to the right edge like
@@ -191,6 +194,7 @@
 .dash-curated-add-icon {
   display: inline-block;
   flex-shrink: 0;
+  font-size: 1.2em; /* 20% larger than the button's own font-size, per direct request */
 }
 
 .dash-kanban-mini-board {
