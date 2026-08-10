@@ -348,6 +348,13 @@
     height: 90px;
     border-radius: 10px;
   }
+  /* Shifts just the sliding photo thumbnails up, leaving .dash-hero-content (greeting text +
+     its own gradient backdrop, a separate absolutely-positioned sibling) exactly where it
+     already was — per direct request. .dash-hero's own overflow: hidden still clips the
+     collage's now-exposed top edge, so nothing pokes out above the hero band. */
+  .dash-hero-collage {
+    transform: translateY(-30px);
+  }
 
   /* Profile page */
   .profile-widget-grid { grid-template-columns: 1fr; height: auto; }
