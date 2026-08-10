@@ -455,6 +455,6 @@
   .dash-kanban-open-label,
   .dash-curated-add-label {
     display: inline-block;
-    transform: translateX(-5px);
+    transform: translateX(-3px);
   }
 }
