@@ -118,7 +118,7 @@ export function renderSidebar() {
     </div>
     <div class="sidebar-mode-tabs">
       <button class="sidebar-mode-tab ${state.sidebarMode === 'curated' ? 'active' : ''}" data-sidebar-opt="curated">Curated</button>
-      <button class="sidebar-mode-tab sidebar-mode-tab--sponsored" data-sidebar-opt="sponsored">⚡ VC</button>
+      <button class="sidebar-mode-tab ${state.sidebarMode === 'shared' ? 'active' : ''}" data-sidebar-opt="shared">⚡ Shared</button>
     </div>
   `;
 
@@ -131,9 +131,8 @@ export function renderSidebar() {
           state.sidebarMode = 'home'; state.view = 'dashboard';
         } else if (opt === 'curated') {
           state.sidebarMode = 'curated'; state.view = 'curated';
-        } else if (opt === 'sponsored') {
-          // "VoteCraft Picks" links straight into the real curated Top 100 saves area.
-          state.sidebarMode = 'curated'; state.view = 'genre:Top 100';
+        } else if (opt === 'shared') {
+          state.sidebarMode = 'shared'; state.view = 'shared';
         } else {
           state.sidebarMode = 'categories'; state.view = 'all';
         }
@@ -273,8 +272,8 @@ export function renderSidebar() {
     });
     // Curated Lists' "Votecraft" row — its one hardcoded destination (see the itemExtraClass/
     // itemIsActive wiring on its _renderDashboardListRow call above): the real "Votecraft List"
-    // curated genre, same place the mobile header's "VoteCraft Picks" option and the "⚡ VC"
-    // sponsored tab both link to.
+    // curated genre, same place the mobile header's "VoteCraft Picks" option links to (the mobile
+    // drawer's own "⚡ Shared" tab now links to Shared Saves instead — see wireMobileHeader above).
     sidebar.querySelector('.sidebar-curated-votecraft-link')?.addEventListener('click', () => {
       state.sidebarMode = 'curated';
       state.view = 'genre:Top 100';
