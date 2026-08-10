@@ -331,7 +331,7 @@ function buildCuratedListsWidget() {
     <div class="dash-card dash-card--curated">
       <div class="dash-card-header">
         <span class="dash-card-title">Curated Lists</span>
-        <button class="dash-card-header-btn dash-curated-add-btn"><span class="dash-curated-add-label">Add +</span></button>
+        <button class="dash-card-header-btn dash-curated-add-btn"><span class="dash-curated-add-label">Add</span> <span class="dash-curated-add-icon">+</span></button>
       </div>
       <div class="dash-carousel">
         <button class="dash-carousel-prev" aria-label="Previous">‹</button>

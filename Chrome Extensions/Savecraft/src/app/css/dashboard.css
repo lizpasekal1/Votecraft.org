@@ -184,6 +184,15 @@
   flex-shrink: 0;
 }
 
+/* Curated Lists' "Add +" — the "+" used to be part of the same text run as "Add" (no separate
+   icon element), so it sat immediately after the label instead of pinned to the right edge like
+   Sort's chevron/Open's triangle, the actual mismatch reported live. Split into its own span
+   (dashboard.js) so it can get the same flex-shrink: 0 treatment as .dash-kanban-open-arrow. */
+.dash-curated-add-icon {
+  display: inline-block;
+  flex-shrink: 0;
+}
+
 .dash-kanban-mini-board {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
