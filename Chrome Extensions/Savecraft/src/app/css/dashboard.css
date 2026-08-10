@@ -447,4 +447,14 @@
     font-size: 1em;
     margin-left: 0;
   }
+  /* Shifts just the text 5px left in all three widget-header buttons, leaving each one's own
+     icon (Sort's chevron, Open's triangle) exactly where it already is — per direct request.
+     Add +'s "+" is plain text, not a separate icon element, so its whole label moves as one
+     (nothing to leave in place). */
+  .dash-fav-category-label,
+  .dash-kanban-open-label,
+  .dash-curated-add-label {
+    display: inline-block;
+    transform: translateX(-5px);
+  }
 }

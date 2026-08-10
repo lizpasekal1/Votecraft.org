@@ -150,7 +150,7 @@ function buildFavoritesWidget() {
   const categoryFilterHtml = `
     <div class="board-filter-wrap dash-fav-category-wrap">
       <button class="btn-board-filter dash-fav-category-btn">
-        <span>${escapeHtml(_favCategoryFilter ? _favCategoryFilter.toUpperCase() : 'Sort')}</span>
+        <span class="dash-fav-category-label">${escapeHtml(_favCategoryFilter ? _favCategoryFilter.toUpperCase() : 'Sort')}</span>
         <svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor"><path d="M0 0l5 6 5-6z"/></svg>
       </button>
       <div class="board-filter-dropdown dash-fav-category-dropdown" hidden></div>
@@ -241,7 +241,7 @@ function buildKanbanWidget() {
     <div class="dash-card dash-card--kanban">
       <div class="dash-card-header">
         <span class="dash-card-title">Queue Kanban</span>
-        <button class="dash-card-header-btn dash-kanban-open">Open <span class="dash-kanban-open-arrow">▶</span></button>
+        <button class="dash-card-header-btn dash-kanban-open"><span class="dash-kanban-open-label">Open</span> <span class="dash-kanban-open-arrow">▶</span></button>
       </div>
       <div class="dash-kanban-mini-board">${columnsHtml}</div>
     </div>`;
@@ -331,7 +331,7 @@ function buildCuratedListsWidget() {
     <div class="dash-card dash-card--curated">
       <div class="dash-card-header">
         <span class="dash-card-title">Curated Lists</span>
-        <button class="dash-card-header-btn dash-curated-add-btn">Add +</button>
+        <button class="dash-card-header-btn dash-curated-add-btn"><span class="dash-curated-add-label">Add +</span></button>
       </div>
       <div class="dash-carousel">
         <button class="dash-carousel-prev" aria-label="Previous">‹</button>
