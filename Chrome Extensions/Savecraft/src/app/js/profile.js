@@ -248,7 +248,7 @@ function wireInterestsSection(container) {
 // Lets the user choose which category folders are relevant to each custom Saved List (Health,
 // Motivation, anything user-added) — e.g. Health might not want a "Games" section at all, or
 // might want it narrowed down to just "Mobile Games". Deliberately excludes the built-in
-// "All Saves" (default-favorites) list — that one's the catch-all and is always unrestricted, so
+// "All My Saves" (default-favorites) list — that one's the catch-all and is always unrestricted, so
 // there's nothing to configure for it. See renderSidebar.js's activeSavedListFolderScope() for
 // where this actually filters the sidebar's category>folder tree while a scoped list is active.
 

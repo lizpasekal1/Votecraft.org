@@ -6,7 +6,7 @@
 // other file's `from './render.js'` import line needs to change.
 
 export { getFilteredSortedItems } from './renderFilters.js';
-export { renderSidebar, promptAddFolder } from './renderSidebar.js';
+export { renderSidebar, promptAddFolder, collapseAllSidebarSections } from './renderSidebar.js';
 export { renderGrid, renderCard } from './renderGrid.js';
 export { renderAuthorPage } from './renderAuthorPage.js';
 export { resolveOrgImageUrl } from './renderCuratedPages.js';

@@ -159,7 +159,7 @@ function buildFavoritesWidget() {
   if (_favSlides.length === 0) {
     return `
       <div class="dash-card dash-card--favorites">
-        <div class="dash-card-header"><span class="dash-card-title">Favorites Spotlight</span></div>
+        <div class="dash-card-header"><span class="dash-card-title">Recent Saves</span></div>
         <div class="dash-fav-empty">Star an item to see it here.</div>
       </div>`;
   }
@@ -179,7 +179,7 @@ function buildFavoritesWidget() {
   return `
     <div class="dash-card dash-card--favorites">
       <div class="dash-card-header">
-        <span class="dash-card-title">Favorites Spotlight</span>
+        <span class="dash-card-title">Recent Saves</span>
         ${categoryFilterHtml}
       </div>
       <div class="dash-carousel">

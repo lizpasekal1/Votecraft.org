@@ -77,7 +77,7 @@ export function getFilteredSortedItems() {
     // Sidebar's Saved Lists child rows (Favorites/Health/Motivation/anything user-added) — set
     // via the detail modal's star "Save to:" menu (detailModalHeader.js's _toggleSaveToMenu()),
     // checkbox-style so an item can belong to several lists at once. default-favorites (checked
-    // by id, not display name — "Favorites" is renameable, e.g. to "All Saves") drives the
+    // by id, not display name — "Favorites" is renameable, e.g. to "All My Saves") drives the
     // existing item.favorite boolean (matching _isListSelected()'s own id check there); every
     // other list matches against item.savedListIds (an array, not a single id). An id that no
     // longer matches any state.savedLists entry (list was since removed) shows empty rather than

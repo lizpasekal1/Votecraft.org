@@ -112,10 +112,11 @@ export function renderGrid() {
     const listId = state.view.slice(10);
     const list = state.savedLists.find(l => l.id === listId);
     const listName = list ? list.name : 'List';
-    // "All Saves" (default-favorites, renamed from "Favorites") already reads as a complete title
-    // on its own — appending " Saves" would double up ("All Saves Saves"). Every other list
-    // (Health, Motivation, anything user-added) still gets the " Saves" suffix to match the
-    // curated-genre landing card's own title shape (e.g. "Futurism Saves").
+    // "All My Saves" (default-favorites, renamed from "Favorites" -> "All Saves" -> "All My
+    // Saves") already reads as a complete title on its own — appending " Saves" would double up
+    // ("All My Saves Saves"). Every other list (Health, Motivation, anything user-added) still
+    // gets the " Saves" suffix to match the curated-genre landing card's own title shape (e.g.
+    // "Futurism Saves").
     const cardTitle = listId === 'default-favorites' ? listName : `${listName} Saves`;
     gridTitle.style.display = 'none';
     sortSelect.style.display = 'none';
