@@ -310,6 +310,15 @@
      mobile, per direct request. */
   .my-options-item[data-option="home"] { display: none; }
 
+  /* base.css's .search-expand-wrap.open .search-expand-input is a fixed 210px, sized for a
+     desktop header with room to spare — on a phone, that plus the hamburger/wordmark/settings
+     icons already sharing the header row doesn't fit, pushing the whole header (and, since
+     nothing was clipping it reliably, the whole page — see body's own touch-action fix) wider
+     than the screen. Narrower fixed width leaves comfortable room next to the rest of the header. */
+  .search-expand-wrap.open .search-expand-input {
+    width: 140px;
+  }
+
   /* Dashboard */
   .dash-widget-grid { grid-template-columns: 1fr; }
   /* height:auto here used to collapse the hero almost to nothing: .dash-hero-content
