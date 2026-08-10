@@ -122,7 +122,12 @@ export function renderSidebar() {
     </div>
   `;
 
-  function wireMobileHeader() {
+  // allCollapsibleIds: every collapsible id currently rendered in this pass (same idea as
+  // wireDashboardLink's own otherCollapsibleIds param below, and passed in for the same closure-
+  // timing reason — this is called from the curated-picker branch too, textually before
+  // sidebarCategoryList exists). Switching top-level mode via the Curated/Shared tabs closes every
+  // accordion rather than leaving whatever was expanded before still open underneath the new mode.
+  function wireMobileHeader(allCollapsibleIds) {
     sidebar.querySelector('.sidebar-close-btn')?.addEventListener('click', closeSidebar);
     sidebar.querySelectorAll('[data-sidebar-opt]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -136,6 +141,7 @@ export function renderSidebar() {
         } else {
           state.sidebarMode = 'categories'; state.view = 'all';
         }
+        state.collapsed = new Set(allCollapsibleIds);
         persistViewState();
         renderSidebar();
         renderGrid();
@@ -297,7 +303,9 @@ export function renderSidebar() {
         `).join('')}
       </div>
     `;
-    wireMobileHeader();
+    // No categories rendered in this branch — just Dashboard/Saved Lists/Curated Lists (see
+    // dashboardLinkHtml above, shared across every branch).
+    wireMobileHeader(['dashboard', 'saved-lists', 'curated-lists']);
     wireDashboardLink([]); // genre rows aren't collapsible/tracked in state.collapsed at all
     sidebar.querySelectorAll('.sidebar-genre').forEach(el => {
       el.addEventListener('click', () => {
@@ -420,7 +428,7 @@ export function renderSidebar() {
       ${categorySections}
     </div>
   `;
-  wireMobileHeader();
+  wireMobileHeader(['dashboard', 'saved-lists', 'curated-lists', ...sidebarCategoryList]);
   wireDashboardLink(sidebarCategoryList);
 
   // Category header: toggle collapse OR switch view
