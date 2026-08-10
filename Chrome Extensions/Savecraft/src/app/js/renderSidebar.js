@@ -256,19 +256,15 @@ export function renderSidebar() {
   function wireDashboardLink() {
     sidebar.querySelector('.sidebar-dashboard-link')?.addEventListener('click', () => {
       if (state.collapsed.has('dashboard')) {
-        // Every real category re-added here too (via the same canonical list
-        // collapseAllSidebarSections uses), not just whatever this specific render pass happened
-        // to have on hand — this used to take an otherCollapsibleIds param instead, closed over
-        // the current render's own category list, but that went stale in exactly the situation
-        // that matters most: wired from the curated-picker branch (which passes an empty list,
-        // correctly, since genre rows aren't collapsible) and then clicked, the rebuild used that
-        // now-irrelevant empty list, leaving every real category un-collapsed once the click
-        // itself switched back to the normal categorized sidebar (reported live: tap Curated, tap
-        // Dashboard, every accordion is open). A full rebuild is still needed, not a toggle —
-        // without one, expanding Dashboard from a category tab silently blew away that category's
-        // own independent collapsed-by-default state every time (a real bug, caught via testing
-        // before shipping).
-        state.collapsed = new Set([...CATEGORIES.filter(cat => cat !== 'Music Album'), 'saved-lists', 'curated-lists']);
+        // Reuses the same canonical "collapse everything" helper the mode-switch handlers below
+        // call, then reopens just Dashboard — this used to re-derive its own category list inline
+        // instead (via an otherCollapsibleIds param closed over whichever render pass wired it),
+        // which went stale in exactly the situation that matters most: wired from the curated-
+        // picker branch (which has no categories to pass) and then clicked, leaving every real
+        // category un-collapsed once the click switched back to the normal categorized sidebar
+        // (reported live: tap Curated, tap Dashboard, every accordion is open).
+        collapseAllSidebarSections();
+        state.collapsed.delete('dashboard');
       } else {
         state.collapsed.add('dashboard');
       }
