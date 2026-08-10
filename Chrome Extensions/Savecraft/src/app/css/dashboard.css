@@ -441,11 +441,12 @@
   .dash-fav-category-btn svg {
     transform: translateX(-8px);
   }
-  /* Resets the desktop-only .dash-kanban-open-arrow sizing/offset (this file, near the top) —
-     the "Open ▶" triangle stays its original size/position on mobile. */
+  /* Resets the desktop-only .dash-kanban-open-arrow sizing offset (this file, near the top) —
+     the "Open ▶" triangle stays its original size on mobile, with its own small 3px nudge right
+     per direct request (not the desktop 20px, and not fully back to 0 like font-size above). */
   .dash-kanban-open-arrow {
     font-size: 1em;
-    margin-left: 0;
+    margin-left: 3px;
   }
   /* Shifts just the text 5px left in all three widget-header buttons, leaving each one's own
      icon (Sort's chevron, Open's triangle) exactly where it already is — per direct request.
