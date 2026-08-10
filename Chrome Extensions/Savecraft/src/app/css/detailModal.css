@@ -1844,7 +1844,9 @@
   .vc-sponsored-tag {
     gap: 6px;
     font-size: 12px;
-    padding: 4px 11px 7px;
+    /* 10px more on each side than the desktop-equivalent 11px, per direct request (+20px overall) —
+       position: absolute + margin: 0 auto above keeps it centered regardless of the extra width. */
+    padding: 4px 21px 7px;
   }
 }
 
