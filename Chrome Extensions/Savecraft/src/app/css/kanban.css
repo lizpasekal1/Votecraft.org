@@ -822,6 +822,11 @@
   cursor: pointer;
   white-space: nowrap;
 }
+.saves-list-new-confirm:hover,
+.saves-list-new-confirm:active {
+  background: #fff;
+  color: var(--primary);
+}
 
 .queue-new-cancel,
 .saves-list-new-cancel {

@@ -583,8 +583,10 @@
     z-index: 150;
     transition: background 0.15s, transform 0.1s;
   }
-  .fab-add:hover {
-    background: var(--primary-hover);
+  .fab-add:hover,
+  .fab-add:active {
+    background: #fff;
+    color: var(--primary);
     transform: scale(1.05);
   }
 }

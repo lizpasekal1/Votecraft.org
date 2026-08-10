@@ -979,8 +979,10 @@
   transition: background 0.15s;
 }
 
-.top100-cta-btn:hover {
-  background: var(--primary-hover);
+.top100-cta-btn:hover,
+.top100-cta-btn:active {
+  background: #fff;
+  color: var(--primary);
 }
 
 @media (max-width: 768px) {

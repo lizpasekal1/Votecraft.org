@@ -17,8 +17,10 @@
   cursor: pointer;
   transition: opacity 0.15s;
 }
-.btn-fetch-albums:hover {
-  opacity: 0.85;
+.btn-fetch-albums:hover,
+.btn-fetch-albums:active {
+  background: #fff;
+  color: var(--primary);
 }
 
 .fetch-albums-modal {

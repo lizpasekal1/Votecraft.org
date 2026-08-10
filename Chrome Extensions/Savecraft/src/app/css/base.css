@@ -305,10 +305,11 @@ body {
   opacity: 1;
   color: #fff;
 }
-.search-expand-wrap.open .btn-search-icon:hover {
-  background: var(--primary-hover);
+.search-expand-wrap.open .btn-search-icon:hover,
+.search-expand-wrap.open .btn-search-icon:active {
+  background: #fff;
   opacity: 1;
-  color: #fff;
+  color: var(--primary);
 }
 
 .header-actions {
@@ -349,8 +350,10 @@ body {
   white-space: nowrap;
 }
 
-.btn-add-item:hover {
-  background: var(--primary-hover);
+.btn-add-item:hover,
+.btn-add-item:active {
+  background: #fff;
+  color: var(--primary);
 }
 
 /* Share button */
