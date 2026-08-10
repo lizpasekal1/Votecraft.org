@@ -601,8 +601,12 @@
 .btn-detail-website {
   position: relative;
   flex-shrink: 0;
-  width: 204px;
-  padding: 5px 24px;
+  /* No fixed width — this used to be sized to fit "OFFICIAL WEBSITE"; now that the label is just
+     "WEBSITE" (much shorter), a fixed width left a lot of dead space on either side of the text.
+     Shrink-wraps to the text via padding instead, same as this file's other pill buttons. Still
+     centers correctly under the image (.detail-artist-header--inline uses translateX(-50%), which
+     re-centers on whatever width this ends up rendering at). */
+  padding: 5px 18px;
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -1807,11 +1811,7 @@
   .detail-tracklist-add-chapter { font-size: 14px; }
   .streaming-label { font-size: 13px; }
   .streaming-link-btn { font-size: 14px; }
-  /* Widened along with its own font-size bump — "OFFICIAL WEBSITE" already nearly fills the
-     desktop pill's 170px at 12px/uppercase/0.08em letter-spacing, so growing the text without
-     growing the box would clip or wrap it. */
   .btn-detail-website {
-    width: 210px;
     font-size: 14px;
   }
 
