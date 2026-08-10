@@ -131,7 +131,7 @@
 .dash-card-header-btn {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 128px;
   padding: 7px 22px;
   box-sizing: border-box;
@@ -160,18 +160,28 @@
   background: var(--primary-hover);
 }
 
+/* Label stretches to fill the button, pinning any trailing icon flush against the right padding
+   edge — same mechanism .btn-board-filter span already uses for Sort (kanban.css), so all three
+   widget-header buttons (Sort/Add +/Open) share one spacing recipe and start their text flush at
+   the same left position, instead of the divergent per-button transform hacks this went through
+   getting here live. Targeted by class, not a bare `span` descendant selector, since Open's
+   button has a SECOND span (.dash-kanban-open-arrow) that must stay fixed-width, not also
+   stretch. Applies at every width — nothing here is mobile/desktop-scoped, so the same rule
+   reflows naturally at the narrower mobile size instead of needing its own copy. */
+.dash-fav-category-label,
+.dash-kanban-open-label,
+.dash-curated-add-label {
+  flex: 1;
+}
+
 /* Kanban widget — a scaled-down peek at the real board. .dash-kanban-open is now just a marker
    class for the click handler (dashboard.js) — its actual look comes from .dash-card-header-btn,
    the same purple pill style "Sort"/"Add +" already use elsewhere in this widget grid, so all
    three widget-header buttons read consistently instead of this one being a plain text link. */
-
-/* Desktop only, per direct request — reset back to normal in this file's own mobile block
-   (bottom of file) rather than left unset, since without an explicit reset there this would
-   otherwise apply on mobile too (nothing here is scoped to a max-width query). */
 .dash-kanban-open-arrow {
   display: inline-block;
-  font-size: 0.8em; /* 20% smaller than the button's own font-size */
-  margin-left: 20px;
+  /* Stops the arrow itself from being compressed by its stretching sibling label above. */
+  flex-shrink: 0;
 }
 
 .dash-kanban-mini-board {
@@ -292,8 +302,22 @@
   border-color: var(--primary);
   color: #fff;
   text-transform: uppercase;
+  /* .btn-board-filter (kanban.css) never sets justify-content, so this was already flex-start by
+     inherited default — declared explicitly so the shared recipe with .dash-card-header-btn
+     (which now matches this) is self-documenting, not implicit. */
+  justify-content: flex-start;
 }
 .dash-fav-category-btn svg { opacity: 0.85; fill: #fff; }
+/* Sort's own dropdown sits near the right edge of its widget card, unlike the real Kanban
+   board's filter button that .board-filter-dropdown (kanban.css) is really positioned for — its
+   left: 0 anchor ran the dropdown off the right edge of the screen on mobile (reported live,
+   screenshot confirmed: "All Categorie[s]" cut off). Scoped to this dashboard-specific class
+   (not the shared .board-filter-dropdown base rule) so the real board's own filter dropdown,
+   which doesn't have this problem, is unaffected. */
+.dash-fav-category-dropdown {
+  left: auto;
+  right: 0;
+}
 .dash-fav-category-btn:hover {
   background: var(--primary-hover, var(--primary));
   border-color: var(--primary-hover, var(--primary));
@@ -431,31 +455,13 @@
   .dash-fav-category-btn {
     width: 70px;
     height: 26px;
-    padding: 0;
+    /* Was 0 — with the flex:1 label-stretch mechanism (this file, near the top) pinning icons to
+       the right edge, zero padding left them flush against the bare box edge, which several
+       rounds of per-button transform hacks (now removed) were band-aiding instead of fixing.
+       Real (small) padding gives breathing room at this narrower width, same job desktop's own
+       22px already does at its size — a width change, not a mechanism change, so this reflows
+       from the shared base rules above with nothing button-specific needed here anymore. */
+    padding: 0 8px;
     font-size: 11px;
-  }
-  /* Sort's chevron nudged left, per direct request (3px, then another 3px) — same trailing-
-     position lesson as the width override above applies to any new mobile rule targeting these
-     buttons: it has to come after .dash-fav-category-btn svg's own unconditional base rule (this
-     file, near the top) to actually win. */
-  .dash-fav-category-btn svg {
-    transform: translateX(-8px);
-  }
-  /* Resets the desktop-only .dash-kanban-open-arrow sizing offset (this file, near the top) —
-     the "Open ▶" triangle stays its original size on mobile, with its own small 3px nudge right
-     per direct request (not the desktop 20px, and not fully back to 0 like font-size above). */
-  .dash-kanban-open-arrow {
-    font-size: 1em;
-    margin-left: 3px;
-  }
-  /* Shifts just the text 5px left in all three widget-header buttons, leaving each one's own
-     icon (Sort's chevron, Open's triangle) exactly where it already is — per direct request.
-     Add +'s "+" is plain text, not a separate icon element, so its whole label moves as one
-     (nothing to leave in place). */
-  .dash-fav-category-label,
-  .dash-kanban-open-label,
-  .dash-curated-add-label {
-    display: inline-block;
-    transform: translateX(-3px);
   }
 }
