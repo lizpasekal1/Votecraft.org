@@ -316,7 +316,7 @@
      nothing was clipping it reliably, the whole page — see body's own touch-action fix) wider
      than the screen. Narrower fixed width leaves comfortable room next to the rest of the header. */
   .search-expand-wrap.open .search-expand-input {
-    width: 160px;
+    width: 190px;
   }
   /* REAL BUG, found and fixed: base.css's font-size: 14px on this input is below iOS Safari's
      16px auto-zoom threshold — focusing any input smaller than that makes Safari zoom the whole
