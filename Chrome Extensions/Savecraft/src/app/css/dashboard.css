@@ -32,16 +32,19 @@
     max-height: none;
   }
 
-  /* Every widget-header pill button (Sort/Add +/Open ▶) is a fixed 148x30px on desktop —
-     reasonable next to a 15px title there, but reads oversized against the same title on a
-     phone (reported live). Half that width on mobile, per direct request — text size unchanged
-     (auto-width/shrink-to-fit was tried first, then font-size shrinks, neither was actually
-     wanted; a real fixed width at the original font size is). */
+  /* Every widget-header pill button (Sort/Add +/Open ▶) matches .btn-add-item's own size on
+     desktop (see the base rules below/in kanban.css) — narrowed here on mobile instead, in two
+     rounds per direct request (148px desktop -> 74px -> 37px, this box's current width). At 37px
+     the label itself no longer fully fits at this font-size — white-space: nowrap + overflow:
+     hidden clips rather than wrapping to a second line, which would otherwise overflow this
+     box's fixed height. */
   .dash-card-header-btn,
   .dash-fav-category-btn {
-    width: 74px;
+    width: 37px;
     height: 26px;
     padding: 0;
+    white-space: nowrap;
+    overflow: hidden;
     font-size: 11px;
   }
 }
@@ -138,20 +141,22 @@
 .dash-card-header { display: flex; align-items: center; justify-content: space-between; }
 .dash-card-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
 
+/* Same box recipe as .btn-add-item (base.css) — padding/font/weight/radius, not a fixed width or
+   height, per direct request to match that button. Width and height come out the same in
+   practice since both are intrinsically sized off the same padding+font-size, even though each
+   widget button's own label ("Sort"/"Add +"/"Open") is shorter than "+ Add Item". */
 .dash-card-header-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 148px;
-  height: 30px;
-  padding: 0;
+  padding: 7px 22px;
   box-sizing: border-box;
-  border-radius: 999px;
+  border-radius: 24px;
   border: none;
   background: var(--primary);
   color: #fff;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   cursor: pointer;
@@ -276,9 +281,9 @@
    structure/positioning but recolored to the SaveCraft purple, scoped to this class only so the
    real board's filter button (surface-colored) elsewhere is unaffected. */
 .dash-fav-category-btn {
-  width: 148px;
-  height: 30px;
-  padding: 0 14px;
+  /* No fixed width/height, same reasoning as .dash-card-header-btn above — matches
+     .btn-add-item's own padding instead so this comes out the same size. */
+  padding: 7px 22px;
   box-sizing: border-box;
   background: var(--primary);
   border-color: var(--primary);

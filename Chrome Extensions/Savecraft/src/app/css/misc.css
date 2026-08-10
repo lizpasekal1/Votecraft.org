@@ -344,7 +344,8 @@
   .dash-hero-content {
     justify-content: flex-end;
     padding: 16px 20px;
-    background: linear-gradient(to top, var(--surface) 25%, transparent 100%);
+    /* Gradient backdrop removed per direct request — greeting text now sits directly over the
+       photo collage with no fade-to-solid behind it on mobile. */
   }
   .dash-hero-greeting {
     font-size: 20px;
