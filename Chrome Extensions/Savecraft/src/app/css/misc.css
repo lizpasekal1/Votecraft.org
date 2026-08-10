@@ -310,6 +310,19 @@
      mobile, per direct request. */
   .my-options-item[data-option="home"] { display: none; }
 
+  /* Kanban board header: "‹ Dashboard" moved onto its own row above the My Saves/Categories
+     dropdowns, per direct request — sharing one row on a phone left the Categories dropdown
+     partially cut off the right edge of the screen (reported live, screenshot confirmed). Forcing
+     it to flex-basis: 100% (with the row's own flex-wrap enabled) pushes every sibling onto a
+     second line, same technique used nowhere else in this file yet but a plain, well-supported
+     flex trick — no JS/markup change needed. */
+  .grid-header {
+    flex-wrap: wrap;
+  }
+  .kanban-dashboard-link {
+    flex-basis: 100%;
+  }
+
   /* base.css's .search-expand-wrap.open .search-expand-input is a fixed 210px, sized for a
      desktop header with room to spare — on a phone, that plus the hamburger/wordmark/settings
      icons already sharing the header row doesn't fit, pushing the whole header (and, since

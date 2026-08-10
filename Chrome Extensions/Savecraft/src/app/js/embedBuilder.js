@@ -123,7 +123,11 @@ export function openEmbedBuilder() {
   renderGrid();
 }
 
-function _closeEmbedBuilder() {
+// Exported (not just used internally) so main.js's popstate handler can close Embed Builder as
+// a side effect of Back navigation, the same way it closes every real modal — Embed Builder is a
+// pseudo-view rather than a CSS-toggle overlay, so it needs its own explicit check there instead
+// of fitting the generic overlay-class lookup table.
+export function _closeEmbedBuilder() {
   if (_autoplayTimer) { clearInterval(_autoplayTimer); _autoplayTimer = null; }
   state.view = _returnViewKey || 'all';
   renderSidebar();
