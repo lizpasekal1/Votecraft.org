@@ -48,7 +48,13 @@ export function resolveOrgImageUrl(imageUrl) {
 export function renderCuratedBareList(container) {
   container.className = 'cards-grid bare-list-page';
   document.getElementById('grid-title').style.display = 'none';
-  document.querySelector('.grid-header').style.display = 'none';
+  // .grid-header itself stays visible (unlike before) specifically so its first child, the
+  // '‹ Dashboard' link (same one the Kanban board uses), can show here too, per direct request —
+  // every other control that normally lives in .grid-header is still individually hidden by
+  // renderGrid()'s own reset before this runs, so sort-select is the only one that needs hiding
+  // explicitly here (it defaults to visible there, unlike the Kanban-only controls).
+  document.getElementById('sort-select').style.display = 'none';
+  document.getElementById('btn-kanban-dashboard').style.display = '';
 
   const content = CURATED_DIRECTORY_CONTENT;
   const allOrgs = content.categories.flatMap(({ label, orgs }) => orgs.map(org => ({ ...org, category: label })));

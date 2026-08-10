@@ -568,11 +568,14 @@
 .kanban-sort-option:hover { background: var(--bg); color: var(--text); }
 .kanban-sort-option.active { color: var(--primary); font-weight: 600; }
 
-/* "‹ Dashboard" — a quick way back to the homepage from the Kanban board, per direct request.
-   Sits first in .grid-header (index.html), so it's naturally the leftmost element. On desktop,
-   .saves-list-wrap's own margin-left: auto below pushes the other three controls (My Saves/
-   Categories/info) to the right, leaving this alone on the left — mobile keeps every control
-   left-aligned in one row, this one simply first. */
+/* "‹ Dashboard" — a quick way back to the homepage, per direct request. Sits first in
+   .grid-header (index.html), so it's naturally the leftmost element wherever .grid-header itself
+   is shown — currently the Kanban board (its own render function shows it alongside its other
+   controls) and the "Cause Curated" bare list (which shows it alone, see
+   renderCuratedBareList() in renderCuratedPages.js). On desktop, .saves-list-wrap's own
+   margin-left: auto below pushes the Kanban board's other three controls (My Saves/Categories/
+   info) to the right, leaving this alone on the left; mobile stacks it onto its own row above
+   them instead (misc.css). */
 .kanban-dashboard-link {
   background: none;
   border: none;

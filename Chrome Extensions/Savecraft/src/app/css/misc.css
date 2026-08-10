@@ -315,7 +315,8 @@
      partially cut off the right edge of the screen (reported live, screenshot confirmed). Forcing
      it to flex-basis: 100% (with the row's own flex-wrap enabled) pushes every sibling onto a
      second line, same technique used nowhere else in this file yet but a plain, well-supported
-     flex trick — no JS/markup change needed. */
+     flex trick — no JS/markup change needed. Desktop is unaffected/unchanged — confirmed fine as
+     it already was there. */
   .grid-header {
     flex-wrap: wrap;
   }
