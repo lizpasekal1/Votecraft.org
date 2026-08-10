@@ -32,24 +32,17 @@
     max-height: none;
   }
 
-  /* Both widget-header pill buttons ("Categories" on Recent Saves, "Add Curated" on Curated
-     Lists) are a fixed 148x30px on desktop — reasonable next to a 15px title there, but reads
-     oversized against the same title on a phone (reported live). No fixed width on mobile: each
-     shrink-wraps to its own (differently-sized) label via padding instead, same approach as this
-     file's other pill-button mobile fixes elsewhere in the codebase. */
+  /* Every widget-header pill button (Sort/Add +/Open ▶) is a fixed 148x30px on desktop —
+     reasonable next to a 15px title there, but reads oversized against the same title on a
+     phone (reported live). Half that width on mobile, per direct request — text size unchanged
+     (auto-width/shrink-to-fit was tried first, then font-size shrinks, neither was actually
+     wanted; a real fixed width at the original font size is). */
   .dash-card-header-btn,
   .dash-fav-category-btn {
-    width: auto;
-    height: 22px;
-    padding: 0 3px;
-    font-size: 9px;
-    letter-spacing: 0.02em;
-  }
-  /* The chevron icon (Sort only) at its normal 10x6 was still adding real width against a 9px
-     label — scaled down to match. */
-  .dash-fav-category-btn svg {
-    width: 7px;
-    height: 5px;
+    width: 74px;
+    height: 26px;
+    padding: 0;
+    font-size: 11px;
   }
 }
 
@@ -169,18 +162,10 @@
   background: var(--primary-hover);
 }
 
-/* Kanban widget — a scaled-down peek at the real board */
-.dash-kanban-open {
-  background: none;
-  border: none;
-  color: var(--primary);
-  font-size: 13px;
-  font-weight: 600;
-  text-transform: uppercase;
-  cursor: pointer;
-  padding: 0;
-}
-.dash-kanban-open:hover { text-decoration: underline; }
+/* Kanban widget — a scaled-down peek at the real board. .dash-kanban-open is now just a marker
+   class for the click handler (dashboard.js) — its actual look comes from .dash-card-header-btn,
+   the same purple pill style "Sort"/"Add +" already use elsewhere in this widget grid, so all
+   three widget-header buttons read consistently instead of this one being a plain text link. */
 
 .dash-kanban-mini-board {
   display: grid;
