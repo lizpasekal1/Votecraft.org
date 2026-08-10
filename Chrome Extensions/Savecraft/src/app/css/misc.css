@@ -457,6 +457,16 @@
     background: var(--primary);
     color: #fff;
   }
+  /* Fixed white/dark-gray regardless of theme (not var(--text-primary), which flips to a light
+     color in dark mode) — hover for a mouse, :active for the moment a finger is actually touching
+     it, covering both the "hovering or tapping" cases these tabs get on a phone. Placed after
+     .active above so it also wins the tie there (equal specificity, later rule wins) — tapping the
+     already-active tab gets the same white feedback flash as the inactive one. */
+  .sidebar-mode-tab:hover,
+  .sidebar-mode-tab:active {
+    background: #fff;
+    color: #3c4043;
+  }
 
   /* Scrollable items area */
   .sidebar-items-scroll {
