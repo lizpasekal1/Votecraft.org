@@ -334,6 +334,12 @@
   .dash-hero {
     height: 172px;
     padding: 0;
+    /* Bleeds past .grid-area's own 16px mobile side padding (this file, .grid-area rule below) so
+       the slider touches the true screen edges instead of sitting inset with dead space on either
+       side — negative margin matching that padding exactly, same edge-to-edge technique used
+       elsewhere in this file's mobile overrides. .dash-hero-content's own 20px padding (below)
+       keeps the greeting text sensibly inset regardless. */
+    margin: 0 -16px;
   }
   .dash-hero-content {
     justify-content: flex-end;

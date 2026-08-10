@@ -40,9 +40,16 @@
   .dash-card-header-btn,
   .dash-fav-category-btn {
     width: auto;
-    height: 26px;
-    padding: 0 4px;
-    font-size: 10px;
+    height: 22px;
+    padding: 0 3px;
+    font-size: 9px;
+    letter-spacing: 0.02em;
+  }
+  /* The chevron icon (Sort only) at its normal 10x6 was still adding real width against a 9px
+     label — scaled down to match. */
+  .dash-fav-category-btn svg {
+    width: 7px;
+    height: 5px;
   }
 }
 
