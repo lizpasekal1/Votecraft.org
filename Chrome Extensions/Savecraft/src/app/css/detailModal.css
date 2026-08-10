@@ -1506,8 +1506,11 @@
   transition: background 0.15s, transform 0.1s;
 }
 
-.vc-sponsored-tag:hover {
+.vc-sponsored-tag:hover,
+.vc-sponsored-tag:active {
   transform: translateY(-1px);
+  background: #fff;
+  color: var(--primary);
 }
 
 .vc-sponsored-tag--overlay {
@@ -1584,9 +1587,12 @@
   color: #fff;
   font-weight: 700;
 }
-.detail-load-art-btn.image-lightbox-load-art-btn:hover {
-  color: #fff;
-  filter: brightness(1.1);
+.detail-load-art-btn.image-lightbox-load-art-btn:hover,
+.detail-load-art-btn.image-lightbox-load-art-btn:active {
+  background: #fff;
+  border-color: #fff;
+  color: var(--primary);
+  filter: none;
 }
 
 .image-lightbox-arrow {

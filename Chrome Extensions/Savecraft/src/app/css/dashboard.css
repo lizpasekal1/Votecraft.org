@@ -156,8 +156,10 @@
   transition: background 0.12s;
 }
 
-.dash-card-header-btn:hover {
-  background: var(--primary-hover);
+.dash-card-header-btn:hover,
+.dash-card-header-btn:active {
+  background: #fff;
+  color: var(--primary);
 }
 
 /* Label stretches to fill the button, pinning any trailing icon flush against the right padding
@@ -331,9 +333,16 @@
   left: auto;
   right: 0;
 }
-.dash-fav-category-btn:hover {
-  background: var(--primary-hover, var(--primary));
-  border-color: var(--primary-hover, var(--primary));
+.dash-fav-category-btn:hover,
+.dash-fav-category-btn:active {
+  background: #fff;
+  border-color: #fff;
+  color: var(--primary);
+}
+.dash-fav-category-btn:hover svg,
+.dash-fav-category-btn:active svg {
+  opacity: 1;
+  fill: var(--primary);
 }
 
 .dash-carousel-strip {
