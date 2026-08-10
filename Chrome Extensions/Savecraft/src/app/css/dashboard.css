@@ -425,4 +425,11 @@
     padding: 0;
     font-size: 11px;
   }
+  /* Sort's chevron nudged 3px left, per direct request — same trailing-position lesson as the
+     width override above applies to any new mobile rule targeting these buttons: it has to come
+     after .dash-fav-category-btn svg's own unconditional base rule (this file, near the top) to
+     actually win. */
+  .dash-fav-category-btn svg {
+    transform: translateX(-3px);
+  }
 }

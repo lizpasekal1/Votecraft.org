@@ -396,6 +396,19 @@
     position: static;
     transform: none;
     flex: 1;
+    /* min-width: 0 lets this actually shrink under pressure — a flex item's default min-width is
+       auto (its own content's width, "SaveCraft" at 20px here), not 0, so without this the logo
+       refused to shrink at all once the search input opened (140px wide, see
+       .search-expand-wrap.open .search-expand-input below) and pushed the row's total content
+       wider than the screen — reported live as the header appearing to grow and the hamburger
+       disappearing, almost certainly iOS Safari's own "scroll the focused input into view"
+       behavior shifting the whole header sideways to reveal it, since nothing here was actually
+       narrow enough to avoid that overflow in the first place. overflow/ellipsis so it truncates
+       gracefully instead of visibly overlapping .header-actions if it's ever squeezed this tight. */
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     text-align: center;
   }
 
