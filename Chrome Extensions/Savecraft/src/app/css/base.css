@@ -294,6 +294,16 @@ body {
 .btn-search-icon .icon-close { display: none; }
 .search-expand-wrap.open .btn-search-icon .icon-search { display: none; }
 .search-expand-wrap.open .btn-search-icon .icon-close { display: block; }
+/* Purple circle while searching (was the same neutral --search-bg the resting state uses),
+   per direct request — reads as a real "active" state, not just a swapped icon. */
+.search-expand-wrap.open .btn-search-icon {
+  background: var(--primary);
+  color: #fff;
+}
+.search-expand-wrap.open .btn-search-icon:hover {
+  background: var(--primary-hover);
+  color: #fff;
+}
 
 .header-actions {
   display: flex;
