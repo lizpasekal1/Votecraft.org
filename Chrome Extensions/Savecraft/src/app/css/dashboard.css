@@ -33,18 +33,15 @@
   }
 
   /* Every widget-header pill button (Sort/Add +/Open ▶) matches .btn-add-item's own size on
-     desktop (see the base rules below/in kanban.css) — narrowed here on mobile instead, in two
-     rounds per direct request (148px desktop -> 74px -> 37px, this box's current width). At 37px
-     the label itself no longer fully fits at this font-size — white-space: nowrap + overflow:
-     hidden clips rather than wrapping to a second line, which would otherwise overflow this
-     box's fixed height. */
+     desktop (see the base rules below/in kanban.css) — narrowed here on mobile instead, through
+     several rounds per direct request (148px desktop -> 74px -> 37px -> this box's current
+     67px). Labels fit again at 67px without clipping, so the nowrap/overflow-hidden workaround
+     37px needed is gone too. */
   .dash-card-header-btn,
   .dash-fav-category-btn {
-    width: 37px;
+    width: 67px;
     height: 26px;
     padding: 0;
-    white-space: nowrap;
-    overflow: hidden;
     font-size: 11px;
   }
 }
