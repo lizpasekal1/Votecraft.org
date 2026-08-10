@@ -69,49 +69,58 @@
   display: none;
 }
 
-.sidebar.sidebar-collapsed {
-  width: 64px;
-}
-.sidebar.sidebar-collapsed .sidebar-label-text,
-.sidebar.sidebar-collapsed .sidebar-right,
-.sidebar.sidebar-collapsed .sidebar-subfolder,
-.sidebar.sidebar-collapsed .sidebar-add-folder,
-.sidebar.sidebar-collapsed .sidebar-divider,
-.sidebar.sidebar-collapsed .sidebar-genre-arrow {
-  display: none;
-}
-.sidebar.sidebar-collapsed .sidebar-item {
-  justify-content: center;
-  padding: 10px 0;
-  margin-right: 0;
-  border-radius: 12px;
-}
-.sidebar.sidebar-collapsed .sidebar-label {
-  flex: none;
-  justify-content: center;
-}
+/* Desktop-only icon rail. Scoped behind min-width so it structurally cannot leak into the mobile
+   drawer — this block used to apply unconditionally, so a user who'd previously collapsed the
+   sidebar on desktop got this same styling forced onto their mobile drawer too: first surfaced
+   as the drawer being squeezed to 64px wide (fixed with an equal-specificity width override in
+   misc.css's mobile block), then again as every row's label text/arrow being hidden here (this
+   fix) — same root cause both times, this is the actual fix for the whole class of bug rather
+   than patching each individual property one at a time. */
+@media (min-width: 769px) {
+  .sidebar.sidebar-collapsed {
+    width: 64px;
+  }
+  .sidebar.sidebar-collapsed .sidebar-label-text,
+  .sidebar.sidebar-collapsed .sidebar-right,
+  .sidebar.sidebar-collapsed .sidebar-subfolder,
+  .sidebar.sidebar-collapsed .sidebar-add-folder,
+  .sidebar.sidebar-collapsed .sidebar-divider,
+  .sidebar.sidebar-collapsed .sidebar-genre-arrow {
+    display: none;
+  }
+  .sidebar.sidebar-collapsed .sidebar-item {
+    justify-content: center;
+    padding: 10px 0;
+    margin-right: 0;
+    border-radius: 12px;
+  }
+  .sidebar.sidebar-collapsed .sidebar-label {
+    flex: none;
+    justify-content: center;
+  }
 
-/* Collapsed rail: the full-row hover highlight looks off since the row is much wider than the
-   icon itself — instead, only the icon's own background square lightens on hover. */
-.sidebar.sidebar-collapsed .sidebar-item:hover {
-  background: none;
-}
-.sidebar.sidebar-collapsed .sidebar-item:hover .cat-icon {
-  background: #45454a;
-}
+  /* Collapsed rail: the full-row hover highlight looks off since the row is much wider than the
+     icon itself — instead, only the icon's own background square lightens on hover. */
+  .sidebar.sidebar-collapsed .sidebar-item:hover {
+    background: none;
+  }
+  .sidebar.sidebar-collapsed .sidebar-item:hover .cat-icon {
+    background: #45454a;
+  }
 
-/* Same idea for the active/current page — the wide-row purple band looked just as off; instead
-   only the icon square fills purple, with the icon itself flipped to white for contrast (it's
-   normally purple-on-dark, which would otherwise vanish against a purple square). */
-.sidebar.sidebar-collapsed .sidebar-item.active {
-  background: none;
-}
-.sidebar.sidebar-collapsed .sidebar-item.active .cat-icon {
-  background: var(--primary);
-}
-.sidebar.sidebar-collapsed .sidebar-item.active .cat-icon svg {
-  fill: #fff;
-  color: #fff;
+  /* Same idea for the active/current page — the wide-row purple band looked just as off; instead
+     only the icon square fills purple, with the icon itself flipped to white for contrast (it's
+     normally purple-on-dark, which would otherwise vanish against a purple square). */
+  .sidebar.sidebar-collapsed .sidebar-item.active {
+    background: none;
+  }
+  .sidebar.sidebar-collapsed .sidebar-item.active .cat-icon {
+    background: var(--primary);
+  }
+  .sidebar.sidebar-collapsed .sidebar-item.active .cat-icon svg {
+    fill: #fff;
+    color: #fff;
+  }
 }
 
 .sidebar-item {

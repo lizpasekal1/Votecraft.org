@@ -389,16 +389,10 @@
     overflow: hidden;
     padding: 0;
   }
-  /* sidebar.css's own comment says the desktop collapse-to-icon-rail feature "isn't affected"
-     here, but that was never actually enforced — .sidebar.sidebar-collapsed (two classes) beats
-     the plain .sidebar rule above (one class) on specificity alone, so anyone who'd previously
-     collapsed the sidebar on desktop got that same 64px rail squeezing the mobile drawer too,
-     overflowing its contents (reported live: the mode-tabs buttons spilling out past a 63px-wide
-     container). Re-assert the real mobile width at equal specificity so it always wins here. */
-  .sidebar.sidebar-collapsed {
-    width: 85vw;
-    max-width: 300px;
-  }
+  /* NOTE: .sidebar.sidebar-collapsed's desktop icon-rail styling used to leak in here too (both
+     width and, separately, hidden labels) — now fixed at the root in sidebar.css by scoping that
+     whole block behind min-width:769px, so no override is needed here anymore. See that file's
+     comment on the `.sidebar.sidebar-collapsed` block for the full story. */
   .sidebar.open { transform: translateX(0); }
 
   /* Mobile sidebar header */

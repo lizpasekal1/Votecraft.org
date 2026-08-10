@@ -634,7 +634,16 @@ async function init() {
   document.getElementById('sidebar-overlay').addEventListener('click', closeSidebar);
 
   document.getElementById('sidebar').addEventListener('click', e => {
-    if (window.innerWidth <= 768 && e.target.closest('.sidebar-item')) {
+    // Any row that only expands/collapses to reveal what's nested under it (Dashboard/category
+    // tabs: data-toggle, genre rows: data-genre, Saved Lists/Curated Lists' own header rows:
+    // data-toggle-list — CSS class alone doesn't reliably tell toggle-only rows apart from real
+    // destinations, since Saved Lists/Curated Lists' header carries the exact same
+    // .sidebar-subfolder class a real leaf destination does) shouldn't close the drawer — closing
+    // on that first tap meant re-opening it just to tap the item actually being aimed for one
+    // level deeper. Only a row with none of these (an actual destination) closes it.
+    const item = e.target.closest('.sidebar-item');
+    const isToggleOnly = e.target.closest('[data-toggle], [data-toggle-list], [data-genre]');
+    if (window.innerWidth <= 768 && item && !isToggleOnly) {
       closeSidebar();
     }
   });
