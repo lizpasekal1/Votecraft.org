@@ -11,7 +11,9 @@ import { ensureLastfmRecentTracks, isLastfmConfigured, ensureSteamRecentGames, i
 import { isExtension, storageSync, storageOnChanged, resourceUrl } from './platform.js';
 import { debounce, escapeHtml } from './utils.js';
 import { renderSidebar, renderGrid, collapseAllSidebarSections } from './render.js';
-import { initShare } from './share.js';
+import { initShare, closeShareModal } from './share.js';
+import { navigateToView } from './navigation.js';
+import { _closeEmbedBuilder } from './embedBuilder.js';
 import {
   openAddModal, closeAddModal, handleSaveItem, updatePlatformSummary,
   openEditModal, selectStep1Category, handleTitleSearch, hideTitleSearchResults, kickOffTitleEnrichment,
@@ -300,6 +302,52 @@ export function closeSidebar() {
   document.getElementById('sidebar-overlay').classList.remove('open');
 }
 
+// ===== HISTORY (Back/Forward) =====
+// Closes whatever modal/lightbox/pseudo-view is currently open, as a side effect of Back
+// navigation — modals never get their own history entry (see navigation.js), so a single Back
+// press should dismiss whatever's open rather than needing a separate press first. Ordering
+// mirrors the existing Escape-key handler's own nesting knowledge below (video lightbox, then
+// image lightbox, then the detail modal they both nest inside) — keep the two in sync.
+function _closeAnyOpenModal() {
+  const pairs = [
+    ['video-lightbox-overlay', closeVideoLightbox],
+    ['image-lightbox-overlay', closeImageLightbox],
+    ['detail-modal-overlay', closeDetailModal],
+    ['modal-overlay', closeAddModal],
+    ['fetch-albums-overlay', closeFetchAlbumsModal],
+    ['share-modal-overlay', closeShareModal],
+    ['auth-modal-overlay', closeAuthModal],
+    ['lastfm-modal-overlay', closeLastfmModal],
+    ['steam-modal-overlay', closeSteamModal],
+  ];
+  for (const [id, close] of pairs) {
+    if (document.getElementById(id)?.classList.contains('open')) close();
+  }
+  // Embed Builder is a pseudo-view, not a CSS-toggle overlay, so it's checked via state.view
+  // instead of a DOM class — see navigation.js's NON_HISTORY_VIEWS for why it never gets pushed.
+  if (state.view === 'embed-builder') _closeEmbedBuilder();
+}
+
+function _handlePopstate(e) {
+  _closeAnyOpenModal();
+  if (!e.state) {
+    // An entry this app didn't create (e.g. the user navigated away to another site and back) —
+    // fall back to re-parsing the URL the same way initial load does, rather than guessing.
+    const v = new URLSearchParams(location.search).get('v');
+    if (v) state.view = v;
+  } else {
+    state.view = e.state.view;
+    if (e.state.sidebarMode !== undefined) state.sidebarMode = e.state.sidebarMode;
+    state.activeCuratedFolderId = e.state.activeCuratedFolderId ?? null;
+    state.authorReturnView = e.state.authorReturnView ?? null;
+  }
+  renderSidebar();
+  renderGrid();
+  // No persistViewState() here — Back/Forward is a read of history already written when each
+  // entry was first pushed; re-persisting here would overwrite "last stored view" with whatever
+  // the user is currently scrolled *back* to, not the furthest view actually reached.
+}
+
 // ===== INIT =====
 async function init() {
   await initAuth();
@@ -382,10 +430,7 @@ async function init() {
     // signed-out (buildAccountSection in profile.js falls back to a demo persona); "Manage
     // account" inside it is the actual sign-in entry point. Signing in is what additionally
     // unlocks cross-device sync, it's never required just to look around.
-    state.view = 'profile';
-    persistViewState();
-    renderSidebar();
-    renderGrid();
+    navigateToView('profile');
   });
   document.getElementById('link-sponsored-statements').href = resourceUrl('src/sponsored/sponsored.html');
   document.addEventListener('click', e => {
@@ -445,10 +490,19 @@ async function init() {
   const sortSelect = document.getElementById('sort-select');
   sortSelect.value = state.sort;
 
-  // Reloading lands back on whatever view/sidebarMode was last active — loadAll() above already
-  // restored both from chrome.storage.sync, so no override needed here.
-  renderSidebar();
-  renderGrid();
+  // A `?v=` in the URL (shared/pasted link, or reloading an already-navigated-to view) wins over
+  // the last-stored view — loadAll()/runInitialSync() above already restored state.view from
+  // storage/Firestore as the fallback for when there's no `?v=` at all (e.g. the extension's
+  // very first open, or a bare "/" web visit). Always a replaceState (not pushState), so the URL
+  // matches reality on first paint without creating a phantom extra back-stack entry.
+  const urlView = new URLSearchParams(location.search).get('v');
+  navigateToView(urlView || state.view, {
+    sidebarMode: state.sidebarMode,
+    activeCuratedFolderId: state.activeCuratedFolderId,
+    authorReturnView: state.authorReturnView,
+    replace: true,
+  });
+  window.addEventListener('popstate', _handlePopstate);
   initShare();
   initSearch();
 
@@ -461,27 +515,29 @@ async function init() {
   myOptionsDropdown.querySelectorAll('.my-options-item').forEach(btn => {
     btn.addEventListener('click', () => {
       const opt = btn.dataset.option;
+      let view, sidebarMode;
       if (opt === 'home') {
-        state.sidebarMode = 'home';
-        state.view = 'dashboard';
+        sidebarMode = 'home';
+        view = 'dashboard';
       } else if (opt === 'curated') {
-        state.sidebarMode = 'curated';
-        state.view = 'curated';
+        sidebarMode = 'curated';
+        view = 'curated';
       } else if (opt === 'shared') {
-        state.sidebarMode = 'shared';
-        state.view = 'shared';
+        sidebarMode = 'shared';
+        view = 'shared';
       } else if (opt === 'sponsored') {
         // "VoteCraft Picks" links straight into the real curated Top 100 saves area.
-        state.sidebarMode = 'curated';
-        state.view = 'genre:Top 100';
+        sidebarMode = 'curated';
+        view = 'genre:Top 100';
+      } else {
+        return;
       }
       // Same as the mobile drawer's Curated/Shared tabs (renderSidebar.js) — switching top-level
       // mode from this dropdown closes every accordion instead of leaving whatever was expanded
-      // before still open underneath the new mode.
+      // before still open underneath the new mode. Runs before navigateToView so the collapsed
+      // state is already settled by the time it triggers the render.
       collapseAllSidebarSections();
-      persistViewState();
-      renderSidebar();
-      renderGrid();
+      navigateToView(view, { sidebarMode });
     });
   });
 

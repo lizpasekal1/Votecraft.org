@@ -576,7 +576,7 @@
 .kanban-dashboard-link {
   background: none;
   border: none;
-  color: var(--text-secondary);
+  color: var(--primary);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -584,9 +584,10 @@
   border-radius: 6px;
   transition: color 0.15s, background 0.15s;
 }
-.kanban-dashboard-link:hover {
-  color: var(--primary);
-  background: var(--hover-bg);
+.kanban-dashboard-link:hover,
+.kanban-dashboard-link:active {
+  color: #fff;
+  background: var(--primary);
 }
 @media (min-width: 769px) {
   .saves-list-wrap {
