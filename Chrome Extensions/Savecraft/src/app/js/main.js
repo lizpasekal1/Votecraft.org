@@ -502,6 +502,14 @@ async function init() {
     }
   });
 
+  document.getElementById('btn-kanban-dashboard').addEventListener('click', () => {
+    state.sidebarMode = 'home';
+    state.view = 'dashboard';
+    persistViewState();
+    renderSidebar();
+    renderGrid();
+  });
+
   document.getElementById('btn-saves-list').addEventListener('click', e => {
     e.stopPropagation();
     const dd = document.getElementById('saves-list-dropdown');

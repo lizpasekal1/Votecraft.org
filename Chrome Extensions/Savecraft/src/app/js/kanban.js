@@ -205,6 +205,7 @@ export function renderKanbanBoard() {
 
   renderSavesListDropdown();
   renderBoardFilterDropdown();
+  document.getElementById('btn-kanban-dashboard').style.display = '';
   document.getElementById('saves-list-wrap').style.display = '';
   document.getElementById('board-filter-wrap').style.display = '';
   document.getElementById('board-info-wrap').style.display = '';

@@ -5,7 +5,7 @@
 // Favorites and Curated Lists deliberately share the same thumbnail-carousel look (see the
 // .dash-thumb-* / .dash-carousel-* classes in dashboard.css).
 
-import { state, CATEGORIES, CURATED_GENRES, GENRE_EMOJI, CURATED_ITEMS } from './state.js';
+import { state, CATEGORIES, CAT_LABEL, CURATED_GENRES, GENRE_EMOJI, CURATED_ITEMS } from './state.js';
 import { escapeHtml, catClass } from './utils.js';
 import { persistViewState } from './storage.js';
 import { openDetailModal } from './detailModal.js';
@@ -115,8 +115,12 @@ function wireFavoritesWidget(container) {
   const dd = card.querySelector('.dash-fav-category-dropdown');
   if (dd) {
     const allOption = `<button class="saves-list-option${!_favCategoryFilter ? ' active' : ''}" data-cat="">All Categories</button>`;
-    const catOptions = CATEGORIES.map(cat =>
-      `<button class="saves-list-option${_favCategoryFilter === cat ? ' active' : ''}" data-cat="${escapeHtml(cat)}">${escapeHtml(cat)}</button>`
+    // Same top-level category list/order/labels as the sidebar (Music Album excluded — it's
+    // never its own top-level row there either, just a subfolder under Musician), per direct
+    // request. data-cat stays the raw category value (items are tagged with that, e.g.
+    // "Musician" not "Music") — only the displayed label is the sidebar's friendlier CAT_LABEL.
+    const catOptions = CATEGORIES.filter(cat => cat !== 'Music Album').map(cat =>
+      `<button class="saves-list-option${_favCategoryFilter === cat ? ' active' : ''}" data-cat="${escapeHtml(cat)}">${escapeHtml(CAT_LABEL[cat] || cat)}</button>`
     ).join('');
     dd.innerHTML = allOption + `<div class="saves-list-divider"></div>` + catOptions;
 

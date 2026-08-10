@@ -568,6 +568,32 @@
 .kanban-sort-option:hover { background: var(--bg); color: var(--text); }
 .kanban-sort-option.active { color: var(--primary); font-weight: 600; }
 
+/* "‹ Dashboard" — a quick way back to the homepage from the Kanban board, per direct request.
+   Sits first in .grid-header (index.html), so it's naturally the leftmost element. On desktop,
+   .saves-list-wrap's own margin-left: auto below pushes the other three controls (My Saves/
+   Categories/info) to the right, leaving this alone on the left — mobile keeps every control
+   left-aligned in one row, this one simply first. */
+.kanban-dashboard-link {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 4px;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+.kanban-dashboard-link:hover {
+  color: var(--primary);
+  background: var(--hover-bg);
+}
+@media (min-width: 769px) {
+  .saves-list-wrap {
+    margin-left: auto;
+  }
+}
+
 /* MY SAVES list button + dropdown */
 .saves-list-wrap,
 .board-filter-wrap {
