@@ -247,22 +247,16 @@ export async function loadAll() {
           storageSync.set({ savecraft_saved_lists: state.savedLists });
         }
         // Renamed "Favorites" -> "All Saves" -> "All My Saves" — same id (default-favorites) for
-        // the same reason each time. Every place that needs to know "is this specifically the
-        // Favorites list" (it's the one that drives item.favorite instead of item.savedListIds —
-        // detailModalHeader.js, renderFilters.js, share.js) checks this id, not the display name,
-        // so it keeps working regardless of what the list is labeled.
+        // the same reason each time ("All Saves" read as ambiguous with a possible future generic
+        // "all saves" search/filter concept). Every place that needs to know "is this specifically
+        // the Favorites list" (it's the one that drives item.favorite instead of
+        // item.savedListIds — detailModalHeader.js, renderFilters.js, share.js) checks this id,
+        // not the display name, so it keeps working regardless of what the list is labeled. Both
+        // old names checked in one pass (not two sequential ifs) so an install still on the
+        // original "Favorites" name jumps straight to "All My Saves" in a single write, rather
+        // than persisting through "All Saves" as an intermediate step.
         const favoritesList = state.savedLists.find(l => l.id === 'default-favorites');
-        if (favoritesList && favoritesList.name === 'Favorites') {
-          favoritesList.name = 'All Saves';
-          storageSync.set({ savecraft_saved_lists: state.savedLists });
-        }
-        // Second rename, same list — "All Saves" read as ambiguous with a possible future generic
-        // "all saves" search/filter concept, so this specific catch-all list (driven by
-        // item.favorite, not a real search) needed a name that can't be confused with that. Checked
-        // separately (not else-if) so an install still on the original "Favorites" name jumps
-        // straight to "All My Saves" in one load instead of getting stuck at "All Saves" for a
-        // session — the block above already mutated favoritesList.name by the time this runs.
-        if (favoritesList && favoritesList.name === 'All Saves') {
+        if (favoritesList && (favoritesList.name === 'Favorites' || favoritesList.name === 'All Saves')) {
           favoritesList.name = 'All My Saves';
           storageSync.set({ savecraft_saved_lists: state.savedLists });
         }
