@@ -71,6 +71,17 @@ body {
   color: var(--text-primary);
   height: 100vh;
   overflow: hidden;
+  /* overflow: hidden above is meant to make the whole page unscrollable — any real scrolling
+     happens in an inner container (.grid-area, .detail-body, etc.) — but iOS Safari has a long-
+     documented quirk where overflow: hidden alone doesn't reliably stop a touch drag from
+     panning the page horizontally if any descendant is even briefly wider than the viewport
+     (reported live: the whole screen shifting sideways with the search bar open, whose fixed
+     210px expanded width doesn't fit next to the rest of the header on a phone — see
+     .search-expand-input's own mobile-width fix). touch-action is the modern, reliable fix for
+     that same gap — and belongs here once, not per-descendant: touch-action isn't something a
+     child can loosen back up, the browser intersects it down through the whole subtree, so this
+     single rule already covers the header, every modal, the sidebar, etc. below it. */
+  touch-action: pan-y;
   display: flex;
   flex-direction: column;
   font-size: 14px;

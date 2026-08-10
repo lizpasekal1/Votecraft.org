@@ -345,8 +345,10 @@
   /* .detail-note-toolbar intentionally bleeds 28px past this container's own edges (negative
      margins, see its own comment) to reach the modal's true outer edge — overflow-x: hidden here
      would clip that bleed at THIS element's own boundary instead of the modal's, so it's left as
-     the implicit 'auto' overflow-x computes to (a harmless, never user-visible bit of horizontal
-     scroll capacity — no visible scrollbar, and nothing scrolls it) rather than fixed explicitly. */
+     the implicit 'auto' overflow-x computes to (a bit of horizontal scroll capacity, no visible
+     scrollbar) rather than fixed explicitly. On mobile that's still safe from a touch-drag
+     standpoint without needing its own touch-action here too — body's touch-action: pan-y
+     (base.css) already blocks horizontal panning for this whole subtree. */
   /* The browser's native "keep the caret visible while typing" auto-scroll has no idea the sticky
      title/toolbar (see .detail-title-row / .detail-note-toolbar) will re-cover the very top of
      this scrollport regardless of scroll position — without this, growing a note tall enough
@@ -1116,6 +1118,23 @@
 .detail-tracklist-item {
   display: flex;
   flex-direction: column;
+  /* Same fix as .dash-card/the Embed Builder's grid panels elsewhere in this codebase: a flex
+     item defaults to min-width: auto, not 0, so it can refuse to shrink below its content's
+     natural width and overflow its container even with width: 100% set on that content —
+     letting a touch drag pan the whole accordion horizontally (reported live on an iPhone,
+     touch-action alone on .detail-body didn't stop it since the actual overflow lived here,
+     deeper than that ancestor). */
+  min-width: 0;
+  /* REGRESSION, tried and reverted: an overflow-x: hidden "hard backstop" was added here
+     alongside min-width above, and broke something worse — setting only one overflow axis to a
+     non-visible value forces the CSS spec to compute the other axis as 'auto' too, and a flex
+     item with any non-'visible' overflow gets its "automatic minimum size" reset from its
+     content's real min-content size down to a hard 0. That let this row collapse to zero height
+     under any parent flex-shrink pressure, and detailModalNotes.js's _fitAccordionSection() (which
+     measures scrollHeight via requestAnimationFrame to set the section's max-height) captured
+     that already-collapsed state and locked the whole My Notes/Chapters section at it — reported
+     live as "all the chapters are gone". min-width: 0 alone (no overflow-x here) is enough for
+     the original bleed fix; don't re-add overflow-x/-y on this element without re-checking this. */
 }
 
 /* Song List has no trailing "+Add" button (unlike My Notes/Chapters) to naturally carry space
@@ -1181,9 +1200,13 @@
   max-height: 0;
   overflow: hidden;
   width: 100%;
+  min-width: 0;
   box-sizing: border-box;
   margin: 0;
-  padding: 0 2px 0 34px;
+  /* Left inset matches .detail-tracklist-row's own 2px left padding — same left edge the row's
+     number badge starts at, not the 34px that used to skip past the number+gap to align under
+     the title instead. Requested for both desktop and mobile, so no separate mobile override. */
+  padding: 0 2px;
   border: none;
   outline: none;
   resize: none;
@@ -1205,7 +1228,7 @@
      rather than clipping. */
   max-height: none;
   overflow: hidden;
-  padding: 5px 2px 18px 34px;
+  padding: 5px 2px 18px 2px;
 }
 
 /* Images inserted via the My Notes toolbar's image button (noteSanitizer.js allows a single
@@ -1655,23 +1678,60 @@
      edges (leaving barely any backdrop to tap) now that .detail-modal-close below gives mobile a
      real, dedicated close affordance instead of relying on tapping outside the modal. */
   .modal.detail-modal {
-    width: 98vw;
-    max-width: 98vw;
-    max-height: 98vh;
-    padding: 40px 36px;
+    /* % instead of vw: vw is a longstanding, well-documented mobile Safari inconsistency — it's
+       calculated slightly differently from the real visible viewport (more room than actually
+       shows), so 98vw can render a hair wider than 98% of the true screen, just enough for a
+       touch to drag the whole modal a few px left/right (reported live, still present after the
+       inner accordion/toolbar overflow was already fixed). % is calculated against
+       #detail-modal-overlay's own box instead (position: fixed; inset: 0 — genuinely matches the
+       real viewport, no vw-style discrepancy), which sidesteps the quirk entirely. */
+    width: 98%;
+    max-width: 98%;
+    /* dvh, not vh: vh is fixed against the full screen and ignores the on-screen keyboard, so the
+       modal stayed the same (tall) height once the keyboard opened — bringing the typing caret
+       into view then had to scroll past the sticky note toolbar, pushing it above the visible
+       area entirely (reported live: "tools get hidden above the screen" while typing a note).
+       dvh tracks the actual visible viewport, shrinking with the keyboard, so there's no longer a
+       tall hidden-above region for that scroll to push the toolbar into. */
+    max-height: 98dvh;
+    padding: 40px 26px;
+  }
+
+  /* .detail-note-toolbar::before bleeds the toolbar's purple background past its own box via
+     position: absolute + negative left/right offsets, out to the modal's true edge (a pure
+     desktop visual-polish touch — see its own comment above in this file). Re-matching that
+     negative offset to this file's mobile padding (first tried here) still left the drag/
+     "modal too wide" bug reported live only partially fixed — this exact "absolutely positioned
+     background bled out via a hardcoded pixel offset" mechanism has now caused two rounds of the
+     same class of bug on mobile, so rather than keep re-deriving the exact right offset,
+     mobile just doesn't bleed at all: the pseudo-element is turned off and the toolbar paints
+     its own background directly, contained within its own row. Costs the edge-to-edge/rounded-
+     corner touch on mobile only; removes the whole mechanism as a possible overflow source. */
+  .detail-note-toolbar::before {
+    content: none;
+  }
+  .detail-note-toolbar {
+    background: var(--primary);
+    /* Tighter than the base rule's 9px 12px — that plus the buttons' own height (below) made the
+       whole bar read as too tall on a phone (reported live). */
+    padding: 5px 12px;
   }
 
   /* Desktop deliberately keeps this a fixed 278px regardless of the modal's own width (see the
      base rule's comment) — but the modal itself is now nearly full-screen on mobile, so the same
      small fixed image read as tiny relative to all that space. Ties it back to the modal's width
-     here instead (80% of it, not the full width — 100% read as too large), same as a typical
-     mobile "detail view" hero image. max-height mirrors that same 80%-of-content-width formula as
-     an explicit calc (not none/percentage) rather than an unbounded cap: percentage max-height
-     can't resolve against this element's auto-height container, and focus mode's collapse-to-0
-     transition needs a real numeric "from" value to animate smoothly from either way. */
+     here instead (55% of it, not the full width — 100% read as too large), same as a typical
+     mobile "detail view" hero image. Smaller than an even split with the content below on purpose:
+     the accordion section titles (My Notes/Summary/Web Links/Add to Queue) need to all be visible
+     the moment the modal opens, without the image eating the height budget they need (reported
+     live — see .detail-body's own scroll region, which still exists for content taller than this).
+     max-height mirrors that same 55%-of-content-width formula as an explicit calc (not none/
+     percentage) rather than an unbounded cap: percentage max-height can't resolve against this
+     element's auto-height container, and focus mode's collapse-to-0 transition needs a real
+     numeric "from" value to animate smoothly from either way. */
   .detail-image-wrap {
-    width: 80%;
-    max-height: calc((98vw - 72px) * 0.8);
+    width: 55%;
+    max-height: calc((98vw - 52px) * 0.55);
   }
 
   /* Focus mode pins a firm height (not max-height) so hiding the image/icons doesn't just let the
@@ -1679,7 +1739,7 @@
      otherwise silently override the taller cap above (a real height, not a max-height, always
      wins over the modal's own shrink-wrap regardless of what max-height also allows). */
   .detail-modal--focus-mode {
-    height: 98vh;
+    height: 98dvh;
   }
 
   /* Hidden on desktop (closing via backdrop click/Escape is enough there, and the modal is small
@@ -1708,9 +1768,14 @@
     padding: 10px 2px;
   }
 
+  /* 40px (up from desktop's own 36px) was meant to grow the tap target closer to the ~44px
+     recommended minimum, but read as too tall/bulky for this specific row (reported live) —
+     dropped below even desktop's 36px here, prioritizing a tighter bar over the extra tap-target
+     margin for this particular toolbar (every other mobile touch-target bump elsewhere in this
+     file is untouched). */
   .detail-note-toolbar-btn {
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
   }
 
   /* The circular "open this note" button (My Notes/Chapters rows) — visibly bigger, not just a
@@ -1731,7 +1796,7 @@
      than case-by-case (~10% on top of the first mobile pass, per follow-up feedback). Values
      chosen to still fit their existing layout (checked against the tightest case,
      .btn-detail-website's fixed-width pill) rather than a single flat ratio. ----- */
-  .detail-title { font-size: 22px; }
+  .detail-title { font-size: 19px; }
   .detail-notes { font-size: 15px; }
   .detail-accordion-header { font-size: 13px; }
   .detail-album-row { font-size: 15px; }

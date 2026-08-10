@@ -281,10 +281,10 @@ export function setupHeader(item, { domain, isMusicAlbum, isMusicianItem }) {
   let _ctaAuthor = _ctaAuthorName ? findAuthor(_ctaAuthorName, 'Musician') : null;
   const buildWebsiteCta = () => {
     if (_ctaAuthor?.websiteUrl) {
-      return `<a class="btn-detail-website" id="detail-website-cta" href="${escapeHtml(_ctaAuthor.websiteUrl)}" target="_blank" rel="noopener">Official Website</a>`;
+      return `<a class="btn-detail-website" id="detail-website-cta" href="${escapeHtml(_ctaAuthor.websiteUrl)}" target="_blank" rel="noopener">Website</a>`;
     }
     if (!isMusicianItem && !isMusicAlbum && item.url) {
-      return `<a class="btn-detail-website" id="detail-website-cta" href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Official Website</a>`;
+      return `<a class="btn-detail-website" id="detail-website-cta" href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Website</a>`;
     }
     return '';
   };

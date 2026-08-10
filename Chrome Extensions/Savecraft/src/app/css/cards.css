@@ -2,6 +2,11 @@
 .grid-area {
   flex: 1;
   padding: 24px 20px;
+  /* overflow-y: auto with no overflow-x set means the CSS spec forces overflow-x to compute as
+     'auto' too (a non-'visible' axis forces the other away from 'visible') — this is a real
+     scrollable-in-both-directions container, not just visually clipped. It doesn't need its own
+     touch-action though: body's touch-action: pan-y (base.css) already blocks horizontal touch
+     panning for its entire subtree, including this. */
   overflow-y: auto;
   align-self: stretch;
 }
