@@ -241,7 +241,7 @@ function buildKanbanWidget() {
     <div class="dash-card dash-card--kanban">
       <div class="dash-card-header">
         <span class="dash-card-title">Queue Kanban</span>
-        <button class="dash-card-header-btn dash-kanban-open">Open ▶</button>
+        <button class="dash-card-header-btn dash-kanban-open">Open <span class="dash-kanban-open-arrow">▶</span></button>
       </div>
       <div class="dash-kanban-mini-board">${columnsHtml}</div>
     </div>`;

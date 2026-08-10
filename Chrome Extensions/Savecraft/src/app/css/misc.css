@@ -318,6 +318,17 @@
   .search-expand-wrap.open .search-expand-input {
     width: 140px;
   }
+  /* REAL BUG, found and fixed: base.css's font-size: 14px on this input is below iOS Safari's
+     16px auto-zoom threshold — focusing any input smaller than that makes Safari zoom the whole
+     page in and scroll to center the focused field, entirely independent of this file's own
+     width fix above. That's what was actually behind "the search bar makes the header bigger and
+     removes the hamburger, can't be closed" (reported live, screenshot confirmed): the page
+     wasn't really resizing or losing the hamburger, it was zooming in and scrolling it out of the
+     now-cropped view. 16px here is the fix — at or above the threshold, Safari doesn't invoke
+     the zoom at all. */
+  .search-expand-input {
+    font-size: 16px;
+  }
 
   /* Dashboard */
   .dash-widget-grid { grid-template-columns: 1fr; }
