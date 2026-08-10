@@ -54,6 +54,7 @@ export function renderGrid() {
   if (sortSelect.parentElement !== gridHeader) gridHeader.appendChild(sortSelect);
   gridHeader.style.display = '';
 
+  document.getElementById('btn-kanban-dashboard').style.display = 'none';
   document.getElementById('saves-list-wrap').style.display = 'none';
   document.getElementById('saves-list-dropdown')?.setAttribute('hidden', '');
   document.getElementById('board-filter-wrap').style.display = 'none';
