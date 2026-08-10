@@ -34,11 +34,11 @@
 
   /* Every widget-header pill button (Sort/Add +/Open ▶) shares one width on desktop too (see the
      base rules below/in kanban.css) — sized separately here on mobile, through several rounds
-     per direct request (148px desktop -> 74px -> 37px -> 67px -> 87px -> this box's current
-     77px). */
+     per direct request (148px desktop -> 74px -> 37px -> 67px -> 87px -> 77px -> this box's
+     current 57px). */
   .dash-card-header-btn,
   .dash-fav-category-btn {
-    width: 77px;
+    width: 57px;
     height: 26px;
     padding: 0;
     font-size: 11px;
