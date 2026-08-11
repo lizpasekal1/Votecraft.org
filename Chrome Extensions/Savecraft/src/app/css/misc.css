@@ -550,16 +550,19 @@
     min-height: 44px;
   }
 
-  /* .cat-icon's inset box-shadow "edge" bevel (four 1px inset lines forming a border-like ring,
-     see sidebar.css) reads as a subtle bevel on desktop but renders as a glaring, uniform white
-     outline on real iOS devices (reported live on an iPhone 16 Pro, both Safari and Chrome — same
-     WebKit engine) — a mobile WebKit rendering mismatch for that specific effect, not an
-     intentional look. Disabled here to match how it already looks correct on desktop. The
-     top-half glossy gradient (::after) is a separate, simpler effect that renders fine on mobile
-     too — confirmed once by comparing against the desktop reference — so it's deliberately left
-     alone, not swept into this same disable. */
+  /* .cat-icon's inset box-shadow "edge" bevel (four 1px inset lines forming a border-like ring)
+     AND its top-half ::after gradient (a hard cutoff at the 50%-height mark, see sidebar.css) each
+     independently render as visible defects on real iOS devices — a white outline from the
+     box-shadow, a hard seam line from the gradient's cutoff — even though both read as subtle,
+     fine bevel/gloss on desktop. Tried keeping just the gradient once (matching the desktop
+     reference more closely); confirmed live on an iPhone 16 Pro that it alone still reproduces the
+     seam line on its own, independent of the box-shadow. Both disabled here — flat is the only
+     mobile-safe option for this effect. */
   .cat-icon {
     box-shadow: none;
+  }
+  .cat-icon::after {
+    display: none;
   }
 
   /* Overlay behind open sidebar */
