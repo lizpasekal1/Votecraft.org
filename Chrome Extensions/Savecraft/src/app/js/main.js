@@ -178,7 +178,15 @@ async function requireWebSignIn() {
   openAuthModal();
   await new Promise(resolve => {
     onAuthChange(user => { if (user) resolve(); });
-    demoBtn.addEventListener('click', () => resolve(), { once: true });
+    demoBtn.addEventListener('click', () => {
+      // A fresh "View Demo" click should always land on Dashboard (see the startOnDashboard
+      // check further down in init()) — but that check only forces Dashboard when the URL has no
+      // `?v=` at all, and this same tab may still be carrying one from an earlier visit/test
+      // (history.replaceState doesn't get cleared by a normal reload). Strip it here so a demo
+      // session never inherits a stale deep link it never actually navigated to itself.
+      history.replaceState(null, '', location.pathname);
+      resolve();
+    }, { once: true });
   });
   _authGateActive = false;
   document.getElementById('btn-auth-close').style.display = '';
