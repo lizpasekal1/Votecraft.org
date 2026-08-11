@@ -24,25 +24,19 @@
       {
         "source": "/",
         "headers": [
-          { "key": "Cache-Control", "value": "no-cache, max-age=0" }
+          { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, max-age=0" }
         ]
       },
       {
-        "source": "/src/app/index.html",
+        "source": "/src/app/**",
         "headers": [
-          { "key": "Cache-Control", "value": "no-cache, max-age=0" }
+          { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, max-age=0" }
         ]
       },
       {
-        "source": "/src/app/js/**",
+        "source": "/src/sponsored/**",
         "headers": [
-          { "key": "Cache-Control", "value": "no-cache, max-age=0" }
-        ]
-      },
-      {
-        "source": "/src/app/css/**",
-        "headers": [
-          { "key": "Cache-Control", "value": "no-cache, max-age=0" }
+          { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, max-age=0" }
         ]
       }
     ]
