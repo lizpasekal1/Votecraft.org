@@ -350,6 +350,14 @@ function _handlePopstate(e) {
 
 // ===== INIT =====
 async function init() {
+  // Applied before anything else in init() — in particular before requireWebSignIn() below, which
+  // can hold a signed-out web visitor on the sign-in gate indefinitely. Theme used to load much
+  // later in init(), so that gate (and everything else on screen while it's up) rendered in the
+  // browser's default light styling the whole time a visitor was looking at it.
+  storageSync.get({ savecraft_theme: 'dark' }, data => {
+    applyTheme(data.savecraft_theme);
+  });
+
   await initAuth();
 
   // Auth modal wiring must exist before requireWebSignIn() below — a signed-out web visitor
@@ -407,10 +415,6 @@ async function init() {
   await loadLocalCache('savecraft_creator_cache', 'creatorCache');
   await loadLocalCache('savecraft_lastfm_cache', 'lastfmCache');
   await loadLocalCache('savecraft_steam_cache', 'steamCache');
-
-  storageSync.get({ savecraft_theme: 'dark' }, data => {
-    applyTheme(data.savecraft_theme);
-  });
 
   storageSync.get({ savecraft_sidebar_collapsed: true }, data => {
     applySidebarCollapsed(data.savecraft_sidebar_collapsed);
@@ -510,11 +514,18 @@ async function init() {
   // storage/Firestore as the fallback for when there's no `?v=` at all (e.g. the extension's
   // very first open, or a bare "/" web visit). Always a replaceState (not pushState), so the URL
   // matches reality on first paint without creating a phantom extra back-stack entry.
+  //
+  // On the web demo specifically (not the extension), a bare visit always lands fresh on
+  // Dashboard rather than resuming whatever deep view a previous visit last left on — the
+  // extension keeps its own "pick up where you left off" behavior, since that's a single person's
+  // real, ongoing library rather than a public demo. 'home' is the sidebarMode Dashboard is
+  // paired with everywhere else it's navigated to (see dashboard.js/renderSidebar.js).
   const urlView = new URLSearchParams(location.search).get('v');
-  navigateToView(urlView || state.view, {
-    sidebarMode: state.sidebarMode,
-    activeCuratedFolderId: state.activeCuratedFolderId,
-    authorReturnView: state.authorReturnView,
+  const startOnDashboard = !isExtension && !urlView;
+  navigateToView(urlView || (startOnDashboard ? 'dashboard' : state.view), {
+    sidebarMode: startOnDashboard ? 'home' : state.sidebarMode,
+    activeCuratedFolderId: startOnDashboard ? null : state.activeCuratedFolderId,
+    authorReturnView: startOnDashboard ? null : state.authorReturnView,
     replace: true,
   });
   window.addEventListener('popstate', _handlePopstate);
