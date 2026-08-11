@@ -684,6 +684,37 @@
   margin-top: -6px;
 }
 
+/* Stacks Sign out above Delete account instead of the generic .modal-actions row layout (flex,
+   justify-content: flex-end) — a second flex item there would sit beside Sign out, not below it.
+   align-items: flex-end keeps both still right-aligned, just as a column now. */
+#auth-signed-in-actions {
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+/* Deliberately much quieter than the "Sign out" button above it — deleting an account is far more
+   serious and shouldn't share that button's visual weight or be an easy mis-click. */
+.auth-danger-zone {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  width: 100%;
+  text-align: right;
+}
+
+.auth-delete-account-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #EF4444;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.auth-delete-account-link:hover {
+  color: #DC2626;
+}
+
 /* Pushes the (normally hidden) demo-bypass button to the left edge, keeping Create
    account/Sign in grouped together on the right — see index.html's note on #btn-auth-demo. */
 #auth-signed-out-actions {

@@ -5,10 +5,11 @@
 // — no SDK, since the extension has no bundler. Pure logic, no DOM.
 //
 // Circular import with storage.js (storage.js imports isSignedIn/getCurrentUser/getValidIdToken
-// from here; this module imports runInitialSync from storage.js) — safe under this codebase's
-// established convention, since neither side calls the other's import at module-evaluation
-// time, only from inside function bodies (signUp/signIn here; persistItem etc. there).
-import { runInitialSync } from './storage.js';
+// from here; this module imports runInitialSync/deleteAllAccountFirestoreData from storage.js) —
+// safe under this codebase's established convention, since neither side calls the other's import
+// at module-evaluation time, only from inside function bodies (signUp/signIn/deleteAccount here;
+// persistItem etc. there).
+import { runInitialSync, deleteAllAccountFirestoreData } from './storage.js';
 import { storageLocal } from './platform.js';
 
 const _FIREBASE_API_KEY = 'AIzaSyArJ6pkXUDbZf4jcxRita0qcdr-hT46kI8';
@@ -17,6 +18,7 @@ const _SIGNUP_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?k
 const _SIGNIN_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${_FIREBASE_API_KEY}`;
 const _SEND_OOB_CODE_URL = `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${_FIREBASE_API_KEY}`;
 const _LOOKUP_URL = `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${_FIREBASE_API_KEY}`;
+const _DELETE_ACCOUNT_URL = `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${_FIREBASE_API_KEY}`;
 const _REFRESH_URL = `https://securetoken.googleapis.com/v1/token?key=${_FIREBASE_API_KEY}`;
 
 const _ERROR_MESSAGES = {
@@ -28,6 +30,7 @@ const _ERROR_MESSAGES = {
   WEAK_PASSWORD: 'Password should be at least 6 characters.',
   INVALID_EMAIL: 'That email address looks invalid.',
   TOO_MANY_ATTEMPTS_TRY_LATER: 'Too many attempts — please wait a bit and try again.',
+  CREDENTIAL_TOO_OLD_LOGIN_AGAIN: 'For security, please sign out and sign back in, then try deleting your account again.',
 };
 
 function _friendlyError(code) {
@@ -177,6 +180,34 @@ export async function resendVerificationEmail() {
   if (!idToken) return { ok: false, error: 'Not signed in.' };
   try {
     await _sendVerificationEmail(idToken);
+    return { ok: true };
+  } catch {
+    return { ok: false, error: 'Could not reach the server. Check your connection and try again.' };
+  }
+}
+
+// Permanent — the auth modal's own click handler (main.js) is what actually confirms with the
+// person first. Deletes every Firestore document for this account (deleteAllAccountFirestoreData,
+// storage.js) BEFORE deleting the Auth account itself — order matters, since the security rules
+// need a still-valid, matching signed-in uid to authorize each of those deletes, and deleting the
+// Auth account invalidates the idToken they'd need. Local (chrome.storage.sync) data is
+// deliberately left alone, same as signOut() — see the plan/commit note for why.
+export async function deleteAccount() {
+  const user = getCurrentUser();
+  if (!user) return { ok: false, error: 'Not signed in.' };
+  const idToken = await getValidIdToken();
+  if (!idToken) return { ok: false, error: 'Not signed in.' };
+  try {
+    await deleteAllAccountFirestoreData(user.uid).catch(err => console.warn('[SaveCraft] Some account data may not have fully deleted:', err));
+    const resp = await fetch(_DELETE_ACCOUNT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    });
+    const data = await resp.json();
+    if (data.error) return { ok: false, error: _friendlyError(data.error.message) };
+    await _clearAuth();
+    _notify();
     return { ok: true };
   } catch {
     return { ok: false, error: 'Could not reach the server. Check your connection and try again.' };
