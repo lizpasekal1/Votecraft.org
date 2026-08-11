@@ -152,6 +152,11 @@ export function openAuthModal() {
 // below) — makes the modal temporarily non-dismissable, since web has no local-only fallback
 // (Firestore is the sole data store there, see platform.js). Never set on the extension.
 let _authGateActive = false;
+// Set when "View Demo" is clicked — the startOnDashboard check further down in init() reads this
+// directly instead of inferring "fresh demo entry" from URL state, so a demo session can't
+// silently stop landing on Dashboard just because something else touches the URL between here and
+// there. navigateToView() (called from that same check) still owns the actual URL write.
+let _demoEntryRequested = false;
 function closeAuthModal() {
   if (_authGateActive) return;
   document.getElementById('auth-modal-overlay').classList.remove('open');
@@ -179,12 +184,7 @@ async function requireWebSignIn() {
   await new Promise(resolve => {
     onAuthChange(user => { if (user) resolve(); });
     demoBtn.addEventListener('click', () => {
-      // A fresh "View Demo" click should always land on Dashboard (see the startOnDashboard
-      // check further down in init()) — but that check only forces Dashboard when the URL has no
-      // `?v=` at all, and this same tab may still be carrying one from an earlier visit/test
-      // (history.replaceState doesn't get cleared by a normal reload). Strip it here so a demo
-      // session never inherits a stale deep link it never actually navigated to itself.
-      history.replaceState(null, '', location.pathname);
+      _demoEntryRequested = true;
       resolve();
     }, { once: true });
   });
@@ -361,9 +361,13 @@ async function init() {
   // Applied before anything else in init() — in particular before requireWebSignIn() below, which
   // can hold a signed-out web visitor on the sign-in gate indefinitely. Theme used to load much
   // later in init(), so that gate (and everything else on screen while it's up) rendered in the
-  // browser's default light styling the whole time a visitor was looking at it.
-  storageSync.get({ savecraft_theme: 'dark' }, data => {
+  // browser's default light styling the whole time a visitor was looking at it. Bundled with
+  // sidebar-collapsed in the same storageSync.get call (it has no ordering constraint of its own,
+  // and #header-sidebar — the element it toggles a class on — already exists in the static HTML
+  // regardless of init() order) rather than a second, separate sync-storage round trip later.
+  storageSync.get({ savecraft_theme: 'dark', savecraft_sidebar_collapsed: true }, data => {
     applyTheme(data.savecraft_theme);
+    applySidebarCollapsed(data.savecraft_sidebar_collapsed);
   });
 
   await initAuth();
@@ -424,9 +428,6 @@ async function init() {
   await loadLocalCache('savecraft_lastfm_cache', 'lastfmCache');
   await loadLocalCache('savecraft_steam_cache', 'steamCache');
 
-  storageSync.get({ savecraft_sidebar_collapsed: true }, data => {
-    applySidebarCollapsed(data.savecraft_sidebar_collapsed);
-  });
   document.getElementById('btn-sidebar-collapse').addEventListener('click', toggleSidebarCollapsed);
 
   // Clicking any nav item while the rail is collapsed expands it back open — the user can
@@ -523,19 +524,18 @@ async function init() {
   // very first open, or a bare "/" web visit). Always a replaceState (not pushState), so the URL
   // matches reality on first paint without creating a phantom extra back-stack entry.
   //
-  // On the web demo specifically (not the extension), a bare visit always lands fresh on
-  // Dashboard rather than resuming whatever deep view a previous visit last left on — the
+  // On the web demo specifically (not the extension), a bare visit — or a "View Demo" click,
+  // regardless of what stale ?v= that tab's URL might still be carrying from an earlier visit —
+  // always lands fresh on Dashboard rather than resuming whatever deep view was last open. The
   // extension keeps its own "pick up where you left off" behavior, since that's a single person's
-  // real, ongoing library rather than a public demo. 'home' is the sidebarMode Dashboard is
-  // paired with everywhere else it's navigated to (see dashboard.js/renderSidebar.js).
+  // real, ongoing library rather than a public demo. 'home' is the sidebarMode Dashboard is paired
+  // with everywhere else it's navigated to (see dashboard.js/renderSidebar.js).
   const urlView = new URLSearchParams(location.search).get('v');
-  const startOnDashboard = !isExtension && !urlView;
-  navigateToView(urlView || (startOnDashboard ? 'dashboard' : state.view), {
-    sidebarMode: startOnDashboard ? 'home' : state.sidebarMode,
-    activeCuratedFolderId: startOnDashboard ? null : state.activeCuratedFolderId,
-    authorReturnView: startOnDashboard ? null : state.authorReturnView,
-    replace: true,
-  });
+  const startOnDashboard = !isExtension && (_demoEntryRequested || !urlView);
+  const navOptions = startOnDashboard
+    ? { sidebarMode: 'home', activeCuratedFolderId: null, authorReturnView: null }
+    : { sidebarMode: state.sidebarMode, activeCuratedFolderId: state.activeCuratedFolderId, authorReturnView: state.authorReturnView };
+  navigateToView(startOnDashboard ? 'dashboard' : (urlView || state.view), { ...navOptions, replace: true });
   window.addEventListener('popstate', _handlePopstate);
   initShare();
   initSearch();

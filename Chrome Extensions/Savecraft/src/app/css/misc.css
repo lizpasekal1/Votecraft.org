@@ -612,6 +612,10 @@
    box-shadow, a hard seam line from the gradient's cutoff — even though both read as subtle, fine
    bevel/gloss everywhere else. Confirmed live on an iPhone 16 Pro (both Safari and Chrome — same
    WebKit engine) that the gradient alone still reproduces the seam, independent of the box-shadow.
+   The seam traces back to ::after's own `height: 50%` — the pseudo-element's box itself simply
+   stops existing there, a hard edge WebKit visibly renders, distinct from the gradient's color
+   fade inside it. Stretched to the icon's full height here (still fading to fully transparent, so
+   it still reads as a top-half highlight) — no edge left anywhere for WebKit to render.
    Scoped via @supports (-webkit-touch-callout: none) rather than a max-width media query — that
    property is iOS-WebKit-only (true on an iPhone/iPad regardless of window size, false on every
    desktop browser regardless of how narrow the window gets, Chrome included) — a narrow desktop
@@ -622,6 +626,7 @@
     box-shadow: none;
   }
   .cat-icon::after {
-    display: none;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.15), rgba(255,255,255,0) 65%);
   }
 }
