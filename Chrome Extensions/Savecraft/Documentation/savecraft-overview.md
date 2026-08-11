@@ -6,6 +6,19 @@ SaveCraft is a Chrome extension that acts as a personal media library. Users sav
 
 ## Recent Additions (latest session)
 
+This session redesigned the Sponsored Statements partner-pitch page (`src/sponsored/sponsored.html`) to connect it to VoteCraft Coin (VC), then fixed a real bug found while making that page work on the savecraft.org web build.
+
+- **VoteCraft Coin (VC) connected to the Sponsored Statements pitch page** — each pricing tier ($5/$30/$100+) now shows an estimated VC bonus badge (~500/~3,000/~10,000 VC, using the same $10 = 1,000 VC rate already live on votecraft.org's own VC app dashboard); clicking it reveals a short animated panel framed as "~N VC once VoteCraft Coin launches," never claiming an already-credited balance. Investigation found VC has no real backend anywhere in Votecraft yet — the live votecraft.org VC dashboard is itself a hardcoded front-end mockup (confirmed by reading its JS: no Firebase, no fetch calls) — so this stays an honest, clearly-labeled preview, not a real ledger. New `src/sponsored/vc-bonus.js` holds the interaction logic.
+- **New "VoteCraft Coin — a civic reward, not a cryptocurrency" section** explains VC in plain language (not crypto, no wallet, always tied to a real transaction) plus a link out to the live votecraft.org VC app dashboard. A focusable "ⓘ" tooltip button near the pricing VC mentions repeats the gist in place — built as a `<button>` rather than the app's usual hover-only `<a>` tooltip pattern (see `detailModalHeader.js`'s "⚡ Your Statement" badge), so it also works on tap/keyboard focus, not just mouse hover.
+- **Condensed the three repetitive "Offering N" sections into one "How it works" section** — they mostly restated the overview cards above them; the Sponsored Statements row now explicitly mentions the VC bonus.
+- **Styling deliberately kept in SaveCraft's own purple palette throughout**, not VoteCraft/VC's teal branding — an explicit correction applied mid-session after an initial pass leaned on VC's own brand color for the new elements.
+- **Real bug found and fixed: `sponsored.js` crashed on the web build** — it called `chrome.runtime.getURL()` unconditionally, which throws (`chrome is not defined`) outside the extension, so this page previously only worked from within the extension. Rewritten as an ES module importing `resourceUrl()` from `platform.js` (the same shim the rest of the app already uses) now that this page needs to run at savecraft.org too. `firebase.json` also gained a no-cache header for `src/sponsored/**`, matching the app's other pages.
+- Deployed live to `savecraft.org` / `votecraft-789.web.app`.
+
+---
+
+## Recent Additions (previous session)
+
 This session made SaveCraft dual-mode — the same `src/app/` codebase now also runs as a plain web app at **savecraft.org** (Firebase Hosting, same `votecraft-789` Firestore project), not just as the Chrome extension — then did a full mobile-layout pass against a live iPhone 16 Pro, fixing several real, previously-unnoticed mobile bugs.
 
 - **New: web app at savecraft.org**, dual-mode with the extension via a new `src/app/js/platform.js` runtime shim — see "Architecture" → "Storage" below and `Documentation/web-deploy.md` for the full story (deploy steps, DNS/Namecheap gotchas, the temporary "View Demo" sign-in bypass to remove before real visitors arrive).
@@ -20,7 +33,7 @@ This session made SaveCraft dual-mode — the same `src/app/` codebase now also 
 
 ---
 
-## Recent Additions (previous session)
+## Recent Additions (older session)
 
 This session landed real Saved Lists sidebar navigation, rebuilt the Share modal (Message → a Saved Lists picker, a link-sharing on/off toggle), broadened the sponsor pitch page to three offerings, and — the bulk of the session — built a brand-new **Embed Builder** feature end to end: pick a source (a whole category, an individual folder, or a hand-picked "Custom Slider"), customize a slider's look, and copy a shareable "Embed code" link. Two real bugs were found and fixed along the way (a CSS Grid track-blowout, a JS temporal-dead-zone crash).
 
@@ -36,22 +49,7 @@ This session landed real Saved Lists sidebar navigation, rebuilt the Share modal
 
 ---
 
-## Recent Additions (older session)
-
-This session added image/hyperlink support to the My Notes formatting toolbar, then restructured category/sidebar navigation across four separate requests, then fixed three real bugs found live (a partial-highlight bug, a sidebar multi-tab-open bug, a toolbar spacing issue), and closed with a self-review pass.
-
-- **My Notes toolbar gained a 4th button: insert image** — a prompt-based image-URL insert, sanitizer-gated to `http(s):`/`data:image/` sources (drops the tag entirely rather than leaving a broken-image icon if the URL fails). **Real bug found and fixed**: the note row's blur-cleanup handler used to treat "no visible text" as "this row is empty" and wipe it — but an image-only note has real content with no text at all, so it was silently deleting the image the moment the row lost focus.
-- **Hyperlinks in notes** — pasted `<a href>` links now survive the sanitizer, and plain-text URLs the user types or pastes are auto-linkified into real links on save. Styled with the standard web blue+underline, not the app's purple accent. Clicking a link opens it via `chrome.tabs.create` (needed instead of `window.open()`, which doesn't reliably work from this app's `chrome-extension://` origin).
-- **Highlight color changed to yellow, bold text made brighter** — the note-formatting `<mark>` background moved from the app's themed purple to a plain yellow highlighter color; `<b>` text now uses a brighter color than the note's own dimmer base gray.
-- **Real bug found and fixed: partial-selection dehighlighting** — un-highlighting only part of an already-highlighted note selection used to either leave an invisible, unselectable colored "artifact" behind or silently do nothing, traced to `Range.extractContents()` not reliably preserving element wrappers around the extracted content. Rewritten to determine "is this fully highlighted" from the live document before any DOM mutation, rather than trusting the (unreliable) post-extraction result.
-- **Category/sidebar restructuring**: TV Shows moved from the Shows category into a new Films → Series folder (existing items auto-migrate); the Musicians tab renamed to Music; the News tab removed (Web Links' Blogs folder renamed to News as an informal replacement); a new "Articles" shortcut tile added to the Add Item wizard (routes straight into Web Links → Articles, no sidebar tab of its own); sidebar/wizard tab order changed to Websites, Shows, Music, Games, Films, Books, Arts.
-- **Real bug found and fixed: sidebar allowed more than one tab open at once** — expanding a category tab was silently re-expanding the collapsible Dashboard row as an unintended side effect, since Dashboard's collapse state wasn't part of the categories' mutual-exclusion group. Fixed — now only one top-level sidebar tab is ever expanded at a time, Dashboard included.
-- **Toolbar spacing, iterated to a final fix** — the gap separating the note-formatting buttons from the Expand/Close buttons was sized via `margin-left: auto`, which looked fine with 3 formatting buttons but grew into an oversized, unbalanced gap once Image became a 4th. Settled on a uniform gap between every button plus centering the whole row within the toolbar bar (equal left/right padding, equal top/bottom padding so the buttons sit vertically centered too) after a fixed-margin attempt still read as uneven.
-- **Toolbar button colors redesigned** — resting buttons are now filled the same solid purple as the toolbar bar itself, with a dark icon/outline (matching the modal's own background color) for contrast — hover and the toggled-on "active" state (e.g. Focus mode engaged) both invert this, dark fill with a purple icon, so hovering previews what "on" looks like. Disabled buttons still read as grayed-out as before.
-
----
-
-*(Earlier sessions: rebuilt the detail modal's "My Notes"/Chapters/Song List from a plain textarea into a numbered-notes system with a formatting toolbar, focus mode, and per-row rename. Before that — replaced the Music Album gallery's single low-res iTunes cover with a real multi-image gallery sourced from MusicBrainz + the Cover Art Archive, plus several rounds of detail-modal visual polish. Before that — 214 more IMDb Top 250 movies seeded into curated Top 100, "Curated SaveCraft" reshaped into a two-tier browsing experience, and the previously-dead "Shared Saves" dropdown item wired up for the first time. See git history around those eras if needed.)*
+*(Earlier sessions: added image/hyperlink support to the My Notes formatting toolbar, restructured category/sidebar navigation across four separate requests, and fixed three real bugs found live (a partial-highlight bug, a sidebar multi-tab-open bug, a toolbar spacing issue). Before that — rebuilt the detail modal's "My Notes"/Chapters/Song List from a plain textarea into a numbered-notes system with a formatting toolbar, focus mode, and per-row rename. Before that — replaced the Music Album gallery's single low-res iTunes cover with a real multi-image gallery sourced from MusicBrainz + the Cover Art Archive, plus several rounds of detail-modal visual polish. Before that — 214 more IMDb Top 250 movies seeded into curated Top 100, "Curated SaveCraft" reshaped into a two-tier browsing experience, and the previously-dead "Shared Saves" dropdown item wired up for the first time. See git history around those eras if needed.)*
 
 ---
 
@@ -96,8 +94,9 @@ Savecraft/
 │   │   ├── popup.css
 │   │   └── popup.js             — ES module; imports category config + helpers from src/app/js/state.js and utils.js
 │   ├── sponsored/
-│   │   ├── sponsored.html       — Standalone "Sponsored Statement" page linked from curated Top 100 detail modals + the Settings dropdown
-│   │   └── sponsored.js         — External script (extension-page CSP blocks inline <script>) — sets the "SaveCraft" wordmark link's href
+│   │   ├── sponsored.html       — Standalone "Partner with SaveCraft" pitch page (Sponsored Statements + 2 other offerings) linked from curated Top 100 detail modals + the Settings dropdown; runs on both the extension and the savecraft.org web build
+│   │   ├── sponsored.js         — External ES module (extension-page CSP blocks inline <script>) — sets the "SaveCraft" wordmark link's href via platform.js's resourceUrl()
+│   │   └── vc-bonus.js          — VoteCraft Coin bonus preview badges/panel on the pricing tiers (client-side estimate only — no real VC backend exists anywhere in Votecraft yet)
 │   └── app/
 │       ├── index.html           — Full library page (opens as a new tab); loads js/main.js as an ES module + the css/ stylesheets
 │       ├── js/                  — Library logic, split into ES modules (see below)
