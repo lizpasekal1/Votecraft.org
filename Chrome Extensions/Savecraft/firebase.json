@@ -28,19 +28,7 @@
         ]
       },
       {
-        "source": "/src/app/index.html",
-        "headers": [
-          { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, max-age=0" }
-        ]
-      },
-      {
-        "source": "/src/app/js/**",
-        "headers": [
-          { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, max-age=0" }
-        ]
-      },
-      {
-        "source": "/src/app/css/**",
+        "source": "/src/app/**",
         "headers": [
           { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, max-age=0" }
         ]
