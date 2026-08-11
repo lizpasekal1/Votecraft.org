@@ -6,9 +6,9 @@
 
 import { state, CURATED_DIRECTORY_CONTENT } from './state.js';
 import { escapeHtml } from './utils.js';
-import { persistViewState } from './storage.js';
 import { _wireCarouselArrows } from './dashboard.js';
-import { renderSidebar, renderGrid, resolveOrgImageUrl } from './render.js';
+import { resolveOrgImageUrl } from './render.js';
+import { navigateToView } from './navigation.js';
 
 // Rotated across every vertical card's avatar circle.
 const SHARED_VCARD_COLORS = ['#5B5BEF', '#E0507A', '#2A9D8F', '#E76F51', '#8E44AD', '#F4A340'];
@@ -123,11 +123,7 @@ function wireCarousels(container) {
 function wireAddButtons(container) {
   container.querySelectorAll('.top100-row-add-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      state.sidebarMode = 'curated';
-      state.view = 'curated';
-      persistViewState();
-      renderSidebar();
-      renderGrid();
+      navigateToView('curated', { sidebarMode: 'curated' });
     });
   });
 }

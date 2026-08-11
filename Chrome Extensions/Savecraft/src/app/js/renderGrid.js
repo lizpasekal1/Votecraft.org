@@ -8,6 +8,7 @@ import {
   escapeHtml, catClass, badgeLabel, isMusicAlbumsSectionView, isOwnAuthorPageView, getDomain,
 } from './utils.js';
 import { persistViewState, persistItem, persistHiddenCurated, removeItem } from './storage.js';
+import { navigateToView } from './navigation.js';
 import { wireCardAuthorLinks } from './authors.js';
 import { renderKanbanBoard } from './kanban.js';
 import { openDetailModal } from './detailModal.js';
@@ -31,10 +32,7 @@ function wirePublicationLinks(container) {
   container.querySelectorAll('.card-publication-link').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
-      state.view = btn.dataset.folderId;
-      persistViewState();
-      renderSidebar();
-      renderGrid();
+      navigateToView(btn.dataset.folderId);
     });
   });
 }
@@ -167,10 +165,7 @@ export function renderGrid() {
     }
     document.querySelector('.grid-title-link')?.addEventListener('click', e => {
       e.preventDefault();
-      state.view = e.currentTarget.dataset.view;
-      persistViewState();
-      renderSidebar();
-      renderGrid();
+      navigateToView(e.currentTarget.dataset.view);
     });
   } else if (CATEGORIES.includes(state.view)) {
     gridTitle.innerHTML = `${CAT_EMOJI[state.view]} ${CAT_LABEL[state.view] || state.view}`;

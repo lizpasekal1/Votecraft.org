@@ -6,10 +6,10 @@ import { state, CURATED_ITEMS, CURATED_NOTES_CATEGORIES } from './state.js';
 import { persistAuthor, persistItem, persistCuratedAlbumMetaCache, persistAlbumTrackListCache, persistAlbumArtCache } from './storage.js';
 import { ensureArtistWebsite, ensureArtistWikipediaInfo, fetchAlbumsFromItunes, fetchAlbumArtFromMusicBrainz } from './api.js';
 import { isItunesArtworkUrl, applyArtistPhotoToItem, patchCardImage } from './utils.js';
-import { persistViewState } from './storage.js';
-import { renderSidebar, renderGrid } from './render.js';
+import { renderGrid } from './render.js';
 import { renderAuthorPage } from './render.js';
 import { openDetailModal } from './detailModal.js';
+import { navigateToView } from './navigation.js';
 
 export function findAuthor(name, category) {
   return state.authors.find(a => a.name === name && a.category === category) ?? null;
@@ -104,17 +104,14 @@ export async function autoSaveMusician(artistName) {
 }
 
 export async function navigateToAuthor(name, category) {
-  state.authorReturnView = state.view;
+  const authorReturnView = state.view;
   let author = findAuthor(name, category);
   if (!author) {
     author = { id: Date.now().toString(), name, category, bio: null, imageUrl: null, websiteUrl: null, savedAt: Date.now() };
     state.authors.push(author);
     await persistAuthor(author);
   }
-  state.view = `author:${category}:${name}`;
-  persistViewState();
-  renderSidebar();
-  renderGrid();
+  navigateToView(`author:${category}:${name}`, { authorReturnView });
 
   if (category === 'Musician' && !author.websiteUrl) {
     ensureArtistWebsite(name).then(url => {

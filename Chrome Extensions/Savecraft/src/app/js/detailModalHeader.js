@@ -2,13 +2,14 @@
 
 import { state, CURATED_ITEMS, CATEGORY_WHY_TEXT, CURATED_NOTES_CATEGORIES, CREATOR_CARD_CATEGORY } from './state.js';
 import { escapeHtml, catClass, isMusicAlbumsSectionView, isOwnAuthorPageView, getVideoEmbedUrl } from './utils.js';
-import { persistItem, persistAuthor, persistViewState } from './storage.js';
+import { persistItem, persistAuthor } from './storage.js';
 import { ensureArtistWebsite } from './api.js';
 import { findAuthor, navigateToAuthor, ensureLiveItem, getCachedAlbumArt, ensureAlbumArt } from './authors.js';
 import { closeDetailModal, getDetailItem, openImageLightbox, openVideoLightbox } from './detailModal.js';
 import { renderSidebar, renderGrid } from './render.js';
 import { toggleQueueFromHeader } from './detailModalQueue.js';
 import { resourceUrl } from './platform.js';
+import { navigateToView } from './navigation.js';
 
 const BOOKMARK_OUTLINE = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/></svg>`;
 const BOOKMARK_FILLED = `<svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 -960 960 960" width="22px" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Z"/></svg>`;
@@ -344,10 +345,7 @@ export function setupHeader(item, { domain, isMusicAlbum, isMusicianItem }) {
   document.querySelectorAll('.detail-publication-link').forEach(el => {
     el.addEventListener('click', () => {
       closeDetailModal();
-      state.view = el.dataset.folderId;
-      persistViewState();
-      renderSidebar();
-      renderGrid();
+      navigateToView(el.dataset.folderId);
     });
   });
 
