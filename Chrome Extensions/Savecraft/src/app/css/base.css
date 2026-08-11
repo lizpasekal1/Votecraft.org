@@ -3,6 +3,13 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  /* Every iOS browser (Safari, Chrome, etc. — Apple requires them all to run on WebKit) draws its
+     own default gray tap-highlight flash over any tappable element, and it ignores that element's
+     actual border-radius (e.g. the sidebar's flush-left/rounded-right items, or the full-screen
+     drawer overlay) — rendering as a mismatched rounded "halo" that bleeds past the element's real
+     bounds. The app already provides its own tuned :hover/:active/.active styling everywhere a tap
+     needs feedback, so the browser's own effect is redundant at best and visibly broken at worst. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ===== THEME VARIABLES ===== */
