@@ -419,6 +419,121 @@
       transform: translateY(-1px);
       box-shadow: 0 6px 20px rgba(91, 91, 239, 0.45);
     }
+
+    /* VoteCraft Coin preview — teal accent (VC's own brand color, not SaveCraft purple) so it
+       reads as a VoteCraft-wide element visiting this page, matching the coin/balance styling
+       already live on votecraft.org's VC app dashboard. Estimates only — VoteCraft Coin has no
+       real ledger yet, so this is always framed as "once VoteCraft Coin launches," never as an
+       already-credited balance. */
+    .vc-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      background: rgba(20, 204, 176, 0.12);
+      border: 1px solid rgba(20, 204, 176, 0.32);
+      color: #5eead4;
+      font-family: inherit;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 6px 13px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .vc-badge:hover {
+      background: rgba(20, 204, 176, 0.2);
+      border-color: rgba(20, 204, 176, 0.55);
+    }
+
+    .vc-badge-icon { font-size: 12px; }
+
+    .vc-preview-panel {
+      margin-top: -2px;
+      background: rgba(20, 204, 176, 0.07);
+      border: 1px solid rgba(20, 204, 176, 0.26);
+      border-radius: 14px;
+      padding: 18px 22px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      animation: vcSlideDown 0.3s ease-out;
+    }
+
+    .coin-mini {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #14ccb0, #0a8f7f);
+      color: #fff;
+      font-weight: 800;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 10px rgba(20, 204, 176, 0.4);
+      animation: coinSpin 0.6s ease-out;
+    }
+
+    .vc-preview-text { flex: 1; min-width: 0; }
+
+    .vc-preview-headline {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .vc-preview-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      max-width: none;
+    }
+
+    .vc-tag-pill {
+      display: inline-block;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(20, 204, 176, 0.18);
+      color: #5eead4;
+      border: 1px solid rgba(20, 204, 176, 0.35);
+      margin: 0 6px 0 0;
+    }
+
+    .vc-preview-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #5eead4;
+      text-decoration: none;
+    }
+
+    .vc-preview-cta:hover { text-decoration: underline; }
+
+    @keyframes coinSpin {
+      from { transform: rotateY(0deg) scale(0.5); opacity: 0; }
+      to { transform: rotateY(360deg) scale(1); opacity: 1; }
+    }
+
+    @keyframes vcSlideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Skip the reveal animation once a visitor has already seen the VC preview (this session or a
+       past visit) — avoids the coin/slide-in feeling repetitive on every badge click. */
+    .vc-preview-panel.vc-no-anim,
+    .vc-no-anim .coin-mini {
+      animation: none;
+    }
   </style>
 </head>
 <body>
@@ -526,6 +641,9 @@
           <div class="pricing-right">
             <div class="pricing-price">$5</div>
             <div class="pricing-period">/ month</div>
+            <button class="vc-badge" type="button" data-vc="500" data-tier="Single List" data-subject="Sponsor inquiry — Single List ($5/mo)">
+              <span class="vc-badge-icon">🪙</span> ~500 VC preview
+            </button>
           </div>
         </div>
 
@@ -542,6 +660,9 @@
           <div class="pricing-right">
             <div class="pricing-price">$30</div>
             <div class="pricing-period">/ month</div>
+            <button class="vc-badge" type="button" data-vc="3,000" data-tier="Category Sponsor" data-subject="Sponsor inquiry — Category Sponsor ($30/mo)">
+              <span class="vc-badge-icon">🪙</span> ~3,000 VC preview
+            </button>
           </div>
         </div>
 
@@ -558,6 +679,9 @@
           <div class="pricing-right">
             <div class="pricing-price">$100+</div>
             <div class="pricing-period">/ month</div>
+            <button class="vc-badge" type="button" data-vc="10,000" data-tier="VoteCraft Partner" data-subject="Sponsor inquiry — VoteCraft Partner ($100+/mo)">
+              <span class="vc-badge-icon">🪙</span> ~10,000 VC preview
+            </button>
           </div>
         </div>
 
@@ -590,5 +714,6 @@
   </div>
 
   <script src="sponsored.js"></script>
+  <script src="vc-bonus.js"></script>
 </body>
 </html>
