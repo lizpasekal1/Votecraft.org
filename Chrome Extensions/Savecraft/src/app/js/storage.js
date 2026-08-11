@@ -647,6 +647,21 @@ export function persistAuthor(author) {
   return local;
 }
 
+// Called once, right before the Firebase Auth account itself is deleted (see auth.js's
+// deleteAccount()) — must happen first, since deleting the Auth account invalidates the idToken
+// these deletes need to authenticate (the security rules require request.auth.uid == userId).
+// Per-item failures are swallowed (a partial cleanup shouldn't block the account deletion itself
+// completing) — this can leave a document orphaned in Firestore if one delete fails, but nobody
+// (including the original owner) can ever read/write it again once the account is gone, since the
+// rules still require a matching signed-in uid. Local (chrome.storage.sync) items/folders/authors
+// are deliberately left untouched here — same as signOut(), which never clears local data either.
+export async function deleteAllAccountFirestoreData(uid) {
+  for (const item of state.items) await _firestoreDelete(`savecraft_users/${uid}/items/${item.id}`).catch(() => {});
+  for (const folder of state.folders) await _firestoreDelete(`savecraft_users/${uid}/folders/${folder.id}`).catch(() => {});
+  for (const author of state.authors) await _firestoreDelete(`savecraft_users/${uid}/authors/${author.id}`).catch(() => {});
+  await _firestoreDelete(`savecraft_users/${uid}`).catch(() => {});
+}
+
 // All local-only caches (curated images, artist lookups, etc.) are stored separately from
 // storageSync — this loads one of them into `state` at startup.
 export function loadLocalCache(storageKey, stateProp) {
