@@ -3,6 +3,7 @@
 import { state, CURATED_ITEMS, CAT_LABEL, CAT_EMOJI } from './state.js';
 import { escapeHtml, catClass } from './utils.js';
 import { persistViewState, removeItem } from './storage.js';
+import { navigateToView } from './navigation.js';
 import { findAuthor, resolveMusicianItem, wireCardAuthorLinks, backfillAlbumYears } from './authors.js';
 import { openDetailModal } from './detailModal.js';
 import { openEditModal } from './addEditModal.js';
@@ -25,10 +26,7 @@ export function renderAuthorPage() {
   gridTitle.style.display = '';
   gridTitle.innerHTML = `<button class="author-back-btn" id="author-back-btn"><span>&#8249;</span><span>${CAT_EMOJI[cat] || ''} ${escapeHtml(CAT_LABEL[cat] || cat)}</span></button>`;
   document.getElementById('author-back-btn').addEventListener('click', () => {
-    state.view = state.authorReturnView || cat;
-    persistViewState();
-    renderSidebar();
-    renderGrid();
+    navigateToView(state.authorReturnView || cat);
   });
 
   const items = getFilteredSortedItems();

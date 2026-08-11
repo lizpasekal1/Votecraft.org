@@ -7,10 +7,10 @@
 
 import { state, CATEGORIES, CAT_LABEL, CURATED_GENRES, GENRE_EMOJI, CURATED_ITEMS } from './state.js';
 import { escapeHtml, catClass } from './utils.js';
-import { persistViewState } from './storage.js';
 import { openDetailModal } from './detailModal.js';
 import { KANBAN_DEMO, KANBAN_COLUMNS } from './kanban.js';
 import { renderSidebar, renderGrid } from './render.js';
+import { navigateToView } from './navigation.js';
 import { getCurrentUser, onAuthChange } from './auth.js';
 
 let _favSlides = [];
@@ -253,11 +253,7 @@ function buildKanbanWidget() {
 
 function wireKanbanWidget(container) {
   container.querySelector('.dash-kanban-open')?.addEventListener('click', () => {
-    state.sidebarMode = 'categories';
-    state.view = 'all';
-    persistViewState();
-    renderSidebar();
-    renderGrid();
+    navigateToView('all', { sidebarMode: 'categories' });
   });
 
   container.querySelectorAll('.dash-kmini-card').forEach(card => {
@@ -350,20 +346,12 @@ function wireCuratedListsWidget(container) {
   if (!card) return;
 
   card.querySelector('.dash-curated-add-btn')?.addEventListener('click', () => {
-    state.sidebarMode = 'curated';
-    state.view = 'curated';
-    persistViewState();
-    renderSidebar();
-    renderGrid();
+    navigateToView('curated', { sidebarMode: 'curated' });
   });
 
   card.querySelectorAll('.dash-thumb-card').forEach(btn => {
     btn.addEventListener('click', () => {
-      state.sidebarMode = 'curated';
-      state.view = `genre:${btn.dataset.genre}`;
-      persistViewState();
-      renderSidebar();
-      renderGrid();
+      navigateToView(`genre:${btn.dataset.genre}`, { sidebarMode: 'curated' });
     });
 
     const img = btn.querySelector('.dash-thumb-art img');
@@ -398,10 +386,7 @@ function wireProfileWidget(container) {
     // Intentionally NOT gated on getCurrentUser() — see the matching comment on main.js's
     // btn-profile handler. This card's own subtitle already reads "Sign in to sync your saves"
     // vs. "View your profile →" (buildProfileWidget above) to set expectations either way.
-    state.view = 'profile';
-    persistViewState();
-    renderSidebar();
-    renderGrid();
+    navigateToView('profile');
   });
 }
 

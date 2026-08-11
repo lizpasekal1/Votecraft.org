@@ -5,11 +5,12 @@ import {
   PRIMARY_FOLDER_ID,
 } from './state.js';
 import { escapeHtml, folderIconHtml, sortFoldersForDisplay } from './utils.js';
-import { persistViewState, persistItem, persistFolder, removeFolder, persistSavedLists } from './storage.js';
+import { persistItem, persistFolder, removeFolder, persistSavedLists } from './storage.js';
 import { closeSidebar } from './main.js';
 import { matchesPrimaryOrUnfoldered } from './renderFilters.js';
 import { renderGrid } from './renderGrid.js';
 import { storageSync } from './platform.js';
+import { navigateToView } from './navigation.js';
 
 // Collapses every accordion in the sidebar — Dashboard, Saved Lists, Curated Lists, and every
 // real category (Music Album excluded, same as sidebarCategoryList's own filter further down;
@@ -119,10 +120,7 @@ export function renderSidebar() {
     // author page reached via curated browsing — it steps back to the genre-level view instead
     // of trying to parse the 'author:<cat>:<name>' string as if it were a 'genre:' one.
     const parts = sidebarEffectiveView.slice(6).split(':'); // strip 'genre:' prefix -> [genre, category?]
-    state.view = parts.length > 1 ? `genre:${parts[0]}` : 'curated';
-    persistViewState();
-    renderSidebar();
-    renderGrid();
+    navigateToView(parts.length > 1 ? `genre:${parts[0]}` : 'curated');
   });
 
   const mobileHeader = `
@@ -143,21 +141,21 @@ export function renderSidebar() {
     sidebar.querySelectorAll('[data-sidebar-opt]').forEach(btn => {
       btn.addEventListener('click', () => {
         const opt = btn.dataset.sidebarOpt;
+        let view, sidebarMode;
         if (opt === 'home') {
-          state.sidebarMode = 'home'; state.view = 'dashboard';
+          sidebarMode = 'home'; view = 'dashboard';
         } else if (opt === 'curated') {
-          state.sidebarMode = 'curated'; state.view = 'curated';
+          sidebarMode = 'curated'; view = 'curated';
         } else if (opt === 'shared') {
-          state.sidebarMode = 'shared'; state.view = 'shared';
+          sidebarMode = 'shared'; view = 'shared';
         } else {
-          state.sidebarMode = 'categories'; state.view = 'all';
+          sidebarMode = 'categories'; view = 'all';
         }
         // Switching top-level mode closes every accordion rather than leaving whatever was
-        // expanded before still open underneath the new mode.
+        // expanded before still open underneath the new mode. Runs before navigateToView so the
+        // collapsed state is already settled by the time it triggers the render.
         collapseAllSidebarSections();
-        persistViewState();
-        renderSidebar();
-        renderGrid();
+        navigateToView(view, { sidebarMode });
       });
     });
   }
@@ -268,18 +266,10 @@ export function renderSidebar() {
       } else {
         state.collapsed.add('dashboard');
       }
-      state.sidebarMode = 'home';
-      state.view = 'dashboard';
-      persistViewState();
-      renderSidebar();
-      renderGrid();
+      navigateToView('dashboard', { sidebarMode: 'home' });
     });
     sidebar.querySelector('.sidebar-kanban-link')?.addEventListener('click', () => {
-      state.sidebarMode = 'home';
-      state.view = 'kanban';
-      persistViewState();
-      renderSidebar();
-      renderGrid();
+      navigateToView('kanban', { sidebarMode: 'home' });
     });
     // Saved Lists / Curated Lists — each toggles its own independent collapse state (not tied to
     // Dashboard's, and not mutually exclusive with anything else), just expanding/collapsing its
@@ -297,11 +287,7 @@ export function renderSidebar() {
     // curated genre, same place the mobile header's "VoteCraft Picks" option links to (the mobile
     // drawer's own "⚡ Shared" tab now links to Shared Saves instead — see wireMobileHeader above).
     sidebar.querySelector('.sidebar-curated-votecraft-link')?.addEventListener('click', () => {
-      state.sidebarMode = 'curated';
-      state.view = 'genre:Top 100';
-      persistViewState();
-      renderSidebar();
-      renderGrid();
+      navigateToView('genre:Top 100', { sidebarMode: 'curated' });
     });
   }
 
@@ -323,10 +309,7 @@ export function renderSidebar() {
     wireDashboardLink();
     sidebar.querySelectorAll('.sidebar-genre').forEach(el => {
       el.addEventListener('click', () => {
-        state.view = 'genre:' + el.dataset.genre;
-        persistViewState();
-        renderSidebar();
-        renderGrid();
+        navigateToView('genre:' + el.dataset.genre);
       });
     });
     return;
@@ -459,23 +442,18 @@ export function renderSidebar() {
       } else {
         state.collapsed.add(cat);
       }
-      if (isCuratedGenre) {
-        state.view = `genre:${curatedGenreBase}:${cat}`;
-      } else {
-        state.view = cat;
-      }
-      state.activeCuratedFolderId = null;
-      renderSidebar();
-      renderGrid();
+      // Was missing persistViewState() entirely before this migration (a pre-existing bug —
+      // reloading after clicking a category header lost the navigation, even though it visibly
+      // changed state.view) — navigateToView() fixes that as a side effect of picking up History
+      // API support here too.
+      navigateToView(isCuratedGenre ? `genre:${curatedGenreBase}:${cat}` : cat, { activeCuratedFolderId: null });
     });
   });
 
-  // All Items
+  // All Items — same missing-persistViewState() bug as the category header above, same fix.
   sidebar.querySelectorAll('[data-view="all"]').forEach(el => {
     el.addEventListener('click', () => {
-      state.view = 'all';
-      renderSidebar();
-      renderGrid();
+      navigateToView('all');
     });
   });
 
@@ -489,30 +467,22 @@ export function renderSidebar() {
   sidebar.querySelectorAll('.sidebar-subfolder:not(.sidebar-kanban-link):not(.sidebar-saved-lists-link):not(.sidebar-curated-lists-link):not(.sidebar-curated-lists-child)').forEach(el => {
     el.addEventListener('click', () => {
       if (isCuratedGenre && el.dataset.permanent) {
-        state.view = `genre:${curatedGenreBase}:${el.dataset.view}`;
-        state.activeCuratedFolderId = null;
+        navigateToView(`genre:${curatedGenreBase}:${el.dataset.view}`, { activeCuratedFolderId: null });
       } else if (isCuratedGenre && el.dataset.curatedTarget) {
         // Stays inside the genre by routing to this folder's curatedTarget (a dedicated creator
         // bucket, the full parent category, or — for folders with no curated data at all — the
         // folder's own id, which naturally resolves to an empty list). See the curatedTarget
         // computation in the row-render above for the full explanation.
-        state.view = `genre:${curatedGenreBase}:${el.dataset.curatedTarget}`;
-        state.activeCuratedFolderId = el.dataset.view;
+        navigateToView(`genre:${curatedGenreBase}:${el.dataset.curatedTarget}`, { activeCuratedFolderId: el.dataset.view });
       } else if (el.dataset.view === 'savedlist:default-favorites') {
         // "All My Saves" — the built-in catch-all Saved List — is the same destination as the
         // Dashboard link itself (per direct request), not the generic savedlist: placeholder
         // landing card every other Saved List still shows. sidebarMode matches wireDashboardLink's
         // own 'home' above so this reads as the same navigation, just from a different row.
-        state.sidebarMode = 'home';
-        state.view = 'dashboard';
-        state.activeCuratedFolderId = null;
+        navigateToView('dashboard', { sidebarMode: 'home', activeCuratedFolderId: null });
       } else {
-        state.view = el.dataset.view;
-        state.activeCuratedFolderId = null;
+        navigateToView(el.dataset.view, { activeCuratedFolderId: null });
       }
-      persistViewState();
-      renderSidebar();
-      renderGrid();
     });
   });
 
@@ -547,9 +517,11 @@ export function renderSidebar() {
       state.folders = state.folders.filter(f => f.id !== folderId);
       await removeFolder(folderId);
 
-      if (state.view === folderId) state.view = 'all';
-      renderSidebar();
-      renderGrid();
+      // Only a real navigation (and only then worth a history entry) if the deleted folder was
+      // actually the active view — otherwise just re-render in place, the folder list itself is
+      // what changed, not what's currently being viewed.
+      if (state.view === folderId) navigateToView('all');
+      else { renderSidebar(); renderGrid(); }
     });
   });
 }

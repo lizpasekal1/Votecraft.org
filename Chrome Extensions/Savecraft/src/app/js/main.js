@@ -3,10 +3,10 @@
 import { state } from './state.js';
 import {
   loadAll, loadLocalCache, initCuratedItems, persistSort, persistTheme, persistSidebarCollapsed,
-  persistLastfmUsername, disconnectLastfm, persistViewState, persistSteamId, disconnectSteam,
+  persistLastfmUsername, disconnectLastfm, persistSteamId, disconnectSteam,
   runInitialSync,
 } from './storage.js';
-import { initAuth, onAuthChange, getCurrentUser, signUp, signIn, signOut, resendVerificationEmail } from './auth.js';
+import { initAuth, onAuthChange, getCurrentUser, signUp, signIn, signOut, resendVerificationEmail, deleteAccount } from './auth.js';
 import { ensureLastfmRecentTracks, isLastfmConfigured, ensureSteamRecentGames, isSteamConfigured } from './api.js';
 import { isExtension, storageSync, storageOnChanged, resourceUrl } from './platform.js';
 import { debounce, escapeHtml } from './utils.js';
@@ -367,6 +367,21 @@ async function init() {
     await signOut();
     closeAuthModal();
   });
+  document.getElementById('btn-auth-delete-account').addEventListener('click', async () => {
+    if (!confirm('Delete your account? This permanently removes your saved items, folders, and account settings from the cloud. This cannot be undone.')) return;
+    const result = await deleteAccount();
+    if (result.ok) {
+      // Deliberately NOT closeAuthModal() — applyAuthUI's own reaction to the now-signed-out
+      // state already reverts the modal to its normal signed-out view (email/password + Create/
+      // Sign in), which reads as sufficient built-in confirmation without a separate success
+      // message. Web visitors especially need to land somewhere sane post-deletion, not a closed
+      // modal over a broken signed-out app view (requireWebSignIn() only runs once, at startup).
+      renderSidebar();
+      renderGrid();
+    } else {
+      showAuthError(result.error);
+    }
+  });
   document.getElementById('auth-modal-overlay').addEventListener('keydown', e => {
     if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') handleAuthSubmit(signIn);
     if (e.key === 'Escape') closeAuthModal();
@@ -559,11 +574,7 @@ async function init() {
   });
 
   document.getElementById('btn-kanban-dashboard').addEventListener('click', () => {
-    state.sidebarMode = 'home';
-    state.view = 'dashboard';
-    persistViewState();
-    renderSidebar();
-    renderGrid();
+    navigateToView('dashboard', { sidebarMode: 'home' });
   });
 
   document.getElementById('btn-saves-list').addEventListener('click', e => {

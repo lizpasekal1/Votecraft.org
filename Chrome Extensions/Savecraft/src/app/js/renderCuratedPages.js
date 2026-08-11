@@ -5,14 +5,12 @@ import {
   BOOKMARK_OUTLINE_SVG, BOOKMARK_FILLED_SVG,
 } from './state.js';
 import { escapeHtml, isItunesArtworkUrl } from './utils.js';
-import { persistViewState } from './storage.js';
 import { openDetailModal } from './detailModal.js';
-import { renderSidebar } from './renderSidebar.js';
-import { renderGrid } from './renderGrid.js';
 import { wireQuickQueueButtons } from './renderCardActions.js';
 import { fetchMissingCuratedImages, fetchMissingCuratedMusicianPhotos } from './renderCuratedImageFetch.js';
 import { _wireCarouselArrows } from './dashboard.js';
 import { resourceUrl } from './platform.js';
+import { navigateToView } from './navigation.js';
 
 // Wraps the literal phrase "Inquire to create" in the hero description with a link to the
 // Sponsored pitch page, underlined so it reads as a call-to-action inline with the copy.
@@ -111,10 +109,7 @@ export function renderCuratedBareList(container) {
   `;
 
   container.querySelector('.bare-list-seeall-btn')?.addEventListener('click', () => {
-    state.view = 'curated-full-list';
-    persistViewState();
-    renderSidebar();
-    renderGrid();
+    navigateToView('curated-full-list');
   });
 
   // The rare row backed by a real destination (currently just Votecraft List -> VoteCraft Picks,
@@ -123,11 +118,7 @@ export function renderCuratedBareList(container) {
   container.querySelectorAll('.bare-list-row[data-link-to]').forEach(row => {
     row.addEventListener('click', e => {
       if (e.target.closest('.bare-list-bookmark-btn')) return;
-      state.sidebarMode = 'curated';
-      state.view = row.dataset.linkTo;
-      persistViewState();
-      renderSidebar();
-      renderGrid();
+      navigateToView(row.dataset.linkTo, { sidebarMode: 'curated' });
     });
   });
 
@@ -324,10 +315,7 @@ export function renderCuratedGenreLanding(container, genre, content) {
 
   container.querySelectorAll('.top100-row-header').forEach(btn => {
     btn.addEventListener('click', () => {
-      state.view = `genre:${btn.dataset.genre}:${btn.dataset.category}`;
-      persistViewState();
-      renderSidebar();
-      renderGrid();
+      navigateToView(`genre:${btn.dataset.genre}:${btn.dataset.category}`);
     });
   });
 
