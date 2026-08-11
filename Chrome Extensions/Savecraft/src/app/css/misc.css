@@ -550,6 +550,20 @@
     min-height: 44px;
   }
 
+  /* .cat-icon's subtle glossy-bezel treatment (inset box-shadow "edge" highlights + a top-half
+     gradient overlay, see sidebar.css) reads fine on desktop but renders as an obviously visible
+     white outline plus a hard seam line across the icon on real iOS devices (reported live on an
+     iPhone 16 Pro, both Safari and Chrome — same WebKit engine) — a mobile WebKit rendering
+     mismatch for that effect, not an intentional look. Flattened here to match how it already
+     looks correct on desktop, rather than trying to tune values that only misbehave on one
+     platform. */
+  .cat-icon {
+    box-shadow: none;
+  }
+  .cat-icon::after {
+    display: none;
+  }
+
   /* Overlay behind open sidebar */
   .sidebar-overlay {
     display: block;

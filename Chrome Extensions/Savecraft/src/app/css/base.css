@@ -13,13 +13,22 @@
 }
 
 /* ===== THEME VARIABLES ===== */
+/* :root now holds the DARK palette directly, so dark is the true zero-JS default — the very
+   first paint, before main.js has even loaded let alone read the stored preference back and
+   called applyTheme(). It used to be the reverse ([data-theme="dark"] as the override, :root as
+   a light default), which meant anything rendered before applyTheme() ran (in practice, most
+   visibly the web build's sign-in gate, which main.js can hold open indefinitely waiting on a
+   visitor) stayed stuck in light styling — reported live as the demo's sign-in screen looking
+   wrong even though the rest of the app around it was already dark. applyTheme() itself is
+   unchanged: it still always sets data-theme to 'dark' or 'light' explicitly either way, so
+   toggling still works exactly as before — only the no-attribute-yet default flipped. */
 :root {
   /* Lets native controls (checkboxes, scrollbars, etc.) render with an appropriate default
      appearance for the active theme instead of always defaulting to a light-mode look that
      clashes against a dark surface. */
-  color-scheme: light;
+  color-scheme: dark;
   /* Material 3 motion easing tokens (https://m3.material.io/styles/motion/easing-and-duration) —
-     theme-independent, so defined once here rather than repeated in [data-theme="dark"]. M3's
+     theme-independent, so defined once here rather than repeated in [data-theme="light"]. M3's
      asymmetry between entering and exiting motion is the point: entrances use a "decelerate"
      curve (fast start, gentle settle — reads as arriving/growing into place) and exits use an
      "accelerate" curve (slow start, fast finish — reads as snappier, getting out of the way).
@@ -32,27 +41,6 @@
   --m3-standard-decelerate:   cubic-bezier(0, 0, 0, 1);
   --m3-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
   --m3-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
-  --bg:              #F8F9FA;
-  --surface:         #ffffff;
-  --border:          #E0E0E0;
-  --text-primary:    #202124;
-  --text-secondary:  #80868B;
-  --text-muted:      #9AA0A6;
-  --primary:         #5B5BEF;
-  --primary-bg:      #EBE8FD;
-  --primary-hover:   #4A3DD4;
-  --hover-bg:        #F1F3F4;
-  --search-bg:       #F1F3F4;
-  --search-focus-bg: #ffffff;
-  --modal-bg:        #ffffff;
-  --scrollbar:       #DADCE0;
-  --scrollbar-hover: #BDC1C6;
-  --shadow-card:     rgba(0,0,0,0.12);
-  --shadow-modal:    rgba(0,0,0,0.20);
-}
-
-[data-theme="dark"] {
-  color-scheme: dark;
   --bg:              #1A1B1E;
   --surface:         #25262B;
   --border:          #373A40;
@@ -70,6 +58,27 @@
   --scrollbar-hover: #4A4B50;
   --shadow-card:     rgba(0,0,0,0.35);
   --shadow-modal:    rgba(0,0,0,0.50);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --bg:              #F8F9FA;
+  --surface:         #ffffff;
+  --border:          #E0E0E0;
+  --text-primary:    #202124;
+  --text-secondary:  #80868B;
+  --text-muted:      #9AA0A6;
+  --primary:         #5B5BEF;
+  --primary-bg:      #EBE8FD;
+  --primary-hover:   #4A3DD4;
+  --hover-bg:        #F1F3F4;
+  --search-bg:       #F1F3F4;
+  --search-focus-bg: #ffffff;
+  --modal-bg:        #ffffff;
+  --scrollbar:       #DADCE0;
+  --scrollbar-hover: #BDC1C6;
+  --shadow-card:     rgba(0,0,0,0.12);
+  --shadow-modal:    rgba(0,0,0,0.20);
 }
 
 body {
