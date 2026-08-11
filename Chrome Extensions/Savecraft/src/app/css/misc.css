@@ -550,18 +550,16 @@
     min-height: 44px;
   }
 
-  /* .cat-icon's subtle glossy-bezel treatment (inset box-shadow "edge" highlights + a top-half
-     gradient overlay, see sidebar.css) reads fine on desktop but renders as an obviously visible
-     white outline plus a hard seam line across the icon on real iOS devices (reported live on an
-     iPhone 16 Pro, both Safari and Chrome — same WebKit engine) — a mobile WebKit rendering
-     mismatch for that effect, not an intentional look. Flattened here to match how it already
-     looks correct on desktop, rather than trying to tune values that only misbehave on one
-     platform. */
+  /* .cat-icon's inset box-shadow "edge" bevel (four 1px inset lines forming a border-like ring,
+     see sidebar.css) reads as a subtle bevel on desktop but renders as a glaring, uniform white
+     outline on real iOS devices (reported live on an iPhone 16 Pro, both Safari and Chrome — same
+     WebKit engine) — a mobile WebKit rendering mismatch for that specific effect, not an
+     intentional look. Disabled here to match how it already looks correct on desktop. The
+     top-half glossy gradient (::after) is a separate, simpler effect that renders fine on mobile
+     too — confirmed once by comparing against the desktop reference — so it's deliberately left
+     alone, not swept into this same disable. */
   .cat-icon {
     box-shadow: none;
-  }
-  .cat-icon::after {
-    display: none;
   }
 
   /* Overlay behind open sidebar */

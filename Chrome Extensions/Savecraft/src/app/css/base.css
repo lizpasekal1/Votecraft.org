@@ -12,6 +12,19 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Every button in this app sets its own background/border via its own class (.btn-primary,
+   .btn-search-icon, .btn-theme, etc.), but without this reset, WebKit's native default button
+   chrome (a light/white pill-ish appearance) can still show through or around that custom
+   background on real iOS devices — invisible against a light page, but glaringly visible now
+   that :root defaults to dark (reported live: solid white circles behind the header's search and
+   settings-gear icons on an iPhone 16 Pro, both Safari and Chrome). */
+button {
+  appearance: none;
+  -webkit-appearance: none;
+  font: inherit;
+  color: inherit;
+}
+
 /* ===== THEME VARIABLES ===== */
 /* :root now holds the DARK palette directly, so dark is the true zero-JS default — the very
    first paint, before main.js has even loaded let alone read the stored preference back and
