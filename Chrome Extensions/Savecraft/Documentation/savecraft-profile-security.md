@@ -55,19 +55,40 @@ around in the browser. It doesn't matter whether the request coming in is a real
 around, a script, or anything else automated — if the request doesn't prove it's you, it's
 rejected before it ever reaches your data.
 
-## A heads-up: a web version is being built too
+## Deleting your account
 
-Someone else is currently building a **web version of SaveCraft** (so it can be used from a normal
-browser tab, not just as a Chrome extension) that will connect to this exact same cloud database.
-That means:
+If you want your account and everything tied to it gone for good, there's a real "Delete account"
+option — here's where to find it:
 
-- An account you create in the Chrome extension will also work on the web version, and vice versa
+1. Open the **Settings** menu (the gear icon, top-right) and click **Profile**
+2. On the Profile page, click **"Manage account"** on the Account card
+3. In the screen that opens, you'll see **"Sign out"** — right below it, a smaller red link that
+   says **"Delete account"**
+
+Clicking it asks you to confirm first (a simple "Are you sure?" — nothing more elaborate yet).
+Once confirmed, it's permanent: it deletes your sign-in itself and every saved item, folder, and
+setting tied to your account in the cloud database. There's no "recover my account" option after
+this — it's meant to be a genuine, final delete.
+
+One nuance worth knowing: this only clears your data from the cloud drawer described above — it
+doesn't reach into whatever's saved locally in *this* specific browser. In practice this rarely
+matters, but if you delete your account and then create a *different* one on the same computer,
+anything still sitting in this browser's local storage could get swept up into that new account
+the next time it syncs. If that's ever a concern, clearing your browser's site data for the
+extension first is the safest way to get a truly clean slate.
+
+## A heads-up: SaveCraft now has a real web version too
+
+SaveCraft is no longer just the Chrome extension — **savecraft.org** is a live website version,
+built by someone else on the team, connected to this exact same cloud database. That means:
+
+- An account you create in the Chrome extension will also work on savecraft.org, and vice versa
   — it's the same underlying account system either way.
-- Your saved items will be shared between both versions automatically, since they're reading from
-  the same drawer.
-- Some of the extension's internal code is being adjusted right now so it can run in both places
-  (the extension and a plain web page) — that work is in progress and separate from anything in
-  this document, but it doesn't change anything described above from your perspective.
+- Your saved items are shared between both versions automatically, since they're reading from the
+  same drawer.
+- Unlike the extension, the website currently *requires* signing in to use at all (there's no
+  local-only browsing there yet) — though there's a temporary "View Demo" option on the sign-in
+  screen so people can look around without an account while this is still being polished.
 
 ## What's genuinely not built yet (good to know, not urgent)
 
