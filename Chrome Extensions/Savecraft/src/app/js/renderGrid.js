@@ -222,7 +222,7 @@ export function renderGrid() {
       <div class="empty-state">
         <div class="empty-state-icon">${isSearch ? '🔍' : isCuratedLanding ? '✨' : isCuratedTop ? '✨' : '📦'}</div>
         <h3>${isSearch ? 'No results found' : isCuratedLanding ? 'Pick a category' : isCuratedTop ? `${genre} Saves` : 'Nothing here yet'}</h3>
-        <p>${isSearch ? `No items match "${escapeHtml(state.search)}"` : isCuratedLanding ? 'Explore the sidebar to see our curated picks.' : isCuratedTop ? 'Pick a category from the sidebar to explore curated picks.' : 'Right-click any page to save it, or click + Add Item.'}</p>
+        <p>${isSearch ? `No items match "${escapeHtml(state.search)}"` : isCuratedLanding ? 'Explore the sidebar to see our curated picks.' : isCuratedTop ? 'Pick a category from the sidebar to explore curated picks.' : '+ Add Item to start building this library.'}</p>
       </div>
     `;
     return;
