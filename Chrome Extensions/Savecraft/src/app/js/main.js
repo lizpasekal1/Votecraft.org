@@ -17,7 +17,7 @@ import { _closeEmbedBuilder } from './embedBuilder.js';
 import {
   openAddModal, closeAddModal, handleSaveItem, updatePlatformSummary,
   openEditModal, selectStep1Category, handleTitleSearch, hideTitleSearchResults, kickOffTitleEnrichment,
-  handleModalBack, refreshStep2ImagePreviewFromManualInput, updateCategoryDependentUi,
+  handleModalBack, refreshStep2ImagePreviewFromManualInput, updateCategoryDependentUi, showInfoScreen,
 } from './addEditModal.js';
 import { closeDetailModal, closeImageLightbox, getDetailItem, showNextImage, showPrevImage, handleGalleryLoadMoreClick, closeVideoLightbox } from './detailModal.js';
 import { initNoteToolbar } from './detailModalNotes.js';
@@ -577,6 +577,8 @@ async function init() {
 
   document.getElementById('btn-add').addEventListener('click', () => openAddModal());
 
+  document.getElementById('modal-info-icon').addEventListener('click', showInfoScreen);
+
   document.getElementById('modal-overlay').addEventListener('click', e => {
     if (e.target === document.getElementById('modal-overlay')) closeAddModal();
   });
@@ -585,11 +587,14 @@ async function init() {
 
   document.getElementById('platform-chips').addEventListener('change', updatePlatformSummary);
 
+  // Closes any open .platform-dropdown <details> on an outside click — native <details> doesn't do
+  // this on its own. Covers every dropdown built on that shared component (#platform-dropdown, the
+  // Platforms field's own dropdown, and #saved-lists-wrap, the Add modal's "Select Lists" picker)
+  // with one listener rather than a separate one per instance.
   document.addEventListener('click', e => {
-    const dropdown = document.getElementById('platform-dropdown');
-    if (dropdown && dropdown.open && !dropdown.contains(e.target)) {
-      dropdown.open = false;
-    }
+    document.querySelectorAll('.platform-dropdown[open]').forEach(dropdown => {
+      if (!dropdown.contains(e.target)) dropdown.open = false;
+    });
   });
 
   document.getElementById('btn-kanban-dashboard').addEventListener('click', () => {
