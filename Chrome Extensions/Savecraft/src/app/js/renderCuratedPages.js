@@ -27,6 +27,13 @@ function linkifyHeroDescription(description) {
 // Bare-bones filter state for the flat directory below — resets each session (not persisted),
 // since it's just a display convenience for this fully inert demo list, not real data filtering.
 let _bareListCategoryFilter = null;
+// Whether the "Cause Area" chip list is showing all of them or just the first
+// BARE_LIST_CHIPS_COLLAPSED_COUNT, per request — same "resets each session" reasoning as the
+// filter state above.
+let _bareListChipsExpanded = false;
+const BARE_LIST_CHIPS_COLLAPSED_COUNT = 5;
+// "Why Curated Lists" accordion — collapsed by default, same reasoning as the chip list above.
+let _bareListWhyExpanded = false;
 
 // A palette rotated across avatar circles, standing in for a real org logo/photo.
 const DIRECTORY_AVATAR_COLORS = ['#5B5BEF', '#E0507A', '#2A9D8F', '#E76F51', '#8E44AD', '#F4A340'];
@@ -58,9 +65,15 @@ export function renderCuratedBareList(container) {
   const allOrgs = content.categories.flatMap(({ label, orgs }) => orgs.map(org => ({ ...org, category: label })));
   const visibleOrgs = _bareListCategoryFilter ? allOrgs.filter(o => o.category === _bareListCategoryFilter) : allOrgs;
 
-  const filterChipsHtml = content.categories.map(({ label }) => `
+  // First BARE_LIST_CHIPS_COLLAPSED_COUNT always shown; the rest only once expanded — per request,
+  // so a long cause-area list doesn't dominate the filter rail before you've even looked at it.
+  const collapsedCategories = content.categories.slice(0, BARE_LIST_CHIPS_COLLAPSED_COUNT);
+  const restCategories = content.categories.slice(BARE_LIST_CHIPS_COLLAPSED_COUNT);
+  const chipHtml = ({ label }) => `
     <button class="bare-list-chip${_bareListCategoryFilter === label ? ' bare-list-chip--active' : ''}" data-category="${escapeHtml(label)}">${escapeHtml(label)}</button>
-  `).join('');
+  `;
+  const filterChipsHtml = collapsedCategories.map(chipHtml).join('');
+  const restChipsHtml = restCategories.map(chipHtml).join('');
 
   const rowsHtml = visibleOrgs.map((org, i) => {
     // Progressive List's logo specifically needs a white backdrop to read correctly; Votecraft
@@ -97,8 +110,15 @@ export function renderCuratedBareList(container) {
         <div class="bare-list-filters">
           <div class="bare-list-filter-section-title">Cause Area</div>
           <div class="bare-list-chips">${filterChipsHtml}</div>
-          <div class="bare-list-filter-section-title bare-list-why-title">Why Curated Lists</div>
-          <p class="bare-list-why-copy">A good list is a shortcut — built by people who already did the digging, so you don't have to. Curated lists surface what's worth your time from partners whose values you trust, instead of leaving it to chance.</p>
+          ${restCategories.length ? `
+          <div class="bare-list-chips bare-list-chips-more" ${_bareListChipsExpanded ? '' : 'hidden'}>${restChipsHtml}</div>
+          <button class="bare-list-chips-toggle" type="button">${_bareListChipsExpanded ? 'View less' : 'View more'}</button>
+          ` : ''}
+          <button class="bare-list-filter-section-title bare-list-why-title bare-list-accordion-toggle${_bareListWhyExpanded ? ' bare-list-accordion-toggle--open' : ''}" type="button">
+            Why Curated Lists
+            <svg class="bare-list-accordion-arrow" xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor"><path d="M480-360 280-560h400L480-360Z"/></svg>
+          </button>
+          <p class="bare-list-why-copy" ${_bareListWhyExpanded ? '' : 'hidden'}>A good list is a shortcut — built by people who already did the digging, so you don't have to. Curated lists surface what's worth your time from partners whose values you trust, instead of leaving it to chance.</p>
         </div>
         <div class="bare-list-rows">
           ${rowsHtml}
@@ -130,6 +150,16 @@ export function renderCuratedBareList(container) {
       const active = btn.classList.toggle('bare-list-bookmark-btn--active');
       btn.innerHTML = active ? BOOKMARK_FILLED_SVG : BOOKMARK_OUTLINE_SVG;
     });
+  });
+
+  container.querySelector('.bare-list-chips-toggle')?.addEventListener('click', () => {
+    _bareListChipsExpanded = !_bareListChipsExpanded;
+    renderCuratedBareList(container);
+  });
+
+  container.querySelector('.bare-list-why-title')?.addEventListener('click', () => {
+    _bareListWhyExpanded = !_bareListWhyExpanded;
+    renderCuratedBareList(container);
   });
 
   container.querySelectorAll('.bare-list-chip').forEach(chip => {

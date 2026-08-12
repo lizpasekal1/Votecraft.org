@@ -1189,6 +1189,29 @@
   margin-top: 80px;
 }
 
+/* "Why Curated Lists" is now itself the accordion's clickable header (a <button>, was a plain
+   <div>), per request — resets the button-specific defaults browsers add (border/background/
+   font-family/text-align) so it still reads exactly like the other section titles, plus lays out
+   its own label + arrow icon side by side. */
+.bare-list-accordion-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  border: none;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.bare-list-accordion-arrow {
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+.bare-list-accordion-toggle--open .bare-list-accordion-arrow {
+  transform: rotate(180deg);
+}
+
 .bare-list-why-copy {
   font-size: 13px;
   line-height: 1.5;
@@ -1201,6 +1224,22 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
+}
+/* Real bug: .bare-list-chips-more (the "View more" toggle's extra chips) carries this same
+   .bare-list-chips class, so its own display: flex above was silently overriding the browser's
+   built-in [hidden] { display: none } — an author-stylesheet rule always wins over a user-agent
+   one regardless of specificity, so the hidden attribute never actually did anything and the
+   extra chips stayed visible even when collapsed. This re-asserts display: none at high enough
+   specificity (class + attribute) to actually win. */
+.bare-list-chips-more[hidden] {
+  display: none;
+}
+/* .bare-list-chips-more is a second, separate flex container stacked directly below the first
+   5-chip .bare-list-chips — each has its own internal gap: 8px between its own chips, but nothing
+   enforces that same spacing *between* the two containers, so the last chip of the first group and
+   the first chip of the second sat flush against (visually overlapping) each other once expanded. */
+.bare-list-chips-more {
+  margin-top: 8px;
 }
 
 .bare-list-chip {
@@ -1222,6 +1261,26 @@
 .bare-list-chip--active {
   background: var(--primary);
   color: #fff;
+}
+
+/* "View more"/"View less" toggle for the chip list beyond the first
+   BARE_LIST_CHIPS_COLLAPSED_COUNT (renderCuratedPages.js) — a plain text link rather than a pill
+   like the chips themselves, so it doesn't read as another filter option. .bare-list-chips-more
+   (the extra chips it reveals) reuses .bare-list-chips' own column/gap styling as-is; [hidden]
+   just removes it from flow until toggled. */
+.bare-list-chips-toggle {
+  display: block;
+  margin-top: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.bare-list-chips-toggle:hover {
+  text-decoration: underline;
 }
 
 .bare-list-rows {
@@ -1376,6 +1435,14 @@
 }
 
 @media (max-width: 768px) {
+  /* Was padding-left: 40px only (no padding-right) — fine on desktop where .bare-list-rows'
+     own max-width: 50% + margin-left: 160px kept everything well clear of the right edge anyway,
+     but on mobile (rows now full-width, right below) that left the row list's own right edge
+     flush against the real screen edge with zero margin, squeezing it further than the fix below
+     alone accounts for. Symmetric padding instead. */
+  .bare-list-page {
+    padding: 0 16px 24px;
+  }
   .bare-list-body {
     flex-direction: column;
   }
@@ -1397,11 +1464,93 @@
     margin-left: 0;
     margin-top: 20px;
   }
+  /* Restructured as a grid, not a single-line flex row — squeezing avatar + title + tagline + tag
+     + the View button all onto shared horizontal space (previous approach) left the text column
+     only ~140px wide on a real iPhone even after shrinking the avatar and pulling the button out
+     to an absolute corner position, wrapping a one-sentence tagline across 5-6 lines (reported
+     live, screenshotted). Only the title now shares a line with the avatar; the tagline and tag
+     each get their own full-width row below, which is what a phone-width card actually needs
+     room for. .bare-list-info's display: contents "unwraps" it so its own children (name/
+     tagline/tags) become direct grid items here instead of one combined grid cell — modern
+     browsers only (iOS 15+), already the norm this codebase relies on elsewhere (:has(), etc). */
   .bare-list-row {
-    padding: 16px 20px;
-    gap: 14px;
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    column-gap: 14px;
+    row-gap: 4px;
+    grid-template-areas:
+      "avatar name"
+      "tagline tagline"
+      "tags tags";
+    align-items: start;
+    /* Right padding leaves room for the disclosure arrow (::after, below); not the old 52px
+       bottom reservation the View button used to need — the whole row is already tappable via
+       its own data-link-to click handler, so the button was redundant on mobile anyway, per
+       request. */
+    padding: 16px 34px 16px 20px;
   }
+  /* Right-pointing chevron, vertically centered against the row's own full height — replaces the
+     removed View button as the "this row is tappable" affordance, per request. Drawn from a
+     rotated border corner rather than an image/icon asset. */
+  .bare-list-row::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 18px;
+    width: 8px;
+    height: 8px;
+    border-top: 2px solid var(--text-secondary);
+    border-right: 2px solid var(--text-secondary);
+    transform: translateY(-50%) rotate(45deg);
+  }
+  .bare-list-info {
+    display: contents;
+  }
+  /* Avatar shrunk (was the full 96px desktop size, still too big once next to nothing but the
+     title now) and given its own grid area rather than sizing itself via flex. */
+  .bare-list-avatar {
+    grid-area: avatar;
+    width: 56px;
+    height: 56px;
+    font-size: 22px;
+  }
+  /* Clamped to a fixed number of lines (title 1, tagline 2), per request — org names/taglines
+     vary a lot in length ("Pop culture with a civic pulse." vs. "Getting the money out of
+     politics, one story at a time."), so without a cap each card's own height varied with however
+     much its own text happened to wrap, reading as an uneven, unaligned list. Longer text now
+     truncates with an ellipsis instead of growing the card. */
+  .bare-list-org-name {
+    grid-area: name;
+    align-self: center;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bare-list-org-tagline {
+    grid-area: tagline;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* Reserves 2 full lines' worth of height even when the actual text is shorter — line-clamp
+       above only caps the *maximum*, it doesn't stop a one-line tagline from leaving the card
+       shorter than a two-line one. This is what actually makes every card's height match. */
+    min-height: calc(1.4em * 2);
+  }
+  .bare-list-tags {
+    grid-area: tags;
+    /* Zeroed — the default 10px top/bottom (desktop rule) doubled up with row-gap: 4px above,
+       and this grid already controls spacing between rows on its own. */
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+  /* Hidden on mobile, per request — the whole row is already tappable (data-link-to's own click
+     handler in renderCuratedPages.js), so the button was redundant, and removing it frees up the
+     row's own bottom padding above (was reserving 52px just for this). */
   .bare-list-view-btn {
-    margin-left: 12px;
+    display: none;
   }
 }
