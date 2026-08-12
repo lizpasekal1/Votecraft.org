@@ -152,14 +152,19 @@ export function renderCuratedBareList(container) {
     });
   });
 
-  container.querySelector('.bare-list-chips-toggle')?.addEventListener('click', () => {
+  // These two just flip a hidden/class attribute on their own target — no row/org data changes,
+  // so there's no need to re-run the whole render (which would also re-fetch/rebind every avatar
+  // and bookmark button just to reveal a couple more chips or a paragraph of copy).
+  container.querySelector('.bare-list-chips-toggle')?.addEventListener('click', e => {
     _bareListChipsExpanded = !_bareListChipsExpanded;
-    renderCuratedBareList(container);
+    container.querySelector('.bare-list-chips-more').hidden = !_bareListChipsExpanded;
+    e.currentTarget.textContent = _bareListChipsExpanded ? 'View less' : 'View more';
   });
 
-  container.querySelector('.bare-list-why-title')?.addEventListener('click', () => {
+  container.querySelector('.bare-list-why-title')?.addEventListener('click', e => {
     _bareListWhyExpanded = !_bareListWhyExpanded;
-    renderCuratedBareList(container);
+    e.currentTarget.classList.toggle('bare-list-accordion-toggle--open', _bareListWhyExpanded);
+    container.querySelector('.bare-list-why-copy').hidden = !_bareListWhyExpanded;
   });
 
   container.querySelectorAll('.bare-list-chip').forEach(chip => {
