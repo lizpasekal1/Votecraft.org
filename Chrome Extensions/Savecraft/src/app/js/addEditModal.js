@@ -98,6 +98,16 @@ function setAddSimpleMode(isSimple) {
   document.getElementById('music-url-pair-row').style.display = isSimple ? 'none' : '';
   document.getElementById('image-url-group').style.display = isSimple ? 'none' : '';
   if (isSimple) document.getElementById('platforms-section').style.display = 'none';
+
+  // #input-url's .form-group is a permanent sibling of #image-url-group inside .form-row--url-pair
+  // (hidden just above, isSimple-only) — .form-row--url-pair's own CSS (addEditModal.css) sizes
+  // both fields compactly assuming they're shown side by side. With Image URL hidden, URL is left
+  // alone in the row but still carries that compact sizing, reading visibly shorter than the
+  // Title field above it (reported live, screenshotted twice now: "make both these fields the
+  // same height"). This class lets that CSS rule size the lone field normally instead, matching
+  // Title's own sizing, only when it's actually alone.
+  document.getElementById('input-url').closest('.form-row--url-pair')
+    .classList.toggle('form-row--url-pair--single', isSimple);
 }
 
 // Musician/Music Album/Favorite Albums keep the original compact side-by-side pairing with
@@ -261,6 +271,7 @@ function showMusicChoiceScreen() {
   document.getElementById('btn-modal-back').style.display = '';
   document.getElementById('btn-modal-save').style.display = 'none';
   document.getElementById('modal-back-label').textContent = 'Music';
+  document.querySelector('#modal-overlay h2').classList.add('modal-h2--music-offset');
   document.querySelector('#modal-overlay h2').innerHTML = 'Choose a folder';
 
   // CAT_LABEL['Musician'] is "Music" (used for the combined top-level tile) — on this
@@ -286,6 +297,24 @@ function selectMusicChoice(cat) {
 }
 
 // ===== SCREEN A2: folder picker (shown only when the category has at least one folder) =====
+
+// Folder tiles wrap naturally now (see #step1-folder-grid .step1-category-tile-label in
+// addEditModal.css), but for the common two-word case ("Music Videos", "Book Club") that still
+// left the wrap point up to the browser, which doesn't always break exactly between the two words
+// depending on how much room the tile has. This forces it explicitly — the second word always
+// lands on its own second line — per request. Three+ word (or single-word) names are left to wrap
+// naturally, same as before; a forced break only reads as intentional for exactly two words.
+// "Web Series" specifically stays on one line — short enough to fit without the forced break
+// below, unlike the two-word names that motivated it (Board/Console/Mobile Games, Game
+// Companies), so it just reads as an odd short wrap rather than a helpful one (reported live).
+const FOLDER_TILE_NO_FORCED_BREAK = new Set(['Web Series']);
+function folderTileLabelHtml(name) {
+  const words = name.trim().split(/\s+/);
+  if (words.length === 2 && !FOLDER_TILE_NO_FORCED_BREAK.has(name.trim())) {
+    return `${escapeHtml(words[0])}<br>${escapeHtml(words[1])}`;
+  }
+  return escapeHtml(name);
+}
 
 function showFolderScreenOrSkip(cat) {
   const folders = sortFoldersForDisplay(state.folders.filter(f => f.parentCategory === cat), cat);
@@ -313,14 +342,18 @@ function showFolderScreen(cat, folders) {
   document.getElementById('btn-modal-save').style.display = 'none';
   const isNews = cat === 'News';
   document.getElementById('modal-back-label').textContent = CAT_LABEL[cat] || cat;
+  document.querySelector('#modal-overlay h2').classList.remove('modal-h2--music-offset');
+  document.querySelector('#modal-overlay h2').classList.add('modal-h2--folder-offset');
   document.querySelector('#modal-overlay h2').innerHTML = isNews ? 'Choose a source' : 'Choose a folder';
 
   // No "Skip" — a folder must always be picked; there is no path to the review screen without one.
   const grid = document.getElementById('step1-folder-grid');
+  // Games-only label nudge (addEditModal.css) — see that rule's own comment.
+  grid.classList.toggle('step1-folder-grid--games', cat === 'Game');
   grid.innerHTML = folders.map(f => `
     <button type="button" class="step1-category-tile" data-folder-id="${f.id}">
       <span class="cat-icon">${folderIconHtml(f.id, 28)}</span>
-      <span class="step1-category-tile-label">${escapeHtml(f.name)}${f.paywalled ? ' <span class="step1-paywalled-badge">Paywalled</span>' : ''}</span>
+      <span class="step1-category-tile-label">${folderTileLabelHtml(f.name)}${f.paywalled ? ' <span class="step1-paywalled-badge">Paywalled</span>' : ''}</span>
     </button>`).join('');
 
   grid.querySelectorAll('.step1-category-tile').forEach(t => {
@@ -360,6 +393,7 @@ function showReviewScreen() {
   // folders skip the folder-picker screen entirely, per showFolderScreenOrSkip).
   const chosenFolder = _wizardFolderId ? state.folders.find(f => f.id === _wizardFolderId) : null;
   document.getElementById('modal-back-label').textContent = chosenFolder?.name || CAT_LABEL[state.modalCategory] || state.modalCategory || '';
+  document.querySelector('#modal-overlay h2').classList.remove('modal-h2--folder-offset', 'modal-h2--music-offset');
   document.querySelector('#modal-overlay h2').innerHTML = '';
 
   document.getElementById('input-title').value = '';
@@ -413,6 +447,8 @@ function backToFolderScreen() {
   document.getElementById('modal-category-wrap').style.display = 'none';
   document.getElementById('btn-modal-save').style.display = 'none';
   document.getElementById('modal-back-label').textContent = CAT_LABEL[state.modalCategory] || state.modalCategory || '';
+  document.querySelector('#modal-overlay h2').classList.remove('modal-h2--music-offset');
+  document.querySelector('#modal-overlay h2').classList.add('modal-h2--folder-offset');
   document.querySelector('#modal-overlay h2').innerHTML = 'Choose a folder';
   // Folder tiles/listeners are left exactly as rendered — non-destructive re-entry.
 }
@@ -426,6 +462,8 @@ function backToMusicChoiceScreen() {
   document.getElementById('modal-category-wrap').style.display = 'none';
   document.getElementById('btn-modal-save').style.display = 'none';
   document.getElementById('modal-back-label').textContent = 'Music';
+  document.querySelector('#modal-overlay h2').classList.remove('modal-h2--folder-offset');
+  document.querySelector('#modal-overlay h2').classList.add('modal-h2--music-offset');
   document.querySelector('#modal-overlay h2').innerHTML = 'Choose a folder';
   // Tiles/listeners are left exactly as rendered — non-destructive re-entry, same as backToFolderScreen's pattern.
 }
@@ -447,6 +485,7 @@ function backToCategoryScreen() {
   document.getElementById('modal-category-wrap').style.display = 'none';
   document.getElementById('btn-modal-back').style.display = 'none';
   document.getElementById('btn-modal-save').style.display = 'none';
+  document.querySelector('#modal-overlay h2').classList.remove('modal-h2--folder-offset', 'modal-h2--music-offset');
   document.querySelector('#modal-overlay h2').innerHTML = `${MODAL_BOOKMARK_ICON_SVG}What are you adding to?`;
 }
 
@@ -626,6 +665,7 @@ export function openAddModal() {
   document.getElementById('btn-modal-save').style.display = 'none';
 
   document.querySelector('#modal-overlay h2').classList.remove('modal-h2--left');
+  document.querySelector('#modal-overlay h2').classList.remove('modal-h2--folder-offset', 'modal-h2--music-offset');
   document.querySelector('#modal-overlay h2').innerHTML = `${MODAL_BOOKMARK_ICON_SVG}What are you adding to?`;
   document.getElementById('modal-overlay').classList.add('open');
 }
@@ -664,6 +704,7 @@ export function openEditModal(item) {
   document.getElementById('btn-modal-save').style.display = '';
 
   document.querySelector('#modal-overlay h2').classList.add('modal-h2--left');
+  document.querySelector('#modal-overlay h2').classList.remove('modal-h2--folder-offset', 'modal-h2--music-offset');
   document.querySelector('#modal-overlay h2').innerHTML = `${MODAL_BOOKMARK_ICON_SVG}Edit Item`;
   document.getElementById('btn-modal-save').textContent = 'Update';
 
