@@ -48,14 +48,29 @@
   justify-content: space-between;
 }
 
+/* "Connections" — centered, with a divider below it, per request. Scoped to this card
+   specifically (.profile-card--connections, its own dash-card class) rather than the shared
+   .profile-card-header/-title, which every other widget card on this page still uses as-is. */
+.profile-card--connections .profile-card-header {
+  justify-content: center;
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
 .profile-card-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
+/* Sizes/line-height bumped up across this page (was 13px, no line-height — reading tight and
+   small at any width, worse on mobile), per direct request. Base values here apply everywhere;
+   misc.css's mobile media query pushes them further on top of these, same split as the rest of
+   this codebase's responsive overrides. */
 .profile-card-copy {
-  font-size: 13px;
+  font-size: 14px;
+  line-height: 1.5;
   color: var(--text-secondary);
   margin: 0;
 }
@@ -69,6 +84,13 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+}
+
+/* Mobile-only duplicate of the "Manage account" button above (id="profile-manage-account"),
+   placed at the very end of the page — hidden by default (desktop keeps only the one in the
+   account row); misc.css's own mobile media query shows this one and hides that one instead. */
+.profile-manage-account-mobile {
+  display: none;
 }
 
 .profile-account-identity {
@@ -98,7 +120,7 @@
 }
 
 .profile-account-email {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   color: var(--text-primary);
 }
@@ -157,13 +179,13 @@
 }
 
 .profile-connection-name {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .profile-connection-empty {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-secondary);
 }
 
@@ -204,7 +226,7 @@
 }
 
 .profile-track-title {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--text-primary);
   white-space: nowrap;
@@ -213,7 +235,7 @@
 }
 
 .profile-track-artist {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -222,7 +244,7 @@
 
 .profile-track-nowplaying {
   flex-shrink: 0;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -239,11 +261,15 @@
   gap: 8px;
 }
 
+/* align-items: flex-start (not center) — same fix as .profile-account-row above: with center, a
+   label that wraps to a 2nd line (a longer genre name, or just this page's own bigger mobile
+   fonts) vertically centered the checkbox against the label's full wrapped height instead of
+   keeping it pinned to the first line, per direct request. */
 .profile-interest-option {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-primary);
   cursor: pointer;
 }
@@ -270,7 +296,7 @@
   padding: 6px 4px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
   user-select: none;
@@ -326,7 +352,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-primary);
   cursor: pointer;
 }
@@ -357,7 +383,7 @@
 }
 
 .profile-saved-list-add-folder {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-secondary);
   cursor: pointer;
 }
