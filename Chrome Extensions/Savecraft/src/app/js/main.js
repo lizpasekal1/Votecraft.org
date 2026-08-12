@@ -206,7 +206,7 @@ function applyAuthUI(user) {
 
   document.getElementById('auth-modal-title').textContent = user
     ? 'Your account'
-    : 'Sign in to sync your saves';
+    : 'Explore your library';
   document.getElementById('auth-signed-out-fields').style.display = user ? 'none' : '';
   document.getElementById('auth-password-field').style.display = user ? 'none' : '';
   document.getElementById('auth-signed-out-actions').style.display = user ? 'none' : '';

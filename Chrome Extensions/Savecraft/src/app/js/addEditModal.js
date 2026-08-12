@@ -311,6 +311,7 @@ export function showInfoScreen() {
 
   document.getElementById('modal-step2').style.display = 'none';
   document.getElementById('modal-info-icon').style.display = 'none';
+  document.getElementById('saved-lists-wrap').style.display = 'none'; // review screen's own header control — not part of this screen
   document.getElementById('modal-step-info').style.display = '';
   document.getElementById('btn-modal-back').style.display = '';
   document.getElementById('btn-modal-save').style.display = 'none';
@@ -332,6 +333,7 @@ function backToReviewScreen() {
   document.getElementById('modal-step-info').style.display = 'none';
   document.getElementById('modal-step2').style.display = '';
   document.getElementById('modal-info-icon').style.display = '';
+  document.getElementById('saved-lists-wrap').style.display = '';
   document.getElementById('btn-modal-back').style.display = '';
   document.getElementById('btn-modal-save').style.display = '';
   setModalHeading(reviewTitleHtml(), 'modal-h2--review-title');
