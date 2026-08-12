@@ -15,7 +15,7 @@
   left: 8px;
   background: none;
   border: none;
-  color: var(--text-muted);
+  color: #fff;
   cursor: pointer;
   padding: 6px;
   border-radius: 4px;
@@ -33,11 +33,16 @@
 .modal-info-icon {
   right: 8px;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border: 1.5px solid var(--border);
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid var(--primary);
   border-radius: 50%;
-  color: var(--text-muted);
+  background: var(--primary);
+  color: #fff;
+}
+.modal-info-icon svg {
+  width: 20px;
+  height: 20px;
 }
 
 .platform-dropdown {
@@ -826,29 +831,37 @@
 
 
 /* ===== ADD-MODAL WIZARD: "Lists Explainer" (reached via #modal-info-icon) ===== */
-.info-explainer-intro {
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin: 0 0 24px;
-  text-align: center;
-}
-
 .info-explainer-steps {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  /* 12px — down from 28px, then 18px. The "Saved lists" step grew from a single sentence to a
+     3-line bullet list (per request), tall enough that the wider gaps/icons no longer reliably fit
+     the modal's own fixed height without scrolling on desktop specifically (its 45vh is far
+     shorter than mobile's own 97vh, reported live: the last step's own text was getting clipped)
+     — reclaimed here and in the icon size/text spacing just below instead of relaxing the "no
+     scroll" requirement or the modal's own fixed per-breakpoint height (shared by every wizard
+     screen, not just this one). */
+  gap: 12px;
+  padding-bottom: 6px;
+  padding-left: 5px;
 }
 
 /* Connecting line threading through every step's icon, top to bottom — positioned against the
-   icon column's own center (20px = half of .info-explainer-icon's 40px width). ::before, not a
-   real element, so it doesn't disturb .info-explainer-steps' own flex layout/gap. */
+   icon column's own center: 19px = .info-explainer-steps' own 5px padding-left + 14px (half of
+   .info-explainer-icon's 28px). left is measured from the padding edge (absolute positioning),
+   which padding-left shifts the icons off of but doesn't itself move — the line needs both terms
+   to actually track the icons' real center. ::before, not a real element, so it doesn't disturb
+   .info-explainer-steps' own flex layout/gap. */
 .info-explainer-steps::before {
   content: '';
   position: absolute;
-  top: 20px;
+  top: 14px;
+  /* 20px = 14px (half the icon) + the container's own 6px padding-bottom — bottom is measured
+     from the padding edge same as left above, so the 6px of dead space below the last icon has to
+     be added back in for this to land on that icon's real center instead of 6px short of it. */
   bottom: 20px;
-  left: 20px;
+  left: 19px;
   width: 2px;
   background: var(--border);
 }
@@ -866,18 +879,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  /* 28px — down from 40px, then 34px, same reclaim-room reasoning as .info-explainer-steps' own
+     gap above. */
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--primary);
   color: #fff;
+}
+.info-explainer-icon svg {
+  width: 16px;
+  height: 16px;
 }
 
 .info-explainer-text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding-top: 6px;
+  gap: 1px;
+  padding-top: 3px;
 }
 
 .info-explainer-title {
@@ -887,9 +906,19 @@
 }
 
 .info-explainer-desc {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-secondary);
-  line-height: 1.4;
+  line-height: 1.35;
+}
+/* "Saved lists" step's own desc is 3 bullets instead of a single sentence, per request — .info-
+   explainer-desc's own type styling above still applies (it's on the same <ul> element), this
+   just resets the default list indent/markers to something that fits this compact card. */
+.info-explainer-list {
+  margin: 0;
+  padding-left: 16px;
+}
+.info-explainer-list li + li {
+  margin-top: 2px;
 }
 
 /* ===== ADD-MODAL WIZARD: STEP 1 (category tiles + search) ===== */
@@ -1282,26 +1311,70 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
+  /* 15px below the title, down from the shared .modal-header's own 24px, per request — scoped to
+     this modal specifically since other modals sharing .modal-header still want the larger gap. */
+  margin-bottom: 15px;
 }
 
 .auth-modal-brand {
-  font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 30px;
   font-weight: 700;
-  color: var(--primary);
+  /* White, per request (was var(--primary)) — "Explore your library" below picked up that purple
+     instead. */
+  color: #fff;
   letter-spacing: -0.02em;
+  /* Centered, per request — .auth-modal-header's own align-items: flex-start (left-aligns the
+     "Sign in to sync your saves" h2 below, untouched) would otherwise left-align this too. */
+  align-self: center;
+}
+/* VoteCraft icon to the left of "SaveCraft," per request — same asset renderCuratedPages.js's own
+   .top100-icon-badge already uses for its VoteCraft branding elsewhere in the app. Height matched
+   to the text's own 24px font-size; width: auto keeps the source image's real aspect ratio. */
+.auth-modal-brand-icon {
+  height: 40px;
+  width: auto;
 }
 
+/* Was a short all-caps label ("Chrome Extension") — uppercase + tracked-out letter-spacing suited
+   that, but reads oddly on a full sentence, so this drops both now that the copy is a real tagline
+   ("A small way to save your world"), per request. */
 .auth-modal-tagline {
-  font-size: 12px;
+  /* System serif stack, not a webfont — the app has no font-loading infrastructure anywhere else
+     (base.css's own font-family is a plain system sans-serif stack), and a serif here is purely a
+     one-line stylistic accent, not worth adding a network dependency (and the extra risk of
+     verifying it loads inside the packed Chrome extension, not just the web build) for. */
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 15px;
   font-weight: 500;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 10px;
+  font-style: italic;
+  /* White, per request (was var(--text-secondary)). */
+  color: #fff;
+  /* 2px above the tagline, per request. */
+  margin-top: 2px;
+  /* 35px — another 10px below the tagline, per request (was 10px, then 25px). */
+  margin-bottom: 35px;
+  /* Centered, per request — same reasoning as .auth-modal-brand's own align-self above. */
+  align-self: center;
 }
 
 .auth-modal-header #auth-modal-title {
-  font-size: 16px;
+  /* 15px — matched to .auth-modal-tagline's own font-size, per request (was 16px). */
+  font-size: 15px;
+  /* Purple, per request — overrides the base h2's default var(--text-primary). */
+  color: var(--primary);
+}
+/* Mobile only — centered, matching .auth-modal-brand/.auth-modal-tagline above (.auth-modal-
+   header's own align-items: flex-start would otherwise left-align this). On desktop, left-aligned
+   instead (the header's own default), per request — matches the Email/Password fields' own left
+   edge below, since both share the same .modal padding. */
+@media (max-width: 480px) {
+  .auth-modal-header #auth-modal-title {
+    align-self: center;
+    text-align: center;
+  }
 }
 
 /* Informational reminder (never an error/blocker) — shown in the auth modal's signed-in view when
@@ -1371,46 +1444,101 @@
   color: #DC2626;
 }
 
-/* Pushes the (normally hidden) demo-bypass button to the left edge, keeping Create
-   account/Sign in grouped together on the right — see index.html's note on #btn-auth-demo. */
+/* Stacks the Create account/Sign in row above the (normally hidden) demo-bypass link, both
+   centered — see index.html's note on #btn-auth-demo. Was justify-content: space-between with
+   the demo link pinned to the modal's top-right corner via position: absolute below; per request
+   it now sits in-flow, under the buttons, at the bottom of the popup instead. */
 #auth-signed-out-actions {
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
+  gap: 12px;
 }
 .auth-actions-right {
   display: flex;
   gap: 10px;
 }
+/* Create account/Sign in matched to the same width, per request — flex: 1 splits the row evenly
+   between the two regardless of "Create account" being longer text than "Sign in", scoped to just
+   this row (.btn-cancel/.btn-primary are shared classes other modals' own buttons use too). */
+.auth-actions-right > button {
+  flex: 1;
+  /* "Create account" was wrapping onto two lines — flex: 1's flex-basis: 0% lets the button shrink
+     below its own text's natural width, and text wraps to fit rather than the button just staying
+     as wide as it needs to, per request. */
+  white-space: nowrap;
+  /* 7px — down from the shared .btn-cancel/.btn-primary's own 9px, per request ("too tall" on
+     desktop). Scoped to just these two buttons, not the shared classes other modals' own
+     Save/Connect/etc. buttons still use at their normal size. */
+  padding-top: 7px;
+  padding-bottom: 7px;
+  /* Explicit, rather than relying on the browser's own default <button> text-align — guarantees
+     "Create account"/"Sign in" stay centered now that these buttons stretch much wider than their
+     own text (mobile's own width: calc(100% - 5px) above, almost the full row). */
+  text-align: center;
+}
+/* Desktop only — Sign in matched to Create account's own (wider) width, per request. flex: 1 alone
+   (above) only forces an equal 50/50 *split* of the row's available space, but "Create account"'s
+   longer text needs more than half of that once the row gets tight, so the flex algorithm was
+   giving it more and Sign in less to compensate rather than landing on true equal widths. A shared
+   floor wide enough for "Create account"'s own content pulls Sign in up to match it instead. */
+@media (min-width: 481px) {
+  .auth-actions-right > button {
+    min-width: 140px;
+  }
+}
+/* "Create account" border — pure purple, per request. Scoped to just this button, not the shared
+   .btn-cancel class other modals' own Cancel buttons still use with the default var(--border). */
+#btn-auth-signup {
+  border-color: var(--primary);
+}
+/* In-flow, centered below the Create account/Sign in row, per request — used to be pulled out via
+   position: absolute into the modal's top-right corner next to .modal-x-close. Purple, no
+   underline, per request (was var(--text-secondary), underlined). */
 .auth-demo-link {
   background: none;
   border: none;
-  padding: 9px 4px;
+  padding: 4px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--primary);
   cursor: pointer;
-  text-decoration: underline;
+  text-decoration: none;
 }
 .auth-demo-link:hover {
-  color: var(--primary);
+  text-decoration: underline;
 }
 
 /* Below ~480px (iPhone-width modals — .modal's max-width:90vw kicks in under 533px viewport),
-   View Demo + Create account + Sign in no longer fit on one row — they were flex-shrinking
-   narrower than their own text, wrapping each button's label onto two lines. Stack them
-   full-width instead, both more legible and more thumb-friendly than cramped side-by-side taps. */
+   Create account + Sign in no longer fit on one row — they were flex-shrinking narrower than
+   their own text, wrapping each button's label onto two lines. Stack them full-width instead,
+   both more legible and more thumb-friendly than cramped side-by-side taps. */
 @media (max-width: 480px) {
   #auth-signed-out-actions {
     flex-direction: column;
-    align-items: stretch;
+    /* center, not stretch — .auth-demo-link is a direct child of this row too now (no longer
+       pulled out via position: absolute), and stretch would blow it out to full width. */
+    align-items: center;
     gap: 10px;
   }
   .auth-actions-right {
     flex-direction: column;
+    /* Needed so the explicit width below actually shows as narrower-than-full — the parent's
+       own align-items: stretch (inherited default, column context) would otherwise re-stretch
+       each button back out to .auth-actions-right's full width regardless of its own width. */
+    align-items: center;
   }
-  .auth-demo-link {
-    text-align: center;
-    padding: 9px 4px;
+  /* 5px narrower than the full-width stretch every other mobile size used — was 30px, then 15px,
+     widened another 10px per request. The shared flex: 1 above only governs the column's main
+     axis (height) here, not width, so this is the one that actually controls how wide each
+     stacked button reads on a phone. */
+  .auth-actions-right > button {
+    width: calc(100% - 5px);
+  }
+  /* Sign in above Create account when stacked, per request — desktop's left-to-right order
+     (Create account, then Sign in) is unchanged; order only reorders visually, DOM/tab order
+     stays the same either way. */
+  #btn-auth-signin {
+    order: -1;
   }
 }
 .auth-signed-in-info {

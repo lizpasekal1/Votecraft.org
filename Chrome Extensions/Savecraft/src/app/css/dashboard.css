@@ -27,6 +27,11 @@
 @media (max-width: 768px) {
   .grid-area:has(.dashboard-wrap) {
     overflow-y: auto;
+    /* Extra room at the very end of the scroll so the last widget's own content (e.g. the
+       Profile widget) doesn't end up sitting directly behind the floating "+ Add Item" FAB
+       (misc.css's .fab-add — 56px tall, 24px off the bottom, so ~96px covers it plus a little
+       breathing room) once the user scrolls all the way down, per request. */
+    padding-bottom: 96px;
   }
   .dashboard-wrap {
     max-height: none;

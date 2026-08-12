@@ -583,7 +583,12 @@
     justify-content: center;
     position: fixed;
     bottom: 24px;
-    left: 24px;
+    /* Horizontally centered, per request (was pinned to the left edge) — left: 50% +
+       translateX(-50%) centers against the real viewport width regardless of the button's own
+       56px, rather than a fixed left px value that'd only be centered at one specific screen
+       width. Vertical position (bottom: 24px) is untouched — only asked to center horizontally. */
+    left: 50%;
+    transform: translateX(-50%);
     width: 56px;
     height: 56px;
     border-radius: 50%;
@@ -601,7 +606,9 @@
   .fab-add:active {
     background: #fff;
     color: var(--primary);
-    transform: scale(1.05);
+    /* translateX(-50%) carried over from the base rule's own centering — a bare scale(1.05) here
+       would replace (not add to) that transform, snapping the button back to the left on hover. */
+    transform: translateX(-50%) scale(1.05);
   }
 }
 
