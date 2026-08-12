@@ -119,3 +119,16 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Mobile only — clears room at the bottom of the page for the floating "+ Add Item" FAB
+   (misc.css's .fab-add — fixed, centered horizontally, near the bottom of every page), same fix
+   and reasoning as dashboard.css's own .grid-area:has(.dashboard-wrap) padding-bottom: without it,
+   the last visible slider card here (most often "Friends You've Shared Lists With", the final
+   section) ends up sitting directly behind the button instead of scrolled fully into view — read
+   live as "the content looks off center," but the card itself was already correctly centered;
+   the FAB was just overlapping it. */
+@media (max-width: 768px) {
+  .shared-page-wrap {
+    padding-bottom: 96px;
+  }
+}

@@ -458,8 +458,14 @@
     z-index: 500;
     transform: translateX(-100%);
     transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-    width: 85vw;
-    max-width: 300px;
+    /* Plain px, not vw — on every real iPhone width (375-430px CSS px) 85vw always exceeds this
+       max-width cap anyway, so the cap was already what actually controlled this drawer's width;
+       vw itself is dropped entirely now to sidestep a documented iOS Safari quirk (this same
+       codebase already hit it elsewhere — see .modal's own width comment in addEditModal.css —
+       where vw can render a few px wider than the true viewport). 240px — down further from
+       285px, then 260px, per request. */
+    width: 240px;
+    max-width: 90vw;
     box-shadow: 4px 0 24px rgba(0,0,0,0.3);
     display: flex;
     flex-direction: column;
@@ -473,11 +479,13 @@
   .sidebar.open { transform: translateX(0); }
 
   /* Mobile sidebar header */
+  /* Padding trimmed down (was 16px 16px 14px) and the close button shrunk (was 32px), per request
+     — the title row read as too tall relative to the shorter rows below it. */
   .sidebar-mobile-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 16px 14px;
+    padding: 10px 16px;
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
   }
@@ -487,8 +495,8 @@
     color: var(--text-primary);
   }
   .sidebar-close-btn {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     border: none;
     background: var(--hover-bg);
@@ -505,13 +513,15 @@
   .sidebar-mode-tabs {
     display: flex;
     gap: 8px;
-    padding: 10px 12px;
+    padding: 6px 12px;
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
   }
+  /* Vertical padding trimmed (was 8px), per request — icon/text sizes (font-size, the tab's own
+     content) deliberately left untouched, just the space around them. */
   .sidebar-mode-tab {
     flex: 1;
-    padding: 8px 10px;
+    padding: 5px 10px;
     border-radius: 20px;
     border: none;
     background: var(--hover-bg);
@@ -524,6 +534,20 @@
   .sidebar-mode-tab.active {
     background: var(--primary);
     color: #fff;
+  }
+  /* "Curated" specifically stays purple all the time, per request — not just while it's the
+     active tab (.active above only applies when state.sidebarMode === 'curated'). Equal
+     specificity to .active (class + attribute selector vs. two classes), placed after it so it
+     wins the tie when both apply — same purple either way there, this only actually changes
+     anything for the resting/inactive state. */
+  .sidebar-mode-tab[data-sidebar-opt="curated"] {
+    background: var(--primary);
+    color: #fff;
+  }
+  /* White outline when actually selected, per request — now that the tab stays purple whether
+     active or not, this is the only remaining visual difference showing which one is current. */
+  .sidebar-mode-tab[data-sidebar-opt="curated"].active {
+    box-shadow: 0 0 0 2px #fff;
   }
   /* Fixed white/dark-gray regardless of theme (not var(--text-primary), which flips to a light
      color in dark mode) — hover for a mouse, :active for the moment a finger is actually touching
@@ -544,18 +568,52 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Larger touch targets on mobile */
+  /* Larger touch targets on mobile — vertical padding/min-height trimmed down per request (rows
+     read as too tall/far apart), still comfortably tappable at 38px. */
   .sidebar-items-scroll .sidebar-item {
-    padding: 12px 16px 12px 20px;
-    min-height: 44px;
+    padding: 8px 16px 8px 20px;
+    min-height: 38px;
+  }
+  /* .sidebar-divider's own default 8px top/bottom margin (sidebar.css) was stacking with the row
+     padding above it, per request — trimmed to 4px, then 2px, mobile drawer only (desktop's
+     sidebar keeps the original 8px). */
+  .sidebar-items-scroll .sidebar-divider {
+    margin-top: 2px;
+    margin-bottom: 2px;
+  }
+  /* Icon badges — shrunk again (42px read too large on mobile once actually compared side by
+     side), but keeping the same proportions as desktop's own 11px-radius-on-42px-box instead of a
+     flat value: 8px radius on this 32px box is that same ~26% ratio, so corners read consistent
+     with desktop rather than either too round or too square. Sheen (::after) and svg scaled down
+     to match. */
+  .sidebar-items-scroll .cat-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    /* Everything else — background, box-shadow bevel, the ::after sheen's own gradient/opacity —
+       is deliberately left untouched here, inherited as-is from the shared .cat-icon rule above,
+       so styling stays as close to desktop's as possible; only the size-dependent properties
+       (dimensions, radius, this font-size for any emoji-based icons, svg size below) are scaled
+       down to match, at the same ~0.76 ratio (32/42) throughout. */
+    font-size: 18px;
+  }
+  .sidebar-items-scroll .cat-icon::after {
+    border-radius: 8px 8px 0 0;
+  }
+  .sidebar-items-scroll .cat-icon svg {
+    width: 20px;
+    height: 20px;
   }
 
-  /* Overlay behind open sidebar */
+  /* Overlay behind open sidebar — lighter tint (was 0.5), per request, so the page underneath
+     stays visibly readable rather than mostly obscured while navigating with the drawer open. It
+     only ever covers the exposed area to the right of the drawer itself (the drawer sits on top,
+     z-index 500 vs this overlay's 499, so the drawer's own content is never dimmed by it). */
   .sidebar-overlay {
     display: block;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.25);
     z-index: 499;
     opacity: 0;
     pointer-events: none;
