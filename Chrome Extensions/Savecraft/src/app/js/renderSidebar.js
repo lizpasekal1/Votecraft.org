@@ -156,6 +156,10 @@ export function renderSidebar() {
         // collapsed state is already settled by the time it triggers the render.
         collapseAllSidebarSections();
         navigateToView(view, { sidebarMode });
+        // Curated/Shared navigate straight to their own full-page view, per request — no reason
+        // to leave the mobile drawer open over it the way tapping "My Saves" (which just narrows
+        // what the drawer itself is showing) still does.
+        if (opt === 'curated' || opt === 'shared') closeSidebar();
       });
     });
   }

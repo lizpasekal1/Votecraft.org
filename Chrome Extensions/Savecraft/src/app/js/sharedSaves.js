@@ -44,7 +44,7 @@ const DEMO_FRIENDS = [
 
 // One reusable vertical-card carousel builder — avatar circle, name, tagline, a title/tag pill —
 // shared by both sections below so they read as the same visual language.
-function buildVerticalCardSlider({ sectionClass, title, cards }) {
+function buildVerticalCardSlider({ sectionClass, title, mobileTitle, cards }) {
   const tripled = [...cards, ...cards, ...cards];
   const cardsHtml = tripled.map((c, i) => {
     // Progressive List's logo specifically needs a white backdrop to read correctly; Votecraft
@@ -65,9 +65,15 @@ function buildVerticalCardSlider({ sectionClass, title, cards }) {
       </div>`;
   }).join('');
 
+  // Shorter title on mobile, per request — two <span>s swapped via CSS media query (sharedSaves.css)
+  // rather than JS, so it stays correct across a resize/rotation without a re-render.
+  const titleHtml = mobileTitle
+    ? `<span class="shared-title-full">${escapeHtml(title)}</span><span class="shared-title-compact">${escapeHtml(mobileTitle)}</span>`
+    : escapeHtml(title);
+
   return `
     <div class="dash-card ${sectionClass}">
-      <div class="profile-card-header"><span class="profile-card-title">${escapeHtml(title)}</span><button class="top100-row-add-btn" aria-label="Add"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+      <div class="profile-card-header"><span class="profile-card-title">${titleHtml}</span><button class="top100-row-add-btn" aria-label="Add"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
       <div class="dash-carousel shared-vcard-carousel">
         <button class="dash-carousel-prev" aria-label="Previous">‹</button>
         <div class="dash-carousel-strip">${cardsHtml}</div>
@@ -98,17 +104,17 @@ function buildNonprofitSliderSection() {
         : orgs.slice(0, 1);
       return picks.map(org => ({ name: org.name.replace(/\s+List$/i, ''), tagline: org.tagline, tag: label, icon: org.icon, imageUrl: org.imageUrl }));
     });
-  return buildVerticalCardSlider({ sectionClass: 'shared-card--nonprofits', title: "Curated Lists You've Connected", cards });
+  return buildVerticalCardSlider({ sectionClass: 'shared-card--nonprofits', title: "Curated Lists You've Connected", mobileTitle: 'Cause Curated Lists', cards });
 }
 
 function buildGroupListsSliderSection() {
   const cards = DEMO_GROUP_LISTS.map(g => ({ name: g.name, tagline: g.tagline, icon: g.icon }));
-  return buildVerticalCardSlider({ sectionClass: 'shared-card--group-lists', title: "Group Lists You've Connected", cards });
+  return buildVerticalCardSlider({ sectionClass: 'shared-card--group-lists', title: "Group Lists You've Connected", mobileTitle: 'Group Lists', cards });
 }
 
 function buildFriendsSection() {
   const cards = DEMO_FRIENDS.map(f => ({ name: f.name, imageUrl: f.imageUrl }));
-  return buildVerticalCardSlider({ sectionClass: 'shared-card--friends', title: "Friends You've Shared Lists With", cards });
+  return buildVerticalCardSlider({ sectionClass: 'shared-card--friends', title: "Friends You've Shared Lists With", mobileTitle: "Friend's Lists", cards });
 }
 
 function wireCarousels(container) {

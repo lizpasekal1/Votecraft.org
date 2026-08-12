@@ -248,6 +248,11 @@
 
 .modal-body {
   overflow-y: auto;
+  /* iOS Safari momentum/touch scrolling inside a nested div — without this, a scroll gesture that
+     starts on a still-fitting screen's content can fail to hand off to this container's own
+     overflow once a taller screen (e.g. the Lists Explainer) is swapped in, reading as "it doesn't
+     scroll at all" rather than just scrolling roughly. */
+  -webkit-overflow-scrolling: touch;
   flex: 1;
   min-height: 0;
   /* Same fix as .detail-tracklist-item in detailModal.css: a flex item defaults to
