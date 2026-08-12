@@ -393,7 +393,84 @@
   }
 
   /* Profile page */
-  .profile-widget-grid { grid-template-columns: 1fr; height: auto; }
+  /* grid-template-rows explicitly overridden to none, not just left alone — desktop's own
+     repeat(2, 1fr) (profile.css) still pairs row 1 (Connections) with row 2 (Interests) into
+     equal-height tracks even here, single column and height:auto or not, so Interests kept
+     getting stretched to match whatever height Connections happened to be (most visibly after
+     Connections grew a second line per row for its stacked mobile layout below — reported live as
+     a huge empty gap under Interests' last checkboxes). none drops the explicit 2-row definition
+     entirely, so all 4 cards fall back to implicit auto-height rows sized to their own content. */
+  .profile-widget-grid { grid-template-columns: 1fr; grid-template-rows: none; height: auto; }
+  /* Text across every Profile card bumped up again here, layered on top of profile.css's own
+     base-size bump — mobile was the specific complaint ("very small — especially in mobile"),
+     and there's width to spare once the grid above drops to a single column. Saved Lists' folder
+     tree also drops from 2 columns to 1 (profile.css's column-count: 2) — two columns of this
+     much bigger text got visibly cramped at phone widths. */
+  /* "Manage account" moved to its own button at the very end of the page on mobile (was squeezed
+     beside the avatar/name in the account row, part of the same row via .profile-account-row's
+     own justify-content: space-between), per request — the in-row button (profile.css's own
+     .profile-manage-account-mobile base rule already hides the page-end one by default) swaps
+     places here: hidden in the row, shown at the page end instead. */
+  #profile-manage-account {
+    display: none;
+  }
+  .profile-manage-account-mobile {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+  }
+  .profile-card-title { font-size: 18px; }
+  .profile-card-copy { font-size: 15px; line-height: 1.55; }
+  .profile-account-email { font-size: 16px; }
+  .profile-connection-name { font-size: 16px; }
+  .profile-connection-empty { font-size: 15px; }
+  .profile-track-title { font-size: 15px; }
+  .profile-track-artist { font-size: 14px; }
+  .profile-interest-option { font-size: 15px; }
+  .profile-saved-list-row { font-size: 15px; }
+  .profile-saved-list-category,
+  .profile-saved-list-folder { font-size: 15px; }
+  .profile-saved-list-add-folder { font-size: 15px; }
+  .profile-saved-list-tree { column-count: 1; }
+  /* Interests' checkbox grid (profile.css) uses auto-fill with a 160px column minimum — on a
+     mobile-width card (~300px after grid-area/card padding) that only ever fits one column,
+     stacking all 8 CURATED_GENRES options into one tall vertical list (reported live as "the
+     interest panel is too long"). Forcing 2 fixed columns here halves it to 4 rows. */
+  .profile-interests-grid { grid-template-columns: repeat(2, 1fr); }
+  /* Connections rows (profile.css) sit side-by-side on mobile too — text left, a fixed 150px-wide
+     button right — same as desktop. On a phone that only leaves ~150px for .profile-connection-
+     info, squeezing "We only access your public Steam profile." down to one or two words per line
+     (reported live, screenshot confirmed) no matter how the button itself was sized; a narrower
+     button (tried first) only bought the text a little more room, it didn't fix the actual cause.
+     Real fix: stack each row into two lines instead — description first at the card's full width,
+     button below it — so the text is never fighting a side-by-side button for space at all. */
+  .profile-connection-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .profile-connection-info {
+    width: 100%;
+  }
+  /* Width/height no longer need a fixed override once the button isn't sharing a row with the
+     text — auto-sized to its own label reads fine stacked on its own line, and naturally lands
+     well under half of the old 150px for the single-line "Disconnect"/"Coming soon" labels. */
+  .profile-connection-row .btn-primary,
+  .profile-connection-row .btn-cancel {
+    width: auto;
+    height: auto;
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+  /* Connect Last.fm/Steam's <br class="profile-connect-break"> (profile.js) forces those two
+     buttons onto 2 lines everywhere by default, sized for desktop's own fixed 150px box — with
+     width now auto here, hiding just this break lets each button size to its single-line label
+     instead ("longer and shorter", per direct request), scoped to mobile only so desktop's
+     existing 2-line look is untouched. Disconnect/Coming soon never had a <br> here to begin with,
+     already single-line on both breakpoints. */
+  .profile-connect-break {
+    display: none;
+  }
 
   /* Hamburger */
   .btn-hamburger {

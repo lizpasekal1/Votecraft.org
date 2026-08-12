@@ -49,6 +49,10 @@ function buildAccountSection(user) {
 
 function wireAccountSection(container) {
   container.querySelector('#profile-manage-account')?.addEventListener('click', openAuthModal);
+  // Mobile-only duplicate of the button above, at the very end of the page (profile.css/misc.css
+  // hide/show whichever one applies) — see renderProfilePage's own template for where it's
+  // placed. Separate id (can't reuse #profile-manage-account on two elements) but the same handler.
+  container.querySelector('#profile-manage-account-mobile')?.addEventListener('click', openAuthModal);
   container.querySelector('#profile-resend-verify')?.addEventListener('click', async e => {
     const btn = e.currentTarget;
     btn.disabled = true;
@@ -85,9 +89,9 @@ function buildLastfmRow() {
       <div class="profile-connection-row">
         <div class="profile-connection-info">
           <span class="profile-connection-name">Last.fm</span>
-          <p class="profile-card-copy">${escapeHtml(LASTFM_CONNECTION_COPY)}<br>${escapeHtml(NO_LOGIN_REQUIRED_COPY)}</p>
+          <p class="profile-card-copy">${escapeHtml(LASTFM_CONNECTION_COPY)} ${escapeHtml(NO_LOGIN_REQUIRED_COPY)}</p>
         </div>
-        <button class="btn-primary" id="profile-connect-lastfm">Connect<br>Last.fm</button>
+        <button class="btn-primary" id="profile-connect-lastfm">Connect <br class="profile-connect-break">Last.fm</button>
       </div>`;
   }
 
@@ -112,7 +116,7 @@ function buildLastfmRow() {
     <div class="profile-connection-row">
       <div class="profile-connection-info">
         <span class="profile-connection-name">Last.fm — connected as ${escapeHtml(username)}</span>
-        <p class="profile-card-copy">${escapeHtml(LASTFM_CONNECTION_COPY)}<br>${escapeHtml(NO_LOGIN_REQUIRED_COPY)}${escapeHtml(statusLine)}</p>
+        <p class="profile-card-copy">${escapeHtml(LASTFM_CONNECTION_COPY)} ${escapeHtml(NO_LOGIN_REQUIRED_COPY)}${escapeHtml(statusLine)}</p>
       </div>
       <button class="btn-cancel" id="profile-disconnect-lastfm">Disconnect</button>
     </div>
@@ -127,9 +131,9 @@ function buildSteamRow() {
       <div class="profile-connection-row">
         <div class="profile-connection-info">
           <span class="profile-connection-name">Steam</span>
-          <p class="profile-card-copy">${escapeHtml(STEAM_CONNECTION_COPY)}<br>${escapeHtml(NO_LOGIN_REQUIRED_COPY)}</p>
+          <p class="profile-card-copy">${escapeHtml(STEAM_CONNECTION_COPY)} ${escapeHtml(NO_LOGIN_REQUIRED_COPY)}</p>
         </div>
-        <button class="btn-primary" id="profile-connect-steam">Connect<br>Steam</button>
+        <button class="btn-primary" id="profile-connect-steam">Connect <br class="profile-connect-break">Steam</button>
       </div>`;
   }
 
@@ -153,7 +157,7 @@ function buildSteamRow() {
     <div class="profile-connection-row">
       <div class="profile-connection-info">
         <span class="profile-connection-name">Steam — connected as ${escapeHtml(steamId)}</span>
-        <p class="profile-card-copy">${escapeHtml(STEAM_CONNECTION_COPY)}<br>${escapeHtml(NO_LOGIN_REQUIRED_COPY)}${escapeHtml(statusLine)}</p>
+        <p class="profile-card-copy">${escapeHtml(STEAM_CONNECTION_COPY)} ${escapeHtml(NO_LOGIN_REQUIRED_COPY)}${escapeHtml(statusLine)}</p>
       </div>
       <button class="btn-cancel" id="profile-disconnect-steam">Disconnect</button>
     </div>
@@ -453,6 +457,7 @@ export function renderProfilePage() {
         ${buildMyNotesSection()}
         ${buildSavedListsSection()}
       </div>
+      <button class="btn-cancel profile-manage-account-mobile" id="profile-manage-account-mobile">Manage account</button>
     </div>`;
 
   wireAccountSection(container);
