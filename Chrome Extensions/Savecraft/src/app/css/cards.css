@@ -1130,6 +1130,10 @@
   align-items: center;
   text-align: center;
   margin-left: -20px;
+  /* Matches margin-left, per request — was missing entirely, so the banner sat 20px further out
+     on its left edge than its right, an asymmetry that showed up on both pages this shared
+     component is used on (Cause Curated and Shared Saves). */
+  margin-right: -20px;
 }
 
 .bare-list-title {
