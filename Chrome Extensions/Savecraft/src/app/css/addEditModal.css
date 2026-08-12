@@ -1,17 +1,23 @@
 /* ===== ADD / EDIT ITEM MODAL ===== */
-.modal-back-icon {
+/* Shared base for both of .modal's corner icons — position: absolute against .modal itself (not
+   part of #modal-header's own flex flow), so each sits in the same spot regardless of which
+   screen's body is currently showing. .modal-back-icon (top-left) and .modal-info-icon (top-right)
+   each layer their own shape/color on top of this. */
+.modal-corner-icon {
   position: absolute;
   top: 8px;
-  left: 8px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  z-index: 10;
+}
+
+.modal-back-icon {
+  left: 8px;
   background: none;
   border: none;
   color: var(--text-muted);
   cursor: pointer;
   padding: 6px;
-  z-index: 10;
   border-radius: 4px;
   transition: color 0.15s;
 }
@@ -19,22 +25,19 @@
   color: var(--text-primary);
 }
 
-.modal-back-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--primary);
-}
-.modal-back-label:empty {
-  display: none;
-}
-
-/* Mobile only — matches the 15px .step1-category-tile-label font-size (addEditModal.css further
-   down), so "< Shows" on the "Choose a folder" screens reads at the same size as the tiles below
-   it, per request. */
-@media (max-width: 480px) {
-  .modal-back-label {
-    font-size: 15px;
-  }
+/* Add flow's review/input screen only — same corner treatment as .modal-back-icon (top-right
+   instead of top-left), per request. Circle outline around the icon, matching the reference image
+   (a muted "i" inside a thin ring) — .modal-back-icon's own chevron has no such ring, so this adds
+   its own border/border-radius on top of the shared .modal-corner-icon base rather than reusing
+   .modal-back-icon's own icon-button styling wholesale. */
+.modal-info-icon {
+  right: 8px;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  color: var(--text-muted);
 }
 
 .platform-dropdown {
@@ -81,6 +84,85 @@
   padding: 6px 0;
   z-index: 100;
   box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+}
+
+/* Saved-lists dropdown (Add flow's review-screen header, opposite end of the row from the modal's
+   own top-left back button) — sits at the very TOP of the modal instead of Platforms' usual spot
+   at the bottom of the form, so opening upward (the shared rule above) would push the list off the
+   top of the popup instead of over the form fields below it. Opens downward here instead — plenty
+   of room, and nothing below it to clip against. */
+#saved-lists-wrap .platform-dropdown-list {
+  bottom: auto;
+  top: calc(100% + 4px);
+  left: auto;
+  right: 0;
+  /* Content-sized, not the full row width .platform-dropdown-list normally stretches to inside a
+     full-width .form-group — list names vary in length and this dropdown itself is only as wide
+     as "All My Saves +N", so a fixed min-width keeps the list from being oddly narrow while still
+     hugging the summary's own right edge rather than spanning the whole modal. */
+  min-width: 180px;
+}
+
+/* "Select Lists" tile itself — purple, per request, with its text/arrow kept white (not the
+   shared .platform-dropdown-summary's var(--text-primary), which reads dark on this background).
+   white-space: nowrap fixes "All My Saves" wrapping onto two lines inside the pill (reported live)
+   — the summary itself has no fixed width (sized to its own content, like #modal-category-wrap's
+   select was), so this just keeps that content on one line rather than the pill growing to fit it. */
+#saved-lists-wrap .platform-dropdown-summary {
+  white-space: nowrap;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  /* Pill shape, per request — half the tile's own height rounds both ends fully regardless of
+     however tall the tile ends up (rather than a fixed px value that'd only be "right" at one
+     specific height). */
+  border-radius: 999px;
+  /* Same height as the grid/kanban toolbar's own .sort-select pill (base.css) — same font-size
+     and border-width already match, so matching its 7px top/bottom padding (was the shared
+     .platform-dropdown-summary's 8px) is what actually equalizes the two. */
+  padding-top: 7px;
+  padding-bottom: 7px;
+  /* +15px more horizontal padding, +7.5px each side over the shared .platform-dropdown-summary's
+     base 12px (-> 19.5px), per request. */
+  padding-left: 19.5px;
+  padding-right: 19.5px;
+  /* Text + arrow centered together as a group, not spread to the pill's edges (the shared
+     .platform-dropdown-summary's justify-content: space-between, meant for a full-width row),
+     per request. gap replaces the spacing space-between used to provide between the two. */
+  justify-content: center;
+  gap: 6px;
+}
+/* Arrow icon — 20x20, up from the shared 16x16 (.platform-dropdown-summary svg, base rule above),
+   per request. */
+#saved-lists-wrap .platform-dropdown-summary svg {
+  width: 20px;
+  height: 20px;
+}
+.saved-list-option {
+  /* .platform-option's default (below) puts its checkbox first, name after, left-aligned as one
+     tight group — this reverses that: name on the left, checkbox pushed to the row's right edge,
+     per request. */
+  justify-content: space-between;
+}
+.saved-list-option-name {
+  flex: 1;
+  min-width: 0;
+}
+/* "All My Saves" (default-favorites) — always on, and not something you can turn off from here
+   (every saved item is trivially part of it), so its row reads as informational rather than a
+   real control: dimmed name text and the default (not pointer) cursor, though the checkbox itself
+   still shows filled/checked. */
+.saved-list-option--locked {
+  cursor: default;
+}
+.saved-list-option--locked:hover {
+  background: none;
+}
+.saved-list-option--locked .saved-list-option-name {
+  color: var(--text-secondary);
+}
+.saved-list-option--locked input[type="checkbox"] {
+  cursor: default;
 }
 
 .platform-option {
@@ -194,10 +276,23 @@
 
 .modal-header {
   display: flex;
+  /* Column, not row — the title (h2) needs to sit above the category-select/saved-lists dropdown
+     (whichever is visible) rather than beside it, per request. Only actually changes anything
+     visually on the one screen where both are shown together (the review screen) — every other
+     screen only ever has h2 visible in this row, so a row-vs-column flex-direction makes no
+     difference there either way. */
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   margin-bottom: 24px;
+}
+
+/* .modal-header's own align-items: center (above) would otherwise center these horizontally too,
+   like every other child — pinned to the row's right edge instead, matching where they always sat
+   (top-right) back when the header was a single row instead of stacked. */
+#modal-category-wrap,
+#saved-lists-wrap {
+  align-self: flex-end;
 }
 
 .modal h2 {
@@ -215,6 +310,48 @@
   width: 100%;
 }
 
+/* "Choose a folder"/"Choose a source" heading now carries two lines — the category/folder name
+   (.modal-category-title, e.g. "Games") and the heading text itself (.modal-heading-text) — where
+   that name used to sit instead as the back button's adjacent label, top-left (per request: centered
+   above the heading instead, and the back arrow now shows with no label next to it). Stacks them
+   in a column instead of h2's own default row (base rule above); the row rule's existing gap: 8px
+   still applies, now vertically, matching the requested 8px gap between the two lines exactly. */
+#modal-overlay h2.modal-h2--folder-offset,
+#modal-overlay h2.modal-h2--music-offset {
+  flex-direction: column;
+}
+.modal-category-title {
+  /* 20px — matches .modal-heading-text/h2's own base font-size ("Choose a folder" itself, and the
+     review screen's h2 has no separate heading-text span to compare against), per request. Was
+     15px (matching the folder tiles below), briefly. */
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--primary);
+}
+/* Review (final input) screen's title — white instead of the shared purple, per request. Scoped to
+   .modal-h2--review-title specifically so the folder-picker screens' category titles (e.g. "Games")
+   keep the purple .modal-category-title color above. */
+#modal-overlay h2.modal-h2--review-title .modal-category-title {
+  color: #fff;
+}
+
+/* Desktop only, per request. */
+@media (min-width: 481px) {
+  /* "What are you adding to?" heading — 15px below it, before the category tile grid starts. */
+  #modal-overlay h2.modal-h2--category-screen {
+    margin-bottom: 15px;
+  }
+  /* Bookmark icon in front of "What are you adding to?" — removed, per request. Edit Item's own
+     h2 (same MODAL_BOOKMARK_ICON_SVG markup, no .modal-h2--category-screen class) keeps its icon. */
+  #modal-overlay h2.modal-h2--category-screen .modal-bookmark-icon {
+    display: none;
+  }
+  /* Review (final input) screen's "Add …" title — 10px below it, before the form fields start. */
+  #modal-overlay h2.modal-h2--review-title {
+    margin-bottom: 10px;
+  }
+}
+
 /* Mobile only — pushes "What are you adding to?" down 20px from the top of the popup, per
    request. .modal-h2--folder-offset (toggled in addEditModal.js alongside every "Choose a
    folder"/"Choose a source" innerHTML assignment, for the real folder-picker screen) and
@@ -226,16 +363,27 @@
   #modal-overlay h2 {
     margin-top: 20px;
   }
+  /* Review screen's title — kept at the same vertical band as the back arrow, per request.
+     margin-top: 0 alone (tried first) wasn't actually enough: the arrow is position: absolute at
+     a fixed top: 8px from .modal's own edge, independent of everything else here, while h2 (even
+     at its own margin-top: 0) still starts whatever the *header's* top edge is — 28px down, at
+     .modal's own padding-top, not the arrow's 8px. That baked-in 20px gap between the two needed
+     closing directly, not just zeroing h2's own margin on top of it. */
+  #modal-overlay h2.modal-h2--review-title {
+    /* -5px — 15px down from -20px, per request. */
+    margin-top: -5px;
+  }
   #modal-overlay h2.modal-h2--folder-offset {
-    /* 45px — 10px back up from 55px, per request. */
-    margin-top: 45px;
+    /* 30px — 15px back up from 45px, per a "bring everything up 15px" request covering both the
+       title and the tiles below it (see #step1-folder-grid/#step1-music-choice-grid's own -15px
+       nudge further down this file for the tiles' half of that same move). */
+    margin-top: 30px;
   }
   #modal-overlay h2.modal-h2--music-offset {
-    /* Larger than folder-offset's 55px — the music sub-choice screen's heading needed to come
-       down further still, per request. 75px — another 15px added on top of the previous 60px,
-       matching folder-offset's own +15px, since the request applied to both "Choose a folder"
-       screens together. */
-    margin-top: 75px;
+    /* Larger than folder-offset's 30px — the music sub-choice screen's heading needed to come
+       down further still, per request. Also nudged up 15px along with folder-offset's own, same
+       reasoning. */
+    margin-top: 60px;
   }
   /* REGRESSION, tried and reverted: matching the header's margin-bottom to the same total top gap
      (28px .modal padding-top + the h2's own margin-top — 83px/103px) to visually center the
@@ -248,6 +396,18 @@
      plain 24px default instead — .modal-body/.step1-category-grid's own safe-centering (below)
      still keeps things looking centered when there's room, without this second mechanism
      fighting it over an increasingly small remaining space. */
+  /* Category dropdown (top-right of the review form's header, e.g. "Films") — dropped 20px, per
+     request. */
+  #modal-category-wrap {
+    margin-top: 20px;
+  }
+  /* "Select Lists" dropdown — same starting 20px as #modal-category-wrap above (its Add-flow
+     counterpart in that same spot), plus another 20px on top of that, then another 20px again per
+     a follow-up request (-> 60px). Split into its own rule since the two no longer share the same
+     value. */
+  #saved-lists-wrap {
+    margin-top: 60px;
+  }
 }
 
 /* Scoped to this modal specifically (ID selector, beats the shared .modal's own padding without
@@ -258,6 +418,53 @@
 #modal-overlay .modal {
   padding-left: 16px;
   padding-right: 16px;
+}
+
+/* Desktop only — same fix, same reasoning, as the mobile-only firm-height block just below (that
+   one's own comment covers the full "why" — .modal's base rule only sets max-height, a cap, not a
+   floor, so the box was shrink-wrapping to whatever the current wizard screen's content happened
+   to need, visibly resizing on every Back/Next). Desktop was deliberately left shrink-wrapping
+   when that mobile fix first went in, on the assumption a big screen had no dead-gap problem to
+   avoid — reported live since then: it still reads as the popup changing height as you go, same
+   complaint, just on desktop instead of mobile. Firm height here too now, at the same 85vh/85dvh
+   the shrink-wrap used to cap out at, so the common case (whatever screen was already near that
+   cap) doesn't visibly jump size the moment this switches from a ceiling to a fixed value. */
+@media (min-width: 481px) {
+  #modal-overlay .modal {
+    /* 45 — between 42 and 50, before that 65, 85. */
+    height: 45vh;
+    height: 45dvh;
+  }
+  /* "Select Lists" button — right-side padding bumped further to 25px (from the shared 19.5px),
+     desktop only, per request. */
+  #saved-lists-wrap .platform-dropdown-summary {
+    padding-right: 25px;
+  }
+  /* Pulled left 22px so its own right edge actually lines up with the fields' right edge below —
+     #modal-header (this sits in) has no inset of its own, so align-self: flex-end (base rule)
+     puts it flush with .modal's true 28px content edge, while .modal-step2's own -3px/25px combo
+     just below insets the fields 22px past that same edge. Without this, "Select Lists" sat 22px
+     further right than Title/URL (reported live). */
+  #saved-lists-wrap {
+    margin-right: 22px;
+    /* +15px above "Select Lists" — since #modal-header is a column (gap: 8px) with h2 above and
+       #saved-lists-wrap below, growing this element's own top margin pushes everything below it
+       (the fields, in .modal-body further down) down by the same 15px, per request. */
+    margin-top: 15px;
+  }
+  /* Input/review screen's fields — exactly 25px inset from the modal's edge on each side, per
+     request (superseding an earlier "40px narrower, centered" pass, which over-narrowed them to
+     28px modal padding + 20px more = 48px each side). .modal's own padding is 28px, so a -3px
+     margin here claws back 3px of that before re-adding it as this rule's own 25px padding,
+     netting exactly 25px. .modal-step2's direct children (Title, the URL label/icon row, the URL
+     field, etc.) are all block-level with no width of their own, so this one rule on the parent
+     controls every field's inset at once. */
+  .modal-step2 {
+    margin-left: -3px;
+    margin-right: -3px;
+    padding-left: 25px;
+    padding-right: 25px;
+  }
 }
 
 /* Same fix as .modal.detail-modal's own mobile block in detailModal.css, for the same reason:
@@ -609,6 +816,81 @@
   cursor: not-allowed;
 }
 
+/* Scoped to #btn-modal-save specifically (not .btn-primary generally, which other modals' own
+   Save/Connect buttons also use) — 30px more horizontal padding now (15px, then another 15px),
+   +15px each side over the base 24px, per request. */
+#btn-modal-save {
+  padding-left: 39px;
+  padding-right: 39px;
+}
+
+
+/* ===== ADD-MODAL WIZARD: "Lists Explainer" (reached via #modal-info-icon) ===== */
+.info-explainer-intro {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0 0 24px;
+  text-align: center;
+}
+
+.info-explainer-steps {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* Connecting line threading through every step's icon, top to bottom — positioned against the
+   icon column's own center (20px = half of .info-explainer-icon's 40px width). ::before, not a
+   real element, so it doesn't disturb .info-explainer-steps' own flex layout/gap. */
+.info-explainer-steps::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  bottom: 20px;
+  left: 20px;
+  width: 2px;
+  background: var(--border);
+}
+
+.info-explainer-step {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.info-explainer-icon {
+  position: relative; /* stacks above .info-explainer-steps::before's connecting line */
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+}
+
+.info-explainer-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 6px;
+}
+
+.info-explainer-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.info-explainer-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
 
 /* ===== ADD-MODAL WIZARD: STEP 1 (category tiles + search) ===== */
 .step1-category-grid {
@@ -647,18 +929,30 @@
        (scrollable from a real top edge, nothing clipped) the moment it doesn't. */
     justify-content: safe center;
   }
+  /* Review screen's fields (Title, the URL label/icon row, and the URL field itself — all of
+     .modal-step2's content, as one block) nudged up 20px from their centered position, per
+     request. Same pattern as #step1-music-choice-grid/#step1-folder-grid's own nudges above. */
+  .modal-step2 {
+    /* -35px — another 15px up (from -20px), per request. */
+    margin-top: -35px;
+  }
   .step1-category-grid {
     /* 13px — up from the original 10px, but back down from 18px: less gap between columns means
        more of each row's width goes to the tiles themselves (grid columns are minmax(0, 1fr), so
        narrowing the gap directly widens them) instead of the empty space between them. */
     gap: 13px;
   }
-  /* Music sub-choice screen's tiles only — nudged up 60px (40px, then another 20px) from the
-     centered position .modal-step-music-choice's justify-content: center (above) would otherwise
-     give them, per request. #step1-folder-grid (the real folder-picker screen, same centering
-     mechanism) is untouched. */
+  /* Music sub-choice screen's tiles only — nudged up 75px (40px, then +20px, then +15px as part
+     of a "bring everything up 15px" request covering both screens' titles and tiles together —
+     see the h2.modal-h2--music-offset/folder-offset margin-top comments above) from the centered
+     position .modal-step-music-choice's justify-content: center (above) would otherwise give them.
+     #step1-folder-grid gets its own, separate, smaller nudge below — it never had music's earlier
+     manual pushes stacked on top, so it only needed this one request's own 15px. */
   #step1-music-choice-grid {
-    margin-top: -60px;
+    margin-top: -75px;
+  }
+  #step1-folder-grid {
+    margin-top: -15px;
   }
 }
 
@@ -690,6 +984,39 @@
 #step1-folder-grid .step1-category-tile,
 #step1-music-choice-grid .step1-category-tile {
   padding: 25px 5px;
+}
+
+/* Desktop only — icon+label shifted right (padding-left 5px -> 20px, then another 10px -> 30px),
+   per request. Mobile's own separate block further down (icon-above-label, different padding
+   entirely) is untouched. */
+@media (min-width: 481px) {
+  #step1-folder-grid .step1-category-tile,
+  #step1-music-choice-grid .step1-category-tile {
+    /* 10px — back down 20px (from 30px) per a "move the icon/text left" follow-up request. */
+    padding-left: 10px;
+    /* +10px on top of the base 5px (-> 15px), per request. */
+    padding-right: 15px;
+  }
+  /* Back down to 20px (from 40px) — the wide gap between the two tile columns read as too much
+     space in the middle, per request. Row-gap (vertical, between two rows of tiles) matched to
+     column-gap's own 20px too, per request — previously left at the base rule's 10px. */
+  #step1-folder-grid,
+  #step1-music-choice-grid {
+    column-gap: 20px;
+    row-gap: 20px;
+  }
+  /* Tiles themselves (not just the gap between them) read as too wide, per request, on both this
+     screen's grids and the "What are you adding to?" category tiles (#step1-category-grid) — since
+     each grid's two minmax(0, 1fr) columns split whatever width the grid itself has, capping the
+     grid's own width and centering it narrows every tile directly without touching the modal's
+     width. 330, not 320 — another +5px per tile (+10px total) per a follow-up request. */
+  #step1-folder-grid,
+  #step1-music-choice-grid,
+  #step1-category-grid {
+    max-width: 330px;
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 
 /* .step1-category-tile-label's base rule (below) forces a single line + ellipsis — right for the
@@ -746,13 +1073,25 @@
   #step1-folder-grid .step1-category-tile-label,
   #step1-music-choice-grid .step1-category-tile-label {
     text-align: center;
-  }
-  /* Games' "Choose a folder" screen only (.step1-folder-grid--games, toggled in
-     showFolderScreen/addEditModal.js) — nudges just the label text 3px closer to the icon above
-     it, per request. Every other category's folder screen (same #step1-folder-grid element,
-     different data) is untouched. */
-  #step1-folder-grid.step1-folder-grid--games .step1-category-tile-label {
+    /* Nudges the label 3px closer to the icon above it. Originally scoped to Games only (the only
+       category with two-line folder names at the time) — generalized to every folder here, since
+       this is meant to be the standing style for any two-line tile going forward, not a Games-
+       specific tweak (per request, ahead of user-created custom folders eventually being able to
+       trigger the same two-line case for any category). */
     margin-top: -3px;
+  }
+  /* One-line folder names (.step1-category-tile--one-line, toggled per-tile in addEditModal.js —
+     covers both genuine one-word names and "Web Series", which renders on one line despite being
+     two words, via FOLDER_TILE_NO_FORCED_BREAK) — their icon+label content block is noticeably
+     shorter than a two-line tile's, so even though both are centered within the exact same
+     fixed-height tile, the one-line case reads as sitting too high once there's a taller two-line
+     sibling tile to compare it against (reported live). Shifts the whole centered content block
+     down 10px by moving 10px of padding from bottom to top — content-area height is unchanged
+     (top+bottom total stays 16px either way), only its position within the tile does, so this
+     doesn't affect how anything is centered within that area, just where the area itself sits. */
+  #step1-folder-grid .step1-category-tile--one-line,
+  #step1-music-choice-grid .step1-category-tile--one-line {
+    padding: 16px 5px 0;
   }
 }
 
