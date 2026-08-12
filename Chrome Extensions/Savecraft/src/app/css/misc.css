@@ -392,14 +392,36 @@
     transform: translateY(-30px);
   }
 
+  /* --fab-clearance: same 56px-tall + 24px-off-bottom "+ Add Item" FAB clearance dashboard.css's
+     own .grid-area:has(.dashboard-wrap) already uses — named here so this file's own :has() rules
+     (below, and sharedSaves.css) reference one number instead of each re-deriving 96px by hand.
+     --page-mobile-pad: the standard mobile side padding every page gets from .grid-area below —
+     named so a page wrap that re-applies the same 16px on itself (e.g. sharedSaves.css's
+     .shared-page-wrap, which needs it for desktop too) can size a bleed past *both* stacked
+     layers via calc() instead of a hand-derived literal that silently drifts if either changes. */
+  :root {
+    --fab-clearance: 96px;
+    --page-mobile-pad: 16px;
+  }
+
   /* Profile page */
   /* Same fix as .grid-area:has(.dashboard-wrap) (dashboard.css) — the page-end "Manage account"
      button below (moved here on mobile, see #profile-manage-account/.profile-manage-account-
-     mobile further down) was ending up hidden behind the floating "+ Add Item" FAB (misc.css's
-     .fab-add — 56px tall, 24px off the bottom, so ~96px clears it plus a little breathing room)
-     once scrolled all the way down, per request. */
+     mobile further down) was ending up hidden behind the floating "+ Add Item" FAB once scrolled
+     all the way down, per request. */
   .grid-area:has(.profile-page-wrap) {
-    padding-bottom: 96px;
+    padding-bottom: var(--fab-clearance);
+  }
+
+  /* Shared Saves page — same :has() idiom as the profile-page rule above, used here for two
+     things sharedSaves.css used to instead fight from the child side: FAB clearance (was
+     duplicated as its own literal 96px there), and pulling the hero banner up by pinning this
+     rule's own padding-top to 6px directly (16px base − the 10px reduction requested) instead of
+     leaving the base 16px in place and applying a -10px margin-top on .shared-page-wrap to cancel
+     part of it back out. */
+  .grid-area:has(.shared-page-wrap) {
+    padding-top: 6px;
+    padding-bottom: var(--fab-clearance);
   }
   /* grid-template-rows explicitly overridden to none, not just left alone — desktop's own
      repeat(2, 1fr) (profile.css) still pairs row 1 (Connections) with row 2 (Interests) into
@@ -718,7 +740,7 @@
 
   /* Main layout: full width */
   .main-layout { height: calc(100vh - 64px); }
-  .grid-area { padding: 16px; }
+  .grid-area { padding: var(--page-mobile-pad); }
 
   /* Single column cards */
   .cards-grid { grid-template-columns: 1fr; }
