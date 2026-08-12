@@ -39,7 +39,9 @@
 .shared-card--nonprofits .profile-card-header,
 .shared-card--group-lists .profile-card-header,
 .shared-card--friends .profile-card-header {
-  justify-content: center;
+  /* Left-aligned, per request (was centered) — the Add button still sits right next to the title
+     (not pushed to the row's far edge), just as a left-anchored pair now instead of a centered one. */
+  justify-content: flex-start;
   gap: 10px;
 }
 
@@ -155,6 +157,9 @@
     padding-left: 16px;
     padding-right: 16px;
     padding-bottom: 96px;
+    /* Pulls the hero banner up, per request — .grid-area's own 16px top padding (misc.css, shared
+       by every page) otherwise leaves more space above the banner than wanted here specifically. */
+    margin-top: -10px;
   }
   /* Cards roughly halved (per request) — desktop's 260px min-height/26px padding/83px avatar read
      as oversized for a phone screen, especially the Friends cards (just a photo + name, no
