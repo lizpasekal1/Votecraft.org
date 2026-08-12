@@ -94,6 +94,22 @@ button {
   --shadow-modal:    rgba(0,0,0,0.20);
 }
 
+/* html, not just body: the actual root scrolling/panning box for the document is the html
+   element (documentElement), not body. body's own overflow: hidden happens to propagate up to
+   the viewport per the CSS overflow-propagation rule, but touch-action does NOT propagate the
+   same way — it only constrains touch gestures on the element it's set on and that element's own
+   descendants. With pan-y declared on body alone, a touch that begins panning is still recognized
+   at the html/document root level, one level above where the restriction lives, so the whole page
+   — background and any open modal alike, since they're both just descendants of the same
+   unrestricted root — could still be dragged left/right as a single unit (reported live: the
+   entire dashboard, and a detail modal open on top of it, sliding sideways together). Repeating
+   both rules here closes that gap at the actual root. */
+html {
+  height: 100%;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Google Sans', 'Segoe UI', sans-serif;
   background: var(--bg);
@@ -109,7 +125,9 @@ body {
      .search-expand-input's own mobile-width fix). touch-action is the modern, reliable fix for
      that same gap — and belongs here once, not per-descendant: touch-action isn't something a
      child can loosen back up, the browser intersects it down through the whole subtree, so this
-     single rule already covers the header, every modal, the sidebar, etc. below it. */
+     single rule already covers the header, every modal, the sidebar, etc. below it. (The same
+     pair is also set on html above it — see that rule's own comment for why body alone isn't
+     the actual root scrolling box.) */
   touch-action: pan-y;
   display: flex;
   flex-direction: column;

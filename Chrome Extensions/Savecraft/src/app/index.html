@@ -2,7 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- maximum-scale=1, user-scalable=no — disables pinch/double-tap/input-focus zoom app-wide.
+       html/body's own touch-action: pan-y (base.css) should already block gesture-driven zoom on
+       its own per spec, but was still reproducible live from tapping a category/folder tile
+       ("it zooms the screen in") — Safari's real-world touch-action handling doesn't reliably
+       cover every zoom trigger (e.g. the input-focus auto-zoom path is entirely separate from
+       touch-action). This is the standard, direct way to disable zoom outright for an app-shell
+       page like this one, where — unlike a content/article site — zooming was never intended. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>SaveCraft</title>
   <link rel="stylesheet" href="/src/app/css/base.css">
   <link rel="stylesheet" href="/src/app/css/sidebar.css">

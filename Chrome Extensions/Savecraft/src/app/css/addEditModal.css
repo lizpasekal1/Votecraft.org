@@ -28,6 +28,15 @@
   display: none;
 }
 
+/* Mobile only — matches the 15px .step1-category-tile-label font-size (addEditModal.css further
+   down), so "< Shows" on the "Choose a folder" screens reads at the same size as the tiles below
+   it, per request. */
+@media (max-width: 480px) {
+  .modal-back-label {
+    font-size: 15px;
+  }
+}
+
 .platform-dropdown {
   position: relative;
 }
@@ -126,8 +135,24 @@
   border-radius: 16px;
   padding: 28px;
   width: 480px;
-  max-width: 90vw;
+  /* % instead of vw — same fix and same reasoning as .modal.detail-modal in detailModal.css: vw
+     is a longstanding, documented mobile Safari inconsistency (calculated slightly differently
+     from the real visible viewport, with a hair more room than actually shows), so 90vw can render
+     a few px wider than 90% of the true screen — just enough for a touch to drag the whole modal
+     left/right (reported live, same symptom as that other modal). % is calculated against
+     .modal-overlay's own box instead (position: fixed; inset: 0 — genuinely matches the real
+     viewport, no vw-style discrepancy), sidestepping the quirk entirely. */
+  max-width: 90%;
+  /* dvh, not just vh — same fix as .modal.detail-modal in detailModal.css. vh is fixed against
+     the full-screen layout viewport, which mobile Safari treats as if the address bar + bottom
+     toolbar are already collapsed even while they're still on-screen (the default state). This
+     .modal-overlay centers a position:fixed box against that inflated height, so the modal balloons
+     taller than what's actually visible and its bottom gets clipped behind the toolbar (reported
+     live: category tiles / folder list cut off, only a rounded corner peeking out below the
+     toolbar). dvh tracks the real visible viewport instead. vh kept first as a fallback for
+     browsers without dvh support — identical to today's behavior there, never worse. */
   max-height: 85vh;
+  max-height: 85dvh;
   box-shadow: 0 20px 60px var(--shadow-modal);
   border: 1px solid var(--border);
   display: flex;
@@ -138,6 +163,12 @@
   overflow-y: auto;
   flex: 1;
   min-height: 0;
+  /* Same fix as .detail-tracklist-item in detailModal.css: a flex item defaults to
+     min-width: auto, not 0, so it can refuse to shrink below its content's natural width and
+     overflow .modal even with the parent's own width capped — letting a touch drag pan the whole
+     modal horizontally despite body's touch-action: pan-y (the overflow happens deeper than that,
+     so the ancestor-level rule alone doesn't stop it). */
+  min-width: 0;
   direction: rtl;
   padding-left: 8px;
   margin-left: -8px;
@@ -184,6 +215,77 @@
   width: 100%;
 }
 
+/* Mobile only — pushes "What are you adding to?" down 20px from the top of the popup, per
+   request. .modal-h2--folder-offset (toggled in addEditModal.js alongside every "Choose a
+   folder"/"Choose a source" innerHTML assignment, for the real folder-picker screen) and
+   .modal-h2--music-offset (same idea, for the Musician/Music Album sub-choice screen, which
+   carries the same "Choose a folder" heading text but needed to come down further still, per
+   request) override this to their own larger values instead — each needs its own class rather
+   than reusing this bare-h2 rule, since they're two different requested offsets. */
+@media (max-width: 480px) {
+  #modal-overlay h2 {
+    margin-top: 20px;
+  }
+  #modal-overlay h2.modal-h2--folder-offset {
+    /* 45px — 10px back up from 55px, per request. */
+    margin-top: 45px;
+  }
+  #modal-overlay h2.modal-h2--music-offset {
+    /* Larger than folder-offset's 55px — the music sub-choice screen's heading needed to come
+       down further still, per request. 75px — another 15px added on top of the previous 60px,
+       matching folder-offset's own +15px, since the request applied to both "Choose a folder"
+       screens together. */
+    margin-top: 75px;
+  }
+  /* REGRESSION, tried and reverted: matching the header's margin-bottom to the same total top gap
+     (28px .modal padding-top + the h2's own margin-top — 83px/103px) to visually center the
+     heading between the top of the popup and the top of the grid. With the heading's own margin-
+     top grown twice since (now 55px/75px, up from 40px/60px), that matching bottom gap grew right
+     along with it, and together they ate too far into .modal-body's remaining space inside the
+     fixed-height popup — a folder category with a full 2-row grid no longer fit, and since the
+     grid was pushed low in that shrunken space, its bottom row's bottom edge ran past the visible
+     area (reported live: "too low ... bottom edge is getting cut off"). Left at the header's own
+     plain 24px default instead — .modal-body/.step1-category-grid's own safe-centering (below)
+     still keeps things looking centered when there's room, without this second mechanism
+     fighting it over an increasingly small remaining space. */
+}
+
+/* Scoped to this modal specifically (ID selector, beats the shared .modal's own padding without
+   touching the auth/LastFM/Steam/share popups, which all reuse the bare .modal rule too) — less
+   on the sides than top/bottom. At 28px all around, a narrow phone (.modal's own max-width: 90%)
+   spent a big share of the already-tight width on padding alone, leaving less room for the
+   tiles/fields themselves. Top/bottom kept at 28px; only left/right trimmed. */
+#modal-overlay .modal {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+/* Same fix as .modal.detail-modal's own mobile block in detailModal.css, for the same reason:
+   .modal's base rule only sets max-height (a cap), so the box shrink-wraps to whatever the
+   current wizard screen actually contains — the compact category grid, the taller review form
+   with every field, the folder picker, etc. Each Back/Next swaps that content, so the whole modal
+   visibly grew and shrank in place as you stepped through it (reported live: "I don't want the
+   height of this popup to change as the user navigates through it"). A firm height instead keeps
+   the modal itself static; .modal-body's flex: 1 + overflow-y: auto (already in place) absorbs
+   whatever doesn't fit by scrolling internally, same as detailModal's own fix. Mobile-only, same
+   breakpoint as this file's other phone-only tweaks — desktop keeps shrink-wrapping to content,
+   which is the better fit there (no dead gap below a short screen on a big screen). */
+@media (max-width: 480px) {
+  #modal-overlay .modal {
+    /* 97 (was 94, 90, 85, briefly 70) — since the height is fixed across every screen (see this
+       rule's own comment above), it has to be tall enough for the tallest content any screen shows
+       for none of them to ever need to scroll ("I don't want this popup to scroll" / re a specific
+       screen: "I do not want the buttons to scroll," repeated after 94 still wasn't enough in
+       Chrome specifically — Chrome's own mobile browser-chrome sizing leaves a bit less usable dvh
+       than Safari's did for the same worst-case screen, a 4-folder category with every folder name
+       two words like Games). 97 is close to the practical ceiling before the popup starts reading
+       as edge-to-edge with barely any backdrop, but scrolling was reported as the higher-priority
+       problem to avoid. */
+    height: 97vh;
+    height: 97dvh;
+  }
+}
+
 /* Edit Item only — left-aligns the bookmark icon + "Edit Item" text so the icon lines up with
    the fields below instead of sitting centered above them. */
 #modal-overlay h2.modal-h2--left {
@@ -193,6 +295,14 @@
 .modal-bookmark-icon {
   flex-shrink: 0;
   color: var(--primary);
+}
+
+/* Mobile only — dropped from the "What are you adding to?" / "Choose a folder" heading on a
+   phone (reported live), where the title itself already reads clearly on its own without it. */
+@media (max-width: 480px) {
+  #modal-overlay .modal-bookmark-icon {
+    display: none;
+  }
 }
 
 .modal-category-select {
@@ -352,6 +462,20 @@
   font-size: 10px;
 }
 
+/* .form-row--url-pair--single (toggled in addEditModal.js's setAddSimpleMode, alongside hiding
+   #image-url-group) — undoes the compact height:34px/font-size:11px pairing styles above for
+   when URL is left alone in the row (the Add flow, every category), matching Title's own sizing
+   (.title-author-row .title-author-input below: padding 10px 12px, font-size 14px) instead of the
+   squashed leftover half of a pair that no longer exists. */
+.form-row--url-pair--single .form-group input {
+  height: auto;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+.form-row--url-pair--single label {
+  font-size: 11px;
+}
+
 .input-with-clear {
   position: relative;
 }
@@ -489,9 +613,53 @@
 /* ===== ADD-MODAL WIZARD: STEP 1 (category tiles + search) ===== */
 .step1-category-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  /* minmax(0, 1fr), not bare 1fr — an 'fr' track's default automatic minimum is driven by its
+     widest content (same underlying issue as a flex item's own min-width: auto), so whichever
+     column happened to hold the longest label ("Literature") could throw the two columns out of
+     being genuinely equal width. minmax(0, 1fr) pins each track's floor to 0 instead, so both
+     columns split the row exactly evenly regardless of which tile's content is longest. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin-bottom: 18px;
+}
+
+/* Mobile only — now that #modal-overlay .modal is pinned to a firm 85dvh height instead of
+   shrink-wrapping to content (see that rule's own comment), the category-tile/music-choice/folder
+   screens (all shorter than that fixed height) left a big block of dead space below the grid,
+   with everything clustered up at the top (reported live). .modal-step2 (the review form) is
+   included too, per a later request — Title + URL alone (the Add flow's every category) is just
+   as short as any tile screen, so it gets the same treatment; safe center (below) means a taller
+   review form (more fields, Edit mode) still just top-aligns and scrolls rather than being forced
+   to center against space it doesn't have. */
+@media (max-width: 480px) {
+  .modal-step1,
+  .modal-step-music-choice,
+  .modal-step-folder,
+  .modal-step2 {
+    display: flex;
+    flex-direction: column;
+    /* safe center, not plain center — plain center overflows equally in both directions once a
+       screen's content (e.g. a folder category with enough folders for 2 full rows of tiles) no
+       longer fits the space left after the heading's own margin grew (reported live: "the top of
+       the buttons is getting cut off" — the top half of that overflow lands above where
+       .modal-body's scroll position can reach, since it starts at 0/top, not into negative space).
+       safe center still centers whenever content actually fits, but falls back to start-alignment
+       (scrollable from a real top edge, nothing clipped) the moment it doesn't. */
+    justify-content: safe center;
+  }
+  .step1-category-grid {
+    /* 13px — up from the original 10px, but back down from 18px: less gap between columns means
+       more of each row's width goes to the tiles themselves (grid columns are minmax(0, 1fr), so
+       narrowing the gap directly widens them) instead of the empty space between them. */
+    gap: 13px;
+  }
+  /* Music sub-choice screen's tiles only — nudged up 60px (40px, then another 20px) from the
+     centered position .modal-step-music-choice's justify-content: center (above) would otherwise
+     give them, per request. #step1-folder-grid (the real folder-picker screen, same centering
+     mechanism) is untouched. */
+  #step1-music-choice-grid {
+    margin-top: -60px;
+  }
 }
 
 .step1-add-folder-link {
@@ -509,17 +677,105 @@
 
 .step1-add-folder-link:hover { text-decoration: underline; }
 
+/* "Choose a folder" screen's tiles — #step1-folder-grid (the real folder list) and
+   #step1-music-choice-grid (the Musician/Music Album sub-choice, which carries the exact same
+   "Choose a folder" heading — see showMusicChoiceScreen in addEditModal.js — so it reads as the
+   same screen to the user even though it's a separate grid; initially missed here, reported live
+   as "the music folder didn't update"). 20px taller than the shared .step1-category-tile default
+   below, per request. Left/right padding deliberately left at the shared 5px, not grown to match
+   — 25px all around (tried first) ate too far into the tile's fixed grid-track width, leaving the
+   label too little room and truncating folder names with an ellipsis (reported live). Top/bottom
+   only avoids that: it makes the tile taller without shrinking the horizontal space text actually
+   needs. The "What are you adding to?" category tiles (#step1-category-grid) are untouched. */
+#step1-folder-grid .step1-category-tile,
+#step1-music-choice-grid .step1-category-tile {
+  padding: 25px 5px;
+}
+
+/* .step1-category-tile-label's base rule (below) forces a single line + ellipsis — right for the
+   fixed, short, known-in-advance category words on the "What are you adding to?" screen, but
+   folder names are arbitrary user text (reported live: real folder names like "Creators"/
+   "Podcasts"/"Tutorials"/"Watchlist" truncating down to "Cr…"/"Po…"/"Tu…"/"W…", nowhere near
+   readable). Folder tiles allow wrapping instead — the extra top/bottom padding above already
+   gives a second line somewhere to go without the tile feeling cramped. */
+#step1-folder-grid .step1-category-tile-label,
+#step1-music-choice-grid .step1-category-tile-label {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+/* Mobile only, "Choose a folder" screen only — icon centered above the (possibly two-line) label
+   instead of beside it, with the label itself centered too. The "What are you adding to?" tiles
+   are deliberately left as icon-beside-label (see that decision's own history above). */
+@media (max-width: 480px) {
+  #step1-folder-grid .step1-category-tile,
+  #step1-music-choice-grid .step1-category-tile {
+    flex-direction: column;
+    justify-content: center;
+    /* Fixed, not just min — labels wrap to a different number of lines depending on the folder
+       name (one word vs. two), and since CSS Grid rows each size to their own tallest cell, that
+       made tiles in a two-line row taller than tiles in a one-line row (reported live: wanted
+       every tile the same height/width). A single explicit height applied to every tile removes
+       that per-row variation entirely — tall enough for the two-line case (icon + gap + 2 lines of
+       15px text + this rule's own top/bottom padding), with justify-content: center (above)
+       keeping shorter one-line content vertically centered inside it rather than top-stuck.
+       Width doesn't need the same treatment — the grid's own minmax(0, 1fr) columns (further up
+       this file) are already forced equal regardless of content. */
+    /* 95, down from 130 — per request, too tall. */
+    height: 95px;
+    /* Down from the shared 25px top/bottom (set above for desktop, where the tile's height is
+       auto/content-based so 25px is fine) — at a fixed 95px height, 25px top + 25px bottom left
+       only 45px for the actual icon+gap+label content, which a two-line label alone already
+       exceeds (icon ~35px + gap 3px + two 15px-font lines ≈ 74px) — the content was overflowing
+       past the padding rather than actually sitting centered inside it (reported live: "vertically
+       center the text and icons within"). 10px leaves enough of the fixed height free for the
+       tallest (two-line) case to genuinely fit and be centered by justify-content: center above,
+       instead of just overflowing unevenly. */
+    /* Asymmetric again, but the other direction this time — a plain symmetric 10px/10px (tried
+       just before this) still read as more padding above the icon than below the text on a
+       two-line label specifically (reported live, screenshotted: Games' Board/Console/Companies/
+       Mobile Games tiles), the opposite complaint from what an earlier, differently-biased
+       version got for single-line tiles. Equal CSS padding doesn't guarantee equal *visual* gaps —
+       the icon's own box and the label's line-height each carry their own internal spacing that
+       an even split doesn't account for. Less on top than bottom compensates for the two-line
+       case, which is what every real folder in this app's default set now looks like once two-
+       word names are involved. */
+    padding: 6px 5px 10px;
+  }
+  #step1-folder-grid .step1-category-tile-label,
+  #step1-music-choice-grid .step1-category-tile-label {
+    text-align: center;
+  }
+  /* Games' "Choose a folder" screen only (.step1-folder-grid--games, toggled in
+     showFolderScreen/addEditModal.js) — nudges just the label text 3px closer to the icon above
+     it, per request. Every other category's folder screen (same #step1-folder-grid element,
+     different data) is untouched. */
+  #step1-folder-grid.step1-folder-grid--games .step1-category-tile-label {
+    margin-top: -3px;
+  }
+}
+
 .step1-category-tile {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
+  /* 3px, down from 8px (originally 12px) — reclaims more width for the label and pulls the text
+     closer to the icon on the left. */
+  gap: 3px;
+  /* Even 5px inset on all sides. */
+  padding: 5px;
   border: 1.5px solid var(--border);
   border-radius: 10px;
   background: var(--surface);
   cursor: pointer;
   text-align: left;
   transition: border-color 0.15s, background 0.15s;
+  /* Same fix as .modal-body above / .detail-tracklist-item in detailModal.css: this tile is a
+     grid item (child of #step1-category-grid's display: grid) as well as its own flex container,
+     so it defaults to min-width: auto twice over — free to refuse shrinking below a long folder
+     name's natural width and blow out its 1fr grid track, which is what let a touch drag pan the
+     whole modal horizontally. */
+  min-width: 0;
 }
 
 .step1-category-tile:hover {
@@ -534,9 +790,70 @@
 }
 
 .step1-category-tile-label {
-  font-size: 14px;
+  /* 15px — 2px larger per request. The nowrap + ellipsis safety net below (kept from when this
+     was 13px, added tight for "Literature" specifically) means a bigger font never breaks the
+     layout even if a label ever gets close to the edge again; it'll just truncate instead. */
+  font-size: 15px;
   font-weight: 600;
   color: var(--text-primary);
+  /* flex: 1 (not the default 0 1 auto) — was letting the label's own natural content width act as
+     its flex-basis, so flex-shrink distributed space unevenly across differently-sized labels once
+     anything had to give (reported live: even short labels like "Shows"/"Games" were shrinking and
+     wrapping mid-word, not just the genuinely long ones). flex-basis: 0 here means every label
+     starts from nothing and grows to fill exactly what's left after the icon (locked to a fixed
+     size below), so it always gets its full, consistent fair share of the tile regardless of its
+     own text length. */
+  flex: 1;
+  min-width: 0;
+  /* Titles stay on one line — no wrapping, mid-word or otherwise (reported live: don't want
+     "Literature" splitting onto two lines either). text-overflow/overflow are a safety net only,
+     for a category name longer than anything today; with the space reclaimed above (tighter gap/
+     icon/padding + this smaller font) every current label fits without ever hitting it. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* .cat-icon (sidebar.css) normally draws a rounded-square badge behind the icon — background
+   fill, inset bevel box-shadow, and a top-half gradient sheen via ::after. Scoped strip of all
+   three here only, for the Add/Edit wizard's tiles specifically (category tiles + folder picker,
+   both use .step1-category-tile) — leaves the bare icon on the tile's own background instead of
+   double-boxing it inside another badge. */
+.step1-category-tile .cat-icon {
+  background: none;
+  box-shadow: none;
+  /* Locked to a fixed size and never allowed to shrink — without flex-shrink: 0, this (like the
+     label) had no min-width floor of its own either, so it was free to get squeezed by the same
+     flex-shrink distribution that was compressing the label (reported live), instead of the label
+     alone absorbing all of it as intended. Trimmed from the default 42px to reclaim a bit more
+     width for the label on this narrow 2-column phone layout — the SVGs inside are already sized
+     down to 22px (see the width/height override on .step1-category-tile .cat-icon svg below), so
+     32px still leaves them a few px of breathing room, same spirit as the un-badged 42px default. */
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+}
+.step1-category-tile .cat-icon svg {
+  width: 22px;
+  height: 22px;
+}
+.step1-category-tile .cat-icon::after {
+  content: none;
+}
+
+/* "Choose a folder" screen's icons only (both grids — see the padding/wrap rules above for why
+   #step1-music-choice-grid is included alongside #step1-folder-grid) — 10% larger than the shared
+   32px/22px default above, per request. The "What are you adding to?" category tile icons are
+   untouched. */
+#step1-folder-grid .step1-category-tile .cat-icon,
+#step1-music-choice-grid .step1-category-tile .cat-icon {
+  width: 35px;
+  height: 35px;
+}
+#step1-folder-grid .step1-category-tile .cat-icon svg,
+#step1-music-choice-grid .step1-category-tile .cat-icon svg {
+  width: 24px;
+  height: 24px;
 }
 
 .step1-paywalled-badge {

@@ -468,7 +468,7 @@ export async function loadAll() {
         { id: 'default-movies-videos',   name: 'Videos',        parentCategory: 'Movie' },
         { id: 'default-movies-directors', name: 'Directors',    parentCategory: 'Movie' },
         { id: 'default-shows-podcasts',  name: 'Podcasts',      parentCategory: 'Show' },
-        { id: 'default-shows-webseries', name: 'Webseries',     parentCategory: 'Show' },
+        { id: 'default-shows-webseries', name: 'Web Series',    parentCategory: 'Show' },
         { id: 'default-shows-tutorials', name: 'Tutorials',     parentCategory: 'Show' },
         { id: 'default-shows-creators',  name: 'Creators',      parentCategory: 'Show' },
         { id: 'default-movies-movies',       name: 'Movies',    parentCategory: 'Movie' },
@@ -532,6 +532,14 @@ export async function loadAll() {
       if (danceFolder && danceFolder.name === 'Dance') {
         danceFolder.name = 'Movement';
         toSave[`folder_${danceFolder.id}`] = danceFolder;
+      }
+
+      // Renamed Shows' "Webseries" -> "Web Series" (two words, so it wraps to two lines on the
+      // mobile Add-Item folder picker — see folderTileLabelHtml in addEditModal.js).
+      const webseriesFolder = state.folders.find(f => f.id === 'default-shows-webseries');
+      if (webseriesFolder && webseriesFolder.name === 'Webseries') {
+        webseriesFolder.name = 'Web Series';
+        toSave[`folder_${webseriesFolder.id}`] = webseriesFolder;
       }
 
       if (legacyKeys.length) {
