@@ -62,7 +62,10 @@ function renderKcardInfo(item) {
 // `format` is only ever set while a column is expanded (see KANBAN_EXPANDED_FORMATS) — with no
 // format, this renders the exact same card the normal 4-column board has always shown.
 function renderKanbanCard(item, format = null) {
-  const letter    = (item.title || '?')[0].toUpperCase();
+  // The seeded queue-demo-N items (storage.js) keep a "D" placeholder letter regardless of their
+  // own title's first letter, per direct request — a leftover visual marker for "this is demo
+  // content" now that their titles themselves no longer carry a "Demo:" prefix saying so.
+  const letter    = /^queue-demo-\d+$/.test(item.id) ? 'D' : (item.title || '?')[0].toUpperCase();
   const thumb     = item.imageUrl
     ? `<img class="kcard-thumb" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">`
     : `<div class="kcard-thumb kcard-thumb--placeholder placeholder-${catClass(item.category)}">${letter}</div>`;

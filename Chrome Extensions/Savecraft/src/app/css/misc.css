@@ -310,6 +310,37 @@
      mobile, per direct request. */
   .my-options-item[data-option="home"] { display: none; }
 
+  /* Kanban board columns — much wider than the desktop-oriented 220px floor (kanban.css), per
+     direct request ("more of the text to show... sections can be wider"). Percentage rather than
+     a fixed px value so it scales with the actual device instead of guessing one iPhone's width:
+     .kanban-column's containing block for this is .kanban-board itself, whose own rendered width
+     already equals the visible board area (it's the horizontally-scrolling container, not
+     scrolled content), so 85% leaves a deliberate sliver of the next column peeking in as a
+     swipe-to-see-more affordance rather than each column exactly filling the screen. Applies to
+     both boards — .kanban-column is the shared class kanban.js/adminKanban.js both render. */
+  .kanban-column {
+    min-width: 85%;
+  }
+
+  /* Dashboard's Queue Kanban mini-widget — padding trimmed throughout (kept the 2-column
+     Queue/In Progress layout itself, per direct request) to reclaim width for the title text,
+     which was truncating heavily on a phone (reported live, screenshot confirmed). Nothing here
+     changes sizing/structure, just the gaps and padding eating into the text column's own width.
+     REAL BUG, found and fixed: this used to also override .dash-card--kanban's own outer padding
+     down to 14px 8px — reclaiming width for the mini-board, but at the cost of shifting the
+     "Queue Kanban" title/Open button left of where every other widget's title/button sits (they
+     all still use the shared .dash-card 20px padding), per direct request. Fixed by leaving the
+     card's own padding alone and instead pulling just .dash-kanban-mini-board itself wider with a
+     negative margin — the header row above it is unaffected, so it stays aligned with siblings. */
+  .dash-kanban-mini-board { gap: 4px; margin: 0 -8px; }
+  .dash-kmini-col { padding: 0; }
+  .dash-kmini-col:first-child { padding-right: 4px; }
+  .dash-kmini-col:last-child { padding-left: 3px; }
+  .dash-kmini-card { gap: 6px; padding-right: 4px; }
+  .dash-kmini-info { padding: 5px 4px 5px 0; }
+  /* Nudged down 5px, per direct request. */
+  .dash-card--kanban { margin-top: 5px; }
+
   /* Kanban board header, two rows on mobile — per direct request, this replaces an earlier
      three-row layout (Dashboard alone / info icon alone / the two dropdowns) that wasted vertical
      space the board itself could use instead:
@@ -355,8 +386,14 @@
   .board-filter-wrap { order: 4; margin-top: -15px; }
   /* Narrower than desktop's 148px so the pair above reliably fits on one row even on the
      smallest iPhone widths (e.g. iPhone SE's 320px), instead of the fixed desktop width being
-     just wide enough to force a wrap on some devices but not others. */
-  .btn-board-filter,
+     just wide enough to force a wrap on some devices but not others.
+     REAL BUG, found and fixed: this originally targeted plain .btn-board-filter with no
+     exclusion — .dash-fav-category-btn (the dashboard's "Sort" widget button) also carries that
+     class, and since this file loads after dashboard.css, this same-specificity rule silently
+     won the cascade tie there too, widening Sort back out to 130px and breaking dashboard.css's
+     own deliberately-ordered mobile override matching it to Open's 70px (see that file's own
+     comment on the exact same class of bug). Excluded here so that button is untouched again. */
+  .btn-board-filter:not(.dash-fav-category-btn),
   .btn-saves-list {
     width: 130px;
   }
