@@ -150,7 +150,7 @@ function toggleSidebarCollapsed() {
 export function openAuthModal() {
   document.getElementById('auth-error').style.display = 'none';
   document.getElementById('auth-modal-overlay').classList.add('open');
-  _updatePasswordFieldUI();
+  _exitCreateAccountMode();
 }
 // True while a signed-out web visitor is being forced through sign-in (see requireWebSignIn
 // below) — makes the modal temporarily non-dismissable, since web has no local-only fallback
@@ -167,15 +167,35 @@ function closeAuthModal() {
   document.getElementById('auth-email').value = '';
   document.getElementById('auth-password').value = '';
   document.getElementById('auth-password-confirm').value = '';
-  _updatePasswordFieldUI();
+  _exitCreateAccountMode();
 }
 
-// Confirm-password field + Save's disabled state both key off whether #auth-password has any
-// content — called on input and whenever the modal's fields get reset (closeAuthModal above).
-function _updatePasswordFieldUI() {
-  const hasPassword = document.getElementById('auth-password').value.length > 0;
-  document.getElementById('auth-password-confirm-field').style.display = hasPassword ? '' : 'none';
-  document.getElementById('btn-auth-save').disabled = !hasPassword;
+// "Create account" doesn't submit directly — it switches into this mode first (confirm-password
+// field + Save replacing the initial Create account/Sign in pair), per request. Sign in stays a
+// single direct action with no intermediate step, since at that point there's no ambiguity about
+// intent to resolve — see handleAuthSave's own comment for why that ambiguity used to be a real
+// problem before this button asked the person to just say which they meant.
+function _enterCreateAccountMode() {
+  document.getElementById('auth-modal-title').textContent = 'Create your account';
+  document.getElementById('btn-auth-create').style.display = 'none';
+  document.getElementById('btn-auth-signin').style.display = 'none';
+  document.getElementById('btn-auth-save').style.display = '';
+  document.getElementById('auth-password-confirm-field').style.display = '';
+  _updateSaveDisabled();
+}
+// Reverts to the initial signed-out view — called whenever the modal opens/closes fresh, so
+// "Create account" mode never lingers into an unrelated later open of the same modal.
+function _exitCreateAccountMode() {
+  document.getElementById('auth-modal-title').textContent = 'Explore your library';
+  document.getElementById('btn-auth-create').style.display = '';
+  document.getElementById('btn-auth-signin').style.display = '';
+  document.getElementById('btn-auth-save').style.display = 'none';
+  document.getElementById('auth-password-confirm-field').style.display = 'none';
+}
+
+// Save (create-account mode only) is disabled until a password is typed, per request.
+function _updateSaveDisabled() {
+  document.getElementById('btn-auth-save').disabled = document.getElementById('auth-password').value.length === 0;
 }
 
 const _PASSWORD_COMPLEXITY_ERROR = 'New passwords need at least one number and one special character.';
@@ -255,62 +275,58 @@ function applyAuthUI(user) {
   }
 }
 
-// One button for both sign-in and account creation, per request — rather than asking the user to
-// declare which up front, this tries signing in first.
-//
-// Originally this fell back to creating an account whenever Firebase's sign-in reported
-// EMAIL_NOT_FOUND — reasonable-sounding, but wrong on this project: live-verified (curl against
-// the real API) that email-enumeration protection is on here, so signInWithPassword returns the
-// *same* generic INVALID_LOGIN_CREDENTIALS whether the password is wrong OR no account exists at
-// all — Firebase deliberately won't say which, and createAuthUri (the API made for checking "is
-// this email registered") is blocked the same way. There's no clean signal left to detect "new
-// account" before attempting one.
-//
-// The one call that's NOT ambiguous: signUp's own EMAIL_EXISTS — you can't create a duplicate
-// account, so that error is real regardless of enumeration protection. So: on any sign-in failure,
-// check confirm-match/complexity (the new-account rules) first — if those fail, a plain "wrong
-// password" is exactly as likely as "new account with a mistake", so the error below covers both
-// honestly rather than guessing. If they pass, actually attempt signUp: EMAIL_EXISTS at that point
-// proves it was a real existing account with a wrong password all along (shown as such); anything
-// else is a genuine new-account failure; success means it really was a new account.
-async function handleAuthSave() {
+// Sign in — direct, one step, no confirm/complexity involved at all (those are new-account rules;
+// this button only ever runs for an existing account, by definition of being clicked instead of
+// Create account).
+async function handleSignIn() {
   const email = document.getElementById('auth-email').value.trim();
   const password = document.getElementById('auth-password').value;
   document.getElementById('auth-error').style.display = 'none';
-
-  const signInResult = await signIn(email, password);
-  if (signInResult.ok) {
+  const result = await signIn(email, password);
+  if (result.ok) {
     closeAuthModal();
     renderSidebar();
     renderGrid();
-    return;
+  } else {
+    showAuthError(result.error);
   }
+}
 
+// Save — only reachable via Create account (_enterCreateAccountMode), so unlike an earlier version
+// of this flow, there's no ambiguity to resolve about whether this is a new or existing account:
+// the person already said which by which button they clicked. (That earlier version tried to
+// collapse Create account/Sign in into one smart button that guessed — live-verified against the
+// real API that this project has email-enumeration protection on, so a wrong password and a
+// nonexistent account return the identical error, which made "guess from the failure" fundamentally
+// unreliable. Asking the person to just say which they meant sidesteps the whole problem.)
+async function handleAuthSave() {
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
   const confirmPassword = document.getElementById('auth-password-confirm').value;
-  if (password !== confirmPassword || !_passwordMeetsComplexity(password)) {
-    showAuthError('Incorrect password — or, if you’re creating a new account, make sure both password fields match and include a number and a special character.');
+  document.getElementById('auth-error').style.display = 'none';
+
+  if (password !== confirmPassword) {
+    showAuthError('Passwords don’t match.');
+    return;
+  }
+  if (!_passwordMeetsComplexity(password)) {
+    showAuthError(_PASSWORD_COMPLEXITY_ERROR);
     return;
   }
 
-  document.getElementById('auth-modal-title').textContent = 'Create your account';
-  const signUpResult = await signUp(email, password);
-  if (signUpResult.ok) {
+  const result = await signUp(email, password);
+  if (result.ok) {
     closeAuthModal();
     // signUp already awaits its own cloud sync internally (see auth.js) before resolving — re-
     // render now so the screen reflects whatever that just pulled down/merged in, rather than only
     // updating on the next unrelated navigation.
     renderSidebar();
     renderGrid();
-    return;
+  } else if (result.code === 'EMAIL_EXISTS') {
+    showAuthError('An account with that email already exists — try Sign in instead.');
+  } else {
+    showAuthError(result.error);
   }
-  if (signUpResult.code === 'EMAIL_EXISTS') {
-    // Confirm/complexity both passed above, and Firebase just confirmed this email really does
-    // have an account — so signIn's earlier failure really was just a wrong password.
-    document.getElementById('auth-modal-title').textContent = 'Explore your library';
-    showAuthError('Incorrect password.');
-    return;
-  }
-  showAuthError(signUpResult.error);
 }
 
 // ===== LAST.FM MODAL (Profile page's Connections section) =====
@@ -444,8 +460,10 @@ async function init() {
   document.getElementById('auth-modal-overlay').addEventListener('click', e => {
     if (e.target === document.getElementById('auth-modal-overlay')) closeAuthModal();
   });
+  document.getElementById('btn-auth-create').addEventListener('click', _enterCreateAccountMode);
+  document.getElementById('btn-auth-signin').addEventListener('click', handleSignIn);
   document.getElementById('btn-auth-save').addEventListener('click', handleAuthSave);
-  document.getElementById('auth-password').addEventListener('input', _updatePasswordFieldUI);
+  document.getElementById('auth-password').addEventListener('input', _updateSaveDisabled);
   document.getElementById('btn-auth-forgot-password').addEventListener('click', async e => {
     const email = document.getElementById('auth-email').value.trim();
     document.getElementById('auth-error').style.display = 'none';
@@ -485,7 +503,16 @@ async function init() {
     }
   });
   document.getElementById('auth-modal-overlay').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON' && !document.getElementById('btn-auth-save').disabled) handleAuthSave();
+    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') {
+      // Whichever action is actually showing — Save once Create account mode is active, Sign in
+      // otherwise — matching whichever button click Enter is standing in for.
+      const inCreateMode = document.getElementById('btn-auth-save').style.display !== 'none';
+      if (inCreateMode) {
+        if (!document.getElementById('btn-auth-save').disabled) handleAuthSave();
+      } else {
+        handleSignIn();
+      }
+    }
     if (e.key === 'Escape') closeAuthModal();
   });
 
