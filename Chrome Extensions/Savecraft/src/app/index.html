@@ -191,13 +191,26 @@
         <div class="form-group" id="auth-password-field">
           <input type="password" id="auth-password" placeholder="Password" autocomplete="current-password" />
         </div>
+        <!-- Hidden until #auth-password has content (main.js), and only actually enforced —
+             match required, complexity required — if Save's sign-in-first attempt comes back
+             EMAIL_NOT_FOUND, i.e. this turns out to be a new account. An existing user signing in
+             sees this appear too (there's no way to know in advance which case applies) but typing
+             anything or nothing here never blocks their sign-in. -->
+        <div class="form-group" id="auth-password-confirm-field" style="display:none">
+          <input type="password" id="auth-password-confirm" placeholder="Re-enter password" autocomplete="new-password" />
+          <div class="auth-password-hint">If this turns out to be a new account: at least 6 characters, including a number and a special character.</div>
+        </div>
         <div id="auth-error" class="auth-error" style="display:none"></div>
+        <button type="button" class="auth-forgot-password-link" id="btn-auth-forgot-password">Forgot password?</button>
         <div id="auth-signed-in-info" class="auth-signed-in-info" style="display:none"></div>
       </div>
       <div class="modal-actions" id="auth-signed-out-actions">
         <div class="auth-actions-right">
-          <button class="btn-cancel" id="btn-auth-signup">Create account</button>
-          <button class="btn-primary" id="btn-auth-signin">Sign in</button>
+          <!-- One button, not separate Create account/Sign in — per request. Disabled until a
+               password is typed (main.js). Its handler figures out new-vs-existing account itself
+               (tries sign-in first, falls back to creating the account on EMAIL_NOT_FOUND) rather
+               than asking the user to declare intent up front. -->
+          <button class="btn-primary" id="btn-auth-save" disabled>Save</button>
         </div>
         <!-- TEMPORARY, demo-only: lets a web visitor skip sign-in during early demo work. Only
              ever revealed on the web build's mandatory sign-in gate (see main.js's

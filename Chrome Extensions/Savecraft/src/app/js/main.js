@@ -6,7 +6,10 @@ import {
   persistLastfmUsername, disconnectLastfm, persistSteamId, disconnectSteam,
   runInitialSync,
 } from './storage.js';
-import { initAuth, onAuthChange, getCurrentUser, signUp, signIn, signOut, resendVerificationEmail, deleteAccount } from './auth.js';
+import {
+  initAuth, onAuthChange, getCurrentUser, signUp, signIn, signOut, resendVerificationEmail,
+  deleteAccount, sendPasswordReset,
+} from './auth.js';
 import { ensureLastfmRecentTracks, isLastfmConfigured, ensureSteamRecentGames, isSteamConfigured } from './api.js';
 import { isExtension, storageSync, storageOnChanged, resourceUrl } from './platform.js';
 import { debounce, escapeHtml } from './utils.js';
@@ -147,6 +150,7 @@ function toggleSidebarCollapsed() {
 export function openAuthModal() {
   document.getElementById('auth-error').style.display = 'none';
   document.getElementById('auth-modal-overlay').classList.add('open');
+  _updatePasswordFieldUI();
 }
 // True while a signed-out web visitor is being forced through sign-in (see requireWebSignIn
 // below) — makes the modal temporarily non-dismissable, since web has no local-only fallback
@@ -162,6 +166,24 @@ function closeAuthModal() {
   document.getElementById('auth-modal-overlay').classList.remove('open');
   document.getElementById('auth-email').value = '';
   document.getElementById('auth-password').value = '';
+  document.getElementById('auth-password-confirm').value = '';
+  _updatePasswordFieldUI();
+}
+
+// Confirm-password field + Save's disabled state both key off whether #auth-password has any
+// content — called on input and whenever the modal's fields get reset (closeAuthModal above).
+function _updatePasswordFieldUI() {
+  const hasPassword = document.getElementById('auth-password').value.length > 0;
+  document.getElementById('auth-password-confirm-field').style.display = hasPassword ? '' : 'none';
+  document.getElementById('btn-auth-save').disabled = !hasPassword;
+}
+
+const _PASSWORD_COMPLEXITY_ERROR = 'New passwords need at least one number and one special character.';
+// Only matters for a new account, per request — an existing user's password was created under
+// whatever rules applied when they first signed up, and shouldn't suddenly fail this retroactively
+// just to sign in with it.
+function _passwordMeetsComplexity(password) {
+  return /\d/.test(password) && /[^A-Za-z0-9]/.test(password);
 }
 
 // Blocks app init until a web visitor is signed in. No-ops instantly on the extension (sign-in
@@ -233,21 +255,62 @@ function applyAuthUI(user) {
   }
 }
 
-async function handleAuthSubmit(fn) {
+// One button for both sign-in and account creation, per request — rather than asking the user to
+// declare which up front, this tries signing in first.
+//
+// Originally this fell back to creating an account whenever Firebase's sign-in reported
+// EMAIL_NOT_FOUND — reasonable-sounding, but wrong on this project: live-verified (curl against
+// the real API) that email-enumeration protection is on here, so signInWithPassword returns the
+// *same* generic INVALID_LOGIN_CREDENTIALS whether the password is wrong OR no account exists at
+// all — Firebase deliberately won't say which, and createAuthUri (the API made for checking "is
+// this email registered") is blocked the same way. There's no clean signal left to detect "new
+// account" before attempting one.
+//
+// The one call that's NOT ambiguous: signUp's own EMAIL_EXISTS — you can't create a duplicate
+// account, so that error is real regardless of enumeration protection. So: on any sign-in failure,
+// check confirm-match/complexity (the new-account rules) first — if those fail, a plain "wrong
+// password" is exactly as likely as "new account with a mistake", so the error below covers both
+// honestly rather than guessing. If they pass, actually attempt signUp: EMAIL_EXISTS at that point
+// proves it was a real existing account with a wrong password all along (shown as such); anything
+// else is a genuine new-account failure; success means it really was a new account.
+async function handleAuthSave() {
   const email = document.getElementById('auth-email').value.trim();
   const password = document.getElementById('auth-password').value;
   document.getElementById('auth-error').style.display = 'none';
-  const result = await fn(email, password);
-  if (result.ok) {
+
+  const signInResult = await signIn(email, password);
+  if (signInResult.ok) {
     closeAuthModal();
-    // signUp/signIn already await their own cloud sync internally (see auth.js) before resolving
-    // — re-render now so the screen reflects whatever that sync just pulled down/merged in,
-    // rather than only updating on the next unrelated navigation.
     renderSidebar();
     renderGrid();
-  } else {
-    showAuthError(result.error);
+    return;
   }
+
+  const confirmPassword = document.getElementById('auth-password-confirm').value;
+  if (password !== confirmPassword || !_passwordMeetsComplexity(password)) {
+    showAuthError('Incorrect password — or, if you’re creating a new account, make sure both password fields match and include a number and a special character.');
+    return;
+  }
+
+  document.getElementById('auth-modal-title').textContent = 'Create your account';
+  const signUpResult = await signUp(email, password);
+  if (signUpResult.ok) {
+    closeAuthModal();
+    // signUp already awaits its own cloud sync internally (see auth.js) before resolving — re-
+    // render now so the screen reflects whatever that just pulled down/merged in, rather than only
+    // updating on the next unrelated navigation.
+    renderSidebar();
+    renderGrid();
+    return;
+  }
+  if (signUpResult.code === 'EMAIL_EXISTS') {
+    // Confirm/complexity both passed above, and Firebase just confirmed this email really does
+    // have an account — so signIn's earlier failure really was just a wrong password.
+    document.getElementById('auth-modal-title').textContent = 'Explore your library';
+    showAuthError('Incorrect password.');
+    return;
+  }
+  showAuthError(signUpResult.error);
 }
 
 // ===== LAST.FM MODAL (Profile page's Connections section) =====
@@ -381,8 +444,27 @@ async function init() {
   document.getElementById('auth-modal-overlay').addEventListener('click', e => {
     if (e.target === document.getElementById('auth-modal-overlay')) closeAuthModal();
   });
-  document.getElementById('btn-auth-signup').addEventListener('click', () => handleAuthSubmit(signUp));
-  document.getElementById('btn-auth-signin').addEventListener('click', () => handleAuthSubmit(signIn));
+  document.getElementById('btn-auth-save').addEventListener('click', handleAuthSave);
+  document.getElementById('auth-password').addEventListener('input', _updatePasswordFieldUI);
+  document.getElementById('btn-auth-forgot-password').addEventListener('click', async e => {
+    const email = document.getElementById('auth-email').value.trim();
+    document.getElementById('auth-error').style.display = 'none';
+    if (!email) {
+      showAuthError('Enter your email above first, then tap "Forgot password?" again.');
+      return;
+    }
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    const result = await sendPasswordReset(email);
+    // Always the same confirmation regardless of whether the email actually has an account —
+    // sendPasswordReset() itself already swallows EMAIL_NOT_FOUND for the same "don't reveal
+    // which emails are registered" reason; a real failure (network error, malformed email) still
+    // surfaces normally below.
+    btn.textContent = result.ok ? 'Check your email for a reset link!' : 'Forgot password?';
+    btn.disabled = false;
+    if (!result.ok) showAuthError(result.error);
+  });
   document.getElementById('btn-auth-signout').addEventListener('click', async () => {
     await signOut();
     closeAuthModal();
@@ -392,10 +474,10 @@ async function init() {
     const result = await deleteAccount();
     if (result.ok) {
       // Deliberately NOT closeAuthModal() — applyAuthUI's own reaction to the now-signed-out
-      // state already reverts the modal to its normal signed-out view (email/password + Create/
-      // Sign in), which reads as sufficient built-in confirmation without a separate success
-      // message. Web visitors especially need to land somewhere sane post-deletion, not a closed
-      // modal over a broken signed-out app view (requireWebSignIn() only runs once, at startup).
+      // state already reverts the modal to its normal signed-out view (email/password + Save),
+      // which reads as sufficient built-in confirmation without a separate success message. Web
+      // visitors especially need to land somewhere sane post-deletion, not a closed modal over a
+      // broken signed-out app view (requireWebSignIn() only runs once, at startup).
       renderSidebar();
       renderGrid();
     } else {
@@ -403,7 +485,7 @@ async function init() {
     }
   });
   document.getElementById('auth-modal-overlay').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') handleAuthSubmit(signIn);
+    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON' && !document.getElementById('btn-auth-save').disabled) handleAuthSave();
     if (e.key === 'Escape') closeAuthModal();
   });
 

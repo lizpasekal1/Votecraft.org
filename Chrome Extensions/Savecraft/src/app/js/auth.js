@@ -127,7 +127,11 @@ export async function signUp(email, password) {
       body: JSON.stringify({ email, password, returnSecureToken: true }),
     });
     const data = await resp.json();
-    if (data.error) return { ok: false, error: _friendlyError(data.error.message) };
+    // code is the raw Firebase error string (e.g. EMAIL_EXISTS) alongside the already-friendly
+    // message — added for main.js's unified Save button, which needs to tell "this email already
+    // has an account" apart from every other failure without fragile string-matching against
+    // _friendlyError's user-facing text.
+    if (data.error) return { ok: false, error: _friendlyError(data.error.message), code: data.error.message };
     const auth = _fromSignUpOrInResponse(data);
     await _persistAuth(auth);
     // Refreshed (and awaited) before _notify() so the very first render already shows accurate
@@ -161,7 +165,10 @@ export async function signIn(email, password) {
       body: JSON.stringify({ email, password, returnSecureToken: true }),
     });
     const data = await resp.json();
-    if (data.error) return { ok: false, error: _friendlyError(data.error.message) };
+    // code — see signUp's identical comment above. Here it's specifically what tells the unified
+    // Save button (main.js) "this email has no account yet" (EMAIL_NOT_FOUND) apart from a wrong
+    // password or anything else, so it knows to fall back to creating one instead.
+    if (data.error) return { ok: false, error: _friendlyError(data.error.message), code: data.error.message };
     const auth = _fromSignUpOrInResponse(data);
     await _persistAuth(auth);
     await _refreshEmailVerified(auth).catch(err => console.warn('[SaveCraft] Could not refresh verification status:', err));
@@ -180,6 +187,29 @@ export async function resendVerificationEmail() {
   if (!idToken) return { ok: false, error: 'Not signed in.' };
   try {
     await _sendVerificationEmail(idToken);
+    return { ok: true };
+  } catch {
+    return { ok: false, error: 'Could not reach the server. Check your connection and try again.' };
+  }
+}
+
+// "Forgot password?" link (auth modal). Unlike _sendVerificationEmail above, this doesn't need an
+// idToken — sendOobCode accepts a plain email for PASSWORD_RESET, which is the whole point (the
+// person triggering this is, by definition, not signed in). Always reports success regardless of
+// whether the email actually has an account — same "don't reveal which emails are registered"
+// reasoning EMAIL_NOT_FOUND-style errors would otherwise leak, just applied here proactively
+// rather than by mapping a specific error code.
+export async function sendPasswordReset(email) {
+  try {
+    const resp = await fetch(_SEND_OOB_CODE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ requestType: 'PASSWORD_RESET', email }),
+    });
+    const data = await resp.json();
+    if (data.error && data.error.message !== 'EMAIL_NOT_FOUND') {
+      return { ok: false, error: _friendlyError(data.error.message) };
+    }
     return { ok: true };
   } catch {
     return { ok: false, error: 'Could not reach the server. Check your connection and try again.' };
