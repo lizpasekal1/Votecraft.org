@@ -543,8 +543,9 @@
 .admin-kcard-remove:hover { color: #EF4444; }
 
 /* Urgency dot — bottom-right corner (per direct request; was top-right, where it collided with
-   the remove "✕" above), colored by the 1-10 rating set in the edit popup. Number sits inside
-   the dot. */
+   the remove "✕" above), colored by the Low/Medium/High level set in the edit popup. The number
+   inside it is the card's order/position in the list (top card is always 1), not the urgency
+   level — per direct request. */
 .admin-kcard-urgency {
   position: absolute;
   bottom: 6px;
@@ -560,9 +561,9 @@
   color: #fff;
   line-height: 1;
 }
-.admin-kcard-urgency--blue   { background: #3B82F6; } /* 1-3 */
-.admin-kcard-urgency--orange { background: #C2410C; } /* 4-7 — deep enough that white text (the shared default, no override needed) stays readable, unlike the original yellow */
-.admin-kcard-urgency--red    { background: #EF4444; } /* 8-10 */
+.admin-kcard-urgency--blue   { background: #3B82F6; } /* Low */
+.admin-kcard-urgency--orange { background: #16A34A; } /* Medium — green, per direct request; deep enough that white text stays readable */
+.admin-kcard-urgency--red    { background: #EF4444; } /* High */
 
 /* Left-edge urgency strip — reuses the same three color classes as the dot above (just their
    `background`). .kcard's own overflow: hidden clips this flush to the card's rounded left
@@ -701,6 +702,11 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* Trimmed the same way .grid-area:has(.admin-kanban-wrap) already is below — the header's own
+     two-row layout (misc.css, mobile) freed up room here, per direct request, so the board itself
+     can reach further down the page instead of leaving it as unused padding. */
+  padding-top: 15px;
+  padding-bottom: 4px;
 }
 
 /* Board info icon + popup */

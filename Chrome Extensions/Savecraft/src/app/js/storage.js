@@ -290,12 +290,52 @@ function _backfillSeedUrgency(cards) {
   return changed;
 }
 
+// One-time Queue Kanban demo seed, per direct request ("add 10 demo cards to the queue kanban
+// for me") — real, fully interactive items (draggable, removable, sortable), not the single
+// un-deletable '__demo__' instructional card kanban.js shows on an empty board. Spread across all
+// four columns and a mix of categories so there's something to actually test drag/reorder/scroll
+// against. Titled "Demo:" so they're easy to spot and delete later. imageUrl left null on
+// purpose — the letter-placeholder thumbnail is enough, and avoids depending on any external
+// image URL staying valid.
+function _seedQueueDemoItems() {
+  const entries = [
+    ['The Great Gatsby',        'Book',        'in-queue'],
+    ['Inception',                'Movie',       'in-queue'],
+    ['Breaking Bad',             'Show',        'in-queue'],
+    ['Portal 2',                 'Game',        'in-progress'],
+    ['Random Access Memories',   'Music Album', 'in-progress'],
+    ['Radiohead',                'Musician',    'in-progress'],
+    ['Starry Night Study',       'Visual Art',  'my-review'],
+    ['An Interesting Article',   'Web Links',   'my-review'],
+    ['Dune',                     'Book',        'done'],
+    ['The Matrix',               'Movie',       'done'],
+  ];
+  const now = Date.now();
+  return entries.map(([title, category, queueStatus], i) => ({
+    id: `queue-demo-${i}`,
+    url: null, title: `Demo: ${title}`, author: null, summary: null, description: null,
+    imageUrl: null, youtubeUrl: null, category, folderId: null, platforms: [],
+    done: false, savedAt: now + i, favorite: true, savedListIds: [],
+    queueStatus,
+  }));
+}
+
 export async function loadAll() {
   return new Promise(resolve => {
     storageSync.get(null, data => {
       state.items = Object.entries(data)
         .filter(([k]) => k.startsWith('item_'))
         .map(([, v]) => v);
+      // Gated the same way as the Admin Kanban seed below — runs exactly once, appends rather
+      // than overwrites, and never re-adds one of these the user later deletes since the flag
+      // stays set.
+      if (!data.savecraft_queue_demo_seeded) {
+        const demoItems = _seedQueueDemoItems();
+        state.items = [...state.items, ...demoItems];
+        const toSave = { savecraft_queue_demo_seeded: true };
+        demoItems.forEach(item => { toSave[`item_${item.id}`] = item; });
+        storageSync.set(toSave);
+      }
       state.folders = Object.entries(data)
         .filter(([k]) => k.startsWith('folder_'))
         .map(([, v]) => v);
