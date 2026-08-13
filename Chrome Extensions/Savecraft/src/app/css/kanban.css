@@ -4,7 +4,10 @@
   gap: 0;
   overflow-x: auto;
   align-items: stretch;
-  padding: 4px 2px 16px;
+  /* Bottom padding removed (was 16px) — per direct request, the columns should reach the true
+     bottom of the window on both desktop and mobile, not stop short by a fixed gap underneath
+     them. */
+  padding: 4px 2px 0;
   /* Fills whatever height .kanban-wrap actually has left after its own contents (e.g. a
      tutorial banner) — see .grid-area:has(.kanban-wrap) below for why this reaches the true
      bottom of the window instead of the old calc(100vh - 180px) guess, which fell short and
