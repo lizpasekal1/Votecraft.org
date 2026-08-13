@@ -28,9 +28,10 @@
   transition: background 0.15s;
 }
 
-.kanban-column:hover {
-  background: var(--hover-bg);
-}
+/* :hover background removed entirely, per direct request — with the columns now correctly
+   stretching to the true bottom of the window, hovering the empty space below a sparse column's
+   last card lit up gray all the way down, reading as a separate "gap" area rather than as part
+   of the same column. */
 
 .kanban-column:last-child { border-right: none; }
 
@@ -43,8 +44,6 @@
 .kanban-column--expanded {
   width: 100%;
   border-right: none;
-  /* Always the hover-gray background, not just on :hover — higher specificity than
-     .kanban-column:hover above, so mousing over it no longer changes anything visibly. */
   background: var(--hover-bg);
 }
 
