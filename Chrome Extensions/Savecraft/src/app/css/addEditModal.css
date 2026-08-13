@@ -1418,10 +1418,11 @@
   margin-top: -6px;
 }
 
+/* Sits above #auth-password now (index.html), not below — margin-bottom, not -top. */
 .auth-password-hint {
   color: var(--text-secondary);
   font-size: 12px;
-  margin-top: 6px;
+  margin-bottom: 6px;
 }
 
 /* Gray rather than .auth-resend-link's purple, per request — sits between the fields and the
