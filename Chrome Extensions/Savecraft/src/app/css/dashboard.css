@@ -244,7 +244,7 @@
 .dash-kanban-mini-board::after {
   content: '';
   position: absolute;
-  top: 16px;
+  top: 19px; /* 3px lower, per direct request */
   left: 0;
   right: 0;
   height: 1px;
@@ -276,7 +276,12 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--text-secondary);
-  padding: 0 2px 4px;
+  /* Left padding matches .dash-kmini-thumb's own 5px margin-left below, so the title text lines
+     up with the thumbnails in its column, per direct request — both are additive on top of
+     whatever this column's own base padding happens to be (it differs slightly between the
+     first/last mini-column on mobile), so matching the two values directly keeps them aligned
+     regardless. */
+  padding: 0 2px 4px 5px;
   /* Own border-bottom removed — .dash-kanban-mini-board::after above replaces it with a single
      line spanning both columns, so the two no longer break in the middle. */
 }
