@@ -380,6 +380,12 @@
   flex: 1; /* fills the remaining height below the header, keeping the title pinned to the top */
 }
 
+/* Sits noticeably higher than Open/Add's own position in their header rows (reported live,
+   screenshot confirmed) — nudged down to match, per direct request. */
+.dash-fav-category-wrap {
+  margin-top: 4px;
+}
+
 /* Favorites Spotlight's category filter button — reuses the Kanban board's .btn-board-filter
    structure/positioning but recolored to the SaveCraft purple, scoped to this class only so the
    real board's filter button (surface-colored) elsewhere is unaffected. */
