@@ -4,7 +4,7 @@ import { state, CURATED_ITEMS, CATEGORIES, PRIMARY_FOLDER_ID } from './state.js'
 import {
   SPLIT_TITLE_CREATOR_CATEGORIES, splitCuratedTitleCreator, getStaticCuratedCreator,
 } from './curatedCreatorLookup.js';
-import { isItunesArtworkUrl } from './utils.js';
+import { isItunesArtworkUrl, isQueueDemoId } from './utils.js';
 
 // An item counts as belonging to a category's primary folder if it's actually filed there, or
 // if it has no folder at all (un-foldered items are treated as primary so nothing already-saved
@@ -30,7 +30,15 @@ function resolveCuratedCreatorName(cat, item) {
 }
 
 export function getFilteredSortedItems() {
-  let items = [...state.items];
+  // REAL BUG, found and fixed: the queue-demo-N cards seeded for the Kanban board demo
+  // (storage.js's _seedQueueDemoItems) live in state.items with a real `category`, spreading
+  // them across every category too — since they're placeholder cards with url:null (never meant
+  // to be browsable "saved items"), renderCard() crashed (`getDomain(null)[0]`) the moment one
+  // showed up in a normal category grid, silently leaving that view's previous DOM (often the
+  // Dashboard, whichever view was open before) on screen instead of the real content. Excluded
+  // here, at the single shared source every view/category/search filters from, rather than
+  // patched per-view.
+  let items = [...state.items].filter(item => !isQueueDemoId(item.id));
 
   if (state.view === 'all') {
     // no filter
