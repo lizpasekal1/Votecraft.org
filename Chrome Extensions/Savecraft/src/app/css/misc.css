@@ -331,8 +331,20 @@
   .dash-kmini-col:last-child { padding-left: 3px; }
   .dash-kmini-card { gap: 6px; padding-right: 4px; }
   .dash-kmini-info { padding: 5px 4px 5px 0; }
-  /* Nudged down 5px, per direct request. */
-  .dash-card--kanban { margin-top: 5px; }
+  /* Was nudged down 5px earlier; now moved up 15px net from that (5 - 15 = -10px), per direct
+     request — negative margin-top on a grid item shrinks its effective row-height contribution
+     on this auto-sized mobile single-column grid (.dash-widget-grid), which is what pulls every
+     widget below it up the page too, not just this one. */
+  .dash-card--kanban {
+    margin-top: -10px;
+  }
+  /* 3px less than the base .dash-card 20px top/bottom padding, per direct request — applied to
+     every widget card (was scoped to just Queue Kanban at first) so they all match. Left/right
+     untouched, so each header's title/button stays aligned with the others. */
+  .dash-card {
+    padding-top: 17px;
+    padding-bottom: 17px;
+  }
 
   /* Kanban board header, two rows on mobile — per direct request, this replaces an earlier
      three-row layout (Dashboard alone / info icon alone / the two dropdowns) that wasted vertical
