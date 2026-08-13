@@ -18,6 +18,13 @@ import { storageSync } from './platform.js';
 // kanbanSort) — driven by a dedicated dropdown next to this page's own title, not the shared
 // #sort-select singleton (its fixed option set — Newest/Oldest/A→Z/Z→A/Release Date — belongs to
 // the main items grid; repurposing it here would mean restoring it correctly everywhere else).
+// Urgency is one of three levels — Low/Medium/High, no numbers — but some cards still carry a
+// legacy 1-10 number saved before this became a 3-option dropdown. _urgencyLevel (below,
+// near _urgencyColorClass) normalizes either representation to a level at the point of use, so
+// old data keeps working without a migration step. URGENCY_RANK gives the sort comparators below
+// something numeric to subtract.
+const URGENCY_RANK = { low: 1, medium: 2, high: 3 };
+
 // Comparators read cards already filtered to one column (see _cardsInColumn) — urgency-asc/desc
 // both push cards with no urgency rating to the end, regardless of direction.
 const SORT_MODES = [
@@ -26,8 +33,8 @@ const SORT_MODES = [
   { key: 'za',             label: 'Z → A',                  cmp: (a, b) => (b.name || '').localeCompare(a.name || '') },
   { key: 'newest',         label: 'Newest → Oldest',        cmp: (a, b) => b.createdAt - a.createdAt },
   { key: 'oldest',         label: 'Oldest → Newest',        cmp: (a, b) => a.createdAt - b.createdAt },
-  { key: 'urgency-desc',   label: 'Urgency (High → Low)',   cmp: (a, b) => (b.urgency ?? -Infinity) - (a.urgency ?? -Infinity) },
-  { key: 'urgency-asc',    label: 'Urgency (Low → High)',   cmp: (a, b) => (a.urgency ?? Infinity) - (b.urgency ?? Infinity) },
+  { key: 'urgency-desc',   label: 'Urgency (High → Low)',   cmp: (a, b) => (URGENCY_RANK[_urgencyLevel(b.urgency)] ?? -Infinity) - (URGENCY_RANK[_urgencyLevel(a.urgency)] ?? -Infinity) },
+  { key: 'urgency-asc',    label: 'Urgency (Low → High)',   cmp: (a, b) => (URGENCY_RANK[_urgencyLevel(a.urgency)] ?? Infinity) - (URGENCY_RANK[_urgencyLevel(b.urgency)] ?? Infinity) },
 ];
 
 export const ADMIN_KANBAN_COLUMNS = [
@@ -122,8 +129,13 @@ function _ensureModal() {
           <textarea id="admin-kcard-details-input" placeholder="Details…" rows="6"></textarea>
         </div>
         <div class="form-group">
-          <label class="admin-kcard-urgency-field-label" for="admin-kcard-urgency-input">Urgency (1–10)</label>
-          <input type="number" id="admin-kcard-urgency-input" min="1" max="10" step="1" placeholder="Optional">
+          <label class="admin-kcard-urgency-field-label" for="admin-kcard-urgency-input">Urgency</label>
+          <select id="admin-kcard-urgency-input">
+            <option value="">Optional</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
         </div>
       </div>
       <div class="modal-actions admin-kcard-modal-actions">
@@ -167,7 +179,7 @@ function _openCardModal(card, newInColumn) {
   document.getElementById('admin-kcard-modal-title').textContent = card ? 'Edit Task' : 'New Task';
   document.getElementById('admin-kcard-name-input').value = card?.name || '';
   document.getElementById('admin-kcard-details-input').value = card?.details || '';
-  document.getElementById('admin-kcard-urgency-input').value = card?.urgency ?? '';
+  document.getElementById('admin-kcard-urgency-input').value = _urgencyLevel(card?.urgency) || '';
   // Nothing to delete yet on a brand-new, unsaved card.
   document.getElementById('admin-kcard-delete-btn').style.display = card ? '' : 'none';
 
@@ -184,11 +196,10 @@ function _closeCardModal() {
 function _saveCardModal() {
   const name = document.getElementById('admin-kcard-name-input').value.trim();
   const details = document.getElementById('admin-kcard-details-input').value.trim();
-  // Clamped 1-10, same as the input's own min/max — belt-and-suspenders in case those get
-  // bypassed (e.g. pasting a value in), since this number also picks a CSS color class on the
-  // card. Empty input -> null (urgency stays optional, no dot shown on the card).
+  // The dropdown only ever offers 'low' | 'medium' | 'high' (or blank). Empty selection -> null
+  // (urgency stays optional, no dot shown on the card).
   const urgencyRaw = document.getElementById('admin-kcard-urgency-input').value;
-  const urgency = urgencyRaw === '' ? null : Math.max(1, Math.min(10, Math.round(Number(urgencyRaw))));
+  const urgency = urgencyRaw === '' ? null : urgencyRaw;
   if (!name && !details) { _closeCardModal(); return; } // nothing worth keeping
 
   if (_editingCard) {
@@ -218,24 +229,38 @@ function _saveCardModal() {
 // show for a plain task card). Delete ("✕", hover-revealed) is a quick path straight from the
 // board, matching .kcard-remove on the real board — separate from (and faster than) the modal's
 // own Delete button, per direct request. Never shown on the demo card, same as the real board.
-// 1-3 blue, 4-7 deep orange, 8-10 red, per direct request — orange (not the original yellow) so
-// its number can stay white like the other two, instead of needing its own dark-text override.
-function _urgencyColorClass(n) {
-  if (n <= 3) return 'admin-kcard-urgency--blue';
-  if (n <= 7) return 'admin-kcard-urgency--orange';
-  return 'admin-kcard-urgency--red';
+// Low blue, Medium green, High red, per direct request. Some cards still carry a legacy 1-10
+// number saved before urgency became this Low/Medium/High dropdown (see the SORT_MODES comment
+// above) — _urgencyLevel normalizes either representation to a level, so old data keeps working
+// without a migration step.
+function _urgencyLevel(u) {
+  if (u == null) return null;
+  if (typeof u === 'number') return u <= 3 ? 'low' : u <= 7 ? 'medium' : 'high';
+  return u; // already 'low' | 'medium' | 'high'
 }
+function _urgencyColorClass(level) {
+  if (level === 'low') return 'admin-kcard-urgency--blue';
+  if (level === 'medium') return 'admin-kcard-urgency--orange';
+  return 'admin-kcard-urgency--red'; // 'high'
+}
+const URGENCY_LABEL = { low: 'Low', medium: 'Medium', high: 'High' };
 
-function renderAdminCard(card) {
+// `position` is the card's 1-based rank in its column under whatever sort/order is currently
+// active — the card at the top of the list is always 1, per direct request.
+function renderAdminCard(card, position) {
   const detailsHtml = card.details
     ? `<div class="admin-kcard-details">${escapeHtml(card.details)}</div>` : '';
   const demoTag = card._isDemo ? '<span class="kcard-demo-badge">DEMO</span>' : '';
   const removeBtn = !card._isDemo
     ? `<button class="admin-kcard-remove" data-id="${card.id}" title="Delete card">✕</button>` : '';
-  const urgencyDot = card.urgency
-    ? `<span class="admin-kcard-urgency ${_urgencyColorClass(card.urgency)}" title="Urgency: ${card.urgency}/10">${card.urgency}</span>` : '';
-  const urgencyStrip = card.urgency
-    ? `<span class="admin-kcard-urgency-strip ${_urgencyColorClass(card.urgency)}"></span>` : '';
+  // The dot's color still comes from urgency (Low/Medium/High), but the number inside it is now
+  // the card's order/position in the list, not the urgency level — per direct request. Works for
+  // legacy cards whose stored urgency is still a 1-10 number, via _urgencyLevel.
+  const level = _urgencyLevel(card.urgency);
+  const urgencyDot = (level && !card._isDemo)
+    ? `<span class="admin-kcard-urgency ${_urgencyColorClass(level)}" title="Urgency: ${URGENCY_LABEL[level]} — position ${position}">${position}</span>` : '';
+  const urgencyStrip = level
+    ? `<span class="admin-kcard-urgency-strip ${_urgencyColorClass(level)}"></span>` : '';
   return `
     <div class="kcard admin-kcard${card._isDemo ? ' kcard--demo' : ''}" data-id="${card.id}" draggable="${!card._isDemo}">
       ${urgencyStrip}
@@ -263,7 +288,7 @@ function renderAdminColumn(col) {
       </button>
       <div class="kanban-column-title">${col.label}</div>
       <div class="kanban-cards admin-kanban-cards${isExpanded ? ' kanban-cards--two-col' : ''}" data-col="${col.key}">
-        ${cards.map(renderAdminCard).join('') || emptyHtml}
+        ${cards.map((card, i) => renderAdminCard(card, i + 1)).join('') || emptyHtml}
       </div>
       <button class="admin-kcard-add-btn" data-col="${col.key}" title="Add card">${ADD_CARD_PLUS_SVG}</button>
     </div>`;
