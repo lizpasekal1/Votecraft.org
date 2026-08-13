@@ -77,6 +77,11 @@ export function _wireCarouselArrows(card, strip) {
   };
 
   strip.scrollLeft = copyWidth(); // start centered in the middle copy
+  // .dash-carousel-next was removed from the Dashboard's own two carousels (per direct request —
+  // see their markup below), but this function is shared with Shared Saves/Embed Builder/Curated
+  // landing rows (sharedSaves.js, embedBuilder.js, renderCuratedPages.js), which still render and
+  // rely on a working next button — the `?.` already makes this a no-op wherever it's absent, so
+  // wiring both unconditionally is what keeps every caller correct.
   card.querySelector('.dash-carousel-prev')?.addEventListener('click', () => scrollByCard(-1));
   card.querySelector('.dash-carousel-next')?.addEventListener('click', () => scrollByCard(1));
 }
@@ -189,7 +194,6 @@ function buildFavoritesWidget() {
       <div class="dash-carousel">
         <button class="dash-carousel-prev" aria-label="Previous">‹</button>
         <div class="dash-carousel-strip">${cardsHtml}</div>
-        <button class="dash-carousel-next" aria-label="Next">›</button>
       </div>
     </div>`;
 }
@@ -339,7 +343,6 @@ function buildCuratedListsWidget() {
       <div class="dash-carousel">
         <button class="dash-carousel-prev" aria-label="Previous">‹</button>
         <div class="dash-carousel-strip">${cardsHtml}</div>
-        <button class="dash-carousel-next" aria-label="Next">›</button>
       </div>
     </div>`;
 }

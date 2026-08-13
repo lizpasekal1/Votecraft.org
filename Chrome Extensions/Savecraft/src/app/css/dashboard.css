@@ -504,6 +504,10 @@
   max-width: 100%;
 }
 
+/* .dash-carousel-next removed from these two dashboard widgets specifically (their markup no
+   longer renders it, per direct request) — kept here in the shared selector since Shared Saves/
+   Embed Builder/Curated landing rows (sharedSaves.js, embedBuilder.js, renderCuratedPages.js)
+   still render and rely on this same class for their own carousels. */
 .dash-carousel-prev, .dash-carousel-next {
   flex-shrink: 0;
   border: none;
