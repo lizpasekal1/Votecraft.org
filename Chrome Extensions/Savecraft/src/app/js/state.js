@@ -338,8 +338,11 @@ export const state = {
   adminKanbanCards: [], // { id, name, details, urgency, status: ADMIN_KANBAN_COLUMNS key,
                          // manualOrder, createdAt } — a second, separate board (adminKanban.js) of
                          // freeform task cards, not tied to state.items at all (unlike the main
-                         // Queue board above). Local-only (storageSync), same as
-                         // kanbanSort/kanbanLists — no Firestore dual-write yet.
+                         // Queue board above). Cached locally (storageSync) for offline/first-paint,
+                         // but — unlike kanbanSort/kanbanLists — it's a *shared* board dual-written
+                         // per-card to Firestore's admin_kanban_cards collection for admins (see
+                         // storage.js's persistAdminKanbanCard/removeAdminKanbanCard), since the
+                         // WordPress plugin's bot account reads/writes the same collection.
   adminKanbanSort: 'manual', // one global sort applied across every column (not per-column like
                               // the real board's own kanbanSort) — 'manual' respects each card's
                               // own manualOrder (drag order); see adminKanban.js's SORT_MODES.
