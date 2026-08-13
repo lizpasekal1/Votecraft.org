@@ -408,6 +408,14 @@
 .dash-card--favorites .dash-carousel-prev,
 .dash-card--curated .dash-carousel-prev {
   margin-left: -4px;
+  /* .dash-carousel's own align-items: center centers each child against the *row's* full height
+     — which is .dash-thumb-card's height (image + caption below it), not just the image, so the
+     arrow sat noticeably lower than the image's own center. align-self: flex-start + matching
+     .dash-thumb-art's own 112px height instead centers the arrow (via its own
+     align-items/justify-content, already set below) against just that image height, per direct
+     request. */
+  align-self: flex-start;
+  height: 112px;
 }
 .dash-card--favorites .dash-carousel-strip,
 .dash-card--curated .dash-carousel-strip {
