@@ -11,20 +11,26 @@ Organized by how much each item actually blocks a safe, usable test.
 
 ## 🔴 Blockers — fix before any real user's data touches this
 
-### 1. Confirm Firestore security rules are deployed live
-The rules file (`~/Documents/Votecraft.org/firebase/firestore.rules`, shared across Votecraft.org
-projects) looks correct as written — but no one has confirmed it's actually the *live* ruleset on
-`votecraft-789`, vs. just sitting in the repo. This is the single most important thing standing
-between "your data" and "everyone's data."
+### 1. ✅ Confirm Firestore security rules are deployed live — done, real bug found and fixed
+Confirmed they did **not** match — and worse than the "just not deployed yet" worry above: the live
+ruleset (last deployed Jul 16, predating `savecraft_users` being added to the rules file) was
+missing the `savecraft_users` match block **entirely**. Firestore rules are default-deny per path,
+so this didn't leak anyone's data — it did the opposite: nobody, not even the rightful owner, could
+read or write their own synced items/folders/authors. Per-user cloud sync on web has been silently
+broken in production until this was caught. Verified empirically against the live REST API (not
+just reading rule text) both before and after the fix, including a real throwaway signed-in test
+account. Two secondary discrepancies fixed in the same deploy: `curated_items` write was
+`if request.auth != null` live (any signed-in user could edit curated data) instead of
+`if false` (console-only); `jokeVotes` write allowed any signed-in user to write *any* vote doc
+instead of only their own.
 
-- [ ] Open console.firebase.google.com → `votecraft-789` → Firestore → Rules, and compare what's
+- [x] Open console.firebase.google.com → `votecraft-789` → Firestore → Rules, and compare what's
       live against the local `firestore.rules` file
-- [ ] If they don't match (or nothing's deployed), run
-      `firebase deploy --only firestore:rules --project votecraft-789`
-- [ ] Manually verify: signed in as one test account, confirm you *cannot* read/write another
-      account's `savecraft_users/{uid}` document
-- [ ] Confirm `curated_items`/`curated_genres` are still public-read but write-denied
-- [ ] Update `savecraft-profile-security.md`'s "One thing to actually do" section once confirmed
+- [x] They didn't match — ran `firebase deploy --only firestore:rules --project votecraft-789`
+- [x] Manually verified: a real signed-in test account cannot read/write another account's
+      `savecraft_users/{uid}` document (403, both before and after the fix)
+- [x] Confirmed `curated_items`/`curated_genres` reads are public; writes now correctly gated
+- [x] Updated `savecraft-profile-security.md`'s security-status section to reflect this
 
 ### 2. Privacy policy & Terms of Service
 ✅ Drafted and live — `src/webpage/privacy-policy.html` and `src/webpage/terms-of-service.html`,
