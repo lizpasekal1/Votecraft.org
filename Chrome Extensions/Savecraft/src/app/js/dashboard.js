@@ -80,10 +80,14 @@ export function _wireCarouselArrows(card, strip) {
   // .dash-carousel-next was removed from the Dashboard's own two carousels (per direct request —
   // see their markup below), but this function is shared with Shared Saves/Embed Builder/Curated
   // landing rows (sharedSaves.js, embedBuilder.js, renderCuratedPages.js), which still render and
-  // rely on a working next button — the `?.` already makes this a no-op wherever it's absent, so
-  // wiring both unconditionally is what keeps every caller correct.
-  card.querySelector('.dash-carousel-prev')?.addEventListener('click', () => scrollByCard(-1));
-  card.querySelector('.dash-carousel-next')?.addEventListener('click', () => scrollByCard(1));
+  // rely on a working prev/next pair — the `?.` already makes wiring either one a no-op wherever
+  // it's absent, so this stays correct for every caller either way.
+  const nextBtn = card.querySelector('.dash-carousel-next');
+  // When there's no separate next button (the Dashboard's own two carousels), the sole remaining
+  // arrow advances the slides — moves them left — instead of going back, per direct request:
+  // there's nothing else left to handle forward motion.
+  card.querySelector('.dash-carousel-prev')?.addEventListener('click', () => scrollByCard(nextBtn ? -1 : 1));
+  nextBtn?.addEventListener('click', () => scrollByCard(1));
 }
 
 // ===== favorites carousel =====
