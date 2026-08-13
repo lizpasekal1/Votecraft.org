@@ -2,6 +2,18 @@
 
 import { state, FOLDER_ICON, GENERIC_FOLDER_ICON_PATH } from './state.js';
 
+// Admin gate for Admin Kanban (renderSidebar.js/renderGrid.js/storage.js) — per request, two
+// mechanisms combined rather than picking one: a small hardcoded allowlist (simplest, no extra
+// data model, covers the account that actually needs this today) OR an explicit 'admin' role on
+// the signed-in account's own synced data (savecraft_role, storage.js) so a future admin could be
+// added via the Firebase console alone, no code deploy required. Pure function — takes the email/
+// role explicitly rather than importing auth.js/state.js's own copies, so it has no import-order
+// dependency on either (auth.js already has documented circular-import concerns with storage.js).
+const ADMIN_EMAILS = ['lizpasekal@gmail.com'];
+export function isAdminUser(email, role) {
+  return (!!email && ADMIN_EMAILS.includes(email)) || role === 'admin';
+}
+
 // Movie's "Videos" folder (YouTube/Vimeo links) — pure URL parsing, no network. Used both to
 // build a thumbnail URL (YouTube's is fully derivable from the id; Vimeo's isn't, so that one's
 // fetched via oEmbed in api.js instead) and to build the lightbox's embeddable player src.

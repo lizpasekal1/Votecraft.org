@@ -343,6 +343,11 @@ export const state = {
   adminKanbanSort: 'manual', // one global sort applied across every column (not per-column like
                               // the real board's own kanbanSort) — 'manual' respects each card's
                               // own manualOrder (drag order); see adminKanban.js's SORT_MODES.
+  role: null, // 'admin' | null — an explicit admin flag on the signed-in account's own data
+              // (savecraft_role), read alongside utils.js's hardcoded ADMIN_EMAILS allowlist by
+              // isAdminUser() to gate Admin Kanban. Local-only like adminKanbanCards above unless
+              // signed in (then Firestore too, see storage.js) — settable via the Firebase console
+              // on savecraft_users/{uid}.role for a future admin with no code deploy needed.
   lastfmUsername: null,            // Last.fm account username the user has linked, or null
   followedCuratedLists: new Set(), // Set of CURATED_GENRES keys the user has opted into via Profile > Interests
   lastfmCache: {}, // { [normalizedUsername]: { tracks: [...]|null, fetchedAt } } — auto-fetched via Last.fm, short TTL

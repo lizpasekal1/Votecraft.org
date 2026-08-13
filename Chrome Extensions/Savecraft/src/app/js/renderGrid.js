@@ -6,9 +6,11 @@ import {
 } from './state.js';
 import {
   escapeHtml, catClass, badgeLabel, isMusicAlbumsSectionView, isOwnAuthorPageView, getDomain,
+  isAdminUser,
 } from './utils.js';
 import { persistViewState, persistItem, persistHiddenCurated, removeItem } from './storage.js';
 import { navigateToView } from './navigation.js';
+import { getCurrentUser } from './auth.js';
 import { wireCardAuthorLinks } from './authors.js';
 import { renderKanbanBoard } from './kanban.js';
 import { renderAdminKanbanBoard } from './adminKanban.js';
@@ -68,8 +70,16 @@ export function renderGrid() {
     return;
   }
 
+  // isAdminUser gate here too, not just hiding the sidebar link (renderSidebar.js) — otherwise a
+  // non-admin landing directly on ?v=admin-kanban (bookmarked, typed, or a stale link) would still
+  // render it. Redirects to Dashboard rather than rendering nothing — navigateToView() calls back
+  // into renderSidebar()/renderGrid() itself, but only once: 'dashboard' doesn't hit this branch.
   if (state.view === 'admin-kanban') {
-    renderAdminKanbanBoard();
+    if (isAdminUser(getCurrentUser()?.email, state.role)) {
+      renderAdminKanbanBoard();
+      return;
+    }
+    navigateToView('dashboard', { replace: true });
     return;
   }
 

@@ -10,6 +10,7 @@ import {
   SPLIT_TITLE_CREATOR_CATEGORIES, splitCuratedTitleCreator, getStaticCuratedCreator,
 } from './curatedCreatorLookup.js';
 import { storageSync, storageLocal } from './platform.js';
+import { isAdminUser } from './utils.js';
 
 const _FIREBASE_PROJECT = 'votecraft-789';
 const _FIREBASE_API_KEY = 'AIzaSyArJ6pkXUDbZf4jcxRita0qcdr-hT46kI8';
@@ -374,26 +375,36 @@ export async function loadAll() {
       state.sort = data.savecraft_sort || 'az';
       state.tutorialSeen = data.savecraft_tutorial_seen || false;
       if (data.savecraft_kanban_sort) state.kanbanSort = { ...state.kanbanSort, ...data.savecraft_kanban_sort };
-      if (data.savecraft_admin_kanban_sort) state.adminKanbanSort = data.savecraft_admin_kanban_sort;
-      // Seeded exactly once, gated on its own savecraft_admin_kanban_seeded flag rather than
-      // "does savecraft_admin_kanban_cards exist" (defaultLists' own convention just below) —
-      // this board had already been tested live before this seed was written, so that check could
-      // easily see a real (non-empty) array already there and skip seeding entirely. The flag
-      // guarantees this runs exactly once regardless of what's already saved (appending to it,
-      // never overwriting), and — just as importantly — never re-adds a seeded card the user
-      // later deletes, since the flag stays set after that first run.
-      if (!data.savecraft_admin_kanban_seeded) {
-        state.adminKanbanCards = [...(data.savecraft_admin_kanban_cards || []), ..._seedAdminKanbanCards()];
-        storageSync.set({ savecraft_admin_kanban_cards: state.adminKanbanCards, savecraft_admin_kanban_seeded: true });
-      } else {
-        state.adminKanbanCards = data.savecraft_admin_kanban_cards || [];
-        // One-time patch for boards seeded before urgency existed as a field — see
-        // _backfillSeedUrgency's own comment. Only relevant on this branch: the fresh-seed branch
-        // above already gets urgency baked in from _seedAdminKanbanCards() directly.
-        if (!data.savecraft_admin_kanban_urgency_backfilled) {
-          _backfillSeedUrgency(state.adminKanbanCards);
-          storageSync.set({ savecraft_admin_kanban_cards: state.adminKanbanCards, savecraft_admin_kanban_urgency_backfilled: true });
+      state.role = data.savecraft_role || null;
+      // Admin Kanban is gated entirely behind isAdminUser() — per request, it's not meant to be
+      // visible to just anyone who signs up. Non-admins get an empty board and, critically, never
+      // hit the seeding branch below at all: before this gate existed, *any* visitor (signed in or
+      // not — this data is local-only, see persistAdminKanbanCards) got SaveCraft's own real
+      // internal task list auto-seeded straight into their browser on first load.
+      if (isAdminUser(getCurrentUser()?.email, state.role)) {
+        if (data.savecraft_admin_kanban_sort) state.adminKanbanSort = data.savecraft_admin_kanban_sort;
+        // Seeded exactly once, gated on its own savecraft_admin_kanban_seeded flag rather than
+        // "does savecraft_admin_kanban_cards exist" (defaultLists' own convention just below) —
+        // this board had already been tested live before this seed was written, so that check could
+        // easily see a real (non-empty) array already there and skip seeding entirely. The flag
+        // guarantees this runs exactly once regardless of what's already saved (appending to it,
+        // never overwriting), and — just as importantly — never re-adds a seeded card the user
+        // later deletes, since the flag stays set after that first run.
+        if (!data.savecraft_admin_kanban_seeded) {
+          state.adminKanbanCards = [...(data.savecraft_admin_kanban_cards || []), ..._seedAdminKanbanCards()];
+          storageSync.set({ savecraft_admin_kanban_cards: state.adminKanbanCards, savecraft_admin_kanban_seeded: true });
+        } else {
+          state.adminKanbanCards = data.savecraft_admin_kanban_cards || [];
+          // One-time patch for boards seeded before urgency existed as a field — see
+          // _backfillSeedUrgency's own comment. Only relevant on this branch: the fresh-seed branch
+          // above already gets urgency baked in from _seedAdminKanbanCards() directly.
+          if (!data.savecraft_admin_kanban_urgency_backfilled) {
+            _backfillSeedUrgency(state.adminKanbanCards);
+            storageSync.set({ savecraft_admin_kanban_cards: state.adminKanbanCards, savecraft_admin_kanban_urgency_backfilled: true });
+          }
         }
+      } else {
+        state.adminKanbanCards = [];
       }
       const defaultLists = [
         { id: 'group',   name: 'Group Queue'   },
@@ -1039,6 +1050,11 @@ export async function runInitialSync(uid) {
       savecraft_lastfm_username: cloudSettings.lastfmUsername,
       savecraft_followed_curated_lists: cloudSettings.followedCuratedLists,
       savecraft_steam_id: cloudSettings.steamId,
+      // Not written by any persist* function here (no in-app UI sets it) — read-only from this
+      // side, meant to be set directly on savecraft_users/{uid}.role via the Firebase console for
+      // a future admin (see utils.js's isAdminUser). Included in this pull so a console-set role
+      // actually reaches the client at all, not just Firestore itself.
+      savecraft_role: cloudSettings.role,
     }, resolve));
     // Reflect into live state immediately for the fields state.js actually tracks (theme,
     // sidebarCollapsed, and shareCount have no state.* mirror — main.js/share.js read those
@@ -1054,6 +1070,7 @@ export async function runInitialSync(uid) {
     if (cloudSettings.lastfmUsername !== undefined) state.lastfmUsername = cloudSettings.lastfmUsername;
     if (cloudSettings.followedCuratedLists) state.followedCuratedLists = new Set(cloudSettings.followedCuratedLists);
     if (cloudSettings.steamId !== undefined) state.steamId = cloudSettings.steamId;
+    if (cloudSettings.role != null) state.role = cloudSettings.role;
   }
 
   await _mergeCollection(uid, idToken, 'items', 'item_', state.items);
