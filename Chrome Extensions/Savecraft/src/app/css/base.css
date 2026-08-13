@@ -135,7 +135,16 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Google Sans', 'Segoe UI', sans-serif;
   background: var(--bg);
   color: var(--text-primary);
+  /* REAL BUG, found and fixed: this static 100vh — not misc.css's .main-layout height calc,
+     which was fixed earlier to 100dvh but could never have mattered — is what actually caused
+     the mobile Kanban board's bottom gaps (reported live, screenshot confirmed). body has
+     overflow: hidden, so whatever height it computes to is a hard ceiling every descendant is
+     clipped to, regardless of what any of them calculate for themselves further down — 100vh not
+     tracking iOS Safari's toolbar meant that ceiling sat short of the true visible area. 100dvh
+     (with the two-declaration vh fallback, since an unsupported value is simply ignored rather
+     than needing @supports) fixes it at its actual source instead. */
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   /* overflow: hidden above is meant to make the whole page unscrollable — any real scrolling
      happens in an inner container (.grid-area, .detail-body, etc.) — but iOS Safari has a long-
