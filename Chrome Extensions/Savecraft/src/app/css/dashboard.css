@@ -395,6 +395,11 @@
 .dash-card--favorites .dash-carousel,
 .dash-card--curated .dash-carousel {
   gap: 0;
+  /* Bleeds the whole row (arrow + strip) flush to the card's true left edge, matching .dash-card's
+     own 20px padding — per direct request, the slider should reach the widget's edge the same
+     way it already does on the right (where removing the arrow let the strip's flex: 1 claim that
+     space directly). */
+  margin-left: -20px;
 }
 .dash-card--favorites .dash-carousel-strip,
 .dash-card--curated .dash-carousel-strip {
