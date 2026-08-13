@@ -196,6 +196,10 @@ function _enterCreateAccountMode() {
 // Reverts to the initial signed-out view — called whenever the modal opens/closes fresh, so
 // "Create account" mode never lingers into an unrelated later open of the same modal.
 function _exitCreateAccountMode() {
+  // Runs first, not last — it restores several of the same fields (Save, the hint, Back to sign
+  // in) that this function then immediately hides again below. Order matters here: this function's
+  // own settings need to be the ones that stick.
+  _exitRobotCheckStep();
   document.getElementById('auth-modal-title').textContent = 'Explore your library';
   document.getElementById('btn-auth-create').style.display = '';
   document.getElementById('btn-auth-signin').style.display = '';
@@ -207,7 +211,6 @@ function _exitCreateAccountMode() {
   document.getElementById('btn-auth-forgot-password').style.display = '';
   document.getElementById('btn-auth-back-to-signin').style.display = 'none';
   document.getElementById('auth-password-confirm-field').style.display = 'none';
-  _exitRobotCheckStep();
 }
 
 // Save (create-account mode only) is disabled until a password is typed, per request.
@@ -236,14 +239,22 @@ function _enterRobotCheckStep(email, password) {
   document.getElementById('btn-auth-confirm-robot').style.display = '';
   document.getElementById('btn-auth-confirm-robot').disabled = true;
 }
-// Reverts the robot-check step back to the normal create-account fields — called whenever
-// create-account mode itself is exited, so a cancelled/completed attempt never lingers into the
-// next time this modal opens.
+// Reverts the robot-check step back to the normal create-account fields — mirrors every field
+// _enterRobotCheckStep hides above, not just some of them (an earlier version of this only
+// restored 2 of the 6, which is why EMAIL_EXISTS below used to leave the modal stuck showing just
+// the checkbox with no way back to the fields or to Sign in at all). Called both when create-
+// account mode itself is exited, and directly on EMAIL_EXISTS (handleConfirmRobotCheck) so that
+// specific dead end can't happen again.
 function _exitRobotCheckStep() {
   _pendingSignup = null;
   document.getElementById('auth-signed-out-fields').style.display = '';
+  document.getElementById('auth-password-hint').style.display = '';
   document.getElementById('auth-password-field').style.display = '';
+  document.getElementById('auth-password-confirm-field').style.display = '';
+  document.getElementById('btn-auth-back-to-signin').style.display = '';
+  document.getElementById('btn-auth-save').style.display = '';
   document.getElementById('auth-robot-check').style.display = 'none';
+  _updateSaveDisabled();
 }
 
 const _PASSWORD_COMPLEXITY_ERROR = 'New passwords need at least 8 characters, including a number and a special character.';
@@ -384,6 +395,10 @@ async function handleConfirmRobotCheck() {
     renderSidebar();
     renderGrid();
   } else if (result.code === 'EMAIL_EXISTS') {
+    // Back to the normal create-account fields (still holding whatever was typed) rather than
+    // leaving the checkbox step up with no way out, per request — Back to sign in is what's
+    // actually needed here, not another robot check on an account that already exists.
+    _exitRobotCheckStep();
     showAuthError('An account with that email already exists — try Sign in instead.');
   } else {
     showAuthError(result.error);
