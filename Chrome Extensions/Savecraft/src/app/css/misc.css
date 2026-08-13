@@ -278,7 +278,11 @@
 
 
 /* ===== SCROLLBAR ===== */
-::-webkit-scrollbar { width: 6px; }
+/* height (thickness of a HORIZONTAL scrollbar) was missing here — width only styles vertical
+   scrollbars, so any horizontal-overflow element (e.g. .kanban-board when its columns overflow
+   the window width) fell back to the browser's native thick gray scrollbar instead of this same
+   thin themed one, showing up as a stray gray bar along its bottom edge. */
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
@@ -678,7 +682,17 @@
   /* Sidebar mobile drawer CSS moved to sidebar.css's own "MOBILE SIDEBAR DRAWER" section. */
 
   /* Main layout: full width */
-  .main-layout { height: calc(100vh - 64px); }
+  /* REAL BUG, found and fixed: 100vh on iOS Safari doesn't track the browser's own address-bar/
+     toolbar chrome showing or hiding — it's a fixed value that leaves a gap the size of whatever
+     chrome is currently visible, which is exactly what showed up as two separate gaps on the
+     Kanban board (one inside the last column, one below the whole board — both are downstream of
+     .main-layout itself coming up short, since .kanban-wrap/.kanban-board/.kanban-column/
+     .kanban-cards all correctly flex:1 the rest of the way once given accurate space to fill).
+     100dvh (dynamic viewport height) tracks the *actual* visible area as that chrome animates in
+     and out, per direct request ("I want the sections to go to the end of the screen"). Falls
+     back to plain vh in the (now rare) browsers that don't support dvh, via the two-declaration
+     fallback pattern below rather than @supports, since an unsupported value is simply ignored. */
+  .main-layout { height: calc(100vh - 64px); height: calc(100dvh - 64px); }
   .grid-area { padding: var(--page-mobile-pad); }
 
   /* Single column cards */

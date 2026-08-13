@@ -19,7 +19,7 @@
 // a deliberately separate follow-up phase.
 
 import { state, CATEGORIES, CAT_LABEL, CAT_EMOJI, PRIMARY_FOLDER_ID } from './state.js';
-import { escapeHtml, folderIconHtml, sortFoldersForDisplay } from './utils.js';
+import { escapeHtml, folderIconHtml, sortFoldersForDisplay, isQueueDemoId } from './utils.js';
 import { renderSidebar, renderGrid } from './render.js';
 import { matchesPrimaryOrUnfoldered } from './renderFilters.js';
 import { _wireCarouselArrows } from './dashboard.js';
@@ -189,8 +189,11 @@ function _selectCustomSource() {
 }
 
 // Shared tail of _selectSectionSource/_selectFolderSource — both start opt-out (everything
-// selected), unlike _selectCustomSource above.
+// selected), unlike _selectCustomSource above. Queue-demo cards (Kanban-demo placeholders,
+// url:null — see renderFilters.js's getFilteredSortedItems() for the same exclusion and why)
+// filtered out here too, so they can't end up picked as an embeddable asset.
 function _finalizeSource(items) {
+  items = items.filter(i => !isQueueDemoId(i.id));
   _sourceItems = items;
   _selectedIds = new Set(items.map(i => i.id));
   _orderedIds = items.map(i => i.id);
@@ -378,7 +381,7 @@ function _wireFolderPicker(container) {
 // there specifically so that cap is never really a practical limit).
 function _buildCustomPickerHtml() {
   const q = _customSearch.trim().toLowerCase();
-  const pool = _sortNewestFirst(state.items.filter(i => !q || (i.title || '').toLowerCase().includes(q))).slice(0, 200);
+  const pool = _sortNewestFirst(state.items.filter(i => !isQueueDemoId(i.id) && (!q || (i.title || '').toLowerCase().includes(q)))).slice(0, 200);
 
   const rowsHtml = pool.length ? pool.map(item => `
     <label class="embed-custom-pick-row">

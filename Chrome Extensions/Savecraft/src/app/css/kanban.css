@@ -4,7 +4,10 @@
   gap: 0;
   overflow-x: auto;
   align-items: stretch;
-  padding: 4px 2px 16px;
+  /* Bottom padding removed (was 16px) — per direct request, the columns should reach the true
+     bottom of the window on both desktop and mobile, not stop short by a fixed gap underneath
+     them. */
+  padding: 4px 2px 0;
   /* Fills whatever height .kanban-wrap actually has left after its own contents (e.g. a
      tutorial banner) — see .grid-area:has(.kanban-wrap) below for why this reaches the true
      bottom of the window instead of the old calc(100vh - 180px) guess, which fell short and
@@ -19,15 +22,19 @@
   min-width: 220px;
   display: flex;
   flex-direction: column;
-  padding: 12px;
+  /* Bottom side removed (was 12px all around) — same reasoning as .kanban-board's own bottom
+     padding above: the column's content (.kanban-cards) should reach the true bottom edge, not
+     stop 12px short of it, per direct request. */
+  padding: 12px 12px 0;
   border-right: 1px solid var(--border);
   overflow: hidden;
   transition: background 0.15s;
 }
 
-.kanban-column:hover {
-  background: var(--hover-bg);
-}
+/* :hover background removed entirely, per direct request — with the columns now correctly
+   stretching to the true bottom of the window, hovering the empty space below a sparse column's
+   last card lit up gray all the way down, reading as a separate "gap" area rather than as part
+   of the same column. */
 
 .kanban-column:last-child { border-right: none; }
 
@@ -40,8 +47,6 @@
 .kanban-column--expanded {
   width: 100%;
   border-right: none;
-  /* Always the hover-gray background, not just on :hover — higher specificity than
-     .kanban-column:hover above, so mousing over it no longer changes anything visibly. */
   background: var(--hover-bg);
 }
 
