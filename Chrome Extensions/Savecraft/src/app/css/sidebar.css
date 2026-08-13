@@ -95,6 +95,15 @@
     margin-right: 0;
     border-radius: 12px;
   }
+  /* .sidebar-group.open's own margin-right: 12px (sidebar.css, unconditional — matches every
+     non-grouped row's own inset in the normal expanded sidebar) isn't covered by the .sidebar-item
+     reset just above, since the group is a separate outer element — left unreset here, it shrinks
+     just the *open* section's centering width on this narrow rail, shifting only that one icon
+     left of where every other (non-open) icon centers. Reported live specifically on Dashboard,
+     since it's open by default. */
+  .sidebar.sidebar-collapsed .sidebar-group.open {
+    margin-right: 0;
+  }
   .sidebar.sidebar-collapsed .sidebar-label {
     flex: none;
     justify-content: center;
