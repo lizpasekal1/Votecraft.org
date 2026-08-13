@@ -377,8 +377,10 @@ export async function loadAll() {
       // Admin Kanban is gated entirely behind isAdminUser() — per request, it's not meant to be
       // visible to just anyone who signs up. Non-admins get an empty board and, critically, never
       // hit the seeding branch below at all: before this gate existed, *any* visitor (signed in or
-      // not — this data is local-only, see persistAdminKanbanCards) got SaveCraft's own real
-      // internal task list auto-seeded straight into their browser on first load.
+      // not) got SaveCraft's own real internal task list auto-seeded straight into their browser
+      // on first load. This local read is just the offline/first-paint cache — for a signed-in
+      // admin, runInitialSync() below reconciles it against the shared admin_kanban_cards
+      // Firestore collection right after, and cloud wins.
       if (isAdminUser(getCurrentUser()?.email, state.role)) {
         if (data.savecraft_admin_kanban_sort) state.adminKanbanSort = data.savecraft_admin_kanban_sort;
         // Seeded exactly once, gated on its own savecraft_admin_kanban_seeded flag rather than
@@ -776,11 +778,40 @@ export function persistSavedLists() {
   return local;
 }
 
-// Whole-array write, local-only — same convention as kanbanSort/kanbanLists (kanban.js), not
-// dual-written to Firestore. Admin Kanban is a personal task board, not part of the synced
-// item/folder/author data model.
-export function persistAdminKanbanCards() {
+// Local-storage shape is unchanged (still the whole array, cheap to read back on load) — split out
+// so the Firestore side below can upsert only the card(s) that actually changed rather than
+// re-uploading the whole board. Admin Kanban is now a *shared* board (admin_kanban_cards/{id} in
+// Firestore, one doc per card) rather than a personal per-device blob: the WordPress plugin's bot
+// account and an admin's own SaveCraft session can both write here, so per-card PATCHes are what
+// keep one side's edit from clobbering the other's.
+function _persistAdminKanbanLocal() {
   return new Promise(resolve => storageSync.set({ savecraft_admin_kanban_cards: state.adminKanbanCards }, resolve));
+}
+
+// changedCards: the card(s) whose fields actually moved — one for add/edit, all of a column's
+// cards for a drag reorder (manualOrder shifts on every card in the target column, not just the
+// one dragged). Firestore write only fires for admins (isAdminUser), same gate loadAll() already
+// uses to keep this board invisible to everyone else.
+export function persistAdminKanbanCards(changedCards) {
+  const local = _persistAdminKanbanLocal();
+  if (isAdminUser(getCurrentUser()?.email, state.role)) {
+    for (const card of changedCards) {
+      _firestoreUpsert(`admin_kanban_cards/${card.id}`, card).catch(_syncError);
+    }
+  }
+  return local;
+}
+
+export function persistAdminKanbanCard(card) {
+  return persistAdminKanbanCards([card]);
+}
+
+export function removeAdminKanbanCard(id) {
+  const local = _persistAdminKanbanLocal();
+  if (isAdminUser(getCurrentUser()?.email, state.role)) {
+    _firestoreDelete(`admin_kanban_cards/${id}`).catch(_syncError);
+  }
+  return local;
 }
 
 export function persistCuratedImgCache() {
@@ -1074,4 +1105,25 @@ export async function runInitialSync(uid) {
   await _mergeCollection(uid, idToken, 'items', 'item_', state.items);
   await _mergeCollection(uid, idToken, 'folders', 'folder_', state.folders);
   await _mergeCollection(uid, idToken, 'authors', 'author_', state.authors);
+  await _syncAdminKanbanCards(idToken);
+}
+
+// Admin Kanban isn't per-device personal data like items/folders/authors above (_mergeCollection's
+// keep-both merge doesn't apply) — it's one shared board that WordPress and every admin's own
+// SaveCraft session read/write the same collection for, so there's nothing to reconcile: cloud is
+// simply authoritative once it exists. The only case that uploads instead of overwrites is a board
+// that's never touched Firestore at all yet (cloudList.length === 0) but already has local cards —
+// e.g. this session's own loadAll() just seeded the demo cards above — so that first sign-in
+// publishes them rather than silently discarding them.
+async function _syncAdminKanbanCards(idToken) {
+  if (!isAdminUser(getCurrentUser()?.email, state.role)) return;
+  const cloudList = await _firestoreListCollection('admin_kanban_cards', idToken);
+  if (cloudList.length === 0 && state.adminKanbanCards.length > 0) {
+    for (const card of state.adminKanbanCards) {
+      await _firestoreUpsert(`admin_kanban_cards/${card.id}`, card);
+    }
+  } else {
+    state.adminKanbanCards = cloudList.map(_stripSyncMeta);
+    await new Promise(resolve => storageSync.set({ savecraft_admin_kanban_cards: state.adminKanbanCards }, resolve));
+  }
 }

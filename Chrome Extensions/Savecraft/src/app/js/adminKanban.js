@@ -1,7 +1,8 @@
 // ===== ADMIN KANBAN =====
 // A second, separate board from the main "My Saves Queue" (kanban.js) — reached from the
 // Dashboard's Admin Kanban widget. Cards here aren't saved items at all, just a name + a details
-// field (state.adminKanbanCards, local-only — see storage.js's persistAdminKanbanCards) for
+// field (state.adminKanbanCards — a shared board synced per-card to Firestore's
+// admin_kanban_cards collection for admins, see storage.js's persistAdminKanbanCard) for
 // tracking SaveCraft's own to-do list. Board cards are sized/styled identically to the real
 // board's .kcard, and clicking one opens a popup to edit it — same "compact card, full editor in
 // a modal" split kanban.js itself uses (openDetailModal), just a much smaller modal here since
@@ -11,7 +12,7 @@
 
 import { state } from './state.js';
 import { escapeHtml } from './utils.js';
-import { persistAdminKanbanCards } from './storage.js';
+import { persistAdminKanbanCard, persistAdminKanbanCards, removeAdminKanbanCard } from './storage.js';
 import { storageSync } from './platform.js';
 
 // One global sort applied across every column (unlike the real board's own per-column
@@ -155,8 +156,9 @@ function _ensureModal() {
   document.getElementById('admin-kcard-save-btn').addEventListener('click', _saveCardModal);
   document.getElementById('admin-kcard-delete-btn').addEventListener('click', () => {
     if (_editingCard) {
-      state.adminKanbanCards = state.adminKanbanCards.filter(c => c.id !== _editingCard.id);
-      persistAdminKanbanCards();
+      const id = _editingCard.id;
+      state.adminKanbanCards = state.adminKanbanCards.filter(c => c.id !== id);
+      removeAdminKanbanCard(id);
     }
     _closeCardModal();
     renderAdminKanbanBoard();
@@ -202,12 +204,14 @@ function _saveCardModal() {
   const urgency = urgencyRaw === '' ? null : urgencyRaw;
   if (!name && !details) { _closeCardModal(); return; } // nothing worth keeping
 
+  let savedCard;
   if (_editingCard) {
     _editingCard.name = name;
     _editingCard.details = details;
     _editingCard.urgency = urgency;
+    savedCard = _editingCard;
   } else {
-    state.adminKanbanCards.push({
+    savedCard = {
       id: 'admin-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
       name,
       details,
@@ -215,9 +219,10 @@ function _saveCardModal() {
       status: _newCardColumn,
       manualOrder: _cardsInColumn(_newCardColumn).length,
       createdAt: Date.now(),
-    });
+    };
+    state.adminKanbanCards.push(savedCard);
   }
-  persistAdminKanbanCards();
+  persistAdminKanbanCard(savedCard);
   _closeCardModal();
   renderAdminKanbanBoard();
 }
@@ -388,8 +393,9 @@ export function renderAdminKanbanBoard() {
   board.querySelectorAll('.admin-kcard-remove').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
-      state.adminKanbanCards = state.adminKanbanCards.filter(c => c.id !== btn.dataset.id);
-      persistAdminKanbanCards();
+      const id = btn.dataset.id;
+      state.adminKanbanCards = state.adminKanbanCards.filter(c => c.id !== id);
+      removeAdminKanbanCard(id);
       renderAdminKanbanBoard();
     });
   });
@@ -480,7 +486,10 @@ export function renderAdminKanbanBoard() {
 
     draggedCard.status = newStatus;
     targetOrder.forEach((c, i) => { c.manualOrder = i; });
-    persistAdminKanbanCards();
+    // Every card in targetOrder just got a manualOrder write (and draggedCard also got a status
+    // change if it moved columns) — upsert all of them, not just the one that was actually
+    // dragged, or the others' reordering would silently never reach Firestore/WordPress.
+    persistAdminKanbanCards(targetOrder);
     // Dragging only visibly reorders anything under "Custom order" — under any other active
     // sort, _cardsInColumn's own comparator would just re-sort right past whatever manualOrder
     // this drag just set, making the drag appear to silently do nothing. Same fix the real
