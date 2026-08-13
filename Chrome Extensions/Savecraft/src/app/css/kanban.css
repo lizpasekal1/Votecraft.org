@@ -203,12 +203,21 @@
   position: relative;
   height: 100px;
   flex-shrink: 0;
-  /* Without this, the browser's own default touch scrolling can start the instant a finger
-     touches a card — before kanban.js/adminKanban.js's own touchmove handler even gets to check
-     its drag-vs-tap movement threshold and call preventDefault — so the page visibly jumps a few
-     px before the drag "takes over". none stops that race outright: a touch starting on a card is
-     never eligible for native scroll/zoom at all, only this app's own touch-drag handling. */
-  touch-action: none;
+  /* REAL BUG, found and reverted: touch-action: none used to live here, meant to stop the
+     browser's own scroll from racing the drag-vs-tap threshold check — but it blocked ALL native
+     touch scrolling starting from a card (most of a column's surface) unconditionally, which is
+     worse: it broke the ability to scroll a column via touch at all (reported live: "unable to
+     scroll"). Removed now that kanban.js/adminKanban.js's touch handlers use a long-press to
+     engage a drag instead of a movement threshold — nothing is preventDefault'd until a drag is
+     actually confirmed, so normal scrolling never needs to be blocked at the CSS level. */
+  /* The long-press that starts a touch drag is the exact same gesture iOS Safari uses to select
+     text and pop up its own "Copy / Look Up / Translate…" menu over a card's title/notes text
+     (reported live) — these cards are drag handles, not selectable text, so turn text selection
+     off entirely rather than let the two gestures fight. -webkit-touch-callout specifically
+     suppresses that iOS callout menu; user-select alone doesn't. */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .kcard > .kcard-badge {
@@ -399,8 +408,13 @@
 
 /* Drag-and-drop states */
 .kcard--dragging {
-  opacity: 0.4;
   cursor: grabbing;
+  /* Same dashed-purple outline language as .kanban-column--over below, plus a light purple wash
+     (same inset box-shadow technique as .kcard--just-dropped) so the card visibly turns purple
+     the moment a drag engages — per direct request, replacing the earlier plain-dim treatment. */
+  outline: 2px dashed var(--primary);
+  outline-offset: -2px;
+  box-shadow: inset 0 0 0 999px rgba(91, 91, 239, 0.25);
 }
 
 .kanban-column--over {
@@ -408,10 +422,54 @@
   outline: 2px dashed var(--primary);
 }
 
+/* Touch drag's floating ghost (kanban.js/adminKanban.js's createTouchGhost) — a cloned card that
+   tracks the finger. Full opacity and lifted (scale + shadow), unlike the dimmed, flat original
+   it's covering — reads as "this is the thing actually moving," distinct from the origin card
+   left behind underneath it. */
+.kcard--ghost {
+  opacity: 1;
+  transform: scale(1.04);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+/* Flashed on the card once it lands in its new column (kanban.js/adminKanban.js's performDrop,
+   after the re-render) — per direct request, so it's still identifiable as "the one that just
+   moved" for a moment. A purple wash via inset box-shadow rather than animating background-color
+   directly — a plain opacity/gray fade (tried first) didn't read as "purple," and box-shadow
+   layers as an overlay on top of whatever the card's own resting background already is (fixed
+   white for Admin Kanban cards, var(--surface) for the real board's), instead of needing to
+   target either one specifically. */
+@keyframes kcard-drop-flash {
+  0%   { box-shadow: inset 0 0 0 999px rgba(91, 91, 239, 0.35); }
+  /* Holds at full strength through 87% of the 1.15s run (~1s solid), per direct request — the
+     original version started fading immediately, so it never actually read as "staying" purple.
+     Only the last ~150ms fades out. */
+  87%  { box-shadow: inset 0 0 0 999px rgba(91, 91, 239, 0.35); }
+  100% { box-shadow: inset 0 0 0 999px rgba(91, 91, 239, 0); }
+}
+.kcard--just-dropped {
+  animation: kcard-drop-flash 1.15s ease-out;
+}
+
 /* Shows exactly where a dragged card will land within a column, above/below whichever card
    the cursor is currently over — see the per-card dragover tracking in kanban.js. */
 .kcard--drop-before { box-shadow: 0 -3px 0 0 var(--primary); }
 .kcard--drop-after  { box-shadow: 0 3px 0 0 var(--primary); }
+
+/* Reorder placeholder (kanban.js/adminKanban.js's showPlaceholderAt/showPlaceholderAtEnd) — a
+   dashed "landing spot" that takes a card's place in the list while dragging within its own
+   section, same floating-card language as the touch ghost, per direct request ("I want to use
+   the same floating card affect for up and down dragging"). Sized dynamically via inline
+   style.height to match whatever card it's standing in for; width comes for free from
+   .kanban-cards' flex column stretch, same as every real card. */
+.kcard-placeholder {
+  border: 2px dashed var(--primary);
+  border-radius: 10px;
+  background: var(--primary-bg);
+  flex-shrink: 0;
+}
 
 /* ===== ADMIN KANBAN ===== */
 /* Extra bottom room so the last card in a column can scroll clear of the floating "+ Add card"

@@ -4,7 +4,7 @@ import {
   state, CURATED_ITEMS, CATEGORIES, CAT_LABEL, CAT_EMOJI, CURATED_GENRES, GENRE_EMOJI,
   PRIMARY_FOLDER_ID,
 } from './state.js';
-import { escapeHtml, folderIconHtml, sortFoldersForDisplay } from './utils.js';
+import { escapeHtml, folderIconHtml, sortFoldersForDisplay, catClass } from './utils.js';
 import { persistItem, persistFolder, removeFolder, persistSavedLists } from './storage.js';
 import { closeSidebar } from './main.js';
 import { matchesPrimaryOrUnfoldered } from './renderFilters.js';
@@ -25,12 +25,9 @@ export function collapseAllSidebarSections() {
 }
 
 // Wraps a state-change + re-render so the browser can animate between the old and new sidebar DOM
-// instead of the section just snapping open/closed — purely additive: renderSidebar() itself is
-// still a full innerHTML rebuild either way, but the View Transitions API can smoothly morph a
-// named element's old bounding box into its new one across that rebuild without us having to
-// preserve any actual DOM nodes ourselves. Feature-detected — Safari didn't ship same-document
-// support until v18, so anyone on an older browser just gets today's instant toggle, same as
-// before this existed, never a broken/half-animated state.
+// instead of the section just snapping open/closed. Feature-detected — Safari didn't ship
+// same-document support until v18, so anyone on an older browser just gets the plain instant
+// toggle, same as before this existed, never a broken/half-animated state.
 function withViewTransition(fn) {
   if (document.startViewTransition) {
     document.startViewTransition(fn);
@@ -40,11 +37,26 @@ function withViewTransition(fn) {
 }
 
 // view-transition-name has to be a valid CSS custom-ident (no spaces/punctuation) — several
-// category names aren't ("Web Links"), so this strips anything that isn't alphanumeric. Applied to
-// every .sidebar-group regardless of open/collapsed state (see renderSidebar below) so the same
-// name persists across a toggle and the browser can match old → new snapshots by it.
+// category names aren't ("Web Links"), so this reuses catClass (utils.js), already the app's
+// standard string->CSS-token sanitizer (renderGrid.js, dashboard.js, kanban.css class names,
+// etc.), rather than a second one-off regex. Applied to each section's .sidebar-group-bg (see
+// renderSidebar below) — deliberately NOT the row content itself: naming a growing/shrinking
+// element makes the browser cross-fade a *stretched* snapshot of it mid-animation, which is fine
+// for a plain color fill but visibly warps text (reported live — "bouncing" text). Keeping the
+// name on the empty background layer gets the smooth "opens down" grow without ever touching how
+// the actual label text renders.
+//
+// Memoized — renderSidebar() (a full-rebuild hot path called throughout the app) calls this once
+// per section on every render, but the key set (CATEGORIES + 'dashboard') is fixed at load time,
+// so there's nothing to recompute after the first render.
+const sidebarGroupVtNameCache = new Map();
 function sidebarGroupVtName(key) {
-  return 'sidebar-group-' + String(key).replace(/[^a-zA-Z0-9]+/g, '-');
+  let name = sidebarGroupVtNameCache.get(key);
+  if (name === undefined) {
+    name = 'sidebar-group-' + catClass(key);
+    sidebarGroupVtNameCache.set(key, name);
+  }
+  return name;
 }
 
 // Fill swapped from the source icon's #1f1f1f (near-black, invisible against .cat-icon's dark
@@ -255,7 +267,8 @@ export function renderSidebar() {
   }
 
   const dashboardLinkHtml = `
-    <div class="sidebar-group${isDashboardCollapsed ? '' : ' open'}" style="view-transition-name: ${sidebarGroupVtName('dashboard')}">
+    <div class="sidebar-group${isDashboardCollapsed ? '' : ' open'}">
+      <div class="sidebar-group-bg" style="view-transition-name: ${sidebarGroupVtName('dashboard')}"></div>
       <div class="sidebar-item sidebar-dashboard-link ${state.view === 'dashboard' ? 'active' : ''}" data-view="dashboard" data-toggle="dashboard">
         <span class="sidebar-label"><span class="cat-icon">${DASHBOARD_ICON_SVG}</span><span class="sidebar-label-text"> Dashboard</span></span>
         <span class="sidebar-right"><span class="sidebar-arrow">${dashboardArrow}</span></span>
@@ -290,7 +303,7 @@ export function renderSidebar() {
   function wireDashboardLink() {
     sidebar.querySelector('.sidebar-dashboard-link')?.addEventListener('click', () => {
       // withViewTransition — per request, so opening/closing Dashboard's section morphs smoothly
-      // instead of snapping, via .sidebar-group's own view-transition-name above.
+      // instead of snapping, via .sidebar-group-bg's own view-transition-name above.
       withViewTransition(() => {
         if (state.collapsed.has('dashboard')) {
           // Reuses the same canonical "collapse everything" helper the mode-switch handlers below
@@ -450,7 +463,8 @@ export function renderSidebar() {
     `;
 
     return `
-      <div class="sidebar-group${isCollapsed ? '' : ' open'}" style="view-transition-name: ${sidebarGroupVtName(cat)}">
+      <div class="sidebar-group${isCollapsed ? '' : ' open'}">
+        <div class="sidebar-group-bg" style="view-transition-name: ${sidebarGroupVtName(cat)}"></div>
         <div class="sidebar-item sidebar-category ${isActive ? 'active' : ''}"
              data-view="${cat}" data-toggle="${cat}">
           <span class="sidebar-label"><span class="cat-icon">${CAT_EMOJI[cat] || ''}</span><span class="sidebar-label-text"> ${CAT_LABEL[cat] || cat}</span></span>
@@ -478,7 +492,7 @@ export function renderSidebar() {
     el.addEventListener('click', () => {
       const cat = el.dataset.toggle;
       // withViewTransition — per request, same smooth open/close morph as Dashboard's own toggle
-      // above, via .sidebar-group's view-transition-name.
+      // above, via .sidebar-group-bg's view-transition-name.
       withViewTransition(() => {
         if (state.collapsed.has(cat)) {
           // Expanding — collapse all others first, Dashboard included (sidebarCategoryList excludes

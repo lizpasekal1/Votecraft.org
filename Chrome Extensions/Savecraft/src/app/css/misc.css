@@ -346,11 +346,6 @@
 
   /* Dashboard */
   .dash-widget-grid { grid-template-columns: 1fr; }
-  /* Admin Kanban's mini-board (dashboard.css) is 4 columns across, sized for the desktop tile's
-     full grid width (it spans both columns there) — once the grid above collapses to a single
-     narrow column, 4-across left each mini-card too cramped to read. 2 columns, matching the
-     Queue widget's own mini-board default, reads far more comfortably here. */
-  .dash-admin-kanban-mini-board { grid-template-columns: repeat(2, 1fr); }
   /* height:auto here used to collapse the hero almost to nothing: .dash-hero-content
      (dashboard.css) is height:100% of .dash-hero, and a percentage height resolves to 'auto'
      when its containing block's own height is indeterminate — so with .dash-hero auto too, the
@@ -721,9 +716,16 @@
   }
 
   /* Larger touch targets on mobile — vertical padding/min-height trimmed down per request (rows
-     read as too tall/far apart), still comfortably tappable at 38px. */
+     read as too tall/far apart), still comfortably tappable at 38px. No padding-left here (was a
+     flat 20px) — that clobbered .sidebar-subfolder/.sidebar-subfolder--nested's own deeper 46px/
+     66px indent (sidebar.css) with equal specificity + later source order, flattening every nested
+     row (Queue Kanban, Saved Lists, a category's own subfolders, etc.) to the same indent as a
+     top-level row — desktop was never affected since nothing there overrides padding-left this
+     broadly. Leaving it unset lets each row's own indent rule apply same as desktop, per request. */
   .sidebar-items-scroll .sidebar-item {
-    padding: 8px 16px 8px 20px;
+    padding-top: 8px;
+    padding-right: 16px;
+    padding-bottom: 8px;
     min-height: 38px;
   }
   /* Dashboard row specifically — shifted further left (was the same 20px indent every other row

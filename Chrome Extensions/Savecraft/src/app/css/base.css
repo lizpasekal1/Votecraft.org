@@ -79,6 +79,20 @@ button {
   --shadow-modal:    rgba(0,0,0,0.50);
 }
 
+/* Tunes the timing of every View Transition on the page (currently just the sidebar's
+   accordion-open transition — renderSidebar.js's withViewTransition) — the platform default is a
+   snappy 0.25s ease cross-fade, which read as more of a flicker than a section actually "opening."
+   ::view-transition-group() only takes a literal name or this universal selector, so this rule is
+   necessarily page-wide rather than sidebar-scoped — filed here rather than in sidebar.css so that
+   scope is explicit, not implied by which file it happens to live in. --m3-standard (above) is M3's
+   own recommended curve for "smaller, quieter" transitions like an accordion row, reused here
+   instead of a one-off bezier value. No-op on browsers without View Transitions support — these
+   pseudo-elements simply don't exist there, same graceful fallback as the JS side. */
+::view-transition-group(*) {
+  animation-duration: 0.32s;
+  animation-timing-function: var(--m3-standard);
+}
+
 [data-theme="light"] {
   color-scheme: light;
   --bg:              #F8F9FA;
