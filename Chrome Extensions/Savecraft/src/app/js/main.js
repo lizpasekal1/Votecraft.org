@@ -180,6 +180,7 @@ function _enterCreateAccountMode() {
   document.getElementById('btn-auth-create').style.display = 'none';
   document.getElementById('btn-auth-signin').style.display = 'none';
   document.getElementById('btn-auth-save').style.display = '';
+  document.getElementById('auth-password-hint').style.display = '';
   document.getElementById('auth-password-confirm-field').style.display = '';
   _updateSaveDisabled();
 }
@@ -190,6 +191,7 @@ function _exitCreateAccountMode() {
   document.getElementById('btn-auth-create').style.display = '';
   document.getElementById('btn-auth-signin').style.display = '';
   document.getElementById('btn-auth-save').style.display = 'none';
+  document.getElementById('auth-password-hint').style.display = 'none';
   document.getElementById('auth-password-confirm-field').style.display = 'none';
 }
 

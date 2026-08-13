@@ -188,6 +188,10 @@
         <div class="form-group" id="auth-signed-out-fields">
           <input type="email" id="auth-email" placeholder="Email" autocomplete="username" />
         </div>
+        <!-- Same visibility as the confirm-password field below (main.js's
+             _enterCreateAccountMode/_exitCreateAccountMode) — only relevant once "Create account"
+             is actually active. -->
+        <div class="auth-password-hint" id="auth-password-hint" style="display:none">At least 6 characters, including a number and a special character.</div>
         <div class="form-group" id="auth-password-field">
           <input type="password" id="auth-password" placeholder="Password" autocomplete="current-password" />
         </div>
@@ -197,7 +201,6 @@
              account. -->
         <div class="form-group" id="auth-password-confirm-field" style="display:none">
           <input type="password" id="auth-password-confirm" placeholder="Re-enter password" autocomplete="new-password" />
-          <div class="auth-password-hint">At least 6 characters, including a number and a special character.</div>
         </div>
         <div id="auth-error" class="auth-error" style="display:none"></div>
         <button type="button" class="auth-forgot-password-link" id="btn-auth-forgot-password">Forgot password?</button>
