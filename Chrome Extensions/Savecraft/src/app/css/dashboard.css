@@ -394,7 +394,7 @@
    comparison. */
 .dash-card--favorites .dash-carousel,
 .dash-card--curated .dash-carousel {
-  gap: 0;
+  gap: 5px; /* space between the arrow and the strip, per direct request */
   /* Right edge only, per direct request — left keeps .dash-card's normal 20px padding (the
      arrow still lives there). REAL BUG, found and fixed: removing the right arrow (earlier) let
      .dash-carousel-strip's flex: 1 claim the space the arrow used to occupy, but .dash-card's own
