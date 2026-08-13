@@ -22,7 +22,10 @@
   min-width: 220px;
   display: flex;
   flex-direction: column;
-  padding: 12px;
+  /* Bottom side removed (was 12px all around) — same reasoning as .kanban-board's own bottom
+     padding above: the column's content (.kanban-cards) should reach the true bottom edge, not
+     stop 12px short of it, per direct request. */
+  padding: 12px 12px 0;
   border-right: 1px solid var(--border);
   overflow: hidden;
   transition: background 0.15s;
