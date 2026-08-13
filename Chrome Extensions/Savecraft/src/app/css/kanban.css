@@ -203,6 +203,12 @@
   position: relative;
   height: 100px;
   flex-shrink: 0;
+  /* Without this, the browser's own default touch scrolling can start the instant a finger
+     touches a card — before kanban.js/adminKanban.js's own touchmove handler even gets to check
+     its drag-vs-tap movement threshold and call preventDefault — so the page visibly jumps a few
+     px before the drag "takes over". none stops that race outright: a touch starting on a card is
+     never eligible for native scroll/zoom at all, only this app's own touch-drag handling. */
+  touch-action: none;
 }
 
 .kcard > .kcard-badge {
@@ -547,6 +553,17 @@
   color: #fff;
 }
 
+
+/* Trimmed down from .grid-area's own base 24px top/bottom (cards.css) — this page's real content
+   starts with .admin-kanban-header right away (#grid-title/#sort-select are both hidden here, see
+   renderAdminKanbanBoard), so the full base padding just read as excess empty space above the
+   title, and again as a gap below the columns that kept them from ever reaching the bottom edge
+   of the screen, per direct request. Also grows the columns themselves by the same amount either
+   way, since .kanban-wrap/.kanban-board both flex:1 to fill whatever .grid-area has left. */
+.grid-area:has(.admin-kanban-wrap) {
+  padding-top: 15px;
+  padding-bottom: 4px;
+}
 
 /* Page header — title + the dedicated sort dropdown (SORT_MODES in adminKanban.js), both
    rendered as this board's own content rather than the shared #grid-title/#sort-select elements

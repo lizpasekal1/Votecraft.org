@@ -390,8 +390,9 @@ export function renderAdminKanbanBoard() {
   if (_expandedCol) return; // no cross-column drag target while collapsed to one column
 
   // ===== drag-and-drop between/within columns =====
-  // Same shape as kanban.js's own wiring, simplified: no sort-mode bookkeeping to preserve,
-  // manualOrder is the only ordering signal here.
+  // Mouse (native HTML5 drag-and-drop, dragstart/dragover/drop) and touch (manual — see
+  // wireTouchDrag below) both funnel into the same performDrop() once a target is known, so the
+  // actual reorder logic exists exactly once.
   let dragId = null;
   let dropTargetId = null;
   let dropPosition = null; // 'before' | 'after'
@@ -399,6 +400,51 @@ export function renderAdminKanbanBoard() {
   function clearDropIndicators() {
     board.querySelectorAll('.kcard--drop-before, .kcard--drop-after')
       .forEach(c => c.classList.remove('kcard--drop-before', 'kcard--drop-after'));
+  }
+
+  function clearOverHighlight() {
+    board.querySelectorAll('.kanban-column').forEach(col => {
+      col.classList.remove('kanban-column--over');
+      const hint = col.querySelector('.progress-drop-hint');
+      if (hint) hint.style.opacity = '';
+    });
+  }
+
+  // Shared commit step — colEl is the .admin-kanban-cards element being dropped into.
+  function performDrop(colEl) {
+    colEl.closest('.kanban-column').classList.remove('kanban-column--over');
+    clearDropIndicators();
+    if (!dragId) return;
+
+    const draggedCard = state.adminKanbanCards.find(c => c.id === dragId);
+    if (!draggedCard) { dragId = null; return; }
+
+    const newStatus = colEl.dataset.col;
+    const targetOrder = _cardsInColumn(newStatus).filter(c => c.id !== dragId);
+    let insertAt = targetOrder.length;
+    if (dropTargetId && dropTargetId !== dragId) {
+      const idx = targetOrder.findIndex(c => c.id === dropTargetId);
+      if (idx !== -1) insertAt = dropPosition === 'before' ? idx : idx + 1;
+    }
+    targetOrder.splice(insertAt, 0, draggedCard);
+
+    draggedCard.status = newStatus;
+    targetOrder.forEach((c, i) => { c.manualOrder = i; });
+    persistAdminKanbanCards();
+    // Dragging only visibly reorders anything under "Custom order" — under any other active
+    // sort, _cardsInColumn's own comparator would just re-sort right past whatever manualOrder
+    // this drag just set, making the drag appear to silently do nothing. Same fix the real
+    // board applies per-column (kanban.js's own drop handler sets state.kanbanSort[col] =
+    // 'manual').
+    if (state.adminKanbanSort !== 'manual') {
+      state.adminKanbanSort = 'manual';
+      storageSync.set({ savecraft_admin_kanban_sort: 'manual' });
+    }
+
+    dragId = null;
+    dropTargetId = null;
+    dropPosition = null;
+    renderAdminKanbanBoard();
   }
 
   board.querySelectorAll('.admin-kcard').forEach(card => {
@@ -409,7 +455,7 @@ export function renderAdminKanbanBoard() {
     });
     card.addEventListener('dragend', () => {
       card.classList.remove('kcard--dragging');
-      board.querySelectorAll('.kanban-column').forEach(col => col.classList.remove('kanban-column--over'));
+      clearOverHighlight();
       clearDropIndicators();
       dragId = null;
       dropTargetId = null;
@@ -444,39 +490,93 @@ export function renderAdminKanbanBoard() {
     });
     col.addEventListener('drop', e => {
       e.preventDefault();
-      col.closest('.kanban-column').classList.remove('kanban-column--over');
-      clearDropIndicators();
-      if (!dragId) return;
+      performDrop(col);
+    });
+  });
 
-      const draggedCard = state.adminKanbanCards.find(c => c.id === dragId);
-      if (!draggedCard) { dragId = null; return; }
+  // ===== touch drag-and-drop =====
+  // Native HTML5 drag-and-drop (dragstart/dragover/drop, wired above) never fires from a touch
+  // interaction on iOS Safari — reported live ("can't drag on my iPhone"), and true of the real
+  // Queue board too (same underlying API, see kanban.js's identical fix). This reimplements the
+  // same interaction manually: track the touch, figure out what card/column is under the finger
+  // on every move via elementFromPoint (there's no touch equivalent of dragover), reuse the exact
+  // same visual feedback classes the mouse path already uses, and call the same performDrop() on
+  // release. A movement threshold before "engaging" keeps a plain tap free to fall through to the
+  // card's own click handler (which opens the editor) instead of being swallowed as a micro-drag.
+  const TOUCH_DRAG_THRESHOLD = 10; // px
+  let touchStartX = 0, touchStartY = 0, touchDragging = false, touchCardEl = null;
 
-      const newStatus = col.dataset.col;
-      const targetOrder = _cardsInColumn(newStatus).filter(c => c.id !== dragId);
-      let insertAt = targetOrder.length;
-      if (dropTargetId && dropTargetId !== dragId) {
-        const idx = targetOrder.findIndex(c => c.id === dropTargetId);
-        if (idx !== -1) insertAt = dropPosition === 'before' ? idx : idx + 1;
-      }
-      targetOrder.splice(insertAt, 0, draggedCard);
-
-      draggedCard.status = newStatus;
-      targetOrder.forEach((c, i) => { c.manualOrder = i; });
-      persistAdminKanbanCards();
-      // Dragging only visibly reorders anything under "Custom order" — under any other active
-      // sort, _cardsInColumn's own comparator would just re-sort right past whatever manualOrder
-      // this drag just set, making the drag appear to silently do nothing. Same fix the real
-      // board applies per-column (kanban.js's own drop handler sets state.kanbanSort[col] =
-      // 'manual').
-      if (state.adminKanbanSort !== 'manual') {
-        state.adminKanbanSort = 'manual';
-        storageSync.set({ savecraft_admin_kanban_sort: 'manual' });
-      }
-
-      dragId = null;
+  function touchUpdateTargets(x, y) {
+    const el = document.elementFromPoint(x, y);
+    const overCard = el?.closest('.admin-kcard');
+    const overCol = el?.closest('.admin-kanban-cards');
+    clearDropIndicators();
+    clearOverHighlight();
+    if (overCol) {
+      overCol.closest('.kanban-column').classList.add('kanban-column--over');
+      const hint = overCol.querySelector('.progress-drop-hint');
+      if (hint) hint.style.opacity = '0';
+    }
+    if (overCard && overCard.dataset.id !== dragId) {
+      const rect = overCard.getBoundingClientRect();
+      const before = (y - rect.top) < rect.height / 2;
+      dropTargetId = overCard.dataset.id;
+      dropPosition = before ? 'before' : 'after';
+      overCard.classList.add(before ? 'kcard--drop-before' : 'kcard--drop-after');
+    } else {
       dropTargetId = null;
       dropPosition = null;
-      renderAdminKanbanBoard();
+    }
+    return overCol;
+  }
+
+  board.querySelectorAll('.admin-kcard').forEach(card => {
+    card.addEventListener('touchstart', e => {
+      if (card.dataset.id === '__admin_demo__') return;
+      const t = e.touches[0];
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
+      touchDragging = false;
+      touchCardEl = card;
+      dragId = card.dataset.id;
+    }, { passive: true });
+
+    card.addEventListener('touchmove', e => {
+      if (!dragId || card !== touchCardEl) return;
+      const t = e.touches[0];
+      if (!touchDragging) {
+        const dx = t.clientX - touchStartX, dy = t.clientY - touchStartY;
+        if (Math.hypot(dx, dy) < TOUCH_DRAG_THRESHOLD) return;
+        touchDragging = true;
+        card.classList.add('kcard--dragging');
+      }
+      e.preventDefault(); // stops the page scrolling once an actual drag is underway
+      touchUpdateTargets(t.clientX, t.clientY);
+    }, { passive: false });
+
+    card.addEventListener('touchend', e => {
+      if (card !== touchCardEl) return;
+      card.classList.remove('kcard--dragging');
+      if (touchDragging) {
+        // touches is empty by now (finger already lifted) — changedTouches carries the release
+        // position instead, same coordinates dragover would have reported at this point.
+        const t = e.changedTouches[0];
+        const overCol = touchUpdateTargets(t.clientX, t.clientY);
+        if (overCol) performDrop(overCol);
+        else { clearOverHighlight(); clearDropIndicators(); dragId = null; dropTargetId = null; dropPosition = null; }
+      } else {
+        dragId = null; // was just a tap — let the card's own click handler take it from here
+      }
+      touchCardEl = null;
+      touchDragging = false;
+    });
+
+    card.addEventListener('touchcancel', () => {
+      card.classList.remove('kcard--dragging');
+      clearOverHighlight();
+      clearDropIndicators();
+      dragId = null; dropTargetId = null; dropPosition = null;
+      touchCardEl = null; touchDragging = false;
     });
   });
 }
