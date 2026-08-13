@@ -12,6 +12,23 @@
 import { state } from './state.js';
 import { escapeHtml } from './utils.js';
 import { persistAdminKanbanCards } from './storage.js';
+import { storageSync } from './platform.js';
+
+// One global sort applied across every column (unlike the real board's own per-column
+// kanbanSort) — driven by a dedicated dropdown next to this page's own title, not the shared
+// #sort-select singleton (its fixed option set — Newest/Oldest/A→Z/Z→A/Release Date — belongs to
+// the main items grid; repurposing it here would mean restoring it correctly everywhere else).
+// Comparators read cards already filtered to one column (see _cardsInColumn) — urgency-asc/desc
+// both push cards with no urgency rating to the end, regardless of direction.
+const SORT_MODES = [
+  { key: 'manual',        label: 'Custom order',           cmp: null },
+  { key: 'az',             label: 'A → Z',                  cmp: (a, b) => (a.name || '').localeCompare(b.name || '') },
+  { key: 'za',             label: 'Z → A',                  cmp: (a, b) => (b.name || '').localeCompare(a.name || '') },
+  { key: 'newest',         label: 'Newest → Oldest',        cmp: (a, b) => b.createdAt - a.createdAt },
+  { key: 'oldest',         label: 'Oldest → Newest',        cmp: (a, b) => a.createdAt - b.createdAt },
+  { key: 'urgency-desc',   label: 'Urgency (High → Low)',   cmp: (a, b) => (b.urgency ?? -Infinity) - (a.urgency ?? -Infinity) },
+  { key: 'urgency-asc',    label: 'Urgency (Low → High)',   cmp: (a, b) => (a.urgency ?? Infinity) - (b.urgency ?? Infinity) },
+];
 
 export const ADMIN_KANBAN_COLUMNS = [
   { key: 'todo',        label: 'TO DO' },
@@ -31,13 +48,26 @@ const EMPTY_HINTS = {
 
 // Same plus/minus glyphs as kanban.js's own expand button (duplicated, not imported — kept
 // self-contained since this whole feature is expected to be reworked/removed later).
-const EXPAND_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+// Expand button's icon (top-right of each column, .kanban-expand-btn) — per direct request, was
+// a plain "+". fill is currentColor (not the pasted SVG's own hardcoded #1f1f1f) so it inherits
+// the button's own color, including its hover state, same fix as ADD_CARD_ARROW_SVG below.
+const EXPAND_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="12px" viewBox="0 -960 960 960" width="12px" fill="currentColor"><path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z"/></svg>';
 const COLLAPSE_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+// "+ Add card"'s icon — reverted back to a plain plus (was briefly the arrow SVG below, per an
+// earlier request, then reverted per a follow-up once the expand button's own icon became an
+// arrow instead — the two buttons read more distinctly now: this one "+" (add), that one an
+// arrow (expand/collapse direction)). Same cross-line style EXPAND_ICON_SVG used before its own
+// icon changed above.
+const ADD_CARD_PLUS_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
 
 // Column currently expanded full-width, or null — not persisted, resets on reload, same as
 // kanban.js's state.kanbanExpandedCol. No format picker here (unlike the real board): expanded
 // just means a comfortable 2-column grid instead of the 1-across list.
 let _expandedCol = null;
+
+// Registered once (not per-render, which would stack a new listener on `document` every time the
+// board redraws) — same idiom kanban.js uses for its own sort/format dropdowns.
+let _sortDropdownDocListenerAdded = false;
 
 // Shown in TO DO only, only while the board has no real cards at all yet — same "one demo card
 // so the board doesn't read as four empty boxes" idea as kanban.js's own KANBAN_DEMO(), but
@@ -55,9 +85,11 @@ function _adminDemoCard() {
 
 // Exported for dashboard.js's mini preview widget — same ordering the full board uses.
 export function _cardsInColumn(colKey) {
+  const mode = SORT_MODES.find(m => m.key === state.adminKanbanSort) || SORT_MODES[0];
+  const cmp = mode.cmp || ((a, b) => (a.manualOrder ?? Infinity) - (b.manualOrder ?? Infinity) || a.createdAt - b.createdAt);
   const real = state.adminKanbanCards
     .filter(c => c.status === colKey)
-    .sort((a, b) => (a.manualOrder ?? Infinity) - (b.manualOrder ?? Infinity) || a.createdAt - b.createdAt);
+    .sort(cmp);
   if (colKey === 'todo' && state.adminKanbanCards.length === 0) return [_adminDemoCard()];
   return real;
 }
@@ -251,18 +283,38 @@ function renderAdminColumn(col) {
       <div class="kanban-cards admin-kanban-cards${isExpanded ? ' kanban-cards--two-col' : ''}" data-col="${col.key}">
         ${cards.map(renderAdminCard).join('') || emptyHtml}
       </div>
-      <button class="admin-kcard-add-btn" data-col="${col.key}">+ Add card</button>
+      <button class="admin-kcard-add-btn" data-col="${col.key}" title="Add card">${ADD_CARD_PLUS_SVG}</button>
+    </div>`;
+}
+
+function renderSortDropdown() {
+  const current = SORT_MODES.find(m => m.key === state.adminKanbanSort) || SORT_MODES[0];
+  return `
+    <div class="admin-kanban-sort-wrap">
+      <button class="btn-board-filter admin-kanban-sort-btn" id="admin-kanban-sort-btn">
+        <span>${escapeHtml(current.label)}</span>
+        <svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor"><path d="M0 0l5 6 5-6z"/></svg>
+      </button>
+      <div class="board-filter-dropdown admin-kanban-sort-dropdown" id="admin-kanban-sort-dropdown" hidden>
+        ${SORT_MODES.map(m => `
+          <button class="saves-list-option${m.key === state.adminKanbanSort ? ' active' : ''}" data-sort="${m.key}">${escapeHtml(m.label)}</button>
+        `).join('')}
+      </div>
     </div>`;
 }
 
 export function renderAdminKanbanBoard() {
   const container = document.getElementById('cards-grid');
-  // Visible page title (unlike the real board, which hides #grid-title and relies on its own
-  // saves-list dropdown instead) — Admin Kanban has no such dropdown, so a plain title sits above
-  // the board instead, per direct request.
-  const gridTitle = document.getElementById('grid-title');
-  gridTitle.textContent = 'Admin Kanban';
-  gridTitle.style.display = '';
+  // #grid-title and #sort-select are hidden entirely here (not shown-with-custom-text like an
+  // earlier version of this function did) — same convention every other non-grid view already
+  // follows (dashboard.js, kanban.js, profile.js, embedBuilder.js, sharedSaves.js all hide
+  // #sort-select outright). Title + sort control are rendered as this page's own content below
+  // instead, entirely inside #cards-grid — safer than fighting #grid-title/.grid-header's layout
+  // (see the mobile flex-direction regression this replaced) and lets the sort dropdown actually
+  // carry Admin-Kanban-specific options instead of the shared control's fixed Newest/Oldest/A→Z
+  // set, which belongs to the main items grid and shouldn't be overwritten out from under it.
+  document.getElementById('grid-title').style.display = 'none';
+  document.getElementById('sort-select').style.display = 'none';
   document.getElementById('btn-kanban-dashboard').style.display = '';
   // Second class is a hook for misc.css's mobile override — btn-kanban-dashboard (".‹ Dashboard")
   // is a shared header element (index.html), not scoped per-view on its own, so hiding it just
@@ -275,9 +327,34 @@ export function renderAdminKanbanBoard() {
   // to drag between.
   const columns = _expandedCol ? ADMIN_KANBAN_COLUMNS.filter(c => c.key === _expandedCol) : ADMIN_KANBAN_COLUMNS;
   container.innerHTML = `
+    <div class="admin-kanban-header">
+      <h2 class="admin-kanban-title">Admin Kanban</h2>
+      ${renderSortDropdown()}
+    </div>
     <div class="kanban-board admin-kanban-board${_expandedCol ? ' kanban-board--expanded' : ''}">
       ${columns.map(renderAdminColumn).join('')}
     </div>`;
+
+  const sortBtn = container.querySelector('#admin-kanban-sort-btn');
+  const sortDropdown = container.querySelector('#admin-kanban-sort-dropdown');
+  sortBtn?.addEventListener('click', e => {
+    e.stopPropagation();
+    sortDropdown.toggleAttribute('hidden');
+  });
+  sortDropdown?.querySelectorAll('[data-sort]').forEach(opt => {
+    opt.addEventListener('click', e => {
+      e.stopPropagation();
+      state.adminKanbanSort = opt.dataset.sort;
+      storageSync.set({ savecraft_admin_kanban_sort: state.adminKanbanSort });
+      renderAdminKanbanBoard();
+    });
+  });
+  if (!_sortDropdownDocListenerAdded) {
+    _sortDropdownDocListenerAdded = true;
+    document.addEventListener('click', () => {
+      document.getElementById('admin-kanban-sort-dropdown')?.setAttribute('hidden', '');
+    });
+  }
 
   const board = container.querySelector('.admin-kanban-board');
 
@@ -386,6 +463,15 @@ export function renderAdminKanbanBoard() {
       draggedCard.status = newStatus;
       targetOrder.forEach((c, i) => { c.manualOrder = i; });
       persistAdminKanbanCards();
+      // Dragging only visibly reorders anything under "Custom order" — under any other active
+      // sort, _cardsInColumn's own comparator would just re-sort right past whatever manualOrder
+      // this drag just set, making the drag appear to silently do nothing. Same fix the real
+      // board applies per-column (kanban.js's own drop handler sets state.kanbanSort[col] =
+      // 'manual').
+      if (state.adminKanbanSort !== 'manual') {
+        state.adminKanbanSort = 'manual';
+        storageSync.set({ savecraft_admin_kanban_sort: 'manual' });
+      }
 
       dragId = null;
       dropTargetId = null;
