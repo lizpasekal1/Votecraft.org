@@ -199,7 +199,10 @@ function buildFavoritesWidget() {
 const MINI_CARDS_PER_COLUMN = 3;
 
 function buildMiniKanbanCard(item) {
-  const letter = (item.title || '?')[0].toUpperCase();
+  // The seeded queue-demo-N items (storage.js) keep a "D" placeholder letter regardless of their
+  // own title's first letter, per direct request — a leftover visual marker for "this is demo
+  // content" now that their titles themselves no longer carry a "Demo:" prefix saying so.
+  const letter = /^queue-demo-\d+$/.test(item.id) ? 'D' : (item.title || '?')[0].toUpperCase();
   const thumb = item.imageUrl
     ? `<img class="dash-kmini-thumb" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">`
     : `<div class="dash-kmini-thumb dash-kmini-thumb--placeholder placeholder-${catClass(item.category)}">${letter}</div>`;
@@ -229,10 +232,10 @@ function buildKanbanWidget() {
     // board still reads as "a board with columns" rather than four empty boxes.
     if (isEmpty && colIndex === 0) colItems = [KANBAN_DEMO()];
 
+    // "+N more" removed per direct request — the column header's own count badge already shows
+    // the true total, so this was redundant.
     const shown = colItems.slice(0, MINI_CARDS_PER_COLUMN);
-    const remaining = colItems.length - shown.length;
-    const cardsHtml = shown.map(buildMiniKanbanCard).join('')
-      + (remaining > 0 ? `<div class="dash-kmini-more">+${remaining} more</div>` : '');
+    const cardsHtml = shown.map(buildMiniKanbanCard).join('');
 
     return `
       <div class="dash-kmini-col">
