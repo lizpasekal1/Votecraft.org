@@ -383,17 +383,31 @@
   background: var(--active-bg-light);
 }
 
-/* Dashboard's own icon square fills solid purple (white icon for contrast) when Dashboard is the
-   active view — per direct request/reference screenshot. Unscoped by any media query so it applies
-   everywhere (mobile drawer and the normal expanded desktop sidebar alike), not just the desktop
-   collapsed rail's own version of this same effect above. Scoped to .sidebar-dashboard-link only,
-   not every category's .sidebar-item.active — matches exactly what was asked for. The icon's own
-   inline fill="#5B5BEF" attribute (renderSidebar.js) is a presentation attribute, so this stylesheet
-   rule overrides it same as the collapsed-rail version already relies on. */
-.sidebar-dashboard-link.active .cat-icon {
+/* Every top-level row's own icon square fills solid purple (white icon for contrast) while it's
+   the active view — per direct request/reference screenshot, generalized from an initial
+   Dashboard-only version to every row that carries a boxed .cat-icon (Dashboard + every category
+   header — CAT_EMOJI in state.js). Subfolder rows (Queue Kanban, a category's own folders, etc.)
+   render their icon plain, with no .cat-icon wrapper, so this naturally doesn't touch them.
+   Unscoped by any media query so it applies everywhere (mobile drawer and the normal expanded
+   desktop sidebar alike), not just the desktop collapsed rail's own version of this same effect
+   above. Each icon's own inline fill="#5B5BEF" attribute (renderSidebar.js/state.js) is a
+   presentation attribute, so this stylesheet rule overrides it same as the collapsed-rail version
+   already relies on. */
+.sidebar-item.active .cat-icon {
   background: var(--primary);
 }
-.sidebar-dashboard-link.active .cat-icon svg {
+.sidebar-item.active .cat-icon svg {
+  fill: #fff;
+}
+
+/* Same purple-square-plus-white-icon treatment on hover, not just active — per direct request.
+   Doesn't touch the desktop collapsed rail's own hover (its icon lightens to a plain gray instead,
+   scoped inside its own more-specific media-query rule above), which stays as its own deliberately
+   different, already-established treatment. */
+.sidebar-item:hover .cat-icon {
+  background: var(--primary);
+}
+.sidebar-item:hover .cat-icon svg {
   fill: #fff;
 }
 
