@@ -408,6 +408,12 @@
 .kcard--drop-after  { box-shadow: 0 3px 0 0 var(--primary); }
 
 /* ===== ADMIN KANBAN ===== */
+/* Extra bottom room so the last card in a column can scroll clear of the floating "+ Add card"
+   button (.admin-kcard-add-btn below) instead of sitting permanently hidden behind it. */
+.admin-kanban-cards {
+  padding-bottom: 44px;
+}
+
 /* Cards reuse .kcard directly (same 100px fixed box, hover shadow, drag/drop-indicator classes as
    the real board) — .admin-kcard only replaces the thumb+content row layout with a single text
    block, since a task card has no thumbnail/badge to show. */
@@ -511,23 +517,69 @@
   color: #888888;
 }
 
+/* Circular icon button (was a full-width dashed "+ Add card" rectangle) — same recipe as
+   .kanban-expand-btn above (circle, bordered, purple-fill hover). Floats over the bottom of the
+   column now (was a normal flex sibling below .kanban-cards, which shortened the scrollable card
+   area by its own height and kept the column itself from ever reaching the bottom of the screen)
+   — .kanban-column is already position: relative, so this just pins to its bottom edge and lets
+   .kanban-cards use the column's full height, scrolling underneath it, per direct request. */
 .admin-kcard-add-btn {
-  flex-shrink: 0;
-  margin-top: 8px;
-  padding: 8px;
-  border: 1.5px dashed var(--border);
-  border-radius: 10px;
-  background: none;
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
   color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 600;
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  box-shadow: 0 2px 10px var(--shadow-card); /* separates it from cards scrolling underneath */
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 .admin-kcard-add-btn:hover {
+  background: var(--primary);
   border-color: var(--primary);
-  color: var(--primary);
-  background: var(--hover-bg);
+  color: #fff;
+}
+
+
+/* Page header — title + the dedicated sort dropdown (SORT_MODES in adminKanban.js), both
+   rendered as this board's own content rather than the shared #grid-title/#sort-select elements
+   (see renderAdminKanbanBoard's own comment on why). */
+.admin-kanban-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.admin-kanban-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+.admin-kanban-sort-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+/* .btn-board-filter's own base width (148px, sized for short labels like "CATEGORIES") clips
+   this dropdown's longer ones ("Urgency (High → Low)") — auto-width with a min instead, and the
+   dropdown's own min-width bumped to match its longest option. Right-aligned (not the base
+   rule's left: 0) so it opens under the button rather than spilling past the page's right edge. */
+.admin-kanban-sort-btn {
+  width: auto;
+  min-width: 148px;
+}
+.admin-kanban-sort-dropdown {
+  left: auto;
+  right: 0;
+  min-width: 200px;
 }
 
 /* Card editor modal (injected by adminKanban.js) — reuses the shared .modal/.form-group shell,

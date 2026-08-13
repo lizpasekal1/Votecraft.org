@@ -444,18 +444,19 @@
   body:has(.admin-kanban-wrap) .fab-add {
     display: none;
   }
-  /* REAL BUG, found and reverted: an earlier version of this rule switched .grid-area itself to
-     flex-direction: row (trying to put #grid-title and .grid-header/#sort-select on one line) —
-     but .grid-area:has(.kanban-wrap)'s own overflow: hidden (kanban.css, shared by both boards)
+  /* REAL BUG, found and fixed: an earlier version of this file put #grid-title and .grid-header/
+     #sort-select on one line by switching .grid-area itself to flex-direction: row — but
+     .grid-area:has(.kanban-wrap)'s own overflow: hidden (kanban.css, shared by both boards)
      depends on staying a single flex-column, with #cards-grid's own flex:1 filling "whatever's
      left" and each column scrolling internally. Breaking that into a row+wrap layout broke the
-     whole page's scrolling on mobile (reported live). Reverted to a plain column — just tighter
-     spacing between the title and header row below it, not an actual merge onto one line. */
-  .grid-area:has(.admin-kanban-wrap) > .grid-title {
-    margin-bottom: 4px;
-    font-size: 13px;
+     whole page's scrolling on mobile (reported live). Both #grid-title and #sort-select are now
+     hidden entirely for this view instead (adminKanban.js renders its own title + sort dropdown
+     as this page's own content, safely inside the untouched #cards-grid/flex:1 chain) — nothing
+     left here to reposition or restyle. */
+  .admin-kanban-title {
+    font-size: 16px;
   }
-  .grid-area:has(.admin-kanban-wrap) > .grid-header {
+  .admin-kanban-header {
     margin-bottom: 12px;
   }
   /* grid-template-rows explicitly overridden to none, not just left alone — desktop's own

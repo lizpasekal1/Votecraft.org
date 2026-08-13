@@ -305,6 +305,7 @@ export async function loadAll() {
       state.sort = data.savecraft_sort || 'az';
       state.tutorialSeen = data.savecraft_tutorial_seen || false;
       if (data.savecraft_kanban_sort) state.kanbanSort = { ...state.kanbanSort, ...data.savecraft_kanban_sort };
+      if (data.savecraft_admin_kanban_sort) state.adminKanbanSort = data.savecraft_admin_kanban_sort;
       // Seeded exactly once, gated on its own savecraft_admin_kanban_seeded flag rather than
       // "does savecraft_admin_kanban_cards exist" (defaultLists' own convention just below) —
       // this board had already been tested live before this seed was written, so that check could
