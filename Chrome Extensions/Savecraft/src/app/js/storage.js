@@ -294,9 +294,11 @@ function _backfillSeedUrgency(cards) {
 // for me") — real, fully interactive items (draggable, removable, sortable), not the single
 // un-deletable '__demo__' instructional card kanban.js shows on an empty board. Spread across all
 // four columns and a mix of categories so there's something to actually test drag/reorder/scroll
-// against. Titled "Demo:" so they're easy to spot and delete later. imageUrl left null on
-// purpose — the letter-placeholder thumbnail is enough, and avoids depending on any external
-// image URL staying valid.
+// against. Their stable queue-demo-N ids (below) are what makes them easy to spot and clean up
+// later, not a "Demo:" title prefix (removed per direct request — see _backfillDemoTitles for
+// cards already seeded with the old prefixed titles). imageUrl left null on purpose — the
+// letter-placeholder thumbnail is enough, and avoids depending on any external image URL staying
+// valid.
 function _seedQueueDemoItems() {
   const entries = [
     ['The Great Gatsby',        'Book',        'in-queue'],
@@ -313,11 +315,27 @@ function _seedQueueDemoItems() {
   const now = Date.now();
   return entries.map(([title, category, queueStatus], i) => ({
     id: `queue-demo-${i}`,
-    url: null, title: `Demo: ${title}`, author: null, summary: null, description: null,
+    url: null, title, author: null, summary: null, description: null,
     imageUrl: null, youtubeUrl: null, category, folderId: null, platforms: [],
     done: false, savedAt: now + i, favorite: true, savedListIds: [],
     queueStatus,
   }));
+}
+
+// One-time patch for the queue-demo-N cards seeded before the "Demo:" title prefix was removed,
+// per direct request ("remove the word demo") — strips it from anyone who already has one of
+// these seeded items with the old title, without touching anything the user typed themselves.
+// Matches by the same stable queue-demo-N ids _seedQueueDemoItems() uses, same pattern as
+// _backfillSeedUrgency below for Admin Kanban.
+function _backfillDemoTitles(items) {
+  let changed = false;
+  items.forEach(item => {
+    if (/^queue-demo-\d+$/.test(item.id) && item.title?.startsWith('Demo: ')) {
+      item.title = item.title.slice('Demo: '.length);
+      changed = true;
+    }
+  });
+  return changed;
 }
 
 export async function loadAll() {
@@ -335,6 +353,17 @@ export async function loadAll() {
         const toSave = { savecraft_queue_demo_seeded: true };
         demoItems.forEach(item => { toSave[`item_${item.id}`] = item; });
         storageSync.set(toSave);
+      } else if (!data.savecraft_queue_demo_title_backfilled) {
+        // One-time patch for boards seeded before the "Demo:" prefix was removed — see
+        // _backfillDemoTitles's own comment. Only relevant on this branch: the fresh-seed branch
+        // above already gets the unprefixed title straight from _seedQueueDemoItems().
+        if (_backfillDemoTitles(state.items)) {
+          const toSave = { savecraft_queue_demo_title_backfilled: true };
+          state.items.filter(i => /^queue-demo-\d+$/.test(i.id)).forEach(item => { toSave[`item_${item.id}`] = item; });
+          storageSync.set(toSave);
+        } else {
+          storageSync.set({ savecraft_queue_demo_title_backfilled: true });
+        }
       }
       state.folders = Object.entries(data)
         .filter(([k]) => k.startsWith('folder_'))
