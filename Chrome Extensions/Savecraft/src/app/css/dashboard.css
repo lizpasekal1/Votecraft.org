@@ -129,9 +129,10 @@
 
 .dash-card-header { display: flex; align-items: center; justify-content: space-between; }
 .dash-card-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
-/* 5px more room below the title/Open button, per direct request — scoped to just this widget's
-   header so the other dashboard cards' header spacing is untouched. */
-.dash-card--kanban .dash-card-header { padding-bottom: 5px; }
+/* 5px more room below the title/button row, per direct request — applied to every widget's
+   header (was scoped to just Queue Kanban's at first) so the spacing stays consistent across
+   all of them, per direct request. */
+.dash-card-header { padding-bottom: 5px; }
 
 /* Same box recipe as .btn-add-item (base.css) — width now 20px narrower than that button's own
    148px, per direct request — still one identical width shared by Sort/Add +/Open regardless of
