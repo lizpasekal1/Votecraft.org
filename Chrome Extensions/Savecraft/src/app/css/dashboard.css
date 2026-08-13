@@ -403,6 +403,12 @@
      contrast with the wider gap the arrow used to leave. */
   margin-right: -20px;
 }
+/* Nudged 4px left, per direct request. Scoped to just these two widgets, same reasoning as the
+   rules above — .dash-carousel-prev is shared with pages that still have both arrows. */
+.dash-card--favorites .dash-carousel-prev,
+.dash-card--curated .dash-carousel-prev {
+  margin-left: -4px;
+}
 .dash-card--favorites .dash-carousel-strip,
 .dash-card--curated .dash-carousel-strip {
   padding-left: 0;
