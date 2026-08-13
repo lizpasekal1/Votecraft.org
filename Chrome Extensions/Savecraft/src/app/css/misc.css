@@ -310,18 +310,55 @@
      mobile, per direct request. */
   .my-options-item[data-option="home"] { display: none; }
 
-  /* Kanban board header: "‹ Dashboard" moved onto its own row above the My Saves/Categories
-     dropdowns, per direct request — sharing one row on a phone left the Categories dropdown
-     partially cut off the right edge of the screen (reported live, screenshot confirmed). Forcing
-     it to flex-basis: 100% (with the row's own flex-wrap enabled) pushes every sibling onto a
-     second line, same technique used nowhere else in this file yet but a plain, well-supported
-     flex trick — no JS/markup change needed. Desktop is unaffected/unchanged — confirmed fine as
-     it already was there. */
+  /* Kanban board header, two rows on mobile — per direct request, this replaces an earlier
+     three-row layout (Dashboard alone / info icon alone / the two dropdowns) that wasted vertical
+     space the board itself could use instead:
+       Row 1: "‹ Dashboard" (left corner) ―――――――――――――――――――――――― info icon (right corner)
+       Row 2: My Saves + Categories dropdowns, side by side
+     REAL BUG, found and fixed: putting flex-basis: 100% directly on .saves-list-wrap (the first
+     item meant for row 2) does force a new line, but it also makes THAT ITEM claim the entire row
+     width for itself, leaving .board-filter-wrap nowhere to go but a third row of its own — the
+     two dropdowns kept stacking instead of sharing row 2 (reported live on an iPhone 16 Pro,
+     plenty of width to spare, so it wasn't a narrow-screen overflow issue). Fixed with the
+     standard flexbox line-break trick instead: a zero-size ::after pseudo-element with its own
+     flex-basis: 100% inserted between the two row groups (via order) — it consumes row 1's
+     remaining width and forces everything after it to wrap, without itself being one of the
+     visible controls that needs to share space with a sibling. */
   .grid-header {
     flex-wrap: wrap;
   }
+  /* Pulled up 10px, per direct request — tightens the gap above this row. Applied equally to
+     both so row 1 moves up as a whole rather than the two corners drifting out of line. */
   .kanban-dashboard-link {
+    order: 0;
+    margin-top: -10px;
+  }
+  .board-info-wrap {
+    order: 1;
+    margin-left: auto;
+    /* margin-left: auto already pushes it flush against the row's right edge — this nudges it
+       5px further right past that, per direct request. */
+    margin-right: -5px;
+    margin-top: -10px;
+  }
+  .grid-header::after {
+    content: '';
+    order: 2;
     flex-basis: 100%;
+    width: 0;
+    height: 0;
+  }
+  /* Pulled up 15px, per direct request — tightens the gap under row 1 (Dashboard/info) now that
+     the two rows are reliably grouped correctly. Applied equally to both so the row moves up as
+     a whole rather than the two dropdowns drifting out of line with each other. */
+  .saves-list-wrap { order: 3; margin-top: -15px; }
+  .board-filter-wrap { order: 4; margin-top: -15px; }
+  /* Narrower than desktop's 148px so the pair above reliably fits on one row even on the
+     smallest iPhone widths (e.g. iPhone SE's 320px), instead of the fixed desktop width being
+     just wide enough to force a wrap on some devices but not others. */
+  .btn-board-filter,
+  .btn-saves-list {
+    width: 130px;
   }
 
   /* base.css's .search-expand-wrap.open .search-expand-input is a fixed 210px, sized for a
