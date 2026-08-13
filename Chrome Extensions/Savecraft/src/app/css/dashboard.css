@@ -383,7 +383,7 @@
 /* Sits noticeably higher than Open/Add's own position in their header rows (reported live,
    screenshot confirmed) — nudged down to match, per direct request. */
 .dash-fav-category-wrap {
-  margin-top: 4px;
+  margin-top: 8px;
 }
 
 /* Favorites Spotlight's category filter button — reuses the Kanban board's .btn-board-filter
