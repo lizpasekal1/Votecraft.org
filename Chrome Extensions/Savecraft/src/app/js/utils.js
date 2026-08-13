@@ -11,7 +11,10 @@ import { state, FOLDER_ICON, GENERIC_FOLDER_ICON_PATH } from './state.js';
 // dependency on either (auth.js already has documented circular-import concerns with storage.js).
 const ADMIN_EMAILS = ['lizpasekal@gmail.com'];
 export function isAdminUser(email, role) {
-  return (!!email && ADMIN_EMAILS.includes(email)) || role === 'admin';
+  // Lowercased on both sides — a plain .includes() would silently fail (no error, just no admin
+  // access) if the email ever comes back differently-cased than the allowlist entry, e.g. a
+  // mobile keyboard auto-capitalizing the first letter at sign-up.
+  return (!!email && ADMIN_EMAILS.includes(email.toLowerCase())) || role === 'admin';
 }
 
 // Movie's "Videos" folder (YouTube/Vimeo links) — pure URL parsing, no network. Used both to
