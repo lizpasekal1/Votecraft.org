@@ -332,7 +332,13 @@
   .dash-kmini-card { gap: 6px; padding-right: 4px; }
   .dash-kmini-info { padding: 5px 4px 5px 0; }
   /* Nudged down 5px, per direct request. */
-  .dash-card--kanban { margin-top: 5px; }
+  .dash-card--kanban {
+    margin-top: 5px;
+    /* 3px less than the shared .dash-card 20px top/bottom padding, per direct request — left/
+       right untouched, so the title/Open button stay aligned with the other widgets. */
+    padding-top: 17px;
+    padding-bottom: 17px;
+  }
 
   /* Kanban board header, two rows on mobile — per direct request, this replaces an earlier
      three-row layout (Dashboard alone / info icon alone / the two dropdowns) that wasted vertical
