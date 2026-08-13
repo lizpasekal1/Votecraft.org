@@ -64,6 +64,12 @@ button {
   --primary-bg:      #2D2945;
   --primary-hover:   #6A5EE0;
   --hover-bg:        #2C2D32;
+  /* Was a lighter gray (#45454A), then black (#000000), per two earlier requests — now matches
+     var(--bg), the same dark gray already used for the page's own content-area background (see
+     body, base.css below), per a later request that black read too harsh. Kept as its own variable
+     rather than reusing --bg directly, since the two are conceptually different things that just
+     happen to share a value right now. */
+  --active-bg-light: var(--bg);
   --search-bg:       #3A3B42;
   --search-focus-bg: #44454D;
   --modal-bg:        #25262B;
@@ -85,6 +91,7 @@ button {
   --primary-bg:      #EBE8FD;
   --primary-hover:   #4A3DD4;
   --hover-bg:        #F1F3F4;
+  --active-bg-light: var(--bg);
   --search-bg:       #F1F3F4;
   --search-focus-bg: #ffffff;
   --modal-bg:        #ffffff;
