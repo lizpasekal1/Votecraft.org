@@ -127,12 +127,11 @@
                    equal to content's max-content size, not 0 */
 }
 
-.dash-card-header { display: flex; align-items: center; justify-content: space-between; }
+/* padding-bottom: 5px is extra room below the title/button row, per direct request — applied to
+   every widget's header (was scoped to just Queue Kanban's at first) so the spacing stays
+   consistent across all of them, per direct request. */
+.dash-card-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 5px; }
 .dash-card-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
-/* 5px more room below the title/button row, per direct request — applied to every widget's
-   header (was scoped to just Queue Kanban's at first) so the spacing stays consistent across
-   all of them, per direct request. */
-.dash-card-header { padding-bottom: 5px; }
 
 /* Same box recipe as .btn-add-item (base.css) — width now 20px narrower than that button's own
    148px, per direct request — still one identical width shared by Sort/Add +/Open regardless of
@@ -380,17 +379,12 @@
   flex: 1; /* fills the remaining height below the header, keeping the title pinned to the top */
 }
 
-/* Sits noticeably higher than Open/Add's own position in their header rows (reported live,
-   screenshot confirmed) — nudged down to match, per direct request. */
-/* Explicit align-self instead of guessing a margin-top offset (tried first, still landed too
-   high per direct request even at 8px) — this actually centers it with the "Recent Saves" title
-   text on its own baseline, the same way Open/Add already align with their own titles. */
-/* align-self: center alone (tried first) had no visible effect — still sat closer to the top
-   than Add/Open (reported live, screenshot confirmed). This wrap already has position: relative
-   from its shared .board-filter-wrap base rule (kanban.css), so a direct top offset bypasses
-   whatever's actually eating the flex-centering math instead of fighting it further. */
+/* Sat noticeably higher than Open/Add's own position in their header rows (reported live,
+   screenshot confirmed). Several flex-based attempts (margin-top, align-self) had no visible
+   effect, so this bypasses whatever's actually eating the flex-centering math with a direct
+   offset instead — this wrap already has position: relative from its shared .board-filter-wrap
+   base rule (kanban.css). */
 .dash-fav-category-wrap {
-  align-self: center;
   position: relative;
   top: 8px;
 }
@@ -564,15 +558,6 @@
    effect at all. Moving this override down here, after both base rules, is what actually makes
    it win. */
 @media (max-width: 768px) {
-  /* .dash-fav-category-wrap (the button's own wrapping div, unique to Sort — Open/Add are plain
-     buttons with no wrapper) explicitly matched to the same 26px height as the button it wraps,
-     per direct request ("should be aligned with Recent Saves") — belt-and-suspenders alongside
-     that wrap's own align-self: center above, in case the wrap's box was ever taller than its
-     button content (e.g. from its hidden dropdown child) and throwing off centering within the
-     header row. */
-  .dash-fav-category-wrap {
-    height: 26px;
-  }
   .dash-card-header-btn,
   .dash-fav-category-btn {
     width: 70px;

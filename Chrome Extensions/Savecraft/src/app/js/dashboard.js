@@ -6,7 +6,7 @@
 // .dash-thumb-* / .dash-carousel-* classes in dashboard.css).
 
 import { state, CATEGORIES, CAT_LABEL, CURATED_GENRES, GENRE_EMOJI, CURATED_ITEMS } from './state.js';
-import { escapeHtml, catClass } from './utils.js';
+import { escapeHtml, catClass, isQueueDemoId } from './utils.js';
 import { openDetailModal } from './detailModal.js';
 import { KANBAN_DEMO, KANBAN_COLUMNS } from './kanban.js';
 import { renderSidebar, renderGrid } from './render.js';
@@ -202,7 +202,7 @@ function buildMiniKanbanCard(item) {
   // The seeded queue-demo-N items (storage.js) keep a "D" placeholder letter regardless of their
   // own title's first letter, per direct request — a leftover visual marker for "this is demo
   // content" now that their titles themselves no longer carry a "Demo:" prefix saying so.
-  const letter = /^queue-demo-\d+$/.test(item.id) ? 'D' : (item.title || '?')[0].toUpperCase();
+  const letter = isQueueDemoId(item.id) ? 'D' : (item.title || '?')[0].toUpperCase();
   const thumb = item.imageUrl
     ? `<img class="dash-kmini-thumb" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">`
     : `<div class="dash-kmini-thumb dash-kmini-thumb--placeholder placeholder-${catClass(item.category)}">${letter}</div>`;

@@ -1,7 +1,7 @@
 // ===== KANBAN BOARD ("My Saves Queue") =====
 
 import { state, CATEGORIES, CAT_LABEL } from './state.js';
-import { escapeHtml, catClass, badgeLabel, getListIds } from './utils.js';
+import { escapeHtml, catClass, badgeLabel, getListIds, isQueueDemoId } from './utils.js';
 import { persistViewState, persistItem } from './storage.js';
 import { openDetailModal } from './detailModal.js';
 import { storageSync } from './platform.js';
@@ -65,7 +65,7 @@ function renderKanbanCard(item, format = null) {
   // The seeded queue-demo-N items (storage.js) keep a "D" placeholder letter regardless of their
   // own title's first letter, per direct request — a leftover visual marker for "this is demo
   // content" now that their titles themselves no longer carry a "Demo:" prefix saying so.
-  const letter    = /^queue-demo-\d+$/.test(item.id) ? 'D' : (item.title || '?')[0].toUpperCase();
+  const letter    = isQueueDemoId(item.id) ? 'D' : (item.title || '?')[0].toUpperCase();
   const thumb     = item.imageUrl
     ? `<img class="kcard-thumb" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">`
     : `<div class="kcard-thumb kcard-thumb--placeholder placeholder-${catClass(item.category)}">${letter}</div>`;

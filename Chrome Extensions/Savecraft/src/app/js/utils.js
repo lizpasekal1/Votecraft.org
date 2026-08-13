@@ -102,6 +102,11 @@ export function patchCardImage(itemId, imageUrl) {
 
 export function catClass(cat) { return (cat || '').replace(/\s+/g, '-'); }
 
+// Matches the stable ids storage.js's _seedQueueDemoItems() assigns (queue-demo-0, queue-demo-1,
+// …) — shared here since kanban.js/dashboard.js's card renderers and storage.js's own one-time
+// title backfill all need to recognize these same seeded cards.
+export function isQueueDemoId(id) { return /^queue-demo-\d+$/.test(id); }
+
 // Kanban list membership: modern items carry `listIds` (an array); a lone leftover `listId`
 // (pre-multi-list schema) is normalized into a one-element array instead of being migrated on
 // load, since not every item is guaranteed to pass through a migration pass.
