@@ -1,13 +1,3 @@
-/* Tunes the timing of the sidebar's accordion-open View Transition (renderSidebar.js's
-   withViewTransition, wraps the Dashboard/category toggle handlers) — the platform default is a
-   snappy 0.25s ease cross-fade, which read as more of a flicker than a section actually "opening."
-   No-op on browsers without View Transitions support — these pseudo-elements simply don't exist
-   there, same graceful fallback as the JS side. */
-::view-transition-group(*) {
-  animation-duration: 0.32s;
-  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
 /* ===== MAIN LAYOUT ===== */
 .main-layout {
   display: flex;
@@ -150,40 +140,64 @@
 }
 
 /* No background on hover, per request — was var(--hover-bg), which read as a mismatched gray patch
-   against the black .sidebar-group.open fill. Just the text turns purple instead; most row icons
+   against an open .sidebar-group's own fill. Just the text turns purple instead; most row icons
    have their own hardcoded fill (unaffected by this), and .sidebar-count/.sidebar-arrow each set
    their own explicit color below, so neither picks up this inherited change either. */
 .sidebar-item:hover {
   color: var(--primary);
 }
 
+/* Scoped to :not(.open) — inside an open .sidebar-group, .sidebar-group-bg below already fills the
+   whole section, so a row's own background here would just be redundant paint underneath it. */
 .sidebar-item.active {
-  background: var(--active-bg-light);
   color: var(--primary);
+}
+.sidebar-group:not(.open) .sidebar-item.active {
+  background: var(--active-bg-light);
 }
 
 /* Wraps any collapsible sidebar section's header row plus its expanded children — Dashboard
-   (Queue Kanban, Admin Kanban, Saved Lists, Curated Lists) and every top-level category (Sources,
-   Shows, Music, Games, Films, Literature, Arts, and their own nested folders) alike. Per request,
-   opening any one of these fills the gray highlight all the way down through every row in the open
-   section, not just the header row itself. The rounded-right shape now lives on this outer group
-   instead of each individual row: only the very top (the header's own corners) and very bottom
-   (whichever row ends up last) round off, while every row in between stays flush/square on the
-   right so the block reads as one continuous shape rather than a stack of separate pills. */
+   (Queue Kanban, Admin Kanban, and Saved Lists/Curated Lists' own header rows, though not their
+   further-nested list items — see the [data-toggle-list] handler below, which still toggles those
+   the plain instant way) and every top-level category (Sources, Shows, Music, Games, Films,
+   Literature, Arts, and their own nested folders) alike. Per request, opening any one of these
+   fills the gray highlight all the way down through every row in the open section, not just the
+   header row itself. The rounded-right shape now lives on this outer group instead of each
+   individual row: only the very top (the header's own corners) and very bottom (whichever row ends
+   up last) round off, while every row in between stays flush/square on the right so the block reads
+   as one continuous shape rather than a stack of separate pills. */
+/* z-index: 0 (not just position: relative) is required here — without an explicit z-index,
+   .sidebar-group doesn't actually establish its own stacking context, so .sidebar-group-bg's own
+   z-index: -1 below escapes past it entirely and sinks behind the sidebar's own background instead
+   of just behind this group's row text, rendering it invisible (reported live). */
+.sidebar-group {
+  position: relative;
+  z-index: 0;
+}
 .sidebar-group.open {
-  background: var(--active-bg-light);
-  border-radius: 0 24px 24px 0;
   margin-right: 12px;
-  overflow: hidden;
+}
+/* The actual gray fill lives on this separate empty layer behind the rows, not on .sidebar-group
+   itself — renderSidebar.js's View Transition (the smooth "opens down" animation) is named on this
+   element specifically. Naming a growing/shrinking element makes the browser cross-fade a
+   *stretched* snapshot of it mid-animation; fine for a plain color rectangle (a stretched solid
+   color looks identical to a correctly-sized one), but visibly warps real content, which is why the
+   header/row text itself is deliberately left out of this element and unnamed. */
+.sidebar-group-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 0 24px 24px 0;
+  background: var(--active-bg-light);
+  opacity: 0;
+  pointer-events: none;
+}
+.sidebar-group.open .sidebar-group-bg {
+  opacity: 1;
 }
 .sidebar-group.open .sidebar-item {
   margin-right: 0;
   border-radius: 0;
-}
-/* Individual rows' own .active fill is redundant once the group above already provides it, and
-   would otherwise poke a mismatched rounded-right corner out mid-block. */
-.sidebar-group.open .sidebar-item.active {
-  background: none;
 }
 
 .sidebar-genre {
