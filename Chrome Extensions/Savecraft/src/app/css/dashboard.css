@@ -250,6 +250,14 @@
   height: 1px;
   background: var(--border);
 }
+/* Sat too close to the title text on desktop specifically (reported live, screenshot confirmed)
+   — dropped another 4px there only, leaving mobile's own 19px (already adjusted separately)
+   untouched. */
+@media (min-width: 769px) {
+  .dash-kanban-mini-board::after {
+    top: 23px;
+  }
+}
 
 /* Padding trimmed from 8px down to 3px — no longer needs to be a background-filled box with
    breathing room around it (removed below), so that space goes to the Spotify-style cards
