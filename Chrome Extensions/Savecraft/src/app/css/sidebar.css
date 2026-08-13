@@ -1,3 +1,13 @@
+/* Tunes the timing of the sidebar's accordion-open View Transition (renderSidebar.js's
+   withViewTransition, wraps the Dashboard/category toggle handlers) — the platform default is a
+   snappy 0.25s ease cross-fade, which read as more of a flicker than a section actually "opening."
+   No-op on browsers without View Transitions support — these pseudo-elements simply don't exist
+   there, same graceful fallback as the JS side. */
+::view-transition-group(*) {
+  animation-duration: 0.32s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* ===== MAIN LAYOUT ===== */
 .main-layout {
   display: flex;
@@ -139,13 +149,41 @@
   user-select: none;
 }
 
+/* No background on hover, per request — was var(--hover-bg), which read as a mismatched gray patch
+   against the black .sidebar-group.open fill. Just the text turns purple instead; most row icons
+   have their own hardcoded fill (unaffected by this), and .sidebar-count/.sidebar-arrow each set
+   their own explicit color below, so neither picks up this inherited change either. */
 .sidebar-item:hover {
-  background: var(--hover-bg);
+  color: var(--primary);
 }
 
 .sidebar-item.active {
-  background: var(--primary-bg);
+  background: var(--active-bg-light);
   color: var(--primary);
+}
+
+/* Wraps any collapsible sidebar section's header row plus its expanded children — Dashboard
+   (Queue Kanban, Admin Kanban, Saved Lists, Curated Lists) and every top-level category (Sources,
+   Shows, Music, Games, Films, Literature, Arts, and their own nested folders) alike. Per request,
+   opening any one of these fills the gray highlight all the way down through every row in the open
+   section, not just the header row itself. The rounded-right shape now lives on this outer group
+   instead of each individual row: only the very top (the header's own corners) and very bottom
+   (whichever row ends up last) round off, while every row in between stays flush/square on the
+   right so the block reads as one continuous shape rather than a stack of separate pills. */
+.sidebar-group.open {
+  background: var(--active-bg-light);
+  border-radius: 0 24px 24px 0;
+  margin-right: 12px;
+  overflow: hidden;
+}
+.sidebar-group.open .sidebar-item {
+  margin-right: 0;
+  border-radius: 0;
+}
+/* Individual rows' own .active fill is redundant once the group above already provides it, and
+   would otherwise poke a mismatched rounded-right corner out mid-block. */
+.sidebar-group.open .sidebar-item.active {
+  background: none;
 }
 
 .sidebar-genre {

@@ -24,6 +24,29 @@ export function collapseAllSidebarSections() {
   state.collapsed = new Set([...CATEGORIES.filter(cat => cat !== 'Music Album'), 'dashboard', 'saved-lists', 'curated-lists']);
 }
 
+// Wraps a state-change + re-render so the browser can animate between the old and new sidebar DOM
+// instead of the section just snapping open/closed — purely additive: renderSidebar() itself is
+// still a full innerHTML rebuild either way, but the View Transitions API can smoothly morph a
+// named element's old bounding box into its new one across that rebuild without us having to
+// preserve any actual DOM nodes ourselves. Feature-detected — Safari didn't ship same-document
+// support until v18, so anyone on an older browser just gets today's instant toggle, same as
+// before this existed, never a broken/half-animated state.
+function withViewTransition(fn) {
+  if (document.startViewTransition) {
+    document.startViewTransition(fn);
+  } else {
+    fn();
+  }
+}
+
+// view-transition-name has to be a valid CSS custom-ident (no spaces/punctuation) — several
+// category names aren't ("Web Links"), so this strips anything that isn't alphanumeric. Applied to
+// every .sidebar-group regardless of open/collapsed state (see renderSidebar below) so the same
+// name persists across a toggle and the browser can match old → new snapshots by it.
+function sidebarGroupVtName(key) {
+  return 'sidebar-group-' + String(key).replace(/[^a-zA-Z0-9]+/g, '-');
+}
+
 // Fill swapped from the source icon's #1f1f1f (near-black, invisible against .cat-icon's dark
 // background) to the same #5B5BEF used by every other sidebar cat-icon SVG (CAT_EMOJI in
 // state.js) so it's actually visible in the app's dark theme.
@@ -232,52 +255,58 @@ export function renderSidebar() {
   }
 
   const dashboardLinkHtml = `
-    <div class="sidebar-item sidebar-dashboard-link ${state.view === 'dashboard' ? 'active' : ''}" data-view="dashboard" data-toggle="dashboard">
-      <span class="sidebar-label"><span class="cat-icon">${DASHBOARD_ICON_SVG}</span><span class="sidebar-label-text"> Dashboard</span></span>
-      <span class="sidebar-right"><span class="sidebar-arrow">${dashboardArrow}</span></span>
+    <div class="sidebar-group${isDashboardCollapsed ? '' : ' open'}" style="view-transition-name: ${sidebarGroupVtName('dashboard')}">
+      <div class="sidebar-item sidebar-dashboard-link ${state.view === 'dashboard' ? 'active' : ''}" data-view="dashboard" data-toggle="dashboard">
+        <span class="sidebar-label"><span class="cat-icon">${DASHBOARD_ICON_SVG}</span><span class="sidebar-label-text"> Dashboard</span></span>
+        <span class="sidebar-right"><span class="sidebar-arrow">${dashboardArrow}</span></span>
+      </div>
+      ${isDashboardCollapsed ? '' : `
+      <div class="sidebar-item sidebar-subfolder sidebar-kanban-link ${state.view === 'kanban' ? 'active' : ''}" data-view="kanban">
+        ${KANBAN_ICON_SVG} Queue Kanban
+      </div>
+      <div class="sidebar-item sidebar-subfolder sidebar-admin-kanban-link ${state.view === 'admin-kanban' ? 'active' : ''}" data-view="admin-kanban">
+        ${ADMIN_KANBAN_ICON_SVG} Admin Kanban
+      </div>
+      ${_renderDashboardListRow({
+        key: 'saved-lists', icon: SAVED_LISTS_ICON_SVG, label: 'Saved Lists', items: state.savedLists,
+        linkClass: 'sidebar-saved-lists-link', childClass: 'sidebar-saved-lists-child', addClass: 'sidebar-add-saved-list',
+        viewPrefix: 'savedlist:', showRadio: true,
+        // "All My Saves" routes to state.view === 'dashboard' instead of its own generic
+        // 'savedlist:default-favorites' (see the click handler below) — the viewPrefix-derived
+        // isActive check above wouldn't ever match that, so it needs this explicit override to still
+        // highlight itself while Dashboard (the same destination) is what's actually active.
+        itemIsActive: item => item.id === 'default-favorites' && state.view === 'dashboard',
+      })}
+      ${_renderDashboardListRow({
+        key: 'curated-lists', icon: CURATED_LISTS_ICON_SVG, label: 'Curated Lists', items: state.curatedListsRows,
+        linkClass: 'sidebar-curated-lists-link', childClass: 'sidebar-curated-lists-child', addClass: 'sidebar-add-curated-list',
+        itemExtraClass: item => item.id === 'default-votecraft' ? 'sidebar-curated-votecraft-link' : '',
+        itemIsActive: item => item.id === 'default-votecraft' && state.sidebarMode === 'curated' && sidebarEffectiveView === 'genre:Top 100',
+      })}`}
     </div>
-    ${isDashboardCollapsed ? '' : `
-    <div class="sidebar-item sidebar-subfolder sidebar-kanban-link ${state.view === 'kanban' ? 'active' : ''}" data-view="kanban">
-      ${KANBAN_ICON_SVG} Queue Kanban
-    </div>
-    <div class="sidebar-item sidebar-subfolder sidebar-admin-kanban-link ${state.view === 'admin-kanban' ? 'active' : ''}" data-view="admin-kanban">
-      ${ADMIN_KANBAN_ICON_SVG} Admin Kanban
-    </div>
-    ${_renderDashboardListRow({
-      key: 'saved-lists', icon: SAVED_LISTS_ICON_SVG, label: 'Saved Lists', items: state.savedLists,
-      linkClass: 'sidebar-saved-lists-link', childClass: 'sidebar-saved-lists-child', addClass: 'sidebar-add-saved-list',
-      viewPrefix: 'savedlist:', showRadio: true,
-      // "All My Saves" routes to state.view === 'dashboard' instead of its own generic
-      // 'savedlist:default-favorites' (see the click handler below) — the viewPrefix-derived
-      // isActive check above wouldn't ever match that, so it needs this explicit override to still
-      // highlight itself while Dashboard (the same destination) is what's actually active.
-      itemIsActive: item => item.id === 'default-favorites' && state.view === 'dashboard',
-    })}
-    ${_renderDashboardListRow({
-      key: 'curated-lists', icon: CURATED_LISTS_ICON_SVG, label: 'Curated Lists', items: state.curatedListsRows,
-      linkClass: 'sidebar-curated-lists-link', childClass: 'sidebar-curated-lists-child', addClass: 'sidebar-add-curated-list',
-      itemExtraClass: item => item.id === 'default-votecraft' ? 'sidebar-curated-votecraft-link' : '',
-      itemIsActive: item => item.id === 'default-votecraft' && state.sidebarMode === 'curated' && sidebarEffectiveView === 'genre:Top 100',
-    })}`}
     <div class="sidebar-divider"></div>
   `;
 
   function wireDashboardLink() {
     sidebar.querySelector('.sidebar-dashboard-link')?.addEventListener('click', () => {
-      if (state.collapsed.has('dashboard')) {
-        // Reuses the same canonical "collapse everything" helper the mode-switch handlers below
-        // call, then reopens just Dashboard — this used to re-derive its own category list inline
-        // instead (via an otherCollapsibleIds param closed over whichever render pass wired it),
-        // which went stale in exactly the situation that matters most: wired from the curated-
-        // picker branch (which has no categories to pass) and then clicked, leaving every real
-        // category un-collapsed once the click switched back to the normal categorized sidebar
-        // (reported live: tap Curated, tap Dashboard, every accordion is open).
-        collapseAllSidebarSections();
-        state.collapsed.delete('dashboard');
-      } else {
-        state.collapsed.add('dashboard');
-      }
-      navigateToView('dashboard', { sidebarMode: 'home' });
+      // withViewTransition — per request, so opening/closing Dashboard's section morphs smoothly
+      // instead of snapping, via .sidebar-group's own view-transition-name above.
+      withViewTransition(() => {
+        if (state.collapsed.has('dashboard')) {
+          // Reuses the same canonical "collapse everything" helper the mode-switch handlers below
+          // call, then reopens just Dashboard — this used to re-derive its own category list inline
+          // instead (via an otherCollapsibleIds param closed over whichever render pass wired it),
+          // which went stale in exactly the situation that matters most: wired from the curated-
+          // picker branch (which has no categories to pass) and then clicked, leaving every real
+          // category un-collapsed once the click switched back to the normal categorized sidebar
+          // (reported live: tap Curated, tap Dashboard, every accordion is open).
+          collapseAllSidebarSections();
+          state.collapsed.delete('dashboard');
+        } else {
+          state.collapsed.add('dashboard');
+        }
+        navigateToView('dashboard', { sidebarMode: 'home' });
+      });
     });
     sidebar.querySelector('.sidebar-kanban-link')?.addEventListener('click', () => {
       navigateToView('kanban', { sidebarMode: 'home' });
@@ -421,12 +450,14 @@ export function renderSidebar() {
     `;
 
     return `
-      <div class="sidebar-item sidebar-category ${isActive ? 'active' : ''}"
-           data-view="${cat}" data-toggle="${cat}">
-        <span class="sidebar-label"><span class="cat-icon">${CAT_EMOJI[cat] || ''}</span><span class="sidebar-label-text"> ${CAT_LABEL[cat] || cat}</span></span>
-        <span class="sidebar-right"><span class="sidebar-arrow">${arrow}</span></span>
+      <div class="sidebar-group${isCollapsed ? '' : ' open'}" style="view-transition-name: ${sidebarGroupVtName(cat)}">
+        <div class="sidebar-item sidebar-category ${isActive ? 'active' : ''}"
+             data-view="${cat}" data-toggle="${cat}">
+          <span class="sidebar-label"><span class="cat-icon">${CAT_EMOJI[cat] || ''}</span><span class="sidebar-label-text"> ${CAT_LABEL[cat] || cat}</span></span>
+          <span class="sidebar-right"><span class="sidebar-arrow">${arrow}</span></span>
+        </div>
+        ${expandedContent}
       </div>
-      ${expandedContent}
     `;
     // A category hidden entirely by folderScope (the early `return ''` above) must drop out of
     // the divider-joined list too — filtered out just below — or its neighbors end up with a
@@ -446,21 +477,25 @@ export function renderSidebar() {
   sidebar.querySelectorAll('.sidebar-category').forEach(el => {
     el.addEventListener('click', () => {
       const cat = el.dataset.toggle;
-      if (state.collapsed.has(cat)) {
-        // Expanding — collapse all others first, Dashboard included (sidebarCategoryList excludes
-        // Music Album, which has its own separate collapse state via the Musician "Music Albums"
-        // permanent subfolder link). 'saved-lists'/'curated-lists' included too — same full-Set-
-        // rebuild issue as wireDashboardLink's own expand handler above.
-        state.collapsed = new Set([...sidebarCategoryList, 'dashboard', 'saved-lists', 'curated-lists']);
-        state.collapsed.delete(cat);
-      } else {
-        state.collapsed.add(cat);
-      }
-      // Was missing persistViewState() entirely before this migration (a pre-existing bug —
-      // reloading after clicking a category header lost the navigation, even though it visibly
-      // changed state.view) — navigateToView() fixes that as a side effect of picking up History
-      // API support here too.
-      navigateToView(isCuratedGenre ? `genre:${curatedGenreBase}:${cat}` : cat, { activeCuratedFolderId: null });
+      // withViewTransition — per request, same smooth open/close morph as Dashboard's own toggle
+      // above, via .sidebar-group's view-transition-name.
+      withViewTransition(() => {
+        if (state.collapsed.has(cat)) {
+          // Expanding — collapse all others first, Dashboard included (sidebarCategoryList excludes
+          // Music Album, which has its own separate collapse state via the Musician "Music Albums"
+          // permanent subfolder link). 'saved-lists'/'curated-lists' included too — same full-Set-
+          // rebuild issue as wireDashboardLink's own expand handler above.
+          state.collapsed = new Set([...sidebarCategoryList, 'dashboard', 'saved-lists', 'curated-lists']);
+          state.collapsed.delete(cat);
+        } else {
+          state.collapsed.add(cat);
+        }
+        // Was missing persistViewState() entirely before this migration (a pre-existing bug —
+        // reloading after clicking a category header lost the navigation, even though it visibly
+        // changed state.view) — navigateToView() fixes that as a side effect of picking up History
+        // API support here too.
+        navigateToView(isCuratedGenre ? `genre:${curatedGenreBase}:${cat}` : cat, { activeCuratedFolderId: null });
+      });
     });
   });
 
