@@ -98,10 +98,31 @@ built by someone else on the team, connected to this exact same cloud database. 
   magic links, etc.).
 - Neither of these is a security hole — they're just features that haven't been built yet.
 
-## One thing to actually do
+## Firestore rules — confirmed live (2026-08-13)
 
-The rule described above (*"only the owner can open their own drawer"*) needs to be manually
-turned on inside Google's own control panel for the project — it's written down and ready, but
-someone has to confirm it's actually switched on for the live database, not just sitting as a file
-in this repo. That's a few clicks on a website (console.firebase.google.com), not something
-requiring any coding — ask if you'd like the exact steps again.
+The rule described above (*"only the owner can open their own drawer"*) was checked directly
+against the real, live database — and it turned out to be **off**, not just unconfirmed: the
+version actually running had never been updated to include SaveCraft's own "drawer" rule at all
+(it predated that part of the file being written). The practical effect wasn't a leak — it was the
+opposite: *nobody*, including the account's own rightful owner, could open their drawer on the web.
+That's now fixed and re-verified: a real test account can read/write its own data, and still can't
+touch anyone else's.
+
+## Cost — the free tier, and what would actually change that
+
+SaveCraft's database is currently on Google's free "Spark" plan (confirmed in the Firebase
+console: $0/month). The free tier includes, per day: 50,000 reads, 20,000 writes, 20,000 deletes,
+and 1 GiB of total stored data — reset daily, no charge unless usage is upgraded to a paid plan.
+
+At today's scale this has real headroom — the app's own curated library is a few thousand items,
+read at most once per browser (cached locally for 24 hours after that), and normal saving/browsing
+is a small handful of reads/writes per person per session. The free tier would only become a real
+concern with meaningfully more regular users than exist today.
+
+**What would actually trigger needing to think about this again:** a real jump in daily active
+users, or a change that reads a lot more per visit (e.g. re-fetching the whole curated library on
+every page load instead of once a day). If usage ever gets close to the free tier's limits, Google
+doesn't silently charge — it stops serving requests past the daily cap until it resets, which
+would show up as things failing to load/save, not a surprise bill. Worth a quick check-in on the
+Firebase console's Usage tab occasionally as the user base grows, not something to build anything
+around today.
