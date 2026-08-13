@@ -407,6 +407,155 @@
 .kcard--drop-before { box-shadow: 0 -3px 0 0 var(--primary); }
 .kcard--drop-after  { box-shadow: 0 3px 0 0 var(--primary); }
 
+/* ===== ADMIN KANBAN ===== */
+/* Cards reuse .kcard directly (same 100px fixed box, hover shadow, drag/drop-indicator classes as
+   the real board) — .admin-kcard only replaces the thumb+content row layout with a single text
+   block, since a task card has no thumbnail/badge to show. */
+.admin-kcard-body {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 24px 22px 12px; /* right clears the remove button, bottom clears the urgency dot */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* vertically centers name+details as a block, rather than pinned to the top */
+  gap: 4px;
+  overflow: hidden;
+}
+
+/* Fixed white card / black text here, not the theme-adaptive var(--surface)/var(--text-primary)
+   the rest of this board (and the real Queue board's own .kcard) use — per direct request, and
+   scoped to just Admin Kanban so it doesn't touch the real board's cards. */
+.kcard.admin-kcard {
+  background: #ffffff;
+  border-color: #E0E0E0;
+}
+
+.admin-kcard-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111111;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.admin-kcard-details {
+  font-size: 12px;
+  color: #444444;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Same hover-revealed treatment as the real board's .kcard-remove — fixed dark gray rather than
+   var(--text-muted) (a light gray meant for the dark theme's own cards, low-contrast against
+   this card's fixed white background). Absolutely positioned in the top-right corner — the
+   urgency dot below now lives in the bottom-right instead (per direct request; the two used to
+   share the top-right corner and visibly collided there). */
+.admin-kcard-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: none;
+  border: none;
+  color: #888888;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+.kcard:hover .admin-kcard-remove { opacity: 1; }
+.admin-kcard-remove:hover { color: #EF4444; }
+
+/* Urgency dot — bottom-right corner (per direct request; was top-right, where it collided with
+   the remove "✕" above), colored by the 1-10 rating set in the edit popup. Number sits inside
+   the dot. */
+.admin-kcard-urgency {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+.admin-kcard-urgency--blue   { background: #3B82F6; } /* 1-3 */
+.admin-kcard-urgency--orange { background: #C2410C; } /* 4-7 — deep enough that white text (the shared default, no override needed) stays readable, unlike the original yellow */
+.admin-kcard-urgency--red    { background: #EF4444; } /* 8-10 */
+
+/* Left-edge urgency strip — reuses the same three color classes as the dot above (just their
+   `background`). .kcard's own overflow: hidden clips this flush to the card's rounded left
+   corners instead of it poking out square. */
+.admin-kcard-urgency-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 5px;
+}
+
+/* Same reasoning as .admin-kcard-remove above — .kcard-demo-badge's own var(--text-muted) is
+   near-invisible against this card's fixed white background. */
+.admin-kcard .kcard-demo-badge {
+  color: #888888;
+}
+
+.admin-kcard-add-btn {
+  flex-shrink: 0;
+  margin-top: 8px;
+  padding: 8px;
+  border: 1.5px dashed var(--border);
+  border-radius: 10px;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.admin-kcard-add-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--hover-bg);
+}
+
+/* Card editor modal (injected by adminKanban.js) — reuses the shared .modal/.form-group shell,
+   just its own actions-row layout: Delete pinned left (as a quiet text link, not a full button —
+   matches this app's other destructive-but-secondary actions, e.g. Profile's "Delete account"),
+   Cancel/Save grouped right like every other modal's own .modal-actions. */
+.admin-kcard-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.admin-kcard-modal-actions-right {
+  display: flex;
+  gap: 10px;
+}
+.admin-kcard-delete-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.admin-kcard-delete-link:hover {
+  color: #EF4444;
+}
+
 /* Kanban wrap — outer column container so tutorial sits above board row */
 .kanban-wrap {
   display: flex;

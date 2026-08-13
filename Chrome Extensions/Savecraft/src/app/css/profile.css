@@ -13,6 +13,50 @@
   width: 100%;
 }
 
+/* Groups the desktop "Manage account" button with its own Privacy Policy link directly below it
+   (per direct request) — a plain flex column instead of two separate top-level children of
+   .profile-account-row, so the link sits pinned right under the button regardless of how tall the
+   identity block next to it gets, and lines up with the button's own right edge. */
+.profile-account-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* Privacy Policy · Terms of Service, as one row — shared by the desktop card (under the button)
+   and the mobile page-end duplicate below (see buildLegalLinksRow() in profile.js). */
+.profile-legal-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+}
+
+.profile-legal-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.profile-legal-links a:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.profile-legal-sep {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+/* Mobile-only duplicate (page-end, beside .profile-manage-account-mobile) — hidden by default,
+   same swap-on-mobile pattern misc.css already uses for the button itself: this one hides, the
+   page-end one shows. */
+.profile-legal-links-mobile {
+  display: none;
+  justify-content: center;
+  margin-top: -4px;
+}
+
 /* Account stays its own natural-height card at the top, full width — everything below it
    (Connections/Interests/Your Music Taste/Saved Lists) shares the Dashboard's 2x2 grid shape and
    .dash-card box model, but taller than the Dashboard's own grid — Connections in particular

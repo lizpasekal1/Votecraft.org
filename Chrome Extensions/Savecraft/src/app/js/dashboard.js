@@ -9,6 +9,7 @@ import { state, CATEGORIES, CAT_LABEL, CURATED_GENRES, GENRE_EMOJI, CURATED_ITEM
 import { escapeHtml, catClass } from './utils.js';
 import { openDetailModal } from './detailModal.js';
 import { KANBAN_DEMO, KANBAN_COLUMNS } from './kanban.js';
+import { ADMIN_KANBAN_COLUMNS, _cardsInColumn as adminCardsInColumn, openAdminCardEditor } from './adminKanban.js';
 import { renderSidebar, renderGrid } from './render.js';
 import { navigateToView } from './navigation.js';
 import { getCurrentUser, onAuthChange } from './auth.js';
@@ -265,6 +266,73 @@ function wireKanbanWidget(container) {
   });
 }
 
+// ===== admin kanban widget — full-width, last item in the grid =====
+// A separate board from the Queue Kanban widget above (own state.adminKanbanCards, own file
+// adminKanban.js) for tracking SaveCraft's own project tasks, not saved items. Placed as a 5th
+// widget rather than folded into the existing four, per direct request — the grid's own
+// grid-template-rows (dashboard.css) gives this an explicit auto-height 3rd row spanning both
+// columns, landing directly below Curated Lists (column 1) the way a 5th item naturally falls in
+// a 2-column grid, rather than a half-width orphan tile beside an empty gap.
+
+const ADMIN_KANBAN_PREVIEW_LIMIT = 3;
+
+function buildAdminKanbanWidget() {
+  const columnsHtml = ADMIN_KANBAN_COLUMNS.map(col => {
+    const cards = adminCardsInColumn(col.key);
+    const shown = cards.slice(0, ADMIN_KANBAN_PREVIEW_LIMIT);
+    const remaining = cards.length - shown.length;
+    // data-id is missing on the demo card (id "__admin_demo__" isn't a real state.adminKanbanCards
+    // entry) — its click handler below checks for that and no-ops, same as the full board does.
+    const cardsHtml = shown.map(c => `
+      <div class="dash-admin-kmini-card" data-id="${c._isDemo ? '' : c.id}">${escapeHtml(c.name) || 'Untitled'}</div>`).join('')
+      + (remaining > 0 ? `<div class="dash-kmini-more">+${remaining} more</div>` : '');
+
+    return `
+      <div class="dash-kmini-col">
+        <div class="dash-kmini-col-header">${col.label}<span>${cards.length}</span></div>
+        <div class="dash-kmini-col-cards">${cardsHtml || '<div class="dash-kmini-col-empty">—</div>'}</div>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="dash-card dash-card--admin-kanban">
+      <div class="dash-card-header">
+        <span class="dash-card-title">Admin Kanban</span>
+        <button class="dash-card-header-btn dash-admin-kanban-open"><span class="dash-kanban-open-label">Open</span> <svg class="dash-kanban-open-arrow" width="7.2" height="9" viewBox="0 0 8 10" fill="currentColor"><path d="M0 0 L8 5 L0 10 Z"/></svg></button>
+      </div>
+      <div class="dash-kanban-mini-board dash-admin-kanban-mini-board">${columnsHtml}</div>
+    </div>`;
+}
+
+// Same targeted-rebuild idiom as _rebuildFavoritesCard() above — passed to openAdminCardEditor()
+// as the modal's completion callback so saving/deleting a card from this widget refreshes just
+// this card in place, instead of the modal's own default (renderAdminKanbanBoard(), which would
+// wrongly navigate away from the Dashboard to the full board).
+function _rebuildAdminKanbanCard() {
+  const card = document.querySelector('.dash-card--admin-kanban');
+  if (!card) return;
+  const parent = card.parentElement;
+  card.outerHTML = buildAdminKanbanWidget();
+  wireAdminKanbanWidget(parent);
+}
+
+function wireAdminKanbanWidget(container) {
+  const card = container.querySelector('.dash-card--admin-kanban');
+  if (!card) return;
+
+  card.querySelector('.dash-admin-kanban-open')?.addEventListener('click', () => {
+    navigateToView('admin-kanban');
+  });
+
+  card.querySelectorAll('.dash-admin-kmini-card').forEach(el => {
+    el.addEventListener('click', () => {
+      if (!el.dataset.id) return; // the demo card — nothing real to edit
+      const found = state.adminKanbanCards.find(c => c.id === el.dataset.id);
+      if (found) openAdminCardEditor(found, _rebuildAdminKanbanCard);
+    });
+  });
+}
+
 // ===== curated lists widget =====
 
 // Cosmetic-only relabeling for a few genres — previews a "these lists come from different
@@ -478,7 +546,7 @@ export function renderDashboard() {
   container.innerHTML = `
     ${buildHeroCollage()}
     <div class="dash-widget-grid">
-      ${buildKanbanWidget()}${buildFavoritesWidget()}${buildCuratedListsWidget()}${buildProfileWidget()}
+      ${buildKanbanWidget()}${buildFavoritesWidget()}${buildCuratedListsWidget()}${buildProfileWidget()}${buildAdminKanbanWidget()}
     </div>`;
 
   wireHeroCollage(container);
@@ -486,6 +554,7 @@ export function renderDashboard() {
   wireFavoritesWidget(container);
   wireCuratedListsWidget(container);
   wireProfileWidget(container);
+  wireAdminKanbanWidget(container);
   // Persistence for "arriving at the dashboard" happens at each navigation call site (sidebar
   // link, mobile tab, etc.), not here — same layering as every other view's render function.
 }

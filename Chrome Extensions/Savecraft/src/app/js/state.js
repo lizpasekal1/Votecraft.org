@@ -335,6 +335,11 @@ export const state = {
   kanbanCategory: null,
   kanbanExpandedCol: null,         // column key currently expanded full-width, or null for the normal 4-column board — not persisted, resets every load
   kanbanExpandedFormat: 'two-col', // 'two-col' | 'four-col' | 'large' | 'detail' | 'simple' — only meaningful while a column is expanded, not persisted
+  adminKanbanCards: [], // { id, text, status: ADMIN_KANBAN_COLUMNS key, manualOrder, createdAt } — a
+                         // second, separate board (adminKanban.js) of freeform editable-text task
+                         // cards, not tied to state.items at all (unlike the main Queue board
+                         // above). Local-only (storageSync), same as kanbanSort/kanbanLists — no
+                         // Firestore dual-write yet.
   lastfmUsername: null,            // Last.fm account username the user has linked, or null
   followedCuratedLists: new Set(), // Set of CURATED_GENRES keys the user has opted into via Profile > Interests
   lastfmCache: {}, // { [normalizedUsername]: { tracks: [...]|null, fetchedAt } } — auto-fetched via Last.fm, short TTL

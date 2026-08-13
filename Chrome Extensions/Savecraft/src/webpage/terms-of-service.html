@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms of Service — SaveCraft</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* Same brand purple as the rest of SaveCraft, and identical to privacy-policy.html's own
+         palette — kept in sync deliberately since these two pages are always linked as a pair. */
+      --primary: #5B5BEF;
+      --primary-soft: rgba(91, 91, 239, 0.14);
+      --primary-border: rgba(91, 91, 239, 0.32);
+      --bg: #0b0b10;
+      --surface: rgba(255, 255, 255, 0.03);
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #f1f1f6;
+      --text-muted: rgba(241, 241, 246, 0.62);
+      --text-faint: rgba(241, 241, 246, 0.42);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background:
+        radial-gradient(680px 420px at 12% -10%, rgba(91, 91, 239, 0.16), transparent 60%),
+        radial-gradient(600px 380px at 100% 15%, rgba(91, 91, 239, 0.08), transparent 55%),
+        var(--bg);
+      background-attachment: fixed;
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+      /* Same standalone-page guard as sponsored.html/privacy-policy.html — this page has none of
+         the main app's own horizontal-overflow protections. */
+      overflow-x: hidden;
+    }
+
+    .page {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 52px 40px 120px;
+    }
+
+    @media (max-width: 760px) {
+      .page {
+        padding: 32px 20px 64px;
+      }
+    }
+
+    .wordmark {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 32px;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-faint);
+      letter-spacing: -0.01em;
+    }
+    .wordmark a { color: inherit; text-decoration: none; transition: color 0.15s; }
+    #link-savecraft:hover span { color: #ffffff; }
+    #link-votecraft:hover { color: var(--primary); }
+    .wordmark span { color: var(--primary); }
+    .wordmark-x { color: var(--text-faint); opacity: 0.5; font-size: 20px; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--primary);
+      background: var(--primary-soft);
+      border: 1px solid var(--primary-border);
+      border-radius: 999px;
+      padding: 7px 16px;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: 36px;
+      font-weight: 800;
+      line-height: 1.15;
+      color: #fff;
+      margin-bottom: 10px;
+      letter-spacing: -0.03em;
+    }
+
+    .updated {
+      font-size: 13.5px;
+      color: var(--text-faint);
+      margin-bottom: 40px;
+    }
+
+    .draft-notice {
+      display: flex;
+      gap: 12px;
+      background: rgba(234, 179, 8, 0.1);
+      border: 1px solid rgba(234, 179, 8, 0.35);
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin-bottom: 44px;
+      font-size: 14px;
+      color: #FDE68A;
+      line-height: 1.55;
+    }
+    .draft-notice strong { color: #FEF3C7; }
+
+    .section { margin-bottom: 40px; }
+
+    h2 {
+      font-size: 19px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 12px;
+      letter-spacing: -0.01em;
+    }
+
+    p {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    p:last-child { margin-bottom: 0; }
+
+    ul {
+      margin: 0 0 12px 20px;
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+    ul:last-child { margin-bottom: 0; }
+    li { margin-bottom: 6px; }
+    li:last-child { margin-bottom: 0; }
+    li strong { color: var(--text); }
+
+    a { color: var(--primary); }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 44px 0;
+    }
+
+    .contact-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 22px;
+    }
+
+    /* Placeholder markers left in the text (e.g. governing-law state) — loud on purpose, same
+       intent as .draft-notice, so an unfilled placeholder can't accidentally ship unnoticed. */
+    .fill-in {
+      color: #FDE68A;
+      background: rgba(234, 179, 8, 0.14);
+      border-radius: 4px;
+      padding: 1px 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <div class="wordmark"><a id="link-savecraft"><span>SaveCraft</span></a> <span class="wordmark-x">×</span> <a id="link-votecraft" href="https://votecraft.org/" target="_blank" rel="noopener">VoteCraft</a></div>
+
+    <div class="badge">📜 Terms</div>
+    <h1>Terms of Service</h1>
+    <p class="updated">Last updated: August 12, 2026</p>
+
+    <div class="draft-notice">
+      <span>⚠️</span>
+      <span><strong>This is a working draft</strong>, written to accurately describe how SaveCraft
+      actually works today — not final legal text. Have it reviewed before treating it as your
+      published terms, and fill in the highlighted placeholder before publishing.</span>
+    </div>
+
+    <div class="section">
+      <p>By using SaveCraft's website (savecraft.org), Chrome extension, or related services
+      (together, the "Service"), you agree to be bound by these Terms of Service. If you don't
+      agree with these terms, please don't use the Service.</p>
+      <p>We may update these Terms from time to time, without individual notice. If we do, we'll
+      update the "Last updated" date above; continuing to use the Service after a change means you
+      accept the updated terms. If you don't agree with a change, your only recourse is to stop
+      using the Service and delete your account.</p>
+    </div>
+
+    <div class="section">
+      <h2>1. Account Terms</h2>
+      <ul>
+        <li>You can browse and save items in SaveCraft without ever creating an account —
+        everything just lives in your own browser. Creating an account is only needed if you want
+        your saves to follow you across devices.</li>
+        <li>You must be at least 13 years old to create an account.</li>
+        <li>You must be a human. Accounts registered by bots or other automated methods aren't
+        permitted.</li>
+        <li>Your login is for one person. A single account shared by multiple people isn't
+        permitted — if you need more than one person to have access, each person should create
+        their own account.</li>
+        <li>You're responsible for keeping your account credentials secure, and for all activity
+        that happens under your account, including anything posted or saved by anyone else who
+        has access to it.</li>
+        <li>You may not use the Service for any illegal or unauthorized purpose, or in a way that
+        violates any applicable law in your jurisdiction, including copyright or trademark law.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>2. Content You Save & Share</h2>
+      <p>We claim no intellectual property rights over the titles, links, images, or notes you
+      save — that content remains yours. If you use SaveCraft's Share feature to make a saved list
+      accessible via a link, you're agreeing to let anyone with that link view the items in it; you
+      are solely responsible for choosing what you share and with whom, and for making sure you
+      have the right to save and share it in the first place.</p>
+      <p>We don't pre-screen what you save or share, but SaveCraft (at our discretion, though
+      without any obligation to do so) may remove content, disable sharing, or suspend accounts
+      that we believe violate these Terms, infringe someone else's rights, or violate applicable
+      law.</p>
+    </div>
+
+    <div class="section">
+      <h2>3. Curated & Sponsored Content</h2>
+      <p>SaveCraft features curated lists and statements from nonprofit and advocacy partners,
+      clearly marked as sponsored or curated where they appear. These reflect the views of the
+      organizations behind them, not SaveCraft's own endorsement, and we aren't responsible for
+      the accuracy of third-party content or the practices of the organizations we feature.</p>
+    </div>
+
+    <div class="section">
+      <h2>4. API</h2>
+      <p>SaveCraft does not currently offer a public API for third-party access to your account
+      data. If we introduce one in the future, its use will be governed by these Terms plus
+      additional API-specific terms we'll publish at that time — including our right to rate-limit,
+      suspend, or modify API access to protect the Service.</p>
+    </div>
+
+    <div class="section">
+      <h2>5. Fees</h2>
+      <p>SaveCraft is currently free to use, and no payment information is collected. If we
+      introduce paid plans or features in the future, we'll publish the relevant pricing, billing
+      cycle, and refund terms here before those changes take effect, and continued use of any paid
+      feature after that point will constitute acceptance of those terms. Downgrading or losing
+      access to a paid feature in the future could mean losing the functionality or capacity that
+      feature provided — we won't be liable for that loss.</p>
+    </div>
+
+    <div class="section">
+      <h2>6. Cancellation and Termination</h2>
+      <p>You're solely responsible for properly canceling your own account — an email or verbal
+      request isn't the same as actually deleting it. You can permanently delete your account at
+      any time from Profile → Manage account → Delete account. This immediately and permanently
+      removes your saved items, folders, and account settings from our systems; this can't be
+      undone or recovered once completed.</p>
+      <p>We may suspend or terminate access to the Service for any account, at our discretion and
+      without prior notice — for example, in response to a violation of these Terms, abusive
+      behavior toward SaveCraft or other users, or a legal requirement to do so. We also reserve
+      the right to refuse service to anyone, for any reason, at any time.</p>
+    </div>
+
+    <div class="section">
+      <h2>7. Third-Party Services</h2>
+      <p>SaveCraft integrates with third-party services — including Last.fm, Steam, and public
+      metadata sources like iTunes, Open Library, MusicBrainz, Wikipedia, and YouTube — to help you
+      find and save things, and relies on Google Firebase for hosting, authentication, and data
+      storage. We don't control these services and aren't responsible for their availability,
+      accuracy, security, or their own terms and privacy practices.</p>
+    </div>
+
+    <div class="section">
+      <h2>8. General Conditions</h2>
+      <ul>
+        <li>The Service is provided "as is" and "as available," without warranties of any kind,
+        express or implied. We don't guarantee it will be uninterrupted, timely, secure, or
+        error-free, or that it will meet your specific requirements.</li>
+        <li>To the fullest extent permitted by law, SaveCraft won't be liable for any indirect,
+        incidental, special, consequential, or exemplary damages — including loss of data, goodwill,
+        or use — arising from your use of, or inability to use, the Service, even if we've been
+        advised of the possibility of such damages.</li>
+        <li>You agree not to modify, adapt, reverse-engineer, or hack the Service; attempt
+        unauthorized access to it; interfere with its normal operation; or use it to transmit spam,
+        malware, or unlawful content.</li>
+        <li>You agree not to reproduce, duplicate, resell, or otherwise exploit any part of the
+        Service without our express written permission.</li>
+        <li>Abusive conduct — verbal, written, or otherwise — toward SaveCraft, our partners, or
+        other users may result in immediate account termination.</li>
+        <li>If we don't enforce a right or provision in these Terms on a given occasion, that
+        doesn't mean we've given it up — we can still enforce it later.</li>
+        <li>These Terms, together with our <a href="#" id="link-privacy-policy-inline">Privacy
+        Policy</a>, make up the entire agreement between you and SaveCraft regarding the Service,
+        superseding any prior versions or agreements on the same subject.</li>
+        <li>These Terms are governed by the laws of <span class="fill-in">[insert
+        state/jurisdiction]</span>, without regard to its conflict-of-law principles.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>9. Changes to These Terms</h2>
+      <p>If we make a meaningful change to these Terms, this page will be updated and the "Last
+      updated" date above will reflect it. Continued use of the Service after a change is posted
+      constitutes your acceptance of it.</p>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section">
+      <h2>10. Contact Us</h2>
+      <div class="contact-box">
+        <p>Questions about these Terms? Reach out at
+        <a href="mailto:hello@votecraft.com">hello@votecraft.com</a>.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { resourceUrl } from '../app/js/platform.js';
+    document.getElementById('link-savecraft').href = resourceUrl('src/app/index.html');
+    document.getElementById('link-privacy-policy-inline').href = resourceUrl('src/webpage/privacy-policy.html');
+  </script>
+</body>
+</html>
