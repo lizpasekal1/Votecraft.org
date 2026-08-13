@@ -4,7 +4,7 @@ import {
   state, CURATED_ITEMS, CATEGORIES, CAT_LABEL, CAT_EMOJI, CURATED_GENRES, GENRE_EMOJI,
   PRIMARY_FOLDER_ID,
 } from './state.js';
-import { escapeHtml, folderIconHtml, sortFoldersForDisplay, catClass, isAdminUser } from './utils.js';
+import { escapeHtml, folderIconHtml, sortFoldersForDisplay, catClass, isAdminUser, isQueueDemoId } from './utils.js';
 import { getCurrentUser } from './auth.js';
 import { persistItem, persistFolder, removeFolder, persistSavedLists } from './storage.js';
 import { closeSidebar } from './main.js';
@@ -404,7 +404,11 @@ export function renderSidebar() {
       : state.view === 'Music Album';
     const musicAlbumCount = isCuratedGenre
       ? (CURATED_ITEMS[curatedGenreBase]?.['Music Album']?.length ?? 0)
-      : state.items.filter(i => matchesPrimaryOrUnfoldered(i, 'Music Album')).length;
+      // Queue-demo cards excluded from every real count here — same reasoning as
+      // renderFilters.js's getFilteredSortedItems() (they're Kanban-demo placeholders, not real
+      // saves, but were still showing up as a phantom "1" badge on whichever folder their
+      // category happens to land on).
+      : state.items.filter(i => !isQueueDemoId(i.id) && matchesPrimaryOrUnfoldered(i, 'Music Album')).length;
     const musicAlbumCountLabel = musicAlbumCount > 0 ? `<span class="sidebar-count">${musicAlbumCount}</span>` : '';
     // Music Album isn't part of sidebarCategoryList's own loop (it's excluded above, line
     // 322-323) — it only ever shows via this "Albums" link nested under Musician, routed through
@@ -433,7 +437,7 @@ export function renderSidebar() {
         || (FOLDER_SHOWS_FULL_CURATED_CATEGORY.has(folder.id) ? cat : folder.id);
       const fCount = isCuratedGenre
         ? (CURATED_ITEMS[curatedGenreBase]?.[curatedTarget]?.length ?? 0)
-        : state.items.filter(i => isPrimaryFolder ? matchesPrimaryOrUnfoldered(i, cat) : i.folderId === folder.id).length;
+        : state.items.filter(i => !isQueueDemoId(i.id) && (isPrimaryFolder ? matchesPrimaryOrUnfoldered(i, cat) : i.folderId === folder.id)).length;
       const fCountLabel = fCount > 0 ? `<span class="sidebar-count">${fCount}</span>` : '';
       // Official/default folders (seeded in storage.js's `defaults` array, always id-prefixed
       // "default-") can't be deleted from the sidebar — only user-created ones (Date.now() ids) can.
