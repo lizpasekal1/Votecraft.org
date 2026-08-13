@@ -382,8 +382,11 @@
 
 /* Sits noticeably higher than Open/Add's own position in their header rows (reported live,
    screenshot confirmed) — nudged down to match, per direct request. */
+/* Explicit align-self instead of guessing a margin-top offset (tried first, still landed too
+   high per direct request even at 8px) — this actually centers it with the "Recent Saves" title
+   text on its own baseline, the same way Open/Add already align with their own titles. */
 .dash-fav-category-wrap {
-  margin-top: 8px;
+  align-self: center;
 }
 
 /* Favorites Spotlight's category filter button — reuses the Kanban board's .btn-board-filter
@@ -555,6 +558,15 @@
    effect at all. Moving this override down here, after both base rules, is what actually makes
    it win. */
 @media (max-width: 768px) {
+  /* .dash-fav-category-wrap (the button's own wrapping div, unique to Sort — Open/Add are plain
+     buttons with no wrapper) explicitly matched to the same 26px height as the button it wraps,
+     per direct request ("should be aligned with Recent Saves") — belt-and-suspenders alongside
+     that wrap's own align-self: center above, in case the wrap's box was ever taller than its
+     button content (e.g. from its hidden dropdown child) and throwing off centering within the
+     header row. */
+  .dash-fav-category-wrap {
+    height: 26px;
+  }
   .dash-card-header-btn,
   .dash-fav-category-btn {
     width: 70px;
