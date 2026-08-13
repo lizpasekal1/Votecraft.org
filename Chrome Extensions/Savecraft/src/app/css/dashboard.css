@@ -416,6 +416,7 @@
      request. */
   align-self: flex-start;
   height: 112px;
+  margin-top: 20px; /* dropped down 20px from image-centered, per direct request */
 }
 .dash-card--favorites .dash-carousel-strip,
 .dash-card--curated .dash-carousel-strip {
