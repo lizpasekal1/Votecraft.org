@@ -6,7 +6,14 @@ SaveCraft is a Chrome extension that acts as a personal media library. Users sav
 
 ## Recent Additions (latest session)
 
-This session was a live-feedback-driven mobile polish pass across three areas — the mobile sidebar drawer, the Curated SaveCraft bare-list page, and the Shared Saves page — plus a `/simplify` pass at the end. (Note: the doc gap between this entry and the "previous session" one below spans at least one earlier session's worth of Add Item modal wizard work not separately logged here — see `session-context.md`'s own session-by-session log, which is kept current every session, for the fuller history.)
+This session spanned three efforts: a Profile page mobile pass, new Privacy Policy/Terms of Service pages, and a brand-new "Admin Kanban" board for tracking SaveCraft's own project tasks — closed by discovering that native HTML5 drag-and-drop never worked on iOS touch at all, on *either* kanban board, and fixing it for both. See `session-context.md` for the full blow-by-blow (real bugs found, exact CSS/selector details). (Note: this doc's own log also has a gap — a concurrent session's mobile polish pass across the sidebar drawer, Curated bare-list page, and Shared Saves page landed between this entry and the "older session" one below, but was only logged in `session-context.md`, not here.)
+
+- **Profile page mobile pass** — text sizes bumped throughout, Interests' checkbox grid forced to 2 columns on mobile, Connections rows restructured to stack instead of squeezing description text next to a fixed-width button, and a real bug fixed where `.profile-widget-grid`'s row-pairing stretched the Interests card to match Connections' height, leaving a large empty gap.
+- **New: Privacy Policy & Terms of Service** (`src/webpage/privacy-policy.html`, `terms-of-service.html`) — modeled on Raindrop.io's structure/philosophy where it fit, written honestly for what SaveCraft actually does (no fabricated payment/API terms). Both carry a "working draft" banner. Linked from the Profile page, Settings dropdown, and the Sponsored Statements footer.
+- **New: Admin Kanban board** (`src/app/js/adminKanban.js`) — see "Key Features" below for the full description.
+- **New: `Documentation/launch-requirements.md`** — a ~30-item checklist of what's outstanding before real user testing; seeded onto the Admin Kanban board as real cards, one per sub-task.
+- **Real bug found and fixed: native HTML5 drag-and-drop never fires from touch on iOS Safari** — true of the pre-existing Queue Kanban board, not something this session broke (reported live: "I can't drag on the queue kanban either"). Reimplemented with real touch events in both `kanban.js` and `adminKanban.js`, sharing the same reorder/persist logic as the existing mouse path via one `performDrop()` function per file.
+- Deployed live after every change; committed in two scoped batches (`bbc3019`, `c9d1d39`).
 
 - **Mobile sidebar drawer** (`misc.css`) — fixed-px width (not `vw`, which overshoots on iOS Safari), lighter overlay tint, tighter item padding, the Curated mode-tab made permanently purple/active-styled, and a tighter mobile-only indent for the Dashboard link. Tapping Curated or Shared on mobile now closes the drawer (`closeSidebar()` added to that click handler).
 - **Curated SaveCraft bare-list page** (`cards.css`/`renderCuratedPages.js`) — mobile row layout restructured to CSS Grid via a `display: contents` unwrap trick, avatar shrunk, redundant "View" button replaced by a chevron, Cause Area chips collapsed behind a "View more" toggle, and a new "Why Curated Lists" accordion added.
@@ -18,7 +25,7 @@ This session was a live-feedback-driven mobile polish pass across three areas �
 
 ---
 
-## Recent Additions (previous session)
+## Recent Additions (older session)
 
 This session redesigned the Sponsored Statements partner-pitch page (`src/sponsored/sponsored.html`) to connect it to VoteCraft Coin (VC), then fixed a real bug found while making that page work on the savecraft.org web build.
 
@@ -31,25 +38,7 @@ This session redesigned the Sponsored Statements partner-pitch page (`src/sponso
 
 ---
 
-## Recent Additions (older session)
-
-This session made SaveCraft dual-mode — the same `src/app/` codebase now also runs as a plain web app at **savecraft.org** (Firebase Hosting, same `votecraft-789` Firestore project), not just as the Chrome extension — then did a full mobile-layout pass against a live iPhone 16 Pro, fixing several real, previously-unnoticed mobile bugs.
-
-- **New: web app at savecraft.org**, dual-mode with the extension via a new `src/app/js/platform.js` runtime shim — see "Architecture" → "Storage" below and `Documentation/web-deploy.md` for the full story (deploy steps, DNS/Namecheap gotchas, the temporary "View Demo" sign-in bypass to remove before real visitors arrive).
-- **Real bug found and fixed: Dashboard didn't scroll on mobile** — `dashboard.css` deliberately disabled scrolling on the assumption the widget grid always fits the viewport exactly; true on desktop, but the same widgets stack taller than any phone screen, so everything past the fold was simply unreachable. Mobile-only override re-enables scrolling below 768px.
-- **Real bug found and fixed: Dashboard's welcome banner collapsed to ~90px on mobile** — a mobile CSS rule set `.dash-hero`'s height to `auto`, which (combined with a child using `height:100%`, which resolves to `auto` against an indeterminate parent) collapsed the whole banner down to just the greeting text's own height, clipping the photo collage almost entirely. Rebuilt with a real fixed mobile height, the greeting anchored over a gradient, and smaller collage thumbnails sized for a phone.
-- **Real bug found and fixed: sign-in modal's buttons wrapped onto two lines each** on narrow widths (three buttons flex-shrunk below their own text's width) — now stack full-width below ~480px.
-- **Real bug found and fixed: curated hero banner's icon badge overlapped its own description text on mobile** — the badge is absolutely positioned and vertically centered against the hero's full height; a fixed desktop text `padding-left` left almost no room for the text on mobile, so it wrapped severely, the hero grew tall to fit it, and the badge (still centered on that now-tall hero) ended up floating mid-paragraph. Stacked instead (badge above text) on mobile.
-- **Real bug found and fixed: curated org-list rows squeezed to half-width on mobile** — an existing mobile override stacked the filter rail above the row list, but never reset the row list's own desktop `max-width:50%` + `margin-left:160px` (sized to sit *beside* the filter rail, not below it), so rows stayed squeezed and shoved right, severely word-wrapping every row.
-- **Real bug found and fixed: mobile sidebar drawer squeezed to 64px** whenever a user had previously collapsed the sidebar on desktop — `.sidebar.sidebar-collapsed`'s 64px desktop width rule out-specifies the mobile drawer's own intended `85vw`/300px rule, despite `sidebar.css`'s own comment saying the mobile drawer "isn't affected" by desktop collapse. Re-asserted the mobile width at equal specificity so it always wins there.
-- **Mobile-only trims per direct request**: removed the redundant "My Saves" entry from the desktop hamburger's options dropdown and the redundant "🏠 Home"/"My Saves" pair from the sidebar drawer's mode-tabs row (Curated + ⚡VC remain) on mobile — both duplicated the sidebar's own Home nav item.
-- All fixes are plain `@media (max-width: 768px)` CSS — no device detection — so a desktop browser window resized down to the same width gets identical behavior automatically.
-
----
-
----
-
-*(Earlier sessions: landed real Saved Lists sidebar navigation, rebuilt the Share modal (free-text Message → a Saved Lists picker + an on/off link-sharing toggle), broadened the sponsor pitch page to three offerings, and built a brand-new Embed Builder feature end to end (source picker, style panel, live carousel preview, shareable "Embed code" link) — two real bugs along the way (a CSS Grid track-blowout from an unbreakable URL string, a JS temporal-dead-zone crash from a `const` referenced before its own declaration line ran). Before that — added image/hyperlink support to the My Notes formatting toolbar, restructured category/sidebar navigation across four separate requests, and fixed three real bugs found live (a partial-highlight bug, a sidebar multi-tab-open bug, a toolbar spacing issue). Before that — rebuilt the detail modal's "My Notes"/Chapters/Song List from a plain textarea into a numbered-notes system with a formatting toolbar, focus mode, and per-row rename. Before that — replaced the Music Album gallery's single low-res iTunes cover with a real multi-image gallery sourced from MusicBrainz + the Cover Art Archive, plus several rounds of detail-modal visual polish. Before that — 214 more IMDb Top 250 movies seeded into curated Top 100, "Curated SaveCraft" reshaped into a two-tier browsing experience, and the previously-dead "Shared Saves" dropdown item wired up for the first time. See git history around those eras if needed.)*
+*(Older session: made SaveCraft dual-mode — the same `src/app/` codebase also runs as a plain web app at **savecraft.org** (Firebase Hosting, same `votecraft-789` Firestore project) via a new `src/app/js/platform.js` runtime shim — see "Architecture" → "Storage" below and `Documentation/web-deploy.md`. Same session, a full mobile-layout pass against a live iPhone 16 Pro fixed six real bugs: Dashboard not scrolling on mobile, the welcome banner collapsing to ~90px (a `height:100%`-of-`auto`-parent bug), the sign-in modal's buttons wrapping, a curated hero banner's icon badge overlapping its text, curated org-list rows squeezed to half-width, and the mobile sidebar drawer collapsing to 64px whenever desktop's own collapsed-sidebar preference was set. Earlier sessions: landed real Saved Lists sidebar navigation, rebuilt the Share modal (free-text Message → a Saved Lists picker + an on/off link-sharing toggle), broadened the sponsor pitch page to three offerings, and built a brand-new Embed Builder feature end to end (source picker, style panel, live carousel preview, shareable "Embed code" link) — two real bugs along the way (a CSS Grid track-blowout from an unbreakable URL string, a JS temporal-dead-zone crash from a `const` referenced before its own declaration line ran). Before that — added image/hyperlink support to the My Notes formatting toolbar, restructured category/sidebar navigation across four separate requests, and fixed three real bugs found live (a partial-highlight bug, a sidebar multi-tab-open bug, a toolbar spacing issue). Before that — rebuilt the detail modal's "My Notes"/Chapters/Song List from a plain textarea into a numbered-notes system with a formatting toolbar, focus mode, and per-row rename. Before that — replaced the Music Album gallery's single low-res iTunes cover with a real multi-image gallery sourced from MusicBrainz + the Cover Art Archive, plus several rounds of detail-modal visual polish. Before that — 214 more IMDb Top 250 movies seeded into curated Top 100, "Curated SaveCraft" reshaped into a two-tier browsing experience, and the previously-dead "Shared Saves" dropdown item wired up for the first time. See git history around those eras if needed.)*
 
 ---
 
@@ -97,6 +86,9 @@ Savecraft/
 │   │   ├── sponsored.html       — Standalone "Partner with SaveCraft" pitch page (Sponsored Statements + 2 other offerings) linked from curated Top 100 detail modals + the Settings dropdown; runs on both the extension and the savecraft.org web build
 │   │   ├── sponsored.js         — External ES module (extension-page CSP blocks inline <script>) — sets the "SaveCraft" wordmark link's href via platform.js's resourceUrl()
 │   │   └── vc-bonus.js          — VoteCraft Coin bonus preview badges/panel on the pricing tiers (client-side estimate only — no real VC backend exists anywhere in Votecraft yet)
+│   ├── webpage/
+│   │   ├── privacy-policy.html  — Standalone Privacy Policy page (working draft — see its own banner); linked from Profile, Settings dropdown, Sponsored Statements footer
+│   │   └── terms-of-service.html — Standalone Terms of Service page (same working-draft status); cross-links the Privacy Policy
 │   └── app/
 │       ├── index.html           — Full library page (opens as a new tab); loads js/main.js as an ES module + the css/ stylesheets
 │       ├── js/                  — Library logic, split into ES modules (see below)
@@ -110,7 +102,7 @@ Savecraft/
 
 ### `src/app/js/` modules
 
-The library used to be one ~3,700-line `app.js`. It's now split into 30 ES modules, loaded via `<script type="module" src="js/main.js">` in `index.html`. Modules import/export between each other (some circularly — safe under ES modules since nothing is called at module-evaluation time, only from inside functions):
+The library used to be one ~3,700-line `app.js`. It's now split into 31 ES modules, loaded via `<script type="module" src="js/main.js">` in `index.html`. Modules import/export between each other (some circularly — safe under ES modules since nothing is called at module-evaluation time, only from inside functions):
 
 | Module | Responsibility |
 |--------|-----------------|
@@ -131,7 +123,8 @@ The library used to be one ~3,700-line `app.js`. It's now split into 30 ES modul
 | `renderAuthorPage.js` | `renderAuthorPage` — an author/creator's profile page and their works grid |
 | `renderCuratedPages.js` | `renderCuratedBareList`, `renderCuratedDirectory`, `renderCuratedGenreLanding`, `resolveOrgImageUrl` — the curated Top-100-style landing/directory pages |
 | `renderCardActions.js` | `wireQuickQueueButtons` — the quick add-to-queue button shared by grid cards, author-page cards, and curated landing rows |
-| `kanban.js` | Kanban board rendering, drag-and-drop (cross-column + within-column reorder) — `KANBAN_DEMO`/`KANBAN_COLUMNS` exported for reuse by the Dashboard |
+| `kanban.js` | Kanban board rendering, drag-and-drop (cross-column + within-column reorder, mouse and touch) — `KANBAN_DEMO`/`KANBAN_COLUMNS` exported for reuse by the Dashboard |
+| `adminKanban.js` | Second, separate kanban board for SaveCraft's own project tasks (not saved items) — own local-only state, own drag-and-drop (mouse + touch), own card editor popup |
 | `detailModal.js` | Orchestrator for the item detail modal — re-exports `openDetailModal`/`closeDetailModal`/`getDetailItem`/`openImageLightbox`/`closeImageLightbox`/`showNextImage`/`showPrevImage`/`handleGalleryLoadMoreClick`; the modal's actual sections live in the 5 modules below (2026-07-29 split — was one ~990-line file). The lightbox is a real multi-image gallery now (see Recent Additions), tracked as module-private `_galleryImages`/`_galleryIndex`/`_galleryLoadMore` |
 | `detailModalAccordions.js` | Shared accordion open/close registry (`registerAccordion`/`closeAccordionsExcept`/`resetAccordions`) every other detail-modal section registers with, instead of each hand-listing every other section's DOM elements |
 | `detailModalHeader.js` | Image, sponsored "Your Statement" tag, bookmark/favorite icons, title/author/publication line, Official Website CTA |
@@ -250,6 +243,16 @@ All 4 widget cards stretch to equal height and fill the available vertical space
 | Simple Text | 2 per row | No thumbnail — just the title as a dense text row |
 
 `renderKanbanCard(item, format)` — passing no `format` renders the exact same card the 4-column board has always shown (this code path is untouched by the whole feature). The expanded column and format choice (`state.kanbanExpandedCol`/`state.kanbanExpandedFormat`) are ephemeral — never written to `chrome.storage.sync`, so they reset to the normal board on every reload.
+
+### Admin Kanban
+`js/adminKanban.js`, styled from `css/kanban.css`. A second, separate board from the real Queue Kanban above — for tracking SaveCraft's own project to-do list, not saved items. Cards are freeform (`name` + `details`, edited via a small popup rather than inline) and live entirely in their own `state.adminKanbanCards` array, local-only (`storageSync`, no Firestore dual-write) — this whole feature is expected to be reworked or removed later, so it's kept self-contained in this one file rather than woven through the rest of the app.
+
+- **Reached from** a 5th Dashboard widget (full-width, spanning both grid columns, landing below Curated Lists) and a sidebar entry next to Queue Kanban.
+- **Same visual system as the real board** — `.kcard` sizing, the circular expand button (per-column full-width toggle), empty-column drop hints — but a fixed white card background with black text regardless of theme (per direct request), and cards float a "+ Add card" button over the bottom of the column (not a normal flex sibling) so columns can reach the full height of the screen.
+- **Urgency rating** — an optional 1-10 field in the edit popup, shown as a colored dot (bottom-right) and a left-edge strip: blue 1-3, deep orange 4-7, red 8-10.
+- **Sort dropdown** — A→Z, Z→A, Newest→Oldest, Oldest→Newest, Urgency High→Low, Urgency Low→High, and Custom order (drag order) — one global sort across all four columns, rendered as the board's own content rather than reusing the shared `#sort-select` element (whose fixed option set belongs to the main items grid).
+- **Seeded once** with `Documentation/launch-requirements.md`'s checklist, one card per sub-task, pre-rated by urgency — gated on its own one-time flag (`savecraft_admin_kanban_seeded`) so it never re-adds a card the user deletes.
+- **Touch drag-and-drop** — reimplemented manually (`touchstart`/`touchmove`/`touchend`) alongside the native mouse-based drag, since iOS Safari never fires HTML5 drag-and-drop events from touch at all; the real Queue Kanban board above got the identical fix in the same session.
 
 ### Author / Artist / Director / Studio / Creator Profile Pages
 Every author/director/studio/creator name on a card or in a detail modal is a clickable link (`CREATOR_CARD_CATEGORY` in `state.js`, extended this session from Musician-only to Book/Movie/Show/Game). Clicking it navigates to a dedicated **profile page** for that person/studio within that category:
