@@ -395,11 +395,14 @@
 .dash-card--favorites .dash-carousel,
 .dash-card--curated .dash-carousel {
   gap: 0;
-  /* Bleeds the whole row (arrow + strip) flush to the card's true left edge, matching .dash-card's
-     own 20px padding — per direct request, the slider should reach the widget's edge the same
-     way it already does on the right (where removing the arrow let the strip's flex: 1 claim that
-     space directly). */
+  /* Bleeds the whole row (arrow + strip) flush to the card's true left/right edges, matching
+     .dash-card's own 20px padding — per direct request. REAL BUG, found and fixed: removing the
+     right arrow (earlier) let .dash-carousel-strip's flex: 1 claim the space the arrow used to
+     occupy, but .dash-card's own 20px right padding was still there underneath it the whole
+     time — the strip only ever reached that padding's inner edge, not the card's true edge, so
+     it read as "flush" only by contrast with the wider gap the arrow used to leave. */
   margin-left: -20px;
+  margin-right: -20px;
 }
 .dash-card--favorites .dash-carousel-strip,
 .dash-card--curated .dash-carousel-strip {
