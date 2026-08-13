@@ -385,8 +385,14 @@
 /* Explicit align-self instead of guessing a margin-top offset (tried first, still landed too
    high per direct request even at 8px) — this actually centers it with the "Recent Saves" title
    text on its own baseline, the same way Open/Add already align with their own titles. */
+/* align-self: center alone (tried first) had no visible effect — still sat closer to the top
+   than Add/Open (reported live, screenshot confirmed). This wrap already has position: relative
+   from its shared .board-filter-wrap base rule (kanban.css), so a direct top offset bypasses
+   whatever's actually eating the flex-centering math instead of fighting it further. */
 .dash-fav-category-wrap {
   align-self: center;
+  position: relative;
+  top: 8px;
 }
 
 /* Favorites Spotlight's category filter button — reuses the Kanban board's .btn-board-filter
