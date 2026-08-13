@@ -10,7 +10,7 @@ import {
   SPLIT_TITLE_CREATOR_CATEGORIES, splitCuratedTitleCreator, getStaticCuratedCreator,
 } from './curatedCreatorLookup.js';
 import { storageSync, storageLocal } from './platform.js';
-import { isAdminUser } from './utils.js';
+import { isAdminUser, isQueueDemoId } from './utils.js';
 
 const _FIREBASE_PROJECT = 'votecraft-789';
 const _FIREBASE_API_KEY = 'AIzaSyArJ6pkXUDbZf4jcxRita0qcdr-hT46kI8';
@@ -326,17 +326,19 @@ function _seedQueueDemoItems() {
 // One-time patch for the queue-demo-N cards seeded before the "Demo:" title prefix was removed,
 // per direct request ("remove the word demo") — strips it from anyone who already has one of
 // these seeded items with the old title, without touching anything the user typed themselves.
-// Matches by the same stable queue-demo-N ids _seedQueueDemoItems() uses, same pattern as
-// _backfillSeedUrgency below for Admin Kanban.
+// Matches by the same stable queue-demo-N ids _seedQueueDemoItems() uses (isQueueDemoId, shared
+// with kanban.js/dashboard.js's card renderers), same pattern as _backfillSeedUrgency below for
+// Admin Kanban. Returns the touched items directly rather than just a changed flag, so the
+// caller can persist them without a second pass over the full item list.
 function _backfillDemoTitles(items) {
-  let changed = false;
+  const touched = [];
   items.forEach(item => {
-    if (/^queue-demo-\d+$/.test(item.id) && item.title?.startsWith('Demo: ')) {
+    if (isQueueDemoId(item.id) && item.title?.startsWith('Demo: ')) {
       item.title = item.title.slice('Demo: '.length);
-      changed = true;
+      touched.push(item);
     }
   });
-  return changed;
+  return touched;
 }
 
 export async function loadAll() {
@@ -358,13 +360,9 @@ export async function loadAll() {
         // One-time patch for boards seeded before the "Demo:" prefix was removed — see
         // _backfillDemoTitles's own comment. Only relevant on this branch: the fresh-seed branch
         // above already gets the unprefixed title straight from _seedQueueDemoItems().
-        if (_backfillDemoTitles(state.items)) {
-          const toSave = { savecraft_queue_demo_title_backfilled: true };
-          state.items.filter(i => /^queue-demo-\d+$/.test(i.id)).forEach(item => { toSave[`item_${item.id}`] = item; });
-          storageSync.set(toSave);
-        } else {
-          storageSync.set({ savecraft_queue_demo_title_backfilled: true });
-        }
+        const toSave = { savecraft_queue_demo_title_backfilled: true };
+        _backfillDemoTitles(state.items).forEach(item => { toSave[`item_${item.id}`] = item; });
+        storageSync.set(toSave);
       }
       state.folders = Object.entries(data)
         .filter(([k]) => k.startsWith('folder_'))
