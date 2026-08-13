@@ -278,7 +278,11 @@
 
 
 /* ===== SCROLLBAR ===== */
-::-webkit-scrollbar { width: 6px; }
+/* height (thickness of a HORIZONTAL scrollbar) was missing here — width only styles vertical
+   scrollbars, so any horizontal-overflow element (e.g. .kanban-board when its columns overflow
+   the window width) fell back to the browser's native thick gray scrollbar instead of this same
+   thin themed one, showing up as a stray gray bar along its bottom edge. */
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
