@@ -383,6 +383,20 @@
   background: var(--active-bg-light);
 }
 
+/* Dashboard's own icon square fills solid purple (white icon for contrast) when Dashboard is the
+   active view — per direct request/reference screenshot. Unscoped by any media query so it applies
+   everywhere (mobile drawer and the normal expanded desktop sidebar alike), not just the desktop
+   collapsed rail's own version of this same effect above. Scoped to .sidebar-dashboard-link only,
+   not every category's .sidebar-item.active — matches exactly what was asked for. The icon's own
+   inline fill="#5B5BEF" attribute (renderSidebar.js) is a presentation attribute, so this stylesheet
+   rule overrides it same as the collapsed-rail version already relies on. */
+.sidebar-dashboard-link.active .cat-icon {
+  background: var(--primary);
+}
+.sidebar-dashboard-link.active .cat-icon svg {
+  fill: #fff;
+}
+
 /* Wraps any collapsible sidebar section's header row plus its expanded children — Dashboard
    (Queue Kanban, Admin Kanban, and Saved Lists/Curated Lists' own header rows, though not their
    further-nested list items — see the [data-toggle-list] handler below, which still toggles those
