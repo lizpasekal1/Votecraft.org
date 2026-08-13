@@ -4,7 +4,8 @@ import {
   state, CURATED_ITEMS, CATEGORIES, CAT_LABEL, CAT_EMOJI, CURATED_GENRES, GENRE_EMOJI,
   PRIMARY_FOLDER_ID,
 } from './state.js';
-import { escapeHtml, folderIconHtml, sortFoldersForDisplay, catClass } from './utils.js';
+import { escapeHtml, folderIconHtml, sortFoldersForDisplay, catClass, isAdminUser } from './utils.js';
+import { getCurrentUser } from './auth.js';
 import { persistItem, persistFolder, removeFolder, persistSavedLists } from './storage.js';
 import { closeSidebar } from './main.js';
 import { matchesPrimaryOrUnfoldered } from './renderFilters.js';
@@ -277,9 +278,10 @@ export function renderSidebar() {
       <div class="sidebar-item sidebar-subfolder sidebar-kanban-link ${state.view === 'kanban' ? 'active' : ''}" data-view="kanban">
         ${KANBAN_ICON_SVG} Queue Kanban
       </div>
+      ${isAdminUser(getCurrentUser()?.email, state.role) ? `
       <div class="sidebar-item sidebar-subfolder sidebar-admin-kanban-link ${state.view === 'admin-kanban' ? 'active' : ''}" data-view="admin-kanban">
         ${ADMIN_KANBAN_ICON_SVG} Admin Kanban
-      </div>
+      </div>` : ''}
       ${_renderDashboardListRow({
         key: 'saved-lists', icon: SAVED_LISTS_ICON_SVG, label: 'Saved Lists', items: state.savedLists,
         linkClass: 'sidebar-saved-lists-link', childClass: 'sidebar-saved-lists-child', addClass: 'sidebar-add-saved-list',
