@@ -182,6 +182,14 @@ function _enterCreateAccountMode() {
   document.getElementById('btn-auth-save').style.display = '';
   document.getElementById('auth-password-hint').style.display = '';
   document.getElementById('auth-password-confirm-field').style.display = '';
+  // Hidden here regardless of requireWebSignIn's own gate state, per request — restored in
+  // _exitCreateAccountMode below, not just left visible, since it's still relevant on the plain
+  // Create account/Sign in screen while the gate is active.
+  document.getElementById('btn-auth-demo').style.display = 'none';
+  // "Forgot password?" doesn't apply while creating a brand-new password — swapped for a way back
+  // to the sign-in screen instead, per request.
+  document.getElementById('btn-auth-forgot-password').style.display = 'none';
+  document.getElementById('btn-auth-back-to-signin').style.display = '';
   _updateSaveDisabled();
 }
 // Reverts to the initial signed-out view — called whenever the modal opens/closes fresh, so
@@ -192,6 +200,11 @@ function _exitCreateAccountMode() {
   document.getElementById('btn-auth-signin').style.display = '';
   document.getElementById('btn-auth-save').style.display = 'none';
   document.getElementById('auth-password-hint').style.display = 'none';
+  // Only restored while requireWebSignIn's forced gate is actually active — this also runs from
+  // plain closeAuthModal()/openAuthModal() calls outside the gate, where Demo was never shown.
+  document.getElementById('btn-auth-demo').style.display = _authGateActive ? '' : 'none';
+  document.getElementById('btn-auth-forgot-password').style.display = '';
+  document.getElementById('btn-auth-back-to-signin').style.display = 'none';
   document.getElementById('auth-password-confirm-field').style.display = 'none';
 }
 
@@ -463,6 +476,10 @@ async function init() {
     if (e.target === document.getElementById('auth-modal-overlay')) closeAuthModal();
   });
   document.getElementById('btn-auth-create').addEventListener('click', _enterCreateAccountMode);
+  document.getElementById('btn-auth-back-to-signin').addEventListener('click', () => {
+    document.getElementById('auth-error').style.display = 'none';
+    _exitCreateAccountMode();
+  });
   document.getElementById('btn-auth-signin').addEventListener('click', handleSignIn);
   document.getElementById('btn-auth-save').addEventListener('click', handleAuthSave);
   document.getElementById('auth-password').addEventListener('input', _updateSaveDisabled);
