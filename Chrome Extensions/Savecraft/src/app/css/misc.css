@@ -728,10 +728,11 @@
     padding-bottom: 8px;
     min-height: 38px;
   }
-  /* Dashboard row specifically — shifted further left (was the same 20px indent every other row
-     uses) and shorter top/bottom padding, per request. */
+  /* Dashboard row specifically — shorter top/bottom padding, per an earlier request. Its
+     padding-left override (10px, vs. every other row's 20px) was removed per a later request —
+     shifting it left of its own icon made it visibly misaligned against Sources/Shows/Music/etc.
+     below it; now it falls back to the shared 20px indent like every other top-level row. */
   .sidebar-dashboard-link {
-    padding-left: 10px;
     padding-top: 5px;
     padding-bottom: 5px;
   }

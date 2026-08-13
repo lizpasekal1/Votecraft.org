@@ -85,7 +85,8 @@
   .sidebar.sidebar-collapsed .sidebar-subfolder,
   .sidebar.sidebar-collapsed .sidebar-add-folder,
   .sidebar.sidebar-collapsed .sidebar-divider,
-  .sidebar.sidebar-collapsed .sidebar-genre-arrow {
+  .sidebar.sidebar-collapsed .sidebar-genre-arrow,
+  .sidebar.sidebar-collapsed .sidebar-group-bg {
     display: none;
   }
   .sidebar.sidebar-collapsed .sidebar-item {
@@ -100,7 +101,11 @@
   }
 
   /* Collapsed rail: the full-row hover highlight looks off since the row is much wider than the
-     icon itself — instead, only the icon's own background square lightens on hover. */
+     icon itself — instead, only the icon's own background square lightens on hover. Same reasoning
+     is why .sidebar-group-bg (the open-section gray fill, sidebar.css further down) is hidden
+     outright above rather than adapted to the rail — it rendered its full-row rounded-right shape
+     behind a single 64px-wide icon whenever that section happened to be open, reported live as a
+     stray rounded shape behind the Dashboard icon specifically (Dashboard defaults to open). */
   .sidebar.sidebar-collapsed .sidebar-item:hover {
     background: none;
   }
