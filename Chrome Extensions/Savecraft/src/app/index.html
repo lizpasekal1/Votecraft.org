@@ -203,7 +203,11 @@
           <input type="password" id="auth-password-confirm" placeholder="Re-enter password" autocomplete="new-password" />
         </div>
         <div id="auth-error" class="auth-error" style="display:none"></div>
+        <!-- Doesn't apply while creating a NEW password — swapped for "Back to sign in" instead
+             (main.js's _enterCreateAccountMode/_exitCreateAccountMode toggle which of these two
+             shows, never both). -->
         <button type="button" class="auth-forgot-password-link" id="btn-auth-forgot-password">Forgot password?</button>
+        <button type="button" class="auth-forgot-password-link" id="btn-auth-back-to-signin" style="display:none">Back to sign in</button>
         <div id="auth-signed-in-info" class="auth-signed-in-info" style="display:none"></div>
       </div>
       <div class="modal-actions" id="auth-signed-out-actions">
