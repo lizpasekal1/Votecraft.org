@@ -190,6 +190,7 @@ function _enterCreateAccountMode() {
   // to the sign-in screen instead, per request.
   document.getElementById('btn-auth-forgot-password').style.display = 'none';
   document.getElementById('btn-auth-back-to-signin').style.display = '';
+  _exitRobotCheckStep();
   _updateSaveDisabled();
 }
 // Reverts to the initial signed-out view — called whenever the modal opens/closes fresh, so
@@ -206,6 +207,7 @@ function _exitCreateAccountMode() {
   document.getElementById('btn-auth-forgot-password').style.display = '';
   document.getElementById('btn-auth-back-to-signin').style.display = 'none';
   document.getElementById('auth-password-confirm-field').style.display = 'none';
+  _exitRobotCheckStep();
 }
 
 // Save (create-account mode only) is disabled until a password is typed, per request.
@@ -213,12 +215,44 @@ function _updateSaveDisabled() {
   document.getElementById('btn-auth-save').disabled = document.getElementById('auth-password').value.length === 0;
 }
 
-const _PASSWORD_COMPLEXITY_ERROR = 'New passwords need at least one number and one special character.';
+// Holds the email/password Save already validated (confirm-match + complexity), for
+// handleConfirmRobotCheck to actually create the account with once the checkbox step below is
+// confirmed — not read back from the (by then hidden) fields themselves.
+let _pendingSignup = null;
+
+// Shown after Save passes its own checks, in place of the email/password/confirm fields — the
+// account isn't created until this step is confirmed too, per request. Plain checkbox, not a real
+// CAPTCHA (see index.html's own comment on #auth-robot-check for why).
+function _enterRobotCheckStep(email, password) {
+  _pendingSignup = { email, password };
+  document.getElementById('auth-signed-out-fields').style.display = 'none';
+  document.getElementById('auth-password-hint').style.display = 'none';
+  document.getElementById('auth-password-field').style.display = 'none';
+  document.getElementById('auth-password-confirm-field').style.display = 'none';
+  document.getElementById('btn-auth-back-to-signin').style.display = 'none';
+  document.getElementById('btn-auth-save').style.display = 'none';
+  document.getElementById('auth-robot-check').style.display = '';
+  document.getElementById('auth-robot-checkbox').checked = false;
+  document.getElementById('btn-auth-confirm-robot').style.display = '';
+  document.getElementById('btn-auth-confirm-robot').disabled = true;
+}
+// Reverts the robot-check step back to the normal create-account fields — called whenever
+// create-account mode itself is exited, so a cancelled/completed attempt never lingers into the
+// next time this modal opens.
+function _exitRobotCheckStep() {
+  _pendingSignup = null;
+  document.getElementById('auth-signed-out-fields').style.display = '';
+  document.getElementById('auth-password-field').style.display = '';
+  document.getElementById('auth-robot-check').style.display = 'none';
+}
+
+const _PASSWORD_COMPLEXITY_ERROR = 'New passwords need at least 8 characters, including a number and a special character.';
 // Only matters for a new account, per request — an existing user's password was created under
-// whatever rules applied when they first signed up, and shouldn't suddenly fail this retroactively
-// just to sign in with it.
+// whatever rules applied when they first signed up (Firebase's own server-side floor is 6, not 8 —
+// this app's own stricter length requirement, checked client-side since Firebase has no per-app way
+// to raise its own minimum), and shouldn't suddenly fail this retroactively just to sign in with it.
 function _passwordMeetsComplexity(password) {
-  return /\d/.test(password) && /[^A-Za-z0-9]/.test(password);
+  return password.length >= 8 && /\d/.test(password) && /[^A-Za-z0-9]/.test(password);
 }
 
 // Blocks app init until a web visitor is signed in. No-ops instantly on the extension (sign-in
@@ -314,6 +348,10 @@ async function handleSignIn() {
 // real API that this project has email-enumeration protection on, so a wrong password and a
 // nonexistent account return the identical error, which made "guess from the failure" fundamentally
 // unreliable. Asking the person to just say which they meant sidesteps the whole problem.)
+//
+// Doesn't create the account itself — once confirm-match/complexity pass, it hands off to the
+// robot-check step (_enterRobotCheckStep); handleConfirmRobotCheck below is what actually calls
+// signUp, once that step is confirmed too.
 async function handleAuthSave() {
   const email = document.getElementById('auth-email').value.trim();
   const password = document.getElementById('auth-password').value;
@@ -328,6 +366,14 @@ async function handleAuthSave() {
     showAuthError(_PASSWORD_COMPLEXITY_ERROR);
     return;
   }
+
+  _enterRobotCheckStep(email, password);
+}
+
+async function handleConfirmRobotCheck() {
+  if (!_pendingSignup) return; // shouldn't happen — button is only enabled once this is set
+  const { email, password } = _pendingSignup;
+  document.getElementById('auth-error').style.display = 'none';
 
   const result = await signUp(email, password);
   if (result.ok) {
@@ -483,6 +529,10 @@ async function init() {
   document.getElementById('btn-auth-signin').addEventListener('click', handleSignIn);
   document.getElementById('btn-auth-save').addEventListener('click', handleAuthSave);
   document.getElementById('auth-password').addEventListener('input', _updateSaveDisabled);
+  document.getElementById('auth-robot-checkbox').addEventListener('change', e => {
+    document.getElementById('btn-auth-confirm-robot').disabled = !e.target.checked;
+  });
+  document.getElementById('btn-auth-confirm-robot').addEventListener('click', handleConfirmRobotCheck);
   document.getElementById('btn-auth-forgot-password').addEventListener('click', async e => {
     const email = document.getElementById('auth-email').value.trim();
     document.getElementById('auth-error').style.display = 'none';
@@ -523,10 +573,12 @@ async function init() {
   });
   document.getElementById('auth-modal-overlay').addEventListener('keydown', e => {
     if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') {
-      // Whichever action is actually showing — Save once Create account mode is active, Sign in
-      // otherwise — matching whichever button click Enter is standing in for.
-      const inCreateMode = document.getElementById('btn-auth-save').style.display !== 'none';
-      if (inCreateMode) {
+      // Whichever action is actually showing — matching whichever button click Enter is standing
+      // in for: Continue during the robot-check step, Save once Create account mode is otherwise
+      // active, Sign in on the initial screen.
+      if (document.getElementById('btn-auth-confirm-robot').style.display !== 'none') {
+        if (!document.getElementById('btn-auth-confirm-robot').disabled) handleConfirmRobotCheck();
+      } else if (document.getElementById('btn-auth-save').style.display !== 'none') {
         if (!document.getElementById('btn-auth-save').disabled) handleAuthSave();
       } else {
         handleSignIn();

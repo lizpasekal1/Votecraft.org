@@ -191,7 +191,7 @@
         <!-- Same visibility as the confirm-password field below (main.js's
              _enterCreateAccountMode/_exitCreateAccountMode) — only relevant once "Create account"
              is actually active. -->
-        <div class="auth-password-hint" id="auth-password-hint" style="display:none">At least 6 characters, including a number and a special character.</div>
+        <div class="auth-password-hint" id="auth-password-hint" style="display:none">At least 8 characters, including a number and a special character.</div>
         <div class="form-group" id="auth-password-field">
           <input type="password" id="auth-password" placeholder="Password" autocomplete="current-password" />
         </div>
@@ -208,6 +208,16 @@
              shows, never both). -->
         <button type="button" class="auth-forgot-password-link" id="btn-auth-forgot-password">Forgot password?</button>
         <button type="button" class="auth-forgot-password-link" id="btn-auth-back-to-signin" style="display:none">Back to sign in</button>
+        <!-- Shown only after Save passes its own confirm-match/complexity checks (main.js's
+             _enterRobotCheckStep) — the account isn't actually created until this is confirmed
+             too. A plain checkbox, not a real CAPTCHA (nothing server-side verifies it — a script
+             could tick it as easily as a person), per request. -->
+        <div class="form-group auth-robot-check" id="auth-robot-check" style="display:none">
+          <label>
+            <input type="checkbox" id="auth-robot-checkbox" />
+            I am not a robot
+          </label>
+        </div>
         <div id="auth-signed-in-info" class="auth-signed-in-info" style="display:none"></div>
       </div>
       <div class="modal-actions" id="auth-signed-out-actions">
@@ -217,8 +227,12 @@
                password field first. Sign in submits immediately, no intermediate step. -->
           <button class="btn-cancel" id="btn-auth-create">Create account</button>
           <button class="btn-primary" id="btn-auth-signin">Sign in</button>
-          <!-- Hidden until Create account is clicked. Disabled until a password is typed. -->
+          <!-- Hidden until Create account is clicked. Disabled until a password is typed. Doesn't
+               create the account directly — see handleAuthSave, which validates then hands off to
+               the robot-check step below instead of calling signUp itself. -->
           <button class="btn-primary" id="btn-auth-save" style="display:none" disabled>Save</button>
+          <!-- Hidden until the robot-check step is showing. Disabled until the checkbox is ticked. -->
+          <button class="btn-primary" id="btn-auth-confirm-robot" style="display:none" disabled>Continue</button>
         </div>
         <!-- TEMPORARY, demo-only: lets a web visitor skip sign-in during early demo work. Only
              ever revealed on the web build's mandatory sign-in gate (see main.js's
