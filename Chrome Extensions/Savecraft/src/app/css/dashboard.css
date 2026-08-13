@@ -107,7 +107,13 @@
 .dash-widget-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr); /* both rows equal height, so all 4 cards match */
+  /* Rows 1-2 stay an equal-height pair (unchanged, still just the original 4 cards); the 3rd
+     row — Admin Kanban, a 5th widget appended after Profile — is auto-sized to its own content
+     instead of being forced into that same 1fr pairing, same reasoning as misc.css's identical
+     grid-template-rows: none fix on the Profile page's widget grid. It's the only item in that
+     row (see .dash-card--admin-kanban's grid-column below for why it still reads as one full-
+     width bar rather than a half-width tile next to an empty gap). */
+  grid-template-rows: repeat(2, 1fr) auto;
   gap: 16px;
   flex: 1; /* stretch to fill whatever vertical space is left after the hero */
 }
@@ -297,6 +303,38 @@
   text-align: center;
   padding: 2px;
 }
+
+/* Admin Kanban widget — spans both columns (its own explicit auto row, see .dash-widget-grid
+   above) so it reads as one full-width bar at the bottom of the grid rather than a half-width
+   tile next to an empty gap. */
+.dash-card--admin-kanban {
+  grid-column: 1 / -1;
+}
+
+/* Wider than the Queue widget's 2-column mini-board (.dash-kanban-mini-board) — all 4 columns
+   fit comfortably in one row now that this card has the full grid width to itself. */
+.dash-admin-kanban-mini-board {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Text-only equivalent of .dash-kmini-card (which is built around a thumbnail image) — Admin
+   Kanban cards are just freeform task text, so this is a plain clamped snippet instead. */
+.dash-admin-kmini-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--text-primary);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.dash-admin-kmini-card:hover { border-color: var(--primary); }
 
 /* Shared thumbnail-carousel style — used by both Favorites Spotlight and Curated Lists so they
    read as the same visual language: a horizontally scrollable row of landscape thumbnails with

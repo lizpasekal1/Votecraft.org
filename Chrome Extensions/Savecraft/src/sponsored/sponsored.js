@@ -6,3 +6,5 @@ import { resourceUrl } from '../app/js/platform.js';
 // Navigates this tab back into the SaveCraft app (window.opener isn't available here since
 // the link that opened this page uses rel="noopener").
 document.getElementById('link-savecraft').href = resourceUrl('src/app/index.html');
+document.getElementById('link-privacy-policy').href = resourceUrl('src/webpage/privacy-policy.html');
+document.getElementById('link-terms-of-service').href = resourceUrl('src/webpage/terms-of-service.html');

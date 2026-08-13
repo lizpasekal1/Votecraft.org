@@ -32,12 +32,29 @@
       color: var(--text);
       min-height: 100vh;
       line-height: 1.6;
+      /* This page has none of the main app's own horizontal-overflow guards (base.css's
+         touch-action: pan-y etc.) — it's a standalone static page with its own stylesheet. Without
+         this, any element that's even slightly wider than the viewport (e.g. .vc-info-tooltip
+         below, which stays in layout via visibility:hidden rather than display:none, so its 280px
+         box counts toward scrollable width even while invisible) turns the whole page horizontally
+         scrollable/bounceable — reported live as the page being able to "move back and forth
+         weirdly" on mobile. */
+      overflow-x: hidden;
     }
 
     .page {
       max-width: 960px;
       margin: 0 auto;
       padding: 52px 40px 120px;
+    }
+
+    @media (max-width: 760px) {
+      /* 40px a side was fine against desktop's much wider canvas but eats a real chunk of a
+         phone's own width; also tightened the huge 120px bottom reservation (sized for a desktop
+         viewport's own scroll headroom) down to something proportionate. */
+      .page {
+        padding: 32px 20px 64px;
+      }
     }
 
     /* Wordmark */
@@ -284,7 +301,11 @@
       box-shadow: 0 12px 32px rgba(91, 91, 239, 0.18);
     }
 
-    .pricing-left { flex: 1; }
+    /* min-width: 0 — a flex item's default min-width is auto (its own content's width), not 0;
+       without this, .pricing-includes' row of pill badges could refuse to shrink below its own
+       natural width and force the whole .pricing-card row wider than its container, same class of
+       bug as dashboard.css's identical fix on .dash-card. */
+    .pricing-left { flex: 1; min-width: 0; }
 
     .pricing-name {
       font-size: 16px;
@@ -326,6 +347,20 @@
     .pricing-right {
       text-align: right;
       flex-shrink: 0;
+    }
+
+    @media (max-width: 760px) {
+      /* Price/VC-badge column stacks below the description instead of squeezing beside it —
+         .pricing-right's own flex-shrink: 0 meant it never gave up room on a narrow screen, so it
+         and .pricing-left were both fighting for space in the same row regardless of how much text
+         either one had. */
+      .pricing-card {
+        flex-direction: column;
+        padding: 22px 20px;
+      }
+      .pricing-right {
+        text-align: left;
+      }
     }
 
     .pricing-price {
@@ -607,6 +642,25 @@
     .vc-no-anim .coin-mini {
       animation: none;
     }
+
+    /* Footer — just enough to carry the Privacy Policy link (per direct request), not a full
+       sitemap-style footer; kept quiet (faint text, no background) so it doesn't compete with the
+       CTA box directly above it. */
+    .page-footer {
+      margin-top: 56px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--text-faint);
+    }
+    .page-footer a {
+      color: var(--text-faint);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .page-footer a:hover {
+      color: var(--primary);
+    }
   </style>
 </head>
 <body>
@@ -801,6 +855,12 @@
       <h2>Interested in a placement?</h2>
       <p>We work with nonprofits, advocacy organizations, civic tech companies, and mission-driven brands. All placements are reviewed for alignment with VoteCraft's values before going live.</p>
       <a class="btn-contact" href="mailto:hello@votecraft.com">Get in touch →</a>
+    </div>
+
+    <div class="page-footer">
+      <a id="link-privacy-policy" href="#" target="_blank" rel="noopener">Privacy Policy</a>
+      <span aria-hidden="true">·</span>
+      <a id="link-terms-of-service" href="#" target="_blank" rel="noopener">Terms of Service</a>
     </div>
 
   </div>

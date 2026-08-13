@@ -461,6 +461,8 @@ async function init() {
     navigateToView('profile');
   });
   document.getElementById('link-sponsored-statements').href = resourceUrl('src/sponsored/sponsored.html');
+  document.getElementById('link-privacy-policy').href = resourceUrl('src/webpage/privacy-policy.html');
+  document.getElementById('link-terms-of-service').href = resourceUrl('src/webpage/terms-of-service.html');
   document.addEventListener('click', e => {
     if (!settingsWrap.contains(e.target)) settingsDropdown.setAttribute('hidden', '');
   });

@@ -11,6 +11,7 @@ import { persistViewState, persistItem, persistHiddenCurated, removeItem } from 
 import { navigateToView } from './navigation.js';
 import { wireCardAuthorLinks } from './authors.js';
 import { renderKanbanBoard } from './kanban.js';
+import { renderAdminKanbanBoard } from './adminKanban.js';
 import { openDetailModal } from './detailModal.js';
 import { openEditModal } from './addEditModal.js';
 import { renderDashboard } from './dashboard.js';
@@ -64,6 +65,11 @@ export function renderGrid() {
 
   if (state.view === 'kanban') {
     renderKanbanBoard();
+    return;
+  }
+
+  if (state.view === 'admin-kanban') {
+    renderAdminKanbanBoard();
     return;
   }
 

@@ -14,6 +14,22 @@ import { persistFollowedCuratedLists, persistSavedLists, persistFolder, disconne
 import { ensureLastfmRecentTracks, ensureSteamRecentGames } from './api.js';
 import { CURATED_LIST_DISPLAY_NAMES, DEMO_PROFILE_NAME } from './dashboard.js';
 import { openAuthModal, openLastfmModal, openSteamModal } from './main.js';
+import { resourceUrl } from './platform.js';
+
+const PRIVACY_POLICY_URL = resourceUrl('src/webpage/privacy-policy.html');
+const TERMS_OF_SERVICE_URL = resourceUrl('src/webpage/terms-of-service.html');
+
+// Shared by both the desktop card and the mobile page-end duplicate below — one legal-links row
+// (Privacy Policy · Terms of Service) rather than two separate elements needing their own mobile
+// swap class each.
+function buildLegalLinksRow(extraClass = '') {
+  return `
+    <div class="profile-legal-links${extraClass ? ` ${extraClass}` : ''}">
+      <a href="${PRIVACY_POLICY_URL}" target="_blank" rel="noopener">Privacy Policy</a>
+      <span class="profile-legal-sep">·</span>
+      <a href="${TERMS_OF_SERVICE_URL}" target="_blank" rel="noopener">Terms of Service</a>
+    </div>`;
+}
 
 // ===== account =====
 
@@ -41,7 +57,10 @@ function buildAccountSection(user) {
             <div class="profile-account-email">${displayName}</div>
           </div>
         </div>
-        <button class="btn-cancel" id="profile-manage-account">Manage account</button>
+        <div class="profile-account-actions">
+          <button class="btn-cancel" id="profile-manage-account">Manage account</button>
+          ${buildLegalLinksRow()}
+        </div>
       </div>
       ${verifyBanner}
     </div>`;
@@ -458,6 +477,7 @@ export function renderProfilePage() {
         ${buildSavedListsSection()}
       </div>
       <button class="btn-cancel profile-manage-account-mobile" id="profile-manage-account-mobile">Manage account</button>
+      ${buildLegalLinksRow('profile-legal-links-mobile')}
     </div>`;
 
   wireAccountSection(container);

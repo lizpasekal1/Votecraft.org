@@ -207,6 +207,89 @@ export async function initCuratedItems() {
   setCuratedItems(await _getCuratedItems());
 }
 
+// One-time Admin Kanban seed — the launch-requirements.md checklist (Documentation/), one card
+// per sub-task rather than one card per top-level item, per direct request. Column keys match
+// adminKanban.js's ADMIN_KANBAN_COLUMNS ('todo'/'in-progress'/'blocked'/'done'); the three
+// already-completed Privacy Policy/Terms sub-tasks seed straight into 'done' so the board reflects
+// real progress already made, not just what's left.
+function _seedAdminKanbanCards() {
+  // 3rd tuple element is urgency (1-10, matching the card's own colored dot — blue 1-3/yellow
+  // 4-7/red 8-10) — highest on the Firestore-rules blocker and its immediate legal-page
+  // follow-ups, lowest on cross-browser/cleanup. Omitted (undefined) on the 'done' group — an
+  // already-finished task has nothing left to prioritize.
+  const groups = {
+    todo: [
+      ['Compare live Firestore rules vs. local file', 'console.firebase.google.com → votecraft-789 → Firestore → Rules. Compare against firebase/firestore.rules.', 10],
+      ['Deploy Firestore rules if they don’t match', 'firebase deploy --only firestore:rules --project votecraft-789', 10],
+      ['Verify per-user Firestore isolation', 'Signed in as one test account, confirm you can’t read/write another account’s savecraft_users/{uid} doc.', 9],
+      ['Confirm curated content stays public-read/write-denied', 'curated_items / curated_genres collections.', 8],
+      ['Update security doc once rules are confirmed live', 'savecraft-profile-security.md → "One thing to actually do" section.', 6],
+      ['Fill in governing-law placeholder in Terms of Service', 'The [insert state/jurisdiction] line in terms-of-service.html.', 7],
+      ['Get Privacy Policy + Terms reviewed by someone with real legal judgment', 'Then remove the yellow "working draft" banner from both pages.', 8],
+      ['Decide on a forgot-password approach', 'Firebase Auth’s built-in sendPasswordResetEmail is the simplest fit.', 6],
+      ['Add a "Forgot password?" link to the sign-in modal', '', 5],
+      ['Wire the forgot-password link to send the reset email', '', 5],
+      ['Add a "check your email" confirmation state to the modal', '', 4],
+      ['Test the full password-reset loop end-to-end', 'Request → email arrives → reset → sign in with the new password.', 5],
+      ['Decide: should savecraft.org allow local-only browsing?', 'Extension already allows it without an account — decide if the website should too, or stay sign-in-required.', 5],
+      ['Scope the local-browsing gating work for web', 'If bringing it to web — platform.js’s localStorage shim already exists, likely just gating logic in main.js’s init().', 4],
+      ['Decide what "View Demo" should permanently be', 'If staying sign-in-required for the website.', 4],
+      ['Update security doc with the sign-in-requirement decision', '', 3],
+      ['Pick an error/usage monitoring tool', 'Firebase Analytics (least setup, same project) vs. Sentry vs. just asking testers to check console.', 5],
+      ['Add the monitoring SDK/snippet', '', 5],
+      ['Confirm monitoring events actually show up', 'Send a real test event and check the dashboard.', 4],
+      ['Write testers a "how to report a bug" note', 'What to screenshot/copy.', 3],
+      ['Mobile pass: Dashboard', 'Hero, all 5 widgets including the new Admin Kanban tile.', 5],
+      ['Mobile pass: Queue Kanban board', '', 5],
+      ['Mobile pass: Admin Kanban board', 'Brand new — never mobile-tested at all yet.', 4],
+      ['Mobile pass: Curated pages', 'Landing, genre pages, Cause Curated bare list.', 5],
+      ['Mobile pass: Shared Saves page', '', 4],
+      ['Mobile pass: Modals', 'Add/Edit item, Detail modal, Auth/sign-in modal.', 5],
+      ['Cross-browser test: Android Chrome', '', 3],
+      ['Cross-browser test: Desktop Firefox', '', 2],
+      ['Cross-browser test: Desktop Safari', '', 2],
+      ['Cross-browser test: Desktop Chrome', 'Sanity check — likely fine but unconfirmed.', 1],
+      ['Confirm the games/ and api/ deletions are actually unwanted', 'Called a mistake earlier — double-check before restoring.', 3],
+      ['Restore games/api deletions via git', 'git restore / git checkout -- for games/jokemaster, games/power-plays, games/scavenger-tours, and the affected api/* files.', 3],
+      ['Double-check nothing else in the working tree needs cleanup', '', 2],
+      ['Check Chrome Web Store publish status', 'Published, unlisted, or not submitted at all?', 3],
+      ['Decide: publish unlisted vs. have testers sideload', '', 2],
+      ['Write sideload install instructions', 'Only needed if testers will sideload rather than install from the Store.', 2],
+    ],
+    done: [
+      ['Draft Privacy Policy page', 'src/webpage/privacy-policy.html'],
+      ['Draft Terms of Service page', 'src/webpage/terms-of-service.html'],
+      ['Link Privacy Policy + Terms from the app', 'Profile page (desktop + mobile), Settings dropdown, Sponsored Statements footer.'],
+    ],
+  };
+  const now = Date.now();
+  let i = 0;
+  const cards = [];
+  for (const [status, entries] of Object.entries(groups)) {
+    entries.forEach(([name, details, urgency], manualOrder) => {
+      cards.push({ id: `admin-seed-${i}`, name, details, urgency: urgency ?? null, status, manualOrder, createdAt: now + (i++) });
+    });
+  }
+  return cards;
+}
+
+// One-time backfill for urgency on cards seeded before this feature existed — _seedAdminKanbanCards()
+// above now bakes urgency in from the start for anyone seeding fresh, but this user's board was
+// very likely already seeded (without urgency) before this shipped. Matches by the same stable
+// admin-seed-N ids rather than re-seeding, so it only ever touches those specific cards — nothing
+// the user added themselves — and only ever runs once (savecraft_admin_kanban_urgency_backfilled).
+function _backfillSeedUrgency(cards) {
+  const byId = new Map(_seedAdminKanbanCards().map(c => [c.id, c.urgency]));
+  let changed = false;
+  cards.forEach(c => {
+    if (byId.has(c.id) && (c.urgency === undefined || c.urgency === null) && byId.get(c.id) != null) {
+      c.urgency = byId.get(c.id);
+      changed = true;
+    }
+  });
+  return changed;
+}
+
 export async function loadAll() {
   return new Promise(resolve => {
     storageSync.get(null, data => {
@@ -222,6 +305,26 @@ export async function loadAll() {
       state.sort = data.savecraft_sort || 'az';
       state.tutorialSeen = data.savecraft_tutorial_seen || false;
       if (data.savecraft_kanban_sort) state.kanbanSort = { ...state.kanbanSort, ...data.savecraft_kanban_sort };
+      // Seeded exactly once, gated on its own savecraft_admin_kanban_seeded flag rather than
+      // "does savecraft_admin_kanban_cards exist" (defaultLists' own convention just below) —
+      // this board had already been tested live before this seed was written, so that check could
+      // easily see a real (non-empty) array already there and skip seeding entirely. The flag
+      // guarantees this runs exactly once regardless of what's already saved (appending to it,
+      // never overwriting), and — just as importantly — never re-adds a seeded card the user
+      // later deletes, since the flag stays set after that first run.
+      if (!data.savecraft_admin_kanban_seeded) {
+        state.adminKanbanCards = [...(data.savecraft_admin_kanban_cards || []), ..._seedAdminKanbanCards()];
+        storageSync.set({ savecraft_admin_kanban_cards: state.adminKanbanCards, savecraft_admin_kanban_seeded: true });
+      } else {
+        state.adminKanbanCards = data.savecraft_admin_kanban_cards || [];
+        // One-time patch for boards seeded before urgency existed as a field — see
+        // _backfillSeedUrgency's own comment. Only relevant on this branch: the fresh-seed branch
+        // above already gets urgency baked in from _seedAdminKanbanCards() directly.
+        if (!data.savecraft_admin_kanban_urgency_backfilled) {
+          _backfillSeedUrgency(state.adminKanbanCards);
+          storageSync.set({ savecraft_admin_kanban_cards: state.adminKanbanCards, savecraft_admin_kanban_urgency_backfilled: true });
+        }
+      }
       const defaultLists = [
         { id: 'group',   name: 'Group Queue'   },
         { id: 'project', name: 'Project Queue' },
@@ -592,6 +695,13 @@ export function persistSavedLists() {
   const user = getCurrentUser();
   if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { savedLists: state.savedLists }).catch(_syncError);
   return local;
+}
+
+// Whole-array write, local-only — same convention as kanbanSort/kanbanLists (kanban.js), not
+// dual-written to Firestore. Admin Kanban is a personal task board, not part of the synced
+// item/folder/author data model.
+export function persistAdminKanbanCards() {
+  return new Promise(resolve => storageSync.set({ savecraft_admin_kanban_cards: state.adminKanbanCards }, resolve));
 }
 
 export function persistCuratedImgCache() {

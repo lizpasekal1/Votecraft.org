@@ -346,6 +346,11 @@
 
   /* Dashboard */
   .dash-widget-grid { grid-template-columns: 1fr; }
+  /* Admin Kanban's mini-board (dashboard.css) is 4 columns across, sized for the desktop tile's
+     full grid width (it spans both columns there) — once the grid above collapses to a single
+     narrow column, 4-across left each mini-card too cramped to read. 2 columns, matching the
+     Queue widget's own mini-board default, reads far more comfortably here. */
+  .dash-admin-kanban-mini-board { grid-template-columns: repeat(2, 1fr); }
   /* height:auto here used to collapse the hero almost to nothing: .dash-hero-content
      (dashboard.css) is height:100% of .dash-hero, and a percentage height resolves to 'auto'
      when its containing block's own height is indeterminate — so with .dash-hero auto too, the
@@ -423,6 +428,36 @@
     padding-top: 6px;
     padding-bottom: var(--fab-clearance);
   }
+
+  /* Admin Kanban page — mobile only, scoped via the .admin-kanban-wrap hook adminKanban.js sets
+     on #cards-grid (plain .kanban-wrap is shared with the real Queue board, which keeps its
+     current mobile look untouched). */
+  /* "‹ Dashboard" hidden here specifically — there's already a real way back (the sidebar/
+     hamburger), and it was crowding this page's now-single-row header, per direct request. */
+  .grid-area:has(.admin-kanban-wrap) #btn-kanban-dashboard {
+    display: none;
+  }
+  /* The global "+ Add Item" FAB (#fab-add) is a direct <body> child, not nested under .grid-area
+     at all, so this needs body:has(...) rather than the .grid-area:has(...) idiom used everywhere
+     else on this page — Admin Kanban's own "+ Add card" per column already covers card creation
+     here, and the FAB opens the unrelated save-a-media-item modal, per direct request. */
+  body:has(.admin-kanban-wrap) .fab-add {
+    display: none;
+  }
+  /* REAL BUG, found and reverted: an earlier version of this rule switched .grid-area itself to
+     flex-direction: row (trying to put #grid-title and .grid-header/#sort-select on one line) —
+     but .grid-area:has(.kanban-wrap)'s own overflow: hidden (kanban.css, shared by both boards)
+     depends on staying a single flex-column, with #cards-grid's own flex:1 filling "whatever's
+     left" and each column scrolling internally. Breaking that into a row+wrap layout broke the
+     whole page's scrolling on mobile (reported live). Reverted to a plain column — just tighter
+     spacing between the title and header row below it, not an actual merge onto one line. */
+  .grid-area:has(.admin-kanban-wrap) > .grid-title {
+    margin-bottom: 4px;
+    font-size: 13px;
+  }
+  .grid-area:has(.admin-kanban-wrap) > .grid-header {
+    margin-bottom: 12px;
+  }
   /* grid-template-rows explicitly overridden to none, not just left alone — desktop's own
      repeat(2, 1fr) (profile.css) still pairs row 1 (Connections) with row 2 (Interests) into
      equal-height tracks even here, single column and height:auto or not, so Interests kept
@@ -448,6 +483,15 @@
     display: block;
     width: 100%;
     margin-top: 8px;
+  }
+  /* Same in-row/page-end swap as the button above, for its Privacy Policy · Terms of Service
+     row — hide the desktop card's copy (it's pinned under a button that's itself hidden here),
+     show the page-end one instead. */
+  .profile-account-actions .profile-legal-links {
+    display: none;
+  }
+  .profile-legal-links-mobile {
+    display: flex;
   }
   .profile-card-title { font-size: 18px; }
   .profile-card-copy { font-size: 15px; line-height: 1.55; }

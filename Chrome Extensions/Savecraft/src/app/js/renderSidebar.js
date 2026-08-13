@@ -31,6 +31,10 @@ const DASHBOARD_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="24px
 // Sized/colored to match a folder row's icon (folderIconHtml(id, 16), fill="#5B5BEF"), since the
 // Queue Kanban link renders as a subfolder-styled row nested under Dashboard, not a category icon.
 const KANBAN_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="#5B5BEF"><path d="M280-160v-640h400v640H280Zm-160-80v-480h80v480h-80Zm640 0v-480h80v480h-80Zm-400 0h240v-480H360v480Zm0 0v-480 480Z"/></svg>';
+// Checklist glyph, same sizing/color convention as KANBAN_ICON_SVG above — distinct from it so
+// the two Dashboard-nested kanban rows (Queue Kanban / Admin Kanban) don't read as duplicates of
+// the same icon sitting right next to each other.
+const ADMIN_KANBAN_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="#5B5BEF"><path d="M120-80v-80h720v80H120Zm146-206L100-452l56-56 110 110 224-224 56 56-280 280Zm0-320L100-772l56-56 110 110 224-224 56 56-280 280Z"/></svg>';
 // Same sizing/color convention as KANBAN_ICON_SVG above — another subfolder-styled row nested
 // under Dashboard. Its own toggle row has no view (just expands/collapses, see
 // wireDashboardLink); its children each route to "savedlist:<id>" (see the generic subfolder
@@ -236,6 +240,9 @@ export function renderSidebar() {
     <div class="sidebar-item sidebar-subfolder sidebar-kanban-link ${state.view === 'kanban' ? 'active' : ''}" data-view="kanban">
       ${KANBAN_ICON_SVG} Queue Kanban
     </div>
+    <div class="sidebar-item sidebar-subfolder sidebar-admin-kanban-link ${state.view === 'admin-kanban' ? 'active' : ''}" data-view="admin-kanban">
+      ${ADMIN_KANBAN_ICON_SVG} Admin Kanban
+    </div>
     ${_renderDashboardListRow({
       key: 'saved-lists', icon: SAVED_LISTS_ICON_SVG, label: 'Saved Lists', items: state.savedLists,
       linkClass: 'sidebar-saved-lists-link', childClass: 'sidebar-saved-lists-child', addClass: 'sidebar-add-saved-list',
@@ -274,6 +281,9 @@ export function renderSidebar() {
     });
     sidebar.querySelector('.sidebar-kanban-link')?.addEventListener('click', () => {
       navigateToView('kanban', { sidebarMode: 'home' });
+    });
+    sidebar.querySelector('.sidebar-admin-kanban-link')?.addEventListener('click', () => {
+      navigateToView('admin-kanban', { sidebarMode: 'home' });
     });
     // Saved Lists / Curated Lists — each toggles its own independent collapse state (not tied to
     // Dashboard's, and not mutually exclusive with anything else), just expanding/collapsing its
@@ -461,14 +471,14 @@ export function renderSidebar() {
     });
   });
 
-  // Subfolder view-switching (the Queue Kanban row also uses .sidebar-subfolder for its visual
-  // styling, but it's already wired explicitly in wireDashboardLink() — excluded here so it
-  // doesn't get a second, redundant click handler. Saved Lists' own toggle row (.sidebar-saved-
-  // lists-link) is excluded the same way — its children all carry a real data-view
-  // ("savedlist:<id>") and fall through to the generic handler below. Curated Lists — both its
-  // toggle row and its children — still has no real destination, so both stay excluded so a
-  // click doesn't set state.view to undefined and break navigation).
-  sidebar.querySelectorAll('.sidebar-subfolder:not(.sidebar-kanban-link):not(.sidebar-saved-lists-link):not(.sidebar-curated-lists-link):not(.sidebar-curated-lists-child)').forEach(el => {
+  // Subfolder view-switching (the Queue Kanban / Admin Kanban rows also use .sidebar-subfolder
+  // for their visual styling, but both are already wired explicitly in wireDashboardLink() —
+  // excluded here so neither gets a second, redundant click handler. Saved Lists' own toggle row
+  // (.sidebar-saved-lists-link) is excluded the same way — its children all carry a real
+  // data-view ("savedlist:<id>") and fall through to the generic handler below. Curated Lists —
+  // both its toggle row and its children — still has no real destination, so both stay excluded
+  // so a click doesn't set state.view to undefined and break navigation).
+  sidebar.querySelectorAll('.sidebar-subfolder:not(.sidebar-kanban-link):not(.sidebar-admin-kanban-link):not(.sidebar-saved-lists-link):not(.sidebar-curated-lists-link):not(.sidebar-curated-lists-child)').forEach(el => {
     el.addEventListener('click', () => {
       if (isCuratedGenre && el.dataset.permanent) {
         navigateToView(`genre:${curatedGenreBase}:${el.dataset.view}`, { activeCuratedFolderId: null });
