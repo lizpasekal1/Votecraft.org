@@ -61,6 +61,8 @@
    it reuses) is a full-width flex column and this row would otherwise sit flush left. */
 .about-legal-links {
   justify-content: center;
+  /* Extra space below the description text, per direct request. */
+  margin-top: 50px;
 }
 
 /* About page's own description text — sits directly on the page background now, not inside the
