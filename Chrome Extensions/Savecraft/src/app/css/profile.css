@@ -170,16 +170,8 @@
   color: #14CCB0;
   border: 1px solid rgba(20, 204, 176, 0.3);
 }
-.vc-connect-tag--learn {
-  background: rgba(37, 99, 235, 0.15);
-  color: #60a5fa;
-  border: 1px solid rgba(37, 99, 235, 0.3);
-}
-.vc-connect-tag--support {
-  background: rgba(243, 43, 68, 0.12);
-  color: #F32B44;
-  border: 1px solid rgba(243, 43, 68, 0.25);
-}
+/* .vc-connect-tag--learn/--support removed — the Learn/Donate tags were dropped from the widget
+   (only Volunteer stays), per direct request. */
 
 /* "You're opening Votecraft Wallet" confirmation popup — white-themed regardless of SaveCraft's
    own dark/light setting, styled to match the VC-coin site's own branding (teal #14CCB0 accent,
