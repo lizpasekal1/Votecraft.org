@@ -185,6 +185,10 @@
   color: #4B5563;
   text-align: center;
 }
+/* Overrides the shared .modal-actions' default flex-end (right-aligned) — per direct request. */
+.vc-wallet-modal .modal-actions {
+  justify-content: center;
+}
 .vc-wallet-modal .btn-cancel {
   background: #fff;
   border-color: #E5E7EB;
@@ -193,10 +197,12 @@
 .vc-wallet-modal .btn-cancel:hover {
   background: #F3F4F6;
 }
+/* border-radius deliberately not overridden here — .btn-primary's own 8px already matches
+   .btn-cancel's shape exactly, per direct request ("both buttons the rounded rectangle size the
+   cancel button is"); this used to set its own 24px pill shape instead. */
 .vc-wallet-modal .vc-wallet-open-btn {
   background: linear-gradient(135deg, #14CCB0, #0d9488);
   color: #fff;
-  border-radius: 24px;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
