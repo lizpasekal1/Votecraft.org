@@ -657,8 +657,10 @@ async function init() {
     navigateToView('profile');
   });
   document.getElementById('link-sponsored-statements').href = resourceUrl('src/sponsored/sponsored.html');
-  document.getElementById('link-privacy-policy').href = resourceUrl('src/webpage/privacy-policy.html');
-  document.getElementById('link-terms-of-service').href = resourceUrl('src/webpage/terms-of-service.html');
+  // Privacy Policy/Terms of Service links removed from this dropdown per direct request, replaced
+  // with a single About link — points at the existing SaveCraft marketing/about page rather than
+  // building a new one from scratch.
+  document.getElementById('link-about').href = resourceUrl('src/webpage/savecraft-marketing.html');
   document.addEventListener('click', e => {
     if (!settingsWrap.contains(e.target)) settingsDropdown.setAttribute('hidden', '');
   });
