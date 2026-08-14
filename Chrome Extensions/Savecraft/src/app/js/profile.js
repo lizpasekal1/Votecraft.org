@@ -601,7 +601,7 @@ function wireSharedListsWidget(container) {
 function buildVotecraftConnectionSection() {
   return `
     <div class="dash-card profile-card--votecraft-connection">
-      <div class="profile-card-header"><span class="profile-card-title">VoteCraft.org Connection</span></div>
+      <div class="profile-card-header"><span class="profile-card-title">VC Connector</span></div>
       <div class="vc-connect-top">
         <h3 class="vc-connect-title">Earn <span class="vc-connect-highlight">VoteCraft Coin</span> by caring</h3>
         <button type="button" class="vc-connect-btn" id="vc-connect-learn-more">
