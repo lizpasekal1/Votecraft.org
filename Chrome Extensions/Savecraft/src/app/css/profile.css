@@ -414,10 +414,14 @@
 }
 
 /* --- Interests --- */
+/* column-gap bumped up from the row-gap's 8px, per direct request ("more padding between the two
+   columns") — split out from a single uniform `gap` so row spacing stays as-is. Shared by both
+   Interests and Shared Lists (same checklist recipe), so both get the wider column gap. */
 .profile-interests-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 8px;
+  row-gap: 8px;
+  column-gap: 24px;
 }
 
 /* align-items: flex-start (not center) — same fix as .profile-account-row above: with center, a
