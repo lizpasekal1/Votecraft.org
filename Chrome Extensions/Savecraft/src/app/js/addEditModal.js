@@ -784,20 +784,33 @@ export function refreshStep2ImagePreviewFromManualInput() {
 
 // ===== OPEN / CLOSE =====
 
+// Recursively orders a category's folders parent-then-children (each parent immediately followed
+// by its own subfolders, indented) rather than one flat alphabetical list — a subfolder would
+// otherwise sort wherever its own name happened to land, with nothing showing it belongs under
+// its parent. depth 0 is a top-level folder; each level deeper adds another "— " prefix.
+function _flattenFoldersForSelect(allFolders, category, parentFolderId = null, depth = 0) {
+  const level = sortFoldersForDisplay(allFolders.filter(f => (f.parentFolderId || null) === parentFolderId), category);
+  return level.flatMap(f => [
+    { folder: f, depth },
+    ..._flattenFoldersForSelect(allFolders, category, f.id, depth + 1),
+  ]);
+}
+
 // Edit-mode-only folder reassignment — the Add flow uses the dedicated wizard folder screen
 // instead, so this is only ever called from openEditModal().
 function populateFolderSelect(category, folderId) {
   const wrap = document.getElementById('folder-select-group');
   const select = document.getElementById('input-folder-select');
-  const folders = sortFoldersForDisplay(state.folders.filter(f => f.parentCategory === category), category);
-  if (folders.length === 0) {
+  const categoryFolders = state.folders.filter(f => f.parentCategory === category);
+  if (categoryFolders.length === 0) {
     wrap.style.display = 'none';
     select.innerHTML = '';
     return;
   }
+  const rows = _flattenFoldersForSelect(categoryFolders, category);
   wrap.style.display = '';
   select.innerHTML = `<option value="">No folder</option>` +
-    folders.map(f => `<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('');
+    rows.map(({ folder, depth }) => `<option value="${folder.id}">${'— '.repeat(depth)}${escapeHtml(folder.name)}</option>`).join('');
   select.value = folderId || '';
 }
 
