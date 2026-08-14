@@ -10,10 +10,12 @@
 import { state, CURATED_GENRES, CATEGORIES, CAT_LABEL } from './state.js';
 import { escapeHtml } from './utils.js';
 import { getCurrentUser, resendVerificationEmail } from './auth.js';
-import { persistFollowedCuratedLists, persistSavedLists, persistFolder, disconnectLastfm, disconnectSteam } from './storage.js';
+import { persistFollowedCuratedLists, persistSavedLists, persistFolder, persistItem, disconnectLastfm, disconnectSteam } from './storage.js';
 import { ensureLastfmRecentTracks, ensureSteamRecentGames } from './api.js';
 import { CURATED_LIST_DISPLAY_NAMES, DEMO_PROFILE_NAME } from './dashboard.js';
 import { openAuthModal, openLastfmModal, openSteamModal } from './main.js';
+import { renderSidebar, renderGrid } from './render.js';
+import { navigateToView } from './navigation.js';
 import { resourceUrl } from './platform.js';
 
 const PRIVACY_POLICY_URL = resourceUrl('src/webpage/privacy-policy.html');
@@ -356,9 +358,15 @@ function _buildSavedListRow(list) {
   const expanded = _expandedProfileSavedLists.has(list.id);
   const arrow = expanded ? '▼' : '▶';
   return `
-    <div class="profile-saved-list-row" data-list-id="${escapeHtml(list.id)}">
+    <div class="profile-saved-list-row ${expanded ? 'profile-saved-list-row--expanded' : ''}" data-list-id="${escapeHtml(list.id)}">
       <span class="profile-saved-list-arrow">${arrow}</span>
       <span class="profile-saved-list-name">${escapeHtml(list.name)}</span>
+      <span class="profile-saved-list-actions">
+        <button type="button" class="profile-saved-list-rename" data-list-id="${escapeHtml(list.id)}" title="Rename list">
+          <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor"><path d="M200-200h57l391-391-57-57-391 391v57Zm-40 80q-17 0-28.5-11.5T120-160v-97q0-16 6-30.5t17-25.5l505-504q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L313-143q-11 11-25.5 17t-30.5 6h-97Zm600-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg>
+        </button>
+        <button type="button" class="profile-saved-list-delete" data-list-id="${escapeHtml(list.id)}" title="Delete list">×</button>
+      </span>
     </div>
     ${expanded ? _buildSavedListCategoryTree(list) : ''}`;
 }
@@ -383,6 +391,75 @@ function _rebuildSavedListsCard() {
   wireSavedListsSection(parent);
 }
 
+// Two-step delete, per direct request: (1) a plain "are you sure" confirm, then (2) — only if
+// there's another real list it could go into — a small picker offering to fold this list's items
+// into another list before it's gone, since otherwise deleting a list just silently drops every
+// item's membership in it with no way to get that back. "All My Saves" (default-favorites) is
+// excluded as a merge target — it's the catch-all every item already belongs to via its own
+// `favorite` flag, not a savedListIds-tracked list to merge into.
+async function _promptDeleteSavedList(listId) {
+  const list = _getSavedListById(listId);
+  if (!list) return;
+  if (!confirm(`Are you sure you want to delete "${list.name}"?`)) return;
+
+  const otherLists = state.savedLists.filter(l => l.id !== listId && l.id !== 'default-favorites');
+  const mergeTargetId = otherLists.length ? await _promptMergeTarget(list, otherLists) : '';
+  if (mergeTargetId === null) return; // explicit Cancel from the merge picker — abort the whole delete
+
+  const affected = state.items.filter(i => (i.savedListIds || []).includes(listId));
+  for (const item of affected) {
+    item.savedListIds = item.savedListIds.filter(id => id !== listId);
+    if (mergeTargetId && !item.savedListIds.includes(mergeTargetId)) item.savedListIds.push(mergeTargetId);
+    await persistItem(item);
+  }
+
+  state.savedLists = state.savedLists.filter(l => l.id !== listId);
+  await persistSavedLists();
+
+  // Only a real navigation if the deleted list was the active view — otherwise just re-render in
+  // place, same convention as renderSidebar.js's own folder-delete handler.
+  if (state.view === `savedlist:${listId}`) navigateToView('dashboard', { sidebarMode: 'home' });
+  else { renderSidebar(); renderGrid(); }
+  _rebuildSavedListsCard();
+}
+
+// Small transient modal (built fresh each time, removed on close — unlike Admin Kanban's own
+// build-once-and-toggle card editor, this only ever needs to exist for the span of one delete).
+// Resolves to: a list id (merge into that list), '' (don't merge, just delete), or null (the user
+// cancelled the picker itself — the caller treats this as aborting the whole delete, not just the
+// merge step).
+function _promptMergeTarget(list, otherLists) {
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay open';
+    overlay.innerHTML = `
+      <div class="modal" style="position:relative; width:380px;">
+        <div class="modal-header"><h2>Delete "${escapeHtml(list.name)}"</h2></div>
+        <div class="modal-body">
+          <p>Would you like to merge this list's items into another list first? Items aren't removed from SaveCraft either way — this only changes which list(s) they show up under.</p>
+          <div class="form-group">
+            <label for="merge-target-select">Merge into</label>
+            <select id="merge-target-select">
+              <option value="">Don't merge — just delete</option>
+              ${otherLists.map(l => `<option value="${escapeHtml(l.id)}">${escapeHtml(l.name)}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="merge-target-cancel">Cancel</button>
+          <button type="button" class="btn-primary" id="merge-target-confirm">Delete</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    const close = value => { overlay.remove(); resolve(value); };
+    overlay.querySelector('#merge-target-cancel').addEventListener('click', () => close(null));
+    overlay.querySelector('#merge-target-confirm').addEventListener('click', () => {
+      close(overlay.querySelector('#merge-target-select').value || '');
+    });
+    overlay.addEventListener('click', e => { if (e.target === overlay) close(null); });
+  });
+}
+
 function wireSavedListsSection(container) {
   container.querySelectorAll('.profile-saved-list-row').forEach(row => {
     row.addEventListener('click', () => {
@@ -390,6 +467,27 @@ function wireSavedListsSection(container) {
       if (_expandedProfileSavedLists.has(listId)) _expandedProfileSavedLists.delete(listId);
       else _expandedProfileSavedLists.add(listId);
       _rebuildSavedListsCard();
+    });
+  });
+
+  container.querySelectorAll('.profile-saved-list-rename').forEach(btn => {
+    btn.addEventListener('click', async e => {
+      e.stopPropagation(); // don't also trigger the row's own expand/collapse toggle
+      const list = _getSavedListById(btn.dataset.listId);
+      if (!list) return;
+      const name = prompt('Rename list:', list.name);
+      if (!name?.trim() || name.trim() === list.name) return;
+      list.name = name.trim();
+      await persistSavedLists();
+      _rebuildSavedListsCard();
+      renderSidebar(); // the sidebar's own Saved Lists row shows the same list names
+    });
+  });
+
+  container.querySelectorAll('.profile-saved-list-delete').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      _promptDeleteSavedList(btn.dataset.listId);
     });
   });
 

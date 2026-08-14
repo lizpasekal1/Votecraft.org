@@ -19,6 +19,7 @@ import {
   fetchVideoThumbnail,
 } from './api.js';
 import { autoSaveMusician } from './authors.js';
+import { openDetailModal } from './detailModal.js';
 
 // ===== ADD-MODAL WIZARD STATE (screen 'category' → 'review') =====
 let _wizardScreen = 'category';    // which screen is currently visible — drives what the back icon does
@@ -916,6 +917,22 @@ export async function handleSaveItem() {
     return;
   }
 
+  // Duplicate guard, per direct request — same URL already saved in this exact folder (not just
+  // anywhere in the library) blocks the save entirely rather than silently creating a second copy.
+  // Excludes the item currently being edited so re-saving it without changing its own URL/folder
+  // doesn't flag itself. folderId matches null-to-null too, so this also catches duplicates among
+  // un-foldered items within the same category.
+  if (url) {
+    const duplicate = state.items.find(i => i.id !== state.editingId && i.url === url && i.folderId === folderId);
+    if (duplicate) {
+      if (confirm(`"${duplicate.title || 'Untitled'}" is already saved in this folder. View it?`)) {
+        closeAddModal();
+        openDetailModal(duplicate);
+      }
+      return;
+    }
+  }
+
   // News is source-verified, not free-paste: the URL must actually belong to the chosen curated
   // outlet's domain — a picked outlet alone is just a label, this is what makes it enforcement.
   // Gated on folderId being set: the curated outlet folders are pulled out for now (being
@@ -985,6 +1002,14 @@ export async function handleSaveItem() {
       // own "Save to:" menu already reads/writes for an existing item.
       favorite: true, savedListIds: [..._wizardSelectedListIds],
     };
+    // REAL BUG, found and fixed: this branch built `item` and persisted it to storage below, but
+    // never added it to the in-memory state.items array the way the other two branches above do
+    // (state.items.push/state.items[idx]=) — persistItem() only writes to storage, it doesn't
+    // touch state.items itself. The save silently "worked" (item.reappeared after a reload, since
+    // loadAll() re-reads storage) but the renderGrid()/renderSidebar() calls right after this
+    // function used the still-unchanged in-memory array, so a brand-new item never actually
+    // appeared anywhere in the current session (reported live: "it didn't save").
+    state.items.push(item);
   }
 
   await persistItem(item);

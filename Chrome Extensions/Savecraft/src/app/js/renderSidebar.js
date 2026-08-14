@@ -283,7 +283,18 @@ export function renderSidebar() {
         ${ADMIN_KANBAN_ICON_SVG} Admin Kanban
       </div>` : ''}
       ${_renderDashboardListRow({
-        key: 'saved-lists', icon: SAVED_LISTS_ICON_SVG, label: 'Saved Lists', items: state.savedLists,
+        key: 'saved-lists', icon: SAVED_LISTS_ICON_SVG, label: 'Saved Lists',
+        // Always alphabetical, per direct request — a new list slots into its correct alphabetical
+        // position among the existing ones rather than just appending at the end. Sorted here at
+        // render time only (state.savedLists' own stored order is untouched). "All My Saves"
+        // (default-favorites) stays pinned first — it's the catch-all list, not a real named list
+        // to alphabetize among, same convention as Dashboard/All Items staying pinned ahead of the
+        // alphabetized category list elsewhere in this sidebar.
+        items: [
+          ...state.savedLists.filter(l => l.id === 'default-favorites'),
+          ...state.savedLists.filter(l => l.id !== 'default-favorites')
+            .sort((a, b) => a.name.localeCompare(b.name)),
+        ],
         linkClass: 'sidebar-saved-lists-link', childClass: 'sidebar-saved-lists-child', addClass: 'sidebar-add-saved-list',
         viewPrefix: 'savedlist:', showRadio: true,
         // "All My Saves" routes to state.view === 'dashboard' instead of its own generic
