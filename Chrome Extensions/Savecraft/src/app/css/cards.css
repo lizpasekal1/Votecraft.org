@@ -248,6 +248,12 @@
 .placeholder-Game-Studio { background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%); }
 .placeholder-Visual-Art  { background: linear-gradient(135deg, #F97316 0%, #FDBA74 100%); }
 .placeholder-Memes       { background: linear-gradient(135deg, #EF4444 0%, #FCA5A5 100%); }
+/* Web Links ("Sources") — REAL BUG, found and fixed: every other category had its own placeholder
+   gradient + badge color, but Web Links never got one, so a card with no fetched/manual image
+   (e.g. climate.us, reported live) just showed a blank, uncolored box instead of a colored
+   fallback like every other category's cards do. Teal, to stay visually distinct from every color
+   already in use above. */
+.placeholder-Web-Links   { background: linear-gradient(135deg, #06B6D4 0%, #67E8F9 100%); }
 /* Legacy names kept for any un-migrated items */
 .placeholder-Music  { background: linear-gradient(135deg, #EC4899 0%, #F9A8D4 100%); }
 .placeholder-Shows  { background: linear-gradient(135deg, #8B5CF6 0%, #C4B5FD 100%); }
@@ -337,6 +343,7 @@
 .badge-Game-Studio  { background: #FEF3C7; color: #92400E; }
 .badge-Visual-Art   { background: #FFEDD5; color: #9A3412; }
 .badge-Memes        { background: #FEE2E2; color: #991B1B; }
+.badge-Web-Links    { background: #CFFAFE; color: #155E75; }
 /* Legacy names kept for any un-migrated items */
 .badge-Music  { background: #FCE7F3; color: #BE185D; }
 .badge-Shows  { background: #EDE9FE; color: #6D28D9; }
@@ -356,6 +363,7 @@
 [data-theme="dark"] .badge-Game-Studio  { background: #4A2C00; color: #FCD34D; }
 [data-theme="dark"] .badge-Visual-Art   { background: #4A1A00; color: #FDBA74; }
 [data-theme="dark"] .badge-Memes        { background: #4A1010; color: #FCA5A5; }
+[data-theme="dark"] .badge-Web-Links    { background: #0E4B54; color: #67E8F9; }
 /* Legacy dark names */
 [data-theme="dark"] .badge-Music  { background: #4A1830; color: #F9A8D4; }
 [data-theme="dark"] .badge-Shows  { background: #2E1A5E; color: #C4B5FD; }
