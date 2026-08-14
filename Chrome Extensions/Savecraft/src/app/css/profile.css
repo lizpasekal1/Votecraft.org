@@ -121,17 +121,11 @@
   margin: 0;
 }
 
-/* --- VoteCraft.org Connection --- */
+/* --- VC Connector --- */
 /* Rebuilds the standalone VC-coin promo widget's content (widgets/vc-coin-widget/vc-coin-
    banner.html — embedded elsewhere via iframe) as plain markup in this app's own visual language,
    per a live reference screenshot — no coin animation/particles, those add real motion/weight
    this card was never sized for. */
-.vc-connect-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
 .vc-connect-title {
   font-size: 16px;
   font-weight: 700;
@@ -148,32 +142,17 @@
   color: var(--text-secondary);
   margin: 0;
 }
-.vc-connect-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #14CCB0, #0d9488);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  border: none;
-  border-radius: 24px;
-  cursor: pointer;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: transform 0.15s, box-shadow 0.15s;
-  box-shadow: 0 0 16px rgba(20, 204, 176, 0.2);
-}
-.vc-connect-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 0 24px rgba(20, 204, 176, 0.35);
-}
 .vc-connect-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+/* Same .btn-primary class/look as Connect Steam's own button (Connections widget) — per direct
+   request — just pushed to the very bottom of this card (margin-top: auto, the card is already a
+   flex column) instead of sitting inline next to the title. */
+.vc-connect-learn-more-btn {
+  align-self: flex-start;
+  margin-top: auto;
 }
 .vc-connect-tag {
   display: inline-flex;
