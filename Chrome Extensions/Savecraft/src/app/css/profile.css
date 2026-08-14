@@ -200,6 +200,44 @@
   border: 1px solid rgba(243, 43, 68, 0.25);
 }
 
+/* "You're opening Votecraft Wallet" confirmation popup — white-themed regardless of SaveCraft's
+   own dark/light setting, styled to match the VC-coin site's own branding (teal #14CCB0 accent,
+   pill-shaped teal-gradient CTA) rather than SaveCraft's purple, per direct request. Overrides the
+   shared .modal/.btn-cancel/.btn-primary's theme-variable colors with hardcoded light-mode-
+   appropriate ones, scoped to just this modal via .vc-wallet-modal. */
+.vc-wallet-modal {
+  background: #fff;
+}
+.vc-wallet-modal .modal-header h2 {
+  color: #111827;
+}
+.vc-wallet-modal .modal-body p {
+  color: #4B5563;
+  text-align: center;
+}
+.vc-wallet-modal .btn-cancel {
+  background: #fff;
+  border-color: #E5E7EB;
+  color: #4B5563;
+}
+.vc-wallet-modal .btn-cancel:hover {
+  background: #F3F4F6;
+}
+.vc-wallet-modal .vc-wallet-open-btn {
+  background: linear-gradient(135deg, #14CCB0, #0d9488);
+  color: #fff;
+  border-radius: 24px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 0 16px rgba(20, 204, 176, 0.25);
+}
+.vc-wallet-modal .vc-wallet-open-btn:hover {
+  background: linear-gradient(135deg, #14CCB0, #0d9488);
+  color: #fff;
+  box-shadow: 0 0 24px rgba(20, 204, 176, 0.4);
+}
+
 /* --- Account --- */
 /* Single row: avatar+name on the left, "Manage account" on the right — align-items: flex-start
    (not center) so the button's top edge lines up with the avatar circle's top edge, rather than
