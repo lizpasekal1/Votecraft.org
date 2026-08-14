@@ -207,13 +207,6 @@ body {
   white-space: nowrap;
   letter-spacing: -0.02em;
   pointer-events: none;
-  /* A real offset drop shadow, not a symmetric blur halo — per direct request/follow-up. A
-     centered blur (the earlier version here) darkens the header's own already-near-black
-     background evenly on all sides of the text, which is invisible against a background that
-     dark regardless of how strong it's made (confirmed live — "i don't see it at all"). A
-     genuine offset instead reads as a crisp dark edge/ledge along one side of each letter, giving
-     the text visible depth the same way a drop shadow reads on any background. */
-  text-shadow: 3px 4px 5px rgba(0, 0, 0, 0.85);
 }
 
 /* Sidebar header controls */
