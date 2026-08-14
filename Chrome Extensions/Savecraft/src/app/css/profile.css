@@ -58,15 +58,17 @@
 }
 
 /* Account stays its own natural-height card at the top, full width — everything below it
-   (Connections/Interests/Your Music Taste/Saved Lists) shares the Dashboard's 2x2 grid shape and
-   .dash-card box model, but taller than the Dashboard's own grid — Connections in particular
-   has grown to 4 platform rows, more than the Dashboard's "peek" widgets were ever sized for. */
+   (Connections/Interests/My Notes/Saved Lists/Shared Lists/VoteCraft.org Connection) shares the
+   Dashboard's grid shape and .dash-card box model, but taller than the Dashboard's own grid —
+   Connections in particular has grown to 4 platform rows, more than the Dashboard's "peek"
+   widgets were ever sized for. Three rows now (was two) — Shared Lists + VoteCraft.org Connection
+   added per direct request. */
 .profile-widget-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
+  grid-template-rows: repeat(3, 1fr);
   gap: 16px;
-  height: 816px; /* two 400px rows + the 16px gap between them */
+  height: 1232px; /* three 400px rows + the two 16px gaps between them */
 }
 
 /* Dashboard widgets are deliberately "peek" sized (a few tracks, a capped genre list, etc.) —
@@ -117,6 +119,85 @@
   line-height: 1.5;
   color: var(--text-secondary);
   margin: 0;
+}
+
+/* --- VoteCraft.org Connection --- */
+/* Rebuilds the standalone VC-coin promo widget's content (widgets/vc-coin-widget/vc-coin-
+   banner.html — embedded elsewhere via iframe) as plain markup in this app's own visual language,
+   per a live reference screenshot — no coin animation/particles, those add real motion/weight
+   this card was never sized for. */
+.vc-connect-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.vc-connect-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.3;
+}
+.vc-connect-highlight {
+  color: #14CCB0;
+}
+.vc-connect-desc {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0;
+}
+.vc-connect-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #14CCB0, #0d9488);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  border-radius: 24px;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 0 16px rgba(20, 204, 176, 0.2);
+}
+.vc-connect-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 24px rgba(20, 204, 176, 0.35);
+}
+.vc-connect-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.vc-connect-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.vc-connect-tag--earn {
+  background: rgba(20, 204, 176, 0.15);
+  color: #14CCB0;
+  border: 1px solid rgba(20, 204, 176, 0.3);
+}
+.vc-connect-tag--learn {
+  background: rgba(37, 99, 235, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(37, 99, 235, 0.3);
+}
+.vc-connect-tag--support {
+  background: rgba(243, 43, 68, 0.12);
+  color: #F32B44;
+  border: 1px solid rgba(243, 43, 68, 0.25);
 }
 
 /* --- Account --- */

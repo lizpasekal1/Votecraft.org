@@ -10,12 +10,13 @@
 import { state, CURATED_GENRES, CATEGORIES, CAT_LABEL } from './state.js';
 import { escapeHtml } from './utils.js';
 import { getCurrentUser, resendVerificationEmail } from './auth.js';
-import { persistFollowedCuratedLists, persistSavedLists, persistFolder, persistItem, disconnectLastfm, disconnectSteam } from './storage.js';
+import { persistFollowedCuratedLists, persistSavedLists, persistFolder, persistItem, persistSelectedSharedFriends, disconnectLastfm, disconnectSteam } from './storage.js';
 import { ensureLastfmRecentTracks, ensureSteamRecentGames } from './api.js';
 import { CURATED_LIST_DISPLAY_NAMES, DEMO_PROFILE_NAME } from './dashboard.js';
 import { openAuthModal, openLastfmModal, openSteamModal } from './main.js';
 import { renderSidebar, renderGrid } from './render.js';
 import { navigateToView } from './navigation.js';
+import { DEMO_FRIENDS } from './sharedSaves.js';
 import { resourceUrl } from './platform.js';
 
 const PRIVACY_POLICY_URL = resourceUrl('src/webpage/privacy-policy.html');
@@ -554,6 +555,69 @@ function buildMyNotesSection() {
     </div>`;
 }
 
+// ===== shared lists =====
+// A checklist of the same demo friends Shared Saves' own Friends section shows (sharedSaves.js's
+// DEMO_FRIENDS — no real friend-graph exists yet, so both places draw from the one shared list
+// rather than maintaining separate copies) — exact same recipe as Interests above (label+checkbox
+// rows in a grid, persisted the same way), just toggling state.selectedSharedFriends instead of
+// state.followedCuratedLists. Per direct request ("the way interests is set up").
+function buildSharedListsSection() {
+  const optionsHtml = DEMO_FRIENDS.map(friend => {
+    const checked = state.selectedSharedFriends.has(friend.name) ? 'checked' : '';
+    return `
+      <label class="profile-interest-option">
+        <input type="checkbox" data-friend="${escapeHtml(friend.name)}" ${checked}>
+        <span>${escapeHtml(friend.name)}</span>
+      </label>`;
+  }).join('');
+
+  return `
+    <div class="dash-card profile-card--shared-lists">
+      <div class="profile-card-header"><span class="profile-card-title">Shared Lists</span></div>
+      <p class="profile-card-copy">Choose which friends' shared lists you'd like to see.</p>
+      <div class="profile-interests-grid">${optionsHtml}</div>
+    </div>`;
+}
+
+function wireSharedListsWidget(container) {
+  container.querySelectorAll('.profile-card--shared-lists .profile-interest-option input[type="checkbox"]').forEach(input => {
+    input.addEventListener('change', () => {
+      const name = input.dataset.friend;
+      if (input.checked) state.selectedSharedFriends.add(name);
+      else state.selectedSharedFriends.delete(name);
+      persistSelectedSharedFriends();
+    });
+  });
+}
+
+// ===== votecraft.org connection =====
+// Reuses the exact copy/tag colors from the standalone VC-coin promo widget
+// (widgets/vc-coin-widget/vc-coin-banner.html, embedded elsewhere via iframe — e.g. the Sponsored
+// Statements page) per a live reference screenshot, rebuilt as plain markup/CSS in this app's own
+// visual language instead of pulling in that widget's separate animated-coin/particle-effects
+// stylesheet, which is a lot of extra motion/weight for a small profile card. Colors: #14CCB0
+// (teal, "earn"), #60a5fa (blue, "learn"), #F32B44 (red, "support") — same three as the source
+// widget's .tag-earn/.tag-learn/.tag-support.
+function buildVotecraftConnectionSection() {
+  return `
+    <div class="dash-card profile-card--votecraft-connection">
+      <div class="profile-card-header"><span class="profile-card-title">VoteCraft.org Connection</span></div>
+      <div class="vc-connect-top">
+        <h3 class="vc-connect-title">Earn <span class="vc-connect-highlight">VoteCraft Coin</span> by caring</h3>
+        <a class="vc-connect-btn" href="https://votecraft.org/wp-content/uploads/pages/votecraft-coin/app/index.html" target="_blank" rel="noopener">
+          Learn More
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+      <p class="vc-connect-desc">VC is earned through civic action — volunteering, learning about issues, and supporting reform nonprofits. Spend it in the Emporium.</p>
+      <div class="vc-connect-tags">
+        <span class="vc-connect-tag vc-connect-tag--earn">Volunteer +15 VC</span>
+        <span class="vc-connect-tag vc-connect-tag--learn">Learn +5 VC</span>
+        <span class="vc-connect-tag vc-connect-tag--support">Donate +25 VC</span>
+      </div>
+    </div>`;
+}
+
 // ===== entry point =====
 
 export function renderProfilePage() {
@@ -573,6 +637,8 @@ export function renderProfilePage() {
         ${buildInterestsSection()}
         ${buildMyNotesSection()}
         ${buildSavedListsSection()}
+        ${buildSharedListsSection()}
+        ${buildVotecraftConnectionSection()}
       </div>
       <button class="btn-cancel profile-manage-account-mobile" id="profile-manage-account-mobile">Manage account</button>
       ${buildLegalLinksRow('profile-legal-links-mobile')}
@@ -582,6 +648,7 @@ export function renderProfilePage() {
   wireConnectionsSection(container);
   wireInterestsSection(container);
   wireSavedListsSection(container);
+  wireSharedListsWidget(container);
 
   if (state.lastfmUsername) {
     ensureLastfmRecentTracks(state.lastfmUsername).then(() => {

@@ -485,6 +485,7 @@ export async function loadAll() {
         storageSync.set({ savecraft_curated_lists_rows: state.curatedListsRows });
       }
       state.hiddenCurated = new Set(data.savecraft_hidden_curated || []);
+      state.selectedSharedFriends = new Set(data.savecraft_selected_shared_friends || []);
       state.curatedOverrides = data.savecraft_curated_overrides || {};
       state.lastfmUsername = data.savecraft_lastfm_username || null;
       state.followedCuratedLists = new Set(data.savecraft_followed_curated_lists || []);
@@ -761,6 +762,14 @@ export function persistHiddenCurated() {
   return local;
 }
 
+// Same shape as persistHiddenCurated above — Profile > Shared Lists' friend checkboxes.
+export function persistSelectedSharedFriends() {
+  const local = new Promise(resolve => storageSync.set({ savecraft_selected_shared_friends: [...state.selectedSharedFriends] }, resolve));
+  const user = getCurrentUser();
+  if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { selectedSharedFriends: [...state.selectedSharedFriends] }).catch(_syncError);
+  return local;
+}
+
 export function persistCuratedOverrides() {
   const local = new Promise(resolve => storageSync.set({ savecraft_curated_overrides: state.curatedOverrides }, resolve));
   const user = getCurrentUser();
@@ -988,6 +997,7 @@ function _readLocalSettingsSnapshot() {
       savecraft_kanban_sort: {},
       savecraft_kanban_lists: [],
       savecraft_hidden_curated: [],
+      savecraft_selected_shared_friends: [],
       savecraft_curated_overrides: {},
       savecraft_view: 'Book',
       savecraft_sidebar_mode: 'home',
@@ -1003,6 +1013,7 @@ function _readLocalSettingsSnapshot() {
       kanbanSort: data.savecraft_kanban_sort,
       kanbanLists: data.savecraft_kanban_lists,
       hiddenCurated: data.savecraft_hidden_curated,
+      selectedSharedFriends: data.savecraft_selected_shared_friends,
       curatedOverrides: data.savecraft_curated_overrides,
       view: data.savecraft_view,
       sidebarMode: data.savecraft_sidebar_mode,
@@ -1070,6 +1081,7 @@ export async function runInitialSync(uid) {
       savecraft_kanban_sort: cloudSettings.kanbanSort,
       savecraft_kanban_lists: cloudSettings.kanbanLists,
       savecraft_hidden_curated: cloudSettings.hiddenCurated,
+      savecraft_selected_shared_friends: cloudSettings.selectedSharedFriends,
       savecraft_curated_overrides: cloudSettings.curatedOverrides,
       savecraft_view: cloudSettings.view,
       savecraft_sidebar_mode: cloudSettings.sidebarMode,
@@ -1093,6 +1105,7 @@ export async function runInitialSync(uid) {
     if (cloudSettings.kanbanSort) state.kanbanSort = { ...state.kanbanSort, ...cloudSettings.kanbanSort };
     if (cloudSettings.kanbanLists) state.kanbanLists = cloudSettings.kanbanLists;
     if (cloudSettings.hiddenCurated) state.hiddenCurated = new Set(cloudSettings.hiddenCurated);
+    if (cloudSettings.selectedSharedFriends) state.selectedSharedFriends = new Set(cloudSettings.selectedSharedFriends);
     if (cloudSettings.curatedOverrides) state.curatedOverrides = cloudSettings.curatedOverrides;
     if (cloudSettings.view) state.view = cloudSettings.view;
     if (cloudSettings.sidebarMode) state.sidebarMode = cloudSettings.sidebarMode;
