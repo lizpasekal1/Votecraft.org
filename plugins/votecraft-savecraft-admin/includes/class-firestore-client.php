@@ -195,6 +195,155 @@ class VC_SaveCraft_Firestore_Client {
         return true;
     }
 
+    /* ─── Dashboard demo-content config (dashboard_demo_config/{queue-kanban,recent-saves,
+       curated-lists}) — generic single-doc get/set, unlike the admin_kanban_cards-specific
+       methods above, since this is 3 small fixed-id docs rather than an open collection. Reused
+       by both the "Demo Content" REST routes below. Still goes through the bot's ID token even
+       though this collection is public-read in firestore.rules — one auth path for everything
+       this class touches, no reason to special-case a no-auth branch for three small docs. ─── */
+
+    const DEMO_CONFIG_COLLECTION = 'dashboard_demo_config';
+
+    /**
+     * @param string $doc_id 'queue-kanban' | 'recent-saves' | 'curated-lists'
+     * @return array|null|WP_Error Decoded fields, null if the doc doesn't exist yet, or WP_Error.
+     */
+    public static function get_demo_config( $doc_id ) {
+        $id_token = self::get_id_token();
+        if ( is_wp_error( $id_token ) ) {
+            return $id_token;
+        }
+
+        $url = 'https://firestore.googleapis.com/v1/projects/' . VC_SAVECRAFT_FIREBASE_PROJECT .
+            '/databases/(default)/documents/' . self::DEMO_CONFIG_COLLECTION . '/' . rawurlencode( $doc_id ) .
+            '?key=' . VC_SAVECRAFT_FIREBASE_API_KEY;
+
+        $response = wp_remote_get( $url, array(
+            'timeout' => 15,
+            'headers' => array( 'Authorization' => 'Bearer ' . $id_token ),
+        ) );
+        if ( is_wp_error( $response ) ) {
+            return $response;
+        }
+
+        $data = json_decode( wp_remote_retrieve_body( $response ), true );
+        if ( isset( $data['error'] ) ) {
+            if ( ( $data['error']['status'] ?? '' ) === 'NOT_FOUND' ) {
+                return null;
+            }
+            return new WP_Error( 'vc_savecraft_firestore_error', $data['error']['message'] );
+        }
+        return isset( $data['fields'] ) ? self::from_firestore_fields( $data['fields'] ) : null;
+    }
+
+    /**
+     * Full-document replace, same PATCH-with-no-updateMask shape as upsert_card().
+     *
+     * @param string $doc_id
+     * @param array  $fields
+     * @return true|WP_Error
+     */
+    public static function set_demo_config( $doc_id, array $fields ) {
+        $id_token = self::get_id_token();
+        if ( is_wp_error( $id_token ) ) {
+            return $id_token;
+        }
+
+        $url = 'https://firestore.googleapis.com/v1/projects/' . VC_SAVECRAFT_FIREBASE_PROJECT .
+            '/databases/(default)/documents/' . self::DEMO_CONFIG_COLLECTION . '/' . rawurlencode( $doc_id ) .
+            '?key=' . VC_SAVECRAFT_FIREBASE_API_KEY;
+
+        $response = wp_remote_request( $url, array(
+            'method'  => 'PATCH',
+            'timeout' => 15,
+            'headers' => array(
+                'Authorization' => 'Bearer ' . $id_token,
+                'Content-Type'  => 'application/json',
+            ),
+            'body' => wp_json_encode( array( 'fields' => self::to_firestore_fields( $fields ) ) ),
+        ) );
+        if ( is_wp_error( $response ) ) {
+            return $response;
+        }
+
+        $data = json_decode( wp_remote_retrieve_body( $response ), true );
+        if ( isset( $data['error'] ) ) {
+            return new WP_Error( 'vc_savecraft_firestore_error', $data['error']['message'] );
+        }
+        return true;
+    }
+
+    /* ─── curated_items search, for the Recent Saves demo-card picker's "pick from existing
+       curated items" option. Public-read collection (firestore.rules: `allow read: if true`) — no
+       auth needed at all, deliberately NOT using the bot's ID token here, matching storage.js's
+       own _loadCuratedFromFirestore(), which fetches this same collection unauthenticated.
+       Results cached 1 hour in a transient: this is a few hundred docs, not something worth
+       re-fetching on every picker open. ─── */
+
+    const CURATED_SEARCH_CACHE_TRANSIENT = 'vc_savecraft_curated_search_cache';
+    const CURATED_SEARCH_CACHE_TTL       = HOUR_IN_SECONDS;
+
+    /**
+     * @return array|WP_Error Flat list of { id, title, imageUrl, category, genre }, restricted to
+     *                        Top 100 Musician + Music Album — the same scope the SaveCraft app's
+     *                        own fallback already uses (dashboard.js's resolveFavoriteSlides).
+     */
+    public static function search_curated_items() {
+        $cached = get_transient( self::CURATED_SEARCH_CACHE_TRANSIENT );
+        if ( is_array( $cached ) ) {
+            return $cached;
+        }
+
+        $results = array();
+        $page_token = null;
+
+        do {
+            $url = 'https://firestore.googleapis.com/v1/projects/' . VC_SAVECRAFT_FIREBASE_PROJECT .
+                '/databases/(default)/documents/curated_items' .
+                '?key=' . VC_SAVECRAFT_FIREBASE_API_KEY . '&pageSize=300';
+            if ( $page_token ) {
+                $url .= '&pageToken=' . urlencode( $page_token );
+            }
+
+            $response = wp_remote_get( $url, array( 'timeout' => 15 ) );
+            if ( is_wp_error( $response ) ) {
+                return $response;
+            }
+
+            $data = json_decode( wp_remote_retrieve_body( $response ), true );
+            if ( isset( $data['error'] ) ) {
+                return new WP_Error( 'vc_savecraft_firestore_error', $data['error']['message'] );
+            }
+
+            foreach ( ( $data['documents'] ?? array() ) as $doc ) {
+                $f = self::from_firestore_fields( $doc['fields'] ?? array() );
+                $genre = $f['genre'] ?? null;
+                $category = $f['category'] ?? null;
+                // Firestore's curated_items stores plural category labels ('Musicians', 'Music
+                // Albums') — normalize to the singular values dashboard.js/state.js use
+                // everywhere else (matches storage.js's own _CAT_NORMALIZE map for these two).
+                $category_singular = array( 'Musicians' => 'Musician', 'Music Albums' => 'Music Album' );
+                $category = $category_singular[ $category ] ?? $category;
+                if ( $genre !== 'Top 100' || ! in_array( $category, array( 'Musician', 'Music Album' ), true ) ) {
+                    continue;
+                }
+                if ( empty( $f['imageUrl'] ) ) {
+                    continue;
+                }
+                $results[] = array(
+                    'id'       => $f['id'] ?? $doc['name'],
+                    'title'    => $f['title'] ?? '',
+                    'imageUrl' => $f['imageUrl'],
+                    'category' => $category,
+                );
+            }
+            $page_token = $data['nextPageToken'] ?? null;
+        } while ( $page_token );
+
+        set_transient( self::CURATED_SEARCH_CACHE_TRANSIENT, $results, self::CURATED_SEARCH_CACHE_TTL );
+        return $results;
+    }
+
     /* ─── Firestore REST <-> PHP value conversion — mirrors storage.js's _toFirestoreValue/
        _fromFirestoreValue exactly, so a card round-trips identically whether it was last written
        by this plugin or by the SaveCraft web app/extension itself. ─── */
