@@ -205,7 +205,7 @@ body {
   font-weight: 700;
   /* A lighter periwinkle purple than --primary, scoped to just the logo (per direct request,
      matching a color swatch sent live) — everything else (buttons, etc.) keeps --primary as-is. */
-  color: #7B80E5;
+  color: #8A78E8;
   white-space: nowrap;
   letter-spacing: -0.02em;
   pointer-events: none;
