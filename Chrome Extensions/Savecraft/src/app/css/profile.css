@@ -181,6 +181,16 @@
 .vc-wallet-modal .modal-header h2 {
   color: #111827;
 }
+/* "VC Connector" line, per direct request — bolder and a little larger than "You're opening"
+   above it and the base h2's own 20px/600 weight. */
+.vc-wallet-modal-title-emphasis {
+  font-size: 24px;
+  font-weight: 800;
+}
+/* "You're opening" line, per direct follow-up request — a little smaller than the base h2 size. */
+.vc-wallet-modal-title-lead {
+  font-size: 16px;
+}
 .vc-wallet-modal .modal-body p {
   color: #4B5563;
   text-align: center;

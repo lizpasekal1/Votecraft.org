@@ -626,7 +626,7 @@ function _openVotecraftWalletModal() {
   overlay.className = 'modal-overlay open';
   overlay.innerHTML = `
     <div class="modal vc-wallet-modal" style="position:relative; width:360px;">
-      <div class="modal-header"><h2>You're opening<br>VC Connector</h2></div>
+      <div class="modal-header"><h2><span class="vc-wallet-modal-title-lead">You're opening</span><br><span class="vc-wallet-modal-title-emphasis">VC Connector</span></h2></div>
       <div class="modal-body">
         <p>Explore the organizations you support and keep track of your VC.</p>
       </div>
