@@ -32,7 +32,10 @@ const DEMO_GROUP_LISTS = [
 
 // A handful of fictional demo people — purely illustrative, no real friend-graph data exists yet
 // (see profile.js's own "Friends — coming soon" stub, which this page's Friends section replaces).
-const DEMO_FRIENDS = [
+// Exported — profile.js's own Shared Lists widget reuses this same list for its checklist, so
+// both places show the exact same set of demo friends rather than two independently-maintained
+// copies.
+export const DEMO_FRIENDS = [
   { name: 'Jordan Lee', imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
   { name: 'Sam Rivera', imageUrl: 'https://images.unsplash.com/photo-1592621385612-4d7129426394?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
   { name: 'Casey Kim', imageUrl: 'https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?q=80&w=1335&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
