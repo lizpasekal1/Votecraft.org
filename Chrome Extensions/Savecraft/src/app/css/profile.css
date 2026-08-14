@@ -69,9 +69,9 @@
    hero/banner header (moved out per direct request), so it uses the normal theme text color
    instead of .bare-list-desc's near-white (tuned for that banner's own colored background). */
 .about-copy {
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-primary);
   margin: 0;
 }
 
