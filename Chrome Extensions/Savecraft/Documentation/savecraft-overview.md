@@ -6,6 +6,22 @@ SaveCraft is a Chrome extension that acts as a personal media library. Users sav
 
 ## Recent Additions (latest session)
 
+This session built the WordPress Admin Bridge (see "Key Features" above) — Phase 1 (Admin Kanban
+manageable from wp-admin) end to end: a dedicated, narrowly-scoped Firebase bot account; a new
+`admin_kanban_cards` Firestore rule mirroring `isAdminUser()`'s own email-allowlist-or-role logic;
+Admin Kanban itself moved from a local-only whole-array board (`persistAdminKanbanCards()`) to
+per-card Firestore sync (`persistAdminKanbanCard`/`removeAdminKanbanCard`, `storage.js`); and a new
+WordPress plugin (`plugins/votecraft-savecraft-admin/`, outside this folder) that talks only to its
+own REST routes server-side, never exposing any Firestore credential to the browser. All committed,
+merged with a concurrent session's own CSS work, pushed, and deployed. Phase 2 (viewing SaveCraft
+accounts from wp-admin) was fully designed but paused on a Blaze-billing decision — see
+"WordPress Admin Bridge" above and `/Users/lizpasekal/.claude/plans/can-we-separtarate-the-adaptive-breeze.md`.
+See `session-context.md` for the full blow-by-blow.
+
+---
+
+## Recent Additions (previous session)
+
 This session spanned three efforts: a Profile page mobile pass, new Privacy Policy/Terms of Service pages, and a brand-new "Admin Kanban" board for tracking SaveCraft's own project tasks — closed by discovering that native HTML5 drag-and-drop never worked on iOS touch at all, on *either* kanban board, and fixing it for both. See `session-context.md` for the full blow-by-blow (real bugs found, exact CSS/selector details). (Note: this doc's own log also has a gap — a concurrent session's mobile polish pass across the sidebar drawer, Curated bare-list page, and Shared Saves page landed between this entry and the "older session" one below, but was only logged in `session-context.md`, not here.)
 
 - **Profile page mobile pass** — text sizes bumped throughout, Interests' checkbox grid forced to 2 columns on mobile, Connections rows restructured to stack instead of squeezing description text next to a fixed-width button, and a real bug fixed where `.profile-widget-grid`'s row-pairing stretched the Interests card to match Connections' height, leaving a large empty gap.
@@ -245,7 +261,7 @@ All 4 widget cards stretch to equal height and fill the available vertical space
 `renderKanbanCard(item, format)` — passing no `format` renders the exact same card the 4-column board has always shown (this code path is untouched by the whole feature). The expanded column and format choice (`state.kanbanExpandedCol`/`state.kanbanExpandedFormat`) are ephemeral — never written to `chrome.storage.sync`, so they reset to the normal board on every reload.
 
 ### Admin Kanban
-`js/adminKanban.js`, styled from `css/kanban.css`. A second, separate board from the real Queue Kanban above — for tracking SaveCraft's own project to-do list, not saved items. Cards are freeform (`name` + `details`, edited via a small popup rather than inline) and live entirely in their own `state.adminKanbanCards` array, local-only (`storageSync`, no Firestore dual-write) — this whole feature is expected to be reworked or removed later, so it's kept self-contained in this one file rather than woven through the rest of the app.
+`js/adminKanban.js`, styled from `css/kanban.css`. A second, separate board from the real Queue Kanban above — for tracking SaveCraft's own project to-do list, not saved items. Cards are freeform (`name` + `details`, edited via a small popup rather than inline) and live in `state.adminKanbanCards`. **No longer local-only** — each card now also syncs per-document to Firestore's `admin_kanban_cards` collection when the signed-in account is an admin (`isAdminUser()`, gated the same way the board itself is), since the same collection is also read/written by a new WordPress plugin (see "WordPress Admin Bridge" below) — this whole feature is still expected to be reworked or removed later, so it's kept self-contained in this one file rather than woven through the rest of the app.
 
 - **Reached from** a 5th Dashboard widget (full-width, spanning both grid columns, landing below Curated Lists) and a sidebar entry next to Queue Kanban.
 - **Same visual system as the real board** — `.kcard` sizing, the circular expand button (per-column full-width toggle), empty-column drop hints — but a fixed white card background with black text regardless of theme (per direct request), and cards float a "+ Add card" button over the bottom of the column (not a normal flex sibling) so columns can reach the full height of the screen.
@@ -253,6 +269,26 @@ All 4 widget cards stretch to equal height and fill the available vertical space
 - **Sort dropdown** — A→Z, Z→A, Newest→Oldest, Oldest→Newest, Urgency High→Low, Urgency Low→High, and Custom order (drag order) — one global sort across all four columns, rendered as the board's own content rather than reusing the shared `#sort-select` element (whose fixed option set belongs to the main items grid).
 - **Seeded once** with `Documentation/launch-requirements.md`'s checklist, one card per sub-task, pre-rated by urgency — gated on its own one-time flag (`savecraft_admin_kanban_seeded`) so it never re-adds a card the user deletes.
 - **Touch drag-and-drop** — reimplemented manually (`touchstart`/`touchmove`/`touchend`) alongside the native mouse-based drag, since iOS Safari never fires HTML5 drag-and-drop events from touch at all; the real Queue Kanban board above got the identical fix in the same session.
+
+### WordPress Admin Bridge
+Trusted staff can manage the Admin Kanban board directly inside votecraft.org's wp-admin, without a
+separate SaveCraft login — new WordPress plugin at `plugins/votecraft-savecraft-admin/` (outside
+this folder, alongside the other VoteCraft WordPress plugins). Gated behind a dedicated WordPress
+capability (`manage_savecraft_admin`), not `manage_options`, so it can be granted to specific staff
+without making them full WP Admins.
+
+**Credential design (the point of the whole thing):** a dedicated Firebase Auth account
+(`wp-savecraft-bot@votecraft-789.internal`) whose refresh token lives only in `wp-config.php`,
+scoped by `firestore.rules` to exactly the `admin_kanban_cards` collection — nothing under
+`savecraft_users`, no writes to `curated_items`, no account listing. The browser never sees this
+token or any Firestore-scoped ID token: wp-admin's own JS calls only this plugin's REST routes, and
+PHP does the Firestore calls server-side (`includes/class-firestore-client.php`, a PHP port of this
+app's own `storage.js` Firestore REST helpers and `auth.js`'s refresh-token→ID-token exchange).
+
+A second phase (viewing SaveCraft accounts from wp-admin, read-only) was fully designed but is
+**paused** — it needs Firebase Cloud Functions, which require moving the `votecraft-789` project off
+its free Spark plan onto Blaze. Full plan:
+`/Users/lizpasekal/.claude/plans/can-we-separtarate-the-adaptive-breeze.md`.
 
 ### Author / Artist / Director / Studio / Creator Profile Pages
 Every author/director/studio/creator name on a card or in a detail modal is a clickable link (`CREATOR_CARD_CATEGORY` in `state.js`, extended this session from Musician-only to Book/Movie/Show/Game). Clicking it navigates to a dedicated **profile page** for that person/studio within that category:
