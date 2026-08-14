@@ -357,6 +357,47 @@
   flex-shrink: 0;
 }
 
+.profile-saved-list-name {
+  flex: 1;
+}
+
+/* Rename/delete icons — hidden until the row's hovered, same "don't clutter the row until it's
+   relevant" convention as the sidebar's own .sidebar-delete-folder. */
+.profile-saved-list-actions {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.profile-saved-list-row:hover .profile-saved-list-actions {
+  display: flex;
+}
+.profile-saved-list-rename,
+.profile-saved-list-delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  border-radius: 50%;
+  line-height: 1;
+}
+.profile-saved-list-delete {
+  font-size: 16px;
+}
+.profile-saved-list-rename:hover {
+  background: var(--hover-bg);
+  color: var(--primary);
+}
+.profile-saved-list-delete:hover {
+  background: var(--hover-bg);
+  color: #EF4444;
+}
+
 /* Two-column layout: category groups flow top-to-bottom filling the left column first, then the
    right (standard CSS multi-column behavior), rather than one long single-column stack — matches
    how many category groups a single Saved List's tree tends to hold. */
