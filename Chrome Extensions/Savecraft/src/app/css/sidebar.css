@@ -554,6 +554,23 @@
   padding-left: 66px;
 }
 
+/* A folder's own accordion arrow — sits first in the row (before its icon), same "arrow, then
+   label" order as .profile-saved-list-arrow on the Profile page's own list rows. Placed at the
+   start rather than the end like a category header's .sidebar-arrow, since a folder row's right
+   edge is already claimed by .sidebar-delete-folder (position: absolute, right: 16px, appears on
+   hover) — putting another interactive control there too would have the delete button's hover
+   overlay cover it. */
+.sidebar-folder-toggle {
+  font-size: 9px;
+  color: var(--text-secondary);
+  width: 10px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.sidebar-folder-toggle:hover {
+  color: var(--primary);
+}
+
 /* Saved Lists' child rows only (showRadio in renderSidebar.js's _renderDashboardListRow) — same
    visual language as the detail modal's own "Save to:" menu (.detail-save-to-menu-radio in
    detailModal.css), so picking one of these rows reads as choosing a section, not navigating into
