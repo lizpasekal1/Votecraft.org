@@ -10,7 +10,7 @@
 // at a time.
 
 import { state, CATEGORIES, CAT_LABEL, CAT_EMOJI, CATEGORY_PLATFORMS, MODAL_BOOKMARK_ICON_SVG } from './state.js';
-import { escapeHtml, isItunesArtworkUrl, folderIconHtml, sortFoldersForDisplay } from './utils.js';
+import { escapeHtml, isItunesArtworkUrl, folderIconHtml, sortFoldersForDisplay, getChildFolders } from './utils.js';
 import { persistItem, persistCuratedOverrides } from './storage.js';
 import { renderSidebar, renderGrid, promptAddFolder } from './render.js';
 import {
@@ -789,7 +789,7 @@ export function refreshStep2ImagePreviewFromManualInput() {
 // otherwise sort wherever its own name happened to land, with nothing showing it belongs under
 // its parent. depth 0 is a top-level folder; each level deeper adds another "— " prefix.
 function _flattenFoldersForSelect(allFolders, category, parentFolderId = null, depth = 0) {
-  const level = sortFoldersForDisplay(allFolders.filter(f => (f.parentFolderId || null) === parentFolderId), category);
+  const level = sortFoldersForDisplay(getChildFolders(allFolders, parentFolderId), category);
   return level.flatMap(f => [
     { folder: f, depth },
     ..._flattenFoldersForSelect(allFolders, category, f.id, depth + 1),

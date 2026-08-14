@@ -173,15 +173,10 @@
    request. margin-top: auto (pin to the very bottom of the card) replaced with a fixed 20px gap
    instead, per a direct follow-up request — auto was pushing it flush against the card's bottom
    edge with a lot more than 20px of empty space above it, since the card's a fixed-height row
-   with room to spare below the tags. */
-.vc-connect-learn-more-btn {
-  align-self: center;
-  margin-top: 20px;
-}
-
-/* "+ Add New" — Interests and Shared Lists widgets, centered at the bottom same as VC Connector's
-   Learn More button above. Not wired to anything yet, per direct request — visual placeholder
-   only for now. */
+   with room to spare below the tags. Shared with .profile-widget-add-new-btn (Interests/Shared
+   Lists' own bottom button, not wired to anything yet — visual placeholder only for now) — both
+   want the exact same "centered CTA near the bottom of a dash-card" treatment. */
+.vc-connect-learn-more-btn,
 .profile-widget-add-new-btn {
   align-self: center;
   margin-top: 20px;
@@ -262,8 +257,6 @@
   box-shadow: 0 0 16px rgba(20, 204, 176, 0.25);
 }
 .vc-wallet-modal .vc-wallet-open-btn:hover {
-  background: linear-gradient(135deg, #14CCB0, #0d9488);
-  color: #fff;
   box-shadow: 0 0 24px rgba(20, 204, 176, 0.4);
 }
 
