@@ -1144,6 +1144,14 @@
   margin-right: -20px;
 }
 
+/* Cause Curated only — per direct request, this page's banner text is left-aligned instead of
+   the shared .bare-list-hero's own centered default (Shared Saves, which reuses this same class,
+   keeps center). */
+.bare-list-page .bare-list-hero {
+  text-align: left;
+  align-items: flex-start;
+}
+
 .bare-list-title {
   font-size: 22px;
   font-weight: 700;
