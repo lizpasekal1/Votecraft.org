@@ -21,7 +21,7 @@ export function renderAboutPage() {
       <div class="bare-list-header bare-list-hero">
         <h2 class="bare-list-title">About Us</h2>
       </div>
-      <p class="about-copy">SaveCraft is a VoteCraft.org product.</p>
+      <p class="about-copy about-copy--lead">SaveCraft is a VoteCraft.org product.</p>
       <p class="about-copy">VoteCraft creates immersive civic engagement—through educational demos, games, and currency. Empower Democracy with us today.</p>
       ${buildLegalLinksRow('about-legal-links')}
     </div>`;
