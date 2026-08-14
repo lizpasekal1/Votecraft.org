@@ -150,7 +150,7 @@
    edge with a lot more than 20px of empty space above it, since the card's a fixed-height row
    with room to spare below the tags. */
 .vc-connect-learn-more-btn {
-  align-self: flex-start;
+  align-self: center;
   margin-top: 20px;
 }
 .vc-connect-tag {
@@ -180,10 +180,13 @@
 }
 /* flex-direction: column (the shared .modal h2 base is a row) so the two stacked lines actually
    center over each other, not just vertically align within a single row — per direct request
-   ("your opening should be centered above VC Connector"). */
+   ("your opening should be centered above VC Connector"). gap dropped from the base row's 8px to
+   2px — reported live as "far too much padding between these two lines" (the markup's own <br>,
+   now removed, was also stacking its own line-height on top of that gap). */
 .vc-wallet-modal .modal-header h2 {
   color: #111827;
   flex-direction: column;
+  gap: 2px;
 }
 /* "VC Connector" line, per direct request — bolder and a little larger than "You're opening"
    above it and the base h2's own 20px/600 weight. */
