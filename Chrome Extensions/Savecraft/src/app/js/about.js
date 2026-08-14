@@ -19,8 +19,9 @@ export function renderAboutPage() {
   container.innerHTML = `
     <div class="shared-page">
       <div class="bare-list-header bare-list-hero">
-        <h2 class="bare-list-title">About</h2>
-        <p class="bare-list-desc">SaveCraft — part of the VoteCraft ecosystem.</p>
+        <h2 class="bare-list-title">About Us</h2>
+        <p class="bare-list-desc">SaveCraft is a VoteCraft.org product.</p>
+        <p class="bare-list-desc">VoteCraft creates immersive civic engagement—through educational demos, games, and currency. Empower Democracy with us today.</p>
       </div>
       ${buildLegalLinksRow('about-legal-links')}
     </div>`;
