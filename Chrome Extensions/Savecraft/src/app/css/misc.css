@@ -720,6 +720,13 @@
 
   /* Grid header */
   .grid-header { margin-bottom: 14px; }
+  /* Cause Curated specifically — per direct request, the gap between the Dashboard link (in
+     .grid-header) and the banner below it (.bare-list-hero) should be exactly 20px, not this
+     page's own general 14px mobile tightening above (which applies to every other view's
+     .grid-header too, so scoped here rather than changed globally). */
+  .grid-area:has(.bare-list-page) .grid-header {
+    margin-bottom: 20px;
+  }
 
   /* FAB */
   .fab-add {
