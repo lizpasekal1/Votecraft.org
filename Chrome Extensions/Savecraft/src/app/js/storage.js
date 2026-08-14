@@ -208,6 +208,58 @@ export async function initCuratedItems() {
   setCuratedItems(await _getCuratedItems());
 }
 
+// ===== Dashboard demo-content config (admin-editable, WordPress plugin writes it) =====
+// Public-read Firestore docs (dashboard_demo_config/{queue-kanban,recent-saves,curated-lists}) —
+// deliberately fetched with NO Authorization header, unlike the admin-gated helpers above:
+// `Bearer undefined` for a signed-out visitor would get rejected at the auth layer before rules
+// even run, and this needs to work for every Dashboard visitor, not just signed-in admins. Same
+// unauthenticated-fetch shape as _loadCuratedFromFirestore just above it in this file.
+const _DASHBOARD_DEMO_CACHE_VERSION = 1;
+const _DASHBOARD_DEMO_DOC_IDS = ['queue-kanban', 'recent-saves', 'curated-lists'];
+
+async function _fetchPublicDoc(docId) {
+  const url = `https://firestore.googleapis.com/v1/projects/${_FIREBASE_PROJECT}/databases/(default)/documents/dashboard_demo_config/${docId}?key=${_FIREBASE_API_KEY}`;
+  const resp = await fetch(url);
+  const data = await resp.json();
+  if (data.error) {
+    if (data.error.status === 'NOT_FOUND' || data.error.code === 404) return null;
+    throw new Error(data.error.message);
+  }
+  return data.fields ? _fromFirestoreFields(data.fields) : null;
+}
+
+async function _loadDashboardDemoConfigFromFirestore() {
+  const [queueKanban, recentSaves, curatedLists] = await Promise.all(
+    _DASHBOARD_DEMO_DOC_IDS.map(_fetchPublicDoc)
+  );
+  return { queueKanban, recentSaves, curatedLists };
+}
+
+async function _getDashboardDemoConfig() {
+  return new Promise(resolve => {
+    storageLocal.get({ savecraft_dashboard_demo_config: null }, async cached => {
+      const c = cached.savecraft_dashboard_demo_config;
+      if (c?.data && c?.version === _DASHBOARD_DEMO_CACHE_VERSION && Date.now() - (c.fetchedAt || 0) < 24 * 60 * 60 * 1000) {
+        return resolve(c.data);
+      }
+      try {
+        const fresh = await _loadDashboardDemoConfigFromFirestore();
+        storageLocal.set({ savecraft_dashboard_demo_config: { data: fresh, fetchedAt: Date.now(), version: _DASHBOARD_DEMO_CACHE_VERSION } });
+        resolve(fresh);
+      } catch {
+        resolve(c?.data || { queueKanban: null, recentSaves: null, curatedLists: null });
+      }
+    });
+  });
+}
+
+// Fetches the Dashboard demo-content overrides (from cache if fresh, else Firestore) and installs
+// them into state.dashboardDemoConfig — called from main.js's init() alongside initCuratedItems(),
+// since a signed-out demo visitor needs this on first paint same as curated data.
+export async function initDashboardDemoConfig() {
+  state.dashboardDemoConfig = await _getDashboardDemoConfig();
+}
+
 // One-time Admin Kanban seed — the launch-requirements.md checklist (Documentation/), one card
 // per sub-task rather than one card per top-level item, per direct request. Column keys match
 // adminKanban.js's ADMIN_KANBAN_COLUMNS ('todo'/'in-progress'/'blocked'/'done'); the three

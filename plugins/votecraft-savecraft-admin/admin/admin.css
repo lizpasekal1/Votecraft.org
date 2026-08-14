@@ -1,3 +1,43 @@
+/* Accordion — same markup/class names as votecraft-data-sync.php's own <details>-based accordion,
+   reused as-is (not reinvented) so every VoteCraft wp-admin page that uses this pattern looks and
+   behaves identically. Native <details>/<summary> — no JS needed for expand/collapse. */
+.votecraft-accordion {
+  max-width: 1200px;
+  margin-bottom: 10px;
+  border: 1px solid #c3c4c7;
+  border-radius: 4px;
+  background: #fff;
+}
+.votecraft-accordion summary {
+  padding: 12px 15px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  background: #f6f7f7;
+  border-bottom: 1px solid #c3c4c7;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.votecraft-accordion summary::-webkit-details-marker {
+  display: none;
+}
+.votecraft-accordion summary::before {
+  content: '▶';
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+.votecraft-accordion[open] summary::before {
+  transform: rotate(90deg);
+}
+.votecraft-accordion[open] summary {
+  border-bottom: 1px solid #c3c4c7;
+}
+.votecraft-accordion .accordion-content {
+  padding: 15px;
+}
+
 .vc-savecraft-admin-wrap #vc-savecraft-kanban-error {
   padding: 10px 12px;
 }
@@ -144,4 +184,122 @@
   justify-content: space-between;
   align-items: center;
   margin-top: 12px;
+}
+
+/* ─── Demo Content ─── */
+
+.vc-savecraft-admin-wrap #vc-savecraft-demo-error {
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.vc-savecraft-demo-rs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 700px;
+  margin-bottom: 10px;
+}
+
+.vc-savecraft-demo-rs-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f6f7f7;
+  border: 1px solid #dcdcde;
+  border-radius: 3px;
+  padding: 6px 10px;
+}
+
+.vc-savecraft-demo-rs-card img,
+.vc-savecraft-demo-rs-card-noimg {
+  width: 32px;
+  height: 32px;
+  border-radius: 3px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.vc-savecraft-demo-rs-card-noimg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dcdcde;
+  font-weight: 600;
+  color: #50575e;
+}
+
+.vc-savecraft-demo-rs-card-title {
+  flex: 1;
+  font-weight: 600;
+}
+
+.vc-savecraft-demo-rs-card-cat {
+  color: #50575e;
+  font-size: 12px;
+}
+
+/* Picker modal (Add from Curated) — same overlay/shell as the Kanban card editor modal, just a
+   wider max-width for the results grid. */
+.vc-savecraft-picker-modal {
+  width: 640px;
+}
+
+.vc-savecraft-picker-results {
+  max-height: 400px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.vc-savecraft-picker-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  background: #f6f7f7;
+  border: 1px solid #dcdcde;
+  border-radius: 3px;
+  padding: 6px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.vc-savecraft-picker-item:hover {
+  border-color: #2271b1;
+}
+
+.vc-savecraft-picker-item img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+.vc-savecraft-picker-item span {
+  font-size: 12px;
+  font-weight: 600;
+  display: block;
+}
+
+.vc-savecraft-picker-item small {
+  display: block;
+  font-weight: 400;
+  color: #50575e;
+}
+
+.vc-savecraft-demo-cl-list {
+  max-width: 900px;
+  margin-bottom: 10px;
+}
+
+.vc-savecraft-demo-cl-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #dcdcde;
 }
