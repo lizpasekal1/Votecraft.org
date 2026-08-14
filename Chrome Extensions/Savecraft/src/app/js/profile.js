@@ -604,10 +604,10 @@ function buildVotecraftConnectionSection() {
       <div class="profile-card-header"><span class="profile-card-title">VoteCraft.org Connection</span></div>
       <div class="vc-connect-top">
         <h3 class="vc-connect-title">Earn <span class="vc-connect-highlight">VoteCraft Coin</span> by caring</h3>
-        <a class="vc-connect-btn" href="https://votecraft.org/wp-content/uploads/pages/votecraft-coin/app/index.html" target="_blank" rel="noopener">
+        <button type="button" class="vc-connect-btn" id="vc-connect-learn-more">
           Learn More
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
+        </button>
       </div>
       <p class="vc-connect-desc">VC is earned through civic action — volunteering, learning about issues, and supporting reform nonprofits. Spend it in the Emporium.</p>
       <div class="vc-connect-tags">
@@ -616,6 +616,37 @@ function buildVotecraftConnectionSection() {
         <span class="vc-connect-tag vc-connect-tag--support">Donate +25 VC</span>
       </div>
     </div>`;
+}
+
+const VOTECRAFT_WALLET_URL = 'https://votecraft.org/wp-content/uploads/pages/votecraft-coin/app/index.html';
+
+// Small transient confirmation modal shown before actually leaving to the VC Wallet — per direct
+// request. Same "build fresh, remove on close" pattern as the Saved Lists merge-target picker
+// above; white-themed regardless of SaveCraft's own dark/light setting (per direct request), since
+// it's meant to read as a VoteCraft-branded popup, not a SaveCraft-themed one.
+function _openVotecraftWalletModal() {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.innerHTML = `
+    <div class="modal vc-wallet-modal" style="position:relative; width:360px;">
+      <div class="modal-header"><h2>You're opening Votecraft Wallet</h2></div>
+      <div class="modal-body">
+        <p>Explore the organizations you support and keep track of your VC.</p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="vc-wallet-cancel">Cancel</button>
+        <a class="btn-primary vc-wallet-open-btn" id="vc-wallet-open" href="${VOTECRAFT_WALLET_URL}" target="_blank" rel="noopener">Open</a>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  overlay.querySelector('#vc-wallet-cancel').addEventListener('click', close);
+  overlay.querySelector('#vc-wallet-open').addEventListener('click', close); // real <a> navigation still proceeds, this just cleans up the modal
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+}
+
+function wireVotecraftConnectionSection(container) {
+  container.querySelector('#vc-connect-learn-more')?.addEventListener('click', _openVotecraftWalletModal);
 }
 
 // ===== entry point =====
@@ -649,6 +680,7 @@ export function renderProfilePage() {
   wireInterestsSection(container);
   wireSavedListsSection(container);
   wireSharedListsWidget(container);
+  wireVotecraftConnectionSection(container);
 
   if (state.lastfmUsername) {
     ensureLastfmRecentTracks(state.lastfmUsername).then(() => {
