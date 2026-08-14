@@ -91,14 +91,32 @@ function vc_savecraft_admin_assets( $hook ) {
 function vc_savecraft_admin_page() {
     ?>
     <div class="wrap vc-savecraft-admin-wrap">
-        <h1>SaveCraft Admin Kanban</h1>
-        <p class="description">
-            Shared with the SaveCraft app itself — changes made here show up there, and vice versa.
-        </p>
-        <div id="vc-savecraft-kanban-error" class="notice notice-error" style="display:none"></div>
-        <div id="vc-savecraft-kanban-board" class="vc-savecraft-kanban-board">
-            <p id="vc-savecraft-kanban-loading">Loading…</p>
-        </div>
+        <h1>SaveCraft Admin</h1>
+
+        <details class="votecraft-accordion" open>
+            <summary>🗂️ Admin Kanban</summary>
+            <div class="accordion-content">
+                <p class="description">
+                    Shared with the SaveCraft app itself — changes made here show up there, and vice versa.
+                </p>
+                <div id="vc-savecraft-kanban-error" class="notice notice-error" style="display:none"></div>
+                <div id="vc-savecraft-kanban-board" class="vc-savecraft-kanban-board">
+                    <p id="vc-savecraft-kanban-loading">Loading…</p>
+                </div>
+            </div>
+        </details>
+
+        <details class="votecraft-accordion">
+            <summary>👥 Users</summary>
+            <div class="accordion-content">
+                <p class="description">
+                    Not built yet — viewing SaveCraft accounts here needs a separate Firebase Cloud
+                    Function (this collection isn't reachable the same scoped way Admin Kanban is),
+                    which in turn needs switching the Firebase project off its free Spark plan onto
+                    Blaze (pay-as-you-go). Fully designed, but paused pending that decision.
+                </p>
+            </div>
+        </details>
     </div>
     <?php
 }
