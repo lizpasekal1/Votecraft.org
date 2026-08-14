@@ -607,7 +607,7 @@ function buildVotecraftConnectionSection() {
     <div class="dash-card profile-card--votecraft-connection">
       <div class="profile-card-header"><span class="profile-card-title">VC Connector</span></div>
       <h3 class="vc-connect-title">Building Capitalism + Altruism</h3>
-      <p class="vc-connect-desc">VC is earned through civic action — volunteering, learning about issues, and supporting reform nonprofits. Spend it in the Emporium.</p>
+      <p class="vc-connect-desc">VC is earned through civic action — volunteering, learning about issues, and supporting reform nonprofits. Spend it in the VoteCraft Emporium.</p>
       <div class="vc-connect-tags">
         <span class="vc-connect-tag vc-connect-tag--earn">Volunteer +15 VC</span>
       </div>
