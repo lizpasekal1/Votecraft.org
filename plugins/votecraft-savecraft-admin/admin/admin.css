@@ -1,3 +1,43 @@
+/* Accordion — same markup/class names as votecraft-data-sync.php's own <details>-based accordion,
+   reused as-is (not reinvented) so every VoteCraft wp-admin page that uses this pattern looks and
+   behaves identically. Native <details>/<summary> — no JS needed for expand/collapse. */
+.votecraft-accordion {
+  max-width: 1200px;
+  margin-bottom: 10px;
+  border: 1px solid #c3c4c7;
+  border-radius: 4px;
+  background: #fff;
+}
+.votecraft-accordion summary {
+  padding: 12px 15px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  background: #f6f7f7;
+  border-bottom: 1px solid #c3c4c7;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.votecraft-accordion summary::-webkit-details-marker {
+  display: none;
+}
+.votecraft-accordion summary::before {
+  content: '▶';
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+.votecraft-accordion[open] summary::before {
+  transform: rotate(90deg);
+}
+.votecraft-accordion[open] summary {
+  border-bottom: 1px solid #c3c4c7;
+}
+.votecraft-accordion .accordion-content {
+  padding: 15px;
+}
+
 .vc-savecraft-admin-wrap #vc-savecraft-kanban-error {
   padding: 10px 12px;
 }
