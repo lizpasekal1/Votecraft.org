@@ -148,11 +148,13 @@
   gap: 6px;
 }
 /* Same .btn-primary class/look as Connect Steam's own button (Connections widget) — per direct
-   request — just pushed to the very bottom of this card (margin-top: auto, the card is already a
-   flex column) instead of sitting inline next to the title. */
+   request. margin-top: auto (pin to the very bottom of the card) replaced with a fixed 20px gap
+   instead, per a direct follow-up request — auto was pushing it flush against the card's bottom
+   edge with a lot more than 20px of empty space above it, since the card's a fixed-height row
+   with room to spare below the tags. */
 .vc-connect-learn-more-btn {
   align-self: flex-start;
-  margin-top: auto;
+  margin-top: 20px;
 }
 .vc-connect-tag {
   display: inline-flex;
