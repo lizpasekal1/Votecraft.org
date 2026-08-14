@@ -664,7 +664,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    text-align: center;
+    /* Left, not center — per direct request, so it sits close to the hamburger on the left
+       instead of centered across the whole header row. */
+    text-align: left;
+    /* .header-main's own row gap (8px) already puts some space between the hamburger and this —
+       12px more on top makes the total exactly the requested 20px. */
+    margin-left: 12px;
   }
   /* Hides the logo outright while searching, per direct request (the ellipsis-shrink above was
      the first attempt, but it still left a truncated sliver of "SaveCraft" — see screenshot —
