@@ -985,6 +985,14 @@ export async function handleSaveItem() {
       // own "Save to:" menu already reads/writes for an existing item.
       favorite: true, savedListIds: [..._wizardSelectedListIds],
     };
+    // REAL BUG, found and fixed: this branch built `item` and persisted it to storage below, but
+    // never added it to the in-memory state.items array the way the other two branches above do
+    // (state.items.push/state.items[idx]=) — persistItem() only writes to storage, it doesn't
+    // touch state.items itself. The save silently "worked" (item.reappeared after a reload, since
+    // loadAll() re-reads storage) but the renderGrid()/renderSidebar() calls right after this
+    // function used the still-unchanged in-memory array, so a brand-new item never actually
+    // appeared anywhere in the current session (reported live: "it didn't save").
+    state.items.push(item);
   }
 
   await persistItem(item);
