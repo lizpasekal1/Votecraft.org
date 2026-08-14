@@ -2,7 +2,7 @@
 
 import { state } from './state.js';
 import {
-  loadAll, loadLocalCache, initCuratedItems, persistSort, persistTheme, persistSidebarCollapsed,
+  loadAll, loadLocalCache, initCuratedItems, initDashboardDemoConfig, persistSort, persistTheme, persistSidebarCollapsed,
   persistLastfmUsername, disconnectLastfm, persistSteamId, disconnectSteam,
   runInitialSync,
 } from './storage.js';
@@ -611,6 +611,7 @@ async function init() {
   // it, rather than the screen changing out from under the user a moment after paint.
   if (getCurrentUser()) await runInitialSync(getCurrentUser().uid).catch(() => {});
   await initCuratedItems();
+  await initDashboardDemoConfig();
 
   await loadLocalCache('savecraft_curated_img', 'curatedImgCache');
   await loadLocalCache('savecraft_curated_album_meta', 'curatedAlbumMetaCache');
