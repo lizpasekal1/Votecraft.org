@@ -75,6 +75,13 @@
   margin: 0;
 }
 
+/* "SaveCraft is a VoteCraft.org product." — bolder and a little larger than the rest of the
+   description below it, per direct request. */
+.about-copy--lead {
+  font-size: 18px;
+  font-weight: 700;
+}
+
 /* Account stays its own natural-height card at the top, full width — everything below it
    (Connections/Interests/My Notes/Saved Lists/Shared Lists/VoteCraft.org Connection) shares the
    Dashboard's grid shape and .dash-card box model, but taller than the Dashboard's own grid —
