@@ -51,6 +51,14 @@ function withViewTransition(fn) {
 // per section on every render, but the key set (CATEGORIES + 'dashboard') is fixed at load time,
 // so there's nothing to recompute after the first render.
 const sidebarGroupVtNameCache = new Map();
+
+// Which folders currently have their own subfolder accordion open — separate from
+// state.collapsed (whose *presence* means collapsed, seeded up-front with every category/
+// Dashboard/list key so they default closed) since folders are created dynamically and can't be
+// pre-seeded that way; this Set instead defaults empty, so every folder starts collapsed unless
+// explicitly opened. Page-local like profile.js's _expandedProfileSavedLists — doesn't need to
+// survive a reload any more than a category's own open/closed state does.
+const _expandedFolders = new Set();
 function sidebarGroupVtName(key) {
   let name = sidebarGroupVtNameCache.get(key);
   if (name === undefined) {
@@ -396,7 +404,9 @@ export function renderSidebar() {
 
   const categorySections = sidebarCategoryList.map(cat => {
     const primaryId = PRIMARY_FOLDER_ID[cat];
-    let subfolders = sortFoldersForDisplay(state.folders.filter(f => f.parentCategory === cat), cat);
+    // Top-level only here — a folder's own subfolders (folder.parentFolderId) render recursively
+    // inside _renderFolderRow below, not flattened into this same list.
+    let subfolders = sortFoldersForDisplay(state.folders.filter(f => f.parentCategory === cat && !f.parentFolderId), cat);
     if (folderScope) {
       const hadFolders = subfolders.length > 0;
       subfolders = subfolders.filter(f => folderScope.has(f.id));
@@ -433,7 +443,17 @@ export function renderSidebar() {
       </div>
     ` : '';
 
-    const subfolderRows = subfolders.map(folder => {
+    // Recursive — a folder can itself accordion-open to reveal its own subfolders plus a
+    // "+ New folder" row to add more, same shape as a category itself, per direct request
+    // ("folders also can accordion open to an add folder"). depth 0 is a normal top-level folder
+    // (46px indent, .sidebar-subfolder); depth 1+ all share the one deeper "nested" indent tier
+    // (66px, .sidebar-subfolder--nested) rather than stair-stepping indefinitely — true recursion
+    // is supported structurally (a subfolder can itself have subfolders), the visual indent just
+    // caps out at one extra level. NOTE: unlike the top-level `subfolders` list above, a folder's
+    // own children here are NOT filtered by folderScope — a Saved List scoped to a parent folder
+    // always shows all of that folder's subfolders too, a deliberate simplification rather than
+    // threading folderScope recursively through every depth.
+    function _renderFolderRow(folder, depth) {
       const isPrimaryFolder = primaryId === folder.id;
       // What this folder maps to while browsing a curated genre: its own dedicated "creator
       // card" bucket (Authors/Directors/Creators/Game Companies) if it has one; else the full
@@ -461,15 +481,32 @@ export function renderSidebar() {
       const isActive = isCuratedGenre
         ? state.view === `genre:${curatedGenreBase}:${curatedTarget}` && state.activeCuratedFolderId === folder.id
         : state.view === folder.id;
+
+      const children = sortFoldersForDisplay(state.folders.filter(f => f.parentFolderId === folder.id), cat);
+      const isFolderCollapsed = !_expandedFolders.has(folder.id);
+      const folderArrow = isFolderCollapsed ? '▶' : '▼';
+      const nestedClass = depth > 0 ? 'sidebar-subfolder--nested' : '';
+
+      const childrenHtml = isFolderCollapsed ? '' : `
+        ${children.map(child => _renderFolderRow(child, depth + 1)).join('')}
+        <div class="sidebar-item sidebar-add-folder sidebar-subfolder--nested" data-add-subfolder="${folder.id}">
+          + New folder
+        </div>
+      `;
+
       return `
-        <div class="sidebar-item sidebar-subfolder ${isActive ? 'active' : ''}"
+        <div class="sidebar-item sidebar-subfolder ${nestedClass} ${isActive ? 'active' : ''}"
              data-view="${folder.id}" data-curated-target="${escapeHtml(curatedTarget)}">
+          <span class="sidebar-folder-toggle" data-toggle-folder="${folder.id}">${folderArrow}</span>
           ${folderIconHtml(folder.id, 16)} ${escapeHtml(folder.name)}
           ${fCountLabel}
           ${deleteBtn}
         </div>
+        ${childrenHtml}
       `;
-    }).join('');
+    }
+
+    const subfolderRows = subfolders.map(folder => _renderFolderRow(folder, 0)).join('');
 
     const expandedContent = isCollapsed ? '' : `
       ${permanentSubfolders}
@@ -573,6 +610,32 @@ export function renderSidebar() {
     });
   });
 
+  // "+ New folder" nested inside an already-open folder — adds a subfolder (parentFolderId) under
+  // that specific folder rather than a new top-level folder under the category. Looks the parent
+  // folder up for its own parentCategory since every subfolder shares its ancestor's category
+  // (categories themselves never nest).
+  sidebar.querySelectorAll('[data-add-subfolder]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const parentFolder = state.folders.find(f => f.id === el.dataset.addSubfolder);
+      if (!parentFolder) return;
+      promptAddFolder(parentFolder.parentCategory, parentFolder.id);
+    });
+  });
+
+  // A folder's own accordion arrow — separate control from the row's own click-to-navigate
+  // behavior (the generic .sidebar-subfolder handler above), so opening a folder to reveal its
+  // subfolders doesn't also have to navigate into it, and vice versa.
+  sidebar.querySelectorAll('[data-toggle-folder]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const folderId = el.dataset.toggleFolder;
+      if (_expandedFolders.has(folderId)) _expandedFolders.delete(folderId);
+      else _expandedFolders.add(folderId);
+      renderSidebar();
+    });
+  });
+
   sidebar.querySelector('.sidebar-add-saved-list')?.addEventListener('click', e => {
     e.stopPropagation();
     promptAddSavedList();
@@ -586,40 +649,68 @@ export function renderSidebar() {
     btn.addEventListener('click', async e => {
       e.stopPropagation();
       const folderId = btn.dataset.folderId;
-      if (!confirm('Delete this folder? Items inside will stay in the category.')) return;
+      // Subfolders now exist under a folder, so deleting one cascades to every descendant too
+      // (recursively — a subfolder can itself have subfolders) rather than orphaning them as
+      // folders with a parentFolderId pointing at nothing. _collectFolderAndDescendants below
+      // gathers the whole subtree's ids up front so both the confirm copy and the actual cleanup
+      // below account for all of them, not just the one folder directly clicked.
+      const idsToDelete = _collectFolderAndDescendants(folderId);
+      const confirmMsg = idsToDelete.length > 1
+        ? `Delete this folder and its ${idsToDelete.length - 1} subfolder${idsToDelete.length - 1 === 1 ? '' : 's'}? Items inside will stay in the category.`
+        : 'Delete this folder? Items inside will stay in the category.';
+      if (!confirm(confirmMsg)) return;
 
-      const affected = state.items.filter(i => i.folderId === folderId);
+      const affected = state.items.filter(i => idsToDelete.includes(i.folderId));
       for (const item of affected) {
         item.folderId = null;
         await persistItem(item);
       }
 
-      state.folders = state.folders.filter(f => f.id !== folderId);
-      await removeFolder(folderId);
+      state.folders = state.folders.filter(f => !idsToDelete.includes(f.id));
+      for (const id of idsToDelete) await removeFolder(id);
 
-      // Only a real navigation (and only then worth a history entry) if the deleted folder was
-      // actually the active view — otherwise just re-render in place, the folder list itself is
-      // what changed, not what's currently being viewed.
-      if (state.view === folderId) navigateToView('all');
+      // Only a real navigation (and only then worth a history entry) if the deleted folder (or one
+      // of its now-deleted subfolders) was actually the active view — otherwise just re-render in
+      // place, the folder list itself is what changed, not what's currently being viewed.
+      if (idsToDelete.includes(state.view)) navigateToView('all');
       else { renderSidebar(); renderGrid(); }
     });
   });
 }
 
+// A folder id plus every descendant subfolder id, recursively — used by the delete handler above
+// so removing a folder also removes its whole subtree instead of leaving orphaned subfolders
+// (parentFolderId pointing at a since-deleted folder) behind.
+function _collectFolderAndDescendants(folderId) {
+  const ids = [folderId];
+  state.folders.filter(f => f.parentFolderId === folderId).forEach(child => {
+    ids.push(..._collectFolderAndDescendants(child.id));
+  });
+  return ids;
+}
+
 // ===== FOLDERS =====
-export function promptAddFolder(category) {
-  const name = prompt(`New folder name in ${category}:`);
+// parentFolderId (optional) makes this a subfolder of that folder instead of a new top-level
+// folder directly under the category — same category as its parent either way, since categories
+// themselves never nest. Existing callers (the Add Item wizard's own "+ New folder", and this
+// file's own top-level "+ New folder" row) only ever pass `category`, so they're unaffected.
+export function promptAddFolder(category, parentFolderId = null) {
+  const name = prompt(parentFolderId ? 'New subfolder name:' : `New folder name in ${category}:`);
   if (!name?.trim()) return;
 
   const folder = {
     id: Date.now().toString(),
     name: name.trim(),
     parentCategory: category,
+    parentFolderId: parentFolderId || null,
     createdAt: Date.now(),
   };
 
   state.folders.push(folder);
   persistFolder(folder);
+  // A brand-new subfolder should be visible right away, not hidden behind its own still-collapsed
+  // parent folder accordion.
+  if (parentFolderId) _expandedFolders.add(parentFolderId);
   renderSidebar();
 }
 
