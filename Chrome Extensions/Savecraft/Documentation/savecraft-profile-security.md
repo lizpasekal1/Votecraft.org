@@ -90,13 +90,33 @@ built by someone else on the team, connected to this exact same cloud database. 
   local-only browsing there yet) — though there's a temporary "View Demo" option on the sign-in
   screen so people can look around without an account while this is still being polished.
 
+## Forgotten passwords
+
+There's now a real, self-service "Forgot password?" link on the sign-in screen — it sends a
+password-reset email through the same account system, no support request needed.
+
+## A heads-up: trusted staff can now manage the Admin Kanban board through WordPress too
+
+This one doesn't affect your own personal saves at all — it's about the separate internal to-do
+board ("Admin Kanban") used to track SaveCraft's own project tasks, not anyone's saved items.
+
+Unlike your saves, that board isn't "your own private drawer" — it's one shared board, and it's now
+reachable from two places: the SaveCraft app itself (already existed) and, new, directly inside
+your WordPress admin dashboard, without needing a separate SaveCraft login. Access there is gated
+behind a real WordPress permission (only accounts you've explicitly granted it to can see it), and
+the one credential involved is deliberately narrow — it can only read/write that one shared task
+board, nothing about anyone's account or saved items. That credential lives in a config file on
+your WordPress server, never in a browser.
+
+A second piece — viewing the list of SaveCraft accounts from WordPress — was designed but is
+**paused**, since it would require moving the underlying database off its current free plan. Not
+built, nothing changed there yet.
+
 ## What's genuinely not built yet (good to know, not urgent)
 
-- **No "forgot password" flow yet** — if you forget your password today, there's no self-service
-  way to reset it.
 - **No extra sign-in methods** — email + password is the only option right now (no Google, no
   magic links, etc.).
-- Neither of these is a security hole — they're just features that haven't been built yet.
+- Not a security hole — just a feature that hasn't been built yet.
 
 ## Firestore rules — confirmed live (2026-08-13)
 

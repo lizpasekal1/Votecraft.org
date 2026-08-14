@@ -48,16 +48,18 @@ before they're truly final:
 
 ## 🟡 Should fix — real gaps likely to surface fast in testing
 
-### 3. No "forgot password" flow
-Confirmed absent in `src/app/js/auth.js`. A forgotten password is currently a dead end for
-self-serve testers.
+### 3. ✅ "Forgot password" flow — done
+Built via the Firebase Auth REST API's `sendOobCode` (password-reset mode) — no custom email infra.
+A "Forgot password?" link on the sign-in modal triggers the reset email; the button's own text
+becomes the "check your email" confirmation state rather than a separate screen. Same
+email-enumeration-safe behavior as sign-in itself (doesn't reveal whether an email has an
+account).
 
-- [ ] Decide on approach — Firebase Auth's built-in `sendPasswordResetEmail` is the simplest fit
-      (reuses the existing Firebase Auth setup, no custom email infra needed)
-- [ ] Add a "Forgot password?" link to the sign-in modal
-- [ ] Wire it to trigger the reset email
-- [ ] Add a "check your email" confirmation state to the modal
-- [ ] Test the full loop end-to-end: request → email arrives → reset → sign in with new password
+- [x] Decide on approach — Firebase Auth's built-in reset-email flow, reused the existing setup
+- [x] Add a "Forgot password?" link to the sign-in modal
+- [x] Wire it to trigger the reset email
+- [x] Add a "check your email" confirmation state to the modal
+- [x] Test the full loop end-to-end: request → email arrives → reset → sign in with new password
 
 ### 4. savecraft.org requires signing in to use at all
 Unlike the extension (local-only browsing allowed), the website currently requires an account,
@@ -121,6 +123,22 @@ visit savecraft.org.
 - [ ] Check whether SaveCraft is already published (even unlisted) on the Chrome Web Store
 - [ ] If not published, decide: publish unlisted, or have testers sideload manually?
 - [ ] If sideloading, write brief install instructions for testers
+
+### 10. WordPress admin bridge — staff-only, not a real-user-testing blocker
+Trusted staff can now manage the Admin Kanban board directly from wp-admin instead of needing a
+separate SaveCraft login. Not something real (non-team) testers would ever see or touch, but
+tracked here since it's a new credential/attack surface. Full design and current status live in
+`/Users/lizpasekal/.claude/plans/can-we-separtarate-the-adaptive-breeze.md`.
+
+- [x] Phase 1 (Admin Kanban in wp-admin) — built, tested, deployed. Dedicated bot Firebase account,
+      scoped by `firestore.rules` to exactly the `admin_kanban_cards` collection; browser-side
+      wp-admin JS never sees any Firestore credential, only the plugin's own REST routes.
+- [ ] Add `VOTECRAFT_SAVECRAFT_BOT_REFRESH_TOKEN` to the real `wp-config.php`, upload/activate the
+      `plugins/votecraft-savecraft-admin/` plugin ZIP, confirm a non-admin WP user genuinely can't
+      see the menu — none of this can be done from outside Liz's own WordPress site.
+- [ ] Phase 2 (viewing SaveCraft accounts in wp-admin) — designed, **paused**: requires switching
+      the Firebase project off its free Spark plan onto Blaze (pay-as-you-go) for Cloud Functions.
+      Not built. Resume by re-confirming that billing decision first.
 
 ---
 
