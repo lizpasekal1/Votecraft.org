@@ -129,12 +129,9 @@
 .vc-connect-title {
   font-size: 16px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #14CCB0;
   margin: 0;
   line-height: 1.3;
-}
-.vc-connect-highlight {
-  color: #14CCB0;
 }
 .vc-connect-desc {
   font-size: 14px;
