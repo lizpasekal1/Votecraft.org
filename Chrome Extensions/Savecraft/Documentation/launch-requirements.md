@@ -133,9 +133,15 @@ tracked here since it's a new credential/attack surface. Full design and current
 - [x] Phase 1 (Admin Kanban in wp-admin) — built, tested, deployed. Dedicated bot Firebase account,
       scoped by `firestore.rules` to exactly the `admin_kanban_cards` collection; browser-side
       wp-admin JS never sees any Firestore credential, only the plugin's own REST routes.
-- [ ] Add `VOTECRAFT_SAVECRAFT_BOT_REFRESH_TOKEN` to the real `wp-config.php`, upload/activate the
-      `plugins/votecraft-savecraft-admin/` plugin ZIP, confirm a non-admin WP user genuinely can't
-      see the menu — none of this can be done from outside Liz's own WordPress site.
+- [x] Add `VOTECRAFT_SAVECRAFT_BOT_REFRESH_TOKEN` to the real `wp-config.php`, upload/activate the
+      `plugins/votecraft-savecraft-admin/` plugin ZIP — done and confirmed live 2026-08-14. One
+      real gotcha hit along the way: the site's Elementor Cloud edge caching served a stale HTML
+      response for the brand-new REST route on first load (looked like a broken endpoint —
+      `Unexpected token '<'... is not valid JSON` — until confirmed working in an Incognito
+      window). Purging the host cache, and excluding `/wp-json/*` from caching if the host
+      supports it, avoids this biting the next staff member who opens the page cold.
+- [ ] Confirm a non-admin WP user genuinely can't see the SaveCraft Admin menu — still outstanding,
+      can't be done from outside Liz's own WordPress site.
 - [ ] Phase 2 (viewing SaveCraft accounts in wp-admin) — designed, **paused**: requires switching
       the Firebase project off its free Spark plan onto Blaze (pay-as-you-go) for Cloud Functions.
       Not built. Resume by re-confirming that billing decision first.
