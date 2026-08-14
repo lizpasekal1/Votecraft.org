@@ -63,6 +63,16 @@
   justify-content: center;
 }
 
+/* About page's own description text — sits directly on the page background now, not inside the
+   hero/banner header (moved out per direct request), so it uses the normal theme text color
+   instead of .bare-list-desc's near-white (tuned for that banner's own colored background). */
+.about-copy {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
 /* Account stays its own natural-height card at the top, full width — everything below it
    (Connections/Interests/My Notes/Saved Lists/Shared Lists/VoteCraft.org Connection) shares the
    Dashboard's grid shape and .dash-card box model, but taller than the Dashboard's own grid —
