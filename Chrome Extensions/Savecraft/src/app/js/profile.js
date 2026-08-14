@@ -602,19 +602,14 @@ function buildVotecraftConnectionSection() {
   return `
     <div class="dash-card profile-card--votecraft-connection">
       <div class="profile-card-header"><span class="profile-card-title">VC Connector</span></div>
-      <div class="vc-connect-top">
-        <h3 class="vc-connect-title">Earn <span class="vc-connect-highlight">VoteCraft Coin</span> by caring</h3>
-        <button type="button" class="vc-connect-btn" id="vc-connect-learn-more">
-          Learn More
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-      </div>
+      <h3 class="vc-connect-title">Earn <span class="vc-connect-highlight">VoteCraft Coin</span> by caring</h3>
       <p class="vc-connect-desc">VC is earned through civic action — volunteering, learning about issues, and supporting reform nonprofits. Spend it in the Emporium.</p>
       <div class="vc-connect-tags">
         <span class="vc-connect-tag vc-connect-tag--earn">Volunteer +15 VC</span>
         <span class="vc-connect-tag vc-connect-tag--learn">Learn +5 VC</span>
         <span class="vc-connect-tag vc-connect-tag--support">Donate +25 VC</span>
       </div>
+      <button type="button" class="btn-primary vc-connect-learn-more-btn" id="vc-connect-learn-more">Learn More</button>
     </div>`;
 }
 
