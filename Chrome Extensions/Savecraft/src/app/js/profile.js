@@ -260,6 +260,7 @@ function buildInterestsSection() {
       <div class="profile-card-header"><span class="profile-card-title">Interests</span></div>
       <p class="profile-card-copy">Pick which curated lists you'd like to follow.</p>
       <div class="profile-interests-grid">${optionsHtml}</div>
+      <button type="button" class="btn-primary profile-widget-add-new-btn">+ Add New</button>
     </div>`;
 }
 
@@ -580,6 +581,7 @@ function buildSharedListsSection() {
       <div class="profile-card-header"><span class="profile-card-title">Shared Lists</span></div>
       <p class="profile-card-copy">Choose which friends' shared lists you'd like to see.</p>
       <div class="profile-interests-grid">${optionsHtml}</div>
+      <button type="button" class="btn-primary profile-widget-add-new-btn">+ Add New</button>
     </div>`;
 }
 
