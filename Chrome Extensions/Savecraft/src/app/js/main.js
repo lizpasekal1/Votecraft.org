@@ -658,9 +658,14 @@ async function init() {
   });
   document.getElementById('link-sponsored-statements').href = resourceUrl('src/sponsored/sponsored.html');
   // Privacy Policy/Terms of Service links removed from this dropdown per direct request, replaced
-  // with a single About link — points at the existing SaveCraft marketing/about page rather than
-  // building a new one from scratch.
-  document.getElementById('link-about').href = resourceUrl('src/webpage/savecraft-marketing.html');
+  // with a single About entry — a real in-app page (about.js), not an external link (an earlier
+  // version pointed straight at the marketing page instead; corrected per direct follow-up:
+  // "about should still be in the savecraft app"). Same navigateToView pattern as #btn-profile
+  // above, not an <a href>.
+  document.getElementById('btn-about').addEventListener('click', () => {
+    settingsDropdown.setAttribute('hidden', '');
+    navigateToView('about');
+  });
   document.addEventListener('click', e => {
     if (!settingsWrap.contains(e.target)) settingsDropdown.setAttribute('hidden', '');
   });

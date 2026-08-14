@@ -57,6 +57,12 @@
   margin-top: -4px;
 }
 
+/* About page's own use of this same row (about.js) — centered, since .shared-page (the page shell
+   it reuses) is a full-width flex column and this row would otherwise sit flush left. */
+.about-legal-links {
+  justify-content: center;
+}
+
 /* Account stays its own natural-height card at the top, full width — everything below it
    (Connections/Interests/My Notes/Saved Lists/Shared Lists/VoteCraft.org Connection) shares the
    Dashboard's grid shape and .dash-card box model, but taller than the Dashboard's own grid —

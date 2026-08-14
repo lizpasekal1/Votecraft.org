@@ -25,7 +25,9 @@ const TERMS_OF_SERVICE_URL = resourceUrl('src/webpage/terms-of-service.html');
 // Shared by both the desktop card and the mobile page-end duplicate below — one legal-links row
 // (Privacy Policy · Terms of Service) rather than two separate elements needing their own mobile
 // swap class each.
-function buildLegalLinksRow(extraClass = '') {
+// Exported — the new in-app About page (about.js) reuses this exact row instead of duplicating
+// the Privacy Policy/Terms of Service markup.
+export function buildLegalLinksRow(extraClass = '') {
   return `
     <div class="profile-legal-links${extraClass ? ` ${extraClass}` : ''}">
       <a href="${PRIVACY_POLICY_URL}" target="_blank" rel="noopener">Privacy Policy</a>
