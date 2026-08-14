@@ -610,8 +610,6 @@ function buildVotecraftConnectionSection() {
       <p class="vc-connect-desc">VC is earned through civic action — volunteering, learning about issues, and supporting reform nonprofits. Spend it in the Emporium.</p>
       <div class="vc-connect-tags">
         <span class="vc-connect-tag vc-connect-tag--earn">Volunteer +15 VC</span>
-        <span class="vc-connect-tag vc-connect-tag--learn">Learn +5 VC</span>
-        <span class="vc-connect-tag vc-connect-tag--support">Donate +25 VC</span>
       </div>
       <button type="button" class="btn-primary vc-connect-learn-more-btn" id="vc-connect-learn-more">Learn More</button>
     </div>`;
