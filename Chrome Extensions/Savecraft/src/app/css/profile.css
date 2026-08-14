@@ -369,7 +369,12 @@
   gap: 2px;
   flex-shrink: 0;
 }
-.profile-saved-list-row:hover .profile-saved-list-actions {
+/* Also stays visible while the row's accordion is open, not just on hover — per direct request
+   ("it seems to disappear"). Expanding a row moves the mouse down into the category tree below,
+   which is a sibling of .profile-saved-list-row, not a descendant, so :hover alone stopped
+   matching the instant the cursor left the row itself. */
+.profile-saved-list-row:hover .profile-saved-list-actions,
+.profile-saved-list-row--expanded .profile-saved-list-actions {
   display: flex;
 }
 .profile-saved-list-rename,
