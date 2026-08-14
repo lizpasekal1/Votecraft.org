@@ -153,6 +153,14 @@
   align-self: center;
   margin-top: 20px;
 }
+
+/* "+ Add New" — Interests and Shared Lists widgets, centered at the bottom same as VC Connector's
+   Learn More button above. Not wired to anything yet, per direct request — visual placeholder
+   only for now. */
+.profile-widget-add-new-btn {
+  align-self: center;
+  margin-top: 20px;
+}
 .vc-connect-tag {
   display: inline-flex;
   align-items: center;
