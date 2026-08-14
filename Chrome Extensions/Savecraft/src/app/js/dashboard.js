@@ -37,8 +37,17 @@ function resolveFavoriteSlides() {
   const real = getAllFavoriteItems();
   if (real.length > 0) return { items: real, isDemo: false };
 
-  // Fallback: curated Top 100 Musician + Music Album — the two categories confirmed to have
-  // real populated Top 100 data. Guarded against either being absent/empty.
+  // Admin-editable via the WordPress plugin's "Demo Content" section (state.dashboardDemoConfig,
+  // see storage.js's initDashboardDemoConfig) — an explicit, ordered list of cards (each either
+  // hand-picked from curated data or fully custom, per how the admin built it) takes priority
+  // over the old auto-derived fallback below, once configured.
+  const configured = state.dashboardDemoConfig?.recentSaves?.cards;
+  if (configured?.length) {
+    return { items: configured.map(c => ({ ...c, curated: true })), isDemo: true };
+  }
+
+  // Fallback (unconfigured state): curated Top 100 Musician + Music Album — the two categories
+  // confirmed to have real populated Top 100 data. Guarded against either being absent/empty.
   const musicians = CURATED_ITEMS['Top 100']?.['Musician'] || [];
   const albums = CURATED_ITEMS['Top 100']?.['Music Album'] || [];
   const demo = [...musicians, ...albums]
@@ -321,13 +330,35 @@ export function _resolveGenreCover(genre) {
   return null;
 }
 
+// Admin-editable via the WordPress plugin's "Demo Content" section (state.dashboardDemoConfig,
+// see storage.js's initDashboardDemoConfig) — a configured `genres` list (order, display name,
+// cover per entry) replaces DASHBOARD_CURATED_ORDER/CURATED_LIST_DISPLAY_NAMES/
+// CURATED_LIST_COVER_OVERRIDES wholesale once set; any entry that omits displayName/coverUrl
+// still falls back to that genre's own hardcoded default/auto-resolved cover, so a partial
+// config (e.g. just reordering) doesn't lose the rest.
+function _resolveCuratedListsWidgetConfig() {
+  const configured = state.dashboardDemoConfig?.curatedLists?.genres;
+  if (!configured?.length) {
+    return DASHBOARD_CURATED_ORDER.map(genre => ({
+      genre, displayName: CURATED_LIST_DISPLAY_NAMES[genre] || genre,
+      coverUrl: CURATED_LIST_COVER_OVERRIDES[genre] || _resolveGenreCover(genre),
+    }));
+  }
+  return configured.map(g => ({
+    genre: g.genre,
+    displayName: g.displayName || CURATED_LIST_DISPLAY_NAMES[g.genre] || g.genre,
+    coverUrl: g.coverUrl || CURATED_LIST_COVER_OVERRIDES[g.genre] || _resolveGenreCover(g.genre),
+  }));
+}
+
 function buildCuratedListsWidget() {
+  const order = _resolveCuratedListsWidgetConfig();
   // Tripled so _wireCarouselArrows() always has room to page into on either side — see its
   // comment for why. data-genre still drives navigation, so duplicate cards behave identically.
-  const tripledOrder = [...DASHBOARD_CURATED_ORDER, ...DASHBOARD_CURATED_ORDER, ...DASHBOARD_CURATED_ORDER];
-  const cardsHtml = tripledOrder.map(genre => {
-    const cover = CURATED_LIST_COVER_OVERRIDES[genre] || _resolveGenreCover(genre);
-    const label = CURATED_LIST_DISPLAY_NAMES[genre] || genre;
+  const tripledOrder = [...order, ...order, ...order];
+  const cardsHtml = tripledOrder.map(({ genre, displayName, coverUrl }) => {
+    const cover = coverUrl;
+    const label = displayName;
     const art = cover
       ? `<img src="${escapeHtml(cover)}" alt="" loading="lazy" decoding="async">`
       : `<span class="dash-thumb-fallback">${GENRE_EMOJI[genre] || '📁'}</span>`;

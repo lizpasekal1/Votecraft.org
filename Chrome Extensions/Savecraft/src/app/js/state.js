@@ -356,4 +356,15 @@ export const state = {
   lastfmCache: {}, // { [normalizedUsername]: { tracks: [...]|null, fetchedAt } } — auto-fetched via Last.fm, short TTL
   steamId: null,   // Steam vanity URL or numeric SteamID64 the user has linked, or null
   steamCache: {},  // { [normalizedInput]: { games: [...]|null, fetchedAt } } — auto-fetched via Steam Web API
+  dashboardDemoConfig: null, // { queueKanban: {title,category,imageUrl}|null, recentSaves:
+                              // {cards:[...]}|null, curatedLists: {genres:[...]}|null } — admin-
+                              // editable overrides for the 3 Dashboard widgets that show fallback/
+                              // demo content to signed-out visitors and empty-state accounts
+                              // (kanban.js's KANBAN_DEMO, dashboard.js's resolveFavoriteSlides/
+                              // buildCuratedListsWidget). Public-read Firestore doc(s)
+                              // (dashboard_demo_config collection) fetched once at startup — see
+                              // storage.js's initDashboardDemoConfig — since every visitor's
+                              // Dashboard needs this, not just admins. null/missing sub-keys fall
+                              // back to each widget's own hardcoded default, so this is additive,
+                              // never required to be configured.
 };
