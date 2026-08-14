@@ -19,6 +19,7 @@ import {
   fetchVideoThumbnail,
 } from './api.js';
 import { autoSaveMusician } from './authors.js';
+import { openDetailModal } from './detailModal.js';
 
 // ===== ADD-MODAL WIZARD STATE (screen 'category' → 'review') =====
 let _wizardScreen = 'category';    // which screen is currently visible — drives what the back icon does
@@ -914,6 +915,22 @@ export async function handleSaveItem() {
     const catSelect = document.getElementById('modal-category');
     if (catSelect) { catSelect.style.outline = '2px solid #EF4444'; setTimeout(() => catSelect.style.outline = '', 1500); }
     return;
+  }
+
+  // Duplicate guard, per direct request — same URL already saved in this exact folder (not just
+  // anywhere in the library) blocks the save entirely rather than silently creating a second copy.
+  // Excludes the item currently being edited so re-saving it without changing its own URL/folder
+  // doesn't flag itself. folderId matches null-to-null too, so this also catches duplicates among
+  // un-foldered items within the same category.
+  if (url) {
+    const duplicate = state.items.find(i => i.id !== state.editingId && i.url === url && i.folderId === folderId);
+    if (duplicate) {
+      if (confirm(`"${duplicate.title || 'Untitled'}" is already saved in this folder. View it?`)) {
+        closeAddModal();
+        openDetailModal(duplicate);
+      }
+      return;
+    }
   }
 
   // News is source-verified, not free-paste: the URL must actually belong to the chosen curated
