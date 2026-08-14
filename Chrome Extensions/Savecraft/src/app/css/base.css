@@ -207,6 +207,11 @@ body {
   white-space: nowrap;
   letter-spacing: -0.02em;
   pointer-events: none;
+  /* Slight black blur behind the text, per direct request ("looks dim") — a soft dark halo
+     behind the glyphs adds contrast at their edges so the purple reads as more saturated/"pops"
+     more, compensating for anti-aliased text naturally covering less of each pixel than a solid
+     filled button of the same color. */
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
 }
 
 /* Sidebar header controls */
