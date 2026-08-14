@@ -21,7 +21,7 @@ export function renderAboutPage() {
       <div class="bare-list-header bare-list-hero">
         <h2 class="bare-list-title">About Us</h2>
       </div>
-      <p class="about-copy">SaveCraft is a personal media library that lets you save, organize, and track movies, shows, music, books, and games you want to experience — across a Chrome extension and web app that stay in sync.</p>
+      <p class="about-copy">SaveCraft is a personal media library that lets you save, organize, and track articles, movies, shows, music, books, and games you want to experience — across a Chrome extension and web app that stay in sync.</p>
       <p class="about-copy about-copy--lead">SaveCraft is a VoteCraft.org product.</p>
       <p class="about-copy">VoteCraft creates immersive civic engagement—through educational demos, games, and currency. Empower Democracy with us today.</p>
       ${buildLegalLinksRow('about-legal-links')}
