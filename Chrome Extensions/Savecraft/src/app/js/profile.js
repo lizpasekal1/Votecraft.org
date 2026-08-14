@@ -242,7 +242,11 @@ function wireConnectionsSection(container) {
 
 function buildInterestsSection() {
   const optionsHtml = CURATED_GENRES.map(genre => {
-    const label = CURATED_LIST_DISPLAY_NAMES[genre] || genre;
+    // Trailing " List" dropped here per direct request — same technique sharedSaves.js's own
+    // nonprofit slider already uses on these exact display names, scoped to just this widget's
+    // own labels rather than changing CURATED_LIST_DISPLAY_NAMES itself (other consumers, e.g.
+    // that same slider, still want the full "___ List" name).
+    const label = (CURATED_LIST_DISPLAY_NAMES[genre] || genre).replace(/\s+List$/i, '');
     const checked = state.followedCuratedLists.has(genre) ? 'checked' : '';
     return `
       <label class="profile-interest-option">
