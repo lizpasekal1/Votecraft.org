@@ -4,7 +4,10 @@ import {
   state, CURATED_ITEMS, CATEGORIES, CAT_LABEL, CAT_EMOJI, CURATED_GENRES, GENRE_EMOJI,
   PRIMARY_FOLDER_ID,
 } from './state.js';
-import { escapeHtml, folderIconHtml, sortFoldersForDisplay, catClass, isAdminUser, isQueueDemoId } from './utils.js';
+import {
+  escapeHtml, folderIconHtml, sortFoldersForDisplay, catClass, isAdminUser, isQueueDemoId,
+  getChildFolders, getFolderDescendantIds,
+} from './utils.js';
 import { getCurrentUser } from './auth.js';
 import { persistItem, persistFolder, removeFolder, persistSavedLists } from './storage.js';
 import { closeSidebar } from './main.js';
@@ -482,7 +485,7 @@ export function renderSidebar() {
         ? state.view === `genre:${curatedGenreBase}:${curatedTarget}` && state.activeCuratedFolderId === folder.id
         : state.view === folder.id;
 
-      const children = sortFoldersForDisplay(state.folders.filter(f => f.parentFolderId === folder.id), cat);
+      const children = sortFoldersForDisplay(getChildFolders(state.folders, folder.id), cat);
       const isFolderCollapsed = !_expandedFolders.has(folder.id);
       const folderArrow = isFolderCollapsed ? '▶' : '▼';
       const nestedClass = depth > 0 ? 'sidebar-subfolder--nested' : '';
@@ -651,10 +654,10 @@ export function renderSidebar() {
       const folderId = btn.dataset.folderId;
       // Subfolders now exist under a folder, so deleting one cascades to every descendant too
       // (recursively — a subfolder can itself have subfolders) rather than orphaning them as
-      // folders with a parentFolderId pointing at nothing. _collectFolderAndDescendants below
+      // folders with a parentFolderId pointing at nothing. getFolderDescendantIds (utils.js)
       // gathers the whole subtree's ids up front so both the confirm copy and the actual cleanup
       // below account for all of them, not just the one folder directly clicked.
-      const idsToDelete = _collectFolderAndDescendants(folderId);
+      const idsToDelete = getFolderDescendantIds(state.folders, folderId);
       const confirmMsg = idsToDelete.length > 1
         ? `Delete this folder and its ${idsToDelete.length - 1} subfolder${idsToDelete.length - 1 === 1 ? '' : 's'}? Items inside will stay in the category.`
         : 'Delete this folder? Items inside will stay in the category.';
@@ -678,16 +681,6 @@ export function renderSidebar() {
   });
 }
 
-// A folder id plus every descendant subfolder id, recursively — used by the delete handler above
-// so removing a folder also removes its whole subtree instead of leaving orphaned subfolders
-// (parentFolderId pointing at a since-deleted folder) behind.
-function _collectFolderAndDescendants(folderId) {
-  const ids = [folderId];
-  state.folders.filter(f => f.parentFolderId === folderId).forEach(child => {
-    ids.push(..._collectFolderAndDescendants(child.id));
-  });
-  return ids;
-}
 
 // ===== FOLDERS =====
 // parentFolderId (optional) makes this a subfolder of that folder instead of a new top-level

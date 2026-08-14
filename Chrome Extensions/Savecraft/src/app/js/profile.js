@@ -242,38 +242,60 @@ function wireConnectionsSection(container) {
 
 // ===== interests =====
 
-function buildInterestsSection() {
-  const optionsHtml = CURATED_GENRES.map(genre => {
-    // Trailing " List" dropped here per direct request — same technique sharedSaves.js's own
-    // nonprofit slider already uses on these exact display names, scoped to just this widget's
-    // own labels rather than changing CURATED_LIST_DISPLAY_NAMES itself (other consumers, e.g.
-    // that same slider, still want the full "___ List" name).
-    const label = (CURATED_LIST_DISPLAY_NAMES[genre] || genre).replace(/\s+List$/i, '');
-    const checked = state.followedCuratedLists.has(genre) ? 'checked' : '';
-    return `
+// Shared "label+checkbox grid" recipe — Interests and Shared Lists (below) are both this same
+// shape (a fixed list of options, each independently toggleable, persisted the same way), just
+// with different option sources/state, so one parametrized pair replaces what used to be two
+// near-identical build/wire function pairs.
+function buildChecklistCard({ cardClass, title, copy, options, dataAttr, isChecked }) {
+  const optionsHtml = options.map(({ value, label }) => `
       <label class="profile-interest-option">
-        <input type="checkbox" data-genre="${escapeHtml(genre)}" ${checked}>
+        <input type="checkbox" data-${dataAttr}="${escapeHtml(value)}" ${isChecked(value) ? 'checked' : ''}>
         <span>${escapeHtml(label)}</span>
-      </label>`;
-  }).join('');
+      </label>`).join('');
 
   return `
-    <div class="dash-card profile-card--interests">
-      <div class="profile-card-header"><span class="profile-card-title">Interests</span></div>
-      <p class="profile-card-copy">Pick which curated lists you'd like to follow.</p>
+    <div class="dash-card ${cardClass}">
+      <div class="profile-card-header"><span class="profile-card-title">${escapeHtml(title)}</span></div>
+      <p class="profile-card-copy">${escapeHtml(copy)}</p>
       <div class="profile-interests-grid">${optionsHtml}</div>
       <button type="button" class="btn-primary profile-widget-add-new-btn">+ Add New</button>
     </div>`;
 }
 
+function wireChecklistCard(container, { cardClass, dataAttr, onToggle }) {
+  container.querySelectorAll(`.${cardClass} .profile-interest-option input[type="checkbox"]`).forEach(input => {
+    input.addEventListener('change', () => onToggle(input.dataset[dataAttr], input.checked));
+  });
+}
+
+function buildInterestsSection() {
+  const options = CURATED_GENRES.map(genre => ({
+    value: genre,
+    // Trailing " List" dropped here per direct request — same technique sharedSaves.js's own
+    // nonprofit slider already uses on these exact display names, scoped to just this widget's
+    // own labels rather than changing CURATED_LIST_DISPLAY_NAMES itself (other consumers, e.g.
+    // that same slider, still want the full "___ List" name).
+    label: (CURATED_LIST_DISPLAY_NAMES[genre] || genre).replace(/\s+List$/i, ''),
+  }));
+  return buildChecklistCard({
+    cardClass: 'profile-card--interests',
+    title: 'Interests',
+    copy: "Pick which curated lists you'd like to follow.",
+    options,
+    dataAttr: 'genre',
+    isChecked: genre => state.followedCuratedLists.has(genre),
+  });
+}
+
 function wireInterestsSection(container) {
-  container.querySelectorAll('.profile-interest-option input[type="checkbox"]').forEach(input => {
-    input.addEventListener('change', () => {
-      const genre = input.dataset.genre;
-      if (input.checked) state.followedCuratedLists.add(genre);
+  wireChecklistCard(container, {
+    cardClass: 'profile-card--interests',
+    dataAttr: 'genre',
+    onToggle: (genre, checked) => {
+      if (checked) state.followedCuratedLists.add(genre);
       else state.followedCuratedLists.delete(genre);
       persistFollowedCuratedLists();
-    });
+    },
   });
 }
 
@@ -431,16 +453,26 @@ async function _promptDeleteSavedList(listId) {
   _rebuildSavedListsCard();
 }
 
-// Small transient modal (built fresh each time, removed on close — unlike Admin Kanban's own
-// build-once-and-toggle card editor, this only ever needs to exist for the span of one delete).
+// Small transient modal — creates the overlay div, injects the given .modal markup, and appends
+// it to body (built fresh each call, removed on close, unlike Admin Kanban's own build-once-and-
+// toggle card editor, which persists across renders). Shared by every one-off modal below instead
+// of each hand-rolling its own create/append/remove lifecycle. Returns { overlay, close } — close
+// just removes the DOM node; what "dismissed" actually means (resolving a pending Promise with a
+// specific value, or just closing) is still each caller's own, since that differs per modal.
+function _openTransientModal(modalHtml) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.innerHTML = modalHtml;
+  document.body.appendChild(overlay);
+  return { overlay, close: () => overlay.remove() };
+}
+
 // Resolves to: a list id (merge into that list), '' (don't merge, just delete), or null (the user
 // cancelled the picker itself — the caller treats this as aborting the whole delete, not just the
 // merge step).
 function _promptMergeTarget(list, otherLists) {
   return new Promise(resolve => {
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay open';
-    overlay.innerHTML = `
+    const { overlay, close: closeModal } = _openTransientModal(`
       <div class="modal" style="position:relative; width:380px;">
         <div class="modal-header"><h2>Delete "${escapeHtml(list.name)}"</h2></div>
         <div class="modal-body">
@@ -457,9 +489,8 @@ function _promptMergeTarget(list, otherLists) {
           <button type="button" class="btn-cancel" id="merge-target-cancel">Cancel</button>
           <button type="button" class="btn-primary" id="merge-target-confirm">Delete</button>
         </div>
-      </div>`;
-    document.body.appendChild(overlay);
-    const close = value => { overlay.remove(); resolve(value); };
+      </div>`);
+    const close = value => { closeModal(); resolve(value); };
     overlay.querySelector('#merge-target-cancel').addEventListener('click', () => close(null));
     overlay.querySelector('#merge-target-confirm').addEventListener('click', () => {
       close(overlay.querySelector('#merge-target-select').value || '');
@@ -565,47 +596,40 @@ function buildMyNotesSection() {
 // ===== shared lists =====
 // A checklist of the same demo friends Shared Saves' own Friends section shows (sharedSaves.js's
 // DEMO_FRIENDS — no real friend-graph exists yet, so both places draw from the one shared list
-// rather than maintaining separate copies) — exact same recipe as Interests above (label+checkbox
-// rows in a grid, persisted the same way), just toggling state.selectedSharedFriends instead of
+// rather than maintaining separate copies) — uses the same buildChecklistCard/wireChecklistCard
+// recipe as Interests above, just toggling state.selectedSharedFriends instead of
 // state.followedCuratedLists. Per direct request ("the way interests is set up").
 function buildSharedListsSection() {
-  const optionsHtml = DEMO_FRIENDS.map(friend => {
-    const checked = state.selectedSharedFriends.has(friend.name) ? 'checked' : '';
-    return `
-      <label class="profile-interest-option">
-        <input type="checkbox" data-friend="${escapeHtml(friend.name)}" ${checked}>
-        <span>${escapeHtml(friend.name)}</span>
-      </label>`;
-  }).join('');
-
-  return `
-    <div class="dash-card profile-card--shared-lists">
-      <div class="profile-card-header"><span class="profile-card-title">Shared Lists</span></div>
-      <p class="profile-card-copy">Choose which friends' shared lists you'd like to see.</p>
-      <div class="profile-interests-grid">${optionsHtml}</div>
-      <button type="button" class="btn-primary profile-widget-add-new-btn">+ Add New</button>
-    </div>`;
-}
-
-function wireSharedListsWidget(container) {
-  container.querySelectorAll('.profile-card--shared-lists .profile-interest-option input[type="checkbox"]').forEach(input => {
-    input.addEventListener('change', () => {
-      const name = input.dataset.friend;
-      if (input.checked) state.selectedSharedFriends.add(name);
-      else state.selectedSharedFriends.delete(name);
-      persistSelectedSharedFriends();
-    });
+  const options = DEMO_FRIENDS.map(friend => ({ value: friend.name, label: friend.name }));
+  return buildChecklistCard({
+    cardClass: 'profile-card--shared-lists',
+    title: 'Shared Lists',
+    copy: "Choose which friends' shared lists you'd like to see.",
+    options,
+    dataAttr: 'friend',
+    isChecked: name => state.selectedSharedFriends.has(name),
   });
 }
 
-// ===== votecraft.org connection =====
-// Reuses the exact copy/tag colors from the standalone VC-coin promo widget
+function wireSharedListsWidget(container) {
+  wireChecklistCard(container, {
+    cardClass: 'profile-card--shared-lists',
+    dataAttr: 'friend',
+    onToggle: (name, checked) => {
+      if (checked) state.selectedSharedFriends.add(name);
+      else state.selectedSharedFriends.delete(name);
+      persistSelectedSharedFriends();
+    },
+  });
+}
+
+// ===== VC Connector =====
+// Started as a rebuild of the standalone VC-coin promo widget's content
 // (widgets/vc-coin-widget/vc-coin-banner.html, embedded elsewhere via iframe — e.g. the Sponsored
-// Statements page) per a live reference screenshot, rebuilt as plain markup/CSS in this app's own
-// visual language instead of pulling in that widget's separate animated-coin/particle-effects
-// stylesheet, which is a lot of extra motion/weight for a small profile card. Colors: #14CCB0
-// (teal, "earn"), #60a5fa (blue, "learn"), #F32B44 (red, "support") — same three as the source
-// widget's .tag-earn/.tag-learn/.tag-support.
+// Statements page) as plain markup/CSS in this app's own visual language instead of pulling in
+// that widget's separate animated-coin/particle-effects stylesheet — copy/tags have since diverged
+// from that source per direct edits (tagline, dropped Learn/Donate tags), only the teal #14CCB0
+// "earn" accent remains shared.
 function buildVotecraftConnectionSection() {
   return `
     <div class="dash-card profile-card--votecraft-connection">
@@ -622,13 +646,11 @@ function buildVotecraftConnectionSection() {
 const VOTECRAFT_WALLET_URL = 'https://votecraft.org/wp-content/uploads/pages/votecraft-coin/app/index.html';
 
 // Small transient confirmation modal shown before actually leaving to the VC Wallet — per direct
-// request. Same "build fresh, remove on close" pattern as the Saved Lists merge-target picker
-// above; white-themed regardless of SaveCraft's own dark/light setting (per direct request), since
-// it's meant to read as a VoteCraft-branded popup, not a SaveCraft-themed one.
+// request. Uses the same _openTransientModal helper as the Saved Lists merge-target picker above;
+// white-themed regardless of SaveCraft's own dark/light setting (per direct request), since it's
+// meant to read as a VoteCraft-branded popup, not a SaveCraft-themed one.
 function _openVotecraftWalletModal() {
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay open';
-  overlay.innerHTML = `
+  const { overlay, close } = _openTransientModal(`
     <div class="modal vc-wallet-modal" style="position:relative; width:360px;">
       <div class="modal-header"><h2><span class="vc-wallet-modal-title-lead">You're opening</span><span class="vc-wallet-modal-title-emphasis">VC Connector</span></h2></div>
       <div class="modal-body">
@@ -638,9 +660,7 @@ function _openVotecraftWalletModal() {
         <button type="button" class="btn-cancel" id="vc-wallet-cancel">Cancel</button>
         <a class="btn-primary vc-wallet-open-btn" id="vc-wallet-open" href="${VOTECRAFT_WALLET_URL}" target="_blank" rel="noopener">Open</a>
       </div>
-    </div>`;
-  document.body.appendChild(overlay);
-  const close = () => overlay.remove();
+    </div>`);
   overlay.querySelector('#vc-wallet-cancel').addEventListener('click', close);
   overlay.querySelector('#vc-wallet-open').addEventListener('click', close); // real <a> navigation still proceeds, this just cleans up the modal
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
