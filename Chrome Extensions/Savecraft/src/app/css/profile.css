@@ -178,8 +178,12 @@
 .vc-wallet-modal {
   background: #fff;
 }
+/* flex-direction: column (the shared .modal h2 base is a row) so the two stacked lines actually
+   center over each other, not just vertically align within a single row — per direct request
+   ("your opening should be centered above VC Connector"). */
 .vc-wallet-modal .modal-header h2 {
   color: #111827;
+  flex-direction: column;
 }
 /* "VC Connector" line, per direct request — bolder and a little larger than "You're opening"
    above it and the base h2's own 20px/600 weight. */
@@ -187,9 +191,12 @@
   font-size: 24px;
   font-weight: 800;
 }
-/* "You're opening" line, per direct follow-up request — a little smaller than the base h2 size. */
+/* "You're opening" line, per direct follow-up request — a little smaller than the base h2 size,
+   and kept on one line (the h2's own flex-column above can otherwise let it wrap in this
+   360px-wide modal). */
 .vc-wallet-modal-title-lead {
   font-size: 16px;
+  white-space: nowrap;
 }
 .vc-wallet-modal .modal-body p {
   color: #4B5563;
