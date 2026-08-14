@@ -358,7 +358,7 @@ function _buildSavedListRow(list) {
   const expanded = _expandedProfileSavedLists.has(list.id);
   const arrow = expanded ? '▼' : '▶';
   return `
-    <div class="profile-saved-list-row" data-list-id="${escapeHtml(list.id)}">
+    <div class="profile-saved-list-row ${expanded ? 'profile-saved-list-row--expanded' : ''}" data-list-id="${escapeHtml(list.id)}">
       <span class="profile-saved-list-arrow">${arrow}</span>
       <span class="profile-saved-list-name">${escapeHtml(list.name)}</span>
       <span class="profile-saved-list-actions">
