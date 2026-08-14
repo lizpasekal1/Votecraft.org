@@ -32,12 +32,16 @@ const COLLAPSE_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill=
 
 let _demoStatus = 'in-queue';
 let _kanbanSortListenerAdded = false;
+// Admin-editable via the WordPress plugin's "Demo Content" section (state.dashboardDemoConfig,
+// see storage.js's initDashboardDemoConfig) — falls back to this hardcoded default whenever
+// nothing's been configured yet, so this stays fully functional with zero setup.
 export function KANBAN_DEMO() {
+  const override = state.dashboardDemoConfig?.queueKanban;
   return {
     id: '__demo__',
-    title: 'Drag to progress',
-    category: 'Books',
-    imageUrl: null,
+    title: override?.title || 'Drag to progress',
+    category: override?.category || 'Books',
+    imageUrl: override?.imageUrl || null,
     queueStatus: _demoStatus,
     _isDemo: true,
   };
