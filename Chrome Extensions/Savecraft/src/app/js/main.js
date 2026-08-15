@@ -761,7 +761,9 @@ async function init() {
     if (e.key === 'Escape') closeListEnterModal();
   });
   document.getElementById('btn-list-enter-confirm').addEventListener('click', () => {
-    if (!_pendingListEnter) { closeListEnterModal(); return; }
+    // No view (Shared Saves' demo list cards — see sharedSaves.js) means "Enter list" has nowhere
+    // real to go yet; just close, same as Cancel, rather than calling navigateToView(null, ...).
+    if (!_pendingListEnter?.view) { closeListEnterModal(); return; }
     const { view, options } = _pendingListEnter;
     closeListEnterModal();
     navigateToView(view, options);

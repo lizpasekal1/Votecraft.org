@@ -9,6 +9,7 @@ import { escapeHtml } from './utils.js';
 import { _wireCarouselArrows } from './dashboard.js';
 import { resolveOrgImageUrl } from './render.js';
 import { navigateToView } from './navigation.js';
+import { openListEnterModal } from './main.js';
 
 // Rotated across every vertical card's avatar circle.
 const SHARED_VCARD_COLORS = ['#5B5BEF', '#E0507A', '#2A9D8F', '#E76F51', '#8E44AD', '#F4A340'];
@@ -60,7 +61,7 @@ function buildVerticalCardSlider({ sectionClass, title, mobileTitle, cards }) {
       ? `<img src="${escapeHtml(resolveOrgImageUrl(c.imageUrl))}" alt="" loading="lazy" decoding="async">`
       : (c.icon || PLACEHOLDER_IMAGE_SVG);
     return `
-      <div class="shared-vcard">
+      <div class="shared-vcard" data-name="${escapeHtml(c.name)}">
         <div class="shared-vcard-avatar" style="background:${color}">${avatarContent}</div>
         <span class="shared-vcard-name">${escapeHtml(c.name)}</span>
         ${c.tagline ? `<span class="shared-vcard-tagline">${escapeHtml(c.tagline)}</span>` : ''}
@@ -127,6 +128,19 @@ function wireCarousels(container) {
   });
 }
 
+// "Opening [list]" confirmation on the two actual *list* sections (Curated Lists You've
+// Connected, Group Lists You've Connected) — Friends is deliberately excluded, since those cards
+// are people, not lists. Same modal Saved Lists/Curated Lists sidebar rows use, but with no real
+// view to go to (these are demo/inert cards, see this file's own header comment) — passing null
+// makes "Enter list" just close the modal instead of navigating anywhere, per direct request.
+function wireListCards(container) {
+  container.querySelectorAll('.shared-card--nonprofits .shared-vcard, .shared-card--group-lists .shared-vcard').forEach(card => {
+    card.addEventListener('click', () => {
+      openListEnterModal(card.dataset.name, null, 'curated');
+    });
+  });
+}
+
 // Placeholder destination for now — both plus buttons just go to the Cause Curated page, since
 // there's no real "add a list"/"add a friend" flow built yet.
 function wireAddButtons(container) {
@@ -159,4 +173,5 @@ export function renderSharedSavesPage() {
 
   wireCarousels(container);
   wireAddButtons(container);
+  wireListCards(container);
 }
