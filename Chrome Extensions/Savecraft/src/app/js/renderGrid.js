@@ -19,6 +19,7 @@ import { openEditModal } from './addEditModal.js';
 import { renderDashboard } from './dashboard.js';
 import { renderProfilePage } from './profile.js';
 import { renderSharedSavesPage } from './sharedSaves.js';
+import { renderAboutPage } from './about.js';
 import { renderEmbedBuilder } from './embedBuilder.js';
 import { renderSidebar } from './renderSidebar.js';
 import { renderAuthorPage } from './renderAuthorPage.js';
@@ -95,6 +96,11 @@ export function renderGrid() {
 
   if (state.view === 'shared') {
     renderSharedSavesPage();
+    return;
+  }
+
+  if (state.view === 'about') {
+    renderAboutPage();
     return;
   }
 

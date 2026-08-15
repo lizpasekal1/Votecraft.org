@@ -38,7 +38,7 @@ export function getFilteredSortedItems() {
   // Dashboard, whichever view was open before) on screen instead of the real content. Excluded
   // here, at the single shared source every view/category/search filters from, rather than
   // patched per-view.
-  let items = [...state.items].filter(item => !isQueueDemoId(item.id));
+  let items = state.items.filter(item => !isQueueDemoId(item.id));
 
   if (state.view === 'all') {
     // no filter
