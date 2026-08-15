@@ -724,6 +724,30 @@
   margin: 0 0 4px;
 }
 
+/* Optional — only Shared Saves' cards pass one (see sharedSaves.js's wireListCards, which reuses
+   the clicked card's own already-rendered .shared-vcard-avatar circle rather than recomputing its
+   color/image). Hidden by default (index.html's inline style) since the sidebar's own Saved
+   Lists/Curated Lists rows have no avatar to show here. */
+.list-enter-modal-thumb {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 30px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.list-enter-modal-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .list-enter-modal-name {
   font-size: 28px;
   font-weight: 800;

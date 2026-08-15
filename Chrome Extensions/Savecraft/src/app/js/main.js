@@ -478,11 +478,24 @@ const LIST_ENTER_COPY = {
   },
 };
 let _pendingListEnter = null;
-export function openListEnterModal(name, view, kind, navOptions) {
+// thumb, when passed (Shared Saves' cards only — see sharedSaves.js's wireListCards), is
+// { html, background }: the clicked card's own already-rendered avatar innerHTML/background,
+// reused as-is rather than recomputed here. Sidebar rows never pass one, so the circle just stays
+// hidden for those (no avatar concept there at all).
+export function openListEnterModal(name, view, kind, navOptions, thumb) {
   const copy = LIST_ENTER_COPY[kind] || LIST_ENTER_COPY.saved;
   document.getElementById('list-enter-modal-eyebrow').textContent = copy.eyebrow;
   document.getElementById('list-enter-modal-name').textContent = name;
   document.getElementById('list-enter-modal-body').textContent = copy.body;
+  const thumbEl = document.getElementById('list-enter-modal-thumb');
+  if (thumb) {
+    thumbEl.innerHTML = thumb.html;
+    thumbEl.style.background = thumb.background || '';
+    thumbEl.style.display = '';
+  } else {
+    thumbEl.innerHTML = '';
+    thumbEl.style.display = 'none';
+  }
   _pendingListEnter = { view, options: navOptions || { activeCuratedFolderId: null } };
   document.getElementById('list-enter-modal-overlay').classList.add('open');
 }
