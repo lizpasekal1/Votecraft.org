@@ -10,7 +10,7 @@ import {
 } from './utils.js';
 import { getCurrentUser } from './auth.js';
 import { persistItem, persistFolder, removeFolder, persistSavedLists } from './storage.js';
-import { closeSidebar } from './main.js';
+import { closeSidebar, openSavedListEnterModal } from './main.js';
 import { matchesPrimaryOrUnfoldered } from './renderFilters.js';
 import { renderGrid } from './renderGrid.js';
 import { storageSync } from './platform.js';
@@ -268,7 +268,7 @@ export function renderSidebar() {
       const radioHtml = showRadio ? `<span class="sidebar-list-radio${isActive ? ' sidebar-list-radio--checked' : ''}"></span>` : folderIconHtml(item.id, 16);
       return `
     <div class="sidebar-item sidebar-subfolder sidebar-subfolder--nested ${childClass} ${itemExtraClass?.(item) || ''} ${isActive ? 'active' : ''}"
-         ${view ? `data-view="${escapeHtml(view)}"` : ''}>
+         ${view ? `data-view="${escapeHtml(view)}"` : ''} data-list-name="${escapeHtml(item.name)}">
       ${radioHtml} ${escapeHtml(item.name)}
     </div>`;
     }).join('')}
@@ -307,19 +307,19 @@ export function renderSidebar() {
         // highlight itself while Dashboard (the same destination) is what's actually active.
         itemIsActive: item => item.id === 'default-favorites' && state.view === 'dashboard',
       })}
+      ${_renderDashboardListRow({
+        key: 'curated-lists', icon: CURATED_LISTS_ICON_SVG, label: 'Curated Lists', items: state.curatedListsRows,
+        linkClass: 'sidebar-curated-lists-link', childClass: 'sidebar-curated-lists-child', addClass: 'sidebar-add-curated-list',
+        itemExtraClass: item => item.id === 'default-votecraft' ? 'sidebar-curated-votecraft-link' : '',
+        itemIsActive: item => item.id === 'default-votecraft' && state.sidebarMode === 'curated' && sidebarEffectiveView === 'genre:Top 100',
+      })}
       <div class="sidebar-item sidebar-subfolder sidebar-kanban-link ${state.view === 'kanban' ? 'active' : ''}" data-view="kanban">
         ${KANBAN_ICON_SVG} Queue Kanban
       </div>
       ${isAdminUser(getCurrentUser()?.email, state.role) ? `
       <div class="sidebar-item sidebar-subfolder sidebar-admin-kanban-link ${state.view === 'admin-kanban' ? 'active' : ''}" data-view="admin-kanban">
         ${ADMIN_KANBAN_ICON_SVG} Admin Kanban
-      </div>` : ''}
-      ${_renderDashboardListRow({
-        key: 'curated-lists', icon: CURATED_LISTS_ICON_SVG, label: 'Curated Lists', items: state.curatedListsRows,
-        linkClass: 'sidebar-curated-lists-link', childClass: 'sidebar-curated-lists-child', addClass: 'sidebar-add-curated-list',
-        itemExtraClass: item => item.id === 'default-votecraft' ? 'sidebar-curated-votecraft-link' : '',
-        itemIsActive: item => item.id === 'default-votecraft' && state.sidebarMode === 'curated' && sidebarEffectiveView === 'genre:Top 100',
-      })}`}
+      </div>` : ''}`}
     </div>
     <div class="sidebar-divider"></div>
   `;
@@ -598,8 +598,15 @@ export function renderSidebar() {
         // "All My Saves" — the built-in catch-all Saved List — is the same destination as the
         // Dashboard link itself (per direct request), not the generic savedlist: placeholder
         // landing card every other Saved List still shows. sidebarMode matches wireDashboardLink's
-        // own 'home' above so this reads as the same navigation, just from a different row.
+        // own 'home' above so this reads as the same navigation, just from a different row. Skips
+        // the "You're opening" confirmation below too — it isn't a scoped list the way a real
+        // Saved List is, it's just Dashboard under another name.
         navigateToView('dashboard', { sidebarMode: 'home', activeCuratedFolderId: null });
+      } else if (el.classList.contains('sidebar-saved-lists-child')) {
+        // Every other Saved List gets a "You're opening [name]" confirmation first, since picking
+        // one scopes the whole sidebar down to that list's own allowed folders (Profile > Saved
+        // Lists) — worth a heads-up rather than silently narrowing what's visible.
+        openSavedListEnterModal(el.dataset.listName, el.dataset.view);
       } else {
         navigateToView(el.dataset.view, { activeCuratedFolderId: null });
       }
