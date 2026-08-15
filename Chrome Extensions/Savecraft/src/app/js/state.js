@@ -319,6 +319,7 @@ export const state = {
   // persisted — resets to no-subfolder-highlighted on reload, which is a safe default.
   activeCuratedFolderId: null,
   hiddenCurated: new Set(), // curated item IDs the user has dismissed
+  selectedSharedFriends: new Set(), // demo friend names checked in Profile > Shared Lists (sharedSaves.js's DEMO_FRIENDS) — same "opt in" pattern as followedCuratedLists below
   curatedOverrides: {}, // { [curatedItemId]: { url, title, notes, imageUrl } }
   curatedImgCache: {},  // { [curatedItemId]: imageUrl } — auto-fetched via Microlink
   curatedAlbumMetaCache: {}, // { [curatedItemId]: { year, collectionId } } — auto-fetched via iTunes (curated albums have neither field in Firestore)

@@ -657,8 +657,15 @@ async function init() {
     navigateToView('profile');
   });
   document.getElementById('link-sponsored-statements').href = resourceUrl('src/sponsored/sponsored.html');
-  document.getElementById('link-privacy-policy').href = resourceUrl('src/webpage/privacy-policy.html');
-  document.getElementById('link-terms-of-service').href = resourceUrl('src/webpage/terms-of-service.html');
+  // Privacy Policy/Terms of Service links removed from this dropdown per direct request, replaced
+  // with a single About entry — a real in-app page (about.js), not an external link (an earlier
+  // version pointed straight at the marketing page instead; corrected per direct follow-up:
+  // "about should still be in the savecraft app"). Same navigateToView pattern as #btn-profile
+  // above, not an <a href>.
+  document.getElementById('btn-about').addEventListener('click', () => {
+    settingsDropdown.setAttribute('hidden', '');
+    navigateToView('about');
+  });
   document.addEventListener('click', e => {
     if (!settingsWrap.contains(e.target)) settingsDropdown.setAttribute('hidden', '');
   });

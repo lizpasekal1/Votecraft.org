@@ -59,6 +59,27 @@ export function sortFoldersForDisplay(folders, category) {
   });
 }
 
+// A folder's direct subfolders (folder.parentFolderId === parentId) — shared by every place that
+// walks the subfolder tree (renderSidebar.js's recursive row rendering, addEditModal.js's
+// flattened folder <select>, the delete-cascade below), instead of each hand-rolling the same
+// `.filter(f => f.parentFolderId === X)` independently.
+export function getChildFolders(folders, parentId) {
+  // Normalizes both sides through `|| null` — pre-existing folders (seeded before subfolders
+  // existed) never got a parentFolderId field at all, so their own value is `undefined`, not
+  // `null`; a strict === null on the caller's "top-level" query would otherwise miss them.
+  return folders.filter(f => (f.parentFolderId || null) === (parentId || null));
+}
+
+// A folder id plus every descendant subfolder id, recursively — used when deleting a folder needs
+// to also remove its whole subtree, not just the one folder directly acted on.
+export function getFolderDescendantIds(folders, folderId) {
+  const ids = [folderId];
+  getChildFolders(folders, folderId).forEach(child => {
+    ids.push(...getFolderDescendantIds(folders, child.id));
+  });
+  return ids;
+}
+
 // Renders a folder's sidebar/wizard icon — its own custom icon (FOLDER_ICON, keyed by folder id)
 // if it has one, else the plain generic folder icon every user-created folder uses.
 export function folderIconHtml(folderId, sizePx) {

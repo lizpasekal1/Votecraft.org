@@ -393,20 +393,15 @@
    above. Each icon's own inline fill="#5B5BEF" attribute (renderSidebar.js/state.js) is a
    presentation attribute, so this stylesheet rule overrides it same as the collapsed-rail version
    already relies on. */
-.sidebar-item.active .cat-icon {
-  background: var(--primary);
-}
-.sidebar-item.active .cat-icon svg {
-  fill: #fff;
-}
-
-/* Same purple-square-plus-white-icon treatment on hover, not just active — per direct request.
-   Doesn't touch the desktop collapsed rail's own hover (its icon lightens to a plain gray instead,
-   scoped inside its own more-specific media-query rule above), which stays as its own deliberately
+/* Same treatment on hover as on active, not just one or the other — per direct request. Doesn't
+   touch the desktop collapsed rail's own hover (its icon lightens to a plain gray instead, scoped
+   inside its own more-specific media-query rule above), which stays as its own deliberately
    different, already-established treatment. */
+.sidebar-item.active .cat-icon,
 .sidebar-item:hover .cat-icon {
   background: var(--primary);
 }
+.sidebar-item.active .cat-icon svg,
 .sidebar-item:hover .cat-icon svg {
   fill: #fff;
 }

@@ -664,7 +664,13 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    text-align: center;
+    /* Left, not center — per direct request, so it sits close to the hamburger on the left
+       instead of centered across the whole header row. */
+    text-align: left;
+    /* .header-main's own row gap (8px) already puts some space between the hamburger and this —
+       this extra margin brings the two closer than that alone, per direct request ("more to the
+       left"; was 12px, for 20px total). */
+    margin-left: 4px;
   }
   /* Hides the logo outright while searching, per direct request (the ellipsis-shrink above was
      the first attempt, but it still left a truncated sliver of "SaveCraft" — see screenshot —
@@ -715,6 +721,13 @@
 
   /* Grid header */
   .grid-header { margin-bottom: 14px; }
+  /* Cause Curated specifically — per direct request, the gap between the Dashboard link (in
+     .grid-header) and the banner below it (.bare-list-hero) should be exactly 20px, not this
+     page's own general 14px mobile tightening above (which applies to every other view's
+     .grid-header too, so scoped here rather than changed globally). */
+  .grid-area:has(.bare-list-page) .grid-header {
+    margin-bottom: 20px;
+  }
 
   /* FAB */
   .fab-add {
