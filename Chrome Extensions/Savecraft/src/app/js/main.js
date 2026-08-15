@@ -455,20 +455,36 @@ function applySteamModalUI(steamId) {
   }
 }
 
-// ===== "You're opening [Saved List]" confirmation (sidebar's Saved Lists rows) =====
+// ===== "Opening [list]" confirmation (sidebar's Saved Lists / Curated Lists rows) =====
 // Picking a Saved List scopes the whole sidebar down to that list's own allowed folders (Profile
-// > Saved Lists), so this is a heads-up before that happens rather than a silent navigation —
-// _pendingSavedListView holds where "Enter list" should actually go, set fresh on every open so a
-// stale value from a previous open can never fire if someone Cancels then reopens a different list.
-let _pendingSavedListView = null;
-export function openSavedListEnterModal(name, view) {
-  document.getElementById('savedlist-enter-modal-name').textContent = name;
-  _pendingSavedListView = view;
-  document.getElementById('savedlist-enter-modal-overlay').classList.add('open');
+// > Saved Lists); picking a Curated List swaps it to that list's own curated content — either way
+// this is a heads-up before that happens rather than a silent navigation. _pendingListEnter holds
+// the view + navigateToView options "Enter list" should actually apply (each kind needs different
+// options — Saved Lists clears activeCuratedFolderId, Curated Lists sets sidebarMode instead), set
+// fresh on every open so a stale value from a previous open can never fire if someone Cancels then
+// reopens a different list.
+const LIST_ENTER_COPY = {
+  saved: {
+    eyebrow: 'Opening saved list:',
+    body: 'Your sidebar will display saves specific to this list. Switch to other lists at anytime!',
+  },
+  curated: {
+    eyebrow: 'Opening curated list:',
+    body: 'Your sidebar will display curated picks specific to this list. Switch to other lists at anytime!',
+  },
+};
+let _pendingListEnter = null;
+export function openListEnterModal(name, view, kind, navOptions) {
+  const copy = LIST_ENTER_COPY[kind] || LIST_ENTER_COPY.saved;
+  document.getElementById('list-enter-modal-eyebrow').textContent = copy.eyebrow;
+  document.getElementById('list-enter-modal-name').textContent = name;
+  document.getElementById('list-enter-modal-body').textContent = copy.body;
+  _pendingListEnter = { view, options: navOptions || { activeCuratedFolderId: null } };
+  document.getElementById('list-enter-modal-overlay').classList.add('open');
 }
-function closeSavedListEnterModal() {
-  document.getElementById('savedlist-enter-modal-overlay').classList.remove('open');
-  _pendingSavedListView = null;
+function closeListEnterModal() {
+  document.getElementById('list-enter-modal-overlay').classList.remove('open');
+  _pendingListEnter = null;
 }
 
 // ===== MOBILE SIDEBAR =====
@@ -498,7 +514,7 @@ function _closeAnyOpenModal() {
     ['auth-modal-overlay', closeAuthModal],
     ['lastfm-modal-overlay', closeLastfmModal],
     ['steam-modal-overlay', closeSteamModal],
-    ['savedlist-enter-modal-overlay', closeSavedListEnterModal],
+    ['list-enter-modal-overlay', closeListEnterModal],
   ];
   for (const [id, close] of pairs) {
     if (document.getElementById(id)?.classList.contains('open')) close();
@@ -737,18 +753,18 @@ async function init() {
     if (e.key === 'Escape') closeSteamModal();
   });
 
-  document.getElementById('btn-savedlist-enter-cancel').addEventListener('click', closeSavedListEnterModal);
-  document.getElementById('savedlist-enter-modal-overlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('savedlist-enter-modal-overlay')) closeSavedListEnterModal();
+  document.getElementById('btn-list-enter-cancel').addEventListener('click', closeListEnterModal);
+  document.getElementById('list-enter-modal-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('list-enter-modal-overlay')) closeListEnterModal();
   });
-  document.getElementById('savedlist-enter-modal-overlay').addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeSavedListEnterModal();
+  document.getElementById('list-enter-modal-overlay').addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeListEnterModal();
   });
-  document.getElementById('btn-savedlist-enter-confirm').addEventListener('click', () => {
-    if (!_pendingSavedListView) { closeSavedListEnterModal(); return; }
-    const view = _pendingSavedListView;
-    closeSavedListEnterModal();
-    navigateToView(view, { activeCuratedFolderId: null });
+  document.getElementById('btn-list-enter-confirm').addEventListener('click', () => {
+    if (!_pendingListEnter) { closeListEnterModal(); return; }
+    const { view, options } = _pendingListEnter;
+    closeListEnterModal();
+    navigateToView(view, options);
   });
 
   const sortSelect = document.getElementById('sort-select');

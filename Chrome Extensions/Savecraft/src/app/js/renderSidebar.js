@@ -10,7 +10,7 @@ import {
 } from './utils.js';
 import { getCurrentUser } from './auth.js';
 import { persistItem, persistFolder, removeFolder, persistSavedLists } from './storage.js';
-import { closeSidebar, openSavedListEnterModal } from './main.js';
+import { closeSidebar, openListEnterModal } from './main.js';
 import { matchesPrimaryOrUnfoldered } from './renderFilters.js';
 import { renderGrid } from './renderGrid.js';
 import { storageSync } from './platform.js';
@@ -312,6 +312,10 @@ export function renderSidebar() {
         linkClass: 'sidebar-curated-lists-link', childClass: 'sidebar-curated-lists-child', addClass: 'sidebar-add-curated-list',
         itemExtraClass: item => item.id === 'default-votecraft' ? 'sidebar-curated-votecraft-link' : '',
         itemIsActive: item => item.id === 'default-votecraft' && state.sidebarMode === 'curated' && sidebarEffectiveView === 'genre:Top 100',
+        // Same radio-dot treatment as Saved Lists, per direct request — reads as "choosing a
+        // section" rather than navigating into an ordinary folder, same reasoning as Saved Lists'
+        // own showRadio (see _renderDashboardListRow's own comment above).
+        showRadio: true,
       })}
       <div class="sidebar-item sidebar-subfolder sidebar-kanban-link ${state.view === 'kanban' ? 'active' : ''}" data-view="kanban">
         ${KANBAN_ICON_SVG} Queue Kanban
@@ -366,8 +370,10 @@ export function renderSidebar() {
     // itemIsActive wiring on its _renderDashboardListRow call above): the real "Votecraft List"
     // curated genre, same place the mobile header's "VoteCraft Picks" option links to (the mobile
     // drawer's own "⚡ Shared" tab now links to Shared Saves instead — see wireMobileHeader above).
-    sidebar.querySelector('.sidebar-curated-votecraft-link')?.addEventListener('click', () => {
-      navigateToView('genre:Top 100', { sidebarMode: 'curated' });
+    // Goes through the same "Opening [list]" confirmation Saved Lists rows use, per direct
+    // request — navigateToView only actually fires once "Enter list" is clicked.
+    sidebar.querySelector('.sidebar-curated-votecraft-link')?.addEventListener('click', e => {
+      openListEnterModal(e.currentTarget.dataset.listName, 'genre:Top 100', 'curated', { sidebarMode: 'curated' });
     });
   }
 
@@ -606,7 +612,7 @@ export function renderSidebar() {
         // Every other Saved List gets a "You're opening [name]" confirmation first, since picking
         // one scopes the whole sidebar down to that list's own allowed folders (Profile > Saved
         // Lists) — worth a heads-up rather than silently narrowing what's visible.
-        openSavedListEnterModal(el.dataset.listName, el.dataset.view);
+        openListEnterModal(el.dataset.listName, el.dataset.view, 'saved');
       } else {
         navigateToView(el.dataset.view, { activeCuratedFolderId: null });
       }
