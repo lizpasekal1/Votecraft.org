@@ -598,6 +598,23 @@
   transform: translate(-50%, -50%);
 }
 
+/* Small purple filled-square chip around the Saved Lists / Curated Lists toggle rows' own icons
+   (SAVED_LISTS_ICON_SVG/CURATED_LISTS_ICON_SVG, renderSidebar.js — white fill, meant to sit on
+   this background), per direct request. Deliberately its own small class, not a reuse of the
+   existing 42px glossy .cat-icon chip (top-level category/Dashboard icons) — that one's sized and
+   styled for a bigger, standalone icon slot; this sits inline in a compact subfolder row. Scoped
+   to exactly these two rows — Queue Kanban/Admin Kanban's own icons are untouched. */
+.sidebar-list-icon-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--primary);
+  flex-shrink: 0;
+}
+
 .sidebar-add-folder {
   color: var(--text-secondary);
   font-weight: 400;

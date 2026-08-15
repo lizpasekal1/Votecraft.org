@@ -82,14 +82,18 @@ const KANBAN_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="16px" v
 // the two Dashboard-nested kanban rows (Queue Kanban / Admin Kanban) don't read as duplicates of
 // the same icon sitting right next to each other.
 const ADMIN_KANBAN_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="#5B5BEF"><path d="M120-80v-80h720v80H120Zm146-206L100-452l56-56 110 110 224-224 56 56-280 280Zm0-320L100-772l56-56 110 110 224-224 56 56-280 280Z"/></svg>';
-// Same sizing/color convention as KANBAN_ICON_SVG above — another subfolder-styled row nested
-// under Dashboard. Its own toggle row has no view (just expands/collapses, see
-// wireDashboardLink); its children each route to "savedlist:<id>" (see the generic subfolder
-// click-wiring loop below and getFilteredSortedItems()'s own "savedlist:" branch).
-const SAVED_LISTS_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="#5B5BEF"><path d="M160-120q-33 0-56.5-23.5T80-200v-280h80v280h360v80H160Zm160-160q-33 0-56.5-23.5T240-360v-280h80v280h360v80H320Zm160-160q-33 0-56.5-23.5T400-520v-240q0-33 23.5-56.5T480-840h320q33 0 56.5 23.5T880-760v240q0 33-23.5 56.5T800-440H480Zm0-80h320v-160H480v160Z"/></svg>';
-// Same sizing/color convention again — Curated Lists is Saved Lists' sibling under Dashboard,
-// same collapsible-with-its-own-children structure, just its own (currently empty) list.
-const CURATED_LISTS_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="#5B5BEF"><path d="m280-80 160-300-320-40 480-460h80L520-580l320 40L360-80h-80Zm222-247 161-154-269-34 63-117-160 154 268 33-63 118Zm-22-153Z"/></svg>';
+// White fill, not the usual purple — these two render inside their own small purple square chip
+// (.sidebar-list-icon-chip, applied in _renderDashboardListRow below), per direct request, unlike
+// every other subfolder-styled row nested under Dashboard (Queue Kanban/Admin Kanban above keep
+// their plain purple-on-transparent icon, untouched). Its own toggle row has no view (just
+// expands/collapses, see wireDashboardLink); its children each route to "savedlist:<id>" (see the
+// generic subfolder click-wiring loop below and getFilteredSortedItems()'s own "savedlist:"
+// branch).
+const SAVED_LISTS_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="#fff"><path d="M160-120q-33 0-56.5-23.5T80-200v-280h80v280h360v80H160Zm160-160q-33 0-56.5-23.5T240-360v-280h80v280h360v80H320Zm160-160q-33 0-56.5-23.5T400-520v-240q0-33 23.5-56.5T480-840h320q33 0 56.5 23.5T880-760v240q0 33-23.5 56.5T800-440H480Zm0-80h320v-160H480v160Z"/></svg>';
+// Same white-on-purple-chip treatment as SAVED_LISTS_ICON_SVG above — Curated Lists is Saved
+// Lists' sibling under Dashboard, same collapsible-with-its-own-children structure, just its own
+// (currently empty) list.
+const CURATED_LISTS_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="#fff"><path d="m280-80 160-300-320-40 480-460h80L520-580l320 40L360-80h-80Zm222-247 161-154-269-34 63-117-160 154 268 33-63 118Zm-22-153Z"/></svg>';
 
 // Folders that double as an entry point into a curated "creator card" bucket when browsing a
 // curated genre — see the sidebar-subfolder rendering/wiring below.
@@ -245,7 +249,7 @@ export function renderSidebar() {
     const rowArrow = rowCollapsed ? '▶' : '▼';
     return `
     <div class="sidebar-item sidebar-subfolder ${linkClass}" data-toggle-list="${key}">
-      <span class="sidebar-label">${icon} ${label}</span>
+      <span class="sidebar-label"><span class="sidebar-list-icon-chip">${icon}</span> ${label}</span>
       <span class="sidebar-right"><span class="sidebar-arrow">${rowArrow}</span></span>
     </div>
     ${rowCollapsed ? '' : `
