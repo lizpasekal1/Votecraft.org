@@ -682,3 +682,73 @@
 .sidebar-queue-btn:hover { background: var(--hover-bg); color: var(--text-primary); }
 .sidebar-queue-btn.active { background: var(--primary-bg); color: var(--primary); font-weight: 600; }
 
+/* ===== "You're opening [Saved List]" confirmation modal ===== */
+/* Fixed white card regardless of theme, same as Admin Kanban's own "always white" card treatment
+   (kanban.css) — explicit hex values throughout, deliberately not the theme-swapped --surface/
+   --text-primary/etc. variables .modal/.btn-cancel use elsewhere, so this never goes dark-on-dark
+   or otherwise drifts from the reference design. Sits inside the shared .modal-overlay (base
+   overlay positioning/backdrop/open-state only, see addEditModal.css) rather than the shared
+   .modal class, which pulls in var(--modal-bg). */
+.savedlist-enter-modal {
+  background: #fff;
+  border-radius: 20px;
+  padding: 40px 32px 32px;
+  width: 380px;
+  max-width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.savedlist-enter-modal-eyebrow {
+  font-size: 17px;
+  font-weight: 500;
+  color: #1a1a2e;
+  margin: 0 0 4px;
+}
+
+.savedlist-enter-modal-name {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin: 0 0 20px;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.savedlist-enter-modal-body {
+  font-size: 15px;
+  color: #6b7280;
+  line-height: 1.5;
+  margin: 0 0 28px;
+}
+
+.savedlist-enter-modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.savedlist-enter-modal-cancel,
+.savedlist-enter-modal-confirm {
+  flex: 1;
+  padding: 13px 0;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.savedlist-enter-modal-cancel {
+  background: #fff;
+  border: 1.5px solid #e5e7eb;
+  color: #1a1a2e;
+}
+.savedlist-enter-modal-cancel:hover { background: #f6f6f8; }
+
+.savedlist-enter-modal-confirm {
+  background: #5B5BEF;
+  border: none;
+  color: #fff;
+}
+.savedlist-enter-modal-confirm:hover { opacity: 0.9; }
+

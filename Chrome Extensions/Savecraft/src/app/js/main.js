@@ -455,6 +455,22 @@ function applySteamModalUI(steamId) {
   }
 }
 
+// ===== "You're opening [Saved List]" confirmation (sidebar's Saved Lists rows) =====
+// Picking a Saved List scopes the whole sidebar down to that list's own allowed folders (Profile
+// > Saved Lists), so this is a heads-up before that happens rather than a silent navigation —
+// _pendingSavedListView holds where "Enter list" should actually go, set fresh on every open so a
+// stale value from a previous open can never fire if someone Cancels then reopens a different list.
+let _pendingSavedListView = null;
+export function openSavedListEnterModal(name, view) {
+  document.getElementById('savedlist-enter-modal-name').textContent = name;
+  _pendingSavedListView = view;
+  document.getElementById('savedlist-enter-modal-overlay').classList.add('open');
+}
+function closeSavedListEnterModal() {
+  document.getElementById('savedlist-enter-modal-overlay').classList.remove('open');
+  _pendingSavedListView = null;
+}
+
 // ===== MOBILE SIDEBAR =====
 export function openSidebar() {
   document.getElementById('sidebar').classList.add('open');
@@ -482,6 +498,7 @@ function _closeAnyOpenModal() {
     ['auth-modal-overlay', closeAuthModal],
     ['lastfm-modal-overlay', closeLastfmModal],
     ['steam-modal-overlay', closeSteamModal],
+    ['savedlist-enter-modal-overlay', closeSavedListEnterModal],
   ];
   for (const [id, close] of pairs) {
     if (document.getElementById(id)?.classList.contains('open')) close();
@@ -718,6 +735,20 @@ async function init() {
   });
   document.getElementById('steam-modal-overlay').addEventListener('keydown', e => {
     if (e.key === 'Escape') closeSteamModal();
+  });
+
+  document.getElementById('btn-savedlist-enter-cancel').addEventListener('click', closeSavedListEnterModal);
+  document.getElementById('savedlist-enter-modal-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('savedlist-enter-modal-overlay')) closeSavedListEnterModal();
+  });
+  document.getElementById('savedlist-enter-modal-overlay').addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeSavedListEnterModal();
+  });
+  document.getElementById('btn-savedlist-enter-confirm').addEventListener('click', () => {
+    if (!_pendingSavedListView) { closeSavedListEnterModal(); return; }
+    const view = _pendingSavedListView;
+    closeSavedListEnterModal();
+    navigateToView(view, { activeCuratedFolderId: null });
   });
 
   const sortSelect = document.getElementById('sort-select');
