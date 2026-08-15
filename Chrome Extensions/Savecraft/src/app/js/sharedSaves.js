@@ -128,20 +128,30 @@ function wireCarousels(container) {
   });
 }
 
+// Reads the clicked card's own already-rendered avatar circle (image or icon/emoji, plus its
+// background color) straight from the DOM, rather than recomputing color/avatarContent's rotation
+// logic a second time here — the two would drift apart eventually otherwise.
+function _cardThumb(card) {
+  const avatar = card.querySelector('.shared-vcard-avatar');
+  if (!avatar) return null;
+  return { html: avatar.innerHTML, background: avatar.style.background };
+}
+
 // "Opening [list]" confirmation on all three card sections — same modal Saved Lists/Curated Lists
 // sidebar rows use, but with no real view to go to (these are demo/inert cards, see this file's
 // own header comment) — passing null makes "Enter list" just close the modal instead of
 // navigating anywhere, per direct request. Friends gets its own 'friend' kind/copy ("Opening a
-// list by: Jordan Lee") since those cards are a person, not a list themselves.
+// list by: Jordan Lee") since those cards are a person, not a list themselves. Each also shows the
+// card's own avatar circle above the name (_cardThumb above), per direct request.
 function wireListCards(container) {
   container.querySelectorAll('.shared-card--nonprofits .shared-vcard, .shared-card--group-lists .shared-vcard').forEach(card => {
     card.addEventListener('click', () => {
-      openListEnterModal(card.dataset.name, null, 'curated');
+      openListEnterModal(card.dataset.name, null, 'curated', null, _cardThumb(card));
     });
   });
   container.querySelectorAll('.shared-card--friends .shared-vcard').forEach(card => {
     card.addEventListener('click', () => {
-      openListEnterModal(card.dataset.name, null, 'friend');
+      openListEnterModal(card.dataset.name, null, 'friend', null, _cardThumb(card));
     });
   });
 }
