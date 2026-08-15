@@ -472,6 +472,10 @@ const LIST_ENTER_COPY = {
     eyebrow: 'Opening curated list:',
     body: 'Your sidebar will display curated picks specific to this list. Switch to other lists at anytime!',
   },
+  friend: {
+    eyebrow: 'Opening a list by:',
+    body: 'Your sidebar will display saves specific to this list. Switch to other lists at anytime!',
+  },
 };
 let _pendingListEnter = null;
 export function openListEnterModal(name, view, kind, navOptions) {

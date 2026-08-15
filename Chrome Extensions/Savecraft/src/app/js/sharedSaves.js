@@ -128,15 +128,20 @@ function wireCarousels(container) {
   });
 }
 
-// "Opening [list]" confirmation on the two actual *list* sections (Curated Lists You've
-// Connected, Group Lists You've Connected) — Friends is deliberately excluded, since those cards
-// are people, not lists. Same modal Saved Lists/Curated Lists sidebar rows use, but with no real
-// view to go to (these are demo/inert cards, see this file's own header comment) — passing null
-// makes "Enter list" just close the modal instead of navigating anywhere, per direct request.
+// "Opening [list]" confirmation on all three card sections — same modal Saved Lists/Curated Lists
+// sidebar rows use, but with no real view to go to (these are demo/inert cards, see this file's
+// own header comment) — passing null makes "Enter list" just close the modal instead of
+// navigating anywhere, per direct request. Friends gets its own 'friend' kind/copy ("Opening a
+// list by: Jordan Lee") since those cards are a person, not a list themselves.
 function wireListCards(container) {
   container.querySelectorAll('.shared-card--nonprofits .shared-vcard, .shared-card--group-lists .shared-vcard').forEach(card => {
     card.addEventListener('click', () => {
       openListEnterModal(card.dataset.name, null, 'curated');
+    });
+  });
+  container.querySelectorAll('.shared-card--friends .shared-vcard').forEach(card => {
+    card.addEventListener('click', () => {
+      openListEnterModal(card.dataset.name, null, 'friend');
     });
   });
 }
