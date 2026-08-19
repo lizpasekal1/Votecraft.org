@@ -24,6 +24,7 @@ import {
 } from './addEditModal.js';
 import { closeDetailModal, closeImageLightbox, getDetailItem, showNextImage, showPrevImage, handleGalleryLoadMoreClick, closeVideoLightbox } from './detailModal.js';
 import { initNoteToolbar } from './detailModalNotes.js';
+import { closeVoiceNoteModal, initVoiceNoteModal } from './voiceNotes.js';
 import { closeFetchAlbumsModal, handleImportAlbums, renderFetchAlbumsList } from './fetchAlbumsModal.js';
 
 // ===== SEARCH =====
@@ -473,6 +474,7 @@ export function closeSidebar() {
 // image lightbox, then the detail modal they both nest inside) — keep the two in sync.
 function _closeAnyOpenModal() {
   const pairs = [
+    ['voice-note-modal-overlay', closeVoiceNoteModal],
     ['video-lightbox-overlay', closeVideoLightbox],
     ['image-lightbox-overlay', closeImageLightbox],
     ['detail-modal-overlay', closeDetailModal],
@@ -844,6 +846,7 @@ async function init() {
   });
 
   initNoteToolbar();
+  initVoiceNoteModal();
   document.getElementById('detail-edit').addEventListener('click', () => {
     const detailItem = getDetailItem();
     if (!detailItem) return;
@@ -867,10 +870,13 @@ async function init() {
   document.addEventListener('keydown', e => {
     const lightboxOpen = document.getElementById('image-lightbox-overlay').classList.contains('open');
     const videoLightboxOpen = document.getElementById('video-lightbox-overlay').classList.contains('open');
+    const voiceNoteOpen = document.getElementById('voice-note-modal-overlay').classList.contains('open');
     if (lightboxOpen && e.key === 'ArrowLeft') { showPrevImage(); return; }
     if (lightboxOpen && e.key === 'ArrowRight') { showNextImage(); return; }
     if (e.key !== 'Escape') return;
-    if (videoLightboxOpen) {
+    if (voiceNoteOpen) {
+      closeVoiceNoteModal();
+    } else if (videoLightboxOpen) {
       closeVideoLightbox();
     } else if (lightboxOpen) {
       closeImageLightbox();
