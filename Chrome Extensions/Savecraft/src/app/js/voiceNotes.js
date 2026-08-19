@@ -1,20 +1,20 @@
 // ===== VOICE NOTES: recording popup + IndexedDB blob storage =====
-// One audio clip per note/chapter row (My Notes list or Book's Chapters list — see
-// detailModalNotes.js's renderNumberedNoteList, the shared renderer for both). Music Album's
-// separate Song List track rows are explicitly out of scope — the toolbar button that opens this
-// popup only ever fires for rows that carry a data-audio-field attribute, which Song List rows
-// never get (see detailModalNotes.js's _updateNoteEditingUi).
+// A voice note is an inline marker — a small <img data-audio-id> icon — embedded directly in a
+// note/chapter/track's rich-text content, exactly like the toolbar's existing image-link button
+// (see detailModalNotes.js's _insertImageLink). Not a separate per-row attachment: the marker can
+// sit anywhere in the text, with ordinary editable text before and after it, and travels through
+// the SAME save path every other bit of note formatting already uses — sanitizeNoteHtml (extended
+// in noteSanitizer.js to keep data-audio-id/data-duration on IMG) plus the existing debounced
+// input-triggered save in detailModalNotes.js's _wireNoteRows. This module never touches
+// persistItem/item fields directly; it only manipulates the contenteditable DOM and IndexedDB.
 //
 // Storage is local-only, deliberately: the actual recorded Blob lives in IndexedDB (this
-// browser/device only — never synced across devices or between the extension and the web build).
-// Only a small metadata record — { id, duration, recordedAt } — gets persisted on the item itself
-// via the existing persistItem() path (storage.js), since that stays well under chrome.storage
-// .sync's real per-item quota. This was a direct, confirmed trade-off (see the plan this was built
-// from) in exchange for shipping without new cloud-storage infrastructure (no Firebase Storage
-// integration exists anywhere in this codebase today).
-
-import { persistItem } from './storage.js';
-import { ensureLiveItem } from './authors.js';
+// browser/device only — never synced across devices or between the extension and the web build,
+// and not covered by Firestore the way the rest of an item's data is). A direct, confirmed
+// trade-off for shipping without new cloud-storage infrastructure (no Firebase Storage
+// integration exists anywhere in this codebase today). The marker's data-duration is just a
+// display hint copied from the recording at insert time — the source of truth for playback is
+// always the real Blob in IndexedDB, looked up by data-audio-id.
 
 // ===== INDEXEDDB =====
 // No IndexedDB usage exists anywhere else in this codebase — this is genuinely new
@@ -99,6 +99,20 @@ export function formatDuration(totalSeconds) {
   return `${mm}:${ss}`;
 }
 
+// A data: URI image, not an inline <svg> — the marker has to survive noteSanitizer.js's allow-list
+// (IMG only; SVG/path aren't allowed tags) and round-trip through innerHTML on every save/reload.
+// Color is hardcoded (can't use currentColor inside a rasterized/data-URI image the way an inline
+// <svg> can) to the app's own purple, same #5B5BEF hex already hardcoded elsewhere in this codebase
+// for the identical "rule out any theming difference" reason.
+const _MARKER_ICON_SRC = `data:image/svg+xml,${encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#5B5BEF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">'
+  + '<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><line x1="12" y1="18" x2="12" y2="22"/></svg>'
+)}`;
+
+function _buildMarkerHtml(id, durationSeconds) {
+  return `<img src="${_MARKER_ICON_SRC}" alt="Voice note (${formatDuration(durationSeconds)})" data-audio-id="${id}" data-duration="${Math.round(durationSeconds)}">`;
+}
+
 // ===== POPUP STATE =====
 
 let _activeStream = null;
@@ -109,8 +123,12 @@ let _timerInterval = null;
 let _previewBlob = null;   // the take currently loaded into the <audio> preview, unsaved until Save
 let _previewObjectUrl = null;
 let _previewDuration = 0;
-let _currentTarget = null; // { item, audioField, rowNumber, rowEl } for the row this popup is open on
-let _existingMeta = null;  // { id, duration, recordedAt } if this row already had a saved clip
+// { mode: 'insert', noteEl, range } — fresh recording from the toolbar; inserted at the captured
+// cursor position (or appended at the end if nothing was selected) on Save.
+// { mode: 'replace', markerEl } — opened by clicking an existing marker; Save swaps that exact
+// marker for the new recording in place, Delete removes it outright.
+let _currentTarget = null;
+let _existingMeta = null; // { id, duration } — set only in 'replace' mode (an existing saved clip)
 
 function _el(id) { return document.getElementById(id); }
 
@@ -164,8 +182,8 @@ function _showRecordStep() {
   _el('btn-voice-note-delete').style.display = _existingMeta ? '' : 'none';
 }
 
-// Shows a saved clip immediately on open (reopened via its chip) — same visual shape as the
-// post-record preview step, minus Save (nothing new to save yet) and plus Delete.
+// Shows a saved clip immediately on open (reopened via its inline marker) — same visual shape as
+// the post-record preview step, minus Save (nothing new to save yet) and plus Delete.
 async function _showExistingClip() {
   try {
     const blob = await getClip(_existingMeta.id);
@@ -258,6 +276,14 @@ function _stopRecording() {
 
 // ===== SAVE / DELETE =====
 
+// Fires the same 'input' event _wireNoteRows already listens for on every note row
+// (detailModalNotes.js) — reuses its existing debounced sanitize-and-persist path rather than this
+// module writing to storage itself. bubbles: true so it's caught regardless of which exact
+// descendant node the event target is.
+function _dispatchInput(el) {
+  el?.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
 async function _save() {
   if (!_previewBlob || !_currentTarget) return;
   const saveBtn = _el('btn-voice-note-save');
@@ -265,16 +291,38 @@ async function _save() {
   _hideError();
   try {
     const newId = await saveClip(_previewBlob);
-    const { item, audioField, rowNumber, rowEl } = _currentTarget;
-    const liveItem = await ensureLiveItem(item);
-    const oldMeta = liveItem[audioField]?.[rowNumber];
-    const meta = { id: newId, duration: _previewDuration, recordedAt: Date.now() };
-    liveItem[audioField] = { ...(liveItem[audioField] || {}), [rowNumber]: meta };
-    await persistItem(liveItem);
-    // Only delete the old blob once the new metadata write has actually succeeded — a mid-flow
-    // failure this way leaves one harmless orphaned blob rather than a broken/missing reference.
-    if (oldMeta?.id && oldMeta.id !== newId) await deleteClip(oldMeta.id).catch(() => {});
-    _patchChip(rowEl, meta);
+    const markerHtml = _buildMarkerHtml(newId, _previewDuration);
+    if (_currentTarget.mode === 'replace') {
+      const { markerEl } = _currentTarget;
+      const oldId = markerEl.dataset.audioId;
+      const temp = document.createElement('div');
+      temp.innerHTML = markerHtml;
+      const newNode = temp.firstChild;
+      const container = markerEl.closest('.detail-tracklist-notes-input');
+      markerEl.replaceWith(newNode);
+      _dispatchInput(container);
+      // Only delete the old blob once the swap (and the container's own resulting save) has
+      // actually happened — a mid-flow failure this way leaves one harmless orphaned blob rather
+      // than a broken/missing reference.
+      if (oldId && oldId !== newId) await deleteClip(oldId).catch(() => {});
+    } else {
+      const { noteEl, range } = _currentTarget;
+      noteEl.focus();
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      if (range) {
+        sel.addRange(range);
+      } else {
+        // No cursor position was captured (row had never been clicked into) — append at the end
+        // rather than failing to insert at all.
+        const r = document.createRange();
+        r.selectNodeContents(noteEl);
+        r.collapse(false);
+        sel.addRange(r);
+      }
+      document.execCommand('insertHTML', false, markerHtml);
+      _dispatchInput(noteEl);
+    }
     closeVoiceNoteModal();
   } catch {
     saveBtn.disabled = false;
@@ -283,23 +331,17 @@ async function _save() {
 }
 
 async function _deleteExisting() {
-  if (!_existingMeta || !_currentTarget) return;
+  if (_currentTarget?.mode !== 'replace') return;
   if (!confirm('Delete this voice note?')) return;
-  const { item, audioField, rowNumber, rowEl } = _currentTarget;
+  const { markerEl } = _currentTarget;
+  const id = markerEl.dataset.audioId;
+  const container = markerEl.closest('.detail-tracklist-notes-input');
+  markerEl.remove();
+  _dispatchInput(container);
   try {
-    const liveItem = await ensureLiveItem(item);
-    const meta = liveItem[audioField]?.[rowNumber];
-    if (liveItem[audioField]) {
-      const next = { ...liveItem[audioField] };
-      delete next[rowNumber];
-      liveItem[audioField] = next;
-    }
-    await persistItem(liveItem);
-    if (meta?.id) await deleteClip(meta.id).catch(() => {});
-    rowEl?.querySelector('.detail-tracklist-audio-chip')?.remove();
+    if (id) await deleteClip(id).catch(() => {});
+  } finally {
     closeVoiceNoteModal();
-  } catch {
-    _showError("Couldn't delete this recording — try again.");
   }
 }
 
@@ -314,37 +356,28 @@ function _download() {
   a.remove();
 }
 
-// Builds/updates a row's small "play + duration" chip in place, rather than re-rendering the
-// whole row from storage — matches this feature's own existing convention (see
-// detailModalNotes.js) of never clobbering a row's live DOM mid-edit.
-function _patchChip(rowEl, meta) {
-  if (!rowEl) return;
-  const rowLine = rowEl.querySelector('.detail-tracklist-row');
-  if (!rowLine) return;
-  let chip = rowLine.querySelector('.detail-tracklist-audio-chip');
-  if (!chip) {
-    chip = document.createElement('span');
-    chip.className = 'detail-tracklist-audio-chip';
-    rowLine.querySelector('.detail-tracklist-favorite')?.after(chip);
-  }
-  chip.dataset.rowNumber = String(_currentTarget.rowNumber);
-  chip.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>${formatDuration(meta.duration)}</span>`;
-  chip.onclick = e => {
-    e.stopPropagation();
-    openVoiceNoteModal({ ..._currentTarget, rowEl });
-  };
-}
-
 // ===== PUBLIC API =====
 
-export function openVoiceNoteModal({ item, audioField, rowNumber, rowEl }) {
-  _currentTarget = { item, audioField, rowNumber, rowEl };
-  const liveItem = item; // caller already resolves the live item where it matters (chip click / toolbar)
-  _existingMeta = liveItem?.[audioField]?.[rowNumber] || null;
+// Two call shapes:
+//  - openVoiceNoteModal({ noteEl, range }) — toolbar mic button, fresh recording. `range` is the
+//    cursor position captured at click time (see detailModalNotes.js's _openVoiceRecorder) — the
+//    popup stays open across the whole async record/preview flow, well after the row could have
+//    lost focus/selection, so the insertion point has to be captured up front and restored later
+//    rather than trusted to still be "the current selection" by the time Save fires.
+//  - openVoiceNoteModal({ markerEl }) — an existing marker was clicked; shows its saved clip
+//    immediately, offering Delete or Re-record (which replaces this exact marker in place).
+export function openVoiceNoteModal({ noteEl, range, markerEl } = {}) {
   _hideError();
   _el('voice-note-modal-overlay').classList.add('open');
-  if (_existingMeta) _showExistingClip();
-  else _showRecordStep();
+  if (markerEl) {
+    _currentTarget = { mode: 'replace', markerEl };
+    _existingMeta = { id: markerEl.dataset.audioId, duration: Number(markerEl.dataset.duration) || 0 };
+    _showExistingClip();
+  } else {
+    _currentTarget = { mode: 'insert', noteEl, range };
+    _existingMeta = null;
+    _showRecordStep();
+  }
 }
 
 export function closeVoiceNoteModal() {
