@@ -245,7 +245,7 @@ export function renderSidebar() {
     const rowArrow = rowCollapsed ? '▶' : '▼';
     return `
     <div class="sidebar-item sidebar-subfolder ${linkClass}" data-toggle-list="${key}">
-      <span class="sidebar-label">${icon} ${label}</span>
+      <span class="sidebar-label"><span class="sidebar-list-icon-box">${icon}</span> ${label}</span>
       <span class="sidebar-right"><span class="sidebar-arrow">${rowArrow}</span></span>
     </div>
     ${rowCollapsed ? '' : `
@@ -282,17 +282,10 @@ export function renderSidebar() {
     <div class="sidebar-group${isDashboardCollapsed ? '' : ' open'}">
       <div class="sidebar-group-bg" style="view-transition-name: ${sidebarGroupVtName('dashboard')}"></div>
       <div class="sidebar-item sidebar-dashboard-link ${state.view === 'dashboard' ? 'active' : ''}" data-view="dashboard" data-toggle="dashboard">
-        <span class="sidebar-label"><span class="cat-icon">${DASHBOARD_ICON_SVG}</span><span class="sidebar-label-text"> Dashboard</span></span>
+        <span class="sidebar-label"><span class="cat-icon">${DASHBOARD_ICON_SVG}</span><span class="sidebar-label-text"> My Dashboard</span></span>
         <span class="sidebar-right"><span class="sidebar-arrow">${dashboardArrow}</span></span>
       </div>
       ${isDashboardCollapsed ? '' : `
-      <div class="sidebar-item sidebar-subfolder sidebar-kanban-link ${state.view === 'kanban' ? 'active' : ''}" data-view="kanban">
-        ${KANBAN_ICON_SVG} Queue Kanban
-      </div>
-      ${isAdminUser(getCurrentUser()?.email, state.role) ? `
-      <div class="sidebar-item sidebar-subfolder sidebar-admin-kanban-link ${state.view === 'admin-kanban' ? 'active' : ''}" data-view="admin-kanban">
-        ${ADMIN_KANBAN_ICON_SVG} Admin Kanban
-      </div>` : ''}
       ${_renderDashboardListRow({
         key: 'saved-lists', icon: SAVED_LISTS_ICON_SVG, label: 'Saved Lists',
         // Always alphabetical, per direct request — a new list slots into its correct alphabetical
@@ -319,7 +312,15 @@ export function renderSidebar() {
         linkClass: 'sidebar-curated-lists-link', childClass: 'sidebar-curated-lists-child', addClass: 'sidebar-add-curated-list',
         itemExtraClass: item => item.id === 'default-votecraft' ? 'sidebar-curated-votecraft-link' : '',
         itemIsActive: item => item.id === 'default-votecraft' && state.sidebarMode === 'curated' && sidebarEffectiveView === 'genre:Top 100',
-      })}`}
+        showRadio: true,
+      })}
+      <div class="sidebar-item sidebar-subfolder sidebar-kanban-link ${state.view === 'kanban' ? 'active' : ''}" data-view="kanban">
+        ${KANBAN_ICON_SVG} Queue Kanban
+      </div>
+      ${isAdminUser(getCurrentUser()?.email, state.role) ? `
+      <div class="sidebar-item sidebar-subfolder sidebar-admin-kanban-link ${state.view === 'admin-kanban' ? 'active' : ''}" data-view="admin-kanban">
+        ${ADMIN_KANBAN_ICON_SVG} Admin Kanban
+      </div>` : ''}`}
     </div>
     <div class="sidebar-divider"></div>
   `;

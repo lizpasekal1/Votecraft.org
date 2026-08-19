@@ -627,6 +627,132 @@
   color: var(--primary);
 }
 
+/* --- My Notes (timeline of every item with real notes) --- */
+.profile-notes-category-btn {
+  /* Reuses .btn-board-filter's shape (kanban.css), recolored purple and shrunk to fit a widget
+     header corner — same recipe dashboard.css's .dash-fav-category-btn already uses for the
+     identical "sort by category" control on the Favorites widget. */
+  width: auto;
+  padding: 5px 14px;
+  box-sizing: border-box;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+.profile-notes-category-btn svg { opacity: 0.85; fill: #fff; }
+.profile-notes-category-btn:hover,
+.profile-notes-category-btn:active {
+  background: #fff;
+  border-color: #fff;
+  color: var(--primary);
+}
+.profile-notes-category-btn:hover svg,
+.profile-notes-category-btn:active svg {
+  opacity: 1;
+  fill: var(--primary);
+}
+/* Right-aligned, same reasoning as .dash-fav-category-dropdown — the base .board-filter-dropdown
+   (kanban.css) anchors left:0, which runs a corner-positioned dropdown off the edge of the card. */
+.profile-notes-category-dropdown {
+  left: auto;
+  right: 0;
+}
+
+.profile-notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Same shape as .profile-saved-list-row (Saved Lists widget) — arrow, then content, click-to-
+   toggle on the whole row. */
+.profile-notes-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  user-select: none;
+}
+.profile-notes-row:hover { background: var(--hover-bg); }
+
+.profile-notes-arrow {
+  font-size: 9px;
+  color: var(--text-secondary);
+  width: 10px;
+  flex-shrink: 0;
+}
+
+.profile-notes-cat-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.profile-notes-cat-icon svg { width: 16px; height: 16px; }
+
+.profile-notes-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Only the badges that actually apply render at all (see profile.js's _buildNotesBadges) — no
+   dimmed/absent placeholders, so a plain-text-only item's row just has fewer icons, not empty ones. */
+.profile-notes-badges {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.profile-notes-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  background: var(--primary-bg);
+  color: var(--primary);
+}
+
+.profile-notes-subrows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px 0 6px 26px;
+}
+.profile-notes-subrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.profile-notes-subrow:hover { background: var(--hover-bg); }
+.profile-notes-subrow-label {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.profile-notes-subrow-preview {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
 /* --- Last.fm connect modal --- */
 .lastfm-modal-copy {
   font-size: 13px;
