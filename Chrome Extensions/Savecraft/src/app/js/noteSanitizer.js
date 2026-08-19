@@ -22,7 +22,12 @@ const ALLOWED_TAGS = new Set(['B', 'MARK', 'UL', 'LI',
   'A']);
 // Only IMG/A need an attribute to survive at all; every other allowed tag still gets every
 // attribute stripped, same as before.
-const ALLOWED_ATTRS = { IMG: new Set(['src', 'alt']), A: new Set(['href']) };
+// data-audio-id/data-duration: an inline voice-note marker (voiceNotes.js) is just an IMG whose
+// src is a small fixed SVG icon (see MARKER_ICON_SRC there) — these two are what actually
+// identify which IndexedDB-stored clip it points to and how long it runs. Neither is ever
+// rendered/executed as anything but a plain string read back off the element, so there's no new
+// XSS surface from letting them survive — same reasoning as src/alt above.
+const ALLOWED_ATTRS = { IMG: new Set(['src', 'alt', 'data-audio-id', 'data-duration']), A: new Set(['href']) };
 // http(s)/data:image only — rules out `javascript:`/`vbscript:`/bare `on*=`-style payloads riding
 // in through what's supposed to be a plain image URL. Browsers don't execute `src="javascript:"`
 // on an <img> the way they would on an <a href>, but this is cheap insurance against a browser

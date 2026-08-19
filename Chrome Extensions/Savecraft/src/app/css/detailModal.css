@@ -1239,23 +1239,20 @@
   color: var(--primary);
 }
 
-/* Small "play + duration" pill — shown next to the favorite icon whenever a row has a saved
-   voice note (see voiceNotes.js). Clicking it reopens the recording popup on that clip. */
-.detail-tracklist-audio-chip {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  flex-shrink: 0;
-  padding: 3px 8px;
-  border-radius: 10px;
-  background: var(--primary-bg);
-  color: var(--primary);
-  font-size: 11px;
-  font-weight: 600;
+/* Inline voice-note marker — an <img data-audio-id> embedded directly in a note's rich-text
+   content (see voiceNotes.js), same mechanism as a pasted image, just always this one fixed icon.
+   Sized/aligned to read as a glyph sitting in the text flow, not an oversized inline image. */
+.detail-tracklist-notes-input img[data-audio-id] {
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+  margin: 0 2px;
   cursor: pointer;
+  border-radius: 4px;
+  background: var(--primary-bg);
+  padding: 2px;
 }
-.detail-tracklist-audio-chip svg { flex-shrink: 0; }
-.detail-tracklist-audio-chip:hover { opacity: 0.8; }
+.detail-tracklist-notes-input img[data-audio-id]:hover { opacity: 0.75; }
 
 /* Hovering the title or the pencil turns both purple together, as a preview of the row's
    tap action — separate from --active/--has-note, which is the persistent "has content" state. */
