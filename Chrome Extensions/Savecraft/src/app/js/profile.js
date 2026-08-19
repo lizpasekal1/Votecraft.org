@@ -7,7 +7,7 @@
 // Lists (per-list category/folder scoping — the old "Friends" 4th-slot placeholder this grid was
 // originally sized for never got built; these replaced it).
 
-import { state, CURATED_GENRES, CATEGORIES, CAT_LABEL } from './state.js';
+import { state, CURATED_GENRES, CATEGORIES, CAT_LABEL, CAT_EMOJI } from './state.js';
 import { escapeHtml } from './utils.js';
 import { getCurrentUser, resendVerificationEmail } from './auth.js';
 import { persistFollowedCuratedLists, persistSavedLists, persistFolder, persistItem, persistSelectedSharedFriends, disconnectLastfm, disconnectSteam } from './storage.js';
@@ -18,6 +18,8 @@ import { renderSidebar, renderGrid } from './render.js';
 import { navigateToView } from './navigation.js';
 import { DEMO_FRIENDS } from './sharedSaves.js';
 import { resourceUrl } from './platform.js';
+import { openDetailModal } from './detailModal.js';
+import { inspectNoteHtml, plainTextFromNoteHtml } from './noteSanitizer.js';
 
 const PRIVACY_POLICY_URL = resourceUrl('src/webpage/privacy-policy.html');
 const TERMS_OF_SERVICE_URL = resourceUrl('src/webpage/terms-of-service.html');
@@ -583,14 +585,169 @@ function wireSavedListsSection(container) {
 }
 
 // ===== my notes =====
-// Placeholder for now — future home for an easy way to find which saved items have notes on
-// them. Text-only per explicit scope; the actual note-listing logic is a later, separate task.
+// An accordion timeline of every item with real notes on it — one row per item (not per note;
+// icons on a collapsed row summarize across all of that item's notes combined), expandable to see
+// each individual note, sortable by category via the header dropdown. Deliberately scoped to
+// noteTexts/chapterNotes only (the actual "My Notes"/"Chapters" feature this widget is named
+// after) — Music Album's separate Song List (trackNotes) is a conceptually distinct per-track
+// feature with its own name/accordion elsewhere, not "My Notes" by this widget's own definition.
+
+const _expandedProfileNotesItems = new Set(); // page-local, same lifecycle as the Saved Lists
+                                               // widget's own _expandedProfileSavedLists above —
+                                               // doesn't persist across visits.
+let _notesCategoryFilter = ''; // '' = All Categories, else one CATEGORIES value
+
+const NOTES_LINK_ICON = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+const NOTES_VOICE_ICON = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><line x1="12" y1="18" x2="12" y2="22"/></svg>';
+const NOTES_IMAGE_ICON = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>';
+
+// Every item with at least one real note, plus its individual note rows — computed fresh on every
+// build (no caching layer; matches this codebase's existing pattern for state.items scans, e.g.
+// Dashboard's favorites/queue widgets, which also recompute live on every render).
+function _collectNotesItems() {
+  return state.items
+    .map(item => {
+      const isBook = item.category === 'Book';
+      const textsField = isBook ? 'chapterNotes' : 'noteTexts';
+      const titlesField = isBook ? 'chapterTitles' : 'noteTitles';
+      const rows = Object.entries(item[textsField] || {})
+        .map(([num, html]) => ({ num: Number(num), html, ...inspectNoteHtml(html) }))
+        .filter(r => r.hasContent)
+        .sort((a, b) => a.num - b.num)
+        .map(r => ({
+          ...r,
+          label: item[titlesField]?.[r.num]
+            || (r.num === 0 ? (isBook ? 'Basic Notes' : 'Summary') : (isBook ? `Chapter ${r.num}` : 'Note')),
+        }));
+      if (!rows.length) return null;
+      return {
+        item, rows,
+        hasVoice: rows.some(r => r.hasVoice),
+        hasImage: rows.some(r => r.hasImage),
+        hasLink: rows.some(r => r.hasLink),
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => (b.item.savedAt || 0) - (a.item.savedAt || 0));
+}
+
+function _buildNotesBadges({ hasLink, hasVoice, hasImage }) {
+  return `<span class="profile-notes-badges">`
+    + (hasLink ? `<span class="profile-notes-badge" title="Contains a link">${NOTES_LINK_ICON}</span>` : '')
+    + (hasVoice ? `<span class="profile-notes-badge" title="Contains a voice note">${NOTES_VOICE_ICON}</span>` : '')
+    + (hasImage ? `<span class="profile-notes-badge" title="Contains an image">${NOTES_IMAGE_ICON}</span>` : '')
+    + `</span>`;
+}
+
+function _buildNotesItemRow(entry) {
+  const { item, rows } = entry;
+  const expanded = _expandedProfileNotesItems.has(item.id);
+  const arrow = expanded ? '▼' : '▶';
+  const subRows = rows.map(r => `
+    <div class="profile-notes-subrow" data-item-id="${escapeHtml(item.id)}">
+      <span class="profile-notes-subrow-label">${escapeHtml(r.label)}</span>
+      ${_buildNotesBadges(r)}
+      <span class="profile-notes-subrow-preview">${escapeHtml(plainTextFromNoteHtml(r.html)) || '—'}</span>
+    </div>`).join('');
+  return `
+    <div class="profile-notes-row" data-item-id="${escapeHtml(item.id)}">
+      <span class="profile-notes-arrow">${arrow}</span>
+      <span class="profile-notes-cat-icon">${CAT_EMOJI[item.category] || ''}</span>
+      <span class="profile-notes-title">${escapeHtml(item.title || '')}</span>
+      ${_buildNotesBadges(entry)}
+    </div>
+    ${expanded ? `<div class="profile-notes-subrows">${subRows}</div>` : ''}`;
+}
+
 function buildMyNotesSection() {
+  const allEntries = _collectNotesItems();
+  const entries = _notesCategoryFilter
+    ? allEntries.filter(e => e.item.category === _notesCategoryFilter)
+    : allEntries;
+  const dropdownBtnLabel = _notesCategoryFilter ? (CAT_LABEL[_notesCategoryFilter] || _notesCategoryFilter) : 'SORT';
+  const body = entries.length
+    ? `<div class="profile-notes-list">${entries.map(_buildNotesItemRow).join('')}</div>`
+    : `<p class="profile-card-copy">${allEntries.length ? 'No notes in this category yet.' : "No notes yet — add one from any saved item's detail view."}</p>`;
   return `
     <div class="dash-card profile-card--notes">
-      <div class="profile-card-header"><span class="profile-card-title">My Notes</span></div>
-      <p class="profile-card-copy">Coming soon — an easy way to see everywhere you've taken notes.</p>
+      <div class="profile-card-header">
+        <span class="profile-card-title">My Notes</span>
+        <div class="board-filter-wrap profile-notes-category-wrap">
+          <button type="button" class="btn-board-filter profile-notes-category-btn">
+            <span class="profile-notes-category-label">${escapeHtml(dropdownBtnLabel)}</span>
+            <svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor"><path d="M0 0l5 6 5-6z"/></svg>
+          </button>
+          <div class="board-filter-dropdown profile-notes-category-dropdown" hidden></div>
+        </div>
+      </div>
+      ${body}
     </div>`;
+}
+
+// Registered once at module load (mirrors dashboard.js's own single outside-click listener for
+// its category dropdown) — re-queries the live dropdown each click rather than stacking a new
+// listener on `document` per rebuild.
+document.addEventListener('click', e => {
+  const dd = document.querySelector('.profile-notes-category-dropdown');
+  if (dd && !dd.hidden && !e.target.closest('.profile-notes-category-wrap')) dd.setAttribute('hidden', '');
+});
+
+function _rebuildMyNotesCard() {
+  const card = document.querySelector('.profile-card--notes');
+  if (!card) return;
+  const parent = card.parentElement;
+  card.outerHTML = buildMyNotesSection();
+  wireMyNotesSection(parent);
+}
+
+function wireMyNotesSection(container) {
+  const card = container.querySelector('.profile-card--notes');
+  if (!card) return;
+
+  const dd = card.querySelector('.profile-notes-category-dropdown');
+  if (dd) {
+    const allOption = `<button class="saves-list-option${!_notesCategoryFilter ? ' active' : ''}" data-cat="">All Categories</button>`;
+    const catOptions = CATEGORIES.filter(cat => cat !== 'Music Album').map(cat =>
+      `<button class="saves-list-option${_notesCategoryFilter === cat ? ' active' : ''}" data-cat="${escapeHtml(cat)}">${escapeHtml(CAT_LABEL[cat] || cat)}</button>`
+    ).join('');
+    dd.innerHTML = allOption + `<div class="saves-list-divider"></div>` + catOptions;
+
+    card.querySelector('.profile-notes-category-btn')?.addEventListener('click', e => {
+      e.stopPropagation();
+      dd.toggleAttribute('hidden');
+    });
+    dd.querySelectorAll('.saves-list-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        _notesCategoryFilter = opt.dataset.cat || '';
+        _rebuildMyNotesCard();
+      });
+    });
+  }
+
+  card.querySelectorAll('.profile-notes-arrow').forEach(arrow => {
+    arrow.addEventListener('click', e => {
+      e.stopPropagation();
+      const itemId = arrow.closest('.profile-notes-row')?.dataset.itemId;
+      if (!itemId) return;
+      if (_expandedProfileNotesItems.has(itemId)) _expandedProfileNotesItems.delete(itemId);
+      else _expandedProfileNotesItems.add(itemId);
+      _rebuildMyNotesCard();
+    });
+  });
+
+  // Clicking the rest of a collapsed row's title also opens/closes it (same "arrow is the visual
+  // affordance, not the only tap target" convention Saved Lists' own rows use) — a sub-row instead
+  // navigates straight to that item, since it's already identified down to the specific note.
+  card.querySelectorAll('.profile-notes-row').forEach(row => {
+    row.addEventListener('click', () => row.querySelector('.profile-notes-arrow')?.click());
+  });
+  card.querySelectorAll('.profile-notes-subrow').forEach(subrow => {
+    subrow.addEventListener('click', e => {
+      e.stopPropagation();
+      const item = state.items.find(i => i.id === subrow.dataset.itemId);
+      if (item) openDetailModal(item);
+    });
+  });
 }
 
 // ===== shared lists =====
@@ -699,6 +856,7 @@ export function renderProfilePage() {
   wireAccountSection(container);
   wireConnectionsSection(container);
   wireInterestsSection(container);
+  wireMyNotesSection(container);
   wireSavedListsSection(container);
   wireSharedListsWidget(container);
   wireVotecraftConnectionSection(container);

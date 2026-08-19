@@ -146,3 +146,21 @@ export function noteHtmlHasContent(html) {
   template.innerHTML = html || '';
   return !!(template.content.textContent || '').trim() || !!template.content.querySelector('img');
 }
+
+// Everything a note-listing UI (Profile page's My Notes widget) needs to know about one note's
+// content, in a single parse — the three content types a sanitized note can hold are each
+// unambiguous to detect given ALLOWED_TAGS/ALLOWED_ATTRS above: a voice-note marker is an IMG
+// with data-audio-id (see voiceNotes.js), a plain pasted image is any other IMG (only ever
+// produced by the toolbar's insert-image-link button), and a link is any A (sanitizeNoteHtml
+// strips every other attribute off A, so href presence alone is sufficient).
+export function inspectNoteHtml(html) {
+  const template = document.createElement('template');
+  template.innerHTML = html || '';
+  const content = template.content;
+  return {
+    hasContent: !!(content.textContent || '').trim() || !!content.querySelector('img'),
+    hasVoice: !!content.querySelector('img[data-audio-id]'),
+    hasImage: !!content.querySelector('img:not([data-audio-id])'),
+    hasLink: !!content.querySelector('a[href]'),
+  };
+}
