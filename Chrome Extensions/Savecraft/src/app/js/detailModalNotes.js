@@ -11,7 +11,7 @@ import { getDetailItem } from './detailModal.js';
 import { registerAccordion, closeAccordionsExcept } from './detailModalAccordions.js';
 import { sanitizeNoteHtml, noteHtmlHasContent } from './noteSanitizer.js';
 import { openInNewTab } from './platform.js';
-import { openVoiceNoteModal, formatDuration } from './voiceNotes.js';
+import { openVoiceNoteModal } from './voiceNotes.js';
 
 // Which note row (a .detail-tracklist-notes-input contenteditable) currently has focus, if any —
 // drives the formatting toolbar's visibility/enabled state. _focusModeOn is an independent on/off
@@ -328,6 +328,11 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
       });
       inputEl.addEventListener('click', e => {
         e.stopPropagation();
+        // A voice-note marker (voiceNotes.js) — an inline <img data-audio-id>, indistinguishable
+        // from a pasted image except for that attribute. Opens its saved clip (play/re-record/
+        // delete) instead of doing nothing/whatever a plain <img> click would otherwise do.
+        const marker = e.target.closest('img[data-audio-id]');
+        if (marker) { e.preventDefault(); openVoiceNoteModal({ markerEl: marker }); return; }
         // Links in a note (pasted, or auto-linkified from plain text by noteSanitizer.js) don't
         // carry a stored target/rel — sanitizeNoteHtml only keeps href — so open them explicitly
         // here instead, rather than letting a contenteditable's default click-to-navigate replace
@@ -382,7 +387,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
     const {
       target, countField, defaultCount, favoritesField, textsField, zeroSeededField, titlesField,
       zeroLabel, rowLabel, // rowLabel: (num) => string — e.g. Book's `Chapter ${num}` vs the flat 'Note'
-      notePlaceholder, addButtonLabel, addButtonId, zeroFallback, audioField,
+      notePlaceholder, addButtonLabel, addButtonId, zeroFallback,
       zeroNumberDisplay = '0', // row 0's number badge — Book keeps the literal '0', others use a bullet
     } = config;
     const liveItem = state.items.find(i => i.id === item.id);
@@ -390,7 +395,6 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
     const favorites = liveItem?.[favoritesField] || [];
     const texts = liveItem?.[textsField] || {};
     const titles = liveItem?.[titlesField] || {};
-    const audio = liveItem?.[audioField] || {};
     // Row 0 shows the starting text (old general notes/bio) as a starting point until the user
     // actually edits it — the zeroSeeded flag (set the first time its textarea fires an input
     // event, even to clear it) stops that fallback from reappearing after an intentional clear.
@@ -405,10 +409,6 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
       const hasNote = noteHtmlHasContent(noteHtml);
       const defaultLabel = num === 0 ? zeroLabel : rowLabel(num);
       const displayLabel = titles[num] || defaultLabel;
-      const audioMeta = audio[num];
-      const audioChipHtml = audioMeta
-        ? `<span class="detail-tracklist-audio-chip" data-row-number="${num}"><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>${formatDuration(audioMeta.duration)}</span></span>`
-        : '';
       return `
       <div class="detail-tracklist-item">
         <div class="detail-tracklist-row">
@@ -416,20 +416,12 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
           <span class="detail-tracklist-title${hasNote ? ' detail-tracklist-title--has-note' : ''}" data-row-number="${num}" data-default-label="${escapeHtml(defaultLabel)}">${escapeHtml(displayLabel)}</span>
           <button type="button" class="detail-tracklist-rename" data-row-number="${num}" aria-label="Rename ${escapeHtml(displayLabel)}" title="Rename">${RENAME_ICON}</button>
           <span class="detail-tracklist-favorite detail-tracklist-favorite--circle${isFav || hasNote ? ' detail-tracklist-favorite--active' : ''}" data-row-number="${num}">${NOTE_OPEN_ICON}</span>
-          ${audioChipHtml}
         </div>
-        <div class="detail-tracklist-notes-input${isFav ? ' open' : ''}" data-row-number="${num}" data-audio-field="${audioField}" data-placeholder="${escapeHtml(notePlaceholder)}" contenteditable="true" role="textbox" aria-multiline="true" aria-label="${escapeHtml(notePlaceholder)}">${noteHtml}</div>
+        <div class="detail-tracklist-notes-input${isFav ? ' open' : ''}" data-row-number="${num}" data-placeholder="${escapeHtml(notePlaceholder)}" contenteditable="true" role="textbox" aria-multiline="true" aria-label="${escapeHtml(notePlaceholder)}">${noteHtml}</div>
       </div>`;
     }).join('');
     target.innerHTML = `${rows}<button class="detail-tracklist-add-chapter" id="${addButtonId}">${addButtonLabel}</button>`;
     target.querySelectorAll('.detail-tracklist-notes-input.open').forEach(fitTracklistNote);
-    target.querySelectorAll('.detail-tracklist-audio-chip').forEach(chip => {
-      chip.addEventListener('click', e => {
-        e.stopPropagation(); // don't also toggle the row's note open/closed
-        const rowNumber = Number(chip.dataset.rowNumber);
-        openVoiceNoteModal({ item: liveItem || item, audioField, rowNumber, rowEl: chip.closest('.detail-tracklist-item') });
-      });
-    });
 
     // Renaming a row's title — a small pencil next to the label, separate from the row's own
     // click-to-open-note behavior, so it needs its own stopPropagation to avoid also toggling the
@@ -531,7 +523,6 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
       target: tracklistEl,
       countField: 'chapterCount', defaultCount: 12,
       favoritesField: 'chapterFavorites', textsField: 'chapterNotes', zeroSeededField: 'chapterZeroSeeded', titlesField: 'chapterTitles',
-      audioField: 'chapterAudio',
       zeroLabel: 'Basic Notes', rowLabel: num => `Chapter ${num}`, notePlaceholder: 'Add a note for this chapter…',
       addButtonLabel: '+ Add Chapter', addButtonId: 'btn-add-chapter',
       zeroFallback: text,
@@ -554,7 +545,6 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
       target: notesListEl,
       countField: 'noteCount', defaultCount: 3,
       favoritesField: 'noteFavorites', textsField: 'noteTexts', zeroSeededField: 'noteZeroSeeded', titlesField: 'noteTitles',
-      audioField: 'noteAudio',
       zeroLabel: 'Summary', rowLabel: () => 'Note', notePlaceholder: 'Add a note…',
       addButtonLabel: '+ Add Note', addButtonId: 'btn-add-note', zeroNumberDisplay: '•',
       // Musician's row 0 prefers the artist's Wikipedia bio (see applyMusicianBioFallback() below
@@ -636,11 +626,6 @@ function _updateNoteEditingUi() {
   document.querySelector('.modal.detail-modal')?.classList.toggle('detail-modal--editing-note', editing);
   document.querySelectorAll('#detail-note-toolbar .detail-note-toolbar-btn[data-format]')
     .forEach(b => { b.disabled = !_activeNoteRow; });
-  // No data-format (voice notes aren't an execCommand-style mutation) — disabled state also
-  // requires data-audio-field specifically, not just _activeNoteRow truthy, since Music Album
-  // Song List rows (out of scope for voice notes) never get that attribute stamped on them.
-  const voiceBtn = document.getElementById('note-toolbar-voice');
-  if (voiceBtn) voiceBtn.disabled = !_activeNoteRow || !_activeNoteRow.dataset.audioField;
   document.getElementById('note-toolbar-expand')?.classList.toggle('detail-note-toolbar-btn--active', _focusModeOn);
 }
 
@@ -764,6 +749,23 @@ function _insertImageLink() {
   return true;
 }
 
+// Opens the recording popup targeting _activeNoteRow. Unlike the other 3 formatting commands,
+// nothing is actually inserted synchronously here — the popup's own async record/preview/Save flow
+// (voiceNotes.js) does the real insertion once the user finishes, using the cursor position
+// captured below (recording can take a while, well after this row could have lost focus/selection
+// to the popup's own buttons, so "the current selection" can't just be read again at Save time).
+function _openVoiceRecorder() {
+  if (!_activeNoteRow) return false;
+  const sel = window.getSelection();
+  let range = null;
+  if (sel && sel.rangeCount > 0) {
+    const r = sel.getRangeAt(0);
+    if (_activeNoteRow.contains(r.commonAncestorContainer)) range = r.cloneRange();
+  }
+  openVoiceNoteModal({ noteEl: _activeNoteRow, range });
+  return false; // no input event to dispatch yet — the popup dispatches its own once it actually saves
+}
+
 function _applyFormat(cmd) {
   if (!_activeNoteRow) return;
   _activeNoteRow.focus();
@@ -774,10 +776,11 @@ function _applyFormat(cmd) {
   // Own return value — prompt()'s Cancel/empty case means nothing was actually inserted, so no
   // save/has-note-styling update should fire (the other three commands always change something).
   else if (cmd === 'image') changed = _insertImageLink();
+  else if (cmd === 'voice') changed = _openVoiceRecorder();
   if (changed) _activeNoteRow.dispatchEvent(new Event('input', { bubbles: true })); // triggers the existing debounced save + has-note styling
 }
 
-// Binds the toolbar's 6 static buttons once — called from main.js's init(), since the toolbar DOM
+// Binds the toolbar's 7 static buttons once — called from main.js's init(), since the toolbar DOM
 // lives permanently in index.html rather than being re-rendered per modal open.
 export function initNoteToolbar() {
   document.querySelectorAll('#detail-note-toolbar .detail-note-toolbar-btn').forEach(btn => {
@@ -786,22 +789,7 @@ export function initNoteToolbar() {
     // reason blur rarely needs to special-case "focus moved to the toolbar" at all.
     btn.addEventListener('mousedown', e => e.preventDefault());
   });
-  // Not routed through _applyFormat — recording is an async, multi-step popup flow, not a single
-  // execCommand-style mutation of _activeNoteRow. Reads data-audio-field straight off the row
-  // (stamped there by renderNumberedNoteList) rather than needing that render's own config/field
-  // names in scope here — its absence is also exactly how this stays inert for Music Album Song
-  // List rows (out of scope for voice notes; see _updateNoteEditingUi's own note on this below).
-  document.getElementById('note-toolbar-voice').addEventListener('click', () => {
-    if (!_activeNoteRow || !_activeNoteRow.dataset.audioField) return;
-    const item = getDetailItem();
-    if (!item) return;
-    openVoiceNoteModal({
-      item,
-      audioField: _activeNoteRow.dataset.audioField,
-      rowNumber: Number(_activeNoteRow.dataset.rowNumber),
-      rowEl: _activeNoteRow.closest('.detail-tracklist-item'),
-    });
-  });
+  document.getElementById('note-toolbar-voice').addEventListener('click', () => _applyFormat('voice'));
   document.getElementById('note-toolbar-bold').addEventListener('click', () => _applyFormat('bold'));
   document.getElementById('note-toolbar-highlight').addEventListener('click', () => _applyFormat('highlight'));
   document.getElementById('note-toolbar-bullet').addEventListener('click', () => _applyFormat('bullet'));
