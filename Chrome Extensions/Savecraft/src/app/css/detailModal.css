@@ -523,6 +523,61 @@
    (margin-left: auto, then a fixed 20px) both still read as "there's a gap here" once the row
    had 4 formatting buttons instead of 3; a uniform gap is the one that doesn't. */
 
+/* ===== VOICE NOTE POPUP (see voiceNotes.js) ===== */
+.voice-note-modal { width: 380px; }
+.voice-note-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0 20px;
+}
+.voice-note-record-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.voice-note-record-btn:hover { background: var(--primary-hover); }
+.voice-note-record-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.voice-note-stop-btn {
+  padding: 9px 28px;
+  border: none;
+  border-radius: 24px;
+  background: #E24444;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.voice-note-recording-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.voice-note-rec-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #E24444;
+  animation: voiceNoteRecPulse 1.1s ease-in-out infinite;
+}
+@keyframes voiceNoteRecPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+#voice-note-audio-preview { width: 100%; }
+
 .detail-modal--focus-mode #detail-edit,
 .detail-modal--focus-mode #detail-bookmark-btn,
 .detail-modal--focus-mode #detail-favorite-btn,
@@ -1183,6 +1238,24 @@
 .detail-tracklist-favorite--active {
   color: var(--primary);
 }
+
+/* Small "play + duration" pill — shown next to the favorite icon whenever a row has a saved
+   voice note (see voiceNotes.js). Clicking it reopens the recording popup on that clip. */
+.detail-tracklist-audio-chip {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border-radius: 10px;
+  background: var(--primary-bg);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.detail-tracklist-audio-chip svg { flex-shrink: 0; }
+.detail-tracklist-audio-chip:hover { opacity: 0.8; }
 
 /* Hovering the title or the pencil turns both purple together, as a preview of the row's
    tap action — separate from --active/--has-note, which is the persistent "has content" state. */

@@ -11,6 +11,7 @@ import { getDetailItem } from './detailModal.js';
 import { registerAccordion, closeAccordionsExcept } from './detailModalAccordions.js';
 import { sanitizeNoteHtml, noteHtmlHasContent } from './noteSanitizer.js';
 import { openInNewTab } from './platform.js';
+import { openVoiceNoteModal, formatDuration } from './voiceNotes.js';
 
 // Which note row (a .detail-tracklist-notes-input contenteditable) currently has focus, if any —
 // drives the formatting toolbar's visibility/enabled state. _focusModeOn is an independent on/off
@@ -381,7 +382,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
     const {
       target, countField, defaultCount, favoritesField, textsField, zeroSeededField, titlesField,
       zeroLabel, rowLabel, // rowLabel: (num) => string — e.g. Book's `Chapter ${num}` vs the flat 'Note'
-      notePlaceholder, addButtonLabel, addButtonId, zeroFallback,
+      notePlaceholder, addButtonLabel, addButtonId, zeroFallback, audioField,
       zeroNumberDisplay = '0', // row 0's number badge — Book keeps the literal '0', others use a bullet
     } = config;
     const liveItem = state.items.find(i => i.id === item.id);
@@ -389,6 +390,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
     const favorites = liveItem?.[favoritesField] || [];
     const texts = liveItem?.[textsField] || {};
     const titles = liveItem?.[titlesField] || {};
+    const audio = liveItem?.[audioField] || {};
     // Row 0 shows the starting text (old general notes/bio) as a starting point until the user
     // actually edits it — the zeroSeeded flag (set the first time its textarea fires an input
     // event, even to clear it) stops that fallback from reappearing after an intentional clear.
@@ -403,6 +405,10 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
       const hasNote = noteHtmlHasContent(noteHtml);
       const defaultLabel = num === 0 ? zeroLabel : rowLabel(num);
       const displayLabel = titles[num] || defaultLabel;
+      const audioMeta = audio[num];
+      const audioChipHtml = audioMeta
+        ? `<span class="detail-tracklist-audio-chip" data-row-number="${num}"><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>${formatDuration(audioMeta.duration)}</span></span>`
+        : '';
       return `
       <div class="detail-tracklist-item">
         <div class="detail-tracklist-row">
@@ -410,12 +416,20 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
           <span class="detail-tracklist-title${hasNote ? ' detail-tracklist-title--has-note' : ''}" data-row-number="${num}" data-default-label="${escapeHtml(defaultLabel)}">${escapeHtml(displayLabel)}</span>
           <button type="button" class="detail-tracklist-rename" data-row-number="${num}" aria-label="Rename ${escapeHtml(displayLabel)}" title="Rename">${RENAME_ICON}</button>
           <span class="detail-tracklist-favorite detail-tracklist-favorite--circle${isFav || hasNote ? ' detail-tracklist-favorite--active' : ''}" data-row-number="${num}">${NOTE_OPEN_ICON}</span>
+          ${audioChipHtml}
         </div>
-        <div class="detail-tracklist-notes-input${isFav ? ' open' : ''}" data-row-number="${num}" data-placeholder="${escapeHtml(notePlaceholder)}" contenteditable="true" role="textbox" aria-multiline="true" aria-label="${escapeHtml(notePlaceholder)}">${noteHtml}</div>
+        <div class="detail-tracklist-notes-input${isFav ? ' open' : ''}" data-row-number="${num}" data-audio-field="${audioField}" data-placeholder="${escapeHtml(notePlaceholder)}" contenteditable="true" role="textbox" aria-multiline="true" aria-label="${escapeHtml(notePlaceholder)}">${noteHtml}</div>
       </div>`;
     }).join('');
     target.innerHTML = `${rows}<button class="detail-tracklist-add-chapter" id="${addButtonId}">${addButtonLabel}</button>`;
     target.querySelectorAll('.detail-tracklist-notes-input.open').forEach(fitTracklistNote);
+    target.querySelectorAll('.detail-tracklist-audio-chip').forEach(chip => {
+      chip.addEventListener('click', e => {
+        e.stopPropagation(); // don't also toggle the row's note open/closed
+        const rowNumber = Number(chip.dataset.rowNumber);
+        openVoiceNoteModal({ item: liveItem || item, audioField, rowNumber, rowEl: chip.closest('.detail-tracklist-item') });
+      });
+    });
 
     // Renaming a row's title — a small pencil next to the label, separate from the row's own
     // click-to-open-note behavior, so it needs its own stopPropagation to avoid also toggling the
@@ -517,6 +531,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
       target: tracklistEl,
       countField: 'chapterCount', defaultCount: 12,
       favoritesField: 'chapterFavorites', textsField: 'chapterNotes', zeroSeededField: 'chapterZeroSeeded', titlesField: 'chapterTitles',
+      audioField: 'chapterAudio',
       zeroLabel: 'Basic Notes', rowLabel: num => `Chapter ${num}`, notePlaceholder: 'Add a note for this chapter…',
       addButtonLabel: '+ Add Chapter', addButtonId: 'btn-add-chapter',
       zeroFallback: text,
@@ -539,6 +554,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
       target: notesListEl,
       countField: 'noteCount', defaultCount: 3,
       favoritesField: 'noteFavorites', textsField: 'noteTexts', zeroSeededField: 'noteZeroSeeded', titlesField: 'noteTitles',
+      audioField: 'noteAudio',
       zeroLabel: 'Summary', rowLabel: () => 'Note', notePlaceholder: 'Add a note…',
       addButtonLabel: '+ Add Note', addButtonId: 'btn-add-note', zeroNumberDisplay: '•',
       // Musician's row 0 prefers the artist's Wikipedia bio (see applyMusicianBioFallback() below
@@ -620,6 +636,11 @@ function _updateNoteEditingUi() {
   document.querySelector('.modal.detail-modal')?.classList.toggle('detail-modal--editing-note', editing);
   document.querySelectorAll('#detail-note-toolbar .detail-note-toolbar-btn[data-format]')
     .forEach(b => { b.disabled = !_activeNoteRow; });
+  // No data-format (voice notes aren't an execCommand-style mutation) — disabled state also
+  // requires data-audio-field specifically, not just _activeNoteRow truthy, since Music Album
+  // Song List rows (out of scope for voice notes) never get that attribute stamped on them.
+  const voiceBtn = document.getElementById('note-toolbar-voice');
+  if (voiceBtn) voiceBtn.disabled = !_activeNoteRow || !_activeNoteRow.dataset.audioField;
   document.getElementById('note-toolbar-expand')?.classList.toggle('detail-note-toolbar-btn--active', _focusModeOn);
 }
 
@@ -764,6 +785,22 @@ export function initNoteToolbar() {
     // row instead of moving it to the button — the standard rich-text-toolbar trick, and the
     // reason blur rarely needs to special-case "focus moved to the toolbar" at all.
     btn.addEventListener('mousedown', e => e.preventDefault());
+  });
+  // Not routed through _applyFormat — recording is an async, multi-step popup flow, not a single
+  // execCommand-style mutation of _activeNoteRow. Reads data-audio-field straight off the row
+  // (stamped there by renderNumberedNoteList) rather than needing that render's own config/field
+  // names in scope here — its absence is also exactly how this stays inert for Music Album Song
+  // List rows (out of scope for voice notes; see _updateNoteEditingUi's own note on this below).
+  document.getElementById('note-toolbar-voice').addEventListener('click', () => {
+    if (!_activeNoteRow || !_activeNoteRow.dataset.audioField) return;
+    const item = getDetailItem();
+    if (!item) return;
+    openVoiceNoteModal({
+      item,
+      audioField: _activeNoteRow.dataset.audioField,
+      rowNumber: Number(_activeNoteRow.dataset.rowNumber),
+      rowEl: _activeNoteRow.closest('.detail-tracklist-item'),
+    });
   });
   document.getElementById('note-toolbar-bold').addEventListener('click', () => _applyFormat('bold'));
   document.getElementById('note-toolbar-highlight').addEventListener('click', () => _applyFormat('highlight'));

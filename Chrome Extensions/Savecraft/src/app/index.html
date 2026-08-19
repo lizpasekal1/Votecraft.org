@@ -539,6 +539,9 @@
           <div class="detail-title" id="detail-title"></div>
         </div>
         <div class="detail-note-toolbar" id="detail-note-toolbar" role="toolbar" aria-label="Note formatting">
+          <button type="button" class="detail-note-toolbar-btn" id="note-toolbar-voice" title="Record a voice note" aria-label="Record a voice note">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><line x1="12" y1="18" x2="12" y2="22"/></svg>
+          </button>
           <button type="button" class="detail-note-toolbar-btn" id="note-toolbar-bold" data-format="bold" title="Bold" aria-label="Bold">
             <svg viewBox="0 0 24 24" width="18" height="18"><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="800" fill="currentColor">B</text></svg>
           </button>
@@ -589,6 +592,31 @@
           <svg class="detail-accordion-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
         <div class="detail-queue" id="detail-queue"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="voice-note-modal-overlay">
+    <div class="modal voice-note-modal" style="position:relative">
+      <button class="modal-x-close" id="btn-voice-note-close" title="Close">&#x2715;</button>
+      <div class="modal-header"><h2>Voice Note</h2></div>
+      <div class="modal-body">
+        <div class="voice-note-recording-indicator" id="voice-note-indicator" style="display:none">
+          <span class="voice-note-rec-dot"></span><span id="voice-note-timer">00:00</span>
+        </div>
+        <button type="button" class="voice-note-record-btn" id="btn-voice-note-record" title="Start recording" aria-label="Start recording">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1"/><line x1="12" y1="18" x2="12" y2="22"/></svg>
+        </button>
+        <button type="button" class="voice-note-stop-btn" id="btn-voice-note-stop" style="display:none">Stop</button>
+        <audio id="voice-note-audio-preview" controls style="display:none"></audio>
+        <div id="voice-note-error" class="auth-error" style="display:none"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="btn-voice-note-cancel">Cancel</button>
+        <button class="btn-cancel" id="btn-voice-note-rerecord" style="display:none">Re-record</button>
+        <button class="btn-cancel" id="btn-voice-note-download" style="display:none">Download</button>
+        <button class="btn-cancel" id="btn-voice-note-delete" style="display:none">Delete</button>
+        <button class="btn-primary" id="btn-voice-note-save" style="display:none" disabled>Save</button>
       </div>
     </div>
   </div>
