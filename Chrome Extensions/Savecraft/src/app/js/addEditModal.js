@@ -890,7 +890,10 @@ export function openEditModal(item) {
   document.getElementById('modal-step-folder').style.display = 'none';
   document.getElementById('modal-step2').style.display = '';
   document.getElementById('modal-info-icon').style.display = 'none';
-  document.getElementById('btn-modal-back').style.display = 'none'; // Edit never has a prior screen, so no Back
+  // Edit has no wizard screen history of its own, but the same corner icon still doubles as "back
+  // to this item's preview" here (main.js's own #btn-modal-back click handler special-cases
+  // state.editingId to go there instead of calling handleModalBack), per direct request.
+  document.getElementById('btn-modal-back').style.display = '';
   document.getElementById('btn-modal-save').style.display = '';
 
   _modalH2.classList.add('modal-h2--left');
@@ -898,7 +901,7 @@ export function openEditModal(item) {
   // the detail modal's pencil icon visibly resized the popup wider, since the shared .modal is
   // wider by default for the wizard's other screens (category tiles, folder picker).
   _modalEl.classList.add('modal--edit-item');
-  setModalHeading(`${MODAL_BOOKMARK_ICON_SVG}Edit Item`);
+  setModalHeading('Edit Item'); // no bookmark icon here, per request — Add flow's own "What are you adding to?" keeps it
   document.getElementById('btn-modal-save').textContent = 'Update';
 
   document.getElementById('modal-overlay').classList.add('open');

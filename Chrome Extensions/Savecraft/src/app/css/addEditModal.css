@@ -247,12 +247,17 @@
 }
 
 /* Edit Item screen only (openEditModal toggles this class — addEditModal.js) — reported live: going
-   from the detail modal (.modal.detail-modal, 374px) to Edit Item via its pencil icon visibly
-   resized the popup wider, since the Add/Edit wizard's shared .modal above is 480px for its other
-   screens (category tiles, folder picker, etc., which do need the extra room). Matches
-   .modal.detail-modal's own width exactly so that specific transition doesn't resize at all. */
+   from the detail modal (.modal.detail-modal, detailModal.css) to Edit Item via its pencil icon
+   visibly resized the popup wider, since the Add/Edit wizard's shared .modal above is 480px/28px
+   padding for its other screens (category tiles, folder picker, etc., which do need the extra
+   room). Copies .modal.detail-modal's own width/padding so that transition isn't wider than what
+   was already on screen. max-height is deliberately NOT copied too (tried, reverted — detail-
+   modal's 720px cap is actually shorter than the base .modal's own 85vh/85dvh on most screens,
+   which squeezed the Edit form's flex children until the URL/Image URL inputs collapsed to
+   invisible, reported live) — the base .modal's own generous cap is kept as-is. */
 .modal.modal--edit-item {
   width: 374px;
+  padding: 34px;
 }
 
 .modal-body {
@@ -512,10 +517,25 @@
   }
 }
 
-/* Edit Item only — left-aligns the bookmark icon + "Edit Item" text so the icon lines up with
-   the fields below instead of sitting centered above them. */
+/* Edit Item only — left-aligns "Edit Item" so it lines up with the fields below instead of sitting
+   centered above them. */
 #modal-overlay h2.modal-h2--left {
   justify-content: flex-start;
+}
+
+/* Edit Item only — category select shares the header row with "Edit Item" instead of stacking
+   below it (the shared .modal-header's own column layout above, kept for the Add flow's review
+   screen where Select Lists reads better stacked under its heading there), per request. Reuses
+   .modal--edit-item (addEditModal.js's openEditModal), the same class already scoping this
+   screen's width/padding, rather than a second Edit-only hook. */
+.modal--edit-item .modal-header {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal--edit-item #modal-category-wrap {
+  align-self: center; /* .modal-header's shared rule below pins this to flex-end for the column layout */
 }
 
 .modal-bookmark-icon {
