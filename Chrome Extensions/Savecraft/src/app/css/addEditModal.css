@@ -588,10 +588,12 @@
      ones are flush with the modal's own top edge, which already has its own larger 16px rounding
      right at the true corners, so rounding the bar's top corners too would visibly compete with
      that instead of reading as one continuous edge. */
-  /* Bottom margin trimmed from an earlier 32px down to 16px, per direct follow-up ("padding below
-     it currently") — kept nonzero, not removed outright, since 0 (paired with the -26px top pull)
-     was what caused the title field to overlap this row in the first place (see above). */
-  margin: -34px -34px 16px;
+  /* Bottom margin: 32px originally, trimmed to 16px per a "padding below it currently" complaint,
+     then bumped back up to 24px — reported live on a real iPhone, 16px wasn't reliably enough
+     clearance (the title field visibly overlapped/scrolled behind the bar's bottom edge). Kept
+     nonzero either way, not removed outright — 0 (paired with the -26px top pull) is what caused
+     the original overlap regression in the first place. */
+  margin: -34px -34px 24px;
   background: var(--primary);
   /* Top corners match .modal's own 16px exactly (not the bar's own smaller 10px, and not square) —
      .modal has no overflow: hidden, so a bled-to-the-edge child with a smaller/no radius on its top
