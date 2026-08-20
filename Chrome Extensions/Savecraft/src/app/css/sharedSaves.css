@@ -71,6 +71,13 @@
   margin-top: auto;
 }
 
+/* Curated Lists You've Connected / Group Lists You've Connected cards only (not Friends — see
+   sharedSaves.js's own isListCard note) — tapping one opens the same "You're opening X" confirm
+   popup the sidebar's Saved Lists rows use. */
+.shared-vcard--list {
+  cursor: pointer;
+}
+
 /* Friend cards have no bottom-anchored tag (see the nonprofit-only rule above), so their shorter
    avatar+name content is centered vertically within the card's shared min-height instead of
    sitting flush at the top. */

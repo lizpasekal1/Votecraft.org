@@ -122,6 +122,49 @@ This file helps Claude (or any AI assistant) quickly regain context on the SaveC
 
 ---
 
+## Claude Code Permissions Setup
+
+`…/Savecraft/.claude/settings.json` (new) holds a project-level `permissions.allow` list to cut
+down repeated approval prompts, scoped deliberately narrow:
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep *)",
+      "Bash(dig *)"
+    ]
+  }
+}
+```
+
+Both are unconditionally read-only regardless of flags (`grep` never writes; `dig` is a DNS
+lookup) — chosen by scanning ~50 recent session transcripts for the most frequent Bash calls,
+then keeping only patterns that (a) aren't already covered by Claude Code's own built-in
+read-only auto-allow list (`cd`, `cat`, `head`, `tail`, `echo`, `wc`, `ls`, `find`,
+`git status`/`diff`/`log`/`branch`/`rev-parse`, `lsof`, etc. — these never needed a rule) and
+(b) can't be turned destructive by a hidden flag. `curl` was deliberately left out despite being
+the next-most-frequent candidate — most calls used `-s`/`-sI`/`-sf` (all safe), but a wildcard
+rule can't distinguish those from `curl -sX POST ... -d '...'`, and this project's owner
+explicitly did not want anything that could enable a mutating request to slip through unprompted.
+Interpreters/shells/package-runners (`python3`, `node -e`, `npx`, `bash -c`, `source`) are never
+allowlisted here even when read-only in a specific observed use, since a wildcard rule covering
+them is equivalent to unprompted arbitrary code execution.
+
+**Separate, pre-existing file — not part of this setup, worth knowing about:**
+`/Users/lizpasekal/Documents/Votecraft.org/.claude/settings.local.json` (one directory *above*
+this project, at the shared monorepo root) already has its own, considerably more permissive
+`permissions.allow` list — including blanket `"Edit"`/`"Write"` and two genuinely risky entries,
+`Bash(python3 -c ' *)` and `Bash(node -e:*)`, both real arbitrary-code-execution allowances. It
+predates this session, wasn't created by this work, and hasn't been modified here. Because it
+lives at the monorepo root rather than at this project's own path, it may not even be in effect
+for sessions whose working directory is this Savecraft folder specifically (Claude Code project
+settings are path-scoped) — which could explain permission prompts persisting despite that file
+looking permissive on paper. Flagging this for whoever next touches permissions here, not
+recommending any specific change to it.
+
+---
+
 ## File Locations
 
 | What | Path |
@@ -499,6 +542,13 @@ Handles `item_`, `folder_`, and `author_` key prefixes. Guards against double-ad
 
 ### Header Alignment Bug (unresolved)
 The left edge of **"+ Add Item"** and **"ALL QUEUES"** are visually misaligned. Multiple CSS attempts haven't fixed it. Needs live DOM inspection via DevTools.
+
+### `main` and this session's own working branch diverged (unresolved, needs manual reconciliation)
+Partway through this session, the shared working directory (`Chrome Extensions/Savecraft`) got switched to a side branch, `savecraft-vc-coin-sponsored-page`, by another concurrent process — not something this session did itself. That branch was cut from an *older* point in `main`'s history: before the `/simplify` pass that consolidated Interests/Shared Lists into `buildChecklistCard()`/`wireChecklistCard()`, before the Account card's "+ Add New" buttons, before several copy/markup tweaks (see "Latest Session Summary" above for the full list of what that pass touched). This session kept working normally in that directory all night — editing files, deploying via `firebase deploy` (which just ships whatever's on disk, regardless of branch) — and landing each batch of work on `main` via a cherry-pick through a disposable `git worktree`, to avoid disrupting whatever the other session had checked out.
+
+That worked cleanly for files nothing else had touched (`voiceNotes.js`, `detailModalNotes.js`, the mobile-fix CSS/JS, etc.). It broke down on the first batch that touched `profile.js`/`renderSidebar.js` (the new Profile-page My Notes widget + sidebar "My Dashboard" rename/reorder work) — `git cherry-pick` hit real conflicts there, because `main`'s actual current `profile.js` is meaningfully different from (newer than) the version this session's own branch had been building on top of. The cherry-pick was aborted rather than force-resolved, specifically to avoid two bad outcomes: silently discarding `main`'s newer checklist-refactor/copy work by overwriting it with this session's stale base, or corrupting this session's own new My Notes widget by mechanically splicing it into code it was never actually written against.
+
+**Current state**: this session's My Notes widget + sidebar changes are live on savecraft.org (deployed straight from the working directory, which is unaffected by any of this) and committed on the `savecraft-vc-coin-sponsored-page` branch, but **not yet merged into `main`**. Reconciling needs an actual side-by-side read of both versions of `profile.js`/`renderSidebar.js` (not a mechanical `git merge`/`checkout --ours`) to combine them properly — deferred rather than rushed, given the risk of silently losing either side's work.
 
 ---
 
