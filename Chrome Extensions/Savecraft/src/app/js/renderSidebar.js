@@ -356,13 +356,23 @@ export function renderSidebar() {
     sidebar.querySelector('.sidebar-admin-kanban-link')?.addEventListener('click', () => {
       navigateToView('admin-kanban', { sidebarMode: 'home' });
     });
-    // Saved Lists / Curated Lists — each toggles its own independent collapse state (not tied to
-    // Dashboard's, and not mutually exclusive with anything else), just expanding/collapsing its
-    // own children in place. No view change, no re-render of the grid needed.
+    // Saved Lists / Curated Lists — mutually exclusive with EACH OTHER (opening one collapses the
+    // other), per direct request: both sit at the top of the same expanded Dashboard group, so
+    // seeing both open together read as two top-level sections open at once, the same thing
+    // collapseAllSidebarSections()/the category-tab group already guards against one level up.
+    // Not tied to Dashboard's own collapse state itself, still just a grid re-render, no view
+    // change/navigation.
+    const LIST_TOGGLE_KEYS = ['saved-lists', 'curated-lists'];
     sidebar.querySelectorAll('[data-toggle-list]').forEach(el => {
       el.addEventListener('click', () => {
         const key = el.dataset.toggleList;
-        if (state.collapsed.has(key)) state.collapsed.delete(key);
+        const wasCollapsed = state.collapsed.has(key); // about to open, if so
+        if (wasCollapsed && LIST_TOGGLE_KEYS.includes(key)) {
+          // Collapse both first (closing whichever of the two was open), then re-open just this
+          // one below — never a tick where both are simultaneously open.
+          LIST_TOGGLE_KEYS.forEach(k => state.collapsed.add(k));
+        }
+        if (wasCollapsed) state.collapsed.delete(key);
         else state.collapsed.add(key);
         renderSidebar();
       });
