@@ -22,7 +22,9 @@ import { escapeHtml } from './utils.js';
 // leadColor: optional override for that same line's color (defaults to the shared dark #111827) —
 // Shared Saves' cards pass SaveCraft purple, per direct request, without changing the sidebar's
 // own "You're opening"/VC Connector's existing color.
-export function openSwitchConfirm({ name, subtitle, icon, iconColor, leadText = "You're opening", leadColor, onConfirm }) {
+// openLabel: the primary button's text — defaults to "Open" (sidebar Saved Lists); Shared Saves'
+// cards pass "Explore" instead, per direct request.
+export function openSwitchConfirm({ name, subtitle, icon, iconColor, leadText = "You're opening", leadColor, openLabel = 'Open', onConfirm }) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay open';
   overlay.innerHTML = `
@@ -34,7 +36,7 @@ export function openSwitchConfirm({ name, subtitle, icon, iconColor, leadText = 
       </div>
       <div class="modal-actions">
         <button type="button" class="btn-cancel" id="switch-confirm-cancel">Cancel</button>
-        <button type="button" class="btn-primary" id="switch-confirm-open">Open</button>
+        <button type="button" class="btn-primary" id="switch-confirm-open">${escapeHtml(openLabel)}</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
