@@ -35,6 +35,9 @@ let _wizardSelectedListIds = new Set(); // saved lists (other than the always-on
 // element rather than each screen owning its own heading. Cached once (static element, never
 // removed/replaced) instead of re-querying it on every classList/innerHTML touch.
 const _modalH2 = document.querySelector('#modal-overlay h2');
+// Same caching rationale as _modalH2 above — toggled by openEditModal/openAddModal below for the
+// Edit-flow-only width override (addEditModal.css's .modal--edit-item).
+const _modalEl = document.querySelector('#modal-overlay .modal');
 // The four classes that track "which screen is the heading currently styled for" — mutually
 // exclusive, so every screen transition needs to clear all of them before applying (at most) its
 // own. .modal-h2--left (Edit's own alignment tweak) is a separate, orthogonal concern and not part
@@ -849,6 +852,7 @@ export function openAddModal() {
   document.getElementById('modal-info-icon').style.display = 'none'; // review/input screen only now, per request — not this category screen
 
   _modalH2.classList.remove('modal-h2--left');
+  _modalEl.classList.remove('modal--edit-item'); // reset — a prior Edit session may have left this on
   setModalHeading(`${MODAL_BOOKMARK_ICON_SVG}What are you adding to?`, 'modal-h2--category-screen');
   document.getElementById('modal-overlay').classList.add('open');
 }
@@ -890,6 +894,10 @@ export function openEditModal(item) {
   document.getElementById('btn-modal-save').style.display = '';
 
   _modalH2.classList.add('modal-h2--left');
+  // Matches .modal.detail-modal's own width (addEditModal.css) — reported live: opening Edit from
+  // the detail modal's pencil icon visibly resized the popup wider, since the shared .modal is
+  // wider by default for the wizard's other screens (category tiles, folder picker).
+  _modalEl.classList.add('modal--edit-item');
   setModalHeading(`${MODAL_BOOKMARK_ICON_SVG}Edit Item`);
   document.getElementById('btn-modal-save').textContent = 'Update';
 
