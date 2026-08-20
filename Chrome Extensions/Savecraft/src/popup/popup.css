@@ -303,6 +303,89 @@ body.screen-music-choice .modal-bookmark-icon {
   box-shadow: 0 0 0 1px var(--primary);
 }
 
+/* ===== Saved-lists dropdown (review screen only) — mirrors the main app's #saved-lists-wrap
+   (addEditModal.css), scoped down for the popup's 360px width. ===== */
+.lists-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.lists-dropdown {
+  position: relative;
+}
+
+.lists-summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.lists-summary::-webkit-details-marker { display: none; }
+
+.lists-summary svg {
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+
+.lists-dropdown[open] .lists-summary svg {
+  transform: rotate(180deg);
+}
+
+.lists-options {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 160px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 0;
+  z-index: 10;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+}
+
+.lists-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 12px;
+  font-size: 12.5px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.lists-option:hover {
+  background: var(--hover-bg);
+}
+
+.lists-option--locked {
+  color: var(--text-secondary);
+  cursor: default;
+}
+
+.lists-option--locked:hover {
+  background: none;
+}
+
+.lists-option-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ===== Review screen ===== */
 /* With body.size-tall now auto-height (see above), this is what actually guarantees exactly
    40px of space below the Save Page button, regardless of category/banner state. */
