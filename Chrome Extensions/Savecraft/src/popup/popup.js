@@ -16,6 +16,14 @@ let reviewPrefilled = false;
 // saved with the item — no visible/editable field for it here, only Edit Item (main app) lets the
 // user override an image manually.
 let fetchedImageUrl = null;
+// Same checkbox-multi-select model as the main app's own Add flow (addEditModal.js's
+// _wizardSelectedListIds) — which of the user's saved lists (beyond the always-on "All My
+// Saves") this item should also be added to. Persists across category/folder navigation within
+// this popup session, same as the title/url fields do.
+const selectedListIds = new Set();
+// Lazily fetched (see loadSavedLists below) and cached — null until the first review-screen visit
+// actually needs it, so a page that's never saved from never pays for a storage read.
+let savedLists = null;
 
 // Match whatever theme the user has set in the main app (defaults to dark, same as there).
 chrome.storage.sync.get({ savecraft_theme: 'dark' }, data => {
@@ -156,6 +164,50 @@ function showFolderScreen(folders) {
   });
 }
 
+// ===== Saved-lists dropdown (review screen only) =====
+// Reads the same storage key the main app writes (savecraft_saved_lists — see storage.js) directly
+// via chrome.storage.sync, the same way selectCategory()/showFolderScreen() above already read the
+// user's folders — the popup has no access to the main app's in-memory `state`, only to storage.
+function loadSavedLists() {
+  if (savedLists) return Promise.resolve(savedLists);
+  return new Promise(resolve => {
+    chrome.storage.sync.get({ savecraft_saved_lists: [] }, data => {
+      savedLists = data.savecraft_saved_lists || [];
+      resolve(savedLists);
+    });
+  });
+}
+
+function renderListsDropdown(lists) {
+  const options = document.getElementById('lists-options');
+  options.innerHTML = lists.map(list => {
+    // default-favorites ("All My Saves") is the unrestricted catch-all every save belongs to —
+    // shown checked and locked, same as the main app's own dropdown, not a real per-item choice.
+    const isFavorites = list.id === 'default-favorites';
+    const checked = isFavorites || selectedListIds.has(list.id);
+    return `
+    <label class="lists-option${isFavorites ? ' lists-option--locked' : ''}">
+      <span class="lists-option-name">${escapeHtml(list.name)}</span>
+      <input type="checkbox" data-list-id="${escapeHtml(list.id)}" ${checked ? 'checked' : ''} ${isFavorites ? 'disabled' : ''} />
+    </label>`;
+  }).join('');
+
+  options.querySelectorAll('input[type="checkbox"]:not(:disabled)').forEach(cb => {
+    cb.addEventListener('change', () => {
+      if (cb.checked) selectedListIds.add(cb.dataset.listId);
+      else selectedListIds.delete(cb.dataset.listId);
+    });
+  });
+}
+
+// <details> doesn't close on an outside click natively — same fix the main app needed for its own
+// equivalent dropdowns (main.js's generic ".platform-dropdown" listener); the popup has no such
+// shared listener of its own, so this is scoped just to the one dropdown it actually has.
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('lists-wrap');
+  if (wrap?.open && !wrap.contains(e.target)) wrap.open = false;
+});
+
 // ===== Screen 3: review + save =====
 
 async function showReviewScreen() {
@@ -163,6 +215,7 @@ async function showReviewScreen() {
   setScreen('review');
   setHeader('Add to SaveCraft', true, CAT_LABEL[selectedCategory] || selectedCategory);
   document.getElementById('btn-save').disabled = !pageIsSaveable;
+  renderListsDropdown(await loadSavedLists());
 
   if (!reviewPrefilled && currentTab?.url) {
     reviewPrefilled = true;
@@ -270,7 +323,13 @@ document.getElementById('btn-save').addEventListener('click', () => {
     imageUrl,
     category: selectedCategory,
     folderId: selectedFolderId,
-    favorite: false,
+    // favorite: true — "All My Saves" (default-favorites) is always on for a new save, same
+    // convention the main app's own Add flow uses (addEditModal.js). REAL BUG, found and fixed:
+    // this was hardcoded false, so nothing saved from the toolbar popup ever showed up under "All
+    // My Saves" at all. savedListIds carries whatever other lists were picked in the dropdown
+    // above (empty array when none were).
+    favorite: true,
+    savedListIds: [...selectedListIds],
     done: false,
     savedAt: Date.now(),
   };
