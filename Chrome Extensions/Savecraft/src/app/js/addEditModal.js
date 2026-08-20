@@ -9,7 +9,7 @@
 // or a separate search screen. A single back icon (top-left of the modal) steps back one screen
 // at a time.
 
-import { state, CATEGORIES, CAT_LABEL, CAT_EMOJI, CATEGORY_PLATFORMS, MODAL_BOOKMARK_ICON_SVG } from './state.js';
+import { state, CATEGORIES, CAT_LABEL, CAT_EMOJI, CATEGORY_PLATFORMS, MODAL_BOOKMARK_ICON_SVG, PRIMARY_FOLDER_ID } from './state.js';
 import { escapeHtml, isItunesArtworkUrl, folderIconHtml, sortFoldersForDisplay, getChildFolders } from './utils.js';
 import { persistItem, persistCuratedOverrides } from './storage.js';
 import { renderSidebar, renderGrid, promptAddFolder } from './render.js';
@@ -20,6 +20,7 @@ import {
 } from './api.js';
 import { autoSaveMusician } from './authors.js';
 import { openDetailModal } from './detailModal.js';
+import { openSwitchConfirm } from './confirmModal.js';
 
 // ===== ADD-MODAL WIZARD STATE (screen 'category' → 'review') =====
 let _wizardScreen = 'category';    // which screen is currently visible — drives what the back icon does
@@ -993,13 +994,38 @@ export async function handleSaveItem() {
   // Excludes the item currently being edited so re-saving it without changing its own URL/folder
   // doesn't flag itself. folderId matches null-to-null too, so this also catches duplicates among
   // un-foldered items within the same category.
+  // REAL BUG, found and fixed: this compared folderId by strict equality, but
+  // matchesPrimaryOrUnfoldered() (renderFilters.js) — the function every grid/count view actually
+  // uses to decide what shows "in" a category's primary folder — treats an unfoldered item
+  // (folderId: null) and one explicitly filed in that category's own primary folder as the SAME
+  // thing for display purposes. So saving the same URL once unfoldered and once explicitly into
+  // the primary folder (e.g. Web Links' "Websites") slipped past this guard (null !== the primary
+  // folder's real id) even though both then rendered together as apparent duplicates (reported
+  // live). normalizeFolderId below collapses that same "unfoldered or the category's own primary
+  // folder" pair to one value before comparing, matching what actually shows up as duplicates on
+  // screen. Also now scoped to the same category — two different categories sharing a null
+  // (unfoldered) folderId was never really the same duplicate.
   if (url) {
-    const duplicate = state.items.find(i => i.id !== state.editingId && i.url === url && i.folderId === folderId);
+    const primaryId = PRIMARY_FOLDER_ID[category];
+    const normalizeFolderId = fid => (primaryId && (fid === primaryId || !fid)) ? primaryId : fid;
+    const duplicate = state.items.find(i =>
+      i.id !== state.editingId && i.url === url && i.category === category &&
+      normalizeFolderId(i.folderId) === normalizeFolderId(folderId));
     if (duplicate) {
-      if (confirm(`"${duplicate.title || 'Untitled'}" is already saved in this folder. View it?`)) {
-        closeAddModal();
-        openDetailModal(duplicate);
-      }
+      // Real in-app popup instead of a native confirm(), per direct request — this runs before
+      // #btn-modal-save is ever disabled/set to "Saving..." below, so there's nothing to reset
+      // here. Cancel just closes the popup and leaves the Add/Edit form as-is (matching
+      // confirm()'s own "Cancel" behavior); "View Item" closes this modal and opens the existing
+      // card's detail view instead.
+      openSwitchConfirm({
+        name: 'Already Saved',
+        subtitle: `"${duplicate.title || 'Untitled'}" is already saved with this URL.`,
+        openLabel: 'View Item',
+        onConfirm: () => {
+          closeAddModal();
+          openDetailModal(duplicate);
+        },
+      });
       return;
     }
   }
