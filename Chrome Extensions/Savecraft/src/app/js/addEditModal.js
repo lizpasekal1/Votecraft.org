@@ -470,13 +470,17 @@ function selectStep1Folder(folderId) {
   showReviewScreen();
 }
 
-// ===== Saved-lists dropdown (Add flow's review screen only — see showReviewScreen) =====
-// Same checkbox-multi-select model as the detail modal's "Save to:" menu (detailModalHeader.js),
-// adapted for an item that doesn't exist yet: nothing is persisted per click here, just tracked in
-// _wizardSelectedListIds until the actual Save button click builds the new item (further down this
-// file), which is where item.favorite/item.savedListIds actually get set.
-function renderSavedListsDropdown() {
-  const options = document.getElementById('saved-lists-options');
+// ===== Saved-lists dropdown — Add flow's review screen (header pill, #saved-lists-wrap) AND
+// Edit's own field row (#edit-saved-lists-wrap, per direct request) share this one render function,
+// just targeting different options-container ids, rather than each hand-rolling its own copy of
+// the same checkbox markup/wiring. =====
+// Same checkbox-multi-select model as the detail modal's "Save to:" menu (detailModalHeader.js).
+// Add: nothing persisted per click, just tracked in _wizardSelectedListIds until Save builds the
+// new item. Edit: same tracking, but openEditModal seeds _wizardSelectedListIds from the item's
+// existing savedListIds first, and handleSaveItem's edit branch writes the (possibly changed)
+// selection back onto the item on Update.
+function renderSavedListsCheckboxes(optionsElId) {
+  const options = document.getElementById(optionsElId);
   options.innerHTML = state.savedLists.map(list => {
     const isFavorites = list.id === 'default-favorites';
     const checked = isFavorites || _wizardSelectedListIds.has(list.id);
@@ -496,6 +500,14 @@ function renderSavedListsDropdown() {
   });
 
   updateSavedListsSummaryText();
+}
+
+function renderSavedListsDropdown() {
+  renderSavedListsCheckboxes('saved-lists-options');
+}
+
+function renderEditSavedListsDropdown() {
+  renderSavedListsCheckboxes('edit-saved-lists-options');
 }
 
 function updateSavedListsSummaryText() {
@@ -837,6 +849,7 @@ export function openAddModal() {
   document.getElementById('modal-category').value = '';
   document.getElementById('modal-category-wrap').style.display = 'none';
   document.getElementById('saved-lists-wrap').style.display = 'none';
+  document.getElementById('edit-saved-lists-group').style.display = 'none'; // Edit-only — reset in case a prior Edit session left it visible
   _wizardSelectedListIds = new Set();
   hideTitleSearchResults();
 
@@ -880,6 +893,12 @@ export function openEditModal(item) {
   document.getElementById('modal-category').value = item.category || '';
   document.getElementById('modal-category-wrap').style.display = '';
   document.getElementById('saved-lists-wrap').style.display = 'none'; // Add-only — see showReviewScreen's own comment
+  // Edit's own Saved Lists field, per direct request — seeded from the item's current
+  // savedListIds (not a fresh empty Set, unlike Add's own reset in openAddModal below) so the
+  // dropdown opens showing what's actually already selected, not blank.
+  _wizardSelectedListIds = new Set(item.savedListIds || []);
+  document.getElementById('edit-saved-lists-group').style.display = '';
+  renderEditSavedListsDropdown();
   updatePlatformsSection(item.category || '');
   if (item.platforms) setSelectedPlatforms(item.platforms);
   // No thumbnail preview on Edit Item itself, per request — the image still shows on the detail/
@@ -1015,7 +1034,11 @@ export async function handleSaveItem() {
     // notes deliberately not overridden here — it's no longer edited from this form (moved to the
     // detail modal's own My Notes accordion instead), so the spread above just leaves whatever
     // existing.notes already was untouched.
-    item = { ...existing, url, title, author, summary, imageUrl: manualImageUrl, youtubeUrl, category, folderId, platforms };
+    // savedListIds: [..._wizardSelectedListIds] — Edit's own Saved Lists field (openEditModal
+    // seeds this Set from the item's existing savedListIds), per direct request. favorite isn't
+    // touched here — it stays whatever it already was via the ...existing spread, same as every
+    // other untouched field.
+    item = { ...existing, url, title, author, summary, imageUrl: manualImageUrl, youtubeUrl, category, folderId, platforms, savedListIds: [..._wizardSelectedListIds] };
     const idx = state.items.findIndex(i => i.id === state.editingId);
     if (idx >= 0) state.items[idx] = item;
   } else {
