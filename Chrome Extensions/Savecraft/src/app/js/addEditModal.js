@@ -555,7 +555,7 @@ function showReviewScreen() {
   // the wizard screens you just came through, so re-showing it as an editable field here would be
   // redundant; letting you tag the new item into your own saved lists at the same moment is more
   // useful in this exact spot.
-  document.getElementById('modal-category-wrap').style.display = 'none';
+  document.getElementById('category-folder-row').style.display = 'none';
   document.getElementById('btn-modal-back').style.display = '';
   document.getElementById('btn-modal-save').style.display = '';
   document.getElementById('folder-select-group').style.display = 'none'; // Add flow assigns folder via the wizard screen, not this select
@@ -627,7 +627,7 @@ function backToFolderScreen() {
   _wizardToken += 1;
   document.getElementById('modal-step2').style.display = 'none';
   document.getElementById('modal-step-folder').style.display = '';
-  document.getElementById('modal-category-wrap').style.display = 'none';
+  document.getElementById('category-folder-row').style.display = 'none';
   document.getElementById('saved-lists-wrap').style.display = 'none';
   document.getElementById('btn-modal-save').style.display = 'none';
   document.getElementById('modal-info-icon').style.display = 'none';
@@ -641,7 +641,7 @@ function backToMusicChoiceScreen() {
   document.getElementById('modal-step2').style.display = 'none';
   document.getElementById('modal-step-folder').style.display = 'none';
   document.getElementById('modal-step-music-choice').style.display = '';
-  document.getElementById('modal-category-wrap').style.display = 'none';
+  document.getElementById('category-folder-row').style.display = 'none';
   document.getElementById('saved-lists-wrap').style.display = 'none';
   document.getElementById('btn-modal-save').style.display = 'none';
   document.getElementById('modal-info-icon').style.display = 'none';
@@ -663,7 +663,7 @@ function backToCategoryScreen() {
   document.getElementById('modal-step-folder').style.display = 'none';
   document.getElementById('modal-step-music-choice').style.display = 'none';
   document.getElementById('modal-step1').style.display = '';
-  document.getElementById('modal-category-wrap').style.display = 'none';
+  document.getElementById('category-folder-row').style.display = 'none';
   document.getElementById('saved-lists-wrap').style.display = 'none';
   document.getElementById('btn-modal-back').style.display = 'none';
   document.getElementById('btn-modal-save').style.display = 'none';
@@ -847,7 +847,7 @@ export function openAddModal() {
   document.getElementById('input-image-url').value = '';
   document.getElementById('input-youtube-url').value = '';
   document.getElementById('modal-category').value = '';
-  document.getElementById('modal-category-wrap').style.display = 'none';
+  document.getElementById('category-folder-row').style.display = 'none';
   document.getElementById('saved-lists-wrap').style.display = 'none';
   document.getElementById('edit-saved-lists-group').style.display = 'none'; // Edit-only — reset in case a prior Edit session left it visible
   _wizardSelectedListIds = new Set();
@@ -863,6 +863,11 @@ export function openAddModal() {
   document.getElementById('btn-modal-back').style.display = 'none';
   document.getElementById('btn-modal-save').style.display = 'none';
   document.getElementById('modal-info-icon').style.display = 'none'; // review/input screen only now, per request — not this category screen
+
+  // Moves #btn-modal-save back into its normal spot at the bottom (#modal-actions) — a prior Edit
+  // session may have relocated it into the header row instead (see openEditModal above).
+  document.getElementById('modal-actions').appendChild(document.getElementById('btn-modal-save'));
+  document.getElementById('modal-actions').style.display = '';
 
   _modalH2.classList.remove('modal-h2--left');
   _modalEl.classList.remove('modal--edit-item'); // reset — a prior Edit session may have left this on
@@ -890,8 +895,12 @@ export function openEditModal(item) {
   updateTitleSearchUi(item.category, false);
   updateTitleAuthorLayout(item.category, item.folderId);
   updateVideoUrlLayout(item.category, item.folderId);
+  // Category select moved out of the header/purple bar (per direct request) into its own row,
+  // to the left of Folder (#category-folder-row) — populateFolderSelect below still independently
+  // hides just the Folder half of this row for categories with zero folders; the row itself only
+  // tracks Edit mode's own on/off, same lifecycle #edit-saved-lists-group already has.
   document.getElementById('modal-category').value = item.category || '';
-  document.getElementById('modal-category-wrap').style.display = '';
+  document.getElementById('category-folder-row').style.display = '';
   document.getElementById('saved-lists-wrap').style.display = 'none'; // Add-only — see showReviewScreen's own comment
   // Edit's own Saved Lists field, per direct request — seeded from the item's current
   // savedListIds (not a fresh empty Set, unlike Add's own reset in openAddModal below) so the
@@ -925,7 +934,16 @@ export function openEditModal(item) {
   // wider by default for the wizard's other screens (category tiles, folder picker).
   _modalEl.classList.add('modal--edit-item');
   setModalHeading('Edit Item'); // no bookmark icon here, per request — Add flow's own "What are you adding to?" keeps it
-  document.getElementById('btn-modal-save').textContent = 'Update';
+  document.getElementById('btn-modal-save').textContent = 'Save'; // not "Update" — per direct request
+
+  // Relocates the shared #btn-modal-save button into the header row itself (the category select
+  // used to sit here — it's since moved to its own row next to Folder, see above) instead of
+  // leaving it at the bottom, per direct request. #modal-actions (now empty) is hidden too, rather
+  // than left as a stray blank gap. openAddModal is where this gets moved back for the next real
+  // Add-flow entry — same "shared node relocated via appendChild" technique updateVideoUrlLayout already
+  // uses for #platforms-section/#youtube-url-group.
+  document.getElementById('modal-header').appendChild(document.getElementById('btn-modal-save'));
+  document.getElementById('modal-actions').style.display = 'none';
 
   document.getElementById('modal-overlay').classList.add('open');
   document.getElementById('input-title').focus();

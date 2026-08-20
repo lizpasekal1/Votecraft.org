@@ -258,6 +258,13 @@
 .modal.modal--edit-item {
   width: 374px;
   padding: 34px;
+  /* Crops the purple header bar (further down this file) at this box's own edge instead of relying
+     on the bar's negative margins to land exactly flush — .modal has no overflow of its own, so
+     without this the bar visibly overhung past the modal's real boundary (reported live: "looks
+     like it's on top of the modal"). The Select List field's dropdown panel (#edit-saved-lists-
+     wrap) doesn't lose anything here — it's a child of .modal-body, which already has its own
+     overflow-y: auto scroll clipping it the same way regardless of this rule. */
+  overflow: hidden;
 }
 
 .modal-body {
@@ -311,10 +318,13 @@
   margin-bottom: 24px;
 }
 
-/* .modal-header's own align-items: center (above) would otherwise center these horizontally too,
-   like every other child — pinned to the row's right edge instead, matching where they always sat
-   (top-right) back when the header was a single row instead of stacked. */
-#modal-category-wrap,
+/* .modal-header's own align-items: center (above) would otherwise center this horizontally too,
+   like every other child — pinned to the row's right edge instead, matching where it always sat
+   (top-right) back when the header was a single row instead of stacked. #modal-category-wrap used
+   to share this rule too, back when it also lived in .modal-header — it's since moved to its own
+   row next to Folder (a real .form-row, also display:flex — this same align-self:flex-end would
+   otherwise misalign it to that row's bottom instead of matching Folder's own alignment), so it's
+   scoped to just #saved-lists-wrap now. */
 #saved-lists-wrap {
   align-self: flex-end;
 }
@@ -420,29 +430,21 @@
      plain 24px default instead — .modal-body/.step1-category-grid's own safe-centering (below)
      still keeps things looking centered when there's room, without this second mechanism
      fighting it over an increasingly small remaining space. */
-  /* Category dropdown (top-right of the review form's header, e.g. "Films") — dropped 20px, per
-     request. */
-  #modal-category-wrap {
-    margin-top: 20px;
-  }
-  /* "Select Lists" dropdown — same starting 20px as #modal-category-wrap above (its Add-flow
-     counterpart in that same spot), plus another 20px on top of that, then another 20px again per
-     a follow-up request (-> 60px). Split into its own rule since the two no longer share the same
-     value. */
+  /* "Select Lists" dropdown (top-right of the Add flow's review form header, e.g. "Films") —
+     started at the same 20px its Edit-flow counterpart #modal-category-wrap used to share here
+     (before that one moved out of the header into its own row next to Folder — see
+     addEditModal.js/.css), plus another 20px on top of that, then another 20px again per a
+     follow-up request (-> 60px). */
   #saved-lists-wrap {
     margin-top: 60px;
   }
-  /* Edit Item only — the h2/#modal-category-wrap margin-top pushes above (20px each) were
-     designed for the Add flow's own review screen; for Edit Item they fought the .modal--edit-item
-     .modal-header rule's own -20px pull (further down this file, not scoped to any breakpoint)
-     that brings this row up onto the back arrow's row, per request — reported live, mobile still
-     showed them stacked below the arrow even after that fix (the two margins roughly canceled
-     out). Zeroed here so the parent's own upward pull is what actually shows through, same as it
-     already does on desktop. */
+  /* Edit Item only — the shared h2 margin-top push above (20px, designed for the Add flow's own
+     review screen) fought the .modal--edit-item .modal-header rule's own upward pull (further down
+     this file, not scoped to any breakpoint) that brings this row up onto the back arrow's row,
+     per request — reported live, mobile still showed it stacked below the arrow even after that
+     fix (the two margins roughly canceled out). Zeroed here so the parent's own upward pull is
+     what actually shows through, same as it already does on desktop. */
   #modal-overlay .modal--edit-item h2 {
-    margin-top: 0;
-  }
-  #modal-overlay .modal--edit-item #modal-category-wrap {
     margin-top: 0;
   }
 }
@@ -558,6 +560,10 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+  /* Never shrinks/scrolls with .modal-body below it (which already has its own flex:1 +
+     overflow-y:auto — see the shared .modal-body rule) — content should scroll only underneath
+     this bar, per direct request. */
+  flex-shrink: 0;
   /* Pulled up and inset further from the left, per request — "Edit Item" (left-aligned via
      .modal-h2--left) and the category select were sitting in their own row below the back arrow
      (.modal-corner-icon, position:absolute, top:8px/left:8px against .modal itself) instead of
@@ -582,7 +588,10 @@
      ones are flush with the modal's own top edge, which already has its own larger 16px rounding
      right at the true corners, so rounding the bar's top corners too would visibly compete with
      that instead of reading as one continuous edge. */
-  margin: -34px -34px 32px;
+  /* Bottom margin trimmed from an earlier 32px down to 16px, per direct follow-up ("padding below
+     it currently") — kept nonzero, not removed outright, since 0 (paired with the -26px top pull)
+     was what caused the title field to overlap this row in the first place (see above). */
+  margin: -34px -34px 16px;
   background: var(--primary);
   /* Top corners match .modal's own 16px exactly (not the bar's own smaller 10px, and not square) —
      .modal has no overflow: hidden, so a bled-to-the-edge child with a smaller/no radius on its top
@@ -593,18 +602,33 @@
   padding-top: 10px;
   padding-bottom: 10px;
   padding-left: 50px; /* 34 (bled-out edge) + 16 (icon clearance) */
-  padding-right: 50px; /* 34 (bled-out edge) + 16 (kept symmetric) */
+  padding-right: 24px; /* 34 (bled-out edge) minus 10 — closer to the corner than the left side's 50px, per direct request to push #btn-modal-save further into the right corner */
 }
 
 /* White, not the shared h2's default var(--text-primary) — that reads dark-on-purple in light
    theme and needs forcing regardless of theme, same as the "Select Lists" pill's own text
-   (addEditModal.css, #saved-lists-wrap .platform-dropdown-summary) does against the same purple. */
+   (addEditModal.css, #saved-lists-wrap .platform-dropdown-summary) does against the same purple.
+   flex:1 + justify-content:center (h2 is itself a flex container — see the shared .modal h2 rule)
+   centers "Edit Item" within whatever space is left after #btn-modal-save (now relocated into
+   this same row, see openEditModal) takes its own spot on the right, per direct request. */
 .modal--edit-item .modal-header h2 {
   color: #fff;
+  flex: 1;
+  justify-content: center;
 }
 
-.modal--edit-item #modal-category-wrap {
-  align-self: center; /* .modal-header's shared rule below pins this to flex-end for the column layout */
+/* #btn-modal-save, relocated into this row for Edit Item (openEditModal) — white/less-wide here,
+   per direct request, rather than the shared .btn-primary's solid-purple/24px-padding styling
+   (which would blend invisibly into this same purple bar, and reads too wide for a header slot). */
+.modal--edit-item .modal-header #btn-modal-save {
+  background: #fff;
+  color: var(--primary);
+  padding: 7px 16px;
+  font-size: 13px;
+}
+.modal--edit-item .modal-header #btn-modal-save:hover {
+  background: var(--primary-hover, var(--primary));
+  color: #fff;
 }
 
 .modal-bookmark-icon {
@@ -759,6 +783,14 @@
 .form-row--url-pair {
   align-items: flex-start;
   margin-bottom: 0;
+}
+
+/* Category (moved here from the header, per direct request) has no label of its own, unlike
+   Folder right next to it — flex-end (not the url-pair row's own flex-start above) lines up the
+   two actual <select> boxes at the same height regardless, rather than leaving Category's select
+   sitting higher than Folder's own (which has its label pushing it down). */
+#category-folder-row {
+  align-items: flex-end;
 }
 
 .form-row--url-pair .form-group {
