@@ -287,9 +287,17 @@
 /* The shared openSwitchConfirm() popup's own primary button (confirmModal.js — "Open"/"Explore")
    only, not VC Connector's separately-styled teal .vc-wallet-open-btn above (same .vc-wallet-modal
    wrapper, different button). Adds a purple ring on hover on top of the base .btn-primary:hover's
-   existing white-bg/purple-text swap, per direct request. */
+   existing white-bg/purple-text swap, per direct request. Border reserved (transparent) at rest,
+   not just added on :hover — the base .btn-primary has border: none, so adding a real 2px border
+   only on hover grew the button by 2px a side at that moment, visibly shifting it (reported live).
+   Padding trimmed 2px a side to compensate, so the button's overall rest-state size is unchanged
+   from before this reserved border existed. */
+.vc-wallet-modal .btn-primary:not(.vc-wallet-open-btn) {
+  padding: 7px 22px;
+  border: 2px solid transparent;
+}
 .vc-wallet-modal .btn-primary:not(.vc-wallet-open-btn):hover {
-  border: 2px solid var(--primary);
+  border-color: var(--primary);
 }
 
 /* --- Account --- */
