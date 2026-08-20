@@ -718,10 +718,12 @@ export function renderSidebar() {
         subtitle: 'The sidebar will switch to display only saves from this list. Return to your full collection at any time!',
         icon: SAVED_LISTS_ICON_SVG,
         leadColor: 'var(--primary)',
-        // Collapses the Saved Lists accordion back closed once Open is actually clicked, per
-        // direct request — navigateToView's own re-render (navigation.js) picks this up.
+        // Collapses the Saved Lists accordion, and its Dashboard parent, back closed once Open is
+        // actually clicked, per direct request — navigateToView's own re-render (navigation.js)
+        // picks this up.
         onConfirm: () => {
           state.collapsed.add('saved-lists');
+          state.collapsed.add('dashboard');
           if (el.dataset.view === 'savedlist:default-favorites') {
             // All My Saves is the unrestricted catch-all, never a real scoped list — no
             // activeSavedListId (navigateToView's own default already clears it either way).
