@@ -369,7 +369,18 @@ export function renderSidebar() {
     // curated genre, same place the mobile header's "VoteCraft Picks" option links to (the mobile
     // drawer's own "⚡ Shared" tab now links to Shared Saves instead — see wireMobileHeader above).
     sidebar.querySelector('.sidebar-curated-votecraft-link')?.addEventListener('click', () => {
-      navigateToView('genre:Top 100', { sidebarMode: 'curated' });
+      // Same "You're opening/Explore" popup Shared Saves' own cards use (confirmModal.js) — same
+      // copy/openLabel/leadColor, since this row is the same kind of "someone else's curated
+      // list" destination those cards represent, just reached from the sidebar instead.
+      openSwitchConfirm({
+        name: 'VoteCraft',
+        subtitle: 'The sidebar will switch to display their shared saves. Bookmark or star to collect their saves back to your library!',
+        icon: CURATED_LISTS_ICON_SVG,
+        leadText: 'Opening saves by:',
+        leadColor: 'var(--primary)',
+        openLabel: 'Explore',
+        onConfirm: () => navigateToView('genre:Top 100', { sidebarMode: 'curated' }),
+      });
     });
   }
 
