@@ -481,8 +481,9 @@
      replacement value, so it still scales with viewport height the same way every other screen's
      box does. */
   #modal-overlay .modal.modal--edit-item {
-    height: calc(45vh + 100px);
-    height: calc(45dvh + 100px);
+    /* 120 = 100 + a further +20px, per direct follow-up request. */
+    height: calc(45vh + 120px);
+    height: calc(45dvh + 120px);
   }
   /* "Select Lists" button — right-side padding bumped further to 25px (from the shared 19.5px),
      desktop only, per request. */
