@@ -892,7 +892,7 @@
    against regardless of source order, being ID-scoped). */
 .modal--edit-item #platforms-section,
 .modal--edit-item #music-url-pair-row {
-  margin-top: 8px; /* 18 - 10 */
+  margin-top: 4px; /* reduced further from 8px, per direct follow-up request */
 }
 
 .input-with-clear {
