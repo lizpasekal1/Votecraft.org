@@ -613,8 +613,9 @@ export function renderSidebar() {
       const list = state.savedLists.find(l => l.id === listId);
       openSwitchConfirm({
         name: list?.name || el.textContent.trim(),
-        subtitle: 'The sidebar will change to display saves from this list. Switch lists at any time!',
+        subtitle: 'The sidebar will switch to display only saves from this list. Return to your full collection at any time!',
         icon: SAVED_LISTS_ICON_SVG,
+        leadColor: 'var(--primary)',
         onConfirm: () => {
           if (el.dataset.view === 'savedlist:default-favorites') {
             navigateToView('dashboard', { sidebarMode: 'home', activeCuratedFolderId: null });
