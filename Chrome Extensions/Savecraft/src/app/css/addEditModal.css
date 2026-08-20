@@ -836,6 +836,12 @@
      rules above) — reported live. Matched here now that URL/Image URL stack like any other pair
      of fields instead of sitting side by side. */
   gap: 18px;
+  /* .form-row--url-pair's own align-items: flex-start (base rule above) was written for the row
+     layout's cross axis (vertical there) — in this column layout that same property controls the
+     HORIZONTAL cross axis instead, shrinking each stacked field to its own content width rather
+     than stretching to the row's full width (reported live: narrower than Summary, which isn't
+     inside a flex row at all). stretch restores the full-width behavior. */
+  align-items: stretch;
 }
 /* URL above Image URL, per direct follow-up request — the `order` property flips just the visual
    stacking order for Edit Item without touching the underlying DOM order (which the Add flow's own
