@@ -178,7 +178,17 @@ export function isOwnAuthorPageView(authorName) {
   return name === authorName;
 }
 
+// REAL BUG, found and fixed: returned `url` unchanged on failure — for a null/missing url (a
+// title-only save with no URL, which the app explicitly allows), that's `null`, not a string.
+// renderCard()/detailModal.js's own header both do `getDomain(item.url)[0]` (a fallback "first
+// letter" avatar) with no guard against the return value itself being null — `null[0]` throws
+// and, since this runs inside a card-list .map(), aborts the whole render mid-way, leaving
+// whatever view was on screen before still showing underneath the new page's title (reported
+// live: saving a Musician with no URL, then browsing to Musicians, looked like a totally
+// different page's cards frozen in place). '' (an empty string) is safe everywhere a string was
+// already expected, including `''[0]` which is just `undefined`, not a crash.
 export function getDomain(url) {
+  if (!url) return '';
   try { return new URL(url).hostname.replace('www.', ''); }
   catch { return url; }
 }
