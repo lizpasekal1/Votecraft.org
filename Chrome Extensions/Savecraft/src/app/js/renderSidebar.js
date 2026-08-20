@@ -164,13 +164,25 @@ export function renderSidebar() {
 
   const headerTitleEl = document.getElementById('sidebar-header-title');
   const isCuratedDrilldown = state.sidebarMode === 'curated' && sidebarEffectiveView.startsWith('genre:');
-  if (isCuratedDrilldown) {
-    headerTitleEl.innerHTML = `<button class="sidebar-back-btn" id="sidebar-back-btn" title="Back to genres"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg><span>${escapeHtml(sidebarTitle)}</span></button>`;
+  // "default-favorites" (All My Saves) excluded — its title already reads the generic "My Saves"
+  // rather than a specific list name (see sidebarTitle computation above), so a "back to this
+  // list's own landing" button wouldn't read as meaningfully different from just being here.
+  const isNamedSavedList = sidebarEffectiveView.startsWith('savedlist:') && sidebarEffectiveView.slice(10) !== 'default-favorites';
+  if (isCuratedDrilldown || isNamedSavedList) {
+    const backTitle = isCuratedDrilldown ? 'Back to genres' : `Back to ${sidebarTitle}`;
+    headerTitleEl.innerHTML = `<button class="sidebar-back-btn" id="sidebar-back-btn" title="${escapeHtml(backTitle)}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg><span>${escapeHtml(sidebarTitle)}</span></button>`;
   } else {
     headerTitleEl.textContent = sidebarTitle;
   }
   document.getElementById('sidebar-back-btn')?.addEventListener('click', (e) => {
     e.stopPropagation();
+    // Saved List title — always back to that exact list's own landing card, per direct request
+    // ("standardize" this the same way VoteCraft's own title now always returns to its landing
+    // page regardless of how deep you've navigated since — see the genre: branch below).
+    if (isNamedSavedList) {
+      navigateToView(sidebarEffectiveView);
+      return;
+    }
     // Uses sidebarEffectiveView (not the raw state.view) so this also works correctly from an
     // author page reached via curated browsing — it steps back to the genre-level view instead
     // of trying to parse the 'author:<cat>:<name>' string as if it were a 'genre:' one.
