@@ -227,8 +227,14 @@ export function updatePlatformsSection(cat) {
   // descendant of `list` — overwriting list.innerHTML would detach it from the document entirely,
   // and a detached node is invisible to getElementById, permanently losing the reference on the
   // very next call. Moved out to a safe parent first so it survives the rebuild regardless of
-  // where it was living coming in.
-  document.getElementById('modal-step2').appendChild(document.getElementById('youtube-url-group'));
+  // where it was living coming in. REAL BUG, found and fixed: this ran unconditionally, including
+  // for Music categories — where #youtube-url-group is never a descendant of `list` to begin with
+  // (the guard just below keeps it out), so it's not rescuing anything there; it was instead
+  // yanking the field straight out of #music-url-pair-row (where updateVideoUrlLayout, called
+  // just before this, had correctly placed it), undoing that layout every single time this ran.
+  if (!MUSIC_URL_PAIR_CATEGORIES.has(cat)) {
+    document.getElementById('modal-step2').appendChild(document.getElementById('youtube-url-group'));
+  }
   list.innerHTML = config.platforms.map(p =>
     `<label class="platform-option"><input type="checkbox" value="${p.id}" checked> ${p.name}</label>`
   ).join('');

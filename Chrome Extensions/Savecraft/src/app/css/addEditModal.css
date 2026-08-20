@@ -625,12 +625,17 @@
 .modal--edit-item .modal-header #btn-modal-save {
   background: #fff;
   color: var(--primary);
-  padding: 7px 16px;
+  /* border reserved (transparent) at rest, padding trimmed 2px/side to compensate — same fix as
+     the confirm popup's own Explore/Open button hover (confirmModal.js/profile.css) for the exact
+     same bug: adding a hover-only border grows the button at that moment and visibly shifts it. */
+  border: 2px solid transparent;
+  padding: 5px 14px;
   font-size: 13px;
 }
 .modal--edit-item .modal-header #btn-modal-save:hover {
   background: var(--primary-hover, var(--primary));
   color: #fff;
+  border-color: #fff;
 }
 
 .modal-bookmark-icon {
@@ -855,12 +860,27 @@
   order: 2;
 }
 .modal--edit-item .form-row--url-pair .form-group input {
-  height: auto;
   padding: 10px 12px;
   font-size: 14px;
 }
 .modal--edit-item .form-row--url-pair label {
   font-size: 11px;
+}
+
+/* Every field/dropdown in Edit Item shares one height, per direct request — Summary is the one
+   deliberate exception (a multi-line textarea, left as-is). Category/Folder (smaller padding/font
+   than the rest — .modal-category-select, the base .form-group select) and the two
+   .platform-dropdown-summary instances (Select Lists, Web Links/Platforms — 8px/13px, a different
+   size again) previously each had their own natural height; Title/Author and URL/Image URL were
+   already the same as each other (both 10px 12px padding/14px font) but not matched to these.
+   box-sizing: border-box (base.css's global reset) means this height already accounts for each
+   element's own padding/border — native <select>/<summary> content still centers within it. */
+.modal--edit-item .title-author-row .title-author-input,
+.modal--edit-item .form-row--url-pair .form-group input,
+.modal--edit-item .modal-category-select,
+.modal--edit-item #input-folder-select,
+.modal--edit-item .platform-dropdown-summary {
+  height: 40px;
 }
 
 .input-with-clear {
