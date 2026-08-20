@@ -175,7 +175,17 @@ export function renderSidebar() {
     // author page reached via curated browsing — it steps back to the genre-level view instead
     // of trying to parse the 'author:<cat>:<name>' string as if it were a 'genre:' one.
     const parts = sidebarEffectiveView.slice(6).split(':'); // strip 'genre:' prefix -> [genre, category?]
-    navigateToView(parts.length > 1 ? `genre:${parts[0]}` : 'curated');
+    // Top 100 (VoteCraft) always returns to its own landing banner — even when already there —
+    // per direct request/live report: tapping the title while already on the VoteCraft landing
+    // page was falling through to the "already at the top, step out to the genre picker" branch
+    // below, bouncing to Cause Curated instead of staying on VoteCraft. Every other genre has no
+    // bannered landing page of its own (see CURATED_GENRE_LANDING_CONTENT, state.js — Top 100 is
+    // the only entry), so "step out to the picker once already at the top" still makes sense there.
+    if (parts[0] === 'Top 100') {
+      navigateToView('genre:Top 100');
+    } else {
+      navigateToView(parts.length > 1 ? `genre:${parts[0]}` : 'curated');
+    }
   });
 
   const mobileHeader = `
