@@ -171,6 +171,14 @@ export function renderSidebar() {
     return list?.allowedFolderIds ? new Set(list.allowedFolderIds) : null;
   }
   const folderScope = activeSavedListFolderScope();
+  // Same savedListIds membership check getFilteredSortedItems() (renderFilters.js) applies to the
+  // grid itself — reused here for the sidebar's own folder/subfolder count badges, which were
+  // computed straight off state.items with no scoping at all (reported live: a freshly-created,
+  // still-empty Saved List's own folders kept showing the full unscoped counts, e.g. "3"/"2",
+  // instead of 0/no badge).
+  function activeListScope(item) {
+    return !state.activeSavedListId || (item.savedListIds || []).includes(state.activeSavedListId);
+  }
 
   const headerTitleEl = document.getElementById('sidebar-header-title');
   const isCuratedDrilldown = state.sidebarMode === 'curated' && sidebarEffectiveView.startsWith('genre:');
@@ -516,8 +524,11 @@ export function renderSidebar() {
       // Queue-demo cards excluded from every real count here — same reasoning as
       // renderFilters.js's getFilteredSortedItems() (they're Kanban-demo placeholders, not real
       // saves, but were still showing up as a phantom "1" badge on whichever folder their
-      // category happens to land on).
-      : state.items.filter(i => !isQueueDemoId(i.id) && matchesPrimaryOrUnfoldered(i, 'Music Album')).length;
+      // category happens to land on). activeListScope() below narrows the same way
+      // getFilteredSortedItems() does when browsing inside a Saved List (reported live: an
+      // unscoped count badge kept showing e.g. "3"/"2" on a list's own folders even though
+      // nothing had actually been added to that list yet).
+      : state.items.filter(i => !isQueueDemoId(i.id) && matchesPrimaryOrUnfoldered(i, 'Music Album') && activeListScope(i)).length;
     const musicAlbumCountLabel = musicAlbumCount > 0 ? `<span class="sidebar-count">${musicAlbumCount}</span>` : '';
     // Music Album isn't part of sidebarCategoryList's own loop (it's excluded above, line
     // 322-323) — it only ever shows via this "Albums" link nested under Musician, routed through
@@ -556,7 +567,8 @@ export function renderSidebar() {
         || (FOLDER_SHOWS_FULL_CURATED_CATEGORY.has(folder.id) ? cat : folder.id);
       const fCount = isCuratedGenre
         ? (CURATED_ITEMS[curatedGenreBase]?.[curatedTarget]?.length ?? 0)
-        : state.items.filter(i => !isQueueDemoId(i.id) && (isPrimaryFolder ? matchesPrimaryOrUnfoldered(i, cat) : i.folderId === folder.id)).length;
+        // activeListScope() below narrows this the same way musicAlbumCount above does.
+        : state.items.filter(i => !isQueueDemoId(i.id) && (isPrimaryFolder ? matchesPrimaryOrUnfoldered(i, cat) : i.folderId === folder.id) && activeListScope(i)).length;
       const fCountLabel = fCount > 0 ? `<span class="sidebar-count">${fCount}</span>` : '';
       // Official/default folders (seeded in storage.js's `defaults` array, always id-prefixed
       // "default-") can't be deleted from the sidebar — only user-created ones (Date.now() ids) can.
