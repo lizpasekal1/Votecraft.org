@@ -40,6 +40,7 @@ Update this section as the project evolves.
 | VoteCraft Coin page | Live on GitHub Pages | `pages/votecraft-coin/index.html` — explains VC altruism currency, earning, spending, community exchange. CTA links to donate.html and app.html. |
 | Donate page | Live on GitHub Pages (UI only) | `pages/votecraft-coin/donate.html` — donation tiers, placeholder buttons (no payment processor yet). Cross-linked from vote.html sidebar ("Support Us") and VC coin index.html CTA. |
 | MyReps | Superseded by Vote platform | Address lookup merged into vote platform's left panel |
+| SaveCraft | Live — Chrome extension + savecraft.org web app | Firebase/Firestore backend (`votecraft-789`), own independent auth (not the shared Emporium account, see `firebase/votecraft-firebase.md`). New: a staff-only WordPress admin bridge (Admin Kanban board manageable from wp-admin) — see its Infrastructure line below and `Chrome Extensions/Savecraft/Documentation/savecraft-overview.md`. |
 | JokeMaster | In development | Firebase/Firestore backend. Security rules need console verification. |
 | Scavenger Tours | Paused | Supabase project paused due to inactivity. 90-day window to unpause. |
 | Power Plays | In development | Static card game. |
@@ -48,10 +49,10 @@ Update this section as the project evolves.
 **Infrastructure:**
 - Hosting: GitHub Pages (static frontend) + WordPress (PHP backend, MySQL DB)
 - Repository: github.com/lizpasekal1/Votecraft.org (private, SSH auth)
-- WordPress backend: `votecraft.org` — hosts PHP proxy (`openstates-proxy.php`) and data sync plugin (`votecraft-data-sync.php`)
+- WordPress backend: `votecraft.org` — hosts PHP proxy (`openstates-proxy.php`), data sync plugin (`votecraft-data-sync.php`), and (new) `votecraft-savecraft-admin` — a staff-only wp-admin bridge into SaveCraft's Admin Kanban board, talking to Firestore server-side via a narrowly-scoped dedicated bot account (see `firebase/votecraft-firebase.md`'s `admin_kanban_cards` section)
 - Database: WordPress MySQL with custom tables (prefix `eUZZh_`) for bills, legislators, sponsorships, cache, sync log
 - API sources: OpenStates (state legislators/bills) + Congress.gov (federal)
-- Firebase: project `jokemaster-3ed37` (JokeMaster)
+- Firebase: project `jokemaster-3ed37` (JokeMaster); project `votecraft-789` (SaveCraft — extension + savecraft.org web app + the WordPress admin bridge above; see `firebase/votecraft-firebase.md`)
 - Supabase: project `Votecraft_accounts` / `xvtgmjsselzlyjdzwoth` (Scavenger Tours, paused)
 - Frontend auto-deploys via GitHub Pages (`static.yml`); PHP files manually uploaded as ZIPs to WordPress
 

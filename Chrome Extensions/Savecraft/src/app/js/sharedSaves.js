@@ -9,6 +9,7 @@ import { escapeHtml } from './utils.js';
 import { _wireCarouselArrows } from './dashboard.js';
 import { resolveOrgImageUrl } from './render.js';
 import { navigateToView } from './navigation.js';
+import { openSwitchConfirm } from './confirmModal.js';
 
 // Rotated across every vertical card's avatar circle.
 const SHARED_VCARD_COLORS = ['#5B5BEF', '#E0507A', '#2A9D8F', '#E76F51', '#8E44AD', '#F4A340'];
@@ -32,7 +33,10 @@ const DEMO_GROUP_LISTS = [
 
 // A handful of fictional demo people — purely illustrative, no real friend-graph data exists yet
 // (see profile.js's own "Friends — coming soon" stub, which this page's Friends section replaces).
-const DEMO_FRIENDS = [
+// Exported — profile.js's own Shared Lists widget reuses this same list for its checklist, so
+// both places show the exact same set of demo friends rather than two independently-maintained
+// copies.
+export const DEMO_FRIENDS = [
   { name: 'Jordan Lee', imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
   { name: 'Sam Rivera', imageUrl: 'https://images.unsplash.com/photo-1592621385612-4d7129426394?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
   { name: 'Casey Kim', imageUrl: 'https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?q=80&w=1335&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
@@ -44,7 +48,10 @@ const DEMO_FRIENDS = [
 
 // One reusable vertical-card carousel builder — avatar circle, name, tagline, a title/tag pill —
 // shared by both sections below so they read as the same visual language.
-function buildVerticalCardSlider({ sectionClass, title, cards }) {
+// isListCard: true for all three sliders (nonprofit orgs, group lists, Friends) — every card gets
+// the "You're opening X" confirm popup on tap (see wireListCardConfirm below), matching the same
+// pause-before-switching pattern the sidebar's own Saved Lists/Curated Lists rows use.
+function buildVerticalCardSlider({ sectionClass, title, mobileTitle, cards, isListCard }) {
   const tripled = [...cards, ...cards, ...cards];
   const cardsHtml = tripled.map((c, i) => {
     // Progressive List's logo specifically needs a white backdrop to read correctly; Votecraft
@@ -57,7 +64,7 @@ function buildVerticalCardSlider({ sectionClass, title, cards }) {
       ? `<img src="${escapeHtml(resolveOrgImageUrl(c.imageUrl))}" alt="" loading="lazy" decoding="async">`
       : (c.icon || PLACEHOLDER_IMAGE_SVG);
     return `
-      <div class="shared-vcard">
+      <div class="shared-vcard${isListCard ? ' shared-vcard--list' : ''}" data-card-name="${escapeHtml(c.name)}">
         <div class="shared-vcard-avatar" style="background:${color}">${avatarContent}</div>
         <span class="shared-vcard-name">${escapeHtml(c.name)}</span>
         ${c.tagline ? `<span class="shared-vcard-tagline">${escapeHtml(c.tagline)}</span>` : ''}
@@ -65,9 +72,15 @@ function buildVerticalCardSlider({ sectionClass, title, cards }) {
       </div>`;
   }).join('');
 
+  // Shorter title on mobile, per request — two <span>s swapped via CSS media query (sharedSaves.css)
+  // rather than JS, so it stays correct across a resize/rotation without a re-render.
+  const titleHtml = mobileTitle
+    ? `<span class="shared-title-full">${escapeHtml(title)}</span><span class="shared-title-compact">${escapeHtml(mobileTitle)}</span>`
+    : escapeHtml(title);
+
   return `
     <div class="dash-card ${sectionClass}">
-      <div class="profile-card-header"><span class="profile-card-title">${escapeHtml(title)}</span><button class="top100-row-add-btn" aria-label="Add"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+      <div class="profile-card-header"><span class="profile-card-title">${titleHtml}</span><button class="top100-row-add-btn" aria-label="Add"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
       <div class="dash-carousel shared-vcard-carousel">
         <button class="dash-carousel-prev" aria-label="Previous">‹</button>
         <div class="dash-carousel-strip">${cardsHtml}</div>
@@ -98,17 +111,17 @@ function buildNonprofitSliderSection() {
         : orgs.slice(0, 1);
       return picks.map(org => ({ name: org.name.replace(/\s+List$/i, ''), tagline: org.tagline, tag: label, icon: org.icon, imageUrl: org.imageUrl }));
     });
-  return buildVerticalCardSlider({ sectionClass: 'shared-card--nonprofits', title: "Curated Lists You've Connected", cards });
+  return buildVerticalCardSlider({ sectionClass: 'shared-card--nonprofits', title: "Curated Lists You've Connected", mobileTitle: 'Cause Curated Lists', cards, isListCard: true });
 }
 
 function buildGroupListsSliderSection() {
   const cards = DEMO_GROUP_LISTS.map(g => ({ name: g.name, tagline: g.tagline, icon: g.icon }));
-  return buildVerticalCardSlider({ sectionClass: 'shared-card--group-lists', title: "Group Lists You've Connected", cards });
+  return buildVerticalCardSlider({ sectionClass: 'shared-card--group-lists', title: "Group Lists You've Connected", mobileTitle: 'Group Lists', cards, isListCard: true });
 }
 
 function buildFriendsSection() {
   const cards = DEMO_FRIENDS.map(f => ({ name: f.name, imageUrl: f.imageUrl }));
-  return buildVerticalCardSlider({ sectionClass: 'shared-card--friends', title: "Friends You've Shared Lists With", cards });
+  return buildVerticalCardSlider({ sectionClass: 'shared-card--friends', title: "Friends You've Shared Lists With", mobileTitle: "Friend's Lists", cards, isListCard: true });
 }
 
 function wireCarousels(container) {
@@ -124,6 +137,25 @@ function wireAddButtons(container) {
   container.querySelectorAll('.top100-row-add-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       navigateToView('curated', { sidebarMode: 'curated' });
+    });
+  });
+}
+
+// Same placeholder destination as the plus buttons above (no real per-list page exists yet for
+// any of these) — the popup itself is real, just what "Open" actually does is still the same
+// "there's nothing more specific to land on yet" fallback every other not-yet-built destination
+// on this page already uses.
+function wireListCardConfirm(container) {
+  container.querySelectorAll('.shared-vcard--list').forEach(card => {
+    card.addEventListener('click', () => {
+      const avatar = card.querySelector('.shared-vcard-avatar');
+      openSwitchConfirm({
+        name: card.dataset.cardName,
+        subtitle: 'The sidebar will change to display saves from this list. Switch lists at any time!',
+        icon: avatar?.innerHTML,
+        iconColor: avatar?.style.background,
+        onConfirm: () => navigateToView('curated', { sidebarMode: 'curated' }),
+      });
     });
   });
 }
@@ -150,4 +182,5 @@ export function renderSharedSavesPage() {
 
   wireCarousels(container);
   wireAddButtons(container);
+  wireListCardConfirm(container);
 }

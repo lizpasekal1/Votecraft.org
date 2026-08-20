@@ -278,26 +278,23 @@
 
 
 /* ===== SCROLLBAR ===== */
-::-webkit-scrollbar { width: 6px; }
+/* height (thickness of a HORIZONTAL scrollbar) was missing here — width only styles vertical
+   scrollbars, so any horizontal-overflow element (e.g. .kanban-board when its columns overflow
+   the window width) fell back to the browser's native thick gray scrollbar instead of this same
+   thin themed one, showing up as a stray gray bar along its bottom edge. */
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
 
 
 /* ===== MOBILE-ONLY ELEMENTS (hidden on desktop) ===== */
+/* .sidebar-overlay/.sidebar-mobile-header/.sidebar-mode-tabs/.sidebar-items-scroll moved to
+   sidebar.css — this file's own sidebar drawer section moved there wholesale, see that file's
+   "MOBILE SIDEBAR DRAWER" section. */
 .btn-hamburger,
-.fab-add,
-.sidebar-overlay {
+.fab-add {
   display: none;
-}
-
-.sidebar-mobile-header,
-.sidebar-mode-tabs {
-  display: none;
-}
-
-.sidebar-items-scroll {
-  /* desktop: behaves as a normal block, sidebar itself scrolls */
 }
 
 /* ===== MOBILE ===== */
@@ -310,18 +307,104 @@
      mobile, per direct request. */
   .my-options-item[data-option="home"] { display: none; }
 
-  /* Kanban board header: "‹ Dashboard" moved onto its own row above the My Saves/Categories
-     dropdowns, per direct request — sharing one row on a phone left the Categories dropdown
-     partially cut off the right edge of the screen (reported live, screenshot confirmed). Forcing
-     it to flex-basis: 100% (with the row's own flex-wrap enabled) pushes every sibling onto a
-     second line, same technique used nowhere else in this file yet but a plain, well-supported
-     flex trick — no JS/markup change needed. Desktop is unaffected/unchanged — confirmed fine as
-     it already was there. */
+  /* Kanban board columns — much wider than the desktop-oriented 220px floor (kanban.css), per
+     direct request ("more of the text to show... sections can be wider"). Percentage rather than
+     a fixed px value so it scales with the actual device instead of guessing one iPhone's width:
+     .kanban-column's containing block for this is .kanban-board itself, whose own rendered width
+     already equals the visible board area (it's the horizontally-scrolling container, not
+     scrolled content), so 85% leaves a deliberate sliver of the next column peeking in as a
+     swipe-to-see-more affordance rather than each column exactly filling the screen. Applies to
+     both boards — .kanban-column is the shared class kanban.js/adminKanban.js both render. */
+  .kanban-column {
+    min-width: 85%;
+  }
+
+  /* Dashboard's Queue Kanban mini-widget — padding trimmed throughout (kept the 2-column
+     Queue/In Progress layout itself, per direct request) to reclaim width for the title text,
+     which was truncating heavily on a phone (reported live, screenshot confirmed). Nothing here
+     changes sizing/structure, just the gaps and padding eating into the text column's own width.
+     REAL BUG, found and fixed: this used to also override .dash-card--kanban's own outer padding
+     down to 14px 8px — reclaiming width for the mini-board, but at the cost of shifting the
+     "Queue Kanban" title/Open button left of where every other widget's title/button sits (they
+     all still use the shared .dash-card 20px padding), per direct request. Fixed by leaving the
+     card's own padding alone and instead pulling just .dash-kanban-mini-board itself wider with a
+     negative margin — the header row above it is unaffected, so it stays aligned with siblings. */
+  .dash-kanban-mini-board { gap: 4px; margin: 0 -8px; }
+  .dash-kmini-col { padding: 0; }
+  .dash-kmini-col:first-child { padding-right: 4px; }
+  .dash-kmini-col:last-child { padding-left: 3px; }
+  .dash-kmini-card { gap: 6px; padding-right: 4px; }
+  .dash-kmini-info { padding: 5px 4px 5px 0; }
+  /* Was nudged down 5px earlier; now moved up 15px net from that (5 - 15 = -10px), per direct
+     request — negative margin-top on a grid item shrinks its effective row-height contribution
+     on this auto-sized mobile single-column grid (.dash-widget-grid), which is what pulls every
+     widget below it up the page too, not just this one. */
+  .dash-card--kanban {
+    margin-top: -10px;
+  }
+  /* 3px less than the base .dash-card 20px top/bottom padding, per direct request — applied to
+     every widget card (was scoped to just Queue Kanban at first) so they all match. Left/right
+     untouched, so each header's title/button stays aligned with the others. */
+  .dash-card {
+    padding-top: 17px;
+    padding-bottom: 17px;
+  }
+
+  /* Kanban board header, two rows on mobile — per direct request, this replaces an earlier
+     three-row layout (Dashboard alone / info icon alone / the two dropdowns) that wasted vertical
+     space the board itself could use instead:
+       Row 1: "‹ Dashboard" (left corner) ―――――――――――――――――――――――― info icon (right corner)
+       Row 2: My Saves + Categories dropdowns, side by side
+     REAL BUG, found and fixed: putting flex-basis: 100% directly on .saves-list-wrap (the first
+     item meant for row 2) does force a new line, but it also makes THAT ITEM claim the entire row
+     width for itself, leaving .board-filter-wrap nowhere to go but a third row of its own — the
+     two dropdowns kept stacking instead of sharing row 2 (reported live on an iPhone 16 Pro,
+     plenty of width to spare, so it wasn't a narrow-screen overflow issue). Fixed with the
+     standard flexbox line-break trick instead: a zero-size ::after pseudo-element with its own
+     flex-basis: 100% inserted between the two row groups (via order) — it consumes row 1's
+     remaining width and forces everything after it to wrap, without itself being one of the
+     visible controls that needs to share space with a sibling. */
   .grid-header {
     flex-wrap: wrap;
   }
+  /* Pulled up 10px, per direct request — tightens the gap above this row. Applied equally to
+     both so row 1 moves up as a whole rather than the two corners drifting out of line. */
   .kanban-dashboard-link {
+    order: 0;
+    margin-top: -10px;
+  }
+  .board-info-wrap {
+    order: 1;
+    margin-left: auto;
+    /* margin-left: auto already pushes it flush against the row's right edge — this nudges it
+       5px further right past that, per direct request. */
+    margin-right: -5px;
+    margin-top: -10px;
+  }
+  .grid-header::after {
+    content: '';
+    order: 2;
     flex-basis: 100%;
+    width: 0;
+    height: 0;
+  }
+  /* Pulled up 15px, per direct request — tightens the gap under row 1 (Dashboard/info) now that
+     the two rows are reliably grouped correctly. Applied equally to both so the row moves up as
+     a whole rather than the two dropdowns drifting out of line with each other. */
+  .saves-list-wrap { order: 3; margin-top: -15px; }
+  .board-filter-wrap { order: 4; margin-top: -15px; }
+  /* Narrower than desktop's 148px so the pair above reliably fits on one row even on the
+     smallest iPhone widths (e.g. iPhone SE's 320px), instead of the fixed desktop width being
+     just wide enough to force a wrap on some devices but not others.
+     REAL BUG, found and fixed: this originally targeted plain .btn-board-filter with no
+     exclusion — .dash-fav-category-btn (the dashboard's "Sort" widget button) also carries that
+     class, and since this file loads after dashboard.css, this same-specificity rule silently
+     won the cascade tie there too, widening Sort back out to 130px and breaking dashboard.css's
+     own deliberately-ordered mobile override matching it to Open's 70px (see that file's own
+     comment on the exact same class of bug). Excluded here so that button is untouched again. */
+  .btn-board-filter:not(.dash-fav-category-btn),
+  .btn-saves-list {
+    width: 130px;
   }
 
   /* base.css's .search-expand-wrap.open .search-expand-input is a fixed 210px, sized for a
@@ -392,8 +475,155 @@
     transform: translateY(-30px);
   }
 
+  /* --fab-clearance: same 56px-tall + 24px-off-bottom "+ Add Item" FAB clearance dashboard.css's
+     own .grid-area:has(.dashboard-wrap) already uses — named here so this file's own :has() rules
+     (below, and sharedSaves.css) reference one number instead of each re-deriving 96px by hand.
+     --page-mobile-pad: the standard mobile side padding every page gets from .grid-area below —
+     named so a page wrap that re-applies the same 16px on itself (e.g. sharedSaves.css's
+     .shared-page-wrap, which needs it for desktop too) can size a bleed past *both* stacked
+     layers via calc() instead of a hand-derived literal that silently drifts if either changes. */
+  :root {
+    --fab-clearance: 96px;
+    --page-mobile-pad: 16px;
+  }
+
   /* Profile page */
-  .profile-widget-grid { grid-template-columns: 1fr; height: auto; }
+  /* Same fix as .grid-area:has(.dashboard-wrap) (dashboard.css) — the page-end "Manage account"
+     button below (moved here on mobile, see #profile-manage-account/.profile-manage-account-
+     mobile further down) was ending up hidden behind the floating "+ Add Item" FAB once scrolled
+     all the way down, per request. */
+  .grid-area:has(.profile-page-wrap) {
+    padding-bottom: var(--fab-clearance);
+  }
+
+  /* Shared Saves page — same :has() idiom as the profile-page rule above, used here for two
+     things sharedSaves.css used to instead fight from the child side: FAB clearance (was
+     duplicated as its own literal 96px there), and pulling the hero banner up by pinning this
+     rule's own padding-top to 6px directly (16px base − the 10px reduction requested) instead of
+     leaving the base 16px in place and applying a -10px margin-top on .shared-page-wrap to cancel
+     part of it back out. */
+  .grid-area:has(.shared-page-wrap) {
+    padding-top: 6px;
+    padding-bottom: var(--fab-clearance);
+  }
+
+  /* Admin Kanban page — mobile only, scoped via the .admin-kanban-wrap hook adminKanban.js sets
+     on #cards-grid (plain .kanban-wrap is shared with the real Queue board, which keeps its
+     current mobile look untouched). */
+  /* "‹ Dashboard" hidden here specifically — there's already a real way back (the sidebar/
+     hamburger), and it was crowding this page's now-single-row header, per direct request. */
+  .grid-area:has(.admin-kanban-wrap) #btn-kanban-dashboard {
+    display: none;
+  }
+  /* The global "+ Add Item" FAB (#fab-add) is a direct <body> child, not nested under .grid-area
+     at all, so this needs body:has(...) rather than the .grid-area:has(...) idiom used everywhere
+     else on this page — Admin Kanban's own "+ Add card" per column already covers card creation
+     here, and the FAB opens the unrelated save-a-media-item modal, per direct request. */
+  body:has(.admin-kanban-wrap) .fab-add {
+    display: none;
+  }
+  /* REAL BUG, found and fixed: an earlier version of this file put #grid-title and .grid-header/
+     #sort-select on one line by switching .grid-area itself to flex-direction: row — but
+     .grid-area:has(.kanban-wrap)'s own overflow: hidden (kanban.css, shared by both boards)
+     depends on staying a single flex-column, with #cards-grid's own flex:1 filling "whatever's
+     left" and each column scrolling internally. Breaking that into a row+wrap layout broke the
+     whole page's scrolling on mobile (reported live). Both #grid-title and #sort-select are now
+     hidden entirely for this view instead (adminKanban.js renders its own title + sort dropdown
+     as this page's own content, safely inside the untouched #cards-grid/flex:1 chain) — nothing
+     left here to reposition or restyle. */
+  .admin-kanban-title {
+    font-size: 16px;
+  }
+  .admin-kanban-header {
+    margin-bottom: 12px;
+  }
+  /* grid-template-rows explicitly overridden to none, not just left alone — desktop's own
+     repeat(2, 1fr) (profile.css) still pairs row 1 (Connections) with row 2 (Interests) into
+     equal-height tracks even here, single column and height:auto or not, so Interests kept
+     getting stretched to match whatever height Connections happened to be (most visibly after
+     Connections grew a second line per row for its stacked mobile layout below — reported live as
+     a huge empty gap under Interests' last checkboxes). none drops the explicit 2-row definition
+     entirely, so all 4 cards fall back to implicit auto-height rows sized to their own content. */
+  .profile-widget-grid { grid-template-columns: 1fr; grid-template-rows: none; height: auto; }
+  /* Text across every Profile card bumped up again here, layered on top of profile.css's own
+     base-size bump — mobile was the specific complaint ("very small — especially in mobile"),
+     and there's width to spare once the grid above drops to a single column. Saved Lists' folder
+     tree also drops from 2 columns to 1 (profile.css's column-count: 2) — two columns of this
+     much bigger text got visibly cramped at phone widths. */
+  /* "Manage account" moved to its own button at the very end of the page on mobile (was squeezed
+     beside the avatar/name in the account row, part of the same row via .profile-account-row's
+     own justify-content: space-between), per request — the in-row button (profile.css's own
+     .profile-manage-account-mobile base rule already hides the page-end one by default) swaps
+     places here: hidden in the row, shown at the page end instead. */
+  #profile-manage-account {
+    display: none;
+  }
+  .profile-manage-account-mobile {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+  }
+  /* Same in-row/page-end swap as the button above, for its Privacy Policy · Terms of Service
+     row — hide the desktop card's copy (it's pinned under a button that's itself hidden here),
+     show the page-end one instead. */
+  .profile-account-actions .profile-legal-links {
+    display: none;
+  }
+  .profile-legal-links-mobile {
+    display: flex;
+  }
+  .profile-card-title { font-size: 18px; }
+  .profile-card-copy { font-size: 15px; line-height: 1.55; }
+  .profile-account-email { font-size: 16px; }
+  .profile-connection-name { font-size: 16px; }
+  .profile-connection-empty { font-size: 15px; }
+  .profile-track-title { font-size: 15px; }
+  .profile-track-artist { font-size: 14px; }
+  .profile-interest-option { font-size: 15px; }
+  .profile-saved-list-row { font-size: 15px; }
+  .profile-saved-list-category,
+  .profile-saved-list-folder { font-size: 15px; }
+  .profile-saved-list-add-folder { font-size: 15px; }
+  .profile-saved-list-tree { column-count: 1; }
+  /* Interests' checkbox grid (profile.css) uses auto-fill with a 160px column minimum — on a
+     mobile-width card (~300px after grid-area/card padding) that only ever fits one column,
+     stacking all 8 CURATED_GENRES options into one tall vertical list (reported live as "the
+     interest panel is too long"). Forcing 2 fixed columns here halves it to 4 rows. */
+  .profile-interests-grid { grid-template-columns: repeat(2, 1fr); }
+  /* Connections rows (profile.css) sit side-by-side on mobile too — text left, a fixed 150px-wide
+     button right — same as desktop. On a phone that only leaves ~150px for .profile-connection-
+     info, squeezing "We only access your public Steam profile." down to one or two words per line
+     (reported live, screenshot confirmed) no matter how the button itself was sized; a narrower
+     button (tried first) only bought the text a little more room, it didn't fix the actual cause.
+     Real fix: stack each row into two lines instead — description first at the card's full width,
+     button below it — so the text is never fighting a side-by-side button for space at all. */
+  .profile-connection-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .profile-connection-info {
+    width: 100%;
+  }
+  /* Width/height no longer need a fixed override once the button isn't sharing a row with the
+     text — auto-sized to its own label reads fine stacked on its own line, and naturally lands
+     well under half of the old 150px for the single-line "Disconnect"/"Coming soon" labels. */
+  .profile-connection-row .btn-primary,
+  .profile-connection-row .btn-cancel {
+    width: auto;
+    height: auto;
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+  /* Connect Last.fm/Steam's <br class="profile-connect-break"> (profile.js) forces those two
+     buttons onto 2 lines everywhere by default, sized for desktop's own fixed 150px box — with
+     width now auto here, hiding just this break lets each button size to its single-line label
+     instead ("longer and shorter", per direct request), scoped to mobile only so desktop's
+     existing 2-line look is untouched. Disconnect/Coming soon never had a <br> here to begin with,
+     already single-line on both breakpoints. */
+  .profile-connect-break {
+    display: none;
+  }
 
   /* Hamburger */
   .btn-hamburger {
@@ -434,7 +664,13 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    text-align: center;
+    /* Left, not center — per direct request, so it sits close to the hamburger on the left
+       instead of centered across the whole header row. */
+    text-align: left;
+    /* .header-main's own row gap (8px) already puts some space between the hamburger and this —
+       this extra margin brings the two closer than that alone, per direct request ("more to the
+       left"; was 12px, for 20px total). */
+    margin-left: 4px;
   }
   /* Hides the logo outright while searching, per direct request (the ellipsis-shrink above was
      the first attempt, but it still left a truncated sliver of "SaveCraft" — see screenshot —
@@ -449,132 +685,49 @@
     display: none;
   }
 
-  /* Sidebar becomes a full-height drawer above the header */
-  .sidebar {
-    position: fixed;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    z-index: 500;
-    transform: translateX(-100%);
-    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-    width: 85vw;
-    max-width: 300px;
-    box-shadow: 4px 0 24px rgba(0,0,0,0.3);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    padding: 0;
-  }
-  /* NOTE: .sidebar.sidebar-collapsed's desktop icon-rail styling used to leak in here too (both
-     width and, separately, hidden labels) — now fixed at the root in sidebar.css by scoping that
-     whole block behind min-width:769px, so no override is needed here anymore. See that file's
-     comment on the `.sidebar.sidebar-collapsed` block for the full story. */
-  .sidebar.open { transform: translateX(0); }
-
-  /* Mobile sidebar header */
-  .sidebar-mobile-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 16px 14px;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-  .sidebar-mobile-title {
-    font-size: 17px;
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-  .sidebar-close-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: none;
-    background: var(--hover-bg);
-    color: var(--text-secondary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-  .sidebar-close-btn:hover { background: var(--border); }
-
-  /* Mode tabs: My Saves / Curated */
-  .sidebar-mode-tabs {
-    display: flex;
-    gap: 8px;
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-  .sidebar-mode-tab {
-    flex: 1;
-    padding: 8px 10px;
-    border-radius: 20px;
-    border: none;
-    background: var(--hover-bg);
-    color: var(--text-secondary);
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s;
-  }
-  .sidebar-mode-tab.active {
-    background: var(--primary);
-    color: #fff;
-  }
-  /* Fixed white/dark-gray regardless of theme (not var(--text-primary), which flips to a light
-     color in dark mode) — hover for a mouse, :active for the moment a finger is actually touching
-     it, covering both the "hovering or tapping" cases these tabs get on a phone. Placed after
-     .active above so it also wins the tie there (equal specificity, later rule wins) — tapping the
-     already-active tab gets the same white feedback flash as the inactive one. */
-  .sidebar-mode-tab:hover,
-  .sidebar-mode-tab:active {
-    background: #fff;
-    color: #3c4043;
-  }
-
-  /* Scrollable items area */
-  .sidebar-items-scroll {
-    flex: 1;
-    overflow-y: auto;
-    padding: 8px 0;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Larger touch targets on mobile */
-  .sidebar-items-scroll .sidebar-item {
-    padding: 12px 16px 12px 20px;
-    min-height: 44px;
-  }
-
-  /* Overlay behind open sidebar */
-  .sidebar-overlay {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 499;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.28s ease;
-  }
-  .sidebar-overlay.open {
-    opacity: 1;
-    pointer-events: auto;
-  }
+  /* Sidebar mobile drawer CSS moved to sidebar.css's own "MOBILE SIDEBAR DRAWER" section. */
 
   /* Main layout: full width */
-  .main-layout { height: calc(100vh - 64px); }
-  .grid-area { padding: 16px; }
+  /* REAL BUG, found and fixed: 100vh on iOS Safari doesn't track the browser's own address-bar/
+     toolbar chrome showing or hiding — it's a fixed value that leaves a gap the size of whatever
+     chrome is currently visible, which is exactly what showed up as two separate gaps on the
+     Kanban board (one inside the last column, one below the whole board — both are downstream of
+     .main-layout itself coming up short, since .kanban-wrap/.kanban-board/.kanban-column/
+     .kanban-cards all correctly flex:1 the rest of the way once given accurate space to fill).
+     100dvh (dynamic viewport height) tracks the *actual* visible area as that chrome animates in
+     and out, per direct request ("I want the sections to go to the end of the screen"). Falls
+     back to plain vh in the (now rare) browsers that don't support dvh, via the two-declaration
+     fallback pattern below rather than @supports, since an unsupported value is simply ignored. */
+  .main-layout { height: calc(100vh - 64px); height: calc(100dvh - 64px); }
+  .grid-area { padding: var(--page-mobile-pad); }
 
   /* Single column cards */
   .cards-grid { grid-template-columns: 1fr; }
 
+  /* Empty states ("Nothing here yet", no results, curated prompts) — the landing-state box's own
+     64px-per-side horizontal padding (cards.css) is sized for desktop's much wider canvas; on a
+     phone that leaves very little width for the description, risking a 3rd line. Padding trimmed
+     down for more room, and the description hard-capped to 2 lines as a guarantee regardless of
+     copy length or exact screen width, per direct request. */
+  .cards-grid.landing-state .empty-state {
+    padding: 40px 24px;
+  }
+  .empty-state p {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
   /* Grid header */
   .grid-header { margin-bottom: 14px; }
+  /* Cause Curated specifically — per direct request, the gap between the Dashboard link (in
+     .grid-header) and the banner below it (.bare-list-hero) should be exactly 20px, not this
+     page's own general 14px mobile tightening above (which applies to every other view's
+     .grid-header too, so scoped here rather than changed globally). */
+  .grid-area:has(.bare-list-page) .grid-header {
+    margin-bottom: 20px;
+  }
 
   /* FAB */
   .fab-add {
@@ -583,7 +736,14 @@
     justify-content: center;
     position: fixed;
     bottom: 24px;
-    left: 24px;
+    /* Horizontally centered, per request (was pinned to the left edge) — left: 50% +
+       translateX(-50%) centers against the real viewport width regardless of the button's own
+       56px, rather than a fixed left px value that'd only be centered at one specific screen
+       width. Vertical position (bottom: 24px) is untouched — only asked to center horizontally.
+       (Tonight's own session briefly moved this to the left edge per its own direct request, then
+       confirmed reverting back to centered once this conflict surfaced during the main merge.) */
+    left: 50%;
+    transform: translateX(-50%);
     width: 56px;
     height: 56px;
     border-radius: 50%;
@@ -601,7 +761,9 @@
   .fab-add:active {
     background: #fff;
     color: var(--primary);
-    transform: scale(1.05);
+    /* translateX(-50%) carried over from the base rule's own centering — a bare scale(1.05) here
+       would replace (not add to) that transform, snapping the button back to the left on hover. */
+    transform: translateX(-50%) scale(1.05);
   }
 }
 

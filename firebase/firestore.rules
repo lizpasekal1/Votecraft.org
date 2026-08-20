@@ -2,6 +2,19 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Shared by admin_kanban_cards and dashboard_demo_config below — mirrors utils.js's
+    // isAdminUser(email, role) exactly (hardcoded email allowlist OR a role:'admin' field on the
+    // requester's own savecraft_users/{uid} doc), plus the WordPress plugin's dedicated bot
+    // account UID. See admin_kanban_cards' own comment for the full reasoning on why this is a
+    // logic mirror rather than a static human-UID allowlist.
+    function isSaveCraftAdmin() {
+      return request.auth != null && (
+        request.auth.uid == 'cS6j7sw1yBORiI7SIat8SN32QBy2' ||
+        request.auth.token.email.lower() in ['lizpasekal@gmail.com'] ||
+        get(/databases/$(database)/documents/savecraft_users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+
     // -----------------------------------------------------------------------
     // JokeMaster
     // -----------------------------------------------------------------------
@@ -47,6 +60,37 @@ service cloud.firestore {
       match /authors/{authorId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
+    }
+
+    // -----------------------------------------------------------------------
+    // SaveCraft — Admin Kanban board (shared, not per-user). Mirrors utils.js's
+    // isAdminUser(email, role) exactly — a hardcoded email allowlist OR a
+    // role:'admin' field on the requester's own savecraft_users/{uid} doc —
+    // plus one hardcoded UID for the WordPress plugin's dedicated bot account
+    // (wp-savecraft-bot@votecraft-789.internal), which has no email in that
+    // allowlist and no savecraft_users doc of its own. Deliberately NOT a
+    // static human-UID allowlist: that would've meant hardcoding Liz's own
+    // account UID here too (and every future admin's), and silently going
+    // stale the moment ADMIN_EMAILS changes on the JS side without a matching
+    // rules edit. The bot's credential (a refresh token, not this UID itself)
+    // is the only thing that ever needs to live inside WordPress, and this
+    // rule is the entirety of what that credential can touch: nothing under
+    // savecraft_users, no writes to curated_items, no account listing (that's
+    // a separate system — see Documentation/launch-requirements.md's Phase 2
+    // note in Savecraft).
+    match /admin_kanban_cards/{cardId} {
+      allow read, write: if isSaveCraftAdmin();
+    }
+
+    // -----------------------------------------------------------------------
+    // SaveCraft — Dashboard demo-content config (queue-kanban / recent-saves /
+    // curated-lists docs). Public read, same as curated_items — every signed-
+    // out visitor's Dashboard reads this to render fallback content, not just
+    // admins. Write is admin-only, same check as admin_kanban_cards, so the
+    // WordPress plugin's bot account can edit it without any broader access.
+    match /dashboard_demo_config/{docId} {
+      allow read: if true;
+      allow write: if isSaveCraftAdmin();
     }
 
   }

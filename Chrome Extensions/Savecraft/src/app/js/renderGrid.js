@@ -6,16 +6,20 @@ import {
 } from './state.js';
 import {
   escapeHtml, catClass, badgeLabel, isMusicAlbumsSectionView, isOwnAuthorPageView, getDomain,
+  isAdminUser,
 } from './utils.js';
 import { persistViewState, persistItem, persistHiddenCurated, removeItem } from './storage.js';
 import { navigateToView } from './navigation.js';
+import { getCurrentUser } from './auth.js';
 import { wireCardAuthorLinks } from './authors.js';
 import { renderKanbanBoard } from './kanban.js';
+import { renderAdminKanbanBoard } from './adminKanban.js';
 import { openDetailModal } from './detailModal.js';
 import { openEditModal } from './addEditModal.js';
 import { renderDashboard } from './dashboard.js';
 import { renderProfilePage } from './profile.js';
 import { renderSharedSavesPage } from './sharedSaves.js';
+import { renderAboutPage } from './about.js';
 import { renderEmbedBuilder } from './embedBuilder.js';
 import { renderSidebar } from './renderSidebar.js';
 import { renderAuthorPage } from './renderAuthorPage.js';
@@ -67,6 +71,19 @@ export function renderGrid() {
     return;
   }
 
+  // isAdminUser gate here too, not just hiding the sidebar link (renderSidebar.js) — otherwise a
+  // non-admin landing directly on ?v=admin-kanban (bookmarked, typed, or a stale link) would still
+  // render it. Redirects to Dashboard rather than rendering nothing — navigateToView() calls back
+  // into renderSidebar()/renderGrid() itself, but only once: 'dashboard' doesn't hit this branch.
+  if (state.view === 'admin-kanban') {
+    if (isAdminUser(getCurrentUser()?.email, state.role)) {
+      renderAdminKanbanBoard();
+      return;
+    }
+    navigateToView('dashboard', { replace: true });
+    return;
+  }
+
   if (state.view === 'dashboard') {
     renderDashboard();
     return;
@@ -79,6 +96,11 @@ export function renderGrid() {
 
   if (state.view === 'shared') {
     renderSharedSavesPage();
+    return;
+  }
+
+  if (state.view === 'about') {
+    renderAboutPage();
     return;
   }
 
@@ -222,7 +244,7 @@ export function renderGrid() {
       <div class="empty-state">
         <div class="empty-state-icon">${isSearch ? '🔍' : isCuratedLanding ? '✨' : isCuratedTop ? '✨' : '📦'}</div>
         <h3>${isSearch ? 'No results found' : isCuratedLanding ? 'Pick a category' : isCuratedTop ? `${genre} Saves` : 'Nothing here yet'}</h3>
-        <p>${isSearch ? `No items match "${escapeHtml(state.search)}"` : isCuratedLanding ? 'Explore the sidebar to see our curated picks.' : isCuratedTop ? 'Pick a category from the sidebar to explore curated picks.' : 'Right-click any page to save it, or click + Add Item.'}</p>
+        <p>${isSearch ? `No items match "${escapeHtml(state.search)}"` : isCuratedLanding ? 'Explore the sidebar to see our curated picks.' : isCuratedTop ? 'Pick a category from the sidebar to explore curated picks.' : '+ Add Item to start building this library.'}</p>
       </div>
     `;
     return;

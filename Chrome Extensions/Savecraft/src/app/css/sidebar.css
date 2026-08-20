@@ -85,7 +85,8 @@
   .sidebar.sidebar-collapsed .sidebar-subfolder,
   .sidebar.sidebar-collapsed .sidebar-add-folder,
   .sidebar.sidebar-collapsed .sidebar-divider,
-  .sidebar.sidebar-collapsed .sidebar-genre-arrow {
+  .sidebar.sidebar-collapsed .sidebar-genre-arrow,
+  .sidebar.sidebar-collapsed .sidebar-group-bg {
     display: none;
   }
   .sidebar.sidebar-collapsed .sidebar-item {
@@ -94,13 +95,26 @@
     margin-right: 0;
     border-radius: 12px;
   }
+  /* .sidebar-group.open's own margin-right: 12px (sidebar.css, unconditional — matches every
+     non-grouped row's own inset in the normal expanded sidebar) isn't covered by the .sidebar-item
+     reset just above, since the group is a separate outer element — left unreset here, it shrinks
+     just the *open* section's centering width on this narrow rail, shifting only that one icon
+     left of where every other (non-open) icon centers. Reported live specifically on Dashboard,
+     since it's open by default. */
+  .sidebar.sidebar-collapsed .sidebar-group.open {
+    margin-right: 0;
+  }
   .sidebar.sidebar-collapsed .sidebar-label {
     flex: none;
     justify-content: center;
   }
 
   /* Collapsed rail: the full-row hover highlight looks off since the row is much wider than the
-     icon itself — instead, only the icon's own background square lightens on hover. */
+     icon itself — instead, only the icon's own background square lightens on hover. Same reasoning
+     is why .sidebar-group-bg (the open-section gray fill, sidebar.css further down) is hidden
+     outright above rather than adapted to the rail — it rendered its full-row rounded-right shape
+     behind a single 64px-wide icon whenever that section happened to be open, reported live as a
+     stray rounded shape behind the Dashboard icon specifically (Dashboard defaults to open). */
   .sidebar.sidebar-collapsed .sidebar-item:hover {
     background: none;
   }
@@ -123,6 +137,219 @@
   }
 }
 
+/* ===== SIDEBAR (mobile-only elements, hidden on desktop) ===== */
+/* Moved here from misc.css, alongside the rest of the sidebar's own CSS — this file already owned
+   the desktop collapsed-rail block above; the mobile drawer's rules had been left behind in
+   misc.css's catch-all instead of living with the rest of the sidebar's CSS. */
+.sidebar-overlay {
+  display: none;
+}
+
+.sidebar-mobile-header,
+.sidebar-mode-tabs {
+  display: none;
+}
+
+.sidebar-items-scroll {
+  /* desktop: behaves as a normal block, sidebar itself scrolls */
+}
+
+/* ===== MOBILE SIDEBAR DRAWER ===== */
+@media (max-width: 768px) {
+  /* Sidebar becomes a full-height drawer above the header */
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 500;
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Plain px, not vw — on every real iPhone width (375-430px CSS px) 85vw always exceeds this
+       max-width cap anyway, so the cap was already what actually controlled this drawer's width;
+       vw itself is dropped entirely now to sidestep a documented iOS Safari quirk (this same
+       codebase already hit it elsewhere — see .modal's own width comment in addEditModal.css —
+       where vw can render a few px wider than the true viewport). 240px — down further from
+       285px, then 260px, per request. */
+    width: 240px;
+    max-width: 90vw;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+  }
+  /* NOTE: .sidebar.sidebar-collapsed's desktop icon-rail styling used to leak in here too (both
+     width and, separately, hidden labels) — now fixed at the root by scoping that whole block
+     behind min-width:769px (above). See that block's own comment on `.sidebar.sidebar-collapsed`
+     for the full story. */
+  .sidebar.open { transform: translateX(0); }
+
+  /* Mobile sidebar header */
+  /* Padding trimmed down (was 16px 16px 14px) and the close button shrunk (was 32px), per request
+     — the title row read as too tall relative to the shorter rows below it. */
+  .sidebar-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .sidebar-mobile-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .sidebar-close-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: var(--hover-bg);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .sidebar-close-btn:hover { background: var(--border); }
+
+  /* Mode tabs: My Saves / Curated */
+  .sidebar-mode-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  /* Vertical padding trimmed (was 8px), per request — icon/text sizes (font-size, the tab's own
+     content) deliberately left untouched, just the space around them. */
+  .sidebar-mode-tab {
+    flex: 1;
+    padding: 5px 10px;
+    border-radius: 20px;
+    border: none;
+    background: var(--hover-bg);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .sidebar-mode-tab.active {
+    background: var(--primary);
+    color: #fff;
+  }
+  /* "Curated" specifically stays purple all the time, per request — not just while it's the
+     active tab (.active above only applies when state.sidebarMode === 'curated'). Equal
+     specificity to .active (class + attribute selector vs. two classes), placed after it so it
+     wins the tie when both apply — same purple either way there, this only actually changes
+     anything for the resting/inactive state. */
+  .sidebar-mode-tab[data-sidebar-opt="curated"] {
+    background: var(--primary);
+    color: #fff;
+  }
+  /* White outline when actually selected, per request — now that the tab stays purple whether
+     active or not, this is the only remaining visual difference showing which one is current. */
+  .sidebar-mode-tab[data-sidebar-opt="curated"].active {
+    box-shadow: 0 0 0 2px #fff;
+  }
+  /* Fixed white/dark-gray regardless of theme (not var(--text-primary), which flips to a light
+     color in dark mode) — hover for a mouse, :active for the moment a finger is actually touching
+     it, covering both the "hovering or tapping" cases these tabs get on a phone. Placed after
+     .active above so it also wins the tie there (equal specificity, later rule wins) — tapping the
+     already-active tab gets the same white feedback flash as the inactive one. */
+  .sidebar-mode-tab:hover,
+  .sidebar-mode-tab:active {
+    background: #fff;
+    color: #3c4043;
+  }
+
+  /* Scrollable items area — top padding trimmed (was a symmetric 8px) per request: the gap between
+     the Curated/Shared tabs' divider and the first section's own gray/black fill (.sidebar-group-bg)
+     read as an odd empty band above it now that that fill exists, more noticeable than the same 8px
+     ever was against a plain row. Bottom kept at 8px, unaffected — nothing sits flush against it. */
+  .sidebar-items-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 3px 0 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Larger touch targets on mobile — vertical padding/min-height trimmed down per request (rows
+     read as too tall/far apart), still comfortably tappable at 38px. No padding-left here (was a
+     flat 20px) — that clobbered .sidebar-subfolder/.sidebar-subfolder--nested's own deeper 46px/
+     66px indent (below) with equal specificity + later source order, flattening every nested row
+     (Queue Kanban, Saved Lists, a category's own subfolders, etc.) to the same indent as a
+     top-level row — desktop was never affected since nothing there overrides padding-left this
+     broadly. Leaving it unset lets each row's own indent rule apply same as desktop, per request. */
+  .sidebar-items-scroll .sidebar-item {
+    padding-top: 8px;
+    padding-right: 16px;
+    padding-bottom: 8px;
+    min-height: 38px;
+  }
+  /* Dashboard row specifically — shorter top/bottom padding, per an earlier request. Its
+     padding-left override (10px, vs. every other row's 20px) was removed per a later request —
+     shifting it left of its own icon made it visibly misaligned against Sources/Shows/Music/etc.
+     below it; now it falls back to the shared 20px indent like every other top-level row. */
+  .sidebar-dashboard-link {
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+  /* .sidebar-divider's own default 8px top/bottom margin (below) was stacking with the row
+     padding above it, per request — trimmed to 4px, then 2px, mobile drawer only (desktop's
+     sidebar keeps the original 8px). */
+  .sidebar-items-scroll .sidebar-divider {
+    margin-top: 2px;
+    margin-bottom: 2px;
+  }
+  /* Icon badges — shrunk again (42px read too large on mobile once actually compared side by
+     side), but keeping the same proportions as desktop's own 11px-radius-on-42px-box instead of a
+     flat value: 8px radius on this 32px box is that same ~26% ratio, so corners read consistent
+     with desktop rather than either too round or too square. Sheen (::after) and svg scaled down
+     to match. */
+  .sidebar-items-scroll .cat-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    /* Everything else — background, box-shadow bevel, the ::after sheen's own gradient/opacity —
+       is deliberately left untouched here, inherited as-is from the shared .cat-icon rule below,
+       so styling stays as close to desktop's as possible; only the size-dependent properties
+       (dimensions, radius, this font-size for any emoji-based icons, svg size below) are scaled
+       down to match, at the same ~0.76 ratio (32/42) throughout. */
+    font-size: 18px;
+  }
+  .sidebar-items-scroll .cat-icon::after {
+    border-radius: 8px 8px 0 0;
+  }
+  .sidebar-items-scroll .cat-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Overlay behind open sidebar — lighter tint (was 0.5), per request, so the page underneath
+     stays visibly readable rather than mostly obscured while navigating with the drawer open. It
+     only ever covers the exposed area to the right of the drawer itself (the drawer sits on top,
+     z-index 500 vs this overlay's 499, so the drawer's own content is never dimmed by it). */
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.25);
+    z-index: 499;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.28s ease;
+  }
+  .sidebar-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
 .sidebar-item {
   display: flex;
   align-items: center;
@@ -139,13 +366,88 @@
   user-select: none;
 }
 
+/* No background on hover, per request — was var(--hover-bg), which read as a mismatched gray patch
+   against an open .sidebar-group's own fill. Just the text turns purple instead; most row icons
+   have their own hardcoded fill (unaffected by this), and .sidebar-count/.sidebar-arrow each set
+   their own explicit color below, so neither picks up this inherited change either. */
 .sidebar-item:hover {
-  background: var(--hover-bg);
+  color: var(--primary);
 }
 
+/* Scoped to :not(.open) — inside an open .sidebar-group, .sidebar-group-bg below already fills the
+   whole section, so a row's own background here would just be redundant paint underneath it. */
 .sidebar-item.active {
-  background: var(--primary-bg);
   color: var(--primary);
+}
+.sidebar-group:not(.open) .sidebar-item.active {
+  background: var(--active-bg-light);
+}
+
+/* Every top-level row's own icon square fills solid purple (white icon for contrast) while it's
+   the active view — per direct request/reference screenshot, generalized from an initial
+   Dashboard-only version to every row that carries a boxed .cat-icon (Dashboard + every category
+   header — CAT_EMOJI in state.js). Subfolder rows (Queue Kanban, a category's own folders, etc.)
+   render their icon plain, with no .cat-icon wrapper, so this naturally doesn't touch them.
+   Unscoped by any media query so it applies everywhere (mobile drawer and the normal expanded
+   desktop sidebar alike), not just the desktop collapsed rail's own version of this same effect
+   above. Each icon's own inline fill="#5B5BEF" attribute (renderSidebar.js/state.js) is a
+   presentation attribute, so this stylesheet rule overrides it same as the collapsed-rail version
+   already relies on. */
+/* Same treatment on hover as on active, not just one or the other — per direct request. Doesn't
+   touch the desktop collapsed rail's own hover (its icon lightens to a plain gray instead, scoped
+   inside its own more-specific media-query rule above), which stays as its own deliberately
+   different, already-established treatment. */
+.sidebar-item.active .cat-icon,
+.sidebar-item:hover .cat-icon {
+  background: var(--primary);
+}
+.sidebar-item.active .cat-icon svg,
+.sidebar-item:hover .cat-icon svg {
+  fill: #fff;
+}
+
+/* Wraps any collapsible sidebar section's header row plus its expanded children — Dashboard
+   (Queue Kanban, Admin Kanban, and Saved Lists/Curated Lists' own header rows, though not their
+   further-nested list items — see the [data-toggle-list] handler below, which still toggles those
+   the plain instant way) and every top-level category (Sources, Shows, Music, Games, Films,
+   Literature, Arts, and their own nested folders) alike. Per request, opening any one of these
+   fills the gray highlight all the way down through every row in the open section, not just the
+   header row itself. The rounded-right shape now lives on this outer group instead of each
+   individual row: only the very top (the header's own corners) and very bottom (whichever row ends
+   up last) round off, while every row in between stays flush/square on the right so the block reads
+   as one continuous shape rather than a stack of separate pills. */
+/* z-index: 0 (not just position: relative) is required here — without an explicit z-index,
+   .sidebar-group doesn't actually establish its own stacking context, so .sidebar-group-bg's own
+   z-index: -1 below escapes past it entirely and sinks behind the sidebar's own background instead
+   of just behind this group's row text, rendering it invisible (reported live). */
+.sidebar-group {
+  position: relative;
+  z-index: 0;
+}
+.sidebar-group.open {
+  margin-right: 12px;
+}
+/* The actual gray fill lives on this separate empty layer behind the rows, not on .sidebar-group
+   itself — renderSidebar.js's View Transition (the smooth "opens down" animation) is named on this
+   element specifically. Naming a growing/shrinking element makes the browser cross-fade a
+   *stretched* snapshot of it mid-animation; fine for a plain color rectangle (a stretched solid
+   color looks identical to a correctly-sized one), but visibly warps real content, which is why the
+   header/row text itself is deliberately left out of this element and unnamed. */
+.sidebar-group-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 0 24px 24px 0;
+  background: var(--active-bg-light);
+  opacity: 0;
+  pointer-events: none;
+}
+.sidebar-group.open .sidebar-group-bg {
+  opacity: 1;
+}
+.sidebar-group.open .sidebar-item {
+  margin-right: 0;
+  border-radius: 0;
 }
 
 .sidebar-genre {
@@ -247,6 +549,23 @@
   padding-left: 66px;
 }
 
+/* A folder's own accordion arrow — sits first in the row (before its icon), same "arrow, then
+   label" order as .profile-saved-list-arrow on the Profile page's own list rows. Placed at the
+   start rather than the end like a category header's .sidebar-arrow, since a folder row's right
+   edge is already claimed by .sidebar-delete-folder (position: absolute, right: 16px, appears on
+   hover) — putting another interactive control there too would have the delete button's hover
+   overlay cover it. */
+.sidebar-folder-toggle {
+  font-size: 9px;
+  color: var(--text-secondary);
+  width: 10px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.sidebar-folder-toggle:hover {
+  color: var(--primary);
+}
+
 /* Saved Lists' child rows only (showRadio in renderSidebar.js's _renderDashboardListRow) — same
    visual language as the detail modal's own "Save to:" menu (.detail-save-to-menu-radio in
    detailModal.css), so picking one of these rows reads as choosing a section, not navigating into
@@ -277,6 +596,24 @@
   border-radius: 50%;
   background: var(--primary);
   transform: translate(-50%, -50%);
+}
+
+/* Saved Lists / Curated Lists' own icon — the only two rows _renderDashboardListRow() renders —
+   sit in a small purple rounded-rect badge with a white icon, per direct request, so the two rows
+   now pinned at the top of the Dashboard group read as a distinct, prioritized pair rather than
+   blending into the plain-icon rows (Queue Kanban, Admin Kanban) below them. */
+.sidebar-list-icon-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--primary);
+  flex-shrink: 0;
+}
+.sidebar-list-icon-box svg {
+  fill: #fff;
 }
 
 .sidebar-add-folder {

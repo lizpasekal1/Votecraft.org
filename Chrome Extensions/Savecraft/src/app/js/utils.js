@@ -2,6 +2,21 @@
 
 import { state, FOLDER_ICON, GENERIC_FOLDER_ICON_PATH } from './state.js';
 
+// Admin gate for Admin Kanban (renderSidebar.js/renderGrid.js/storage.js) — per request, two
+// mechanisms combined rather than picking one: a small hardcoded allowlist (simplest, no extra
+// data model, covers the account that actually needs this today) OR an explicit 'admin' role on
+// the signed-in account's own synced data (savecraft_role, storage.js) so a future admin could be
+// added via the Firebase console alone, no code deploy required. Pure function — takes the email/
+// role explicitly rather than importing auth.js/state.js's own copies, so it has no import-order
+// dependency on either (auth.js already has documented circular-import concerns with storage.js).
+const ADMIN_EMAILS = ['lizpasekal@gmail.com'];
+export function isAdminUser(email, role) {
+  // Lowercased on both sides — a plain .includes() would silently fail (no error, just no admin
+  // access) if the email ever comes back differently-cased than the allowlist entry, e.g. a
+  // mobile keyboard auto-capitalizing the first letter at sign-up.
+  return (!!email && ADMIN_EMAILS.includes(email.toLowerCase())) || role === 'admin';
+}
+
 // Movie's "Videos" folder (YouTube/Vimeo links) — pure URL parsing, no network. Used both to
 // build a thumbnail URL (YouTube's is fully derivable from the id; Vimeo's isn't, so that one's
 // fetched via oEmbed in api.js instead) and to build the lightbox's embeddable player src.
@@ -42,6 +57,27 @@ export function sortFoldersForDisplay(folders, category) {
     if (bi === -1) return -1;
     return ai - bi;
   });
+}
+
+// A folder's direct subfolders (folder.parentFolderId === parentId) — shared by every place that
+// walks the subfolder tree (renderSidebar.js's recursive row rendering, addEditModal.js's
+// flattened folder <select>, the delete-cascade below), instead of each hand-rolling the same
+// `.filter(f => f.parentFolderId === X)` independently.
+export function getChildFolders(folders, parentId) {
+  // Normalizes both sides through `|| null` — pre-existing folders (seeded before subfolders
+  // existed) never got a parentFolderId field at all, so their own value is `undefined`, not
+  // `null`; a strict === null on the caller's "top-level" query would otherwise miss them.
+  return folders.filter(f => (f.parentFolderId || null) === (parentId || null));
+}
+
+// A folder id plus every descendant subfolder id, recursively — used when deleting a folder needs
+// to also remove its whole subtree, not just the one folder directly acted on.
+export function getFolderDescendantIds(folders, folderId) {
+  const ids = [folderId];
+  getChildFolders(folders, folderId).forEach(child => {
+    ids.push(...getFolderDescendantIds(folders, child.id));
+  });
+  return ids;
 }
 
 // Renders a folder's sidebar/wizard icon — its own custom icon (FOLDER_ICON, keyed by folder id)
@@ -101,6 +137,11 @@ export function patchCardImage(itemId, imageUrl) {
 }
 
 export function catClass(cat) { return (cat || '').replace(/\s+/g, '-'); }
+
+// Matches the stable ids storage.js's _seedQueueDemoItems() assigns (queue-demo-0, queue-demo-1,
+// …) — shared here since kanban.js/dashboard.js's card renderers and storage.js's own one-time
+// title backfill all need to recognize these same seeded cards.
+export function isQueueDemoId(id) { return /^queue-demo-\d+$/.test(id); }
 
 // Kanban list membership: modern items carry `listIds` (an array); a lone leftover `listId`
 // (pre-multi-list schema) is normalized into a one-element array instead of being migrated on

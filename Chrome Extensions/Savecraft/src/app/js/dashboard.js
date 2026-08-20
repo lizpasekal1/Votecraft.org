@@ -6,7 +6,7 @@
 // .dash-thumb-* / .dash-carousel-* classes in dashboard.css).
 
 import { state, CATEGORIES, CAT_LABEL, CURATED_GENRES, GENRE_EMOJI, CURATED_ITEMS } from './state.js';
-import { escapeHtml, catClass } from './utils.js';
+import { escapeHtml, catClass, isQueueDemoId } from './utils.js';
 import { openDetailModal } from './detailModal.js';
 import { KANBAN_DEMO, KANBAN_COLUMNS } from './kanban.js';
 import { renderSidebar, renderGrid } from './render.js';
@@ -37,8 +37,17 @@ function resolveFavoriteSlides() {
   const real = getAllFavoriteItems();
   if (real.length > 0) return { items: real, isDemo: false };
 
-  // Fallback: curated Top 100 Musician + Music Album — the two categories confirmed to have
-  // real populated Top 100 data. Guarded against either being absent/empty.
+  // Admin-editable via the WordPress plugin's "Demo Content" section (state.dashboardDemoConfig,
+  // see storage.js's initDashboardDemoConfig) — an explicit, ordered list of cards (each either
+  // hand-picked from curated data or fully custom, per how the admin built it) takes priority
+  // over the old auto-derived fallback below, once configured.
+  const configured = state.dashboardDemoConfig?.recentSaves?.cards;
+  if (configured?.length) {
+    return { items: configured.map(c => ({ ...c, curated: true })), isDemo: true };
+  }
+
+  // Fallback (unconfigured state): curated Top 100 Musician + Music Album — the two categories
+  // confirmed to have real populated Top 100 data. Guarded against either being absent/empty.
   const musicians = CURATED_ITEMS['Top 100']?.['Musician'] || [];
   const albums = CURATED_ITEMS['Top 100']?.['Music Album'] || [];
   const demo = [...musicians, ...albums]
@@ -77,8 +86,17 @@ export function _wireCarouselArrows(card, strip) {
   };
 
   strip.scrollLeft = copyWidth(); // start centered in the middle copy
-  card.querySelector('.dash-carousel-prev')?.addEventListener('click', () => scrollByCard(-1));
-  card.querySelector('.dash-carousel-next')?.addEventListener('click', () => scrollByCard(1));
+  // .dash-carousel-next was removed from the Dashboard's own two carousels (per direct request —
+  // see their markup below), but this function is shared with Shared Saves/Embed Builder/Curated
+  // landing rows (sharedSaves.js, embedBuilder.js, renderCuratedPages.js), which still render and
+  // rely on a working prev/next pair — the `?.` already makes wiring either one a no-op wherever
+  // it's absent, so this stays correct for every caller either way.
+  const nextBtn = card.querySelector('.dash-carousel-next');
+  // When there's no separate next button (the Dashboard's own two carousels), the sole remaining
+  // arrow advances the slides — moves them left — instead of going back, per direct request:
+  // there's nothing else left to handle forward motion.
+  card.querySelector('.dash-carousel-prev')?.addEventListener('click', () => scrollByCard(nextBtn ? -1 : 1));
+  nextBtn?.addEventListener('click', () => scrollByCard(1));
 }
 
 // ===== favorites carousel =====
@@ -189,7 +207,6 @@ function buildFavoritesWidget() {
       <div class="dash-carousel">
         <button class="dash-carousel-prev" aria-label="Previous">‹</button>
         <div class="dash-carousel-strip">${cardsHtml}</div>
-        <button class="dash-carousel-next" aria-label="Next">›</button>
       </div>
     </div>`;
 }
@@ -199,7 +216,10 @@ function buildFavoritesWidget() {
 const MINI_CARDS_PER_COLUMN = 3;
 
 function buildMiniKanbanCard(item) {
-  const letter = (item.title || '?')[0].toUpperCase();
+  // The seeded queue-demo-N items (storage.js) keep a "D" placeholder letter regardless of their
+  // own title's first letter, per direct request — a leftover visual marker for "this is demo
+  // content" now that their titles themselves no longer carry a "Demo:" prefix saying so.
+  const letter = isQueueDemoId(item.id) ? 'D' : (item.title || '?')[0].toUpperCase();
   const thumb = item.imageUrl
     ? `<img class="dash-kmini-thumb" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">`
     : `<div class="dash-kmini-thumb dash-kmini-thumb--placeholder placeholder-${catClass(item.category)}">${letter}</div>`;
@@ -229,10 +249,10 @@ function buildKanbanWidget() {
     // board still reads as "a board with columns" rather than four empty boxes.
     if (isEmpty && colIndex === 0) colItems = [KANBAN_DEMO()];
 
+    // "+N more" removed per direct request — the column header's own count badge already shows
+    // the true total, so this was redundant.
     const shown = colItems.slice(0, MINI_CARDS_PER_COLUMN);
-    const remaining = colItems.length - shown.length;
-    const cardsHtml = shown.map(buildMiniKanbanCard).join('')
-      + (remaining > 0 ? `<div class="dash-kmini-more">+${remaining} more</div>` : '');
+    const cardsHtml = shown.map(buildMiniKanbanCard).join('');
 
     return `
       <div class="dash-kmini-col">
@@ -310,13 +330,35 @@ export function _resolveGenreCover(genre) {
   return null;
 }
 
+// Admin-editable via the WordPress plugin's "Demo Content" section (state.dashboardDemoConfig,
+// see storage.js's initDashboardDemoConfig) — a configured `genres` list (order, display name,
+// cover per entry) replaces DASHBOARD_CURATED_ORDER/CURATED_LIST_DISPLAY_NAMES/
+// CURATED_LIST_COVER_OVERRIDES wholesale once set; any entry that omits displayName/coverUrl
+// still falls back to that genre's own hardcoded default/auto-resolved cover, so a partial
+// config (e.g. just reordering) doesn't lose the rest.
+function _resolveCuratedListsWidgetConfig() {
+  const configured = state.dashboardDemoConfig?.curatedLists?.genres;
+  if (!configured?.length) {
+    return DASHBOARD_CURATED_ORDER.map(genre => ({
+      genre, displayName: CURATED_LIST_DISPLAY_NAMES[genre] || genre,
+      coverUrl: CURATED_LIST_COVER_OVERRIDES[genre] || _resolveGenreCover(genre),
+    }));
+  }
+  return configured.map(g => ({
+    genre: g.genre,
+    displayName: g.displayName || CURATED_LIST_DISPLAY_NAMES[g.genre] || g.genre,
+    coverUrl: g.coverUrl || CURATED_LIST_COVER_OVERRIDES[g.genre] || _resolveGenreCover(g.genre),
+  }));
+}
+
 function buildCuratedListsWidget() {
+  const order = _resolveCuratedListsWidgetConfig();
   // Tripled so _wireCarouselArrows() always has room to page into on either side — see its
   // comment for why. data-genre still drives navigation, so duplicate cards behave identically.
-  const tripledOrder = [...DASHBOARD_CURATED_ORDER, ...DASHBOARD_CURATED_ORDER, ...DASHBOARD_CURATED_ORDER];
-  const cardsHtml = tripledOrder.map(genre => {
-    const cover = CURATED_LIST_COVER_OVERRIDES[genre] || _resolveGenreCover(genre);
-    const label = CURATED_LIST_DISPLAY_NAMES[genre] || genre;
+  const tripledOrder = [...order, ...order, ...order];
+  const cardsHtml = tripledOrder.map(({ genre, displayName, coverUrl }) => {
+    const cover = coverUrl;
+    const label = displayName;
     const art = cover
       ? `<img src="${escapeHtml(cover)}" alt="" loading="lazy" decoding="async">`
       : `<span class="dash-thumb-fallback">${GENRE_EMOJI[genre] || '📁'}</span>`;
@@ -336,7 +378,6 @@ function buildCuratedListsWidget() {
       <div class="dash-carousel">
         <button class="dash-carousel-prev" aria-label="Previous">‹</button>
         <div class="dash-carousel-strip">${cardsHtml}</div>
-        <button class="dash-carousel-next" aria-label="Next">›</button>
       </div>
     </div>`;
 }

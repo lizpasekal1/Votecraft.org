@@ -27,6 +27,11 @@
 @media (max-width: 768px) {
   .grid-area:has(.dashboard-wrap) {
     overflow-y: auto;
+    /* Extra room at the very end of the scroll so the last widget's own content (e.g. the
+       Profile widget) doesn't end up sitting directly behind the floating "+ Add Item" FAB
+       (misc.css's .fab-add — 56px tall, 24px off the bottom, so ~96px covers it plus a little
+       breathing room) once the user scrolls all the way down, per request. */
+    padding-bottom: 96px;
   }
   .dashboard-wrap {
     max-height: none;
@@ -122,7 +127,10 @@
                    equal to content's max-content size, not 0 */
 }
 
-.dash-card-header { display: flex; align-items: center; justify-content: space-between; }
+/* padding-bottom: 5px is extra room below the title/button row, per direct request — applied to
+   every widget's header (was scoped to just Queue Kanban's at first) so the spacing stays
+   consistent across all of them, per direct request. */
+.dash-card-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 5px; }
 .dash-card-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
 
 /* Same box recipe as .btn-add-item (base.css) — width now 20px narrower than that button's own
@@ -199,7 +207,17 @@
   font-size: 1.2em; /* 20% larger than the button's own font-size, per direct request */
 }
 
+/* REAL BUG, found and fixed: the vertical divider (::after, .dash-kmini-col:first-child) and the
+   horizontal one under each title (border-bottom, .dash-kmini-col-header, extended into the gap
+   via negative margins) were two independent elements in two different boxes' own coordinate
+   spaces — getting them to actually cross required both to agree on a shared position that
+   neither could see the other's. In practice they just met/stopped instead of crossing, per
+   direct request ("the lines should cross"). Rebuilt as a single pair of pseudo-elements on this
+   shared grid container instead — position: relative here makes both ::before (vertical) and
+   ::after (horizontal) below position relative to the exact same box, so guaranteeing a real
+   crossing is just "make sure the vertical's top/bottom range includes the horizontal's top." */
 .dash-kanban-mini-board {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   grid-auto-rows: 1fr;
@@ -207,15 +225,55 @@
   flex: 1;
   min-height: 0;
 }
+/* Vertical divider — starts at the very top (row 0), well above the horizontal line below, and
+   runs down to bottom: 5px (see that rule's own comment on the 46px card / 36px thumbnail gap),
+   so it passes straight through the horizontal line's position instead of stopping at it. */
+.dash-kanban-mini-board::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3px; /* 2px thicker than the original 1px border, per direct request */
+  background: var(--border);
+}
+/* Horizontal divider, under the titles — full width (both columns and the gap between them, so
+   it runs straight through the vertical line above instead of stopping at each column's own
+   edge), positioned to land just under the title row's text. */
+.dash-kanban-mini-board::after {
+  content: '';
+  position: absolute;
+  top: 19px; /* 3px lower, per direct request */
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--border);
+}
+/* Sat too close to the title text on desktop specifically (reported live, screenshot confirmed)
+   — dropped another 4px there only, leaving mobile's own 19px (already adjusted separately)
+   untouched. */
+@media (min-width: 769px) {
+  .dash-kanban-mini-board::after {
+    top: 23px;
+  }
+}
 
+/* Padding trimmed from 8px down to 3px — no longer needs to be a background-filled box with
+   breathing room around it (removed below), so that space goes to the Spotify-style cards
+   themselves instead, per direct request. */
 .dash-kmini-col {
-  background: var(--hover-bg);
-  border-radius: 10px;
-  padding: 8px;
+  /* border-radius removed — leftover from when this had its own background fill (no longer
+     does). With none, it was rounding the corners the divider's border-right rides along below,
+     making the line curve in at the top/bottom instead of running straight, per direct request. */
+  padding: 3px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   min-width: 0;
+}
+.dash-kmini-col:first-child {
+  padding-right: 10px;
 }
 
 .dash-kmini-col-header {
@@ -226,55 +284,80 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--text-secondary);
-  padding: 0 2px;
+  /* Left padding matches .dash-kmini-thumb's own 5px margin-left below, so the title text lines
+     up with the thumbnails in its column, per direct request — both are additive on top of
+     whatever this column's own base padding happens to be (it differs slightly between the
+     first/last mini-column on mobile), so matching the two values directly keeps them aligned
+     regardless. */
+  padding: 0 2px 4px 5px;
+  /* Own border-bottom removed — .dash-kanban-mini-board::after above replaces it with a single
+     line spanning both columns, so the two no longer break in the middle. */
 }
+/* A true gray circle behind the count, per direct request — was a pill (asymmetric padding, not
+   equal width/height) before. */
 .dash-kmini-col-header span {
-  background: var(--surface);
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: var(--hover-bg);
   color: var(--text-secondary);
-  border-radius: 10px;
-  padding: 1px 6px;
+  border-radius: 50%;
   font-weight: 600;
 }
 
 .dash-kmini-col-cards { display: flex; flex-direction: column; gap: 6px; }
 
+/* Restyled after Spotify's small library cards (referenced live, screenshot shown) — a flat,
+   borderless pill with a true square thumbnail, tighter and rounder than the previous version's
+   thin 36px-tall strip with a 44px-wide (not-quite-square) thumb. */
 .dash-kmini-card {
   display: flex;
-  align-items: stretch; /* thumb stretches to the card's full height, set by the text column */
-  height: 36px; /* fixed so every card matches regardless of thumb/title content — was content-driven before, causing uneven heights */
+  align-items: center;
+  height: 46px; /* taller than the single-line version's 40px — needed to fit the title's two lines below */
   flex-shrink: 0;
   gap: 9px;
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 11px;
-  padding: 0; /* the thumb now bleeds to the card's top/bottom/left edges; text keeps its own padding */
-  overflow: hidden; /* clips the flush thumb to the card's rounded corners */
+  border-radius: 0; /* square corners, per direct request */
+  padding: 0 9px 0 0; /* left edge comes from .dash-kmini-thumb's own margin below instead, now that it's an inset tile rather than flush */
   cursor: pointer;
-  transition: border-color 0.15s;
+  transition: background 0.15s;
 }
-.dash-kmini-card:hover { border-color: var(--primary); }
+.dash-kmini-card:hover { background: var(--hover-bg); }
 
+/* A distinct rounded-square icon tile inset within the card — per direct request/reference image
+   (a bookmark icon in a rounded green square) — rather than the old flush thumbnail bleeding
+   into and clipped by the card's own (now square) corners. */
 .dash-kmini-thumb {
-  width: 44px;
-  align-self: stretch;
+  width: 36px;
+  height: 36px;
+  margin: 5px 0 5px 5px;
+  border-radius: 4px; /* slightly rounded, per direct request */
   object-fit: cover;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
   color: #fff;
 }
 
-.dash-kmini-info { min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 7px 9px 7px 0; }
+.dash-kmini-info { min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 5px 9px 5px 0; }
+/* Two lines instead of one (per direct request, matching Spotify's own small library cards) —
+   -webkit-line-clamp hard-caps it there regardless of title length, with a matching line-height
+   tuned so two lines fit .dash-kmini-card's own 46px height comfortably. */
 .dash-kmini-title {
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 500;
+  line-height: 1.3;
   color: var(--text-primary);
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 .dash-kmini-demo-badge {
   align-self: flex-start;
@@ -302,6 +385,52 @@
   align-items: center;
   gap: 4px;
   flex: 1; /* fills the remaining height below the header, keeping the title pinned to the top */
+}
+/* Tightened for just these two widgets (gap 4px -> 0, strip's own left padding 2px -> 0 below) —
+   .dash-carousel/.dash-carousel-strip are shared with Shared Saves/Embed Builder/Curated landing
+   rows, which still have a right arrow and shouldn't be affected. With the right arrow gone here
+   (per direct request), the strip reaches the widget's right edge directly, and the left side's
+   still-noticeable inset (arrow + this gap + the strip's own left padding) stood out by
+   comparison. */
+.dash-card--favorites .dash-carousel,
+.dash-card--curated .dash-carousel {
+  gap: 5px; /* space between the arrow and the strip, per direct request */
+  /* Right edge only, per direct request — left keeps .dash-card's normal 20px padding (the
+     arrow still lives there). REAL BUG, found and fixed: removing the right arrow (earlier) let
+     .dash-carousel-strip's flex: 1 claim the space the arrow used to occupy, but .dash-card's own
+     20px right padding was still there underneath it the whole time — the strip only ever
+     reached that padding's inner edge, not the card's true edge, so it read as "flush" only by
+     contrast with the wider gap the arrow used to leave. */
+  margin-right: -20px;
+}
+/* Nudged 4px left, per direct request. Scoped to just these two widgets, same reasoning as the
+   rules above — .dash-carousel-prev is shared with pages that still have both arrows. */
+.dash-card--favorites .dash-carousel-prev,
+.dash-card--curated .dash-carousel-prev {
+  margin-left: -4px;
+  /* .dash-carousel's own align-items: center centers each child against the *row's* full height
+     — which is .dash-thumb-card's height (image + caption below it), not just the image, so the
+     arrow sat noticeably lower than the image's own center. align-self: flex-start + matching
+     .dash-thumb-art's own 112px height instead centers the arrow (via its own
+     align-items/justify-content, already set below) against just that image height, per direct
+     request. */
+  align-self: flex-start;
+  height: 112px;
+  margin-top: 20px; /* dropped down 20px from image-centered, per direct request */
+}
+.dash-card--favorites .dash-carousel-strip,
+.dash-card--curated .dash-carousel-strip {
+  padding-left: 0;
+}
+
+/* Sat noticeably higher than Open/Add's own position in their header rows (reported live,
+   screenshot confirmed). Several flex-based attempts (margin-top, align-self) had no visible
+   effect, so this bypasses whatever's actually eating the flex-centering math with a direct
+   offset instead — this wrap already has position: relative from its shared .board-filter-wrap
+   base rule (kanban.css). */
+.dash-fav-category-wrap {
+  position: relative;
+  top: 8px;
 }
 
 /* Favorites Spotlight's category filter button — reuses the Kanban board's .btn-board-filter
@@ -411,6 +540,10 @@
   max-width: 100%;
 }
 
+/* .dash-carousel-next removed from these two dashboard widgets specifically (their markup no
+   longer renders it, per direct request) — kept here in the shared selector since Shared Saves/
+   Embed Builder/Curated landing rows (sharedSaves.js, embedBuilder.js, renderCuratedPages.js)
+   still render and rely on this same class for their own carousels. */
 .dash-carousel-prev, .dash-carousel-next {
   flex-shrink: 0;
   border: none;

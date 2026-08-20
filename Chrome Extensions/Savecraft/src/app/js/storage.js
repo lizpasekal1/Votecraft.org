@@ -10,6 +10,7 @@ import {
   SPLIT_TITLE_CREATOR_CATEGORIES, splitCuratedTitleCreator, getStaticCuratedCreator,
 } from './curatedCreatorLookup.js';
 import { storageSync, storageLocal } from './platform.js';
+import { isAdminUser, isQueueDemoId } from './utils.js';
 
 const _FIREBASE_PROJECT = 'votecraft-789';
 const _FIREBASE_API_KEY = 'AIzaSyArJ6pkXUDbZf4jcxRita0qcdr-hT46kI8';
@@ -207,12 +208,214 @@ export async function initCuratedItems() {
   setCuratedItems(await _getCuratedItems());
 }
 
+// ===== Dashboard demo-content config (admin-editable, WordPress plugin writes it) =====
+// Public-read Firestore docs (dashboard_demo_config/{queue-kanban,recent-saves,curated-lists}) —
+// deliberately fetched with NO Authorization header, unlike the admin-gated helpers above:
+// `Bearer undefined` for a signed-out visitor would get rejected at the auth layer before rules
+// even run, and this needs to work for every Dashboard visitor, not just signed-in admins. Same
+// unauthenticated-fetch shape as _loadCuratedFromFirestore just above it in this file.
+const _DASHBOARD_DEMO_CACHE_VERSION = 1;
+const _DASHBOARD_DEMO_DOC_IDS = ['queue-kanban', 'recent-saves', 'curated-lists'];
+
+async function _fetchPublicDoc(docId) {
+  const url = `https://firestore.googleapis.com/v1/projects/${_FIREBASE_PROJECT}/databases/(default)/documents/dashboard_demo_config/${docId}?key=${_FIREBASE_API_KEY}`;
+  const resp = await fetch(url);
+  const data = await resp.json();
+  if (data.error) {
+    if (data.error.status === 'NOT_FOUND' || data.error.code === 404) return null;
+    throw new Error(data.error.message);
+  }
+  return data.fields ? _fromFirestoreFields(data.fields) : null;
+}
+
+async function _loadDashboardDemoConfigFromFirestore() {
+  const [queueKanban, recentSaves, curatedLists] = await Promise.all(
+    _DASHBOARD_DEMO_DOC_IDS.map(_fetchPublicDoc)
+  );
+  return { queueKanban, recentSaves, curatedLists };
+}
+
+async function _getDashboardDemoConfig() {
+  return new Promise(resolve => {
+    storageLocal.get({ savecraft_dashboard_demo_config: null }, async cached => {
+      const c = cached.savecraft_dashboard_demo_config;
+      if (c?.data && c?.version === _DASHBOARD_DEMO_CACHE_VERSION && Date.now() - (c.fetchedAt || 0) < 24 * 60 * 60 * 1000) {
+        return resolve(c.data);
+      }
+      try {
+        const fresh = await _loadDashboardDemoConfigFromFirestore();
+        storageLocal.set({ savecraft_dashboard_demo_config: { data: fresh, fetchedAt: Date.now(), version: _DASHBOARD_DEMO_CACHE_VERSION } });
+        resolve(fresh);
+      } catch {
+        resolve(c?.data || { queueKanban: null, recentSaves: null, curatedLists: null });
+      }
+    });
+  });
+}
+
+// Fetches the Dashboard demo-content overrides (from cache if fresh, else Firestore) and installs
+// them into state.dashboardDemoConfig — called from main.js's init() alongside initCuratedItems(),
+// since a signed-out demo visitor needs this on first paint same as curated data.
+export async function initDashboardDemoConfig() {
+  state.dashboardDemoConfig = await _getDashboardDemoConfig();
+}
+
+// One-time Admin Kanban seed — the launch-requirements.md checklist (Documentation/), one card
+// per sub-task rather than one card per top-level item, per direct request. Column keys match
+// adminKanban.js's ADMIN_KANBAN_COLUMNS ('todo'/'in-progress'/'blocked'/'done'); the three
+// already-completed Privacy Policy/Terms sub-tasks seed straight into 'done' so the board reflects
+// real progress already made, not just what's left.
+function _seedAdminKanbanCards() {
+  // 3rd tuple element is urgency (1-10, matching the card's own colored dot — blue 1-3/yellow
+  // 4-7/red 8-10) — highest on the Firestore-rules blocker and its immediate legal-page
+  // follow-ups, lowest on cross-browser/cleanup. Omitted (undefined) on the 'done' group — an
+  // already-finished task has nothing left to prioritize.
+  const groups = {
+    todo: [
+      ['Compare live Firestore rules vs. local file', 'console.firebase.google.com → votecraft-789 → Firestore → Rules. Compare against firebase/firestore.rules.', 10],
+      ['Deploy Firestore rules if they don’t match', 'firebase deploy --only firestore:rules --project votecraft-789', 10],
+      ['Verify per-user Firestore isolation', 'Signed in as one test account, confirm you can’t read/write another account’s savecraft_users/{uid} doc.', 9],
+      ['Confirm curated content stays public-read/write-denied', 'curated_items / curated_genres collections.', 8],
+      ['Update security doc once rules are confirmed live', 'savecraft-profile-security.md → "One thing to actually do" section.', 6],
+      ['Fill in governing-law placeholder in Terms of Service', 'The [insert state/jurisdiction] line in terms-of-service.html.', 7],
+      ['Get Privacy Policy + Terms reviewed by someone with real legal judgment', 'Then remove the yellow "working draft" banner from both pages.', 8],
+      ['Decide on a forgot-password approach', 'Firebase Auth’s built-in sendPasswordResetEmail is the simplest fit.', 6],
+      ['Add a "Forgot password?" link to the sign-in modal', '', 5],
+      ['Wire the forgot-password link to send the reset email', '', 5],
+      ['Add a "check your email" confirmation state to the modal', '', 4],
+      ['Test the full password-reset loop end-to-end', 'Request → email arrives → reset → sign in with the new password.', 5],
+      ['Decide: should savecraft.org allow local-only browsing?', 'Extension already allows it without an account — decide if the website should too, or stay sign-in-required.', 5],
+      ['Scope the local-browsing gating work for web', 'If bringing it to web — platform.js’s localStorage shim already exists, likely just gating logic in main.js’s init().', 4],
+      ['Decide what "View Demo" should permanently be', 'If staying sign-in-required for the website.', 4],
+      ['Update security doc with the sign-in-requirement decision', '', 3],
+      ['Pick an error/usage monitoring tool', 'Firebase Analytics (least setup, same project) vs. Sentry vs. just asking testers to check console.', 5],
+      ['Add the monitoring SDK/snippet', '', 5],
+      ['Confirm monitoring events actually show up', 'Send a real test event and check the dashboard.', 4],
+      ['Write testers a "how to report a bug" note', 'What to screenshot/copy.', 3],
+      ['Mobile pass: Dashboard', 'Hero, all 5 widgets including the new Admin Kanban tile.', 5],
+      ['Mobile pass: Queue Kanban board', '', 5],
+      ['Mobile pass: Admin Kanban board', 'Brand new — never mobile-tested at all yet.', 4],
+      ['Mobile pass: Curated pages', 'Landing, genre pages, Cause Curated bare list.', 5],
+      ['Mobile pass: Shared Saves page', '', 4],
+      ['Mobile pass: Modals', 'Add/Edit item, Detail modal, Auth/sign-in modal.', 5],
+      ['Cross-browser test: Android Chrome', '', 3],
+      ['Cross-browser test: Desktop Firefox', '', 2],
+      ['Cross-browser test: Desktop Safari', '', 2],
+      ['Cross-browser test: Desktop Chrome', 'Sanity check — likely fine but unconfirmed.', 1],
+      ['Confirm the games/ and api/ deletions are actually unwanted', 'Called a mistake earlier — double-check before restoring.', 3],
+      ['Restore games/api deletions via git', 'git restore / git checkout -- for games/jokemaster, games/power-plays, games/scavenger-tours, and the affected api/* files.', 3],
+      ['Double-check nothing else in the working tree needs cleanup', '', 2],
+      ['Check Chrome Web Store publish status', 'Published, unlisted, or not submitted at all?', 3],
+      ['Decide: publish unlisted vs. have testers sideload', '', 2],
+      ['Write sideload install instructions', 'Only needed if testers will sideload rather than install from the Store.', 2],
+    ],
+    done: [
+      ['Draft Privacy Policy page', 'src/webpage/privacy-policy.html'],
+      ['Draft Terms of Service page', 'src/webpage/terms-of-service.html'],
+      ['Link Privacy Policy + Terms from the app', 'Profile page (desktop + mobile), Settings dropdown, Sponsored Statements footer.'],
+    ],
+  };
+  const now = Date.now();
+  let i = 0;
+  const cards = [];
+  for (const [status, entries] of Object.entries(groups)) {
+    entries.forEach(([name, details, urgency], manualOrder) => {
+      cards.push({ id: `admin-seed-${i}`, name, details, urgency: urgency ?? null, status, manualOrder, createdAt: now + (i++) });
+    });
+  }
+  return cards;
+}
+
+// One-time backfill for urgency on cards seeded before this feature existed — _seedAdminKanbanCards()
+// above now bakes urgency in from the start for anyone seeding fresh, but this user's board was
+// very likely already seeded (without urgency) before this shipped. Matches by the same stable
+// admin-seed-N ids rather than re-seeding, so it only ever touches those specific cards — nothing
+// the user added themselves — and only ever runs once (savecraft_admin_kanban_urgency_backfilled).
+function _backfillSeedUrgency(cards) {
+  const byId = new Map(_seedAdminKanbanCards().map(c => [c.id, c.urgency]));
+  let changed = false;
+  cards.forEach(c => {
+    if (byId.has(c.id) && (c.urgency === undefined || c.urgency === null) && byId.get(c.id) != null) {
+      c.urgency = byId.get(c.id);
+      changed = true;
+    }
+  });
+  return changed;
+}
+
+// One-time Queue Kanban demo seed, per direct request ("add 10 demo cards to the queue kanban
+// for me") — real, fully interactive items (draggable, removable, sortable), not the single
+// un-deletable '__demo__' instructional card kanban.js shows on an empty board. Spread across all
+// four columns and a mix of categories so there's something to actually test drag/reorder/scroll
+// against. Their stable queue-demo-N ids (below) are what makes them easy to spot and clean up
+// later, not a "Demo:" title prefix (removed per direct request — see _backfillDemoTitles for
+// cards already seeded with the old prefixed titles). imageUrl left null on purpose — the
+// letter-placeholder thumbnail is enough, and avoids depending on any external image URL staying
+// valid.
+function _seedQueueDemoItems() {
+  const entries = [
+    ['The Great Gatsby',        'Book',        'in-queue'],
+    ['Inception',                'Movie',       'in-queue'],
+    ['Breaking Bad',             'Show',        'in-queue'],
+    ['Portal 2',                 'Game',        'in-progress'],
+    ['Random Access Memories',   'Music Album', 'in-progress'],
+    ['Radiohead',                'Musician',    'in-progress'],
+    ['Starry Night Study',       'Visual Art',  'my-review'],
+    ['An Interesting Article',   'Web Links',   'my-review'],
+    ['Dune',                     'Book',        'done'],
+    ['The Matrix',               'Movie',       'done'],
+  ];
+  const now = Date.now();
+  return entries.map(([title, category, queueStatus], i) => ({
+    id: `queue-demo-${i}`,
+    url: null, title, author: null, summary: null, description: null,
+    imageUrl: null, youtubeUrl: null, category, folderId: null, platforms: [],
+    done: false, savedAt: now + i, favorite: true, savedListIds: [],
+    queueStatus,
+  }));
+}
+
+// One-time patch for the queue-demo-N cards seeded before the "Demo:" title prefix was removed,
+// per direct request ("remove the word demo") — strips it from anyone who already has one of
+// these seeded items with the old title, without touching anything the user typed themselves.
+// Matches by the same stable queue-demo-N ids _seedQueueDemoItems() uses (isQueueDemoId, shared
+// with kanban.js/dashboard.js's card renderers), same pattern as _backfillSeedUrgency below for
+// Admin Kanban. Returns the touched items directly rather than just a changed flag, so the
+// caller can persist them without a second pass over the full item list.
+function _backfillDemoTitles(items) {
+  const touched = [];
+  items.forEach(item => {
+    if (isQueueDemoId(item.id) && item.title?.startsWith('Demo: ')) {
+      item.title = item.title.slice('Demo: '.length);
+      touched.push(item);
+    }
+  });
+  return touched;
+}
+
 export async function loadAll() {
   return new Promise(resolve => {
     storageSync.get(null, data => {
       state.items = Object.entries(data)
         .filter(([k]) => k.startsWith('item_'))
         .map(([, v]) => v);
+      // Gated the same way as the Admin Kanban seed below — runs exactly once, appends rather
+      // than overwrites, and never re-adds one of these the user later deletes since the flag
+      // stays set.
+      if (!data.savecraft_queue_demo_seeded) {
+        const demoItems = _seedQueueDemoItems();
+        state.items = [...state.items, ...demoItems];
+        const toSave = { savecraft_queue_demo_seeded: true };
+        demoItems.forEach(item => { toSave[`item_${item.id}`] = item; });
+        storageSync.set(toSave);
+      } else if (!data.savecraft_queue_demo_title_backfilled) {
+        // One-time patch for boards seeded before the "Demo:" prefix was removed — see
+        // _backfillDemoTitles's own comment. Only relevant on this branch: the fresh-seed branch
+        // above already gets the unprefixed title straight from _seedQueueDemoItems().
+        const toSave = { savecraft_queue_demo_title_backfilled: true };
+        _backfillDemoTitles(state.items).forEach(item => { toSave[`item_${item.id}`] = item; });
+        storageSync.set(toSave);
+      }
       state.folders = Object.entries(data)
         .filter(([k]) => k.startsWith('folder_'))
         .map(([, v]) => v);
@@ -222,6 +425,39 @@ export async function loadAll() {
       state.sort = data.savecraft_sort || 'az';
       state.tutorialSeen = data.savecraft_tutorial_seen || false;
       if (data.savecraft_kanban_sort) state.kanbanSort = { ...state.kanbanSort, ...data.savecraft_kanban_sort };
+      state.role = data.savecraft_role || null;
+      // Admin Kanban is gated entirely behind isAdminUser() — per request, it's not meant to be
+      // visible to just anyone who signs up. Non-admins get an empty board and, critically, never
+      // hit the seeding branch below at all: before this gate existed, *any* visitor (signed in or
+      // not) got SaveCraft's own real internal task list auto-seeded straight into their browser
+      // on first load. This local read is just the offline/first-paint cache — for a signed-in
+      // admin, runInitialSync() below reconciles it against the shared admin_kanban_cards
+      // Firestore collection right after, and cloud wins.
+      if (isAdminUser(getCurrentUser()?.email, state.role)) {
+        if (data.savecraft_admin_kanban_sort) state.adminKanbanSort = data.savecraft_admin_kanban_sort;
+        // Seeded exactly once, gated on its own savecraft_admin_kanban_seeded flag rather than
+        // "does savecraft_admin_kanban_cards exist" (defaultLists' own convention just below) —
+        // this board had already been tested live before this seed was written, so that check could
+        // easily see a real (non-empty) array already there and skip seeding entirely. The flag
+        // guarantees this runs exactly once regardless of what's already saved (appending to it,
+        // never overwriting), and — just as importantly — never re-adds a seeded card the user
+        // later deletes, since the flag stays set after that first run.
+        if (!data.savecraft_admin_kanban_seeded) {
+          state.adminKanbanCards = [...(data.savecraft_admin_kanban_cards || []), ..._seedAdminKanbanCards()];
+          storageSync.set({ savecraft_admin_kanban_cards: state.adminKanbanCards, savecraft_admin_kanban_seeded: true });
+        } else {
+          state.adminKanbanCards = data.savecraft_admin_kanban_cards || [];
+          // One-time patch for boards seeded before urgency existed as a field — see
+          // _backfillSeedUrgency's own comment. Only relevant on this branch: the fresh-seed branch
+          // above already gets urgency baked in from _seedAdminKanbanCards() directly.
+          if (!data.savecraft_admin_kanban_urgency_backfilled) {
+            _backfillSeedUrgency(state.adminKanbanCards);
+            storageSync.set({ savecraft_admin_kanban_cards: state.adminKanbanCards, savecraft_admin_kanban_urgency_backfilled: true });
+          }
+        }
+      } else {
+        state.adminKanbanCards = [];
+      }
       const defaultLists = [
         { id: 'group',   name: 'Group Queue'   },
         { id: 'project', name: 'Project Queue' },
@@ -301,6 +537,7 @@ export async function loadAll() {
         storageSync.set({ savecraft_curated_lists_rows: state.curatedListsRows });
       }
       state.hiddenCurated = new Set(data.savecraft_hidden_curated || []);
+      state.selectedSharedFriends = new Set(data.savecraft_selected_shared_friends || []);
       state.curatedOverrides = data.savecraft_curated_overrides || {};
       state.lastfmUsername = data.savecraft_lastfm_username || null;
       state.followedCuratedLists = new Set(data.savecraft_followed_curated_lists || []);
@@ -468,7 +705,7 @@ export async function loadAll() {
         { id: 'default-movies-videos',   name: 'Videos',        parentCategory: 'Movie' },
         { id: 'default-movies-directors', name: 'Directors',    parentCategory: 'Movie' },
         { id: 'default-shows-podcasts',  name: 'Podcasts',      parentCategory: 'Show' },
-        { id: 'default-shows-webseries', name: 'Webseries',     parentCategory: 'Show' },
+        { id: 'default-shows-webseries', name: 'Web Series',    parentCategory: 'Show' },
         { id: 'default-shows-tutorials', name: 'Tutorials',     parentCategory: 'Show' },
         { id: 'default-shows-creators',  name: 'Creators',      parentCategory: 'Show' },
         { id: 'default-movies-movies',       name: 'Movies',    parentCategory: 'Movie' },
@@ -534,6 +771,14 @@ export async function loadAll() {
         toSave[`folder_${danceFolder.id}`] = danceFolder;
       }
 
+      // Renamed Shows' "Webseries" -> "Web Series" (two words, so it wraps to two lines on the
+      // mobile Add-Item folder picker — see folderTileLabelHtml in addEditModal.js).
+      const webseriesFolder = state.folders.find(f => f.id === 'default-shows-webseries');
+      if (webseriesFolder && webseriesFolder.name === 'Webseries') {
+        webseriesFolder.name = 'Web Series';
+        toSave[`folder_${webseriesFolder.id}`] = webseriesFolder;
+      }
+
       if (legacyKeys.length) {
         storageSync.remove(legacyKeys, () => {
           if (Object.keys(toSave).length) storageSync.set(toSave, resolve);
@@ -569,6 +814,14 @@ export function persistHiddenCurated() {
   return local;
 }
 
+// Same shape as persistHiddenCurated above — Profile > Shared Lists' friend checkboxes.
+export function persistSelectedSharedFriends() {
+  const local = new Promise(resolve => storageSync.set({ savecraft_selected_shared_friends: [...state.selectedSharedFriends] }, resolve));
+  const user = getCurrentUser();
+  if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { selectedSharedFriends: [...state.selectedSharedFriends] }).catch(_syncError);
+  return local;
+}
+
 export function persistCuratedOverrides() {
   const local = new Promise(resolve => storageSync.set({ savecraft_curated_overrides: state.curatedOverrides }, resolve));
   const user = getCurrentUser();
@@ -583,6 +836,42 @@ export function persistSavedLists() {
   const local = new Promise(resolve => storageSync.set({ savecraft_saved_lists: state.savedLists }, resolve));
   const user = getCurrentUser();
   if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { savedLists: state.savedLists }).catch(_syncError);
+  return local;
+}
+
+// Local-storage shape is unchanged (still the whole array, cheap to read back on load) — split out
+// so the Firestore side below can upsert only the card(s) that actually changed rather than
+// re-uploading the whole board. Admin Kanban is now a *shared* board (admin_kanban_cards/{id} in
+// Firestore, one doc per card) rather than a personal per-device blob: the WordPress plugin's bot
+// account and an admin's own SaveCraft session can both write here, so per-card PATCHes are what
+// keep one side's edit from clobbering the other's.
+function _persistAdminKanbanLocal() {
+  return new Promise(resolve => storageSync.set({ savecraft_admin_kanban_cards: state.adminKanbanCards }, resolve));
+}
+
+// changedCards: the card(s) whose fields actually moved — one for add/edit, all of a column's
+// cards for a drag reorder (manualOrder shifts on every card in the target column, not just the
+// one dragged). Firestore write only fires for admins (isAdminUser), same gate loadAll() already
+// uses to keep this board invisible to everyone else.
+export function persistAdminKanbanCards(changedCards) {
+  const local = _persistAdminKanbanLocal();
+  if (isAdminUser(getCurrentUser()?.email, state.role)) {
+    for (const card of changedCards) {
+      _firestoreUpsert(`admin_kanban_cards/${card.id}`, card).catch(_syncError);
+    }
+  }
+  return local;
+}
+
+export function persistAdminKanbanCard(card) {
+  return persistAdminKanbanCards([card]);
+}
+
+export function removeAdminKanbanCard(id) {
+  const local = _persistAdminKanbanLocal();
+  if (isAdminUser(getCurrentUser()?.email, state.role)) {
+    _firestoreDelete(`admin_kanban_cards/${id}`).catch(_syncError);
+  }
   return local;
 }
 
@@ -760,6 +1049,7 @@ function _readLocalSettingsSnapshot() {
       savecraft_kanban_sort: {},
       savecraft_kanban_lists: [],
       savecraft_hidden_curated: [],
+      savecraft_selected_shared_friends: [],
       savecraft_curated_overrides: {},
       savecraft_view: 'Book',
       savecraft_sidebar_mode: 'home',
@@ -775,6 +1065,7 @@ function _readLocalSettingsSnapshot() {
       kanbanSort: data.savecraft_kanban_sort,
       kanbanLists: data.savecraft_kanban_lists,
       hiddenCurated: data.savecraft_hidden_curated,
+      selectedSharedFriends: data.savecraft_selected_shared_friends,
       curatedOverrides: data.savecraft_curated_overrides,
       view: data.savecraft_view,
       sidebarMode: data.savecraft_sidebar_mode,
@@ -842,6 +1133,7 @@ export async function runInitialSync(uid) {
       savecraft_kanban_sort: cloudSettings.kanbanSort,
       savecraft_kanban_lists: cloudSettings.kanbanLists,
       savecraft_hidden_curated: cloudSettings.hiddenCurated,
+      savecraft_selected_shared_friends: cloudSettings.selectedSharedFriends,
       savecraft_curated_overrides: cloudSettings.curatedOverrides,
       savecraft_view: cloudSettings.view,
       savecraft_sidebar_mode: cloudSettings.sidebarMode,
@@ -851,6 +1143,11 @@ export async function runInitialSync(uid) {
       savecraft_lastfm_username: cloudSettings.lastfmUsername,
       savecraft_followed_curated_lists: cloudSettings.followedCuratedLists,
       savecraft_steam_id: cloudSettings.steamId,
+      // Not written by any persist* function here (no in-app UI sets it) — read-only from this
+      // side, meant to be set directly on savecraft_users/{uid}.role via the Firebase console for
+      // a future admin (see utils.js's isAdminUser). Included in this pull so a console-set role
+      // actually reaches the client at all, not just Firestore itself.
+      savecraft_role: cloudSettings.role,
     }, resolve));
     // Reflect into live state immediately for the fields state.js actually tracks (theme,
     // sidebarCollapsed, and shareCount have no state.* mirror — main.js/share.js read those
@@ -860,15 +1157,38 @@ export async function runInitialSync(uid) {
     if (cloudSettings.kanbanSort) state.kanbanSort = { ...state.kanbanSort, ...cloudSettings.kanbanSort };
     if (cloudSettings.kanbanLists) state.kanbanLists = cloudSettings.kanbanLists;
     if (cloudSettings.hiddenCurated) state.hiddenCurated = new Set(cloudSettings.hiddenCurated);
+    if (cloudSettings.selectedSharedFriends) state.selectedSharedFriends = new Set(cloudSettings.selectedSharedFriends);
     if (cloudSettings.curatedOverrides) state.curatedOverrides = cloudSettings.curatedOverrides;
     if (cloudSettings.view) state.view = cloudSettings.view;
     if (cloudSettings.sidebarMode) state.sidebarMode = cloudSettings.sidebarMode;
     if (cloudSettings.lastfmUsername !== undefined) state.lastfmUsername = cloudSettings.lastfmUsername;
     if (cloudSettings.followedCuratedLists) state.followedCuratedLists = new Set(cloudSettings.followedCuratedLists);
     if (cloudSettings.steamId !== undefined) state.steamId = cloudSettings.steamId;
+    if (cloudSettings.role != null) state.role = cloudSettings.role;
   }
 
   await _mergeCollection(uid, idToken, 'items', 'item_', state.items);
   await _mergeCollection(uid, idToken, 'folders', 'folder_', state.folders);
   await _mergeCollection(uid, idToken, 'authors', 'author_', state.authors);
+  await _syncAdminKanbanCards(idToken);
+}
+
+// Admin Kanban isn't per-device personal data like items/folders/authors above (_mergeCollection's
+// keep-both merge doesn't apply) — it's one shared board that WordPress and every admin's own
+// SaveCraft session read/write the same collection for, so there's nothing to reconcile: cloud is
+// simply authoritative once it exists. The only case that uploads instead of overwrites is a board
+// that's never touched Firestore at all yet (cloudList.length === 0) but already has local cards —
+// e.g. this session's own loadAll() just seeded the demo cards above — so that first sign-in
+// publishes them rather than silently discarding them.
+async function _syncAdminKanbanCards(idToken) {
+  if (!isAdminUser(getCurrentUser()?.email, state.role)) return;
+  const cloudList = await _firestoreListCollection('admin_kanban_cards', idToken);
+  if (cloudList.length === 0 && state.adminKanbanCards.length > 0) {
+    for (const card of state.adminKanbanCards) {
+      await _firestoreUpsert(`admin_kanban_cards/${card.id}`, card);
+    }
+  } else {
+    state.adminKanbanCards = cloudList.map(_stripSyncMeta);
+    await new Promise(resolve => storageSync.set({ savecraft_admin_kanban_cards: state.adminKanbanCards }, resolve));
+  }
 }

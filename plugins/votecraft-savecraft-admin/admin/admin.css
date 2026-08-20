@@ -1,0 +1,305 @@
+/* Accordion — same markup/class names as votecraft-data-sync.php's own <details>-based accordion,
+   reused as-is (not reinvented) so every VoteCraft wp-admin page that uses this pattern looks and
+   behaves identically. Native <details>/<summary> — no JS needed for expand/collapse. */
+.votecraft-accordion {
+  max-width: 1200px;
+  margin-bottom: 10px;
+  border: 1px solid #c3c4c7;
+  border-radius: 4px;
+  background: #fff;
+}
+.votecraft-accordion summary {
+  padding: 12px 15px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  background: #f6f7f7;
+  border-bottom: 1px solid #c3c4c7;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.votecraft-accordion summary::-webkit-details-marker {
+  display: none;
+}
+.votecraft-accordion summary::before {
+  content: '▶';
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+.votecraft-accordion[open] summary::before {
+  transform: rotate(90deg);
+}
+.votecraft-accordion[open] summary {
+  border-bottom: 1px solid #c3c4c7;
+}
+.votecraft-accordion .accordion-content {
+  padding: 15px;
+}
+
+.vc-savecraft-admin-wrap #vc-savecraft-kanban-error {
+  padding: 10px 12px;
+}
+
+.vc-savecraft-kanban-board {
+  margin-top: 16px;
+}
+
+.vc-savecraft-kanban-cols {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  overflow-x: auto;
+}
+
+.vc-savecraft-kanban-col {
+  background: #f6f7f7;
+  border: 1px solid #dcdcde;
+  border-radius: 4px;
+  min-width: 260px;
+  flex: 1 1 260px;
+  padding: 10px;
+}
+
+.vc-savecraft-kanban-col-head {
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: #50575e;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vc-savecraft-kanban-count {
+  background: #dcdcde;
+  border-radius: 10px;
+  padding: 0 7px;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.vc-savecraft-kanban-col-cards {
+  min-height: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.vc-savecraft-kcard {
+  background: #fff;
+  border: 1px solid #dcdcde;
+  border-left: 4px solid #dcdcde;
+  border-radius: 3px;
+  padding: 8px 10px;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.vc-savecraft-kcard:hover {
+  border-color: #8c8f94;
+}
+
+.vc-savecraft-kcard.vc-urgency-low { border-left-color: #2563eb; }
+.vc-savecraft-kcard.vc-urgency-medium { border-left-color: #16a34a; }
+.vc-savecraft-kcard.vc-urgency-high { border-left-color: #dc2626; }
+
+.vc-savecraft-kcard-name {
+  font-weight: 600;
+  padding-right: 18px;
+  word-break: break-word;
+}
+
+.vc-savecraft-kcard-details {
+  color: #50575e;
+  font-size: 12px;
+  margin-top: 4px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.vc-savecraft-kcard-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #a7aaad;
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 5px;
+}
+
+.vc-savecraft-kcard-remove:hover {
+  color: #cc1818;
+}
+
+.vc-savecraft-kanban-add {
+  width: 100%;
+}
+
+/* ─── modal ─── */
+
+.vc-savecraft-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100000;
+  align-items: center;
+  justify-content: center;
+}
+
+.vc-savecraft-modal-overlay.open {
+  display: flex;
+}
+
+.vc-savecraft-modal {
+  background: #fff;
+  border-radius: 4px;
+  padding: 20px;
+  width: 420px;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+.vc-savecraft-modal h2 {
+  margin-top: 0;
+}
+
+.vc-savecraft-modal label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.vc-savecraft-modal-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
+
+/* ─── Demo Content ─── */
+
+.vc-savecraft-admin-wrap #vc-savecraft-demo-error {
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.vc-savecraft-demo-rs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 700px;
+  margin-bottom: 10px;
+}
+
+.vc-savecraft-demo-rs-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f6f7f7;
+  border: 1px solid #dcdcde;
+  border-radius: 3px;
+  padding: 6px 10px;
+}
+
+.vc-savecraft-demo-rs-card img,
+.vc-savecraft-demo-rs-card-noimg {
+  width: 32px;
+  height: 32px;
+  border-radius: 3px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.vc-savecraft-demo-rs-card-noimg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dcdcde;
+  font-weight: 600;
+  color: #50575e;
+}
+
+.vc-savecraft-demo-rs-card-title {
+  flex: 1;
+  font-weight: 600;
+}
+
+.vc-savecraft-demo-rs-card-cat {
+  color: #50575e;
+  font-size: 12px;
+}
+
+/* Picker modal (Add from Curated) — same overlay/shell as the Kanban card editor modal, just a
+   wider max-width for the results grid. */
+.vc-savecraft-picker-modal {
+  width: 640px;
+}
+
+.vc-savecraft-picker-results {
+  max-height: 400px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.vc-savecraft-picker-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  background: #f6f7f7;
+  border: 1px solid #dcdcde;
+  border-radius: 3px;
+  padding: 6px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.vc-savecraft-picker-item:hover {
+  border-color: #2271b1;
+}
+
+.vc-savecraft-picker-item img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+.vc-savecraft-picker-item span {
+  font-size: 12px;
+  font-weight: 600;
+  display: block;
+}
+
+.vc-savecraft-picker-item small {
+  display: block;
+  font-weight: 400;
+  color: #50575e;
+}
+
+.vc-savecraft-demo-cl-list {
+  max-width: 900px;
+  margin-bottom: 10px;
+}
+
+.vc-savecraft-demo-cl-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #dcdcde;
+}

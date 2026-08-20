@@ -64,6 +64,12 @@ button {
   --primary-bg:      #2D2945;
   --primary-hover:   #6A5EE0;
   --hover-bg:        #2C2D32;
+  /* Was a lighter gray (#45454A), then black (#000000), per two earlier requests — now matches
+     var(--bg), the same dark gray already used for the page's own content-area background (see
+     body, base.css below), per a later request that black read too harsh. Kept as its own variable
+     rather than reusing --bg directly, since the two are conceptually different things that just
+     happen to share a value right now. */
+  --active-bg-light: var(--bg);
   --search-bg:       #3A3B42;
   --search-focus-bg: #44454D;
   --modal-bg:        #25262B;
@@ -71,6 +77,20 @@ button {
   --scrollbar-hover: #4A4B50;
   --shadow-card:     rgba(0,0,0,0.35);
   --shadow-modal:    rgba(0,0,0,0.50);
+}
+
+/* Tunes the timing of every View Transition on the page (currently just the sidebar's
+   accordion-open transition — renderSidebar.js's withViewTransition) — the platform default is a
+   snappy 0.25s ease cross-fade, which read as more of a flicker than a section actually "opening."
+   ::view-transition-group() only takes a literal name or this universal selector, so this rule is
+   necessarily page-wide rather than sidebar-scoped — filed here rather than in sidebar.css so that
+   scope is explicit, not implied by which file it happens to live in. --m3-standard (above) is M3's
+   own recommended curve for "smaller, quieter" transitions like an accordion row, reused here
+   instead of a one-off bezier value. No-op on browsers without View Transitions support — these
+   pseudo-elements simply don't exist there, same graceful fallback as the JS side. */
+::view-transition-group(*) {
+  animation-duration: 0.32s;
+  animation-timing-function: var(--m3-standard);
 }
 
 [data-theme="light"] {
@@ -85,6 +105,7 @@ button {
   --primary-bg:      #EBE8FD;
   --primary-hover:   #4A3DD4;
   --hover-bg:        #F1F3F4;
+  --active-bg-light: var(--bg);
   --search-bg:       #F1F3F4;
   --search-focus-bg: #ffffff;
   --modal-bg:        #ffffff;
@@ -94,11 +115,36 @@ button {
   --shadow-modal:    rgba(0,0,0,0.20);
 }
 
+/* html, not just body: the actual root scrolling/panning box for the document is the html
+   element (documentElement), not body. body's own overflow: hidden happens to propagate up to
+   the viewport per the CSS overflow-propagation rule, but touch-action does NOT propagate the
+   same way — it only constrains touch gestures on the element it's set on and that element's own
+   descendants. With pan-y declared on body alone, a touch that begins panning is still recognized
+   at the html/document root level, one level above where the restriction lives, so the whole page
+   — background and any open modal alike, since they're both just descendants of the same
+   unrestricted root — could still be dragged left/right as a single unit (reported live: the
+   entire dashboard, and a detail modal open on top of it, sliding sideways together). Repeating
+   both rules here closes that gap at the actual root. */
+html {
+  height: 100%;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Google Sans', 'Segoe UI', sans-serif;
   background: var(--bg);
   color: var(--text-primary);
+  /* REAL BUG, found and fixed: this static 100vh — not misc.css's .main-layout height calc,
+     which was fixed earlier to 100dvh but could never have mattered — is what actually caused
+     the mobile Kanban board's bottom gaps (reported live, screenshot confirmed). body has
+     overflow: hidden, so whatever height it computes to is a hard ceiling every descendant is
+     clipped to, regardless of what any of them calculate for themselves further down — 100vh not
+     tracking iOS Safari's toolbar meant that ceiling sat short of the true visible area. 100dvh
+     (with the two-declaration vh fallback, since an unsupported value is simply ignored rather
+     than needing @supports) fixes it at its actual source instead. */
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   /* overflow: hidden above is meant to make the whole page unscrollable — any real scrolling
      happens in an inner container (.grid-area, .detail-body, etc.) — but iOS Safari has a long-
@@ -109,7 +155,9 @@ body {
      .search-expand-input's own mobile-width fix). touch-action is the modern, reliable fix for
      that same gap — and belongs here once, not per-descendant: touch-action isn't something a
      child can loosen back up, the browser intersects it down through the whole subtree, so this
-     single rule already covers the header, every modal, the sidebar, etc. below it. */
+     single rule already covers the header, every modal, the sidebar, etc. below it. (The same
+     pair is also set on html above it — see that rule's own comment for why body alone isn't
+     the actual root scrolling box.) */
   touch-action: pan-y;
   display: flex;
   flex-direction: column;
@@ -155,7 +203,9 @@ body {
   transform: translateX(-50%);
   font-size: 20px;
   font-weight: 700;
-  color: var(--primary);
+  /* A lighter periwinkle purple than --primary, scoped to just the logo (per direct request,
+     matching a color swatch sent live) — everything else (buttons, etc.) keeps --primary as-is. */
+  color: #5e60fb;
   white-space: nowrap;
   letter-spacing: -0.02em;
   pointer-events: none;
