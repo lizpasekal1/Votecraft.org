@@ -532,6 +532,14 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+  /* Pulled up and inset further from the left, per request — "Edit Item" (left-aligned via
+     .modal-h2--left) and the category select were sitting in their own row below the back arrow
+     (.modal-corner-icon, position:absolute, top:8px/left:8px against .modal itself) instead of
+     sharing its row. Only this one row is shifted — the rest of the screen's content (image,
+     title, url fields) keeps the modal's normal 34px padding, since only this row needs to clear
+     the icon. */
+  margin-top: -20px;
+  padding-left: 16px;
 }
 
 .modal--edit-item #modal-category-wrap {
