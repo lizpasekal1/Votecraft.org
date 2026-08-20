@@ -131,7 +131,10 @@ export function renderSidebar() {
     : state.view;
   let sidebarTitle = 'My Saves';
   if (sidebarEffectiveView.startsWith('genre:')) {
-    sidebarTitle = sidebarEffectiveView.slice(6).split(':')[0] + ' Saves';
+    const genreName = sidebarEffectiveView.slice(6).split(':')[0];
+    // Top 100 is the VoteCraft-branded genre (the Curated Lists "Votecraft" row's own
+    // destination) — reads as "VoteCraft" up top rather than "Top 100 Saves", per direct request.
+    sidebarTitle = genreName === 'Top 100' ? 'VoteCraft' : genreName + ' Saves';
   } else if (sidebarEffectiveView.startsWith('savedlist:')) {
     // Mirrors the header reading "<Name> Saves" while browsing that Saved List's own landing
     // card (renderGrid.js) — except default-favorites (labeled "All My Saves" in its own Saved
