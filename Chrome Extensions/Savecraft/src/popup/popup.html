@@ -44,6 +44,20 @@
 
     <!-- Screen 3: review + save -->
     <div class="wizard-step" id="step-review" style="display:none">
+      <!-- Same checkbox-multi-select picker as the main app's own Add flow (addEditModal.js's
+           #saved-lists-wrap) — lets the item being saved be added to any of the user's saved
+           lists, not just the category-derived folder. Nothing persisted per click here, just
+           tracked in popup.js's selectedListIds until Save actually builds the item. -->
+      <div class="lists-row">
+        <details class="lists-dropdown" id="lists-wrap">
+          <summary class="lists-summary">
+            <span>Select Lists</span>
+            <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M480-360 280-560h400L480-360Z"/></svg>
+          </summary>
+          <div class="lists-options" id="lists-options"></div>
+        </details>
+      </div>
+
       <div class="form-group">
         <label>Title</label>
         <input type="text" id="input-title" placeholder="Title" autocomplete="off" />
