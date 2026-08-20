@@ -151,7 +151,7 @@ function wireListCardConfirm(container) {
       const avatar = card.querySelector('.shared-vcard-avatar');
       openSwitchConfirm({
         name: card.dataset.cardName,
-        subtitle: 'The sidebar will switch to display their shared saves. Bookmark, star, or add a note to collect their saves into your library!',
+        subtitle: 'The sidebar will switch to display their shared saves. Bookmark or star to collect their saves back to your library!',
         icon: avatar?.innerHTML,
         iconColor: avatar?.style.background,
         leadText: 'Opening saves by:',
