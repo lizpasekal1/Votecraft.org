@@ -831,6 +831,15 @@
 .modal--edit-item .form-row--url-pair {
   flex-direction: column;
 }
+/* URL above Image URL, per direct follow-up request — the `order` property flips just the visual
+   stacking order for Edit Item without touching the underlying DOM order (which the Add flow's own
+   row layout still relies on: Image URL left, URL right, unaffected by this). */
+.modal--edit-item #url-group {
+  order: 1;
+}
+.modal--edit-item #image-url-group {
+  order: 2;
+}
 .modal--edit-item .form-row--url-pair .form-group input {
   height: auto;
   padding: 10px 12px;
