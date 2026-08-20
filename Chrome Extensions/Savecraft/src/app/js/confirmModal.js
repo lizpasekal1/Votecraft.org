@@ -19,12 +19,15 @@ import { escapeHtml } from './utils.js';
 // own Saved Lists popup and VC Connector's separate hardcoded one); Shared Saves' cards pass
 // "Opening saves by:" instead, per direct request, since "opening" a person/group there reads
 // better as "opening saves BY that person/group" than "opening [a name]" on its own.
-export function openSwitchConfirm({ name, subtitle, icon, iconColor, leadText = "You're opening", onConfirm }) {
+// leadColor: optional override for that same line's color (defaults to the shared dark #111827) —
+// Shared Saves' cards pass SaveCraft purple, per direct request, without changing the sidebar's
+// own "You're opening"/VC Connector's existing color.
+export function openSwitchConfirm({ name, subtitle, icon, iconColor, leadText = "You're opening", leadColor, onConfirm }) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay open';
   overlay.innerHTML = `
     <div class="modal vc-wallet-modal" style="position:relative; width:360px;">
-      <div class="modal-header"><h2><span class="vc-wallet-modal-title-lead">${escapeHtml(leadText)}</span><span class="vc-wallet-modal-title-emphasis">${escapeHtml(name)}</span></h2></div>
+      <div class="modal-header"><h2><span class="vc-wallet-modal-title-lead"${leadColor ? ` style="color:${escapeHtml(leadColor)}"` : ''}>${escapeHtml(leadText)}</span><span class="vc-wallet-modal-title-emphasis">${escapeHtml(name)}</span></h2></div>
       ${icon ? `<div class="switch-confirm-icon" style="background:${escapeHtml(iconColor || 'var(--primary)')}">${icon}</div>` : ''}
       <div class="modal-body">
         <p>${escapeHtml(subtitle)}</p>
