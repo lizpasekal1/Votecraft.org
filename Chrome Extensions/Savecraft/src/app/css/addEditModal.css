@@ -550,8 +550,12 @@
      (.modal-corner-icon, position:absolute, top:8px/left:8px against .modal itself) instead of
      sharing its row. Only this one row is shifted — the rest of the screen's content (image,
      title, url fields) keeps the modal's normal 34px padding, since only this row needs to clear
-     the icon. */
-  margin-top: -20px;
+     the icon. Less aggressive than the -20px tried first (reported live on mobile: the title field
+     started overlapping this row) — paired with an explicit, larger-than-the-shared-24px
+     margin-bottom so the gap to the title field below can't shrink regardless of how far up this
+     pull moves the row itself. */
+  margin-top: -8px;
+  margin-bottom: 32px;
   padding-left: 16px;
 }
 
