@@ -398,7 +398,7 @@ export function renderSidebar() {
       // curated list for Dashboard is the same kind of bigger context switch.
       if (state.activeSavedListId || state.sidebarMode === 'curated') {
         openSwitchConfirm({
-          subtitle: 'Returning to your dashboard switches your sidebar to display your full saves library',
+          subtitle: 'Returning to your dashboard switches the sidebar to display your full saves library',
           openLabel: 'Okay',
           onConfirm: doNavigate,
         });
