@@ -239,11 +239,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  /* -9px top: the shared .modal-header already carries its own 24px margin-bottom (addEditModal.
+  /* -14px top: the shared .modal-header already carries its own 24px margin-bottom (addEditModal.
      css) before this element even starts — negative offset pulls the icon up so the real gap
-     under the title lands at 15px total, per direct request, rather than adding this on top of
-     that 24px for ~28px. 22px bottom (was 12px) — an explicit +10px per direct follow-up request. */
-  margin: -9px auto 22px;
+     under the title lands at 10px total (was 15px, -5px per direct follow-up request), rather
+     than adding this on top of that 24px. 22px bottom (was 12px) — an explicit +10px per an
+     earlier direct request. */
+  margin: -14px auto 22px;
   color: #fff;
   font-size: 22px;
   font-weight: 700;
@@ -281,6 +282,14 @@
 }
 .vc-wallet-modal .vc-wallet-open-btn:hover {
   box-shadow: 0 0 24px rgba(20, 204, 176, 0.4);
+}
+
+/* The shared openSwitchConfirm() popup's own primary button (confirmModal.js — "Open"/"Explore")
+   only, not VC Connector's separately-styled teal .vc-wallet-open-btn above (same .vc-wallet-modal
+   wrapper, different button). Adds a purple ring on hover on top of the base .btn-primary:hover's
+   existing white-bg/purple-text swap, per direct request. */
+.vc-wallet-modal .btn-primary:not(.vc-wallet-open-btn):hover {
+  border: 2px solid var(--primary);
 }
 
 /* --- Account --- */
