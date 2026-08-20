@@ -130,7 +130,14 @@ export function renderSidebar() {
     ? state.authorReturnView
     : state.view;
   let sidebarTitle = 'My Saves';
-  if (sidebarEffectiveView.startsWith('genre:')) {
+  if (state.activeSavedListId) {
+    // Takes priority over every branch below — set once when a Saved List row is opened and
+    // preserved across category/subfolder navigation (renderSidebar.js's own click handlers
+    // further down), so the list's name keeps showing throughout, not just on its own landing
+    // card (which the sidebarEffectiveView.startsWith('savedlist:') branch below still covers on
+    // its own, e.g. right after a fresh popstate restore where this hasn't re-derived yet).
+    sidebarTitle = state.savedLists.find(l => l.id === state.activeSavedListId)?.name || 'My Saves';
+  } else if (sidebarEffectiveView.startsWith('genre:')) {
     const genreName = sidebarEffectiveView.slice(6).split(':')[0];
     // Top 100 is the VoteCraft-branded genre (the Curated Lists "Votecraft" row's own
     // destination) — reads as "VoteCraft" up top rather than "Top 100 Saves", per direct request.
@@ -154,9 +161,12 @@ export function renderSidebar() {
   // Saves" (default-favorites) is the catch-all and is never restricted, regardless of its own
   // allowedFolderIds field (which the Profile widget never sets — it excludes that list entirely).
   function activeSavedListFolderScope() {
-    if (!sidebarEffectiveView.startsWith('savedlist:')) return null;
-    const listId = sidebarEffectiveView.slice(10);
-    if (listId === 'default-favorites') return null;
+    // state.activeSavedListId (set on open, preserved across category clicks) covers browsing
+    // within the list; the sidebarEffectiveView check stays as a fallback for the landing card
+    // itself immediately after a popstate restore, before a re-render has re-derived the former.
+    const listId = state.activeSavedListId
+      || (sidebarEffectiveView.startsWith('savedlist:') ? sidebarEffectiveView.slice(10) : null);
+    if (!listId || listId === 'default-favorites') return null;
     const list = state.savedLists.find(l => l.id === listId);
     return list?.allowedFolderIds ? new Set(list.allowedFolderIds) : null;
   }
@@ -167,7 +177,10 @@ export function renderSidebar() {
   // "default-favorites" (All My Saves) excluded — its title already reads the generic "My Saves"
   // rather than a specific list name (see sidebarTitle computation above), so a "back to this
   // list's own landing" button wouldn't read as meaningfully different from just being here.
-  const isNamedSavedList = sidebarEffectiveView.startsWith('savedlist:') && sidebarEffectiveView.slice(10) !== 'default-favorites';
+  // state.activeSavedListId covers browsing within the list's categories; the sidebarEffectiveView
+  // check alone still covers the landing card itself right after a popstate restore.
+  const isNamedSavedList = !!state.activeSavedListId
+    || (sidebarEffectiveView.startsWith('savedlist:') && sidebarEffectiveView.slice(10) !== 'default-favorites');
   if (isCuratedDrilldown || isNamedSavedList) {
     const backTitle = isCuratedDrilldown ? 'Back to genres' : `Back to ${sidebarTitle}`;
     headerTitleEl.innerHTML = `<button class="sidebar-back-btn" id="sidebar-back-btn" title="${escapeHtml(backTitle)}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg><span>${escapeHtml(sidebarTitle)}</span></button>`;
@@ -178,9 +191,12 @@ export function renderSidebar() {
     e.stopPropagation();
     // Saved List title — always back to that exact list's own landing card, per direct request
     // ("standardize" this the same way VoteCraft's own title now always returns to its landing
-    // page regardless of how deep you've navigated since — see the genre: branch below).
+    // page regardless of how deep you've navigated since — see the genre: branch below). Reads
+    // the target list id from state.activeSavedListId first (works from anywhere inside the
+    // list's categories), falling back to sidebarEffectiveView for the landing-card-only case.
     if (isNamedSavedList) {
-      navigateToView(sidebarEffectiveView);
+      const listId = state.activeSavedListId || sidebarEffectiveView.slice(10);
+      navigateToView(`savedlist:${listId}`, { activeSavedListId: listId });
       return;
     }
     // Uses sidebarEffectiveView (not the raw state.view) so this also works correctly from an
@@ -353,24 +369,39 @@ export function renderSidebar() {
 
   function wireDashboardLink() {
     sidebar.querySelector('.sidebar-dashboard-link')?.addEventListener('click', () => {
-      // withViewTransition — per request, so opening/closing Dashboard's section morphs smoothly
-      // instead of snapping, via .sidebar-group-bg's own view-transition-name above.
-      withViewTransition(() => {
-        if (state.collapsed.has('dashboard')) {
-          // Reuses the same canonical "collapse everything" helper the mode-switch handlers below
-          // call, then reopens just Dashboard — this used to re-derive its own category list inline
-          // instead (via an otherCollapsibleIds param closed over whichever render pass wired it),
-          // which went stale in exactly the situation that matters most: wired from the curated-
-          // picker branch (which has no categories to pass) and then clicked, leaving every real
-          // category un-collapsed once the click switched back to the normal categorized sidebar
-          // (reported live: tap Curated, tap Dashboard, every accordion is open).
-          collapseAllSidebarSections();
-          state.collapsed.delete('dashboard');
-        } else {
-          state.collapsed.add('dashboard');
-        }
-        navigateToView('dashboard', { sidebarMode: 'home' });
-      });
+      const doNavigate = () => {
+        // withViewTransition — per request, so opening/closing Dashboard's section morphs smoothly
+        // instead of snapping, via .sidebar-group-bg's own view-transition-name above.
+        withViewTransition(() => {
+          if (state.collapsed.has('dashboard')) {
+            // Reuses the same canonical "collapse everything" helper the mode-switch handlers below
+            // call, then reopens just Dashboard — this used to re-derive its own category list inline
+            // instead (via an otherCollapsibleIds param closed over whichever render pass wired it),
+            // which went stale in exactly the situation that matters most: wired from the curated-
+            // picker branch (which has no categories to pass) and then clicked, leaving every real
+            // category un-collapsed once the click switched back to the normal categorized sidebar
+            // (reported live: tap Curated, tap Dashboard, every accordion is open).
+            collapseAllSidebarSections();
+            state.collapsed.delete('dashboard');
+          } else {
+            state.collapsed.add('dashboard');
+          }
+          navigateToView('dashboard', { sidebarMode: 'home' });
+        });
+      };
+      // Leaving an active Saved List scope (e.g. "Civics") for Dashboard is a bigger context
+      // switch than a plain category click within that same list — pauses for confirmation first,
+      // per direct request, rather than silently dropping the scope like every other destination
+      // already does (navigateToView's own default-clear behavior for activeSavedListId).
+      if (state.activeSavedListId) {
+        openSwitchConfirm({
+          subtitle: 'Returning to your dashboard switches your sidebar to display your full saves library',
+          openLabel: 'Okay',
+          onConfirm: doNavigate,
+        });
+      } else {
+        doNavigate();
+      }
     });
     sidebar.querySelector('.sidebar-kanban-link')?.addEventListener('click', () => {
       navigateToView('kanban', { sidebarMode: 'home' });
@@ -619,7 +650,10 @@ export function renderSidebar() {
         // reloading after clicking a category header lost the navigation, even though it visibly
         // changed state.view) — navigateToView() fixes that as a side effect of picking up History
         // API support here too.
-        navigateToView(isCuratedGenre ? `genre:${curatedGenreBase}:${cat}` : cat, { activeCuratedFolderId: null });
+        // activeSavedListId: state.activeSavedListId re-affirms whatever Saved List scope is
+        // currently active (a no-op when nothing's scoped) — see the generic subfolder handler
+        // below for the full reasoning; this is the same fix for the category-header click.
+        navigateToView(isCuratedGenre ? `genre:${curatedGenreBase}:${cat}` : cat, { activeCuratedFolderId: null, activeSavedListId: state.activeSavedListId });
       });
     });
   });
@@ -649,7 +683,11 @@ export function renderSidebar() {
         // computation in the row-render above for the full explanation.
         navigateToView(`genre:${curatedGenreBase}:${el.dataset.curatedTarget}`, { activeCuratedFolderId: el.dataset.view });
       } else {
-        navigateToView(el.dataset.view, { activeCuratedFolderId: null });
+        // activeSavedListId: state.activeSavedListId re-affirms whatever Saved List scope is
+        // currently active (a no-op when nothing's scoped) — without this, navigateToView's
+        // default-clear-unless-passed behavior for this field would silently drop out of a Saved
+        // List the instant a subfolder inside it was clicked (reported live).
+        navigateToView(el.dataset.view, { activeCuratedFolderId: null, activeSavedListId: state.activeSavedListId });
       }
     });
   });
@@ -673,9 +711,13 @@ export function renderSidebar() {
         onConfirm: () => {
           state.collapsed.add('saved-lists');
           if (el.dataset.view === 'savedlist:default-favorites') {
+            // All My Saves is the unrestricted catch-all, never a real scoped list — no
+            // activeSavedListId (navigateToView's own default already clears it either way).
             navigateToView('dashboard', { sidebarMode: 'home', activeCuratedFolderId: null });
           } else {
-            navigateToView(el.dataset.view, { activeCuratedFolderId: null });
+            // Scope begins here — preserved across category/subfolder clicks from this point on
+            // (see those handlers) until the user navigates somewhere unrelated.
+            navigateToView(el.dataset.view, { activeCuratedFolderId: null, activeSavedListId: listId });
           }
         },
       });

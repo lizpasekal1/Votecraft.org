@@ -159,6 +159,11 @@ export function getFilteredSortedItems() {
     // A top-level tab shows only its "primary" folder's items, plus anything with no folder
     // assigned yet — see matchesPrimaryOrUnfoldered() above.
     items = items.filter(i => matchesPrimaryOrUnfoldered(i, state.view));
+    // Browsing this category "inside" a Saved List (renderSidebar.js preserves
+    // state.activeSavedListId across category clicks) — narrow down to just that list's items,
+    // same membership check the savedlist: branch above already uses. default-favorites never
+    // sets this field (it's the unrestricted catch-all), so no favorite/savedListIds ambiguity.
+    if (state.activeSavedListId) items = items.filter(i => (i.savedListIds || []).includes(state.activeSavedListId));
   } else {
     const folder = state.folders.find(f => f.id === state.view);
     const isPrimaryFolder = folder && PRIMARY_FOLDER_ID[folder.parentCategory] === folder.id;
@@ -166,6 +171,7 @@ export function getFilteredSortedItems() {
       // Clicking the primary folder directly shows exactly what its category tab shows.
       ? items.filter(i => matchesPrimaryOrUnfoldered(i, folder.parentCategory))
       : items.filter(i => i.folderId === state.view);
+    if (state.activeSavedListId) items = items.filter(i => (i.savedListIds || []).includes(state.activeSavedListId));
   }
 
   // Search filter
