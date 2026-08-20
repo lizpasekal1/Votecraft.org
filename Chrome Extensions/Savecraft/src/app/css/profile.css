@@ -233,8 +233,8 @@
    the thing being opened already has (a Shared Saves card's own avatar color/content, or a
    sidebar list's purple icon badge), sitting centered between the title and the body copy. */
 .switch-confirm-icon {
-  width: 48px;
-  height: 48px;
+  width: 53px;
+  height: 53px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -245,12 +245,12 @@
      that 24px for ~28px. 22px bottom (was 12px) — an explicit +10px per direct follow-up request. */
   margin: -9px auto 22px;
   color: #fff;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
   overflow: hidden;
 }
 .switch-confirm-icon img { width: 100%; height: 100%; object-fit: cover; }
-.switch-confirm-icon svg { width: 22px; height: 22px; fill: #fff; }
+.switch-confirm-icon svg { width: 24px; height: 24px; fill: #fff; }
 
 .vc-wallet-modal .modal-body p {
   color: #4B5563;
