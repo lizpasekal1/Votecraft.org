@@ -478,36 +478,36 @@
         </details>
       </div>
 
-      <!-- Edit-mode-only folder + category reassignment; the Add flow uses the dedicated
-           category-tile/folder-picker wizard screens instead. Category (moved here from the header
-           row, per direct request — it used to sit in .modal-header/the purple bar) sits to the
-           left of Folder in one row, sharing #folder-select-group's own display toggle since the
-           two are always shown/hidden together. -->
-      <div class="form-row" id="category-folder-row" style="display:none;">
-        <div class="form-group">
-          <span class="select-with-arrow" id="modal-category-wrap">
-            <select id="modal-category" class="modal-category-select">
-              <option value="">Category...</option>
-              <option value="Web Links">Sources</option>
-              <option value="News">News</option>
-              <option value="Book">Literature</option>
-              <option value="Game">Game</option>
-              <option value="Movie">Films</option>
-              <option value="Musician">Music</option>
-              <option value="Music Album">Albums</option>
-              <option value="Show">Show</option>
-              <option value="Visual Art">Visual Art</option>
-            </select>
-            <svg class="select-arrow" xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M480-360 280-560h400L480-360Z"/></svg>
-          </span>
-        </div>
-        <div class="form-group" id="folder-select-group">
-          <!-- Label removed, per direct request -->
-          <span class="select-with-arrow">
-            <select id="input-folder-select"></select>
-            <svg class="select-arrow" xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M480-360 280-560h400L480-360Z"/></svg>
-          </span>
-        </div>
+      <!-- Category select — permanently hidden now, per direct request ("remove the category
+           drop down lists" from Edit Item). Kept in the DOM (not deleted outright) purely because
+           handleSaveItem() reads #modal-category's own value for every save, Add and Edit alike —
+           openEditModal still writes item.category into it on open, just never shows it visibly
+           anymore. Category becomes fully non-editable from Edit Item; it stays whatever it
+           already was. -->
+      <span class="select-with-arrow" id="modal-category-wrap" style="display:none">
+        <select id="modal-category" class="modal-category-select">
+          <option value="">Category...</option>
+          <option value="Web Links">Sources</option>
+          <option value="News">News</option>
+          <option value="Book">Literature</option>
+          <option value="Game">Game</option>
+          <option value="Movie">Films</option>
+          <option value="Musician">Music</option>
+          <option value="Music Album">Albums</option>
+          <option value="Show">Show</option>
+          <option value="Visual Art">Visual Art</option>
+        </select>
+        <svg class="select-arrow" xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M480-360 280-560h400L480-360Z"/></svg>
+      </span>
+
+      <!-- Edit-mode-only folder reassignment; the Add flow uses the dedicated folder-picker
+           wizard screen instead. -->
+      <div class="form-group" id="folder-select-group" style="display:none;">
+        <!-- Label removed, per direct request -->
+        <span class="select-with-arrow">
+          <select id="input-folder-select"></select>
+          <svg class="select-arrow" xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M480-360 280-560h400L480-360Z"/></svg>
+        </span>
       </div>
 
       <!-- Musician/Music Album/Favorite Albums keep the original compact side-by-side pairing
