@@ -24,10 +24,12 @@ const KANBAN_EXPANDED_FORMATS = [
   { key: 'simple',   label: 'Simple Text' },
 ];
 
-// Same top-right circular button in both states — a plain "+" when this column can be expanded,
-// swapping to a purple "−" (via .kanban-expand-btn--active in CSS) when it's the one currently
-// expanded, so clicking it again visibly reads as "shrink back down."
-const EXPAND_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+// Same top-right circular button in both states — a down-chevron when this column can be
+// expanded, swapping to a purple "−" (via .kanban-expand-btn--active in CSS) when it's the one
+// currently expanded, so clicking it again visibly reads as "shrink back down." Matches
+// adminKanban.js's own EXPAND_ICON_SVG, per direct request — that one already moved off the plain
+// "+" this file used to share with it; this brings Queue Kanban in line with the same icon.
+const EXPAND_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="12px" viewBox="0 -960 960 960" width="12px" fill="currentColor"><path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z"/></svg>';
 const COLLAPSE_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>';
 
 let _demoStatus = 'in-queue';
