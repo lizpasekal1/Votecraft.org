@@ -135,6 +135,13 @@ export function plainTextFromNoteHtml(html) {
   return (template.content.textContent || '').trim();
 }
 
+// The actual "is there anything worth keeping" check — factored out so noteHtmlHasContent and
+// inspectNoteHtml below (which both need it, on an already-parsed tree) share one implementation
+// instead of each re-deriving the same boolean expression.
+function _contentHasSomething(content) {
+  return !!(content.textContent || '').trim() || !!content.querySelector('img');
+}
+
 // "Does this note have anything worth keeping" — true visible text OR an inserted image (My
 // Notes toolbar's image button). Used wherever plainTextFromNoteHtml's result was only ever
 // checked for truthiness (has-note styling, whether to persist vs. delete a row's saved text) —
@@ -144,7 +151,7 @@ export function plainTextFromNoteHtml(html) {
 export function noteHtmlHasContent(html) {
   const template = document.createElement('template');
   template.innerHTML = html || '';
-  return !!(template.content.textContent || '').trim() || !!template.content.querySelector('img');
+  return _contentHasSomething(template.content);
 }
 
 // Everything a note-listing UI (Profile page's My Notes widget) needs to know about one note's
@@ -158,7 +165,7 @@ export function inspectNoteHtml(html) {
   template.innerHTML = html || '';
   const content = template.content;
   return {
-    hasContent: !!(content.textContent || '').trim() || !!content.querySelector('img'),
+    hasContent: _contentHasSomething(content),
     hasVoice: !!content.querySelector('img[data-audio-id]'),
     hasImage: !!content.querySelector('img:not([data-audio-id])'),
     hasLink: !!content.querySelector('a[href]'),

@@ -165,7 +165,7 @@ export function renderGrid() {
     ? state.savedLists.find(l => l.id === state.activeSavedListId)?.name
     : null;
   const scopedListSuffix = scopedListName
-    ? ` <button type="button" class="grid-title-scope-link" data-list-id="${escapeHtml(state.activeSavedListId)}">| ${escapeHtml(scopedListName)}</button>`
+    ? ` <button type="button" class="grid-title-scope-link">| ${escapeHtml(scopedListName)}</button>`
     : '';
 
   if (state.view === 'all') {
@@ -220,9 +220,10 @@ export function renderGrid() {
 
   // scopedListSuffix's own link — stopPropagation not needed (unlike the sidebar's equivalent
   // click handlers) since the page title itself has no click behavior of its own to collide with.
+  // state.activeSavedListId is already known here (it's what produced scopedListSuffix above), so
+  // the link needs no data-attribute of its own to carry it back out on click.
   document.querySelector('.grid-title-scope-link')?.addEventListener('click', () => {
-    const listId = document.querySelector('.grid-title-scope-link').dataset.listId;
-    navigateToView(`savedlist:${listId}`, { activeSavedListId: listId });
+    navigateToView(`savedlist:${state.activeSavedListId}`, { activeSavedListId: state.activeSavedListId });
   });
 
   const items = getFilteredSortedItems();
