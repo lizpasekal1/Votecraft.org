@@ -246,6 +246,15 @@
   flex-direction: column;
 }
 
+/* Edit Item screen only (openEditModal toggles this class — addEditModal.js) — reported live: going
+   from the detail modal (.modal.detail-modal, 374px) to Edit Item via its pencil icon visibly
+   resized the popup wider, since the Add/Edit wizard's shared .modal above is 480px for its other
+   screens (category tiles, folder picker, etc., which do need the extra room). Matches
+   .modal.detail-modal's own width exactly so that specific transition doesn't resize at all. */
+.modal.modal--edit-item {
+  width: 374px;
+}
+
 .modal-body {
   overflow-y: auto;
   /* iOS Safari momentum/touch scrolling inside a nested div — without this, a scroll gesture that
