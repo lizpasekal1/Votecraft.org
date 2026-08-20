@@ -393,8 +393,10 @@ export function renderSidebar() {
       // Leaving an active Saved List scope (e.g. "Civics") for Dashboard is a bigger context
       // switch than a plain category click within that same list — pauses for confirmation first,
       // per direct request, rather than silently dropping the scope like every other destination
-      // already does (navigateToView's own default-clear behavior for activeSavedListId).
-      if (state.activeSavedListId) {
+      // already does (navigateToView's own default-clear behavior for activeSavedListId). Same
+      // treatment extended to Curated Lists (e.g. VoteCraft), per a follow-up request — leaving a
+      // curated list for Dashboard is the same kind of bigger context switch.
+      if (state.activeSavedListId || state.sidebarMode === 'curated') {
         openSwitchConfirm({
           subtitle: 'Returning to your dashboard switches your sidebar to display your full saves library',
           openLabel: 'Okay',
@@ -446,11 +448,13 @@ export function renderSidebar() {
         leadText: 'Opening saves by:',
         leadColor: 'var(--primary)',
         openLabel: 'Explore',
-        // Collapses the Curated Lists accordion back closed once the popup's own Explore is
-        // actually clicked, per direct request — navigateToView's own re-render (navigation.js)
-        // picks this up, no separate renderSidebar() call needed here.
+        // Collapses the Curated Lists accordion, and its Dashboard parent, back closed once the
+        // popup's own Explore is actually clicked, per direct request — same fix as the Saved
+        // Lists row's own "Open" popup already got — navigateToView's own re-render
+        // (navigation.js) picks this up, no separate renderSidebar() call needed here.
         onConfirm: () => {
           state.collapsed.add('curated-lists');
+          state.collapsed.add('dashboard');
           navigateToView('genre:Top 100', { sidebarMode: 'curated' });
         },
       });
