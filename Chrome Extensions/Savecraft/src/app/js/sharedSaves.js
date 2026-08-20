@@ -155,6 +155,7 @@ function wireListCardConfirm(container) {
         icon: avatar?.innerHTML,
         iconColor: avatar?.style.background,
         leadText: 'Opening saves by:',
+        leadColor: 'var(--primary)',
         onConfirm: () => navigateToView('curated', { sidebarMode: 'curated' }),
       });
     });
