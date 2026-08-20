@@ -15,12 +15,16 @@ import { escapeHtml } from './utils.js';
 // defaults to SaveCraft purple (var(--primary)) — the same default the sidebar's own list-icon
 // badges use — when a caller has no more specific color of its own (e.g. a sidebar list, which
 // isn't independently colored the way a Shared Saves card's avatar already is).
-export function openSwitchConfirm({ name, subtitle, icon, iconColor, onConfirm }) {
+// leadText: the small line above the name — defaults to "You're opening" (matches the sidebar's
+// own Saved Lists popup and VC Connector's separate hardcoded one); Shared Saves' cards pass
+// "Opening saves by:" instead, per direct request, since "opening" a person/group there reads
+// better as "opening saves BY that person/group" than "opening [a name]" on its own.
+export function openSwitchConfirm({ name, subtitle, icon, iconColor, leadText = "You're opening", onConfirm }) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay open';
   overlay.innerHTML = `
     <div class="modal vc-wallet-modal" style="position:relative; width:360px;">
-      <div class="modal-header"><h2><span class="vc-wallet-modal-title-lead">You're opening</span><span class="vc-wallet-modal-title-emphasis">${escapeHtml(name)}</span></h2></div>
+      <div class="modal-header"><h2><span class="vc-wallet-modal-title-lead">${escapeHtml(leadText)}</span><span class="vc-wallet-modal-title-emphasis">${escapeHtml(name)}</span></h2></div>
       ${icon ? `<div class="switch-confirm-icon" style="background:${escapeHtml(iconColor || 'var(--primary)')}">${icon}</div>` : ''}
       <div class="modal-body">
         <p>${escapeHtml(subtitle)}</p>
