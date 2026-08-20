@@ -830,6 +830,12 @@
    Title's sizing instead of the squashed half-width pairing, which no longer applies here). */
 .modal--edit-item .form-row--url-pair {
   flex-direction: column;
+  /* .form-row's own base gap (12px, for the side-by-side pairing everywhere else) reads
+     inconsistent with the 18px every other adjacent-field gap in this form actually uses (a
+     .form-group's own margin-bottom, matched by the .form-row + .form-group/.form-row + .form-row
+     rules above) — reported live. Matched here now that URL/Image URL stack like any other pair
+     of fields instead of sitting side by side. */
+  gap: 18px;
 }
 /* URL above Image URL, per direct follow-up request — the `order` property flips just the visual
    stacking order for Edit Item without touching the underlying DOM order (which the Add flow's own
