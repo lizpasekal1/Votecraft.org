@@ -472,6 +472,18 @@
     height: 45vh;
     height: 45dvh;
   }
+  /* Edit Item only, desktop only, per direct request — this is the rule that was actually
+     controlling Edit's real rendered height all session (a firm height, not just a cap); earlier
+     attempts to size Edit Item via .modal--edit-item's own padding/max-height never mattered much
+     because this ID-scoped rule's specificity always won regardless. #modal-overlay is needed on
+     the override too, to match/beat this rule's own specificity ((1,1,0) vs .modal--edit-item
+     alone at (0,2,0), which would lose the tie). +100px on top of the same 45vh/45dvh base, not a
+     replacement value, so it still scales with viewport height the same way every other screen's
+     box does. */
+  #modal-overlay .modal.modal--edit-item {
+    height: calc(45vh + 100px);
+    height: calc(45dvh + 100px);
+  }
   /* "Select Lists" button — right-side padding bumped further to 25px (from the shared 19.5px),
      desktop only, per request. */
   #saved-lists-wrap .platform-dropdown-summary {
@@ -550,11 +562,13 @@
      (.modal-corner-icon, position:absolute, top:8px/left:8px against .modal itself) instead of
      sharing its row. Only this one row is shifted — the rest of the screen's content (image,
      title, url fields) keeps the modal's normal 34px padding, since only this row needs to clear
-     the icon. Less aggressive than the -20px tried first (reported live on mobile: the title field
-     started overlapping this row) — paired with an explicit, larger-than-the-shared-24px
-     margin-bottom so the gap to the title field below can't shrink regardless of how far up this
-     pull moves the row itself. */
-  margin-top: -8px;
+     the icon. -26px is computed, not guessed: .modal--edit-item's own padding-top is 34px, the
+     icon's own top is 8px, so -(34 - 8) lines this row's top edge up with the icon's exactly,
+     desktop and mobile both (unscoped by any breakpoint). Paired with an explicit, larger-than-
+     the-shared-24px margin-bottom so the gap to the title field below can't shrink regardless of
+     how far up this pull moves the row itself (reported live at -20px with the old 24px default:
+     the title field started overlapping this row). */
+  margin-top: -26px;
   margin-bottom: 32px;
   padding-left: 16px;
 }
