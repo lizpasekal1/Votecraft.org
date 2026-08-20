@@ -154,6 +154,7 @@ function wireListCardConfirm(container) {
         subtitle: 'The sidebar will change to display saves from this list. Switch lists at any time!',
         icon: avatar?.innerHTML,
         iconColor: avatar?.style.background,
+        leadText: 'Opening saves by:',
         onConfirm: () => navigateToView('curated', { sidebarMode: 'curated' }),
       });
     });
