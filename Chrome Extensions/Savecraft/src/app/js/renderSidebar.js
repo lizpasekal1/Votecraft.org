@@ -288,7 +288,7 @@ export function renderSidebar() {
       </div>
       ${isDashboardCollapsed ? '' : `
       ${_renderDashboardListRow({
-        key: 'saved-lists', icon: SAVED_LISTS_ICON_SVG, label: 'Saved Lists',
+        key: 'saved-lists', icon: SAVED_LISTS_ICON_SVG, label: 'My Saves Library',
         // Always alphabetical, per direct request — a new list slots into its correct alphabetical
         // position among the existing ones rather than just appending at the end. Sorted here at
         // render time only (state.savedLists' own stored order is untouched). "All My Saves"
