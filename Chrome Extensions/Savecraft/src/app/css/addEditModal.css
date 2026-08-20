@@ -1145,6 +1145,17 @@
     /* -35px — another 15px up (from -20px), per request. */
     margin-top: -35px;
   }
+  /* Edit Item excluded from both the centering AND the nudge above — reported live on a real
+     iPhone: Edit's own content (many more fields than the Add flow's Title+URL-only review screen
+     this treatment was actually tuned for) was rendering pulled up above its natural scroll
+     position, visibly intruding behind the purple header bar regardless of scroll position, not
+     just at rest. Edit's form is long enough that it should just start at its own natural top and
+     scroll normally, the same way modal-step1/-folder/-music-choice already do once their own
+     content doesn't fit (safe center's own fallback — see this block's opening comment). */
+  .modal--edit-item .modal-step2 {
+    justify-content: flex-start;
+    margin-top: 0;
+  }
   .step1-category-grid {
     /* 13px — up from the original 10px, but back down from 18px: less gap between columns means
        more of each row's width goes to the tiles themselves (grid columns are minmax(0, 1fr), so
