@@ -12,7 +12,8 @@ Firestore rules: `firebase/firestore.rules`
 | App | Type | Firebase Features Used |
 |-----|------|------------------------|
 | **JokeMaster** | Browser game | Auth (email+password), Firestore (game state, joke votes) |
-| **SaveCraft** | Chrome extension | Firestore (public curated library — read only) |
+| **SaveCraft** | Chrome extension + web app (savecraft.org) | Auth (email+password), Firestore (public curated library read-only; per-user synced library and shared Admin Kanban board, both auth-gated read/write) |
+| **SaveCraft WordPress plugin** | wp-admin (votecraft.org), server-side only | Firestore (`admin_kanban_cards` only), via a dedicated bot Auth account — see its own section below |
 | **Scavenger Tours** | Browser game (future) | TBD |
 | **Power Plays** | Browser game (future) | TBD |
 
@@ -89,6 +90,38 @@ Per-user synced library — the extension's `chrome.storage.sync` data mirrored 
 - `savecraft_users/{uid}/authors/{authorId}` — one doc per author/artist profile
 
 **Auth is SaveCraft-specific, not the shared Emporium account** (see the "Auth implication" note below — this is a deliberate divergence from this doc's original vision, decided directly with the user). Uses the same Firebase project and the same email+password provider, but a SaveCraft sign-up does not double as a Votecraft account. Written via the Firebase Auth REST API directly from the extension (no SDK — the extension has no bundler), not through any shared Emporium sign-in flow.
+
+---
+
+### `admin_kanban_cards` — SaveCraft
+SaveCraft's internal project-task board ("Admin Kanban") — a single **shared** collection, not
+per-user (unlike `savecraft_users` above). Auth-gated to accounts the app/rules consider admins.
+
+**Document ID:** the card's own `id` (also duplicated inside its own fields, matching the
+`items`/`folders`/`authors` convention — see `_mergeCollection` in `storage.js`).
+
+**Fields:** `id`, `name`, `details`, `urgency` (`'low'|'medium'|'high'|null`), `status`
+(`'todo'|'in-progress'|'blocked'|'done'`), `manualOrder`, `createdAt`, `updatedAt`.
+
+**Rule (`firestore.rules`) deliberately mirrors `utils.js`'s `isAdminUser(email, role)` logic in
+rules syntax** rather than a static human-UID allowlist — `request.auth.token.email.lower()` against
+the same hardcoded email list, OR a `get()` lookup of the requester's own `savecraft_users/{uid}.role`
+field, OR one hardcoded UID for the dedicated WordPress bot account
+(`wp-savecraft-bot@votecraft-789.internal`) — see the rule's own comment for the full reasoning.
+
+**Two writers, both server-side/app-side only, never a portable Firestore credential in a browser
+beyond the signed-in user's own scoped ID token:**
+1. SaveCraft's own app/extension, when a signed-in admin uses the Admin Kanban board (`storage.js`'s
+   `persistAdminKanbanCard`/`removeAdminKanbanCard`).
+2. `plugins/votecraft-savecraft-admin/` (WordPress) — server-side PHP only
+   (`includes/class-firestore-client.php`), using the bot account's refresh token stored in
+   `wp-config.php`. The browser-side wp-admin JS never touches Firestore directly, only this
+   plugin's own REST routes.
+
+A second, read-only surface (viewing SaveCraft accounts from wp-admin) was designed but is paused —
+it needs a Cloud Function + dedicated IAM service account (`roles/firebaseauth.viewer`), which
+requires moving this project off the free Spark plan onto Blaze. Full plan:
+`/Users/lizpasekal/.claude/plans/can-we-separtarate-the-adaptive-breeze.md`.
 
 ---
 

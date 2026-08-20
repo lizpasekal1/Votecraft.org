@@ -13,16 +13,87 @@
   width: 100%;
 }
 
+/* Groups the desktop "Manage account" button with its own Privacy Policy link directly below it
+   (per direct request) — a plain flex column instead of two separate top-level children of
+   .profile-account-row, so the link sits pinned right under the button regardless of how tall the
+   identity block next to it gets, and lines up with the button's own right edge. */
+.profile-account-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* Privacy Policy · Terms of Service, as one row — shared by the desktop card (under the button)
+   and the mobile page-end duplicate below (see buildLegalLinksRow() in profile.js). */
+.profile-legal-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+}
+
+.profile-legal-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.profile-legal-links a:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.profile-legal-sep {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+/* Mobile-only duplicate (page-end, beside .profile-manage-account-mobile) — hidden by default,
+   same swap-on-mobile pattern misc.css already uses for the button itself: this one hides, the
+   page-end one shows. */
+.profile-legal-links-mobile {
+  display: none;
+  justify-content: center;
+  margin-top: -4px;
+}
+
+/* About page's own use of this same row (about.js) — centered, since .shared-page (the page shell
+   it reuses) is a full-width flex column and this row would otherwise sit flush left. */
+.about-legal-links {
+  justify-content: center;
+  /* Extra space below the description text, per direct request. */
+  margin-top: 50px;
+}
+
+/* About page's own description text — sits directly on the page background now, not inside the
+   hero/banner header (moved out per direct request), so it uses the normal theme text color
+   instead of .bare-list-desc's near-white (tuned for that banner's own colored background). */
+.about-copy {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* "SaveCraft is a VoteCraft.org product." — bolder and a little larger than the rest of the
+   description below it, per direct request. */
+.about-copy--lead {
+  font-size: 18px;
+  font-weight: 700;
+}
+
 /* Account stays its own natural-height card at the top, full width — everything below it
-   (Connections/Interests/Your Music Taste/Saved Lists) shares the Dashboard's 2x2 grid shape and
-   .dash-card box model, but taller than the Dashboard's own grid — Connections in particular
-   has grown to 4 platform rows, more than the Dashboard's "peek" widgets were ever sized for. */
+   (Connections/Interests/My Notes/Saved Lists/Shared Lists/VoteCraft.org Connection) shares the
+   Dashboard's grid shape and .dash-card box model, but taller than the Dashboard's own grid —
+   Connections in particular has grown to 4 platform rows, more than the Dashboard's "peek"
+   widgets were ever sized for. Three rows now (was two) — Shared Lists + VoteCraft.org Connection
+   added per direct request. */
 .profile-widget-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
+  grid-template-rows: repeat(3, 1fr);
   gap: 16px;
-  height: 816px; /* two 400px rows + the 16px gap between them */
+  height: 1232px; /* three 400px rows + the two 16px gaps between them */
 }
 
 /* Dashboard widgets are deliberately "peek" sized (a few tracks, a capped genre list, etc.) —
@@ -48,16 +119,164 @@
   justify-content: space-between;
 }
 
+/* "Connections" — centered, with a divider below it, per request. Scoped to this card
+   specifically (.profile-card--connections, its own dash-card class) rather than the shared
+   .profile-card-header/-title, which every other widget card on this page still uses as-is. */
+.profile-card--connections .profile-card-header {
+  justify-content: center;
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
 .profile-card-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
+/* Sizes/line-height bumped up across this page (was 13px, no line-height — reading tight and
+   small at any width, worse on mobile), per direct request. Base values here apply everywhere;
+   misc.css's mobile media query pushes them further on top of these, same split as the rest of
+   this codebase's responsive overrides. */
 .profile-card-copy {
-  font-size: 13px;
+  font-size: 14px;
+  line-height: 1.5;
   color: var(--text-secondary);
   margin: 0;
+}
+
+/* --- VC Connector --- */
+/* Rebuilds the standalone VC-coin promo widget's content (widgets/vc-coin-widget/vc-coin-
+   banner.html — embedded elsewhere via iframe) as plain markup in this app's own visual language,
+   per a live reference screenshot — no coin animation/particles, those add real motion/weight
+   this card was never sized for. */
+.vc-connect-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #14CCB0;
+  margin: 0;
+  line-height: 1.3;
+}
+.vc-connect-desc {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0;
+}
+.vc-connect-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+/* Same .btn-primary class/look as Connect Steam's own button (Connections widget) — per direct
+   request. margin-top: auto (pin to the very bottom of the card) replaced with a fixed 20px gap
+   instead, per a direct follow-up request — auto was pushing it flush against the card's bottom
+   edge with a lot more than 20px of empty space above it, since the card's a fixed-height row
+   with room to spare below the tags. Shared with .profile-widget-add-new-btn (Interests/Shared
+   Lists' own bottom button, not wired to anything yet — visual placeholder only for now) — both
+   want the exact same "centered CTA near the bottom of a dash-card" treatment. */
+.vc-connect-learn-more-btn,
+.profile-widget-add-new-btn {
+  align-self: center;
+  margin-top: 20px;
+}
+.vc-connect-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.vc-connect-tag--earn {
+  background: rgba(20, 204, 176, 0.15);
+  color: #14CCB0;
+  border: 1px solid rgba(20, 204, 176, 0.3);
+}
+/* .vc-connect-tag--learn/--support removed — the Learn/Donate tags were dropped from the widget
+   (only Volunteer stays), per direct request. */
+
+/* "You're opening Votecraft Wallet" confirmation popup — white-themed regardless of SaveCraft's
+   own dark/light setting, styled to match the VC-coin site's own branding (teal #14CCB0 accent,
+   pill-shaped teal-gradient CTA) rather than SaveCraft's purple, per direct request. Overrides the
+   shared .modal/.btn-cancel/.btn-primary's theme-variable colors with hardcoded light-mode-
+   appropriate ones, scoped to just this modal via .vc-wallet-modal. */
+.vc-wallet-modal {
+  background: #fff;
+}
+/* flex-direction: column (the shared .modal h2 base is a row) so the two stacked lines actually
+   center over each other, not just vertically align within a single row — per direct request
+   ("your opening should be centered above VC Connector"). gap dropped from the base row's 8px to
+   2px — reported live as "far too much padding between these two lines" (the markup's own <br>,
+   now removed, was also stacking its own line-height on top of that gap). */
+.vc-wallet-modal .modal-header h2 {
+  color: #111827;
+  flex-direction: column;
+  gap: 2px;
+}
+/* "VC Connector" line, per direct request — bolder and a little larger than "You're opening"
+   above it and the base h2's own 20px/600 weight. */
+.vc-wallet-modal-title-emphasis {
+  font-size: 24px;
+  font-weight: 800;
+}
+/* "You're opening" line, per direct follow-up request — a little smaller than the base h2 size,
+   and kept on one line (the h2's own flex-column above can otherwise let it wrap in this
+   360px-wide modal). */
+.vc-wallet-modal-title-lead {
+  font-size: 16px;
+  white-space: nowrap;
+}
+/* Optional icon (see confirmModal.js's openSwitchConfirm) — a circle carrying whatever identity
+   the thing being opened already has (a Shared Saves card's own avatar color/content, or a
+   sidebar list's purple icon badge), sitting centered between the title and the body copy. */
+.switch-confirm-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px auto 12px;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  overflow: hidden;
+}
+.switch-confirm-icon img { width: 100%; height: 100%; object-fit: cover; }
+.switch-confirm-icon svg { width: 22px; height: 22px; fill: #fff; }
+
+.vc-wallet-modal .modal-body p {
+  color: #4B5563;
+  text-align: center;
+}
+/* Overrides the shared .modal-actions' default flex-end (right-aligned) — per direct request. */
+.vc-wallet-modal .modal-actions {
+  justify-content: center;
+}
+.vc-wallet-modal .btn-cancel {
+  background: #fff;
+  border-color: #E5E7EB;
+  color: #4B5563;
+}
+.vc-wallet-modal .btn-cancel:hover {
+  background: #F3F4F6;
+}
+/* border-radius deliberately not overridden here — .btn-primary's own 8px already matches
+   .btn-cancel's shape exactly, per direct request ("both buttons the rounded rectangle size the
+   cancel button is"); this used to set its own 24px pill shape instead. */
+.vc-wallet-modal .vc-wallet-open-btn {
+  background: linear-gradient(135deg, #14CCB0, #0d9488);
+  color: #fff;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 0 16px rgba(20, 204, 176, 0.25);
+}
+.vc-wallet-modal .vc-wallet-open-btn:hover {
+  box-shadow: 0 0 24px rgba(20, 204, 176, 0.4);
 }
 
 /* --- Account --- */
@@ -69,6 +288,13 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+}
+
+/* Mobile-only duplicate of the "Manage account" button above (id="profile-manage-account"),
+   placed at the very end of the page — hidden by default (desktop keeps only the one in the
+   account row); misc.css's own mobile media query shows this one and hides that one instead. */
+.profile-manage-account-mobile {
+  display: none;
 }
 
 .profile-account-identity {
@@ -98,7 +324,7 @@
 }
 
 .profile-account-email {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   color: var(--text-primary);
 }
@@ -157,13 +383,13 @@
 }
 
 .profile-connection-name {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .profile-connection-empty {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-secondary);
 }
 
@@ -204,7 +430,7 @@
 }
 
 .profile-track-title {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--text-primary);
   white-space: nowrap;
@@ -213,7 +439,7 @@
 }
 
 .profile-track-artist {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -222,7 +448,7 @@
 
 .profile-track-nowplaying {
   flex-shrink: 0;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -233,17 +459,25 @@
 }
 
 /* --- Interests --- */
+/* column-gap bumped up from the row-gap's 8px, per direct request ("more padding between the two
+   columns") — split out from a single uniform `gap` so row spacing stays as-is. Shared by both
+   Interests and Shared Lists (same checklist recipe), so both get the wider column gap. */
 .profile-interests-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 8px;
+  row-gap: 8px;
+  column-gap: 24px;
 }
 
+/* align-items: flex-start (not center) — same fix as .profile-account-row above: with center, a
+   label that wraps to a 2nd line (a longer genre name, or just this page's own bigger mobile
+   fonts) vertically centered the checkbox against the label's full wrapped height instead of
+   keeping it pinned to the first line, per direct request. */
 .profile-interest-option {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-primary);
   cursor: pointer;
 }
@@ -270,7 +504,7 @@
   padding: 6px 4px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
   user-select: none;
@@ -285,6 +519,52 @@
   color: var(--text-secondary);
   width: 10px;
   flex-shrink: 0;
+}
+
+.profile-saved-list-name {
+  flex: 1;
+}
+
+/* Rename/delete icons — hidden until the row's hovered, same "don't clutter the row until it's
+   relevant" convention as the sidebar's own .sidebar-delete-folder. */
+.profile-saved-list-actions {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+/* Also stays visible while the row's accordion is open, not just on hover — per direct request
+   ("it seems to disappear"). Expanding a row moves the mouse down into the category tree below,
+   which is a sibling of .profile-saved-list-row, not a descendant, so :hover alone stopped
+   matching the instant the cursor left the row itself. */
+.profile-saved-list-row:hover .profile-saved-list-actions,
+.profile-saved-list-row--expanded .profile-saved-list-actions {
+  display: flex;
+}
+.profile-saved-list-rename,
+.profile-saved-list-delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  border-radius: 50%;
+  line-height: 1;
+}
+.profile-saved-list-delete {
+  font-size: 16px;
+}
+.profile-saved-list-rename:hover {
+  background: var(--hover-bg);
+  color: var(--primary);
+}
+.profile-saved-list-delete:hover {
+  background: var(--hover-bg);
+  color: #EF4444;
 }
 
 /* Two-column layout: category groups flow top-to-bottom filling the left column first, then the
@@ -326,7 +606,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-primary);
   cursor: pointer;
 }
@@ -357,13 +637,139 @@
 }
 
 .profile-saved-list-add-folder {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-secondary);
   cursor: pointer;
 }
 
 .profile-saved-list-add-folder:hover {
   color: var(--primary);
+}
+
+/* --- My Notes (timeline of every item with real notes) --- */
+.profile-notes-category-btn {
+  /* Reuses .btn-board-filter's shape (kanban.css), recolored purple and shrunk to fit a widget
+     header corner — same recipe dashboard.css's .dash-fav-category-btn already uses for the
+     identical "sort by category" control on the Favorites widget. */
+  width: auto;
+  padding: 5px 14px;
+  box-sizing: border-box;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+.profile-notes-category-btn svg { opacity: 0.85; fill: #fff; }
+.profile-notes-category-btn:hover,
+.profile-notes-category-btn:active {
+  background: #fff;
+  border-color: #fff;
+  color: var(--primary);
+}
+.profile-notes-category-btn:hover svg,
+.profile-notes-category-btn:active svg {
+  opacity: 1;
+  fill: var(--primary);
+}
+/* Right-aligned, same reasoning as .dash-fav-category-dropdown — the base .board-filter-dropdown
+   (kanban.css) anchors left:0, which runs a corner-positioned dropdown off the edge of the card. */
+.profile-notes-category-dropdown {
+  left: auto;
+  right: 0;
+}
+
+.profile-notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Same shape as .profile-saved-list-row (Saved Lists widget) — arrow, then content, click-to-
+   toggle on the whole row. */
+.profile-notes-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  user-select: none;
+}
+.profile-notes-row:hover { background: var(--hover-bg); }
+
+.profile-notes-arrow {
+  font-size: 9px;
+  color: var(--text-secondary);
+  width: 10px;
+  flex-shrink: 0;
+}
+
+.profile-notes-cat-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.profile-notes-cat-icon svg { width: 16px; height: 16px; }
+
+.profile-notes-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Only the badges that actually apply render at all (see profile.js's _buildNotesBadges) — no
+   dimmed/absent placeholders, so a plain-text-only item's row just has fewer icons, not empty ones. */
+.profile-notes-badges {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.profile-notes-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  background: var(--primary-bg);
+  color: var(--primary);
+}
+
+.profile-notes-subrows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px 0 6px 26px;
+}
+.profile-notes-subrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.profile-notes-subrow:hover { background: var(--hover-bg); }
+.profile-notes-subrow-label {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.profile-notes-subrow-preview {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
 }
 
 /* --- Last.fm connect modal --- */

@@ -10,7 +10,7 @@
 // at a time.
 
 import { state, CATEGORIES, CAT_LABEL, CAT_EMOJI, CATEGORY_PLATFORMS, MODAL_BOOKMARK_ICON_SVG } from './state.js';
-import { escapeHtml, isItunesArtworkUrl, folderIconHtml, sortFoldersForDisplay } from './utils.js';
+import { escapeHtml, isItunesArtworkUrl, folderIconHtml, sortFoldersForDisplay, getChildFolders } from './utils.js';
 import { persistItem, persistCuratedOverrides } from './storage.js';
 import { renderSidebar, renderGrid, promptAddFolder } from './render.js';
 import {
@@ -19,6 +19,7 @@ import {
   fetchVideoThumbnail,
 } from './api.js';
 import { autoSaveMusician } from './authors.js';
+import { openDetailModal } from './detailModal.js';
 
 // ===== ADD-MODAL WIZARD STATE (screen 'category' → 'review') =====
 let _wizardScreen = 'category';    // which screen is currently visible — drives what the back icon does
@@ -28,6 +29,51 @@ let _wizardToken = 0;              // bumped on every open/close/back/advance �
 let _wizardFolderId = null;        // folder chosen on the folder-picker screen (null = "No folder")
 let _wizardHadFolderScreen = false; // whether the current category actually showed a folder screen — drives Back navigation
 let _wizardHadMusicChoiceScreen = false; // whether the combined "Music" tile's Musician/Album sub-choice screen was shown — drives Back navigation
+let _wizardSelectedListIds = new Set(); // saved lists (other than the always-on "All My Saves") picked on the review screen's saved-lists dropdown — reset fresh each time showReviewScreen runs
+
+// The modal's single shared h2 — every wizard screen-transition function below re-labels this same
+// element rather than each screen owning its own heading. Cached once (static element, never
+// removed/replaced) instead of re-querying it on every classList/innerHTML touch.
+const _modalH2 = document.querySelector('#modal-overlay h2');
+// The four classes that track "which screen is the heading currently styled for" — mutually
+// exclusive, so every screen transition needs to clear all of them before applying (at most) its
+// own. .modal-h2--left (Edit's own alignment tweak) is a separate, orthogonal concern and not part
+// of this set.
+const MODAL_H2_SCREEN_CLASSES = ['modal-h2--folder-offset', 'modal-h2--music-offset', 'modal-h2--review-title', 'modal-h2--category-screen'];
+function setModalHeading(html, screenClass) {
+  _modalH2.classList.remove(...MODAL_H2_SCREEN_CLASSES);
+  if (screenClass) _modalH2.classList.add(screenClass);
+  _modalH2.innerHTML = html;
+}
+
+// Words whose plural doesn't singularize by the generic suffix rule below (SINGULARIZE_SUFFIX),
+// either because it's already invariant ("Web Series"/"Series"/"News") or because the "-ies" rule
+// would misfire on a word that just happens to end in "-ies" without being a "-y" plural ("Movies"
+// is "Movie" + "s", not "Movy" + "ies"). Keyed exactly as the folder/category name appears.
+const SINGULARIZE_OVERRIDES = { 'Movies': 'Movie', 'Web Series': 'Web Series', 'Series': 'Series', 'News': 'News', 'PDFs': 'PDF' };
+// Review screen's title reads "Add <folder/category>" (e.g. "Add Podcast") instead of the plural
+// folder/category name as-is, per request. Handles the common English plural suffixes for the
+// current (and any future, user-created) folder names; anything that doesn't fit those rules
+// falls back to SINGULARIZE_OVERRIDES or, failing that, is left unchanged.
+function singularize(name) {
+  if (!name) return name;
+  if (SINGULARIZE_OVERRIDES[name]) return SINGULARIZE_OVERRIDES[name];
+  if (/ies$/i.test(name)) return name.slice(0, -3) + 'y';
+  if (/[^s]s$/i.test(name)) return name.slice(0, -1);
+  return name;
+}
+
+// Review screen's own "Add …" heading markup — factored out so backToReviewScreen can rebuild it
+// fresh on the way back from the Lists Explainer, the same way every other back-nav function
+// recomputes its heading from current wizard state rather than snapshotting/restoring raw HTML.
+function reviewTitleHtml() {
+  // The chosen folder (e.g. "News") is more specific/useful here than the category name — falls
+  // back to the category (e.g. "Sources") when no folder was chosen (categories with 0 or 1
+  // folders skip the folder-picker screen entirely, per showFolderScreenOrSkip).
+  const chosenFolder = _wizardFolderId ? state.folders.find(f => f.id === _wizardFolderId) : null;
+  const reviewTitleName = singularize(chosenFolder?.name || CAT_LABEL[state.modalCategory] || state.modalCategory || '');
+  return `<span class="modal-category-title">${escapeHtml(reviewTitleName ? `Add ${reviewTitleName}` : '')}</span>`;
+}
 
 // Show's iTunes search (real artwork/year inline) runs first; Wikipedia is only queried as a
 // fallback when iTunes has nothing, for the shows its TV catalog doesn't cover — same "search
@@ -98,6 +144,16 @@ function setAddSimpleMode(isSimple) {
   document.getElementById('music-url-pair-row').style.display = isSimple ? 'none' : '';
   document.getElementById('image-url-group').style.display = isSimple ? 'none' : '';
   if (isSimple) document.getElementById('platforms-section').style.display = 'none';
+
+  // #input-url's .form-group is a permanent sibling of #image-url-group inside .form-row--url-pair
+  // (hidden just above, isSimple-only) — .form-row--url-pair's own CSS (addEditModal.css) sizes
+  // both fields compactly assuming they're shown side by side. With Image URL hidden, URL is left
+  // alone in the row but still carries that compact sizing, reading visibly shorter than the
+  // Title field above it (reported live, screenshotted twice now: "make both these fields the
+  // same height"). This class lets that CSS rule size the lone field normally instead, matching
+  // Title's own sizing, only when it's actually alone.
+  document.getElementById('input-url').closest('.form-row--url-pair')
+    .classList.toggle('form-row--url-pair--single', isSimple);
 }
 
 // Musician/Music Album/Favorite Albums keep the original compact side-by-side pairing with
@@ -247,6 +303,43 @@ export function selectStep1Category(cat) {
   showFolderScreenOrSkip(cat);
 }
 
+// ===== SCREEN A-INFO: "Lists Explainer" (reached only from #modal-info-icon on the review/input
+// screen — Add flow only, next to Select Lists, since that's what this actually explains) =====
+
+export function showInfoScreen() {
+  _wizardScreen = 'info';
+  _wizardToken += 1;
+
+  document.getElementById('modal-step2').style.display = 'none';
+  document.getElementById('modal-info-icon').style.display = 'none';
+  document.getElementById('saved-lists-wrap').style.display = 'none'; // review screen's own header control — not part of this screen
+  document.getElementById('modal-step-info').style.display = '';
+  document.getElementById('btn-modal-back').style.display = '';
+  document.getElementById('btn-modal-save').style.display = 'none';
+  setModalHeading('Lists Explainer');
+}
+
+// Leaving the explainer always returns to the review/input screen it can only be reached from —
+// restores that screen's visibility/back-button/heading exactly as showReviewScreen does (heading
+// rebuilt fresh via reviewTitleHtml(), same as every other back-nav function recomputes its own
+// heading from current wizard state, rather than snapshotting/restoring raw HTML), but without
+// showReviewScreen's own field-clearing reset, which would otherwise wipe out whatever the user
+// had already typed before tapping the info icon. Named backTo*, not returnFrom*, to match every
+// other back-navigation function's naming (backToFolderScreen etc.) — handleModalBack treats it
+// identically to those.
+function backToReviewScreen() {
+  _wizardScreen = 'review';
+  _wizardToken += 1;
+
+  document.getElementById('modal-step-info').style.display = 'none';
+  document.getElementById('modal-step2').style.display = '';
+  document.getElementById('modal-info-icon').style.display = '';
+  document.getElementById('saved-lists-wrap').style.display = '';
+  document.getElementById('btn-modal-back').style.display = '';
+  document.getElementById('btn-modal-save').style.display = '';
+  setModalHeading(reviewTitleHtml(), 'modal-h2--review-title');
+}
+
 // ===== SCREEN A1.5: Musician vs Music Album sub-choice (only for the combined "Music" tile) =====
 
 function showMusicChoiceScreen() {
@@ -260,8 +353,8 @@ function showMusicChoiceScreen() {
   document.getElementById('modal-step2').style.display = 'none';
   document.getElementById('btn-modal-back').style.display = '';
   document.getElementById('btn-modal-save').style.display = 'none';
-  document.getElementById('modal-back-label').textContent = 'Music';
-  document.querySelector('#modal-overlay h2').innerHTML = 'Choose a folder';
+  document.getElementById('modal-info-icon').style.display = 'none';
+  setModalHeading('<span class="modal-category-title">Music</span><span class="modal-heading-text">Choose a folder</span>', 'modal-h2--music-offset');
 
   // CAT_LABEL['Musician'] is "Music" (used for the combined top-level tile) — on this
   // specific sub-choice screen that duplicates the tile you just clicked, so it's overridden to
@@ -269,7 +362,7 @@ function showMusicChoiceScreen() {
   const musicChoiceLabels = { Musician: 'Musician', 'Music Album': CAT_LABEL['Music Album'] };
   const grid = document.getElementById('step1-music-choice-grid');
   grid.innerHTML = ['Musician', 'Music Album'].map(cat => `
-    <button type="button" class="step1-category-tile" data-category="${cat}">
+    <button type="button" class="step1-category-tile${folderTileIsOneLine(musicChoiceLabels[cat] || cat) ? ' step1-category-tile--one-line' : ''}" data-category="${cat}">
       <span class="cat-icon">${CAT_EMOJI[cat] || ''}</span>
       <span class="step1-category-tile-label">${musicChoiceLabels[cat] || cat}</span>
     </button>`).join('');
@@ -286,6 +379,37 @@ function selectMusicChoice(cat) {
 }
 
 // ===== SCREEN A2: folder picker (shown only when the category has at least one folder) =====
+
+// Folder tiles wrap naturally now (see #step1-folder-grid .step1-category-tile-label in
+// addEditModal.css), but for the common two-word case ("Music Videos", "Book Club") that still
+// left the wrap point up to the browser, which doesn't always break exactly between the two words
+// depending on how much room the tile has. This forces it explicitly — the second word always
+// lands on its own second line — per request. Three+ word (or single-word) names are left to wrap
+// naturally, same as before; a forced break only reads as intentional for exactly two words.
+// "Web Series" specifically stays on one line — short enough to fit without the forced break
+// below, unlike the two-word names that motivated it (Board/Console/Mobile Games, Game
+// Companies), so it just reads as an odd short wrap rather than a helpful one (reported live).
+const FOLDER_TILE_NO_FORCED_BREAK = new Set(['Web Series']);
+function folderTileLabelHtml(name) {
+  const words = name.trim().split(/\s+/);
+  if (words.length === 2 && !FOLDER_TILE_NO_FORCED_BREAK.has(name.trim())) {
+    return `${escapeHtml(words[0])}<br>${escapeHtml(words[1])}`;
+  }
+  return escapeHtml(name);
+}
+
+// A one-line label's icon+text sit noticeably higher than a two-line label's own (both centered
+// within the same fixed-height tile, but a shorter content block reads as riding higher, not
+// truly centered, once there's a taller sibling tile to compare it against — reported live).
+// Class-driven rather than baked into the shared tile padding, since it's specifically the
+// one-line case (not just "shorter than two lines" in general, e.g. three+ word names that
+// happen to wrap onto one line anyway) that needed the nudge. Word count alone isn't quite the
+// right test any more, now that FOLDER_TILE_NO_FORCED_BREAK (above) can keep a two-word name like
+// "Web Series" on one line too — that name still needs this same nudge (reported live: "apply
+// this to webseries as well — it is still on one line"), so it's checked here as well.
+function folderTileIsOneLine(name) {
+  return name.trim().split(/\s+/).length === 1 || FOLDER_TILE_NO_FORCED_BREAK.has(name.trim());
+}
 
 function showFolderScreenOrSkip(cat) {
   const folders = sortFoldersForDisplay(state.folders.filter(f => f.parentCategory === cat), cat);
@@ -311,16 +435,16 @@ function showFolderScreen(cat, folders) {
   document.getElementById('modal-step2').style.display = 'none';
   document.getElementById('btn-modal-back').style.display = '';
   document.getElementById('btn-modal-save').style.display = 'none';
+  document.getElementById('modal-info-icon').style.display = 'none';
   const isNews = cat === 'News';
-  document.getElementById('modal-back-label').textContent = CAT_LABEL[cat] || cat;
-  document.querySelector('#modal-overlay h2').innerHTML = isNews ? 'Choose a source' : 'Choose a folder';
+  setModalHeading(`<span class="modal-category-title">${escapeHtml(CAT_LABEL[cat] || cat)}</span><span class="modal-heading-text">${isNews ? 'Choose a source' : 'Choose a folder'}</span>`, 'modal-h2--folder-offset');
 
   // No "Skip" — a folder must always be picked; there is no path to the review screen without one.
   const grid = document.getElementById('step1-folder-grid');
   grid.innerHTML = folders.map(f => `
-    <button type="button" class="step1-category-tile" data-folder-id="${f.id}">
+    <button type="button" class="step1-category-tile${folderTileIsOneLine(f.name) ? ' step1-category-tile--one-line' : ''}" data-folder-id="${f.id}">
       <span class="cat-icon">${folderIconHtml(f.id, 28)}</span>
-      <span class="step1-category-tile-label">${escapeHtml(f.name)}${f.paywalled ? ' <span class="step1-paywalled-badge">Paywalled</span>' : ''}</span>
+      <span class="step1-category-tile-label">${folderTileLabelHtml(f.name)}${f.paywalled ? ' <span class="step1-paywalled-badge">Paywalled</span>' : ''}</span>
     </button>`).join('');
 
   grid.querySelectorAll('.step1-category-tile').forEach(t => {
@@ -328,7 +452,9 @@ function showFolderScreen(cat, folders) {
   });
 
   const addFolderLink = document.getElementById('step1-add-folder-link');
-  addFolderLink.style.display = cat === 'Visual Art' ? '' : 'none';
+  // Was shown for Visual Art only (the one category that had it enabled at all) — removed per
+  // request, so it's hidden unconditionally now rather than just no longer matching any category.
+  addFolderLink.style.display = 'none';
   addFolderLink.onclick = () => {
     promptAddFolder(cat);
     const updatedFolders = sortFoldersForDisplay(state.folders.filter(f => f.parentCategory === cat), cat);
@@ -341,6 +467,63 @@ function selectStep1Folder(folderId) {
   showReviewScreen();
 }
 
+// ===== Saved-lists dropdown (Add flow's review screen only — see showReviewScreen) =====
+// Same checkbox-multi-select model as the detail modal's "Save to:" menu (detailModalHeader.js),
+// adapted for an item that doesn't exist yet: nothing is persisted per click here, just tracked in
+// _wizardSelectedListIds until the actual Save button click builds the new item (further down this
+// file), which is where item.favorite/item.savedListIds actually get set.
+function renderSavedListsDropdown() {
+  const options = document.getElementById('saved-lists-options');
+  options.innerHTML = state.savedLists.map(list => {
+    const isFavorites = list.id === 'default-favorites';
+    const checked = isFavorites || _wizardSelectedListIds.has(list.id);
+    return `
+    <label class="platform-option saved-list-option${isFavorites ? ' saved-list-option--locked' : ''}">
+      <span class="saved-list-option-name">${escapeHtml(list.name)}</span>
+      <input type="checkbox" data-list-id="${escapeHtml(list.id)}" ${checked ? 'checked' : ''} ${isFavorites ? 'disabled' : ''} />
+    </label>`;
+  }).join('');
+
+  options.querySelectorAll('input[type="checkbox"]:not(:disabled)').forEach(cb => {
+    cb.addEventListener('change', () => {
+      if (cb.checked) _wizardSelectedListIds.add(cb.dataset.listId);
+      else _wizardSelectedListIds.delete(cb.dataset.listId);
+      updateSavedListsSummaryText();
+    });
+  });
+
+  updateSavedListsSummaryText();
+}
+
+function updateSavedListsSummaryText() {
+  // "Select Lists", not "All My Saves" — that's really just the locked first row inside the list
+  // itself (always on, not a real choice), not a fitting label for the collapsed button that opens
+  // it (reported live). Static label, no selected-count suffix — the checkmarks inside the open
+  // dropdown are enough, no need to surface that count on the closed button too (reported live).
+  document.getElementById('saved-lists-summary-text').textContent = 'Select Lists';
+}
+
+// #saved-lists-wrap closing on outside click (native <details> doesn't do this on its own) is
+// handled by the generic "close any open .platform-dropdown" listener in main.js — it already
+// existed for #platform-dropdown (the Platforms field's own dropdown), and #saved-lists-wrap
+// carries that same .platform-dropdown class, so no separate listener is needed here.
+
+// Save button stays disabled (grayed out, via .btn-primary:disabled) until the user has entered
+// at least a title or a URL, per request — re-run on every keystroke in either field (registered
+// once at module scope so repeated Add-modal opens don't stack up duplicate listeners) and also
+// called directly from showReviewScreen/openEditModal so it starts in the right state for
+// whatever's already in the fields (blank for a fresh Add, pre-filled for Edit). Refs cached once
+// — these inputs/button are static, never removed/replaced, so there's no need to re-look them up
+// on every keystroke.
+const _saveBtnTitleInput = document.getElementById('input-title');
+const _saveBtnUrlInput = document.getElementById('input-url');
+const _saveBtnEl = document.getElementById('btn-modal-save');
+function updateSaveButtonEnabled() {
+  _saveBtnEl.disabled = !_saveBtnTitleInput.value.trim() && !_saveBtnUrlInput.value.trim();
+}
+_saveBtnTitleInput.addEventListener('input', updateSaveButtonEnabled);
+_saveBtnUrlInput.addEventListener('input', updateSaveButtonEnabled);
+
 // ===== SCREEN B: review form (Title + URL, Title doubles as search for some categories) =====
 
 function showReviewScreen() {
@@ -351,16 +534,27 @@ function showReviewScreen() {
   document.getElementById('modal-step-music-choice').style.display = 'none';
   document.getElementById('modal-step-folder').style.display = 'none';
   document.getElementById('modal-step2').style.display = '';
-  document.getElementById('modal-category-wrap').style.display = '';
+  document.getElementById('modal-info-icon').style.display = ''; // Add flow's review/input screen only, per request — next to Select Lists
+  // Add flow shows the saved-lists picker here instead of the category select (Edit's own
+  // openEditModal shows the reverse — see its own comment) — category is already established by
+  // the wizard screens you just came through, so re-showing it as an editable field here would be
+  // redundant; letting you tag the new item into your own saved lists at the same moment is more
+  // useful in this exact spot.
+  document.getElementById('modal-category-wrap').style.display = 'none';
   document.getElementById('btn-modal-back').style.display = '';
   document.getElementById('btn-modal-save').style.display = '';
   document.getElementById('folder-select-group').style.display = 'none'; // Add flow assigns folder via the wizard screen, not this select
+  _wizardSelectedListIds = new Set();
+  renderSavedListsDropdown();
+  const savedListsWrap = document.getElementById('saved-lists-wrap');
+  savedListsWrap.style.display = '';
+  savedListsWrap.open = false;
   // The chosen folder (e.g. "News") is more specific/useful here than the category name — falls
   // back to the category (e.g. "Sources") when no folder was chosen (categories with 0 or 1
   // folders skip the folder-picker screen entirely, per showFolderScreenOrSkip).
-  const chosenFolder = _wizardFolderId ? state.folders.find(f => f.id === _wizardFolderId) : null;
-  document.getElementById('modal-back-label').textContent = chosenFolder?.name || CAT_LABEL[state.modalCategory] || state.modalCategory || '';
-  document.querySelector('#modal-overlay h2').innerHTML = '';
+  // Centered in the heading instead of left-aligned next to the back arrow, per request — same
+  // move as the "Choose a folder"/"Choose a source" screens' own category title just above.
+  setModalHeading(reviewTitleHtml(), 'modal-h2--review-title');
 
   document.getElementById('input-title').value = '';
   document.getElementById('input-author').value = '';
@@ -368,6 +562,7 @@ function showReviewScreen() {
   document.getElementById('input-image-url').value = '';
   document.getElementById('input-youtube-url').value = '';
   document.getElementById('input-url').value = '';
+  updateSaveButtonEnabled();
   _wizardFetchedImageUrl = null;
   _wizardResults = [];
 
@@ -383,7 +578,12 @@ function showReviewScreen() {
   document.getElementById('input-url-label-text').textContent = isVideosFolder ? 'Video URL' : 'URL';
   document.getElementById('input-url').placeholder = isVideosFolder ? 'https://youtube.com/watch?v=…' : 'https://…';
 
-  document.getElementById('input-title').focus();
+  // Desktop only — on mobile this immediately opened the on-screen keyboard the moment the review
+  // screen appeared, covering half the popup before the user had even seen the whole screen
+  // (reported live: "I want the user to see the full screen ... and select what they want to add
+  // for themselves"). Desktop has no on-screen keyboard to fight, so auto-focusing straight into
+  // Title there is still just a convenience, not an obstruction.
+  if (!window.matchMedia('(max-width: 480px)').matches) document.getElementById('input-title').focus();
 }
 
 // ===== BACK NAVIGATION =====
@@ -391,7 +591,9 @@ function showReviewScreen() {
 // chain: category → [music-choice, only for the combined "Music" tile] → [folder, only if the
 // category has folders] → review.
 export function handleModalBack() {
-  if (_wizardScreen === 'folder') {
+  if (_wizardScreen === 'info') {
+    backToReviewScreen();
+  } else if (_wizardScreen === 'folder') {
     if (_wizardHadMusicChoiceScreen) backToMusicChoiceScreen();
     else backToCategoryScreen();
   } else if (_wizardScreen === 'music-choice') {
@@ -411,9 +613,10 @@ function backToFolderScreen() {
   document.getElementById('modal-step2').style.display = 'none';
   document.getElementById('modal-step-folder').style.display = '';
   document.getElementById('modal-category-wrap').style.display = 'none';
+  document.getElementById('saved-lists-wrap').style.display = 'none';
   document.getElementById('btn-modal-save').style.display = 'none';
-  document.getElementById('modal-back-label').textContent = CAT_LABEL[state.modalCategory] || state.modalCategory || '';
-  document.querySelector('#modal-overlay h2').innerHTML = 'Choose a folder';
+  document.getElementById('modal-info-icon').style.display = 'none';
+  setModalHeading(`<span class="modal-category-title">${escapeHtml(CAT_LABEL[state.modalCategory] || state.modalCategory || '')}</span><span class="modal-heading-text">Choose a folder</span>`, 'modal-h2--folder-offset');
   // Folder tiles/listeners are left exactly as rendered — non-destructive re-entry.
 }
 
@@ -424,9 +627,10 @@ function backToMusicChoiceScreen() {
   document.getElementById('modal-step-folder').style.display = 'none';
   document.getElementById('modal-step-music-choice').style.display = '';
   document.getElementById('modal-category-wrap').style.display = 'none';
+  document.getElementById('saved-lists-wrap').style.display = 'none';
   document.getElementById('btn-modal-save').style.display = 'none';
-  document.getElementById('modal-back-label').textContent = 'Music';
-  document.querySelector('#modal-overlay h2').innerHTML = 'Choose a folder';
+  document.getElementById('modal-info-icon').style.display = 'none';
+  setModalHeading('<span class="modal-category-title">Music</span><span class="modal-heading-text">Choose a folder</span>', 'modal-h2--music-offset');
   // Tiles/listeners are left exactly as rendered — non-destructive re-entry, same as backToFolderScreen's pattern.
 }
 
@@ -445,9 +649,11 @@ function backToCategoryScreen() {
   document.getElementById('modal-step-music-choice').style.display = 'none';
   document.getElementById('modal-step1').style.display = '';
   document.getElementById('modal-category-wrap').style.display = 'none';
+  document.getElementById('saved-lists-wrap').style.display = 'none';
   document.getElementById('btn-modal-back').style.display = 'none';
   document.getElementById('btn-modal-save').style.display = 'none';
-  document.querySelector('#modal-overlay h2').innerHTML = `${MODAL_BOOKMARK_ICON_SVG}What are you adding to?`;
+  document.getElementById('modal-info-icon').style.display = 'none'; // review/input screen only now, per request — not this category screen
+  setModalHeading(`${MODAL_BOOKMARK_ICON_SVG}What are you adding to?`, 'modal-h2--category-screen');
 }
 
 // ===== Title-field live search (Music Album/Show/Book/Game/Movie only) =====
@@ -509,6 +715,7 @@ function selectTitleSearchResult(result) {
   document.getElementById('input-title').value = result.title || '';
   document.getElementById('input-author').value = result.author || '';
   document.getElementById('input-url').value = result.url || '';
+  updateSaveButtonEnabled();
   _wizardFetchedImageUrl = result.imageUrlLarge || result.imageUrl || null;
   hideTitleSearchResults();
   kickOffTitleEnrichment();
@@ -577,20 +784,33 @@ export function refreshStep2ImagePreviewFromManualInput() {
 
 // ===== OPEN / CLOSE =====
 
+// Recursively orders a category's folders parent-then-children (each parent immediately followed
+// by its own subfolders, indented) rather than one flat alphabetical list — a subfolder would
+// otherwise sort wherever its own name happened to land, with nothing showing it belongs under
+// its parent. depth 0 is a top-level folder; each level deeper adds another "— " prefix.
+function _flattenFoldersForSelect(allFolders, category, parentFolderId = null, depth = 0) {
+  const level = sortFoldersForDisplay(getChildFolders(allFolders, parentFolderId), category);
+  return level.flatMap(f => [
+    { folder: f, depth },
+    ..._flattenFoldersForSelect(allFolders, category, f.id, depth + 1),
+  ]);
+}
+
 // Edit-mode-only folder reassignment — the Add flow uses the dedicated wizard folder screen
 // instead, so this is only ever called from openEditModal().
 function populateFolderSelect(category, folderId) {
   const wrap = document.getElementById('folder-select-group');
   const select = document.getElementById('input-folder-select');
-  const folders = sortFoldersForDisplay(state.folders.filter(f => f.parentCategory === category), category);
-  if (folders.length === 0) {
+  const categoryFolders = state.folders.filter(f => f.parentCategory === category);
+  if (categoryFolders.length === 0) {
     wrap.style.display = 'none';
     select.innerHTML = '';
     return;
   }
+  const rows = _flattenFoldersForSelect(categoryFolders, category);
   wrap.style.display = '';
   select.innerHTML = `<option value="">No folder</option>` +
-    folders.map(f => `<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('');
+    rows.map(({ folder, depth }) => `<option value="${folder.id}">${'— '.repeat(depth)}${escapeHtml(folder.name)}</option>`).join('');
   select.value = folderId || '';
 }
 
@@ -613,6 +833,8 @@ export function openAddModal() {
   document.getElementById('input-youtube-url').value = '';
   document.getElementById('modal-category').value = '';
   document.getElementById('modal-category-wrap').style.display = 'none';
+  document.getElementById('saved-lists-wrap').style.display = 'none';
+  _wizardSelectedListIds = new Set();
   hideTitleSearchResults();
 
   renderCategoryTiles();
@@ -624,9 +846,10 @@ export function openAddModal() {
   document.getElementById('modal-step2').style.display = 'none';
   document.getElementById('btn-modal-back').style.display = 'none';
   document.getElementById('btn-modal-save').style.display = 'none';
+  document.getElementById('modal-info-icon').style.display = 'none'; // review/input screen only now, per request — not this category screen
 
-  document.querySelector('#modal-overlay h2').classList.remove('modal-h2--left');
-  document.querySelector('#modal-overlay h2').innerHTML = `${MODAL_BOOKMARK_ICON_SVG}What are you adding to?`;
+  _modalH2.classList.remove('modal-h2--left');
+  setModalHeading(`${MODAL_BOOKMARK_ICON_SVG}What are you adding to?`, 'modal-h2--category-screen');
   document.getElementById('modal-overlay').classList.add('open');
 }
 
@@ -641,6 +864,7 @@ export function openEditModal(item) {
   document.getElementById('input-url').placeholder = 'https://…'; // reset in case a prior Add left it on the Videos-folder wording
   document.getElementById('input-url-label-text').textContent = 'URL';
   document.getElementById('input-title').value = item.title || '';
+  updateSaveButtonEnabled();
   document.getElementById('input-author').value = item.author || '';
   document.getElementById('input-summary').value = item.summary || '';
   document.getElementById('input-image-url').value = item.imageUrl || '';
@@ -651,6 +875,7 @@ export function openEditModal(item) {
   updateVideoUrlLayout(item.category, item.folderId);
   document.getElementById('modal-category').value = item.category || '';
   document.getElementById('modal-category-wrap').style.display = '';
+  document.getElementById('saved-lists-wrap').style.display = 'none'; // Add-only — see showReviewScreen's own comment
   updatePlatformsSection(item.category || '');
   if (item.platforms) setSelectedPlatforms(item.platforms);
   renderStep2ImagePreview(item.imageUrl || null);
@@ -660,11 +885,12 @@ export function openEditModal(item) {
   document.getElementById('modal-step-music-choice').style.display = 'none';
   document.getElementById('modal-step-folder').style.display = 'none';
   document.getElementById('modal-step2').style.display = '';
+  document.getElementById('modal-info-icon').style.display = 'none';
   document.getElementById('btn-modal-back').style.display = 'none'; // Edit never has a prior screen, so no Back
   document.getElementById('btn-modal-save').style.display = '';
 
-  document.querySelector('#modal-overlay h2').classList.add('modal-h2--left');
-  document.querySelector('#modal-overlay h2').innerHTML = `${MODAL_BOOKMARK_ICON_SVG}Edit Item`;
+  _modalH2.classList.add('modal-h2--left');
+  setModalHeading(`${MODAL_BOOKMARK_ICON_SVG}Edit Item`);
   document.getElementById('btn-modal-save').textContent = 'Update';
 
   document.getElementById('modal-overlay').classList.add('open');
@@ -702,6 +928,22 @@ export async function handleSaveItem() {
     const catSelect = document.getElementById('modal-category');
     if (catSelect) { catSelect.style.outline = '2px solid #EF4444'; setTimeout(() => catSelect.style.outline = '', 1500); }
     return;
+  }
+
+  // Duplicate guard, per direct request — same URL already saved in this exact folder (not just
+  // anywhere in the library) blocks the save entirely rather than silently creating a second copy.
+  // Excludes the item currently being edited so re-saving it without changing its own URL/folder
+  // doesn't flag itself. folderId matches null-to-null too, so this also catches duplicates among
+  // un-foldered items within the same category.
+  if (url) {
+    const duplicate = state.items.find(i => i.id !== state.editingId && i.url === url && i.folderId === folderId);
+    if (duplicate) {
+      if (confirm(`"${duplicate.title || 'Untitled'}" is already saved in this folder. View it?`)) {
+        closeAddModal();
+        openDetailModal(duplicate);
+      }
+      return;
+    }
   }
 
   // News is source-verified, not free-paste: the URL must actually belong to the chosen curated
@@ -766,7 +1008,21 @@ export async function handleSaveItem() {
       id: Date.now().toString(), url, title, author, summary,
       imageUrl: manualImageUrl || _wizardFetchedImageUrl || null, youtubeUrl, description: null,
       category, folderId, platforms, done: false, savedAt: Date.now(),
+      // favorite: true — "All My Saves" (default-favorites) is always on for a new save, same as
+      // its checkbox on the review screen's saved-lists dropdown always showing checked and
+      // locked. savedListIds carries whatever other lists were also picked there (see
+      // renderSavedListsDropdown/_wizardSelectedListIds above) — same fields the detail modal's
+      // own "Save to:" menu already reads/writes for an existing item.
+      favorite: true, savedListIds: [..._wizardSelectedListIds],
     };
+    // REAL BUG, found and fixed: this branch built `item` and persisted it to storage below, but
+    // never added it to the in-memory state.items array the way the other two branches above do
+    // (state.items.push/state.items[idx]=) — persistItem() only writes to storage, it doesn't
+    // touch state.items itself. The save silently "worked" (item.reappeared after a reload, since
+    // loadAll() re-reads storage) but the renderGrid()/renderSidebar() calls right after this
+    // function used the still-unchanged in-memory array, so a brand-new item never actually
+    // appeared anywhere in the current session (reported live: "it didn't save").
+    state.items.push(item);
   }
 
   await persistItem(item);

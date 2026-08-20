@@ -15,12 +15,14 @@
 .shared-page {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  /* 8px — down from 16px, per request (reduce the vertical space between the list sliders). */
+  gap: 8px;
   width: 100%;
 }
 
 .shared-page .bare-list-hero {
-  margin-bottom: 40px;
+  /* 20px — down from 40px, per request (reduce the vertical space below the banner). */
+  margin-bottom: 20px;
 }
 
 /* Strip .dash-card's boxed look (background/border/padding) for these sections specifically —
@@ -37,13 +39,16 @@
 .shared-card--nonprofits .profile-card-header,
 .shared-card--group-lists .profile-card-header,
 .shared-card--friends .profile-card-header {
-  justify-content: center;
+  /* Left-aligned, per request (was centered) — the Add button still sits right next to the title
+     (not pushed to the row's far edge), just as a left-anchored pair now instead of a centered one. */
+  justify-content: flex-start;
   gap: 10px;
 }
 
 .shared-section-divider {
   border-top: 1px solid var(--border);
-  margin: 8px 24px;
+  /* 4px top/bottom — down from 8px, per request. */
+  margin: 4px 24px;
 }
 
 .shared-vcard {
@@ -66,11 +71,28 @@
   margin-top: auto;
 }
 
+/* Curated Lists You've Connected / Group Lists You've Connected cards only (not Friends — see
+   sharedSaves.js's own isListCard note) — tapping one opens the same "You're opening X" confirm
+   popup the sidebar's Saved Lists rows use. */
+.shared-vcard--list {
+  cursor: pointer;
+}
+
 /* Friend cards have no bottom-anchored tag (see the nonprofit-only rule above), so their shorter
    avatar+name content is centered vertically within the card's shared min-height instead of
    sitting flush at the top. */
 .shared-card--friends .shared-vcard {
   justify-content: center;
+}
+
+/* "Cause Curated" cards (.shared-card--nonprofits) — description hidden, per request, so only the
+   avatar/name/cause-area tag show. Deliberately keeps the shared 260px min-height (not trimmed
+   down) and the tag's own shared margin-top: auto, so it still sits flush at the bottom exactly
+   like Group Lists' own taller (tagline-included) cards do — same final height for both sections,
+   per a follow-up request, rather than Cause Curated reading noticeably shorter once its
+   description went away. */
+.shared-card--nonprofits .shared-vcard-tagline {
+  display: none;
 }
 
 .shared-vcard-avatar {
@@ -118,4 +140,121 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Compact title hidden by default (desktop) — shown only inside the mobile block below. */
+.shared-title-compact {
+  display: none;
+}
+
+/* Mobile only — clears room at the bottom of the page for the floating "+ Add Item" FAB
+   (misc.css's .fab-add — fixed, centered horizontally, near the bottom of every page), same fix
+   and reasoning as dashboard.css's own .grid-area:has(.dashboard-wrap) padding-bottom: without it,
+   the last visible slider card here (most often "Friends You've Shared Lists With", the final
+   section) ends up sitting directly behind the button instead of scrolled fully into view — read
+   live as "the content looks off center," but the card itself was already correctly centered;
+   the FAB was just overlapping it. */
+@media (max-width: 768px) {
+  /* Real bug, same class as .bare-list-page's own (cards.css, fixed earlier this session):
+     padding-left: 40px above has no matching padding-right, which is fine on desktop (nothing
+     else constrains this page's width there), but on mobile it shoved everything 40px to the
+     right with nothing balancing it on the other side — reported live as "not horizontally
+     centered"/"too far to the right." Symmetric padding instead. */
+  /* FAB clearance and the pulled-up hero banner (padding-top: 6px, was 16px) are both handled at
+     the source now — misc.css's .grid-area:has(.shared-page-wrap) — rather than fought from here
+     with a duplicated 96px and a -10px margin-top canceling part of the ancestor's own padding. */
+  .shared-page-wrap {
+    padding-left: var(--page-mobile-pad);
+    padding-right: var(--page-mobile-pad);
+  }
+  /* Cards roughly halved (per request) — desktop's 260px min-height/26px padding/83px avatar read
+     as oversized for a phone screen, especially the Friends cards (just a photo + name, no
+     tagline/tag to fill the extra room). */
+  .shared-vcard {
+    width: 180px;
+    min-height: 130px;
+    padding: 12px 14px;
+    gap: 6px;
+  }
+  .shared-vcard-avatar {
+    width: 50px;
+    height: 50px;
+    font-size: 22px;
+  }
+  .shared-vcard-avatar svg {
+    width: 22px;
+    height: 22px;
+  }
+  .shared-vcard-name {
+    font-size: 15px;
+  }
+  /* Friends cards specifically shorter still, per request — scoped to just this section (not the
+     shared .shared-vcard rule above) since Curated Lists/Group Lists cards also carry a
+     tagline + tag pill that still need the room; Friends is only ever a photo + name. */
+  .shared-card--friends .shared-vcard {
+    min-height: 90px;
+    padding: 10px 14px;
+  }
+  /* Shorter section titles on mobile, per request (sharedSaves.js's own mobileTitle param) — CSS
+     swap, not a JS check, so it stays correct across a resize/rotation without a re-render. */
+  .shared-title-full {
+    display: none;
+  }
+  .shared-title-compact {
+    display: inline;
+  }
+  /* Add button (the circle-plus icon) pulled in close to its title, per request — the flex: 1
+     title approach used here previously kept the button pinned to the header's far right edge
+     (correctly centering the title text on its own, but leaving the icon reading disconnected,
+     far away from it). Tighter gap on the shared header rule (below) + centering the pair as one
+     group again (.profile-card-header's own justify-content: center, unconditional, already
+     does this) puts the icon right next to the title instead. */
+  .shared-card--nonprofits .profile-card-title,
+  .shared-card--group-lists .profile-card-title,
+  .shared-card--friends .profile-card-title {
+    flex: none;
+  }
+  .shared-card--nonprofits .profile-card-header,
+  .shared-card--group-lists .profile-card-header,
+  .shared-card--friends .profile-card-header {
+    gap: 6px;
+  }
+  /* Every shared-saves slider (Curated Lists/Group Lists/Friends all share this one
+     .shared-vcard-carousel class, via buildVerticalCardSlider) bleeds to the true right edge of
+     the screen instead of stopping at .shared-page-wrap's own padding, per request. Two stacked
+     layers to cancel, not one — #cards-grid (== .shared-page-wrap) sits directly inside
+     .grid-area, which has its own --page-mobile-pad mobile padding (misc.css) stacking with
+     .shared-page-wrap's own copy of the same value on top of it (-16px alone only canceled the
+     inner layer and still left the outer one's padding visible — reported live, screenshotted).
+     calc() off the shared variable instead of a bare -32px so this stays correct automatically if
+     that padding value ever changes. position: relative so the arrows below have something to
+     anchor to. */
+  .shared-vcard-carousel {
+    position: relative;
+    margin-right: calc(var(--page-mobile-pad) * -2);
+  }
+  /* Pulled out of the carousel's own flex row (was a 3rd/1st flex sibling alongside the strip,
+     taking up its own dedicated width) and overlaid on top of the cards instead, per request — a
+     small semi-opaque circle so it stays legible over whatever's currently scrolled underneath it
+     regardless of that card's own color. */
+  .shared-vcard-carousel .dash-carousel-prev,
+  .shared-vcard-carousel .dash-carousel-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
+    font-size: 18px;
+    padding: 0;
+  }
+  .shared-vcard-carousel .dash-carousel-prev {
+    left: 4px;
+  }
+  .shared-vcard-carousel .dash-carousel-next {
+    right: 12px;
+  }
 }

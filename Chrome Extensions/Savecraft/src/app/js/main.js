@@ -2,11 +2,14 @@
 
 import { state } from './state.js';
 import {
-  loadAll, loadLocalCache, initCuratedItems, persistSort, persistTheme, persistSidebarCollapsed,
+  loadAll, loadLocalCache, initCuratedItems, initDashboardDemoConfig, persistSort, persistTheme, persistSidebarCollapsed,
   persistLastfmUsername, disconnectLastfm, persistSteamId, disconnectSteam,
   runInitialSync,
 } from './storage.js';
-import { initAuth, onAuthChange, getCurrentUser, signUp, signIn, signOut, resendVerificationEmail, deleteAccount } from './auth.js';
+import {
+  initAuth, onAuthChange, getCurrentUser, signUp, signIn, signOut, resendVerificationEmail,
+  deleteAccount, sendPasswordReset,
+} from './auth.js';
 import { ensureLastfmRecentTracks, isLastfmConfigured, ensureSteamRecentGames, isSteamConfigured } from './api.js';
 import { isExtension, storageSync, storageOnChanged, resourceUrl } from './platform.js';
 import { debounce, escapeHtml } from './utils.js';
@@ -17,7 +20,7 @@ import { _closeEmbedBuilder } from './embedBuilder.js';
 import {
   openAddModal, closeAddModal, handleSaveItem, updatePlatformSummary,
   openEditModal, selectStep1Category, handleTitleSearch, hideTitleSearchResults, kickOffTitleEnrichment,
-  handleModalBack, refreshStep2ImagePreviewFromManualInput, updateCategoryDependentUi,
+  handleModalBack, refreshStep2ImagePreviewFromManualInput, updateCategoryDependentUi, showInfoScreen,
 } from './addEditModal.js';
 import { closeDetailModal, closeImageLightbox, getDetailItem, showNextImage, showPrevImage, handleGalleryLoadMoreClick, closeVideoLightbox } from './detailModal.js';
 import { initNoteToolbar } from './detailModalNotes.js';
@@ -148,6 +151,7 @@ function toggleSidebarCollapsed() {
 export function openAuthModal() {
   document.getElementById('auth-error').style.display = 'none';
   document.getElementById('auth-modal-overlay').classList.add('open');
+  _exitCreateAccountMode();
 }
 // True while a signed-out web visitor is being forced through sign-in (see requireWebSignIn
 // below) — makes the modal temporarily non-dismissable, since web has no local-only fallback
@@ -163,6 +167,104 @@ function closeAuthModal() {
   document.getElementById('auth-modal-overlay').classList.remove('open');
   document.getElementById('auth-email').value = '';
   document.getElementById('auth-password').value = '';
+  document.getElementById('auth-password-confirm').value = '';
+  _exitCreateAccountMode();
+}
+
+// "Create account" doesn't submit directly — it switches into this mode first (confirm-password
+// field + Save replacing the initial Create account/Sign in pair), per request. Sign in stays a
+// single direct action with no intermediate step, since at that point there's no ambiguity about
+// intent to resolve — see handleAuthSave's own comment for why that ambiguity used to be a real
+// problem before this button asked the person to just say which they meant.
+function _enterCreateAccountMode() {
+  document.getElementById('auth-modal-title').textContent = 'Create your account';
+  document.getElementById('btn-auth-create').style.display = 'none';
+  document.getElementById('btn-auth-signin').style.display = 'none';
+  document.getElementById('btn-auth-save').style.display = '';
+  document.getElementById('auth-password-hint').style.display = '';
+  document.getElementById('auth-password-confirm-field').style.display = '';
+  // Hidden here regardless of requireWebSignIn's own gate state, per request — restored in
+  // _exitCreateAccountMode below, not just left visible, since it's still relevant on the plain
+  // Create account/Sign in screen while the gate is active.
+  document.getElementById('btn-auth-demo').style.display = 'none';
+  // "Forgot password?" doesn't apply while creating a brand-new password — swapped for a way back
+  // to the sign-in screen instead, per request.
+  document.getElementById('btn-auth-forgot-password').style.display = 'none';
+  document.getElementById('btn-auth-back-to-signin').style.display = '';
+  _exitRobotCheckStep();
+  _updateSaveDisabled();
+}
+// Reverts to the initial signed-out view — called whenever the modal opens/closes fresh, so
+// "Create account" mode never lingers into an unrelated later open of the same modal.
+function _exitCreateAccountMode() {
+  // Runs first, not last — it restores several of the same fields (Save, the hint, Back to sign
+  // in) that this function then immediately hides again below. Order matters here: this function's
+  // own settings need to be the ones that stick.
+  _exitRobotCheckStep();
+  document.getElementById('auth-modal-title').textContent = 'Explore your library';
+  document.getElementById('btn-auth-create').style.display = '';
+  document.getElementById('btn-auth-signin').style.display = '';
+  document.getElementById('btn-auth-save').style.display = 'none';
+  document.getElementById('auth-password-hint').style.display = 'none';
+  // Only restored while requireWebSignIn's forced gate is actually active — this also runs from
+  // plain closeAuthModal()/openAuthModal() calls outside the gate, where Demo was never shown.
+  document.getElementById('btn-auth-demo').style.display = _authGateActive ? '' : 'none';
+  document.getElementById('btn-auth-forgot-password').style.display = '';
+  document.getElementById('btn-auth-back-to-signin').style.display = 'none';
+  document.getElementById('auth-password-confirm-field').style.display = 'none';
+}
+
+// Save (create-account mode only) is disabled until a password is typed, per request.
+function _updateSaveDisabled() {
+  document.getElementById('btn-auth-save').disabled = document.getElementById('auth-password').value.length === 0;
+}
+
+// Holds the email/password Save already validated (confirm-match + complexity), for
+// handleConfirmRobotCheck to actually create the account with once the checkbox step below is
+// confirmed — not read back from the (by then hidden) fields themselves.
+let _pendingSignup = null;
+
+// Shown after Save passes its own checks, in place of the email/password/confirm fields — the
+// account isn't created until this step is confirmed too, per request. Plain checkbox, not a real
+// CAPTCHA (see index.html's own comment on #auth-robot-check for why).
+function _enterRobotCheckStep(email, password) {
+  _pendingSignup = { email, password };
+  document.getElementById('auth-signed-out-fields').style.display = 'none';
+  document.getElementById('auth-password-hint').style.display = 'none';
+  document.getElementById('auth-password-field').style.display = 'none';
+  document.getElementById('auth-password-confirm-field').style.display = 'none';
+  document.getElementById('btn-auth-back-to-signin').style.display = 'none';
+  document.getElementById('btn-auth-save').style.display = 'none';
+  document.getElementById('auth-robot-check').style.display = '';
+  document.getElementById('auth-robot-checkbox').checked = false;
+  document.getElementById('btn-auth-confirm-robot').style.display = '';
+  document.getElementById('btn-auth-confirm-robot').disabled = true;
+}
+// Reverts the robot-check step back to the normal create-account fields — mirrors every field
+// _enterRobotCheckStep hides above, not just some of them (an earlier version of this only
+// restored 2 of the 6, which is why EMAIL_EXISTS below used to leave the modal stuck showing just
+// the checkbox with no way back to the fields or to Sign in at all). Called both when create-
+// account mode itself is exited, and directly on EMAIL_EXISTS (handleConfirmRobotCheck) so that
+// specific dead end can't happen again.
+function _exitRobotCheckStep() {
+  _pendingSignup = null;
+  document.getElementById('auth-signed-out-fields').style.display = '';
+  document.getElementById('auth-password-hint').style.display = '';
+  document.getElementById('auth-password-field').style.display = '';
+  document.getElementById('auth-password-confirm-field').style.display = '';
+  document.getElementById('btn-auth-back-to-signin').style.display = '';
+  document.getElementById('btn-auth-save').style.display = '';
+  document.getElementById('auth-robot-check').style.display = 'none';
+  _updateSaveDisabled();
+}
+
+const _PASSWORD_COMPLEXITY_ERROR = 'New passwords need at least 8 characters, including a number and a special character.';
+// Only matters for a new account, per request — an existing user's password was created under
+// whatever rules applied when they first signed up (Firebase's own server-side floor is 6, not 8 —
+// this app's own stricter length requirement, checked client-side since Firebase has no per-app way
+// to raise its own minimum), and shouldn't suddenly fail this retroactively just to sign in with it.
+function _passwordMeetsComplexity(password) {
+  return password.length >= 8 && /\d/.test(password) && /[^A-Za-z0-9]/.test(password);
 }
 
 // Blocks app init until a web visitor is signed in. No-ops instantly on the extension (sign-in
@@ -207,7 +309,7 @@ function applyAuthUI(user) {
 
   document.getElementById('auth-modal-title').textContent = user
     ? 'Your account'
-    : 'Sign in to sync your saves';
+    : 'Explore your library';
   document.getElementById('auth-signed-out-fields').style.display = user ? 'none' : '';
   document.getElementById('auth-password-field').style.display = user ? 'none' : '';
   document.getElementById('auth-signed-out-actions').style.display = user ? 'none' : '';
@@ -234,18 +336,71 @@ function applyAuthUI(user) {
   }
 }
 
-async function handleAuthSubmit(fn) {
+// Sign in — direct, one step, no confirm/complexity involved at all (those are new-account rules;
+// this button only ever runs for an existing account, by definition of being clicked instead of
+// Create account).
+async function handleSignIn() {
   const email = document.getElementById('auth-email').value.trim();
   const password = document.getElementById('auth-password').value;
   document.getElementById('auth-error').style.display = 'none';
-  const result = await fn(email, password);
+  const result = await signIn(email, password);
   if (result.ok) {
     closeAuthModal();
-    // signUp/signIn already await their own cloud sync internally (see auth.js) before resolving
-    // — re-render now so the screen reflects whatever that sync just pulled down/merged in,
-    // rather than only updating on the next unrelated navigation.
     renderSidebar();
     renderGrid();
+  } else {
+    showAuthError(result.error);
+  }
+}
+
+// Save — only reachable via Create account (_enterCreateAccountMode), so unlike an earlier version
+// of this flow, there's no ambiguity to resolve about whether this is a new or existing account:
+// the person already said which by which button they clicked. (That earlier version tried to
+// collapse Create account/Sign in into one smart button that guessed — live-verified against the
+// real API that this project has email-enumeration protection on, so a wrong password and a
+// nonexistent account return the identical error, which made "guess from the failure" fundamentally
+// unreliable. Asking the person to just say which they meant sidesteps the whole problem.)
+//
+// Doesn't create the account itself — once confirm-match/complexity pass, it hands off to the
+// robot-check step (_enterRobotCheckStep); handleConfirmRobotCheck below is what actually calls
+// signUp, once that step is confirmed too.
+async function handleAuthSave() {
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const confirmPassword = document.getElementById('auth-password-confirm').value;
+  document.getElementById('auth-error').style.display = 'none';
+
+  if (password !== confirmPassword) {
+    showAuthError('Passwords don’t match.');
+    return;
+  }
+  if (!_passwordMeetsComplexity(password)) {
+    showAuthError(_PASSWORD_COMPLEXITY_ERROR);
+    return;
+  }
+
+  _enterRobotCheckStep(email, password);
+}
+
+async function handleConfirmRobotCheck() {
+  if (!_pendingSignup) return; // shouldn't happen — button is only enabled once this is set
+  const { email, password } = _pendingSignup;
+  document.getElementById('auth-error').style.display = 'none';
+
+  const result = await signUp(email, password);
+  if (result.ok) {
+    closeAuthModal();
+    // signUp already awaits its own cloud sync internally (see auth.js) before resolving — re-
+    // render now so the screen reflects whatever that just pulled down/merged in, rather than only
+    // updating on the next unrelated navigation.
+    renderSidebar();
+    renderGrid();
+  } else if (result.code === 'EMAIL_EXISTS') {
+    // Back to the normal create-account fields (still holding whatever was typed) rather than
+    // leaving the checkbox step up with no way out, per request — Back to sign in is what's
+    // actually needed here, not another robot check on an account that already exists.
+    _exitRobotCheckStep();
+    showAuthError('An account with that email already exists — try Sign in instead.');
   } else {
     showAuthError(result.error);
   }
@@ -383,8 +538,37 @@ async function init() {
   document.getElementById('auth-modal-overlay').addEventListener('click', e => {
     if (e.target === document.getElementById('auth-modal-overlay')) closeAuthModal();
   });
-  document.getElementById('btn-auth-signup').addEventListener('click', () => handleAuthSubmit(signUp));
-  document.getElementById('btn-auth-signin').addEventListener('click', () => handleAuthSubmit(signIn));
+  document.getElementById('btn-auth-create').addEventListener('click', _enterCreateAccountMode);
+  document.getElementById('btn-auth-back-to-signin').addEventListener('click', () => {
+    document.getElementById('auth-error').style.display = 'none';
+    _exitCreateAccountMode();
+  });
+  document.getElementById('btn-auth-signin').addEventListener('click', handleSignIn);
+  document.getElementById('btn-auth-save').addEventListener('click', handleAuthSave);
+  document.getElementById('auth-password').addEventListener('input', _updateSaveDisabled);
+  document.getElementById('auth-robot-checkbox').addEventListener('change', e => {
+    document.getElementById('btn-auth-confirm-robot').disabled = !e.target.checked;
+  });
+  document.getElementById('btn-auth-confirm-robot').addEventListener('click', handleConfirmRobotCheck);
+  document.getElementById('btn-auth-forgot-password').addEventListener('click', async e => {
+    const email = document.getElementById('auth-email').value.trim();
+    document.getElementById('auth-error').style.display = 'none';
+    if (!email) {
+      showAuthError('Enter your email above first, then tap "Forgot password?" again.');
+      return;
+    }
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    const result = await sendPasswordReset(email);
+    // Always the same confirmation regardless of whether the email actually has an account —
+    // sendPasswordReset() itself already swallows EMAIL_NOT_FOUND for the same "don't reveal
+    // which emails are registered" reason; a real failure (network error, malformed email) still
+    // surfaces normally below.
+    btn.textContent = result.ok ? 'Check your email for a reset link!' : 'Forgot password?';
+    btn.disabled = false;
+    if (!result.ok) showAuthError(result.error);
+  });
   document.getElementById('btn-auth-signout').addEventListener('click', async () => {
     await signOut();
     closeAuthModal();
@@ -394,10 +578,10 @@ async function init() {
     const result = await deleteAccount();
     if (result.ok) {
       // Deliberately NOT closeAuthModal() — applyAuthUI's own reaction to the now-signed-out
-      // state already reverts the modal to its normal signed-out view (email/password + Create/
-      // Sign in), which reads as sufficient built-in confirmation without a separate success
-      // message. Web visitors especially need to land somewhere sane post-deletion, not a closed
-      // modal over a broken signed-out app view (requireWebSignIn() only runs once, at startup).
+      // state already reverts the modal to its normal signed-out view (email/password + Save),
+      // which reads as sufficient built-in confirmation without a separate success message. Web
+      // visitors especially need to land somewhere sane post-deletion, not a closed modal over a
+      // broken signed-out app view (requireWebSignIn() only runs once, at startup).
       renderSidebar();
       renderGrid();
     } else {
@@ -405,7 +589,18 @@ async function init() {
     }
   });
   document.getElementById('auth-modal-overlay').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') handleAuthSubmit(signIn);
+    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') {
+      // Whichever action is actually showing — matching whichever button click Enter is standing
+      // in for: Continue during the robot-check step, Save once Create account mode is otherwise
+      // active, Sign in on the initial screen.
+      if (document.getElementById('btn-auth-confirm-robot').style.display !== 'none') {
+        if (!document.getElementById('btn-auth-confirm-robot').disabled) handleConfirmRobotCheck();
+      } else if (document.getElementById('btn-auth-save').style.display !== 'none') {
+        if (!document.getElementById('btn-auth-save').disabled) handleAuthSave();
+      } else {
+        handleSignIn();
+      }
+    }
     if (e.key === 'Escape') closeAuthModal();
   });
 
@@ -418,6 +613,7 @@ async function init() {
   // it, rather than the screen changing out from under the user a moment after paint.
   if (getCurrentUser()) await runInitialSync(getCurrentUser().uid).catch(() => {});
   await initCuratedItems();
+  await initDashboardDemoConfig();
 
   await loadLocalCache('savecraft_curated_img', 'curatedImgCache');
   await loadLocalCache('savecraft_curated_album_meta', 'curatedAlbumMetaCache');
@@ -463,6 +659,15 @@ async function init() {
     navigateToView('profile');
   });
   document.getElementById('link-sponsored-statements').href = resourceUrl('src/sponsored/sponsored.html');
+  // Privacy Policy/Terms of Service links removed from this dropdown per direct request, replaced
+  // with a single About entry — a real in-app page (about.js), not an external link (an earlier
+  // version pointed straight at the marketing page instead; corrected per direct follow-up:
+  // "about should still be in the savecraft app"). Same navigateToView pattern as #btn-profile
+  // above, not an <a href>.
+  document.getElementById('btn-about').addEventListener('click', () => {
+    settingsDropdown.setAttribute('hidden', '');
+    navigateToView('about');
+  });
   document.addEventListener('click', e => {
     if (!settingsWrap.contains(e.target)) settingsDropdown.setAttribute('hidden', '');
   });
@@ -579,6 +784,8 @@ async function init() {
 
   document.getElementById('btn-add').addEventListener('click', () => openAddModal());
 
+  document.getElementById('modal-info-icon').addEventListener('click', showInfoScreen);
+
   document.getElementById('modal-overlay').addEventListener('click', e => {
     if (e.target === document.getElementById('modal-overlay')) closeAddModal();
   });
@@ -587,11 +794,14 @@ async function init() {
 
   document.getElementById('platform-chips').addEventListener('change', updatePlatformSummary);
 
+  // Closes any open .platform-dropdown <details> on an outside click — native <details> doesn't do
+  // this on its own. Covers every dropdown built on that shared component (#platform-dropdown, the
+  // Platforms field's own dropdown, and #saved-lists-wrap, the Add modal's "Select Lists" picker)
+  // with one listener rather than a separate one per instance.
   document.addEventListener('click', e => {
-    const dropdown = document.getElementById('platform-dropdown');
-    if (dropdown && dropdown.open && !dropdown.contains(e.target)) {
-      dropdown.open = false;
-    }
+    document.querySelectorAll('.platform-dropdown[open]').forEach(dropdown => {
+      if (!dropdown.contains(e.target)) dropdown.open = false;
+    });
   });
 
   document.getElementById('btn-kanban-dashboard').addEventListener('click', () => {

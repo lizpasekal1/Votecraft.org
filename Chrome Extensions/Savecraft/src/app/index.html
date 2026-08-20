@@ -2,7 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- maximum-scale=1, user-scalable=no — disables pinch/double-tap/input-focus zoom app-wide.
+       html/body's own touch-action: pan-y (base.css) should already block gesture-driven zoom on
+       its own per spec, but was still reproducible live from tapping a category/folder tile
+       ("it zooms the screen in") — Safari's real-world touch-action handling doesn't reliably
+       cover every zoom trigger (e.g. the input-focus auto-zoom path is entirely separate from
+       touch-action). This is the standard, direct way to disable zoom outright for an app-shell
+       page like this one, where — unlike a content/article site — zooming was never intended. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>SaveCraft</title>
   <link rel="stylesheet" href="/src/app/css/base.css">
   <link rel="stylesheet" href="/src/app/css/sidebar.css">
@@ -59,19 +66,23 @@
             <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor"><path d="m370-80-16-128q-13-5-24.5-12T307-235l-119 50L78-375l103-78q-1-7-1-13.5v-27q0-6.5 1-13.5L78-585l110-190 119 50q11-8 23-15t24-12l16-128h220l16 128q13 5 24.5 12t22.5 15l119-50 110 190-103 78q1 7 1 13.5v27q0 6.5-2 13.5l103 78-110 190-118-50q-11 8-23 15t-24 12L590-80H370Zm70-80h79l14-106q31-8 57.5-23.5T639-327l99 41 39-68-86-65q5-14 7-29.5t2-31.5q0-16-2-31.5t-7-29.5l86-65-39-68-99 42q-22-23-48.5-38.5T533-694l-13-106h-79l-14 106q-31 8-57.5 23.5T321-633l-99-41-39 68 86 64q-5 15-7 30t-2 32q0 16 2 31t7 30l-86 65 39 68 99-42q22 23 48.5 38.5T427-266l13 106Zm42-180q58 0 99-41t41-99q0-58-41-99t-99-41q-59 0-99.5 41T342-480q0 58 40.5 99t99.5 41Zm-2-140Z"/></svg>
           </button>
           <div class="settings-dropdown" id="settings-dropdown" hidden>
-            <button class="settings-option" id="btn-toggle-theme">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-              <span id="theme-label">Dark mode</span>
-            </button>
-            <div class="settings-divider"></div>
             <button class="settings-option" id="btn-profile">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
               <span id="profile-label">Sign in</span>
             </button>
+            <div class="settings-divider"></div>
+            <button class="settings-option" id="btn-toggle-theme">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+              <span id="theme-label">Dark mode</span>
+            </button>
             <a class="settings-option" id="link-sponsored-statements" href="#" target="_blank" rel="noopener">
               <span aria-hidden="true">⚡</span>
-              <span>Sponsored Statements</span>
+              <span>Sponsors</span>
             </a>
+            <button class="settings-option" id="btn-about">
+              <svg xmlns="http://www.w3.org/2000/svg" height="15px" viewBox="0 -960 960 960" width="15px" fill="currentColor"><path d="M440-280h80v-240h-80v240Zm68.5-331.5Q520-623 520-640t-11.5-28.5Q497-680 480-680t-28.5 11.5Q440-657 440-640t11.5 28.5Q463-600 480-600t28.5-11.5ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>
+              <span>About</span>
+            </button>
           </div>
         </div>
         <div class="share-btn-wrap" id="share-btn-wrap">
@@ -115,7 +126,7 @@
     <main class="grid-area">
       <h1 class="grid-title" id="grid-title">All Items</h1>
       <div class="grid-header">
-        <button class="kanban-dashboard-link" id="btn-kanban-dashboard" style="display:none;">‹ Dashboard</button>
+        <button class="kanban-dashboard-link" id="btn-kanban-dashboard" style="display:none;">‹ My Dashboard</button>
         <div class="saves-list-wrap" id="saves-list-wrap" style="display:none;">
           <button class="btn-saves-list" id="btn-saves-list">
             <span id="saves-list-label">MY SAVES</span>
@@ -162,30 +173,69 @@
     <div class="modal auth-modal" style="position:relative">
       <button class="modal-x-close" id="btn-auth-close" title="Close">&#x2715;</button>
       <div class="modal-header auth-modal-header">
-        <div class="auth-modal-brand">SaveCraft</div>
-        <div class="auth-modal-tagline">Chrome Extension</div>
-        <h2 id="auth-modal-title">Sign in to sync your saves</h2>
+        <div class="auth-modal-brand">
+          <img class="auth-modal-brand-icon" src="/images/logos/votecraft_icon_white.png" alt="">
+          SaveCraft
+        </div>
+        <div class="auth-modal-tagline">A small way to save your world</div>
+        <h2 id="auth-modal-title">Explore your library</h2>
       </div>
       <div class="modal-body">
         <div class="form-group" id="auth-signed-out-fields">
           <input type="email" id="auth-email" placeholder="Email" autocomplete="username" />
         </div>
+        <!-- Same visibility as the confirm-password field below (main.js's
+             _enterCreateAccountMode/_exitCreateAccountMode) — only relevant once "Create account"
+             is actually active. -->
+        <div class="auth-password-hint" id="auth-password-hint" style="display:none">At least 8 characters, including a number and a special character.</div>
         <div class="form-group" id="auth-password-field">
           <input type="password" id="auth-password" placeholder="Password" autocomplete="current-password" />
         </div>
+        <!-- Only shown once "Create account" has actually been clicked (main.js's
+             _enterCreateAccountMode) — Sign in is a direct one-step action with no confirm/
+             complexity involved at all, since at that point we know for certain this isn't a new
+             account. -->
+        <div class="form-group" id="auth-password-confirm-field" style="display:none">
+          <input type="password" id="auth-password-confirm" placeholder="Re-enter password" autocomplete="new-password" />
+        </div>
         <div id="auth-error" class="auth-error" style="display:none"></div>
+        <!-- Doesn't apply while creating a NEW password — swapped for "Back to sign in" instead
+             (main.js's _enterCreateAccountMode/_exitCreateAccountMode toggle which of these two
+             shows, never both). -->
+        <button type="button" class="auth-forgot-password-link" id="btn-auth-forgot-password">Forgot password?</button>
+        <button type="button" class="auth-forgot-password-link" id="btn-auth-back-to-signin" style="display:none">Back to sign in</button>
+        <!-- Shown only after Save passes its own confirm-match/complexity checks (main.js's
+             _enterRobotCheckStep) — the account isn't actually created until this is confirmed
+             too. A plain checkbox, not a real CAPTCHA (nothing server-side verifies it — a script
+             could tick it as easily as a person), per request. -->
+        <div class="form-group auth-robot-check" id="auth-robot-check" style="display:none">
+          <label>
+            <input type="checkbox" id="auth-robot-checkbox" />
+            I am not a robot
+          </label>
+        </div>
         <div id="auth-signed-in-info" class="auth-signed-in-info" style="display:none"></div>
       </div>
       <div class="modal-actions" id="auth-signed-out-actions">
+        <div class="auth-actions-right">
+          <!-- Initial pair — Create account switches to the Save button below instead of
+               submitting directly (main.js's _enterCreateAccountMode), revealing the confirm-
+               password field first. Sign in submits immediately, no intermediate step. -->
+          <button class="btn-cancel" id="btn-auth-create">Create account</button>
+          <button class="btn-primary" id="btn-auth-signin">Sign in</button>
+          <!-- Hidden until Create account is clicked. Disabled until a password is typed. Doesn't
+               create the account directly — see handleAuthSave, which validates then hands off to
+               the robot-check step below instead of calling signUp itself. -->
+          <button class="btn-primary" id="btn-auth-save" style="display:none" disabled>Save</button>
+          <!-- Hidden until the robot-check step is showing. Disabled until the checkbox is ticked. -->
+          <button class="btn-primary" id="btn-auth-confirm-robot" style="display:none" disabled>Continue</button>
+        </div>
         <!-- TEMPORARY, demo-only: lets a web visitor skip sign-in during early demo work. Only
              ever revealed on the web build's mandatory sign-in gate (see main.js's
              requireWebSignIn()) — remove this button once savecraft.org is ready for real
-             visitors. -->
-        <button class="auth-demo-link" id="btn-auth-demo" type="button" style="display:none">View Demo</button>
-        <div class="auth-actions-right">
-          <button class="btn-cancel" id="btn-auth-signup">Create account</button>
-          <button class="btn-primary" id="btn-auth-signin">Sign in</button>
-        </div>
+             visitors. Moved below the Create account/Sign in row, per request — used to sit
+             pinned in the modal's top-right corner. -->
+        <button class="auth-demo-link" id="btn-auth-demo" type="button" style="display:none">Demo</button>
       </div>
       <div class="modal-actions" id="auth-signed-in-actions" style="display:none">
         <button class="btn-primary" id="btn-auth-signout">Sign out</button>
@@ -286,10 +336,14 @@
 
   <div class="modal-overlay" id="modal-overlay">
     <div class="modal" style="position:relative">
-      <button class="modal-back-icon" id="btn-modal-back" title="Back" style="display:none">
-        <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor"><path d="M400-80 0-480l400-400 56 56-344 344 344 344-56 56Z"/></svg>
-        <span class="modal-back-label" id="modal-back-label"></span>
+      <button class="modal-corner-icon modal-back-icon" id="btn-modal-back" title="Back" style="display:none">
+        <svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 -960 960 960" width="22px" fill="currentColor"><path d="M400-80 0-480l400-400 71 71-329 329 329 329-71 71Z"/></svg>
       </button>
+      <!-- Add flow's review/input screen only (shown/hidden alongside #modal-step2 in JS, next to
+           Select Lists) — opens the "Lists Explainer" (#modal-step-info) on click. -->
+      <span class="modal-corner-icon modal-info-icon" id="modal-info-icon" title="Info" style="display:none">
+        <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor"><path d="M513.5-254.5Q528-269 528-290t-14.5-35.5Q499-340 478-340t-35.5 14.5Q428-311 428-290t14.5 35.5Q457-240 478-240t35.5-14.5ZM442-394h74q0-33 7.5-52t42.5-52q26-26 41-49.5t15-56.5q0-56-41-86t-97-30q-57 0-92.5 30T342-618l66 26q5-18 22.5-39t53.5-21q32 0 48 17.5t16 38.5q0 20-12 37.5T506-526q-44 39-54 59t-10 73Zm38 314q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>
+      </span>
       <div class="modal-header">
         <h2>What are you adding to?</h2>
         <span class="select-with-arrow" id="modal-category-wrap" style="display:none">
@@ -307,11 +361,64 @@
         </select>
         <svg class="select-arrow" xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M480-360 280-560h400L480-360Z"/></svg>
         </span>
+        <!-- Add flow only (Edit keeps #modal-category-wrap above, for recategorizing an existing
+             item) — lets the item being saved be added to any combination of the user's own saved
+             lists, not just the category-derived folder. Same checkbox-multi-select semantics as
+             the detail modal's own "Save to:" menu (detailModalHeader.js) — item.favorite for the
+             built-in "All My Saves" list (default-favorites, always on, can't be unchecked here —
+             every saved item is trivially "saved"), item.savedListIds for every other list. Reuses
+             .platform-dropdown's existing expand/collapse shell (same component the Platforms
+             field already uses) rather than building a new dropdown mechanism from scratch. -->
+        <details class="platform-dropdown saved-lists-dropdown" id="saved-lists-wrap" style="display:none">
+          <summary class="platform-dropdown-summary">
+            <span id="saved-lists-summary-text">Select Lists</span>
+            <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M480-360 280-560h400L480-360Z"/></svg>
+          </summary>
+          <div class="platform-dropdown-list saved-lists-options" id="saved-lists-options"></div>
+        </details>
       </div>
 
       <!-- ===== SCREEN A: category tiles (Add flow only) ===== -->
       <div class="modal-body modal-step1" id="modal-step1">
         <div class="step1-category-grid" id="step1-category-grid"></div>
+      </div>
+
+      <!-- ===== SCREEN A-INFO: "Lists Explainer" — reached by tapping #modal-info-icon on Screen A,
+           left via the back arrow (Add flow only) ===== -->
+      <div class="modal-body modal-step-info" id="modal-step-info" style="display:none">
+        <div class="info-explainer-steps">
+          <div class="info-explainer-step">
+            <span class="info-explainer-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 -960 960 960" width="22px" fill="currentColor"><path d="M160-120q-33 0-56.5-23.5T80-200v-280h80v280h360v80H160Zm160-160q-33 0-56.5-23.5T240-360v-280h80v280h360v80H320Zm160-160q-33 0-56.5-23.5T400-520v-240q0-33 23.5-56.5T480-840h320q33 0 56.5 23.5T880-760v240q0 33-23.5 56.5T800-440H480Zm0-80h320v-160H480v160Z"/></svg>
+            </span>
+            <span class="info-explainer-text">
+              <span class="info-explainer-title">Saved lists</span>
+              <ul class="info-explainer-desc info-explainer-list">
+                <li>Each list is different. It shows specific tagged content in sidebar categories.</li>
+                <li>You can put the same save in more than one list.</li>
+                <li>All My Saves contains your items across all your lists. Duplicates do not appear here.</li>
+              </ul>
+            </span>
+          </div>
+          <div class="info-explainer-step">
+            <span class="info-explainer-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 -960 960 960" width="22px" fill="currentColor"><path d="M160-520v-280h280v280H160Zm0 360v-280h280v280H160Zm360-360v-280h280v280H520Zm0 360v-280h280v280H520Z"/></svg>
+            </span>
+            <span class="info-explainer-text">
+              <span class="info-explainer-title">Category</span>
+              <span class="info-explainer-desc">The sidebar tab you're adding to.</span>
+            </span>
+          </div>
+          <div class="info-explainer-step">
+            <span class="info-explainer-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 -960 960 960" width="22px" fill="currentColor"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h240l80 80h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Z"/></svg>
+            </span>
+            <span class="info-explainer-text">
+              <span class="info-explainer-title">Folder</span>
+              <span class="info-explainer-desc">Categories organized further.</span>
+            </span>
+          </div>
+        </div>
       </div>
 
       <!-- ===== SCREEN A1.5: Musician vs Music Album sub-choice, shown only from the combined "Music" tile (Add flow only) ===== -->

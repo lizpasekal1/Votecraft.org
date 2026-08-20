@@ -1,7 +1,7 @@
 // ===== KANBAN BOARD ("My Saves Queue") =====
 
 import { state, CATEGORIES, CAT_LABEL } from './state.js';
-import { escapeHtml, catClass, badgeLabel, getListIds } from './utils.js';
+import { escapeHtml, catClass, badgeLabel, getListIds, isQueueDemoId } from './utils.js';
 import { persistViewState, persistItem } from './storage.js';
 import { openDetailModal } from './detailModal.js';
 import { storageSync } from './platform.js';
@@ -32,12 +32,16 @@ const COLLAPSE_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill=
 
 let _demoStatus = 'in-queue';
 let _kanbanSortListenerAdded = false;
+// Admin-editable via the WordPress plugin's "Demo Content" section (state.dashboardDemoConfig,
+// see storage.js's initDashboardDemoConfig) — falls back to this hardcoded default whenever
+// nothing's been configured yet, so this stays fully functional with zero setup.
 export function KANBAN_DEMO() {
+  const override = state.dashboardDemoConfig?.queueKanban;
   return {
     id: '__demo__',
-    title: 'Drag to progress',
-    category: 'Books',
-    imageUrl: null,
+    title: override?.title || 'Drag to progress',
+    category: override?.category || 'Books',
+    imageUrl: override?.imageUrl || null,
     queueStatus: _demoStatus,
     _isDemo: true,
   };
@@ -62,7 +66,10 @@ function renderKcardInfo(item) {
 // `format` is only ever set while a column is expanded (see KANBAN_EXPANDED_FORMATS) — with no
 // format, this renders the exact same card the normal 4-column board has always shown.
 function renderKanbanCard(item, format = null) {
-  const letter    = (item.title || '?')[0].toUpperCase();
+  // The seeded queue-demo-N items (storage.js) keep a "D" placeholder letter regardless of their
+  // own title's first letter, per direct request — a leftover visual marker for "this is demo
+  // content" now that their titles themselves no longer carry a "Demo:" prefix saying so.
+  const letter    = isQueueDemoId(item.id) ? 'D' : (item.title || '?')[0].toUpperCase();
   const thumb     = item.imageUrl
     ? `<img class="kcard-thumb" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">`
     : `<div class="kcard-thumb kcard-thumb--placeholder placeholder-${catClass(item.category)}">${letter}</div>`;
@@ -410,14 +417,48 @@ export function renderKanbanBoard() {
   // in the DOM at all, so cards render with draggable="false" and none of this gets wired up.
   if (!state.kanbanExpandedCol) {
     let dragId = null;
-    // Which card (and above/below it) the dragged card would land on if dropped right now —
-    // tracked via per-card dragover below, read at drop time to place the card exactly where
-    // the user is hovering rather than always appending to the end of the column.
+    // Which column the drag started in, and (only meaningful within that same column) which
+    // card it's currently hovering above/below — per direct request, reordering up/down within
+    // a section is still precise; only a drop into a *different* section always lands at the top.
+    let dragOriginCol = null;
     let dropTargetId = null;
     let dropPosition = null; // 'before' | 'after'
 
     function clearDropIndicators() {
       board.querySelectorAll('.kcard--drop-before, .kcard--drop-after').forEach(c => c.classList.remove('kcard--drop-before', 'kcard--drop-after'));
+      hidePlaceholder();
+    }
+
+    // ===== reorder placeholder — a dashed "landing spot" box, same floating-card language as
+    // the touch ghost — so dragging a card up/down within its own section visibly shows where it
+    // will land, per direct request ("I want to use the same floating card affect for up and down
+    // dragging"; a thin box-shadow line on the neighboring card wasn't reading as an actual
+    // "floating card" cue). One shared node, moved to wherever it's currently needed rather than
+    // recreated each time.
+    let placeholderEl = null;
+
+    function ensurePlaceholder(height) {
+      if (!placeholderEl) {
+        placeholderEl = document.createElement('div');
+        placeholderEl.className = 'kcard-placeholder';
+      }
+      placeholderEl.style.height = `${height}px`;
+      return placeholderEl;
+    }
+
+    function showPlaceholderAt(targetCard, before) {
+      const ph = ensurePlaceholder(targetCard.getBoundingClientRect().height);
+      targetCard.insertAdjacentElement(before ? 'beforebegin' : 'afterend', ph);
+    }
+
+    function showPlaceholderAtEnd(colEl) {
+      const refCard = colEl.querySelector('.kcard');
+      const ph = ensurePlaceholder(refCard ? refCard.getBoundingClientRect().height : 100);
+      colEl.appendChild(ph);
+    }
+
+    function hidePlaceholder() {
+      placeholderEl?.remove();
     }
 
     // The column's cards in their current on-screen order (respects whatever sort mode is
@@ -426,32 +467,120 @@ export function renderKanbanBoard() {
       return sortCards(allItems.filter(i => i.queueStatus === colKey && i.id !== '__demo__'), colKey);
     }
 
+    function clearOverHighlight() {
+      board.querySelectorAll('.kanban-column').forEach(col => {
+        col.classList.remove('kanban-column--over');
+        const hint = col.querySelector('.progress-drop-hint');
+        if (hint) hint.style.opacity = '';
+      });
+    }
+
+    // Shared commit step for both the mouse 'drop' handler and touch's touchend below, so the
+    // actual reorder logic exists exactly once. colEl is the .kanban-cards element dropped into.
+    async function performDrop(colEl) {
+      colEl.closest('.kanban-column').classList.remove('kanban-column--over');
+      clearDropIndicators();
+      if (!dragId) return;
+      const newStatus = colEl.dataset.col;
+      if (dragId === '__demo__') {
+        _demoStatus = newStatus;
+        dragId = null;
+        renderKanbanBoard();
+        flashJustDropped('__demo__');
+        centerColumnInView(newStatus);
+        return;
+      }
+
+      const draggedItem = state.items.find(i => i.id === dragId);
+      if (!draggedItem) { dragId = null; return; }
+
+      // Within the same section, reordering up/down is still precise — drop on a specific card
+      // to land exactly above/below it, or in empty space to land at the bottom. Only a drop into
+      // a *different* section always lands at the top, per direct request. Then give every card
+      // in the target column a fresh sequential manualOrder and switch it to "Custom order" — so
+      // the manual position actually sticks instead of being immediately overridden by whatever
+      // sort mode (newest/oldest/A→Z) was active before.
+      const targetOrder = currentColumnOrder(newStatus).filter(i => i.id !== dragId);
+      let insertAt = targetOrder.length;
+      if (newStatus === dragOriginCol) {
+        if (dropTargetId && dropTargetId !== dragId) {
+          const idx = targetOrder.findIndex(i => i.id === dropTargetId);
+          if (idx !== -1) insertAt = dropPosition === 'before' ? idx : idx + 1;
+        }
+      } else {
+        insertAt = 0;
+      }
+      targetOrder.splice(insertAt, 0, draggedItem);
+
+      draggedItem.queueStatus = newStatus;
+      targetOrder.forEach((item, i) => { item.manualOrder = i; });
+      state.kanbanSort[newStatus] = 'manual';
+      storageSync.set({ savecraft_kanban_sort: state.kanbanSort });
+      await Promise.all(targetOrder.map(item => persistItem(item)));
+
+      const droppedId = draggedItem.id;
+      dragId = null;
+      dropTargetId = null;
+      dropPosition = null;
+      renderKanbanBoard();
+      flashJustDropped(droppedId);
+      centerColumnInView(newStatus);
+    }
+
+    // Purple flash (kcard-drop-flash, kanban.css) on whichever card just landed, so it's still
+    // identifiable a moment after the board re-renders and every card's position shifts. Queried
+    // via `container` (the stable #cards-grid element, never itself replaced) rather than the
+    // local `board` reference above — that one points at the specific .kanban-board *node*
+    // renderKanbanBoard()'s innerHTML rebuild just discarded, not whatever replaced it.
+    function flashJustDropped(id) {
+      const el = container.querySelector(`.kcard[data-id="${id}"]`);
+      el?.classList.add('kcard--just-dropped');
+    }
+
+    // Scrolls the board so the column just dropped into is centered in view — per direct request
+    // ("if I drop the card in a particular section, I want the mobile window to center on that
+    // section"; previously the re-render left the board wherever it happened to already be
+    // scrolled, usually back at "To Do"). Re-queries board fresh from `container` rather than
+    // using the closed-over `board` reference above, same reason as flashJustDropped: that one
+    // points at the specific .kanban-board node renderKanbanBoard()'s innerHTML rebuild just
+    // discarded.
+    function centerColumnInView(colKey) {
+      const freshBoard = container.querySelector('.kanban-board');
+      const colEl = freshBoard?.querySelector(`.kanban-cards[data-col="${colKey}"]`)?.closest('.kanban-column');
+      if (!freshBoard || !colEl) return;
+      const boardRect = freshBoard.getBoundingClientRect();
+      const colRect = colEl.getBoundingClientRect();
+      const target = freshBoard.scrollLeft + (colRect.left - boardRect.left) - (boardRect.width - colRect.width) / 2;
+      freshBoard.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
+    }
+
     board.querySelectorAll('.kcard').forEach(card => {
       card.addEventListener('dragstart', e => {
         dragId = card.dataset.id;
-        dropTargetId = null;
-        dropPosition = null;
+        dragOriginCol = card.closest('.kanban-cards')?.dataset.col || null;
         card.classList.add('kcard--dragging');
         e.dataTransfer.effectAllowed = 'move';
       });
       card.addEventListener('dragend', () => {
         card.classList.remove('kcard--dragging');
-        board.querySelectorAll('.kanban-column').forEach(col => col.classList.remove('kanban-column--over'));
+        clearOverHighlight();
         clearDropIndicators();
         dropTargetId = null;
         dropPosition = null;
       });
-      // Lets a card be dropped above/below any other card, not just anywhere in the column —
-      // this is what actually lets the user move a card up or down within the same column.
+      // Lets a card be dropped above/below any other card within its own section, so the user can
+      // still drag it up/down to reorder — only relevant while hovering a card in the column the
+      // drag started in; cards in other columns are still swallowed (below) but never targeted,
+      // since crossing into a different section always lands at the top regardless.
       card.addEventListener('dragover', e => {
         e.preventDefault();
         if (!dragId || card.dataset.id === dragId) return;
+        if (card.closest('.kanban-cards')?.dataset.col !== dragOriginCol) return;
         const rect = card.getBoundingClientRect();
         const before = (e.clientY - rect.top) < rect.height / 2;
         dropTargetId = card.dataset.id;
         dropPosition = before ? 'before' : 'after';
-        clearDropIndicators();
-        card.classList.add(before ? 'kcard--drop-before' : 'kcard--drop-after');
+        showPlaceholderAt(card, before);
       });
     });
 
@@ -462,6 +591,25 @@ export function renderKanbanBoard() {
         col.closest('.kanban-column').classList.add('kanban-column--over');
         const hint = col.querySelector('.progress-drop-hint');
         if (hint) hint.style.opacity = '0';
+        // Hovering blank space (not a specific card) within the section the drag started in
+        // still shows the floating placeholder, landing at the bottom — the per-card dragover
+        // above already handles placement while actually over a card (this listener still fires
+        // too, since dragover bubbles, so it's guarded to skip that case and only cover the empty
+        // space below/between cards).
+        if (dragId && col.dataset.col === dragOriginCol) {
+          // Hovering the placeholder itself (the gap it just opened up) shouldn't move it —
+          // otherwise this would treat "not directly over a real card" as "empty space" and snap
+          // it to the bottom the instant it appeared under the cursor. Real bug, found and fixed.
+          const overPlaceholder = placeholderEl && (e.target === placeholderEl || placeholderEl.contains(e.target));
+          if (!overPlaceholder && !e.target.closest('.kcard')) {
+            dropTargetId = null;
+            dropPosition = null;
+            showPlaceholderAtEnd(col);
+          }
+        } else {
+          // A different section — always lands at the top there, so there's nothing to preview.
+          hidePlaceholder();
+        }
       });
       col.addEventListener('dragleave', e => {
         if (!col.contains(e.relatedTarget)) {
@@ -470,39 +618,233 @@ export function renderKanbanBoard() {
           if (hint) hint.style.opacity = '';
         }
       });
-      col.addEventListener('drop', async e => {
+      col.addEventListener('drop', e => {
         e.preventDefault();
-        col.closest('.kanban-column').classList.remove('kanban-column--over');
-        clearDropIndicators();
-        if (!dragId) return;
-        const newStatus = col.dataset.col;
-        if (dragId === '__demo__') { _demoStatus = newStatus; dragId = null; dropTargetId = null; dropPosition = null; renderKanbanBoard(); return; }
+        performDrop(col);
+      });
+    });
 
-        const draggedItem = state.items.find(i => i.id === dragId);
-        if (!draggedItem) { dragId = null; return; }
+    // ===== touch drag-and-drop =====
+    // Native HTML5 drag-and-drop (wired above) never fires from a touch interaction on iOS
+    // Safari — reported live ("can't drag on my iPhone"). Reimplemented manually: track the
+    // touch, figure out what card/column is under the finger on every move via elementFromPoint
+    // (there's no touch equivalent of dragover), reuse the exact same visual feedback classes the
+    // mouse path already uses, and call the same performDrop() on release.
+    //
+    // REAL BUG, found and fixed: an earlier version engaged a drag as soon as the touch moved
+    // past a small threshold — but that's indistinguishable from the start of an ordinary scroll
+    // swipe (both are "finger down on a card, then move vertically"), so it broke the ability to
+    // scroll the column at all by touching a card first, which is most of the column's surface
+    // (reported live: "unable to scroll"). Switched to a long-press to engage instead — hold
+    // still for TOUCH_DRAG_HOLD_MS before a drag starts; move before that timer fires and this
+    // backs out entirely (never calls preventDefault), leaving the gesture to the browser's own
+    // native scroll handling, same as if these listeners weren't here at all.
+    const TOUCH_DRAG_MOVE_CANCEL = 10; // px of movement before the hold timer fires -> treat as a scroll, not a drag
+    const TOUCH_DRAG_HOLD_MS = 350;
+    let touchStartX = 0, touchStartY = 0, touchDragging = false, touchCardEl = null, touchHoldTimer = null;
 
-        // Re-insert the dragged card into the target column's order at the exact spot it was
-        // dropped, then give every card in that column a fresh sequential manualOrder and switch
-        // the column to "Custom order" — so the manual position actually sticks instead of being
-        // immediately overridden by whatever sort mode (newest/oldest/A→Z) was active before.
-        const targetOrder = currentColumnOrder(newStatus).filter(i => i.id !== dragId);
-        let insertAt = targetOrder.length;
-        if (dropTargetId && dropTargetId !== dragId) {
-          const idx = targetOrder.findIndex(i => i.id === dropTargetId);
-          if (idx !== -1) insertAt = dropPosition === 'before' ? idx : idx + 1;
+    function touchUpdateTargets(x, y) {
+      // REAL BUG, found and fixed: once the placeholder appears mid-list, the finger is very
+      // often hovering directly over the placeholder itself (the gap it just opened up) on the
+      // very next touchmove — elementFromPoint then resolves to the placeholder, which isn't a
+      // .kcard, so this used to read as "empty space" and immediately snap the placeholder back
+      // to the bottom of the column. That fought itself into a jittery loop the instant the
+      // placeholder showed up, which read as dragging (and even scrolling, since the column is
+      // locked mid-drag) simply not working at all. Leave the placeholder exactly where it is
+      // whenever the finger is still over it — nothing to update.
+      if (placeholderEl) {
+        const phRect = placeholderEl.getBoundingClientRect();
+        if (x >= phRect.left && x <= phRect.right && y >= phRect.top && y <= phRect.bottom) {
+          return placeholderEl.closest('.kanban-cards');
         }
-        targetOrder.splice(insertAt, 0, draggedItem);
-
-        draggedItem.queueStatus = newStatus;
-        targetOrder.forEach((item, i) => { item.manualOrder = i; });
-        state.kanbanSort[newStatus] = 'manual';
-        storageSync.set({ savecraft_kanban_sort: state.kanbanSort });
-        await Promise.all(targetOrder.map(item => persistItem(item)));
-
-        dragId = null;
+      }
+      const el = document.elementFromPoint(x, y);
+      const overCard = el?.closest('.kcard');
+      const overCol = el?.closest('.kanban-cards');
+      clearDropIndicators();
+      clearOverHighlight();
+      // Only the column you'd actually be dropping into lights up — not wherever the card
+      // started, even though that's technically "under" your finger too until you've moved it
+      // somewhere else, per direct request.
+      if (overCol && overCol.dataset.col !== dragOriginCol) {
+        overCol.closest('.kanban-column').classList.add('kanban-column--over');
+        const hint = overCol.querySelector('.progress-drop-hint');
+        if (hint) hint.style.opacity = '0';
+      }
+      // Per-card before/after targeting only within the section the drag started in — so the
+      // user can still drag a card up/down to reorder it there; crossing into a different section
+      // always lands at the top regardless (performDrop), so there's nothing to target there.
+      if (overCard && overCard.dataset.id !== dragId && overCol?.dataset.col === dragOriginCol) {
+        const rect = overCard.getBoundingClientRect();
+        const before = (y - rect.top) < rect.height / 2;
+        dropTargetId = overCard.dataset.id;
+        dropPosition = before ? 'before' : 'after';
+        showPlaceholderAt(overCard, before);
+      } else if (overCol && overCol.dataset.col === dragOriginCol) {
+        // Over blank space within the section the drag started in (not a specific card) — still
+        // preview landing at the bottom.
         dropTargetId = null;
         dropPosition = null;
-        renderKanbanBoard();
+        showPlaceholderAtEnd(overCol);
+      }
+      return overCol;
+    }
+
+    // ===== floating "ghost" — makes the card visibly follow the finger while dragging =====
+    // Native mouse drag-and-drop gets this for free (the browser draws its own drag image); the
+    // touch path has nothing built-in, so the card just sat in place dimmed with no sense of
+    // "where it currently is" (reported live: "is there some way I can see the card appear to
+    // drag"). A cloned, fixed-position, pointer-events:none copy tracks the finger directly —
+    // pointer-events:none is what keeps it from shadowing the real card/column underneath it in
+    // touchUpdateTargets' own elementFromPoint lookup.
+    let touchGhostEl = null;
+
+    function createTouchGhost(card, x, y) {
+      const rect = card.getBoundingClientRect();
+      const ghost = card.cloneNode(true);
+      ghost.classList.add('kcard--ghost');
+      ghost.style.position = 'fixed';
+      ghost.style.left = `${rect.left}px`;
+      ghost.style.top = `${rect.top}px`;
+      ghost.style.width = `${rect.width}px`;
+      ghost.style.height = `${rect.height}px`;
+      // Set directly rather than relying on the CSS class alone — this is what keeps the ghost
+      // from shadowing the real card/column underneath it in elementFromPoint (touchUpdateTargets).
+      ghost.style.pointerEvents = 'none';
+      ghost.style.zIndex = '1000';
+      // Finger's offset from the card's own top-left corner, preserved for the life of the drag
+      // so the ghost tracks naturally under the finger instead of snapping its corner there.
+      ghost.dataset.offsetX = x - rect.left;
+      ghost.dataset.offsetY = y - rect.top;
+      document.body.appendChild(ghost);
+      return ghost;
+    }
+
+    function moveTouchGhost(x, y) {
+      if (!touchGhostEl) return;
+      touchGhostEl.style.left = `${x - touchGhostEl.dataset.offsetX}px`;
+      touchGhostEl.style.top = `${y - touchGhostEl.dataset.offsetY}px`;
+    }
+
+    function removeTouchGhost() {
+      touchGhostEl?.remove();
+      touchGhostEl = null;
+    }
+
+    // While a drag is actively engaged, none of the columns should be able to scroll underneath
+    // the finger, per direct request. e.preventDefault() on touchmove alone isn't fully reliable
+    // for this — iOS Safari only honors it if called on the very first touchmove of the whole
+    // gesture, but the natural jitter of a real finger holding still through the long-press can
+    // already nudge the column's native scroll before our timer even fires. Belt-and-suspenders:
+    // flip every column's own overflow off outright for the duration of the drag, which stops
+    // scrolling regardless of what iOS already decided.
+    function lockColumnScroll() {
+      board.querySelectorAll('.kanban-cards').forEach(col => { col.style.overflowY = 'hidden'; });
+    }
+    function unlockColumnScroll() {
+      board.querySelectorAll('.kanban-cards').forEach(col => { col.style.overflowY = ''; });
+    }
+
+    // ===== auto-scroll the board horizontally while dragging near an edge =====
+    // On mobile not all columns fit on screen at once, and a single finger can't both hold the
+    // drag position AND perform a separate swipe-to-scroll gesture at the same time — so the
+    // finger's own horizontal position drives an auto-scroll of the board's columns instead, per
+    // direct request ("hold the card and scroll left or right... so I can place it in Done").
+    // board itself (.kanban-board) is the horizontally-scrollable flex row (overflow-x: auto).
+    const EDGE_SCROLL_ZONE = 60;  // px from the board's left/right edge that triggers auto-scroll
+    const EDGE_SCROLL_SPEED = 12; // px scrolled per animation frame
+    let edgeScrollDir = 0; // -1 left, 0 none, 1 right
+    let edgeScrollRAF = null;
+
+    function edgeScrollStep() {
+      if (!edgeScrollDir) { edgeScrollRAF = null; return; }
+      board.scrollLeft += edgeScrollDir * EDGE_SCROLL_SPEED;
+      edgeScrollRAF = requestAnimationFrame(edgeScrollStep);
+    }
+
+    function updateEdgeScroll(x) {
+      const rect = board.getBoundingClientRect();
+      let dir = 0;
+      if (x < rect.left + EDGE_SCROLL_ZONE) dir = -1;
+      else if (x > rect.right - EDGE_SCROLL_ZONE) dir = 1;
+      edgeScrollDir = dir;
+      if (dir && !edgeScrollRAF) edgeScrollRAF = requestAnimationFrame(edgeScrollStep);
+    }
+
+    function stopEdgeScroll() {
+      edgeScrollDir = 0;
+      if (edgeScrollRAF) { cancelAnimationFrame(edgeScrollRAF); edgeScrollRAF = null; }
+    }
+
+    board.querySelectorAll('.kcard').forEach(card => {
+      card.addEventListener('touchstart', e => {
+        const t = e.touches[0];
+        touchStartX = t.clientX;
+        touchStartY = t.clientY;
+        touchDragging = false;
+        touchCardEl = card;
+        dragId = card.dataset.id;
+        dragOriginCol = card.closest('.kanban-cards')?.dataset.col || null;
+        clearTimeout(touchHoldTimer);
+        touchHoldTimer = setTimeout(() => {
+          if (touchCardEl !== card) return; // finger already lifted, or moved enough to cancel below
+          touchDragging = true;
+          card.classList.add('kcard--dragging');
+          touchGhostEl = createTouchGhost(card, touchStartX, touchStartY);
+          lockColumnScroll();
+        }, TOUCH_DRAG_HOLD_MS);
+      }, { passive: true });
+
+      card.addEventListener('touchmove', e => {
+        if (!dragId || card !== touchCardEl) return;
+        const t = e.touches[0];
+        if (!touchDragging) {
+          const dx = t.clientX - touchStartX, dy = t.clientY - touchStartY;
+          if (Math.hypot(dx, dy) > TOUCH_DRAG_MOVE_CANCEL) {
+            // Moved before the long-press engaged — a scroll attempt, not a drag. Back out
+            // entirely; nothing was ever preventDefault'd, so the browser's native scroll just
+            // continues handling this touch as normal.
+            clearTimeout(touchHoldTimer);
+            touchCardEl = null;
+            dragId = null;
+          }
+          return;
+        }
+        e.preventDefault(); // actively dragging now — stop the page from also scrolling underneath it
+        moveTouchGhost(t.clientX, t.clientY);
+        touchUpdateTargets(t.clientX, t.clientY);
+        updateEdgeScroll(t.clientX);
+      }, { passive: false });
+
+      card.addEventListener('touchend', e => {
+        clearTimeout(touchHoldTimer);
+        if (card !== touchCardEl) return;
+        card.classList.remove('kcard--dragging');
+        removeTouchGhost();
+        unlockColumnScroll();
+        stopEdgeScroll();
+        if (touchDragging) {
+          const t = e.changedTouches[0]; // touches is empty by now; this carries the release position
+          const overCol = touchUpdateTargets(t.clientX, t.clientY);
+          if (overCol) performDrop(overCol);
+          else { clearOverHighlight(); clearDropIndicators(); dragId = null; dropTargetId = null; dropPosition = null; }
+        } else {
+          dragId = null; // was just a tap (or a cancelled scroll attempt) — let the card's own click handler take it from here
+        }
+        touchCardEl = null;
+        touchDragging = false;
+      });
+
+      card.addEventListener('touchcancel', () => {
+        clearTimeout(touchHoldTimer);
+        card.classList.remove('kcard--dragging');
+        removeTouchGhost();
+        unlockColumnScroll();
+        stopEdgeScroll();
+        clearOverHighlight();
+        clearDropIndicators();
+        dragId = null; dropTargetId = null; dropPosition = null;
+        touchCardEl = null; touchDragging = false;
       });
     });
   }

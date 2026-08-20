@@ -4,13 +4,18 @@ import {
   state, CURATED_ITEMS, CATEGORIES, CAT_LABEL, CAT_EMOJI, CURATED_GENRES, GENRE_EMOJI,
   PRIMARY_FOLDER_ID,
 } from './state.js';
-import { escapeHtml, folderIconHtml, sortFoldersForDisplay } from './utils.js';
+import {
+  escapeHtml, folderIconHtml, sortFoldersForDisplay, catClass, isAdminUser, isQueueDemoId,
+  getChildFolders, getFolderDescendantIds,
+} from './utils.js';
+import { getCurrentUser } from './auth.js';
 import { persistItem, persistFolder, removeFolder, persistSavedLists } from './storage.js';
 import { closeSidebar } from './main.js';
 import { matchesPrimaryOrUnfoldered } from './renderFilters.js';
 import { renderGrid } from './renderGrid.js';
 import { storageSync } from './platform.js';
 import { navigateToView } from './navigation.js';
+import { openSwitchConfirm } from './confirmModal.js';
 
 // Collapses every accordion in the sidebar — Dashboard, Saved Lists, Curated Lists, and every
 // real category (Music Album excluded, same as sidebarCategoryList's own filter further down;
@@ -24,6 +29,49 @@ export function collapseAllSidebarSections() {
   state.collapsed = new Set([...CATEGORIES.filter(cat => cat !== 'Music Album'), 'dashboard', 'saved-lists', 'curated-lists']);
 }
 
+// Wraps a state-change + re-render so the browser can animate between the old and new sidebar DOM
+// instead of the section just snapping open/closed. Feature-detected — Safari didn't ship
+// same-document support until v18, so anyone on an older browser just gets the plain instant
+// toggle, same as before this existed, never a broken/half-animated state.
+function withViewTransition(fn) {
+  if (document.startViewTransition) {
+    document.startViewTransition(fn);
+  } else {
+    fn();
+  }
+}
+
+// view-transition-name has to be a valid CSS custom-ident (no spaces/punctuation) — several
+// category names aren't ("Web Links"), so this reuses catClass (utils.js), already the app's
+// standard string->CSS-token sanitizer (renderGrid.js, dashboard.js, kanban.css class names,
+// etc.), rather than a second one-off regex. Applied to each section's .sidebar-group-bg (see
+// renderSidebar below) — deliberately NOT the row content itself: naming a growing/shrinking
+// element makes the browser cross-fade a *stretched* snapshot of it mid-animation, which is fine
+// for a plain color fill but visibly warps text (reported live — "bouncing" text). Keeping the
+// name on the empty background layer gets the smooth "opens down" grow without ever touching how
+// the actual label text renders.
+//
+// Memoized — renderSidebar() (a full-rebuild hot path called throughout the app) calls this once
+// per section on every render, but the key set (CATEGORIES + 'dashboard') is fixed at load time,
+// so there's nothing to recompute after the first render.
+const sidebarGroupVtNameCache = new Map();
+
+// Which folders currently have their own subfolder accordion open — separate from
+// state.collapsed (whose *presence* means collapsed, seeded up-front with every category/
+// Dashboard/list key so they default closed) since folders are created dynamically and can't be
+// pre-seeded that way; this Set instead defaults empty, so every folder starts collapsed unless
+// explicitly opened. Page-local like profile.js's _expandedProfileSavedLists — doesn't need to
+// survive a reload any more than a category's own open/closed state does.
+const _expandedFolders = new Set();
+function sidebarGroupVtName(key) {
+  let name = sidebarGroupVtNameCache.get(key);
+  if (name === undefined) {
+    name = 'sidebar-group-' + catClass(key);
+    sidebarGroupVtNameCache.set(key, name);
+  }
+  return name;
+}
+
 // Fill swapped from the source icon's #1f1f1f (near-black, invisible against .cat-icon's dark
 // background) to the same #5B5BEF used by every other sidebar cat-icon SVG (CAT_EMOJI in
 // state.js) so it's actually visible in the app's dark theme.
@@ -31,6 +79,10 @@ const DASHBOARD_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="24px
 // Sized/colored to match a folder row's icon (folderIconHtml(id, 16), fill="#5B5BEF"), since the
 // Queue Kanban link renders as a subfolder-styled row nested under Dashboard, not a category icon.
 const KANBAN_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="#5B5BEF"><path d="M280-160v-640h400v640H280Zm-160-80v-480h80v480h-80Zm640 0v-480h80v480h-80Zm-400 0h240v-480H360v480Zm0 0v-480 480Z"/></svg>';
+// Checklist glyph, same sizing/color convention as KANBAN_ICON_SVG above — distinct from it so
+// the two Dashboard-nested kanban rows (Queue Kanban / Admin Kanban) don't read as duplicates of
+// the same icon sitting right next to each other.
+const ADMIN_KANBAN_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="#5B5BEF"><path d="M120-80v-80h720v80H120Zm146-206L100-452l56-56 110 110 224-224 56 56-280 280Zm0-320L100-772l56-56 110 110 224-224 56 56-280 280Z"/></svg>';
 // Same sizing/color convention as KANBAN_ICON_SVG above — another subfolder-styled row nested
 // under Dashboard. Its own toggle row has no view (just expands/collapses, see
 // wireDashboardLink); its children each route to "savedlist:<id>" (see the generic subfolder
@@ -156,6 +208,10 @@ export function renderSidebar() {
         // collapsed state is already settled by the time it triggers the render.
         collapseAllSidebarSections();
         navigateToView(view, { sidebarMode });
+        // Curated/Shared navigate straight to their own full-page view, per request — no reason
+        // to leave the mobile drawer open over it the way tapping "My Saves" (which just narrows
+        // what the drawer itself is showing) still does.
+        if (opt === 'curated' || opt === 'shared') closeSidebar();
       });
     });
   }
@@ -190,7 +246,7 @@ export function renderSidebar() {
     const rowArrow = rowCollapsed ? '▶' : '▼';
     return `
     <div class="sidebar-item sidebar-subfolder ${linkClass}" data-toggle-list="${key}">
-      <span class="sidebar-label">${icon} ${label}</span>
+      <span class="sidebar-label"><span class="sidebar-list-icon-box">${icon}</span> ${label}</span>
       <span class="sidebar-right"><span class="sidebar-arrow">${rowArrow}</span></span>
     </div>
     ${rowCollapsed ? '' : `
@@ -224,52 +280,78 @@ export function renderSidebar() {
   }
 
   const dashboardLinkHtml = `
-    <div class="sidebar-item sidebar-dashboard-link ${state.view === 'dashboard' ? 'active' : ''}" data-view="dashboard" data-toggle="dashboard">
-      <span class="sidebar-label"><span class="cat-icon">${DASHBOARD_ICON_SVG}</span><span class="sidebar-label-text"> Dashboard</span></span>
-      <span class="sidebar-right"><span class="sidebar-arrow">${dashboardArrow}</span></span>
+    <div class="sidebar-group${isDashboardCollapsed ? '' : ' open'}">
+      <div class="sidebar-group-bg" style="view-transition-name: ${sidebarGroupVtName('dashboard')}"></div>
+      <div class="sidebar-item sidebar-dashboard-link ${state.view === 'dashboard' ? 'active' : ''}" data-view="dashboard" data-toggle="dashboard">
+        <span class="sidebar-label"><span class="cat-icon">${DASHBOARD_ICON_SVG}</span><span class="sidebar-label-text"> My Dashboard</span></span>
+        <span class="sidebar-right"><span class="sidebar-arrow">${dashboardArrow}</span></span>
+      </div>
+      ${isDashboardCollapsed ? '' : `
+      ${_renderDashboardListRow({
+        key: 'saved-lists', icon: SAVED_LISTS_ICON_SVG, label: 'Saved Lists',
+        // Always alphabetical, per direct request — a new list slots into its correct alphabetical
+        // position among the existing ones rather than just appending at the end. Sorted here at
+        // render time only (state.savedLists' own stored order is untouched). "All My Saves"
+        // (default-favorites) stays pinned first — it's the catch-all list, not a real named list
+        // to alphabetize among, same convention as Dashboard/All Items staying pinned ahead of the
+        // alphabetized category list elsewhere in this sidebar.
+        items: [
+          ...state.savedLists.filter(l => l.id === 'default-favorites'),
+          ...state.savedLists.filter(l => l.id !== 'default-favorites')
+            .sort((a, b) => a.name.localeCompare(b.name)),
+        ],
+        linkClass: 'sidebar-saved-lists-link', childClass: 'sidebar-saved-lists-child', addClass: 'sidebar-add-saved-list',
+        viewPrefix: 'savedlist:', showRadio: true,
+        // "All My Saves" routes to state.view === 'dashboard' instead of its own generic
+        // 'savedlist:default-favorites' (see the click handler below) — the viewPrefix-derived
+        // isActive check above wouldn't ever match that, so it needs this explicit override to still
+        // highlight itself while Dashboard (the same destination) is what's actually active.
+        itemIsActive: item => item.id === 'default-favorites' && state.view === 'dashboard',
+      })}
+      ${_renderDashboardListRow({
+        key: 'curated-lists', icon: CURATED_LISTS_ICON_SVG, label: 'Curated Lists', items: state.curatedListsRows,
+        linkClass: 'sidebar-curated-lists-link', childClass: 'sidebar-curated-lists-child', addClass: 'sidebar-add-curated-list',
+        itemExtraClass: item => item.id === 'default-votecraft' ? 'sidebar-curated-votecraft-link' : '',
+        itemIsActive: item => item.id === 'default-votecraft' && state.sidebarMode === 'curated' && sidebarEffectiveView === 'genre:Top 100',
+        showRadio: true,
+      })}
+      <div class="sidebar-item sidebar-subfolder sidebar-kanban-link ${state.view === 'kanban' ? 'active' : ''}" data-view="kanban">
+        ${KANBAN_ICON_SVG} Queue Kanban
+      </div>
+      ${isAdminUser(getCurrentUser()?.email, state.role) ? `
+      <div class="sidebar-item sidebar-subfolder sidebar-admin-kanban-link ${state.view === 'admin-kanban' ? 'active' : ''}" data-view="admin-kanban">
+        ${ADMIN_KANBAN_ICON_SVG} Admin Kanban
+      </div>` : ''}`}
     </div>
-    ${isDashboardCollapsed ? '' : `
-    <div class="sidebar-item sidebar-subfolder sidebar-kanban-link ${state.view === 'kanban' ? 'active' : ''}" data-view="kanban">
-      ${KANBAN_ICON_SVG} Queue Kanban
-    </div>
-    ${_renderDashboardListRow({
-      key: 'saved-lists', icon: SAVED_LISTS_ICON_SVG, label: 'Saved Lists', items: state.savedLists,
-      linkClass: 'sidebar-saved-lists-link', childClass: 'sidebar-saved-lists-child', addClass: 'sidebar-add-saved-list',
-      viewPrefix: 'savedlist:', showRadio: true,
-      // "All My Saves" routes to state.view === 'dashboard' instead of its own generic
-      // 'savedlist:default-favorites' (see the click handler below) — the viewPrefix-derived
-      // isActive check above wouldn't ever match that, so it needs this explicit override to still
-      // highlight itself while Dashboard (the same destination) is what's actually active.
-      itemIsActive: item => item.id === 'default-favorites' && state.view === 'dashboard',
-    })}
-    ${_renderDashboardListRow({
-      key: 'curated-lists', icon: CURATED_LISTS_ICON_SVG, label: 'Curated Lists', items: state.curatedListsRows,
-      linkClass: 'sidebar-curated-lists-link', childClass: 'sidebar-curated-lists-child', addClass: 'sidebar-add-curated-list',
-      itemExtraClass: item => item.id === 'default-votecraft' ? 'sidebar-curated-votecraft-link' : '',
-      itemIsActive: item => item.id === 'default-votecraft' && state.sidebarMode === 'curated' && sidebarEffectiveView === 'genre:Top 100',
-    })}`}
     <div class="sidebar-divider"></div>
   `;
 
   function wireDashboardLink() {
     sidebar.querySelector('.sidebar-dashboard-link')?.addEventListener('click', () => {
-      if (state.collapsed.has('dashboard')) {
-        // Reuses the same canonical "collapse everything" helper the mode-switch handlers below
-        // call, then reopens just Dashboard — this used to re-derive its own category list inline
-        // instead (via an otherCollapsibleIds param closed over whichever render pass wired it),
-        // which went stale in exactly the situation that matters most: wired from the curated-
-        // picker branch (which has no categories to pass) and then clicked, leaving every real
-        // category un-collapsed once the click switched back to the normal categorized sidebar
-        // (reported live: tap Curated, tap Dashboard, every accordion is open).
-        collapseAllSidebarSections();
-        state.collapsed.delete('dashboard');
-      } else {
-        state.collapsed.add('dashboard');
-      }
-      navigateToView('dashboard', { sidebarMode: 'home' });
+      // withViewTransition — per request, so opening/closing Dashboard's section morphs smoothly
+      // instead of snapping, via .sidebar-group-bg's own view-transition-name above.
+      withViewTransition(() => {
+        if (state.collapsed.has('dashboard')) {
+          // Reuses the same canonical "collapse everything" helper the mode-switch handlers below
+          // call, then reopens just Dashboard — this used to re-derive its own category list inline
+          // instead (via an otherCollapsibleIds param closed over whichever render pass wired it),
+          // which went stale in exactly the situation that matters most: wired from the curated-
+          // picker branch (which has no categories to pass) and then clicked, leaving every real
+          // category un-collapsed once the click switched back to the normal categorized sidebar
+          // (reported live: tap Curated, tap Dashboard, every accordion is open).
+          collapseAllSidebarSections();
+          state.collapsed.delete('dashboard');
+        } else {
+          state.collapsed.add('dashboard');
+        }
+        navigateToView('dashboard', { sidebarMode: 'home' });
+      });
     });
     sidebar.querySelector('.sidebar-kanban-link')?.addEventListener('click', () => {
       navigateToView('kanban', { sidebarMode: 'home' });
+    });
+    sidebar.querySelector('.sidebar-admin-kanban-link')?.addEventListener('click', () => {
+      navigateToView('admin-kanban', { sidebarMode: 'home' });
     });
     // Saved Lists / Curated Lists — each toggles its own independent collapse state (not tied to
     // Dashboard's, and not mutually exclusive with anything else), just expanding/collapsing its
@@ -327,7 +409,9 @@ export function renderSidebar() {
 
   const categorySections = sidebarCategoryList.map(cat => {
     const primaryId = PRIMARY_FOLDER_ID[cat];
-    let subfolders = sortFoldersForDisplay(state.folders.filter(f => f.parentCategory === cat), cat);
+    // Top-level only here — a folder's own subfolders (folder.parentFolderId) render recursively
+    // inside _renderFolderRow below, not flattened into this same list.
+    let subfolders = sortFoldersForDisplay(state.folders.filter(f => f.parentCategory === cat && !f.parentFolderId), cat);
     if (folderScope) {
       const hadFolders = subfolders.length > 0;
       subfolders = subfolders.filter(f => folderScope.has(f.id));
@@ -346,7 +430,11 @@ export function renderSidebar() {
       : state.view === 'Music Album';
     const musicAlbumCount = isCuratedGenre
       ? (CURATED_ITEMS[curatedGenreBase]?.['Music Album']?.length ?? 0)
-      : state.items.filter(i => matchesPrimaryOrUnfoldered(i, 'Music Album')).length;
+      // Queue-demo cards excluded from every real count here — same reasoning as
+      // renderFilters.js's getFilteredSortedItems() (they're Kanban-demo placeholders, not real
+      // saves, but were still showing up as a phantom "1" badge on whichever folder their
+      // category happens to land on).
+      : state.items.filter(i => !isQueueDemoId(i.id) && matchesPrimaryOrUnfoldered(i, 'Music Album')).length;
     const musicAlbumCountLabel = musicAlbumCount > 0 ? `<span class="sidebar-count">${musicAlbumCount}</span>` : '';
     // Music Album isn't part of sidebarCategoryList's own loop (it's excluded above, line
     // 322-323) — it only ever shows via this "Albums" link nested under Musician, routed through
@@ -360,7 +448,17 @@ export function renderSidebar() {
       </div>
     ` : '';
 
-    const subfolderRows = subfolders.map(folder => {
+    // Recursive — a folder can itself accordion-open to reveal its own subfolders plus a
+    // "+ New folder" row to add more, same shape as a category itself, per direct request
+    // ("folders also can accordion open to an add folder"). depth 0 is a normal top-level folder
+    // (46px indent, .sidebar-subfolder); depth 1+ all share the one deeper "nested" indent tier
+    // (66px, .sidebar-subfolder--nested) rather than stair-stepping indefinitely — true recursion
+    // is supported structurally (a subfolder can itself have subfolders), the visual indent just
+    // caps out at one extra level. NOTE: unlike the top-level `subfolders` list above, a folder's
+    // own children here are NOT filtered by folderScope — a Saved List scoped to a parent folder
+    // always shows all of that folder's subfolders too, a deliberate simplification rather than
+    // threading folderScope recursively through every depth.
+    function _renderFolderRow(folder, depth) {
       const isPrimaryFolder = primaryId === folder.id;
       // What this folder maps to while browsing a curated genre: its own dedicated "creator
       // card" bucket (Authors/Directors/Creators/Game Companies) if it has one; else the full
@@ -375,7 +473,7 @@ export function renderSidebar() {
         || (FOLDER_SHOWS_FULL_CURATED_CATEGORY.has(folder.id) ? cat : folder.id);
       const fCount = isCuratedGenre
         ? (CURATED_ITEMS[curatedGenreBase]?.[curatedTarget]?.length ?? 0)
-        : state.items.filter(i => isPrimaryFolder ? matchesPrimaryOrUnfoldered(i, cat) : i.folderId === folder.id).length;
+        : state.items.filter(i => !isQueueDemoId(i.id) && (isPrimaryFolder ? matchesPrimaryOrUnfoldered(i, cat) : i.folderId === folder.id)).length;
       const fCountLabel = fCount > 0 ? `<span class="sidebar-count">${fCount}</span>` : '';
       // Official/default folders (seeded in storage.js's `defaults` array, always id-prefixed
       // "default-") can't be deleted from the sidebar — only user-created ones (Date.now() ids) can.
@@ -388,15 +486,32 @@ export function renderSidebar() {
       const isActive = isCuratedGenre
         ? state.view === `genre:${curatedGenreBase}:${curatedTarget}` && state.activeCuratedFolderId === folder.id
         : state.view === folder.id;
+
+      const children = sortFoldersForDisplay(getChildFolders(state.folders, folder.id), cat);
+      const isFolderCollapsed = !_expandedFolders.has(folder.id);
+      const folderArrow = isFolderCollapsed ? '▶' : '▼';
+      const nestedClass = depth > 0 ? 'sidebar-subfolder--nested' : '';
+
+      const childrenHtml = isFolderCollapsed ? '' : `
+        ${children.map(child => _renderFolderRow(child, depth + 1)).join('')}
+        <div class="sidebar-item sidebar-add-folder sidebar-subfolder--nested" data-add-subfolder="${folder.id}">
+          + New folder
+        </div>
+      `;
+
       return `
-        <div class="sidebar-item sidebar-subfolder ${isActive ? 'active' : ''}"
+        <div class="sidebar-item sidebar-subfolder ${nestedClass} ${isActive ? 'active' : ''}"
              data-view="${folder.id}" data-curated-target="${escapeHtml(curatedTarget)}">
+          <span class="sidebar-folder-toggle" data-toggle-folder="${folder.id}">${folderArrow}</span>
           ${folderIconHtml(folder.id, 16)} ${escapeHtml(folder.name)}
           ${fCountLabel}
           ${deleteBtn}
         </div>
+        ${childrenHtml}
       `;
-    }).join('');
+    }
+
+    const subfolderRows = subfolders.map(folder => _renderFolderRow(folder, 0)).join('');
 
     const expandedContent = isCollapsed ? '' : `
       ${permanentSubfolders}
@@ -407,12 +522,15 @@ export function renderSidebar() {
     `;
 
     return `
-      <div class="sidebar-item sidebar-category ${isActive ? 'active' : ''}"
-           data-view="${cat}" data-toggle="${cat}">
-        <span class="sidebar-label"><span class="cat-icon">${CAT_EMOJI[cat] || ''}</span><span class="sidebar-label-text"> ${CAT_LABEL[cat] || cat}</span></span>
-        <span class="sidebar-right"><span class="sidebar-arrow">${arrow}</span></span>
+      <div class="sidebar-group${isCollapsed ? '' : ' open'}">
+        <div class="sidebar-group-bg" style="view-transition-name: ${sidebarGroupVtName(cat)}"></div>
+        <div class="sidebar-item sidebar-category ${isActive ? 'active' : ''}"
+             data-view="${cat}" data-toggle="${cat}">
+          <span class="sidebar-label"><span class="cat-icon">${CAT_EMOJI[cat] || ''}</span><span class="sidebar-label-text"> ${CAT_LABEL[cat] || cat}</span></span>
+          <span class="sidebar-right"><span class="sidebar-arrow">${arrow}</span></span>
+        </div>
+        ${expandedContent}
       </div>
-      ${expandedContent}
     `;
     // A category hidden entirely by folderScope (the early `return ''` above) must drop out of
     // the divider-joined list too — filtered out just below — or its neighbors end up with a
@@ -432,21 +550,25 @@ export function renderSidebar() {
   sidebar.querySelectorAll('.sidebar-category').forEach(el => {
     el.addEventListener('click', () => {
       const cat = el.dataset.toggle;
-      if (state.collapsed.has(cat)) {
-        // Expanding — collapse all others first, Dashboard included (sidebarCategoryList excludes
-        // Music Album, which has its own separate collapse state via the Musician "Music Albums"
-        // permanent subfolder link). 'saved-lists'/'curated-lists' included too — same full-Set-
-        // rebuild issue as wireDashboardLink's own expand handler above.
-        state.collapsed = new Set([...sidebarCategoryList, 'dashboard', 'saved-lists', 'curated-lists']);
-        state.collapsed.delete(cat);
-      } else {
-        state.collapsed.add(cat);
-      }
-      // Was missing persistViewState() entirely before this migration (a pre-existing bug —
-      // reloading after clicking a category header lost the navigation, even though it visibly
-      // changed state.view) — navigateToView() fixes that as a side effect of picking up History
-      // API support here too.
-      navigateToView(isCuratedGenre ? `genre:${curatedGenreBase}:${cat}` : cat, { activeCuratedFolderId: null });
+      // withViewTransition — per request, same smooth open/close morph as Dashboard's own toggle
+      // above, via .sidebar-group-bg's view-transition-name.
+      withViewTransition(() => {
+        if (state.collapsed.has(cat)) {
+          // Expanding — collapse all others first, Dashboard included (sidebarCategoryList excludes
+          // Music Album, which has its own separate collapse state via the Musician "Music Albums"
+          // permanent subfolder link). 'saved-lists'/'curated-lists' included too — same full-Set-
+          // rebuild issue as wireDashboardLink's own expand handler above.
+          state.collapsed = new Set([...sidebarCategoryList, 'dashboard', 'saved-lists', 'curated-lists']);
+          state.collapsed.delete(cat);
+        } else {
+          state.collapsed.add(cat);
+        }
+        // Was missing persistViewState() entirely before this migration (a pre-existing bug —
+        // reloading after clicking a category header lost the navigation, even though it visibly
+        // changed state.view) — navigateToView() fixes that as a side effect of picking up History
+        // API support here too.
+        navigateToView(isCuratedGenre ? `genre:${curatedGenreBase}:${cat}` : cat, { activeCuratedFolderId: null });
+      });
     });
   });
 
@@ -457,14 +579,14 @@ export function renderSidebar() {
     });
   });
 
-  // Subfolder view-switching (the Queue Kanban row also uses .sidebar-subfolder for its visual
-  // styling, but it's already wired explicitly in wireDashboardLink() — excluded here so it
-  // doesn't get a second, redundant click handler. Saved Lists' own toggle row (.sidebar-saved-
-  // lists-link) is excluded the same way — its children all carry a real data-view
-  // ("savedlist:<id>") and fall through to the generic handler below. Curated Lists — both its
-  // toggle row and its children — still has no real destination, so both stay excluded so a
-  // click doesn't set state.view to undefined and break navigation).
-  sidebar.querySelectorAll('.sidebar-subfolder:not(.sidebar-kanban-link):not(.sidebar-saved-lists-link):not(.sidebar-curated-lists-link):not(.sidebar-curated-lists-child)').forEach(el => {
+  // Subfolder view-switching (the Queue Kanban / Admin Kanban rows also use .sidebar-subfolder
+  // for their visual styling, but both are already wired explicitly in wireDashboardLink() —
+  // excluded here so neither gets a second, redundant click handler. Saved Lists' own toggle row
+  // (.sidebar-saved-lists-link) is excluded the same way — its children all carry a real
+  // data-view ("savedlist:<id>") and fall through to the generic handler below. Curated Lists —
+  // both its toggle row and its children — still has no real destination, so both stay excluded
+  // so a click doesn't set state.view to undefined and break navigation).
+  sidebar.querySelectorAll('.sidebar-subfolder:not(.sidebar-kanban-link):not(.sidebar-admin-kanban-link):not(.sidebar-saved-lists-link):not(.sidebar-curated-lists-link):not(.sidebar-curated-lists-child):not(.sidebar-saved-lists-child)').forEach(el => {
     el.addEventListener('click', () => {
       if (isCuratedGenre && el.dataset.permanent) {
         navigateToView(`genre:${curatedGenreBase}:${el.dataset.view}`, { activeCuratedFolderId: null });
@@ -474,15 +596,33 @@ export function renderSidebar() {
         // folder's own id, which naturally resolves to an empty list). See the curatedTarget
         // computation in the row-render above for the full explanation.
         navigateToView(`genre:${curatedGenreBase}:${el.dataset.curatedTarget}`, { activeCuratedFolderId: el.dataset.view });
-      } else if (el.dataset.view === 'savedlist:default-favorites') {
-        // "All My Saves" — the built-in catch-all Saved List — is the same destination as the
-        // Dashboard link itself (per direct request), not the generic savedlist: placeholder
-        // landing card every other Saved List still shows. sidebarMode matches wireDashboardLink's
-        // own 'home' above so this reads as the same navigation, just from a different row.
-        navigateToView('dashboard', { sidebarMode: 'home', activeCuratedFolderId: null });
       } else {
         navigateToView(el.dataset.view, { activeCuratedFolderId: null });
       }
+    });
+  });
+
+  // Saved Lists' own rows (radio dot + name) — pulled out of the generic handler above so tapping
+  // one pauses for a "You're opening X" confirmation first, per direct request, rather than
+  // switching immediately. "All My Saves" keeps its existing special-case destination (the same
+  // Dashboard/home landing the Dashboard link itself uses, not the generic savedlist: placeholder
+  // every other list still shows) — just now behind the same confirm step as every other list.
+  sidebar.querySelectorAll('.sidebar-saved-lists-child').forEach(el => {
+    el.addEventListener('click', () => {
+      const listId = el.dataset.view?.replace(/^savedlist:/, '');
+      const list = state.savedLists.find(l => l.id === listId);
+      openSwitchConfirm({
+        name: list?.name || el.textContent.trim(),
+        subtitle: 'The sidebar will change to display saves from this list. Switch lists at any time!',
+        icon: SAVED_LISTS_ICON_SVG,
+        onConfirm: () => {
+          if (el.dataset.view === 'savedlist:default-favorites') {
+            navigateToView('dashboard', { sidebarMode: 'home', activeCuratedFolderId: null });
+          } else {
+            navigateToView(el.dataset.view, { activeCuratedFolderId: null });
+          }
+        },
+      });
     });
   });
 
@@ -490,6 +630,32 @@ export function renderSidebar() {
     el.addEventListener('click', e => {
       e.stopPropagation();
       promptAddFolder(el.dataset.addFolder);
+    });
+  });
+
+  // "+ New folder" nested inside an already-open folder — adds a subfolder (parentFolderId) under
+  // that specific folder rather than a new top-level folder under the category. Looks the parent
+  // folder up for its own parentCategory since every subfolder shares its ancestor's category
+  // (categories themselves never nest).
+  sidebar.querySelectorAll('[data-add-subfolder]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const parentFolder = state.folders.find(f => f.id === el.dataset.addSubfolder);
+      if (!parentFolder) return;
+      promptAddFolder(parentFolder.parentCategory, parentFolder.id);
+    });
+  });
+
+  // A folder's own accordion arrow — separate control from the row's own click-to-navigate
+  // behavior (the generic .sidebar-subfolder handler above), so opening a folder to reveal its
+  // subfolders doesn't also have to navigate into it, and vice versa.
+  sidebar.querySelectorAll('[data-toggle-folder]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const folderId = el.dataset.toggleFolder;
+      if (_expandedFolders.has(folderId)) _expandedFolders.delete(folderId);
+      else _expandedFolders.add(folderId);
+      renderSidebar();
     });
   });
 
@@ -506,40 +672,58 @@ export function renderSidebar() {
     btn.addEventListener('click', async e => {
       e.stopPropagation();
       const folderId = btn.dataset.folderId;
-      if (!confirm('Delete this folder? Items inside will stay in the category.')) return;
+      // Subfolders now exist under a folder, so deleting one cascades to every descendant too
+      // (recursively — a subfolder can itself have subfolders) rather than orphaning them as
+      // folders with a parentFolderId pointing at nothing. getFolderDescendantIds (utils.js)
+      // gathers the whole subtree's ids up front so both the confirm copy and the actual cleanup
+      // below account for all of them, not just the one folder directly clicked.
+      const idsToDelete = getFolderDescendantIds(state.folders, folderId);
+      const confirmMsg = idsToDelete.length > 1
+        ? `Delete this folder and its ${idsToDelete.length - 1} subfolder${idsToDelete.length - 1 === 1 ? '' : 's'}? Items inside will stay in the category.`
+        : 'Delete this folder? Items inside will stay in the category.';
+      if (!confirm(confirmMsg)) return;
 
-      const affected = state.items.filter(i => i.folderId === folderId);
+      const affected = state.items.filter(i => idsToDelete.includes(i.folderId));
       for (const item of affected) {
         item.folderId = null;
         await persistItem(item);
       }
 
-      state.folders = state.folders.filter(f => f.id !== folderId);
-      await removeFolder(folderId);
+      state.folders = state.folders.filter(f => !idsToDelete.includes(f.id));
+      for (const id of idsToDelete) await removeFolder(id);
 
-      // Only a real navigation (and only then worth a history entry) if the deleted folder was
-      // actually the active view — otherwise just re-render in place, the folder list itself is
-      // what changed, not what's currently being viewed.
-      if (state.view === folderId) navigateToView('all');
+      // Only a real navigation (and only then worth a history entry) if the deleted folder (or one
+      // of its now-deleted subfolders) was actually the active view — otherwise just re-render in
+      // place, the folder list itself is what changed, not what's currently being viewed.
+      if (idsToDelete.includes(state.view)) navigateToView('all');
       else { renderSidebar(); renderGrid(); }
     });
   });
 }
 
+
 // ===== FOLDERS =====
-export function promptAddFolder(category) {
-  const name = prompt(`New folder name in ${category}:`);
+// parentFolderId (optional) makes this a subfolder of that folder instead of a new top-level
+// folder directly under the category — same category as its parent either way, since categories
+// themselves never nest. Existing callers (the Add Item wizard's own "+ New folder", and this
+// file's own top-level "+ New folder" row) only ever pass `category`, so they're unaffected.
+export function promptAddFolder(category, parentFolderId = null) {
+  const name = prompt(parentFolderId ? 'New subfolder name:' : `New folder name in ${category}:`);
   if (!name?.trim()) return;
 
   const folder = {
     id: Date.now().toString(),
     name: name.trim(),
     parentCategory: category,
+    parentFolderId: parentFolderId || null,
     createdAt: Date.now(),
   };
 
   state.folders.push(folder);
   persistFolder(folder);
+  // A brand-new subfolder should be visible right away, not hidden behind its own still-collapsed
+  // parent folder accordion.
+  if (parentFolderId) _expandedFolders.add(parentFolderId);
   renderSidebar();
 }
 

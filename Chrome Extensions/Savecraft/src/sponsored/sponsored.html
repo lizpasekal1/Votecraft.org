@@ -32,12 +32,29 @@
       color: var(--text);
       min-height: 100vh;
       line-height: 1.6;
+      /* This page has none of the main app's own horizontal-overflow guards (base.css's
+         touch-action: pan-y etc.) — it's a standalone static page with its own stylesheet. Without
+         this, any element that's even slightly wider than the viewport (e.g. .vc-info-tooltip
+         below, which stays in layout via visibility:hidden rather than display:none, so its 280px
+         box counts toward scrollable width even while invisible) turns the whole page horizontally
+         scrollable/bounceable — reported live as the page being able to "move back and forth
+         weirdly" on mobile. */
+      overflow-x: hidden;
     }
 
     .page {
       max-width: 960px;
       margin: 0 auto;
       padding: 52px 40px 120px;
+    }
+
+    @media (max-width: 760px) {
+      /* 40px a side was fine against desktop's much wider canvas but eats a real chunk of a
+         phone's own width; also tightened the huge 120px bottom reservation (sized for a desktop
+         viewport's own scroll headroom) down to something proportionate. */
+      .page {
+        padding: 32px 20px 64px;
+      }
     }
 
     /* Wordmark */
@@ -131,6 +148,23 @@
       border: none;
       border-top: 1px solid var(--border);
       margin: 64px 0;
+    }
+
+    /* Lighter-weight divider between rows inside one grouped section (e.g. the three "How it
+       works" rows) — a full .divider's 64px margin is for separating distinct sections, not
+       restating that these three rows already belong together. */
+    .divider-sub {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 32px 0;
+    }
+
+    h3 {
+      font-size: 19px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
     }
 
     /* Three ways to partner — overview strip, one card per feature */
@@ -267,7 +301,11 @@
       box-shadow: 0 12px 32px rgba(91, 91, 239, 0.18);
     }
 
-    .pricing-left { flex: 1; }
+    /* min-width: 0 — a flex item's default min-width is auto (its own content's width), not 0;
+       without this, .pricing-includes' row of pill badges could refuse to shrink below its own
+       natural width and force the whole .pricing-card row wider than its container, same class of
+       bug as dashboard.css's identical fix on .dash-card. */
+    .pricing-left { flex: 1; min-width: 0; }
 
     .pricing-name {
       font-size: 16px;
@@ -309,6 +347,20 @@
     .pricing-right {
       text-align: right;
       flex-shrink: 0;
+    }
+
+    @media (max-width: 760px) {
+      /* Price/VC-badge column stacks below the description instead of squeezing beside it —
+         .pricing-right's own flex-shrink: 0 meant it never gave up room on a narrow screen, so it
+         and .pricing-left were both fighting for space in the same row regardless of how much text
+         either one had. */
+      .pricing-card {
+        flex-direction: column;
+        padding: 22px 20px;
+      }
+      .pricing-right {
+        text-align: left;
+      }
     }
 
     .pricing-price {
@@ -420,19 +472,19 @@
       box-shadow: 0 6px 20px rgba(91, 91, 239, 0.45);
     }
 
-    /* VoteCraft Coin preview — teal accent (VC's own brand color, not SaveCraft purple) so it
-       reads as a VoteCraft-wide element visiting this page, matching the coin/balance styling
-       already live on votecraft.org's VC app dashboard. Estimates only — VoteCraft Coin has no
-       real ledger yet, so this is always framed as "once VoteCraft Coin launches," never as an
-       already-credited balance. */
+    /* VoteCraft Coin preview — kept entirely in SaveCraft's own purple palette (var(--primary)
+       etc.), same as every other badge/pill on this page. This page stays SaveCraft, not a
+       VoteCraft/VC-coin reskin — the VC mentions are content, not a second brand identity.
+       Estimates only — VoteCraft Coin has no real ledger yet, so this is always framed as "once
+       VoteCraft Coin launches," never as an already-credited balance. */
     .vc-badge {
       display: inline-flex;
       align-items: center;
       gap: 6px;
       margin-top: 12px;
-      background: rgba(20, 204, 176, 0.12);
-      border: 1px solid rgba(20, 204, 176, 0.32);
-      color: #5eead4;
+      background: var(--primary-soft);
+      border: 1px solid var(--primary-border);
+      color: var(--primary);
       font-family: inherit;
       font-size: 11.5px;
       font-weight: 700;
@@ -443,16 +495,72 @@
     }
 
     .vc-badge:hover {
-      background: rgba(20, 204, 176, 0.2);
-      border-color: rgba(20, 204, 176, 0.55);
+      background: rgba(91, 91, 239, 0.22);
+      border-color: rgba(91, 91, 239, 0.55);
     }
 
     .vc-badge-icon { font-size: 12px; }
 
+    .pricing-intro {
+      font-size: 13.5px;
+      margin-top: -6px;
+      margin-bottom: 22px;
+    }
+
+    /* A button (not the app's usual <a>-wrapped tooltip) so it's focusable — tapping it on a
+       touch device focuses it and reveals the tooltip via :focus, same as :hover does for a mouse,
+       rather than only working for visitors who can hover. Same short-explainer-in-place idea as
+       the "⚡ Your Statement" badge's tooltip elsewhere in SaveCraft
+       (src/app/css/detailModal.css's .vc-sponsored-tooltip), re-declared locally since this page
+       doesn't share that stylesheet. */
+    .vc-info {
+      position: relative;
+      display: inline-flex;
+      background: none;
+      border: none;
+      padding: 0;
+      font-family: inherit;
+      font-size: inherit;
+      color: var(--primary);
+      cursor: pointer;
+    }
+
+    .vc-info-tooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translate(-50%, 4px);
+      margin-bottom: 10px;
+      width: 280px;
+      max-width: 80vw;
+      background: var(--surface);
+      border: 1px solid var(--primary-border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: var(--text-muted);
+      text-align: left;
+      white-space: normal;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.15s, transform 0.15s, visibility 0.15s;
+      z-index: 5;
+    }
+
+    .vc-info:hover .vc-info-tooltip,
+    .vc-info:focus .vc-info-tooltip,
+    .vc-info:focus-visible .vc-info-tooltip {
+      opacity: 1;
+      visibility: visible;
+      transform: translate(-50%, 0);
+    }
+
     .vc-preview-panel {
       margin-top: -2px;
-      background: rgba(20, 204, 176, 0.07);
-      border: 1px solid rgba(20, 204, 176, 0.26);
+      background: var(--surface);
+      border: 1px solid var(--primary-border);
       border-radius: 14px;
       padding: 18px 22px;
       display: flex;
@@ -464,17 +572,17 @@
     .coin-mini {
       width: 36px;
       height: 36px;
-      border-radius: 50%;
-      background: linear-gradient(145deg, #14ccb0, #0a8f7f);
-      color: #fff;
+      border-radius: 10px;
+      background: var(--primary-soft);
+      border: 1px solid var(--primary-border);
+      color: var(--primary);
       font-weight: 800;
       font-size: 11px;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      box-shadow: 0 2px 10px rgba(20, 204, 176, 0.4);
-      animation: coinSpin 0.6s ease-out;
+      animation: coinSpin 0.3s ease-out;
     }
 
     .vc-preview-text { flex: 1; min-width: 0; }
@@ -499,9 +607,9 @@
       font-weight: 700;
       padding: 3px 10px;
       border-radius: 999px;
-      background: rgba(20, 204, 176, 0.18);
-      color: #5eead4;
-      border: 1px solid rgba(20, 204, 176, 0.35);
+      background: rgba(91, 91, 239, 0.18);
+      color: var(--text);
+      border: 1px solid rgba(91, 91, 239, 0.3);
       margin: 0 6px 0 0;
     }
 
@@ -512,15 +620,15 @@
       margin-top: 12px;
       font-size: 12.5px;
       font-weight: 600;
-      color: #5eead4;
+      color: var(--primary);
       text-decoration: none;
     }
 
     .vc-preview-cta:hover { text-decoration: underline; }
 
     @keyframes coinSpin {
-      from { transform: rotateY(0deg) scale(0.5); opacity: 0; }
-      to { transform: rotateY(360deg) scale(1); opacity: 1; }
+      from { transform: scale(0.7); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
     }
 
     @keyframes vcSlideDown {
@@ -533,6 +641,25 @@
     .vc-preview-panel.vc-no-anim,
     .vc-no-anim .coin-mini {
       animation: none;
+    }
+
+    /* Footer — just enough to carry the Privacy Policy link (per direct request), not a full
+       sitemap-style footer; kept quiet (faint text, no background) so it doesn't compete with the
+       CTA box directly above it. */
+    .page-footer {
+      margin-top: 56px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--text-faint);
+    }
+    .page-footer a {
+      color: var(--text-faint);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .page-footer a:hover {
+      color: var(--primary);
     }
   </style>
 </head>
@@ -570,6 +697,19 @@
     <hr class="divider">
 
     <div class="section">
+      <div class="section-label">VoteCraft Coin</div>
+      <h2>A civic reward, not a cryptocurrency</h2>
+      <p>VoteCraft Coin (VC) is VoteCraft's own civic-engagement reward — earned alongside real
+      donations today, and alongside sponsorships like this one. There's no wallet to set up and
+      no crypto exposure: VC lives entirely inside VoteCraft's own systems, and it's always tied to
+      a real transaction, never created from nothing. Pricing below shows the estimated VC bonus
+      for each tier.</p>
+      <a class="vc-preview-cta" href="https://votecraft.org/wp-content/uploads/pages/votecraft-coin/app/" target="_blank" rel="noopener">See VoteCraft Coin in action →</a>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section">
       <div class="section-label">Why it exists</div>
       <h2>Advertising that respects the reader</h2>
       <p>SaveCraft curates the films, books, music, and shows that shape culture. VoteCraft exists to connect culture to civic participation. These three placements let mission-aligned organizations speak directly to that intersection — without banners, autoplay, or interruption.</p>
@@ -578,47 +718,47 @@
 
     <hr class="divider">
 
-    <div class="section section-with-visual">
-      <div class="header-text">
-        <div class="section-label">Offering 1</div>
-        <h2>Your Own Sponsored Page</h2>
-        <p>Every entry in SaveCraft's Cause Curated directory imagines a nonprofit or advocacy partner's own curated collection — a preview of what's possible when culture and civic life share a spotlight. The Votecraft List is already live this way today.</p>
-        <p>Bring your organization's picks to life as their own branded page, linked directly from the directory your audience is already browsing.</p>
-      </div>
-      <div class="preview-card">
-        <div class="preview-poster">
-          <span class="preview-badge">🗳️ Your Sponsored Page</span>
+    <div class="section">
+      <div class="section-label">How it works</div>
+      <h2>One placement, three ways to show up</h2>
+
+      <div class="section-with-visual">
+        <div class="header-text">
+          <h3>Your Own Sponsored Page</h3>
+          <p>A branded curated collection inside SaveCraft's Cause Curated directory — your picks, your voice, discovered by an audience already browsing culture. The VoteCraft List is already live this way today.</p>
+        </div>
+        <div class="preview-card">
+          <div class="preview-poster">
+            <span class="preview-badge">🗳️ Your Sponsored Page</span>
+          </div>
         </div>
       </div>
-    </div>
 
-    <hr class="divider">
+      <hr class="divider-sub">
 
-    <div class="section section-with-visual">
-      <div class="header-text">
-        <div class="section-label">Offering 2</div>
-        <h2>Sponsored Statements</h2>
-        <p>Your statement appears once, inline, beneath a curated list your audience chose to explore. It's not an ad. It's a position.</p>
-      </div>
-      <div class="preview-card">
-        <div class="preview-poster">
-          <span class="preview-badge">⚡ Your Sponsored Statement</span>
+      <div class="section-with-visual">
+        <div class="header-text">
+          <h3>Sponsored Statements</h3>
+          <p>Your statement appears once, inline, beneath a curated list your audience chose to explore — not an ad, a position. Sponsoring a statement is a digital-only contribution, so it also earns an estimated VoteCraft Coin bonus (see pricing below).</p>
+        </div>
+        <div class="preview-card">
+          <div class="preview-poster">
+            <span class="preview-badge">⚡ Your Sponsored Statement</span>
+          </div>
         </div>
       </div>
-    </div>
 
-    <hr class="divider">
+      <hr class="divider-sub">
 
-    <div class="section section-with-visual">
-      <div class="header-text">
-        <div class="section-label">Offering 3</div>
-        <h2>Embed Anywhere</h2>
-        <p>Pick a folder — Literature, Films, Music, whatever your organization curates — then choose exactly which saves to include, drag them into order, and style the slider: how many are visible, autoplay, arrows or dots, light or dark.</p>
-        <p>The result is a live embed you control from inside SaveCraft, ready to paste onto your own site as a single &lt;iframe&gt;.</p>
-      </div>
-      <div class="preview-card">
-        <div class="preview-poster">
-          <span class="preview-badge">&lt;/&gt; Your Embedded List</span>
+      <div class="section-with-visual">
+        <div class="header-text">
+          <h3>Embed Anywhere</h3>
+          <p>Pick a folder, choose exactly which saves to include, and style the slider — then drop the live embed onto your own site as a single &lt;iframe&gt;, ready to paste with one line of code.</p>
+        </div>
+        <div class="preview-card">
+          <div class="preview-poster">
+            <span class="preview-badge">&lt;/&gt; Your Embedded List</span>
+          </div>
         </div>
       </div>
     </div>
@@ -628,6 +768,12 @@
     <div class="section">
       <div class="section-label">Pricing</div>
       <h2>Simple, transparent tiers</h2>
+      <p class="pricing-intro">Every tier includes an estimated VoteCraft Coin bonus
+        <button class="vc-info" type="button" aria-label="What is VoteCraft Coin?">
+          <span class="vc-info-icon">ⓘ</span>
+          <span class="vc-info-tooltip">VoteCraft Coin (VC) is a civic-engagement reward, not a cryptocurrency — see the VoteCraft Coin section above. This is an estimate of what a tier would earn once it launches, not a balance you can spend yet.</span>
+        </button>.
+      </p>
       <div class="pricing-grid">
 
         <div class="pricing-card">
@@ -711,9 +857,15 @@
       <a class="btn-contact" href="mailto:hello@votecraft.com">Get in touch →</a>
     </div>
 
+    <div class="page-footer">
+      <a id="link-privacy-policy" href="#" target="_blank" rel="noopener">Privacy Policy</a>
+      <span aria-hidden="true">·</span>
+      <a id="link-terms-of-service" href="#" target="_blank" rel="noopener">Terms of Service</a>
+    </div>
+
   </div>
 
-  <script src="sponsored.js"></script>
+  <script type="module" src="sponsored.js"></script>
   <script src="vc-bonus.js"></script>
 </body>
 </html>
