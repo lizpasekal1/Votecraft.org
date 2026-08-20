@@ -486,6 +486,22 @@
         </span>
       </div>
 
+      <!-- Edit-mode-only Saved Lists reassignment, per direct request — same checkbox-multi-select
+           model as the Add flow's own "Select Lists" header pill (#saved-lists-wrap), just as a
+           full-width field row here instead, matching Folder's own field styling right above it.
+           Distinct ids/dropdown instance from #saved-lists-wrap — that one stays Add-only, in the
+           header, with its own compact pill treatment; the two are never shown at the same time. -->
+      <div class="form-group" id="edit-saved-lists-group" style="display:none;">
+        <label><svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M160-120q-33 0-56.5-23.5T80-200v-280h80v280h360v80H160Zm160-160q-33 0-56.5-23.5T240-360v-280h80v280h360v80H320Zm160-160q-33 0-56.5-23.5T400-520v-240q0-33 23.5-56.5T480-840h320q33 0 56.5 23.5T880-760v240q0 33-23.5 56.5T800-440H480Zm0-80h320v-160H480v160Z"/></svg>Select List</label>
+        <details class="platform-dropdown" id="edit-saved-lists-wrap">
+          <summary class="platform-dropdown-summary">
+            <span>Select Lists</span>
+            <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M480-360 280-560h400L480-360Z"/></svg>
+          </summary>
+          <div class="platform-dropdown-list" id="edit-saved-lists-options"></div>
+        </details>
+      </div>
+
       <!-- Musician/Music Album/Favorite Albums keep the original compact side-by-side pairing
            (left untouched per explicit request) — updateVideoUrlLayout() moves #platforms-section
            and #youtube-url-group into this row for those categories only; it's otherwise empty and
