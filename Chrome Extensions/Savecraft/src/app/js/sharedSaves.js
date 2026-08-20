@@ -48,11 +48,9 @@ export const DEMO_FRIENDS = [
 
 // One reusable vertical-card carousel builder — avatar circle, name, tagline, a title/tag pill —
 // shared by both sections below so they read as the same visual language.
-// isListCard: true for the two "connected list" sliders (nonprofit orgs, group lists) — their
-// cards get the "You're opening X" confirm popup on tap (see wireListCardConfirm below), matching
-// the same pause-before-switching pattern the sidebar's own Saved Lists/Curated Lists rows use.
-// Friends aren't a list in that sense (the popup's own copy, "switch lists at any time," wouldn't
-// make sense for a person), so that slider stays as a plain visual preview.
+// isListCard: true for all three sliders (nonprofit orgs, group lists, Friends) — every card gets
+// the "You're opening X" confirm popup on tap (see wireListCardConfirm below), matching the same
+// pause-before-switching pattern the sidebar's own Saved Lists/Curated Lists rows use.
 function buildVerticalCardSlider({ sectionClass, title, mobileTitle, cards, isListCard }) {
   const tripled = [...cards, ...cards, ...cards];
   const cardsHtml = tripled.map((c, i) => {
@@ -123,7 +121,7 @@ function buildGroupListsSliderSection() {
 
 function buildFriendsSection() {
   const cards = DEMO_FRIENDS.map(f => ({ name: f.name, imageUrl: f.imageUrl }));
-  return buildVerticalCardSlider({ sectionClass: 'shared-card--friends', title: "Friends You've Shared Lists With", mobileTitle: "Friend's Lists", cards });
+  return buildVerticalCardSlider({ sectionClass: 'shared-card--friends', title: "Friends You've Shared Lists With", mobileTitle: "Friend's Lists", cards, isListCard: true });
 }
 
 function wireCarousels(container) {
