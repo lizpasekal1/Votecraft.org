@@ -584,7 +584,12 @@
      that instead of reading as one continuous edge. */
   margin: -34px -34px 32px;
   background: var(--primary);
-  border-radius: 0 0 10px 10px;
+  /* Top corners match .modal's own 16px exactly (not the bar's own smaller 10px, and not square) —
+     .modal has no overflow: hidden, so a bled-to-the-edge child with a smaller/no radius on its top
+     corners pokes past the modal's own rounded corner instead of sitting flush within it, per
+     direct request ("the bar should essentially be within the background container of the
+     modal"). Bottom corners keep the bar's own 10px, since they're not at a modal edge. */
+  border-radius: 16px 16px 10px 10px;
   padding-top: 10px;
   padding-bottom: 10px;
   padding-left: 50px; /* 34 (bled-out edge) + 16 (icon clearance) */
