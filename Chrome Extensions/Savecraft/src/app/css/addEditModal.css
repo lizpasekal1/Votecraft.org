@@ -792,14 +792,6 @@
   margin-bottom: 0;
 }
 
-/* Category (moved here from the header, per direct request) has no label of its own, unlike
-   Folder right next to it — flex-end (not the url-pair row's own flex-start above) lines up the
-   two actual <select> boxes at the same height regardless, rather than leaving Category's select
-   sitting higher than Folder's own (which has its label pushing it down). */
-#category-folder-row {
-  align-items: flex-end;
-}
-
 .form-row--url-pair .form-group {
   margin-bottom: 0;
 }
@@ -885,11 +877,10 @@
 
 /* Web Links/Platforms field — 10px less gap above it than the standard 18px between fields, per
    direct request. #platforms-section (non-Music categories, a bare .form-group after
-   #category-folder-row) and #music-url-pair-row (Music categories — #platforms-section instead
-   lives inside this .form-row, sitting right after #category-folder-row too) are the two possible
-   homes for it, covered here directly by id rather than relying on the generic
-   .form-row + .form-group/.form-row + .form-row adjacency rules above (which this still wins
-   against regardless of source order, being ID-scoped). */
+   #folder-select-group) and #music-url-pair-row (Music categories — #platforms-section instead
+   lives inside this .form-row) are the two possible homes for it, covered here directly by id
+   rather than relying on the generic .form-row + .form-group/.form-row + .form-row adjacency
+   rules above (which this still wins against regardless of source order, being ID-scoped). */
 .modal--edit-item #platforms-section,
 .modal--edit-item #music-url-pair-row {
   margin-top: 4px; /* reduced further from 8px, per direct follow-up request */

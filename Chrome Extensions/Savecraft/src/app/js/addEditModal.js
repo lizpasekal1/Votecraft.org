@@ -558,11 +558,10 @@ function showReviewScreen() {
   document.getElementById('modal-step2').style.display = '';
   document.getElementById('modal-info-icon').style.display = ''; // Add flow's review/input screen only, per request — next to Select Lists
   // Add flow shows the saved-lists picker here instead of the category select (Edit's own
-  // openEditModal shows the reverse — see its own comment) — category is already established by
-  // the wizard screens you just came through, so re-showing it as an editable field here would be
-  // redundant; letting you tag the new item into your own saved lists at the same moment is more
-  // useful in this exact spot.
-  document.getElementById('category-folder-row').style.display = 'none';
+  // category select is permanently hidden now regardless — see openEditModal's own comment) —
+  // category is already established by the wizard screens you just came through, so showing it
+  // as an editable field here would be redundant; letting you tag the new item into your own
+  // saved lists at the same moment is more useful in this exact spot.
   document.getElementById('btn-modal-back').style.display = '';
   document.getElementById('btn-modal-save').style.display = '';
   document.getElementById('folder-select-group').style.display = 'none'; // Add flow assigns folder via the wizard screen, not this select
@@ -634,7 +633,7 @@ function backToFolderScreen() {
   _wizardToken += 1;
   document.getElementById('modal-step2').style.display = 'none';
   document.getElementById('modal-step-folder').style.display = '';
-  document.getElementById('category-folder-row').style.display = 'none';
+  document.getElementById('folder-select-group').style.display = 'none';
   document.getElementById('saved-lists-wrap').style.display = 'none';
   document.getElementById('btn-modal-save').style.display = 'none';
   document.getElementById('modal-info-icon').style.display = 'none';
@@ -648,7 +647,7 @@ function backToMusicChoiceScreen() {
   document.getElementById('modal-step2').style.display = 'none';
   document.getElementById('modal-step-folder').style.display = 'none';
   document.getElementById('modal-step-music-choice').style.display = '';
-  document.getElementById('category-folder-row').style.display = 'none';
+  document.getElementById('folder-select-group').style.display = 'none';
   document.getElementById('saved-lists-wrap').style.display = 'none';
   document.getElementById('btn-modal-save').style.display = 'none';
   document.getElementById('modal-info-icon').style.display = 'none';
@@ -670,7 +669,7 @@ function backToCategoryScreen() {
   document.getElementById('modal-step-folder').style.display = 'none';
   document.getElementById('modal-step-music-choice').style.display = 'none';
   document.getElementById('modal-step1').style.display = '';
-  document.getElementById('category-folder-row').style.display = 'none';
+  document.getElementById('folder-select-group').style.display = 'none';
   document.getElementById('saved-lists-wrap').style.display = 'none';
   document.getElementById('btn-modal-back').style.display = 'none';
   document.getElementById('btn-modal-save').style.display = 'none';
@@ -854,7 +853,7 @@ export function openAddModal() {
   document.getElementById('input-image-url').value = '';
   document.getElementById('input-youtube-url').value = '';
   document.getElementById('modal-category').value = '';
-  document.getElementById('category-folder-row').style.display = 'none';
+  document.getElementById('folder-select-group').style.display = 'none';
   document.getElementById('saved-lists-wrap').style.display = 'none';
   document.getElementById('edit-saved-lists-group').style.display = 'none'; // Edit-only — reset in case a prior Edit session left it visible
   _wizardSelectedListIds = new Set();
@@ -902,12 +901,12 @@ export function openEditModal(item) {
   updateTitleSearchUi(item.category, false);
   updateTitleAuthorLayout(item.category, item.folderId);
   updateVideoUrlLayout(item.category, item.folderId);
-  // Category select moved out of the header/purple bar (per direct request) into its own row,
-  // to the left of Folder (#category-folder-row) — populateFolderSelect below still independently
-  // hides just the Folder half of this row for categories with zero folders; the row itself only
-  // tracks Edit mode's own on/off, same lifecycle #edit-saved-lists-group already has.
+  // #modal-category-wrap itself is permanently hidden now (per direct request — "remove the
+  // category drop down lists" from Edit Item), never shown/toggled here at all. Its value is
+  // still kept in sync, though — handleSaveItem() reads #modal-category's own value on save,
+  // Add and Edit alike. Folder's own visibility (#folder-select-group) is handled independently
+  // by populateFolderSelect below, which hides it for categories with zero folders.
   document.getElementById('modal-category').value = item.category || '';
-  document.getElementById('category-folder-row').style.display = '';
   document.getElementById('saved-lists-wrap').style.display = 'none'; // Add-only — see showReviewScreen's own comment
   // Edit's own Saved Lists field, per direct request — seeded from the item's current
   // savedListIds (not a fresh empty Set, unlike Add's own reset in openAddModal below) so the
