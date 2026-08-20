@@ -392,7 +392,13 @@ export function renderSidebar() {
         leadText: 'Opening saves by:',
         leadColor: 'var(--primary)',
         openLabel: 'Explore',
-        onConfirm: () => navigateToView('genre:Top 100', { sidebarMode: 'curated' }),
+        // Collapses the Curated Lists accordion back closed once the popup's own Explore is
+        // actually clicked, per direct request — navigateToView's own re-render (navigation.js)
+        // picks this up, no separate renderSidebar() call needed here.
+        onConfirm: () => {
+          state.collapsed.add('curated-lists');
+          navigateToView('genre:Top 100', { sidebarMode: 'curated' });
+        },
       });
     });
   }
@@ -640,7 +646,10 @@ export function renderSidebar() {
         subtitle: 'The sidebar will switch to display only saves from this list. Return to your full collection at any time!',
         icon: SAVED_LISTS_ICON_SVG,
         leadColor: 'var(--primary)',
+        // Collapses the Saved Lists accordion back closed once Open is actually clicked, per
+        // direct request — navigateToView's own re-render (navigation.js) picks this up.
         onConfirm: () => {
+          state.collapsed.add('saved-lists');
           if (el.dataset.view === 'savedlist:default-favorites') {
             navigateToView('dashboard', { sidebarMode: 'home', activeCuratedFolderId: null });
           } else {
