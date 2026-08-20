@@ -602,7 +602,7 @@
   padding-top: 10px;
   padding-bottom: 10px;
   padding-left: 50px; /* 34 (bled-out edge) + 16 (icon clearance) */
-  padding-right: 24px; /* 34 (bled-out edge) minus 10 — closer to the corner than the left side's 50px, per direct request to push #btn-modal-save further into the right corner */
+  padding-right: 34px; /* 24 + 10 — moved #btn-modal-save 10px back to the left, per direct follow-up request */
 }
 
 /* White, not the shared h2's default var(--text-primary) — that reads dark-on-purple in light
