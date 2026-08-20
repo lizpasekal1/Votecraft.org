@@ -22,7 +22,7 @@ import {
   openEditModal, selectStep1Category, handleTitleSearch, hideTitleSearchResults, kickOffTitleEnrichment,
   handleModalBack, refreshStep2ImagePreviewFromManualInput, updateCategoryDependentUi, showInfoScreen,
 } from './addEditModal.js';
-import { closeDetailModal, closeImageLightbox, getDetailItem, showNextImage, showPrevImage, handleGalleryLoadMoreClick, closeVideoLightbox } from './detailModal.js';
+import { openDetailModal, closeDetailModal, closeImageLightbox, getDetailItem, showNextImage, showPrevImage, handleGalleryLoadMoreClick, closeVideoLightbox } from './detailModal.js';
 import { initNoteToolbar } from './detailModalNotes.js';
 import { closeVoiceNoteModal, initVoiceNoteModal } from './voiceNotes.js';
 import { closeFetchAlbumsModal, handleImportAlbums, renderFetchAlbumsList } from './fetchAlbumsModal.js';
@@ -938,7 +938,21 @@ async function init() {
     setTimeout(hideTitleSearchResults, 150);
     kickOffTitleEnrichment();
   });
-  document.getElementById('btn-modal-back').addEventListener('click', handleModalBack);
+  document.getElementById('btn-modal-back').addEventListener('click', () => {
+    // Edit Item's own back arrow (state.editingId is only ever set while editing an existing item —
+    // see openEditModal) — returns to that same item's detail/preview modal instead of the Add
+    // wizard's category/folder back-navigation, which doesn't apply to Edit at all (there's no
+    // wizard history to step back through). Mirrors #detail-edit's own forward direction just
+    // below (close detail, open edit) in reverse.
+    if (state.editingId) {
+      const editingId = state.editingId;
+      closeAddModal();
+      const item = state.items.find(i => i.id === editingId);
+      if (item) openDetailModal(item);
+      return;
+    }
+    handleModalBack();
+  });
   document.getElementById('input-image-url').addEventListener('input', refreshStep2ImagePreviewFromManualInput);
 
 
