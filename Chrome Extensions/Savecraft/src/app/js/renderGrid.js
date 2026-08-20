@@ -155,6 +155,19 @@ export function renderGrid() {
 
   container.className = 'cards-grid';
 
+  // "Sources | Civics" — appended to the page's own title while browsing inside a scoped Saved
+  // List, so it stays visible even on a plain category/folder page whose own name isn't the
+  // list's. Purple + a real link back to that list's own landing card (savedlist:<id>), same
+  // destination the sidebar's own "‹ Civics" back-button already goes to. Only the two branches
+  // below that show a real category/folder page use it — genre:/author:/etc. pages never carry an
+  // active list scope in the first place (navigateToView's default-clear behavior).
+  const scopedListName = state.activeSavedListId
+    ? state.savedLists.find(l => l.id === state.activeSavedListId)?.name
+    : null;
+  const scopedListSuffix = scopedListName
+    ? ` <button type="button" class="grid-title-scope-link" data-list-id="${escapeHtml(state.activeSavedListId)}">| ${escapeHtml(scopedListName)}</button>`
+    : '';
+
   if (state.view === 'all') {
     gridTitle.textContent = 'All Items';
   } else if (state.view.startsWith('genre:')) {
@@ -190,7 +203,7 @@ export function renderGrid() {
       navigateToView(e.currentTarget.dataset.view);
     });
   } else if (CATEGORIES.includes(state.view)) {
-    gridTitle.innerHTML = `${CAT_EMOJI[state.view]} ${CAT_LABEL[state.view] || state.view}`;
+    gridTitle.innerHTML = `${CAT_EMOJI[state.view]} ${CAT_LABEL[state.view] || state.view}${scopedListSuffix}`;
   } else {
     const folder = state.folders.find(f => f.id === state.view);
     // News outlet folders double as "publication profile pages" — a richer header (domain +
@@ -199,11 +212,18 @@ export function renderGrid() {
     if (folder && folder.parentCategory === 'News') {
       const domainHtml = folder.domain ? `<span class="grid-title-domain">${escapeHtml(folder.domain)}</span>` : '';
       const paywalledHtml = folder.paywalled ? `<span class="grid-title-paywalled-badge">Paywalled</span>` : '';
-      gridTitle.innerHTML = `${escapeHtml(folder.name)} ${domainHtml}${paywalledHtml}`;
+      gridTitle.innerHTML = `${escapeHtml(folder.name)} ${domainHtml}${paywalledHtml}${scopedListSuffix}`;
     } else {
-      gridTitle.textContent = folder ? folder.name : 'Folder';
+      gridTitle.innerHTML = `${escapeHtml(folder ? folder.name : 'Folder')}${scopedListSuffix}`;
     }
   }
+
+  // scopedListSuffix's own link — stopPropagation not needed (unlike the sidebar's equivalent
+  // click handlers) since the page title itself has no click behavior of its own to collide with.
+  document.querySelector('.grid-title-scope-link')?.addEventListener('click', () => {
+    const listId = document.querySelector('.grid-title-scope-link').dataset.listId;
+    navigateToView(`savedlist:${listId}`, { activeSavedListId: listId });
+  });
 
   const items = getFilteredSortedItems();
 
