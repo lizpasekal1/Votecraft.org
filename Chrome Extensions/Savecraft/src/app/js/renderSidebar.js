@@ -15,6 +15,7 @@ import { matchesPrimaryOrUnfoldered } from './renderFilters.js';
 import { renderGrid } from './renderGrid.js';
 import { storageSync } from './platform.js';
 import { navigateToView } from './navigation.js';
+import { openSwitchConfirm } from './confirmModal.js';
 
 // Collapses every accordion in the sidebar — Dashboard, Saved Lists, Curated Lists, and every
 // real category (Music Album excluded, same as sidebarCategoryList's own filter further down;
@@ -585,7 +586,7 @@ export function renderSidebar() {
   // data-view ("savedlist:<id>") and fall through to the generic handler below. Curated Lists —
   // both its toggle row and its children — still has no real destination, so both stay excluded
   // so a click doesn't set state.view to undefined and break navigation).
-  sidebar.querySelectorAll('.sidebar-subfolder:not(.sidebar-kanban-link):not(.sidebar-admin-kanban-link):not(.sidebar-saved-lists-link):not(.sidebar-curated-lists-link):not(.sidebar-curated-lists-child)').forEach(el => {
+  sidebar.querySelectorAll('.sidebar-subfolder:not(.sidebar-kanban-link):not(.sidebar-admin-kanban-link):not(.sidebar-saved-lists-link):not(.sidebar-curated-lists-link):not(.sidebar-curated-lists-child):not(.sidebar-saved-lists-child)').forEach(el => {
     el.addEventListener('click', () => {
       if (isCuratedGenre && el.dataset.permanent) {
         navigateToView(`genre:${curatedGenreBase}:${el.dataset.view}`, { activeCuratedFolderId: null });
@@ -595,15 +596,33 @@ export function renderSidebar() {
         // folder's own id, which naturally resolves to an empty list). See the curatedTarget
         // computation in the row-render above for the full explanation.
         navigateToView(`genre:${curatedGenreBase}:${el.dataset.curatedTarget}`, { activeCuratedFolderId: el.dataset.view });
-      } else if (el.dataset.view === 'savedlist:default-favorites') {
-        // "All My Saves" — the built-in catch-all Saved List — is the same destination as the
-        // Dashboard link itself (per direct request), not the generic savedlist: placeholder
-        // landing card every other Saved List still shows. sidebarMode matches wireDashboardLink's
-        // own 'home' above so this reads as the same navigation, just from a different row.
-        navigateToView('dashboard', { sidebarMode: 'home', activeCuratedFolderId: null });
       } else {
         navigateToView(el.dataset.view, { activeCuratedFolderId: null });
       }
+    });
+  });
+
+  // Saved Lists' own rows (radio dot + name) — pulled out of the generic handler above so tapping
+  // one pauses for a "You're opening X" confirmation first, per direct request, rather than
+  // switching immediately. "All My Saves" keeps its existing special-case destination (the same
+  // Dashboard/home landing the Dashboard link itself uses, not the generic savedlist: placeholder
+  // every other list still shows) — just now behind the same confirm step as every other list.
+  sidebar.querySelectorAll('.sidebar-saved-lists-child').forEach(el => {
+    el.addEventListener('click', () => {
+      const listId = el.dataset.view?.replace(/^savedlist:/, '');
+      const list = state.savedLists.find(l => l.id === listId);
+      openSwitchConfirm({
+        name: list?.name || el.textContent.trim(),
+        subtitle: 'The sidebar will change to display saves from this list. Switch lists at any time!',
+        icon: SAVED_LISTS_ICON_SVG,
+        onConfirm: () => {
+          if (el.dataset.view === 'savedlist:default-favorites') {
+            navigateToView('dashboard', { sidebarMode: 'home', activeCuratedFolderId: null });
+          } else {
+            navigateToView(el.dataset.view, { activeCuratedFolderId: null });
+          }
+        },
+      });
     });
   });
 

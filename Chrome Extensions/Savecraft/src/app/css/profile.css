@@ -229,6 +229,25 @@
   font-size: 16px;
   white-space: nowrap;
 }
+/* Optional icon (see confirmModal.js's openSwitchConfirm) — a circle carrying whatever identity
+   the thing being opened already has (a Shared Saves card's own avatar color/content, or a
+   sidebar list's purple icon badge), sitting centered between the title and the body copy. */
+.switch-confirm-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px auto 12px;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  overflow: hidden;
+}
+.switch-confirm-icon img { width: 100%; height: 100%; object-fit: cover; }
+.switch-confirm-icon svg { width: 22px; height: 22px; fill: #fff; }
+
 .vc-wallet-modal .modal-body p {
   color: #4B5563;
   text-align: center;
