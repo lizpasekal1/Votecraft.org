@@ -22,6 +22,15 @@
   margin-left: auto;
 }
 
+/* Top 100 category pages only (renderGrid.js) — the publication logo (Rolling Stone/Steam/NYT),
+   moved here from inline in the title itself, per direct request, so it sits on the same row as
+   the sort dropdown instead of next to the title text above. :empty (every other view — the slot
+   is reset to '' by default in renderGrid.js) means it doesn't consume .grid-header's own gap
+   space when there's nothing in it. */
+.grid-header-logo-slot:empty {
+  display: none;
+}
+
 .grid-title {
   display: flex;
   align-items: center;
@@ -85,19 +94,15 @@
   padding: 2px 8px;
 }
 
+/* .nyt-logo-wrap/.rs-logo-wrap/.steam-logo-wrap: now only ever used inside #grid-header-logo-slot
+   (.grid-header's own left slot), not inline next to title text anymore (moved out per direct
+   request) — the divider bar these each used to draw against preceding text (::before, removed)
+   and the small left margin that assumed that same preceding text (also removed) no longer apply
+   as the first/only thing in their own row. */
 .nyt-logo-wrap {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin-left: 4px;
-}
-
-.nyt-logo-wrap::before {
-  content: '';
-  display: inline-block;
-  width: 1px;
-  height: 18px;
-  background: rgba(255,255,255,0.25);
 }
 
 .nyt-logo-wrap svg {
@@ -111,15 +116,6 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin-left: 4px;
-}
-
-.rs-logo-wrap::before {
-  content: '';
-  display: inline-block;
-  width: 1px;
-  height: 18px;
-  background: rgba(255,255,255,0.25);
 }
 
 .rs-logo-img {
@@ -134,15 +130,6 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin-left: 4px;
-}
-
-.steam-logo-wrap::before {
-  content: '';
-  display: inline-block;
-  width: 1px;
-  height: 18px;
-  background: rgba(255,255,255,0.25);
 }
 
 .steam-logo-img {
@@ -151,9 +138,6 @@
   display: block;
   opacity: 0.7;
   filter: brightness(0) invert(1);
-  /* Taller than the title text/other logos — cancel the extra height it would otherwise add
-     to .grid-title's row so this page's header isn't taller than every other category page. */
-  margin: -10px 0;
 }
 
 .nyt-logo-wrap,
