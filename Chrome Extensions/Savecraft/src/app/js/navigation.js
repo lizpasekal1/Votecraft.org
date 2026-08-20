@@ -11,8 +11,8 @@
 // the requested path as `/` and needs none. encodeURIComponent also losslessly round-trips every
 // current view-string shape (colons in `author:Musician:Name`, spaces in `Top 100`, arbitrary
 // folder ids) with no custom parsing. Everything else worth restoring (sidebarMode,
-// activeCuratedFolderId, authorReturnView) travels in history.state instead of the URL, handed
-// straight back on popstate — keeps the URL itself minimal and stable.
+// activeCuratedFolderId, authorReturnView, activeSavedListId) travels in history.state instead of
+// the URL, handed straight back on popstate — keeps the URL itself minimal and stable.
 //
 // See main.js's popstate listener for the read side of this, and its init() for how the very
 // first paint resolves either a `?v=` in the URL or the last-stored view into one replaceState.
@@ -28,12 +28,18 @@ import { renderSidebar, renderGrid } from './render.js';
 const NON_HISTORY_VIEWS = new Set(['embed-builder']);
 
 export function navigateToView(view, opts = {}) {
-  const { sidebarMode, activeCuratedFolderId, authorReturnView, replace = false } = opts;
+  const { sidebarMode, activeCuratedFolderId, authorReturnView, activeSavedListId, replace = false } = opts;
 
   state.view = view;
   if (sidebarMode !== undefined) state.sidebarMode = sidebarMode;
   if (activeCuratedFolderId !== undefined) state.activeCuratedFolderId = activeCuratedFolderId;
   if (authorReturnView !== undefined) state.authorReturnView = authorReturnView;
+  // Opposite default from the three fields above (which only overwrite when passed, else stay
+  // unchanged) — this one resolves to null on every navigation unless a caller explicitly passes
+  // a value, so the ~25 call sites elsewhere in the app that never mention it correctly clear any
+  // active Saved List scope by default; only the sidebar's own category/subfolder clicks (which
+  // preserve it) and the Saved List row itself (which sets it) need to say otherwise.
+  state.activeSavedListId = activeSavedListId ?? null;
 
   if (!NON_HISTORY_VIEWS.has(view)) {
     const historyState = {
@@ -41,6 +47,7 @@ export function navigateToView(view, opts = {}) {
       sidebarMode: state.sidebarMode,
       activeCuratedFolderId: state.activeCuratedFolderId,
       authorReturnView: state.authorReturnView,
+      activeSavedListId: state.activeSavedListId,
     };
     const url = `?v=${encodeURIComponent(view)}`;
     if (replace) history.replaceState(historyState, '', url);

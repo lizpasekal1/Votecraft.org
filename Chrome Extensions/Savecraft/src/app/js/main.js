@@ -505,6 +505,7 @@ function _handlePopstate(e) {
     if (e.state.sidebarMode !== undefined) state.sidebarMode = e.state.sidebarMode;
     state.activeCuratedFolderId = e.state.activeCuratedFolderId ?? null;
     state.authorReturnView = e.state.authorReturnView ?? null;
+    state.activeSavedListId = e.state.activeSavedListId ?? null;
   }
   renderSidebar();
   renderGrid();
