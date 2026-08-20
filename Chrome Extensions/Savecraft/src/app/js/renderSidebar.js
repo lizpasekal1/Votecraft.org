@@ -179,18 +179,6 @@ export function renderSidebar() {
   function activeListScope(item) {
     return !state.activeSavedListId || (item.savedListIds || []).includes(state.activeSavedListId);
   }
-  // Suffix appended to every category header's own label while browsing inside a Saved List — e.g.
-  // "Sources | Civics" — so it stays visually obvious which list is scoping the grid/counts even
-  // once you've drilled into a plain category and its own name (not the list's) is what's showing.
-  const scopedListName = state.activeSavedListId
-    ? state.savedLists.find(l => l.id === state.activeSavedListId)?.name
-    : null;
-  // data-scope-list-link carries the list id for the click handler below (wired once per render,
-  // same as every other data-attribute-driven sidebar row) — a real link to that list's own
-  // landing card, not just a static label, per direct request.
-  const scopedListLabel = scopedListName
-    ? ` <span class="sidebar-cat-scope-label" data-scope-list-link="${escapeHtml(state.activeSavedListId)}">| ${escapeHtml(scopedListName)}</span>`
-    : '';
 
   const headerTitleEl = document.getElementById('sidebar-header-title');
   const isCuratedDrilldown = state.sidebarMode === 'curated' && sidebarEffectiveView.startsWith('genre:');
@@ -633,7 +621,7 @@ export function renderSidebar() {
         <div class="sidebar-group-bg" style="view-transition-name: ${sidebarGroupVtName(cat)}"></div>
         <div class="sidebar-item sidebar-category ${isActive ? 'active' : ''}"
              data-view="${cat}" data-toggle="${cat}">
-          <span class="sidebar-label"><span class="cat-icon">${CAT_EMOJI[cat] || ''}</span><span class="sidebar-label-text"> ${CAT_LABEL[cat] || cat}${scopedListLabel}</span></span>
+          <span class="sidebar-label"><span class="cat-icon">${CAT_EMOJI[cat] || ''}</span><span class="sidebar-label-text"> ${CAT_LABEL[cat] || cat}</span></span>
           <span class="sidebar-right"><span class="sidebar-arrow">${arrow}</span></span>
         </div>
         ${expandedContent}
@@ -679,18 +667,6 @@ export function renderSidebar() {
         // below for the full reasoning; this is the same fix for the category-header click.
         navigateToView(isCuratedGenre ? `genre:${curatedGenreBase}:${cat}` : cat, { activeCuratedFolderId: null, activeSavedListId: state.activeSavedListId });
       });
-    });
-  });
-
-  // "Sources | Civics" — the list-name half of a scoped category header's own label. A real link
-  // back to that list's own landing card (savedlist:<id>), same destination the "‹ Civics" sidebar
-  // title/back-button already goes to — stopPropagation so this doesn't also trigger the parent
-  // .sidebar-category row's own click handler (collapse/expand + switch to the plain category).
-  sidebar.querySelectorAll('.sidebar-cat-scope-label').forEach(el => {
-    el.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const listId = el.dataset.scopeListLink;
-      navigateToView(`savedlist:${listId}`, { activeSavedListId: listId });
     });
   });
 

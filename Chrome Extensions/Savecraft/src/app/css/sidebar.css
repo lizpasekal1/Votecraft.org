@@ -517,22 +517,6 @@
   color: var(--primary);
 }
 
-/* "Sources | Civics" — the active Saved List's name, appended to every category header's own
-   label while browsing inside that list (renderSidebar.js). Purple + slightly smaller/lighter
-   than the category name itself so it reads as a scope tag, not part of the category's own name.
-   Also a real link back to that list's own landing card — cursor/underline-on-hover mark it as
-   clickable, distinct from the rest of the (non-clickable-on-its-own) category label around it. */
-.sidebar-cat-scope-label {
-  color: var(--primary);
-  font-weight: 600;
-  font-size: 0.9em;
-  cursor: pointer;
-}
-
-.sidebar-cat-scope-label:hover {
-  text-decoration: underline;
-}
-
 .sidebar-right {
   display: flex;
   align-items: center;
