@@ -242,8 +242,8 @@
   /* -9px top: the shared .modal-header already carries its own 24px margin-bottom (addEditModal.
      css) before this element even starts — negative offset pulls the icon up so the real gap
      under the title lands at 15px total, per direct request, rather than adding this on top of
-     that 24px for ~28px. */
-  margin: -9px auto 12px;
+     that 24px for ~28px. 22px bottom (was 12px) — an explicit +10px per direct follow-up request. */
+  margin: -9px auto 22px;
   color: #fff;
   font-size: 20px;
   font-weight: 700;
