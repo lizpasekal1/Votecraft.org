@@ -398,6 +398,10 @@ export function renderSidebar() {
       // curated list for Dashboard is the same kind of bigger context switch.
       if (state.activeSavedListId || state.sidebarMode === 'curated') {
         openSwitchConfirm({
+          // leadText: '' suppresses openSwitchConfirm's default "You're opening" lead line —
+          // name alone then reads as a plain title, "Entering Dashboard", per direct request.
+          name: 'Entering Dashboard',
+          leadText: '',
           subtitle: 'Returning to your dashboard switches the sidebar to display your full saves library',
           openLabel: 'Okay',
           onConfirm: doNavigate,

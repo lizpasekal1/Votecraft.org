@@ -26,12 +26,19 @@ import { escapeHtml } from './utils.js';
 // cards pass "Explore" instead, per direct request.
 // name: optional — omit for a plain message-only confirm (no title/icon at all), e.g. "return to
 // Dashboard?" style prompts that aren't about opening a specific named thing.
+// leadText: pass '' (not just omit — the default is "You're opening", not empty) to show name
+// alone as a plain title with no lead line above it at all, e.g. "Entering Dashboard" — the
+// h2's own flex-column layout (profile.css) would otherwise leave a stray empty line/gap where
+// the lead span used to be.
 export function openSwitchConfirm({ name, subtitle, icon, iconColor, leadText = "You're opening", leadColor, openLabel = 'Open', onConfirm }) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay open';
+  const leadHtml = leadText
+    ? `<span class="vc-wallet-modal-title-lead"${leadColor ? ` style="color:${escapeHtml(leadColor)}"` : ''}>${escapeHtml(leadText)}</span>`
+    : '';
   overlay.innerHTML = `
     <div class="modal vc-wallet-modal" style="position:relative; width:360px;">
-      ${name ? `<div class="modal-header"><h2><span class="vc-wallet-modal-title-lead"${leadColor ? ` style="color:${escapeHtml(leadColor)}"` : ''}>${escapeHtml(leadText)}</span><span class="vc-wallet-modal-title-emphasis">${escapeHtml(name)}</span></h2></div>` : ''}
+      ${name ? `<div class="modal-header"><h2>${leadHtml}<span class="vc-wallet-modal-title-emphasis">${escapeHtml(name)}</span></h2></div>` : ''}
       ${icon ? `<div class="switch-confirm-icon" style="background:${escapeHtml(iconColor || 'var(--primary)')}">${icon}</div>` : ''}
       <div class="modal-body">
         <p>${escapeHtml(subtitle)}</p>
