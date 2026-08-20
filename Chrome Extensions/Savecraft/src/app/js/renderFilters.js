@@ -16,6 +16,15 @@ export function matchesPrimaryOrUnfoldered(item, category) {
   return item.category === category && (!primaryId || item.folderId === primaryId || !item.folderId);
 }
 
+// Whether item belongs to the currently active Saved List scope (state.activeSavedListId) —
+// trivially true when nothing's scoped. Shared by getFilteredSortedItems()'s category/folder
+// branches below and renderSidebar.js's own folder/subfolder count badges, so there's exactly one
+// implementation of "does this item belong to the currently-scoped Saved List" rather than the
+// same membership check copy-pasted at each call site.
+export function matchesActiveSavedListScope(item) {
+  return !state.activeSavedListId || (item.savedListIds || []).includes(state.activeSavedListId);
+}
+
 // Resolves a raw (pre-merge) curated item's creator name, trying every source in the same order
 // the main genre: view branch above does — an explicit .author field, then the Book-style split
 // title, then the static Movie/Show/Game lookup. Used to match curated items against an author
@@ -159,11 +168,6 @@ export function getFilteredSortedItems() {
     // A top-level tab shows only its "primary" folder's items, plus anything with no folder
     // assigned yet — see matchesPrimaryOrUnfoldered() above.
     items = items.filter(i => matchesPrimaryOrUnfoldered(i, state.view));
-    // Browsing this category "inside" a Saved List (renderSidebar.js preserves
-    // state.activeSavedListId across category clicks) — narrow down to just that list's items,
-    // same membership check the savedlist: branch above already uses. default-favorites never
-    // sets this field (it's the unrestricted catch-all), so no favorite/savedListIds ambiguity.
-    if (state.activeSavedListId) items = items.filter(i => (i.savedListIds || []).includes(state.activeSavedListId));
   } else {
     const folder = state.folders.find(f => f.id === state.view);
     const isPrimaryFolder = folder && PRIMARY_FOLDER_ID[folder.parentCategory] === folder.id;
@@ -171,8 +175,15 @@ export function getFilteredSortedItems() {
       // Clicking the primary folder directly shows exactly what its category tab shows.
       ? items.filter(i => matchesPrimaryOrUnfoldered(i, folder.parentCategory))
       : items.filter(i => i.folderId === state.view);
-    if (state.activeSavedListId) items = items.filter(i => (i.savedListIds || []).includes(state.activeSavedListId));
   }
+
+  // Browsing a category or folder "inside" a Saved List (renderSidebar.js preserves
+  // state.activeSavedListId across category/subfolder clicks) — narrow down to just that list's
+  // items, via the same membership check the savedlist: branch above already uses. Applied once
+  // here (only the two branches above can actually reach this with activeSavedListId set) rather
+  // than duplicated into each one. default-favorites never sets this field (it's the unrestricted
+  // catch-all), so no favorite/savedListIds ambiguity.
+  if (state.activeSavedListId) items = items.filter(matchesActiveSavedListScope);
 
   // Search filter
   if (state.search) {

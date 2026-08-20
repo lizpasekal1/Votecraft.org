@@ -11,7 +11,7 @@ import {
 import { getCurrentUser } from './auth.js';
 import { persistItem, persistFolder, removeFolder, persistSavedLists } from './storage.js';
 import { closeSidebar } from './main.js';
-import { matchesPrimaryOrUnfoldered } from './renderFilters.js';
+import { matchesPrimaryOrUnfoldered, matchesActiveSavedListScope } from './renderFilters.js';
 import { renderGrid } from './renderGrid.js';
 import { storageSync } from './platform.js';
 import { navigateToView } from './navigation.js';
@@ -156,39 +156,34 @@ export function renderSidebar() {
   } else if (state.sidebarMode === 'shared') {
     sidebarTitle = 'Shared Saves';
   }
-  // Returns null (no restriction — the default) or a Set<folderId> of folders allowed to appear
-  // while browsing a Saved List that's been scoped via Profile > Saved Lists (profile.js). "All
-  // Saves" (default-favorites) is the catch-all and is never restricted, regardless of its own
-  // allowedFolderIds field (which the Profile widget never sets — it excludes that list entirely).
-  function activeSavedListFolderScope() {
-    // state.activeSavedListId (set on open, preserved across category clicks) covers browsing
-    // within the list; the sidebarEffectiveView check stays as a fallback for the landing card
-    // itself immediately after a popstate restore, before a re-render has re-derived the former.
+  // Which Saved List id (if any) the sidebar is currently scoped to — prefers
+  // state.activeSavedListId (covers browsing within the list's categories/subfolders), falling
+  // back to parsing sidebarEffectiveView's own 'savedlist:<id>' prefix (covers the list's own
+  // landing card right after a popstate restore, before a re-render has re-derived the former).
+  // "All Saves" (default-favorites) is the unrestricted catch-all, never a real scoped list — every
+  // caller below wants null instead of that literal id.
+  function _scopedListId() {
     const listId = state.activeSavedListId
       || (sidebarEffectiveView.startsWith('savedlist:') ? sidebarEffectiveView.slice(10) : null);
-    if (!listId || listId === 'default-favorites') return null;
+    return listId === 'default-favorites' ? null : listId;
+  }
+  // Returns null (no restriction — the default) or a Set<folderId> of folders allowed to appear
+  // while browsing a Saved List that's been scoped via Profile > Saved Lists (profile.js).
+  function activeSavedListFolderScope() {
+    const listId = _scopedListId();
+    if (!listId) return null;
     const list = state.savedLists.find(l => l.id === listId);
     return list?.allowedFolderIds ? new Set(list.allowedFolderIds) : null;
   }
   const folderScope = activeSavedListFolderScope();
-  // Same savedListIds membership check getFilteredSortedItems() (renderFilters.js) applies to the
-  // grid itself — reused here for the sidebar's own folder/subfolder count badges, which were
-  // computed straight off state.items with no scoping at all (reported live: a freshly-created,
-  // still-empty Saved List's own folders kept showing the full unscoped counts, e.g. "3"/"2",
-  // instead of 0/no badge).
-  function activeListScope(item) {
-    return !state.activeSavedListId || (item.savedListIds || []).includes(state.activeSavedListId);
-  }
 
   const headerTitleEl = document.getElementById('sidebar-header-title');
   const isCuratedDrilldown = state.sidebarMode === 'curated' && sidebarEffectiveView.startsWith('genre:');
-  // "default-favorites" (All My Saves) excluded — its title already reads the generic "My Saves"
-  // rather than a specific list name (see sidebarTitle computation above), so a "back to this
-  // list's own landing" button wouldn't read as meaningfully different from just being here.
-  // state.activeSavedListId covers browsing within the list's categories; the sidebarEffectiveView
-  // check alone still covers the landing card itself right after a popstate restore.
-  const isNamedSavedList = !!state.activeSavedListId
-    || (sidebarEffectiveView.startsWith('savedlist:') && sidebarEffectiveView.slice(10) !== 'default-favorites');
+  // "default-favorites" (All My Saves) excluded via _scopedListId() — its title already reads the
+  // generic "My Saves" rather than a specific list name (see sidebarTitle computation above), so a
+  // "back to this list's own landing" button wouldn't read as meaningfully different from just
+  // being here.
+  const isNamedSavedList = !!_scopedListId();
   if (isCuratedDrilldown || isNamedSavedList) {
     const backTitle = isCuratedDrilldown ? 'Back to genres' : `Back to ${sidebarTitle}`;
     headerTitleEl.innerHTML = `<button class="sidebar-back-btn" id="sidebar-back-btn" title="${escapeHtml(backTitle)}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg><span>${escapeHtml(sidebarTitle)}</span></button>`;
@@ -199,11 +194,9 @@ export function renderSidebar() {
     e.stopPropagation();
     // Saved List title — always back to that exact list's own landing card, per direct request
     // ("standardize" this the same way VoteCraft's own title now always returns to its landing
-    // page regardless of how deep you've navigated since — see the genre: branch below). Reads
-    // the target list id from state.activeSavedListId first (works from anywhere inside the
-    // list's categories), falling back to sidebarEffectiveView for the landing-card-only case.
+    // page regardless of how deep you've navigated since — see the genre: branch below).
     if (isNamedSavedList) {
-      const listId = state.activeSavedListId || sidebarEffectiveView.slice(10);
+      const listId = _scopedListId();
       navigateToView(`savedlist:${listId}`, { activeSavedListId: listId });
       return;
     }
@@ -524,11 +517,11 @@ export function renderSidebar() {
       // Queue-demo cards excluded from every real count here — same reasoning as
       // renderFilters.js's getFilteredSortedItems() (they're Kanban-demo placeholders, not real
       // saves, but were still showing up as a phantom "1" badge on whichever folder their
-      // category happens to land on). activeListScope() below narrows the same way
+      // category happens to land on). matchesActiveSavedListScope() narrows the same way
       // getFilteredSortedItems() does when browsing inside a Saved List (reported live: an
       // unscoped count badge kept showing e.g. "3"/"2" on a list's own folders even though
       // nothing had actually been added to that list yet).
-      : state.items.filter(i => !isQueueDemoId(i.id) && matchesPrimaryOrUnfoldered(i, 'Music Album') && activeListScope(i)).length;
+      : state.items.filter(i => !isQueueDemoId(i.id) && matchesPrimaryOrUnfoldered(i, 'Music Album') && matchesActiveSavedListScope(i)).length;
     const musicAlbumCountLabel = musicAlbumCount > 0 ? `<span class="sidebar-count">${musicAlbumCount}</span>` : '';
     // Music Album isn't part of sidebarCategoryList's own loop (it's excluded above, line
     // 322-323) — it only ever shows via this "Albums" link nested under Musician, routed through
@@ -567,8 +560,8 @@ export function renderSidebar() {
         || (FOLDER_SHOWS_FULL_CURATED_CATEGORY.has(folder.id) ? cat : folder.id);
       const fCount = isCuratedGenre
         ? (CURATED_ITEMS[curatedGenreBase]?.[curatedTarget]?.length ?? 0)
-        // activeListScope() below narrows this the same way musicAlbumCount above does.
-        : state.items.filter(i => !isQueueDemoId(i.id) && (isPrimaryFolder ? matchesPrimaryOrUnfoldered(i, cat) : i.folderId === folder.id) && activeListScope(i)).length;
+        // matchesActiveSavedListScope() narrows this the same way musicAlbumCount above does.
+        : state.items.filter(i => !isQueueDemoId(i.id) && (isPrimaryFolder ? matchesPrimaryOrUnfoldered(i, cat) : i.folderId === folder.id) && matchesActiveSavedListScope(i)).length;
       const fCountLabel = fCount > 0 ? `<span class="sidebar-count">${fCount}</span>` : '';
       // Official/default folders (seeded in storage.js's `defaults` array, always id-prefixed
       // "default-") can't be deleted from the sidebar — only user-created ones (Date.now() ids) can.

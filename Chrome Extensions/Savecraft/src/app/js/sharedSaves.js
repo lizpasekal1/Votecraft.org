@@ -47,11 +47,12 @@ export const DEMO_FRIENDS = [
 ];
 
 // One reusable vertical-card carousel builder — avatar circle, name, tagline, a title/tag pill —
-// shared by both sections below so they read as the same visual language.
-// isListCard: true for all three sliders (nonprofit orgs, group lists, Friends) — every card gets
-// the "You're opening X" confirm popup on tap (see wireListCardConfirm below), matching the same
-// pause-before-switching pattern the sidebar's own Saved Lists/Curated Lists rows use.
-function buildVerticalCardSlider({ sectionClass, title, mobileTitle, cards, isListCard }) {
+// shared by both sections below so they read as the same visual language. Every card gets the
+// "You're opening X" confirm popup on tap (see wireListCardConfirm below), matching the same
+// pause-before-switching pattern the sidebar's own Saved Lists/Curated Lists rows use — all three
+// callers below (nonprofit orgs, group lists, Friends) want this, so it's unconditional rather
+// than a per-call opt-in nothing currently opts out of.
+function buildVerticalCardSlider({ sectionClass, title, mobileTitle, cards }) {
   const tripled = [...cards, ...cards, ...cards];
   const cardsHtml = tripled.map((c, i) => {
     // Progressive List's logo specifically needs a white backdrop to read correctly; Votecraft
@@ -64,7 +65,7 @@ function buildVerticalCardSlider({ sectionClass, title, mobileTitle, cards, isLi
       ? `<img src="${escapeHtml(resolveOrgImageUrl(c.imageUrl))}" alt="" loading="lazy" decoding="async">`
       : (c.icon || PLACEHOLDER_IMAGE_SVG);
     return `
-      <div class="shared-vcard${isListCard ? ' shared-vcard--list' : ''}" data-card-name="${escapeHtml(c.name)}">
+      <div class="shared-vcard shared-vcard--list" data-card-name="${escapeHtml(c.name)}">
         <div class="shared-vcard-avatar" style="background:${color}">${avatarContent}</div>
         <span class="shared-vcard-name">${escapeHtml(c.name)}</span>
         ${c.tagline ? `<span class="shared-vcard-tagline">${escapeHtml(c.tagline)}</span>` : ''}
@@ -111,17 +112,17 @@ function buildNonprofitSliderSection() {
         : orgs.slice(0, 1);
       return picks.map(org => ({ name: org.name.replace(/\s+List$/i, ''), tagline: org.tagline, tag: label, icon: org.icon, imageUrl: org.imageUrl }));
     });
-  return buildVerticalCardSlider({ sectionClass: 'shared-card--nonprofits', title: "Curated Lists You've Connected", mobileTitle: 'Cause Curated Lists', cards, isListCard: true });
+  return buildVerticalCardSlider({ sectionClass: 'shared-card--nonprofits', title: "Curated Lists You've Connected", mobileTitle: 'Cause Curated Lists', cards });
 }
 
 function buildGroupListsSliderSection() {
   const cards = DEMO_GROUP_LISTS.map(g => ({ name: g.name, tagline: g.tagline, icon: g.icon }));
-  return buildVerticalCardSlider({ sectionClass: 'shared-card--group-lists', title: "Group Lists You've Connected", mobileTitle: 'Group Lists', cards, isListCard: true });
+  return buildVerticalCardSlider({ sectionClass: 'shared-card--group-lists', title: "Group Lists You've Connected", mobileTitle: 'Group Lists', cards });
 }
 
 function buildFriendsSection() {
   const cards = DEMO_FRIENDS.map(f => ({ name: f.name, imageUrl: f.imageUrl }));
-  return buildVerticalCardSlider({ sectionClass: 'shared-card--friends', title: "Friends You've Shared Lists With", mobileTitle: "Friend's Lists", cards, isListCard: true });
+  return buildVerticalCardSlider({ sectionClass: 'shared-card--friends', title: "Friends You've Shared Lists With", mobileTitle: "Friend's Lists", cards });
 }
 
 function wireCarousels(container) {
