@@ -569,9 +569,33 @@
      the-shared-24px margin-bottom so the gap to the title field below can't shrink regardless of
      how far up this pull moves the row itself (reported live at -20px with the old 24px default:
      the title field started overlapping this row). */
-  margin-top: -26px;
-  margin-bottom: 32px;
-  padding-left: 16px;
+  /* Purple bar behind "Edit Item" + the category select, per direct request — scoped to just this
+     row's own box (not the back-arrow icon, a sibling outside .modal-header, per the request's own
+     "the edit item and the dropdown" wording). The category select keeps its own opaque surface
+     background (.modal-category-select above), so it still reads as a distinct chip sitting on
+     top of the bar rather than blending into it. Bleeds to the modal's true left/right/top edges
+     (a negative margin equal to .modal--edit-item's own 34px padding on all three sides, per
+     follow-up request — touch the left, right, and top of the modal) — padding grows by that same
+     34px on left/right so the visible content stays roughly where it was (plus the original 16px
+     left inset for icon clearance), rather than the text/select jumping flush against the new,
+     further-out edges. Only the bottom two corners stay rounded (border-radius below) — the top
+     ones are flush with the modal's own top edge, which already has its own larger 16px rounding
+     right at the true corners, so rounding the bar's top corners too would visibly compete with
+     that instead of reading as one continuous edge. */
+  margin: -34px -34px 32px;
+  background: var(--primary);
+  border-radius: 0 0 10px 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 50px; /* 34 (bled-out edge) + 16 (icon clearance) */
+  padding-right: 50px; /* 34 (bled-out edge) + 16 (kept symmetric) */
+}
+
+/* White, not the shared h2's default var(--text-primary) — that reads dark-on-purple in light
+   theme and needs forcing regardless of theme, same as the "Select Lists" pill's own text
+   (addEditModal.css, #saved-lists-wrap .platform-dropdown-summary) does against the same purple. */
+.modal--edit-item .modal-header h2 {
+  color: #fff;
 }
 
 .modal--edit-item #modal-category-wrap {
@@ -847,6 +871,11 @@
    as-is by the Fetch Albums modal, which has two buttons). */
 #modal-overlay .modal-actions {
   justify-content: center;
+}
+
+/* Edit Item only — dropped down further than the shared 24px, per direct request. */
+.modal--edit-item .modal-actions {
+  margin-top: 44px;
 }
 
 .btn-cancel {
