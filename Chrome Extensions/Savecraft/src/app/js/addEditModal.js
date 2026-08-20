@@ -882,7 +882,11 @@ export function openEditModal(item) {
   document.getElementById('saved-lists-wrap').style.display = 'none'; // Add-only — see showReviewScreen's own comment
   updatePlatformsSection(item.category || '');
   if (item.platforms) setSelectedPlatforms(item.platforms);
-  renderStep2ImagePreview(item.imageUrl || null);
+  // No thumbnail preview on Edit Item itself, per request — the image still shows on the detail/
+  // preview modal this screen's own new back arrow returns to (detailModal.js/.css, untouched by
+  // this). renderStep2ImagePreview(null) (not item.imageUrl) keeps #step2-image-preview-wrap
+  // hidden rather than just skipping the call, in case a prior Add-flow screen left it visible.
+  renderStep2ImagePreview(null);
   populateFolderSelect(item.category, item.folderId);
 
   document.getElementById('modal-step1').style.display = 'none';
