@@ -318,6 +318,12 @@ export const state = {
   // subfolders, so state.view alone can't tell them apart for highlighting purposes. Not
   // persisted — resets to no-subfolder-highlighted on reload, which is a safe default.
   activeCuratedFolderId: null,
+  // Which Saved List (state.savedLists id, never 'default-favorites' — that one's the
+  // unrestricted catch-all, not a real scoped list) the user is currently browsing categories
+  // "inside," independent of the literal current state.view — set when a Saved List row is
+  // opened, preserved across category/subfolder navigation (renderSidebar.js), cleared by every
+  // other navigation. Not persisted — resets to unscoped on reload, same as authorReturnView.
+  activeSavedListId: null,
   hiddenCurated: new Set(), // curated item IDs the user has dismissed
   selectedSharedFriends: new Set(), // demo friend names checked in Profile > Shared Lists (sharedSaves.js's DEMO_FRIENDS) — same "opt in" pattern as followedCuratedLists below
   curatedOverrides: {}, // { [curatedItemId]: { url, title, notes, imageUrl } }

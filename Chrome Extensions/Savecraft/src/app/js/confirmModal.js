@@ -24,12 +24,14 @@ import { escapeHtml } from './utils.js';
 // own "You're opening"/VC Connector's existing color.
 // openLabel: the primary button's text — defaults to "Open" (sidebar Saved Lists); Shared Saves'
 // cards pass "Explore" instead, per direct request.
+// name: optional — omit for a plain message-only confirm (no title/icon at all), e.g. "return to
+// Dashboard?" style prompts that aren't about opening a specific named thing.
 export function openSwitchConfirm({ name, subtitle, icon, iconColor, leadText = "You're opening", leadColor, openLabel = 'Open', onConfirm }) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay open';
   overlay.innerHTML = `
     <div class="modal vc-wallet-modal" style="position:relative; width:360px;">
-      <div class="modal-header"><h2><span class="vc-wallet-modal-title-lead"${leadColor ? ` style="color:${escapeHtml(leadColor)}"` : ''}>${escapeHtml(leadText)}</span><span class="vc-wallet-modal-title-emphasis">${escapeHtml(name)}</span></h2></div>
+      ${name ? `<div class="modal-header"><h2><span class="vc-wallet-modal-title-lead"${leadColor ? ` style="color:${escapeHtml(leadColor)}"` : ''}>${escapeHtml(leadText)}</span><span class="vc-wallet-modal-title-emphasis">${escapeHtml(name)}</span></h2></div>` : ''}
       ${icon ? `<div class="switch-confirm-icon" style="background:${escapeHtml(iconColor || 'var(--primary)')}">${icon}</div>` : ''}
       <div class="modal-body">
         <p>${escapeHtml(subtitle)}</p>
