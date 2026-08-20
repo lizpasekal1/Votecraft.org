@@ -432,6 +432,19 @@
   #saved-lists-wrap {
     margin-top: 60px;
   }
+  /* Edit Item only — the h2/#modal-category-wrap margin-top pushes above (20px each) were
+     designed for the Add flow's own review screen; for Edit Item they fought the .modal--edit-item
+     .modal-header rule's own -20px pull (further down this file, not scoped to any breakpoint)
+     that brings this row up onto the back arrow's row, per request — reported live, mobile still
+     showed them stacked below the arrow even after that fix (the two margins roughly canceled
+     out). Zeroed here so the parent's own upward pull is what actually shows through, same as it
+     already does on desktop. */
+  #modal-overlay .modal--edit-item h2 {
+    margin-top: 0;
+  }
+  #modal-overlay .modal--edit-item #modal-category-wrap {
+    margin-top: 0;
+  }
 }
 
 /* Scoped to this modal specifically (ID selector, beats the shared .modal's own padding without
