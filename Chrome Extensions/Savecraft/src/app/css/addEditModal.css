@@ -823,6 +823,23 @@
   font-size: 11px;
 }
 
+/* Edit Item only, per direct request — Image URL and URL stack full-width instead of the
+   compact side-by-side pairing above. flex-direction: column makes each .form-group stretch to
+   the row's full width (same as any other stacked field); the un-compacted sizing reuses
+   .form-row--url-pair--single's own values (same reasoning as that rule's own comment — matches
+   Title's sizing instead of the squashed half-width pairing, which no longer applies here). */
+.modal--edit-item .form-row--url-pair {
+  flex-direction: column;
+}
+.modal--edit-item .form-row--url-pair .form-group input {
+  height: auto;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+.modal--edit-item .form-row--url-pair label {
+  font-size: 11px;
+}
+
 .input-with-clear {
   position: relative;
 }
