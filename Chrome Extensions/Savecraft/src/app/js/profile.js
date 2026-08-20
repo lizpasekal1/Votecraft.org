@@ -643,7 +643,10 @@ function _buildNotesItemRow(entry) {
   const { item, rows } = entry;
   const expanded = _expandedProfileNotesItems.has(item.id);
   const arrow = expanded ? '▼' : '▶';
-  const subRows = rows.map(r => `
+  // Only parsed (plainTextFromNoteHtml does a real DOM-template parse per row) when the row is
+  // actually expanded and this HTML gets used — most rows start collapsed, and this is rebuilt on
+  // every category-filter change and every arrow-toggle click.
+  const subRows = !expanded ? '' : rows.map(r => `
     <div class="profile-notes-subrow" data-item-id="${escapeHtml(item.id)}">
       <span class="profile-notes-subrow-label">${escapeHtml(r.label)}</span>
       ${_buildNotesBadges(r)}
