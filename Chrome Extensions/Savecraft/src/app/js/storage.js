@@ -519,21 +519,29 @@ export async function loadAll() {
         // combined version forever.
         const combinedIdx = state.curatedListsRows.findIndex(l => l.id === 'default-votecraft-rcv');
         if (combinedIdx !== -1) {
-          state.curatedListsRows.splice(combinedIdx, 1, { id: 'default-votecraft', name: 'Votecraft' }, { id: 'default-rcv', name: 'RCV' });
+          state.curatedListsRows.splice(combinedIdx, 1, { id: 'default-votecraft', name: 'Votecraft', genre: 'Top 100' }, { id: 'default-rcv', name: 'RCV', genre: 'RCV' });
           changed = true;
         } else {
           if (!state.curatedListsRows.some(l => l.id === 'default-rcv')) {
-            state.curatedListsRows.unshift({ id: 'default-rcv', name: 'RCV' });
+            state.curatedListsRows.unshift({ id: 'default-rcv', name: 'RCV', genre: 'RCV' });
             changed = true;
           }
           if (!state.curatedListsRows.some(l => l.id === 'default-votecraft')) {
-            state.curatedListsRows.unshift({ id: 'default-votecraft', name: 'Votecraft' });
+            state.curatedListsRows.unshift({ id: 'default-votecraft', name: 'Votecraft', genre: 'Top 100' });
             changed = true;
           }
         }
+        // Backfill for installs that already had these two rows seeded before `genre` existed on
+        // them at all (this field is what actually makes a curated-list row navigable — see
+        // renderSidebar.js's generalized click handler below) — without this, an existing "RCV"
+        // row would stay permanently inert even after this update ships.
+        state.curatedListsRows.forEach(row => {
+          if (row.id === 'default-votecraft' && !row.genre) { row.genre = 'Top 100'; changed = true; }
+          if (row.id === 'default-rcv' && !row.genre) { row.genre = 'RCV'; changed = true; }
+        });
         if (changed) storageSync.set({ savecraft_curated_lists_rows: state.curatedListsRows });
       } else {
-        state.curatedListsRows = [{ id: 'default-votecraft', name: 'Votecraft' }, { id: 'default-rcv', name: 'RCV' }];
+        state.curatedListsRows = [{ id: 'default-votecraft', name: 'Votecraft', genre: 'Top 100' }, { id: 'default-rcv', name: 'RCV', genre: 'RCV' }];
         storageSync.set({ savecraft_curated_lists_rows: state.curatedListsRows });
       }
       state.hiddenCurated = new Set(data.savecraft_hidden_curated || []);

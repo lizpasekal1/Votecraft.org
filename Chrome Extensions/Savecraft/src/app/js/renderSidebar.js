@@ -311,7 +311,8 @@ export function renderSidebar() {
       const radioHtml = showRadio ? `<span class="sidebar-list-radio${isActive ? ' sidebar-list-radio--checked' : ''}"></span>` : folderIconHtml(item.id, 16);
       return `
     <div class="sidebar-item sidebar-subfolder sidebar-subfolder--nested ${childClass} ${itemExtraClass?.(item) || ''} ${isActive ? 'active' : ''}"
-         ${view ? `data-view="${escapeHtml(view)}"` : ''}>
+         ${view ? `data-view="${escapeHtml(view)}"` : ''}
+         ${item.genre ? `data-genre="${escapeHtml(item.genre)}"` : ''}>
       ${radioHtml} ${escapeHtml(item.name)}
     </div>`;
     }).join('')}
@@ -353,8 +354,12 @@ export function renderSidebar() {
       ${_renderDashboardListRow({
         key: 'curated-lists', icon: CURATED_LISTS_ICON_SVG, label: 'Curated Lists', items: state.curatedListsRows,
         linkClass: 'sidebar-curated-lists-link', childClass: 'sidebar-curated-lists-child', addClass: 'sidebar-add-curated-list',
-        itemExtraClass: item => item.id === 'default-votecraft' ? 'sidebar-curated-votecraft-link' : '',
-        itemIsActive: item => item.id === 'default-votecraft' && state.sidebarMode === 'curated' && sidebarEffectiveView === 'genre:Top 100',
+        // Generic now — every row with a `genre` field (state.curatedListsRows, storage.js) is
+        // real/clickable, not just "default-votecraft" specifically (a second list, "RCV", used
+        // to sit here with no destination at all). No viewPrefix is passed to this call, so `view`
+        // (inside _renderDashboardListRow) is always null regardless of itemExtraClass — the
+        // click handler below is what actually routes these, via each row's own data-genre.
+        itemIsActive: item => !!item.genre && state.sidebarMode === 'curated' && sidebarEffectiveView === `genre:${item.genre}`,
         showRadio: true,
       })}
       <div class="sidebar-item sidebar-subfolder sidebar-kanban-link ${state.view === 'kanban' ? 'active' : ''}" data-view="kanban">
@@ -437,30 +442,35 @@ export function renderSidebar() {
         renderSidebar();
       });
     });
-    // Curated Lists' "Votecraft" row — its one hardcoded destination (see the itemExtraClass/
-    // itemIsActive wiring on its _renderDashboardListRow call above): the real "Votecraft List"
-    // curated genre, same place the mobile header's "VoteCraft Picks" option links to (the mobile
-    // drawer's own "⚡ Shared" tab now links to Shared Saves instead — see wireMobileHeader above).
-    sidebar.querySelector('.sidebar-curated-votecraft-link')?.addEventListener('click', () => {
-      // Same "You're opening/Explore" popup Shared Saves' own cards use (confirmModal.js) — same
-      // copy/openLabel/leadColor, since this row is the same kind of "someone else's curated
-      // list" destination those cards represent, just reached from the sidebar instead.
-      openSwitchConfirm({
-        name: 'VoteCraft',
-        subtitle: 'The sidebar will switch to display their shared saves. Bookmark or star to collect their saves back to your library!',
-        icon: CURATED_LISTS_ICON_SVG,
-        leadText: 'Opening saves by:',
-        leadColor: 'var(--primary)',
-        openLabel: 'Explore',
-        // Collapses the Curated Lists accordion, and its Dashboard parent, back closed once the
-        // popup's own Explore is actually clicked, per direct request — same fix as the Saved
-        // Lists row's own "Open" popup already got — navigateToView's own re-render
-        // (navigation.js) picks this up, no separate renderSidebar() call needed here.
-        onConfirm: () => {
-          state.collapsed.add('curated-lists');
-          state.collapsed.add('dashboard');
-          navigateToView('genre:Top 100', { sidebarMode: 'curated' });
-        },
+    // Curated Lists' own rows — generic now (see the itemIsActive wiring on its
+    // _renderDashboardListRow call above): any row with a data-genre (every real entry in
+    // state.curatedListsRows, storage.js) opens that genre's own curated page, same place the
+    // mobile header's "VoteCraft Picks" option links to (the mobile drawer's own "⚡ Shared" tab
+    // now links to Shared Saves instead — see wireMobileHeader above). Was hardcoded to just
+    // "Votecraft" — a second row, "RCV," used to sit here with no destination at all.
+    sidebar.querySelectorAll('.sidebar-curated-lists-child[data-genre]').forEach(el => {
+      el.addEventListener('click', () => {
+        const genre = el.dataset.genre;
+        // Same "You're opening/Explore" popup Shared Saves' own cards use (confirmModal.js) — same
+        // copy/openLabel/leadColor, since this row is the same kind of "someone else's curated
+        // list" destination those cards represent, just reached from the sidebar instead.
+        openSwitchConfirm({
+          name: el.textContent.trim(),
+          subtitle: 'The sidebar will switch to display their shared saves. Bookmark or star to collect their saves back to your library!',
+          icon: CURATED_LISTS_ICON_SVG,
+          leadText: 'Opening saves by:',
+          leadColor: 'var(--primary)',
+          openLabel: 'Explore',
+          // Collapses the Curated Lists accordion, and its Dashboard parent, back closed once the
+          // popup's own Explore is actually clicked, per direct request — same fix as the Saved
+          // Lists row's own "Open" popup already got — navigateToView's own re-render
+          // (navigation.js) picks this up, no separate renderSidebar() call needed here.
+          onConfirm: () => {
+            state.collapsed.add('curated-lists');
+            state.collapsed.add('dashboard');
+            navigateToView(`genre:${genre}`, { sidebarMode: 'curated' });
+          },
+        });
       });
     });
   }
@@ -511,12 +521,14 @@ export function renderSidebar() {
   const isCuratedGenre = sidebarEffectiveView.startsWith('genre:');
   const curatedGenreBase = isCuratedGenre ? sidebarEffectiveView.slice(6).split(':')[0] : null;
 
-  // 'Web Links' ("Website") is a real CATEGORIES member, so the generic filter below already
-  // includes it — excluded here only from curated-genre drilldowns, since there's no curated
-  // "Web Links" content and it'd always be an empty, dead entry there.
-  const sidebarCategoryList = isCuratedGenre
-    ? CATEGORIES.filter(cat => cat !== 'Music Album' && cat !== 'Web Links')
-    : CATEGORIES.filter(cat => cat !== 'Music Album');
+  // Same category list for curated-genre browsing as the personal "My Saves" sidebar, per direct
+  // request ("the cause curated template should reflect the changes we made to the sidebar in
+  // the 'all my saves' lists") — Web Links ("Sources") used to be excluded here specifically
+  // because no curated genre had any Web Links content, so it'd always be an empty dead entry;
+  // that's no longer true (RCV's own CURATED_GENRE_LANDING_CONTENT, state.js, has a Web Links
+  // row), and an under-populated category elsewhere just shows an empty count/grid like any other
+  // still-being-curated category — not actually broken.
+  const sidebarCategoryList = CATEGORIES.filter(cat => cat !== 'Music Album');
 
   const categorySections = sidebarCategoryList.map(cat => {
     const primaryId = PRIMARY_FOLDER_ID[cat];
@@ -612,11 +624,18 @@ export function renderSidebar() {
       // add-subfolder row.
       const isMusicianCategory = cat === 'Musician';
 
-      const childrenHtml = (isMusicianCategory || isFolderCollapsed) ? '' : `
-        ${children.map(child => _renderFolderRow(child, depth + 1)).join('')}
+      // Curated genre browsing is read-only, per direct request ("the user should not be able to
+      // add new folders to the curated lists") — same folders/counts as the personal sidebar
+      // (isCuratedGenre already threads through fCount/isActive above), just no way to edit that
+      // structure from in here.
+      const nestedAddFolderRow = isCuratedGenre ? '' : `
         <div class="sidebar-item sidebar-add-folder sidebar-subfolder--nested" data-add-subfolder="${folder.id}">
           + New folder
         </div>
+      `;
+      const childrenHtml = (isMusicianCategory || isFolderCollapsed) ? '' : `
+        ${children.map(child => _renderFolderRow(child, depth + 1)).join('')}
+        ${nestedAddFolderRow}
       `;
 
       return `
@@ -637,8 +656,10 @@ export function renderSidebar() {
     // other way around.
     // Musician gets no "+ New folder" row, per direct request — its own subfolder slot (the
     // "Musicians" primary folder) plus the permanent Albums row are the whole of what belongs
-    // here; every other category keeps the normal add-folder affordance.
-    const addFolderRow = cat === 'Musician' ? '' : `
+    // here; every other category keeps the normal add-folder affordance. Curated genre browsing
+    // gets none either way, for every category — read-only, per direct request ("the user should
+    // not be able to add new folders to the curated lists").
+    const addFolderRow = (cat === 'Musician' || isCuratedGenre) ? '' : `
       <div class="sidebar-item sidebar-add-folder" data-add-folder="${cat}">
         + New folder
       </div>
