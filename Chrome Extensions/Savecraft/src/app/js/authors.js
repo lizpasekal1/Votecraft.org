@@ -4,7 +4,7 @@
 
 import { state, CURATED_ITEMS, CURATED_NOTES_CATEGORIES, MUSIC_GENRE_BUCKET_MAP } from './state.js';
 import { persistAuthor, persistItem, persistCuratedAlbumMetaCache, persistAlbumTrackListCache, persistAlbumArtCache } from './storage.js';
-import { ensureArtistWebsite, ensureArtistWikipediaInfo, ensureArtistGenre, fetchAlbumsFromItunes, fetchAlbumArtFromMusicBrainz } from './api.js';
+import { ensureArtistWebsite, ensureArtistWikipediaInfo, ensureArtistGenre, isItunesRateLimited, fetchAlbumsFromItunes, fetchAlbumArtFromMusicBrainz } from './api.js';
 import { isItunesArtworkUrl, applyArtistPhotoToItem, patchCardImage, isQueueDemoId } from './utils.js';
 import { renderGrid } from './render.js';
 import { renderAuthorPage } from './render.js';
@@ -69,6 +69,15 @@ export function tagsForMusicGenreBucket(bucket) {
 // queue-demo placeholders excluded (they have no real title/url to look anything up by).
 const _genreBackfillInFlight = new Set();
 export function backfillMusicianGenres() {
+  // REAL BUG, found and fixed: this used to schedule a full pass regardless — while iTunes is
+  // actively 403-ing this client (isItunesRateLimited(), api.js), every one of those hundreds of
+  // scheduled calls would just immediately no-op anyway, so skipping the whole pass here isn't a
+  // behavior change, just a clear single log line instead of silently doing nothing hundreds of
+  // times over. Missed items are still picked up on the next call once the breaker closes.
+  if (isItunesRateLimited()) {
+    console.log('[backfillMusicianGenres] iTunes is rate-limiting this browser right now — skipping this pass, try again in a few minutes.');
+    return;
+  }
   const musicianItems = state.items.filter(i => i.category === 'Musician' && !isQueueDemoId(i.id));
   const missing = musicianItems.filter(i => {
     const author = findAuthor(i.title, 'Musician');
