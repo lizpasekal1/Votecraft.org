@@ -58,7 +58,8 @@
 }
 
 /* ===== Music landing page (state.view === 'Musician', renderGrid.js's renderMusicGenreLanding())
-   — a fixed 15-card grid of genre buckets instead of a flat item list. Modeled loosely on the Add
+   — a fixed grid of genre buckets (14 as of Metal folding into Rock, see MUSIC_GENRE_BUCKETS,
+   state.js) instead of a flat item list. Modeled loosely on the Add
    modal's .step1-category-tile (icon+label tile shape, addEditModal.css) plus a .sidebar-count-
    style count badge (sidebar.css) — the two closest existing pieces, since no single component
    already combined icon+label+count in a clickable grid card. ===== */
