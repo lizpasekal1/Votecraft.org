@@ -484,14 +484,18 @@ export function renderSidebar() {
     });
   }
 
-  // Curated mode: genre picker until a genre is selected, then show categories
-  if (state.sidebarMode === 'curated' && !sidebarEffectiveView.startsWith('genre:')) {
+  // Curated mode: genre picker until a genre is selected, then show categories. Shared Saves mode
+  // reuses this exact same picker list (same rows, same icons, same order), per direct request —
+  // the "⚡ Shared" tab's sidebar should visually match Cause Curated's, only the header/mode-tab
+  // still reads "Shared Saves" (sidebarTitle above is already mode-derived, so that falls out for
+  // free with no extra branching here).
+  if ((state.sidebarMode === 'curated' || state.sidebarMode === 'shared') && !sidebarEffectiveView.startsWith('genre:')) {
     sidebar.innerHTML = mobileHeader + `
       <div class="sidebar-items-scroll">
         ${dashboardLinkHtml}
         ${CURATED_GENRES.map((genre, i) => `
           ${i > 0 ? '<div class="sidebar-divider"></div>' : ''}
-          <div class="sidebar-item sidebar-genre ${genre === 'Top 100' && state.view === 'curated' ? 'active' : ''}" data-genre="${genre}">
+          <div class="sidebar-item sidebar-genre ${genre === 'Top 100' && state.sidebarMode === 'curated' && state.view === 'curated' ? 'active' : ''}" data-genre="${genre}">
             <span class="sidebar-label"><span class="cat-icon">${
               // "Cause Curated" (formerly "Top 100") uses the same icon as the Dashboard's own
               // "Curated Lists" row, per direct request, instead of GENRE_EMOJI's star — every
