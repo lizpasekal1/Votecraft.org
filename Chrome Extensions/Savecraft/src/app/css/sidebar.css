@@ -627,6 +627,13 @@
   color: var(--primary);
 }
 
+/* "+Add/Explore" under Curated Lists — purple at rest (not just on hover like every other
+   "+ New folder"/"+ Add List" row), per direct request, since it reads as an invitation to
+   explore rather than a plain editing affordance. */
+.sidebar-add-curated-list {
+  color: var(--primary);
+}
+
 /* Two-class selector so this reliably wins over .sidebar-add-folder's own 46px, regardless of
    declaration order — the Saved Lists "+ New folder" row needs the deeper 66px nested indent
    (see .sidebar-subfolder--nested above), not the normal category depth. */
