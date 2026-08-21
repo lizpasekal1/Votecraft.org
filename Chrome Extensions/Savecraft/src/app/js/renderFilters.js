@@ -1,6 +1,6 @@
 // ===== ITEM FILTERING / SORTING =====
 
-import { state, CURATED_ITEMS, CATEGORIES, PRIMARY_FOLDER_ID } from './state.js';
+import { state, CURATED_ITEMS, CATEGORIES, PRIMARY_FOLDER_ID, MUSIC_ALL_LABEL } from './state.js';
 import {
   SPLIT_TITLE_CREATOR_CATEGORIES, splitCuratedTitleCreator, getStaticCuratedCreator,
 } from './curatedCreatorLookup.js';
@@ -172,9 +172,12 @@ export function getFilteredSortedItems() {
     // `genre:` — that prefix is SaveCraft's own unrelated curated-content-browsing concept
     // (handled above), so this uses a distinct `musicgenre:` prefix to avoid colliding with it.
     const bucket = state.view.slice(11);
-    items = items
-      .filter(i => matchesPrimaryOrUnfoldered(i, 'Musician'))
-      .filter(i => bucketForMusicianItem(i) === bucket);
+    items = items.filter(i => matchesPrimaryOrUnfoldered(i, 'Musician'));
+    // "All Music" (the landing grid's own pinned-first card, MUSIC_ALL_LABEL) isn't a real bucket
+    // — every musician, no further narrowing — so every real bucket still routes through the same
+    // one page/dropdown instead of a genuinely different destination (reported live: clicking it
+    // landed somewhere with no genre dropdown at all).
+    if (bucket !== MUSIC_ALL_LABEL) items = items.filter(i => bucketForMusicianItem(i) === bucket);
   } else if (CATEGORIES.includes(state.view)) {
     // A top-level tab shows only its "primary" folder's items, plus anything with no folder
     // assigned yet — see matchesPrimaryOrUnfoldered() above.

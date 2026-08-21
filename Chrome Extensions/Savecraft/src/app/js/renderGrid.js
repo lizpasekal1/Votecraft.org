@@ -3,7 +3,7 @@
 import {
   state, CURATED_ITEMS, CATEGORIES, CAT_LABEL, CAT_EMOJI, CURATED_NOTES_CATEGORIES,
   CREATOR_CARD_CATEGORY, BOOKMARK_OUTLINE_SVG, BOOKMARK_FILLED_SVG, CURATED_GENRE_LANDING_CONTENT,
-  MUSIC_GENRE_BUCKETS, MUSIC_GENRE_BUCKET_EMOJI, MUSIC_ALL_LABEL, PRIMARY_FOLDER_ID,
+  MUSIC_GENRE_BUCKETS, MUSIC_GENRE_BUCKET_EMOJI, MUSIC_ALL_LABEL,
 } from './state.js';
 import {
   escapeHtml, catClass, badgeLabel, isMusicAlbumsSectionView, isOwnAuthorPageView, getDomain,
@@ -235,7 +235,11 @@ export function renderGrid() {
     // current bucket, same as sortSelect.value being set from state.sort elsewhere.
     const bucket = state.view.slice(11);
     gridTitle.innerHTML = `${CAT_EMOJI['Musician']} ${escapeHtml(bucket)}${scopedListSuffix}`;
-    musicGenreSelect.innerHTML = MUSIC_GENRE_BUCKETS
+    // "All Music" listed first (matching its pinned-first spot on the landing grid), then the
+    // real buckets alphabetically — every one of these routes through this exact same page now
+    // (reported live: clicking "All Music" used to land somewhere with no genre dropdown at all,
+    // because it went to a genuinely different view/branch than the real buckets did).
+    musicGenreSelect.innerHTML = [MUSIC_ALL_LABEL, ...MUSIC_GENRE_BUCKETS]
       .map(b => `<option value="${escapeHtml(b)}"${b === bucket ? ' selected' : ''}>${escapeHtml(b)}</option>`)
       .join('');
     musicGenreSelect.style.display = '';
@@ -460,13 +464,11 @@ function renderMusicGenreLanding() {
 
   container.querySelectorAll('.musicgenre-card').forEach(card => {
     card.addEventListener('click', () => {
-      // "All Music" goes straight to the primary Musicians folder view (unfiltered) — every real
-      // bucket goes through the musicgenre: filter branch as before.
-      if (card.dataset.bucket === MUSIC_ALL_LABEL) {
-        navigateToView(PRIMARY_FOLDER_ID['Musician']);
-      } else {
-        navigateToView(`musicgenre:${card.dataset.bucket}`);
-      }
+      // "All Music" now routes through the exact same musicgenre: page every real bucket does
+      // (renderFilters.js treats MUSIC_ALL_LABEL as "no further narrowing" rather than a real
+      // bucket) — was its own separate primary-folder view, which meant no genre dropdown showed
+      // up there at all (reported live).
+      navigateToView(`musicgenre:${card.dataset.bucket}`);
     });
   });
 
