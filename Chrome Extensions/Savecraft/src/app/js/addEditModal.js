@@ -905,6 +905,7 @@ export function openAddModal() {
   document.getElementById('modal-step-folder').style.display = 'none';
   document.getElementById('modal-step2').style.display = 'none';
   document.getElementById('modal-step-confirm').style.display = 'none'; // a prior save may have left this showing
+  document.getElementById('modal-header').classList.remove('modal-header--confirm'); // ditto
   document.getElementById('btn-modal-back').style.display = 'none';
   document.getElementById('btn-modal-save').style.display = 'none';
   document.getElementById('modal-info-icon').style.display = 'none'; // review/input screen only now, per request — not this category screen
@@ -967,6 +968,7 @@ export function openEditModal(item) {
   document.getElementById('modal-step-folder').style.display = 'none';
   document.getElementById('modal-step2').style.display = '';
   document.getElementById('modal-step-confirm').style.display = 'none'; // a prior save may have left this showing
+  document.getElementById('modal-header').classList.remove('modal-header--confirm'); // ditto
   document.getElementById('modal-info-icon').style.display = 'none';
   // Edit has no wizard screen history of its own, but the same corner icon still doubles as "back
   // to this item's preview" here (main.js's own #btn-modal-back click handler special-cases
@@ -1228,6 +1230,22 @@ function showSaveConfirmationStep(item) {
   document.getElementById('modal-step-music-choice').style.display = 'none';
   document.getElementById('modal-step-folder').style.display = 'none';
   document.getElementById('modal-step2').style.display = 'none';
+  // Empty now (Done/View live inside #modal-step-confirm itself instead) but was still reserving
+  // its own margin-top as dead space at the bottom, unbalancing the centering below — per direct
+  // request ("better center the confirmation message ... right now it's weirdly at the bottom").
+  document.getElementById('modal-actions').style.display = 'none';
+  // Tightens the gap under the header to exactly 15px for this screen only (addEditModal.css),
+  // per direct follow-up — supersedes the vertical-centering approach above with "bring the
+  // check mark up so it's just 15px below the 'Excellent' title" instead. Removed again by
+  // openAddModal/openEditModal on the next real open (below).
+  document.getElementById('modal-header').classList.add('modal-header--confirm');
+  // "Add Musician"/"Edit Item"/etc. no longer fits once the item's already saved — per direct
+  // request. openAddModal/openEditModal both set this fresh on the next real open, so nothing
+  // needs to restore it here. modal-h2--left isn't one of setModalHeading's own managed classes
+  // (openEditModal adds it directly) — dropped explicitly too, or Edit's confirmation heading
+  // would render left-aligned instead of centered like Add's.
+  _modalH2.classList.remove('modal-h2--left');
+  setModalHeading('Excellent!');
 
   // A folder-filed item names its folder too (e.g. "Sources → Websites"), same location detail
   // the retired toast showed — so "View" lands somewhere specific rather than just the category's
