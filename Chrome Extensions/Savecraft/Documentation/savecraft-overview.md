@@ -6,6 +6,24 @@ SaveCraft is a Chrome extension that acts as a personal media library. Users sav
 
 ## Recent Additions (latest session)
 
+Another very long, live-feedback-driven session, three main arcs: Musician/Music polish (title
+search, a genre tag, two real bugs — duplicate iTunes video-album cards, a Musician bio rendering
+twice) closing with an in-modal save-confirmation redesign; a new **Music landing page** (15
+curated genre-bucket cards with save counts, a genre dropdown, and a background backfill for
+already-saved musicians missing a genre); and — the largest arc — generalizing VoteCraft/"Top 100"
+from a hardcoded one-off into a real reusable **Curated List template**
+(`CURATED_GENRE_LANDING_CONTENT`, see "Curated SaveCraft" below), with "RCV" wired up as a second,
+genuinely content-empty real instance proving the template holds. Also fixed a major cross-device
+sync bug (`savedLists` was write-only, never pulled back down from Firestore), made Saved Lists
+show their own real content instead of a placeholder, and closed with two separately-reported
+mobile horizontal-drag bugs on curated pages (one from an unwrapped title row, one from an
+invisible hover-tooltip inflating scrollable overflow). See `session-context.md` for the full
+blow-by-blow.
+
+---
+
+## Recent Additions (previous session)
+
 This session built the WordPress Admin Bridge (see "Key Features" above) — Phase 1 (Admin Kanban
 manageable from wp-admin) end to end: a dedicated, narrowly-scoped Firebase bot account; a new
 `admin_kanban_cards` Firestore rule mirroring `isAdminUser()`'s own email-allowlist-or-role logic;
@@ -20,7 +38,7 @@ See `session-context.md` for the full blow-by-blow.
 
 ---
 
-## Recent Additions (previous session)
+## Recent Additions (older session)
 
 This session spanned three efforts: a Profile page mobile pass, new Privacy Policy/Terms of Service pages, and a brand-new "Admin Kanban" board for tracking SaveCraft's own project tasks — closed by discovering that native HTML5 drag-and-drop never worked on iOS touch at all, on *either* kanban board, and fixing it for both. See `session-context.md` for the full blow-by-blow (real bugs found, exact CSS/selector details). (Note: this doc's own log also has a gap — a concurrent session's mobile polish pass across the sidebar drawer, Curated bare-list page, and Shared Saves page landed between this entry and the "older session" one below, but was only logged in `session-context.md`, not here.)
 
@@ -41,20 +59,7 @@ This session spanned three efforts: a Profile page mobile pass, new Privacy Poli
 
 ---
 
-## Recent Additions (older session)
-
-This session redesigned the Sponsored Statements partner-pitch page (`src/sponsored/sponsored.html`) to connect it to VoteCraft Coin (VC), then fixed a real bug found while making that page work on the savecraft.org web build.
-
-- **VoteCraft Coin (VC) connected to the Sponsored Statements pitch page** — each pricing tier ($5/$30/$100+) now shows an estimated VC bonus badge (~500/~3,000/~10,000 VC, using the same $10 = 1,000 VC rate already live on votecraft.org's own VC app dashboard); clicking it reveals a short animated panel framed as "~N VC once VoteCraft Coin launches," never claiming an already-credited balance. Investigation found VC has no real backend anywhere in Votecraft yet — the live votecraft.org VC dashboard is itself a hardcoded front-end mockup (confirmed by reading its JS: no Firebase, no fetch calls) — so this stays an honest, clearly-labeled preview, not a real ledger. New `src/sponsored/vc-bonus.js` holds the interaction logic.
-- **New "VoteCraft Coin — a civic reward, not a cryptocurrency" section** explains VC in plain language (not crypto, no wallet, always tied to a real transaction) plus a link out to the live votecraft.org VC app dashboard. A focusable "ⓘ" tooltip button near the pricing VC mentions repeats the gist in place — built as a `<button>` rather than the app's usual hover-only `<a>` tooltip pattern (see `detailModalHeader.js`'s "⚡ Your Statement" badge), so it also works on tap/keyboard focus, not just mouse hover.
-- **Condensed the three repetitive "Offering N" sections into one "How it works" section** — they mostly restated the overview cards above them; the Sponsored Statements row now explicitly mentions the VC bonus.
-- **Styling deliberately kept in SaveCraft's own purple palette throughout**, not VoteCraft/VC's teal branding — an explicit correction applied mid-session after an initial pass leaned on VC's own brand color for the new elements.
-- **Real bug found and fixed: `sponsored.js` crashed on the web build** — it called `chrome.runtime.getURL()` unconditionally, which throws (`chrome is not defined`) outside the extension, so this page previously only worked from within the extension. Rewritten as an ES module importing `resourceUrl()` from `platform.js` (the same shim the rest of the app already uses) now that this page needs to run at savecraft.org too. `firebase.json` also gained a no-cache header for `src/sponsored/**`, matching the app's other pages.
-- Deployed live to `savecraft.org` / `votecraft-789.web.app`.
-
----
-
-*(Older session: made SaveCraft dual-mode — the same `src/app/` codebase also runs as a plain web app at **savecraft.org** (Firebase Hosting, same `votecraft-789` Firestore project) via a new `src/app/js/platform.js` runtime shim — see "Architecture" → "Storage" below and `Documentation/web-deploy.md`. Same session, a full mobile-layout pass against a live iPhone 16 Pro fixed six real bugs: Dashboard not scrolling on mobile, the welcome banner collapsing to ~90px (a `height:100%`-of-`auto`-parent bug), the sign-in modal's buttons wrapping, a curated hero banner's icon badge overlapping its text, curated org-list rows squeezed to half-width, and the mobile sidebar drawer collapsing to 64px whenever desktop's own collapsed-sidebar preference was set. Earlier sessions: landed real Saved Lists sidebar navigation, rebuilt the Share modal (free-text Message → a Saved Lists picker + an on/off link-sharing toggle), broadened the sponsor pitch page to three offerings, and built a brand-new Embed Builder feature end to end (source picker, style panel, live carousel preview, shareable "Embed code" link) — two real bugs along the way (a CSS Grid track-blowout from an unbreakable URL string, a JS temporal-dead-zone crash from a `const` referenced before its own declaration line ran). Before that — added image/hyperlink support to the My Notes formatting toolbar, restructured category/sidebar navigation across four separate requests, and fixed three real bugs found live (a partial-highlight bug, a sidebar multi-tab-open bug, a toolbar spacing issue). Before that — rebuilt the detail modal's "My Notes"/Chapters/Song List from a plain textarea into a numbered-notes system with a formatting toolbar, focus mode, and per-row rename. Before that — replaced the Music Album gallery's single low-res iTunes cover with a real multi-image gallery sourced from MusicBrainz + the Cover Art Archive, plus several rounds of detail-modal visual polish. Before that — 214 more IMDb Top 250 movies seeded into curated Top 100, "Curated SaveCraft" reshaped into a two-tier browsing experience, and the previously-dead "Shared Saves" dropdown item wired up for the first time. See git history around those eras if needed.)*
+*(Older session: redesigned the Sponsored Statements partner-pitch page to connect it to VoteCraft Coin (VC) — each pricing tier gained an estimated VC bonus badge, a plain-language "VoteCraft Coin — a civic reward, not a cryptocurrency" section, styling deliberately kept in SaveCraft's own purple palette (not VC's teal), and a real bug fixed where `sponsored.js` crashed on the web build from an unconditional `chrome.runtime.getURL()` call. Older still, made SaveCraft dual-mode — the same `src/app/` codebase also runs as a plain web app at **savecraft.org** (Firebase Hosting, same `votecraft-789` Firestore project) via a new `src/app/js/platform.js` runtime shim — see "Architecture" → "Storage" below and `Documentation/web-deploy.md`. Same session, a full mobile-layout pass against a live iPhone 16 Pro fixed six real bugs: Dashboard not scrolling on mobile, the welcome banner collapsing to ~90px (a `height:100%`-of-`auto`-parent bug), the sign-in modal's buttons wrapping, a curated hero banner's icon badge overlapping its text, curated org-list rows squeezed to half-width, and the mobile sidebar drawer collapsing to 64px whenever desktop's own collapsed-sidebar preference was set. Earlier sessions: landed real Saved Lists sidebar navigation, rebuilt the Share modal (free-text Message → a Saved Lists picker + an on/off link-sharing toggle), broadened the sponsor pitch page to three offerings, and built a brand-new Embed Builder feature end to end (source picker, style panel, live carousel preview, shareable "Embed code" link) — two real bugs along the way (a CSS Grid track-blowout from an unbreakable URL string, a JS temporal-dead-zone crash from a `const` referenced before its own declaration line ran). Before that — added image/hyperlink support to the My Notes formatting toolbar, restructured category/sidebar navigation across four separate requests, and fixed three real bugs found live (a partial-highlight bug, a sidebar multi-tab-open bug, a toolbar spacing issue). Before that — rebuilt the detail modal's "My Notes"/Chapters/Song List from a plain textarea into a numbered-notes system with a formatting toolbar, focus mode, and per-row rename. Before that — replaced the Music Album gallery's single low-res iTunes cover with a real multi-image gallery sourced from MusicBrainz + the Cover Art Archive, plus several rounds of detail-modal visual polish. Before that — 214 more IMDb Top 250 movies seeded into curated Top 100, "Curated SaveCraft" reshaped into a two-tier browsing experience, and the previously-dead "Shared Saves" dropdown item wired up for the first time. See git history around those eras if needed.)*
 
 ---
 
