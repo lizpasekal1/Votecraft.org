@@ -509,15 +509,25 @@ export async function ensureArtistGenre(artistName) {
   if (cached && (cached.genre || (Date.now() - cached.fetchedAt < ARTIST_GENRE_CACHE_MISS_TTL))) {
     return cached.genre;
   }
-  let genre = null;
+  // REAL BUG, found and fixed: a request that failed outright (network error, or iTunes
+  // returning a non-ok response — e.g. rate-limiting a large burst of lookups, hit live during a
+  // ~800-artist bulk import) used to be cached as a miss identically to a genuine "no such
+  // artist" empty result, poisoning it for the full 90-day TTL above. A transient failure now
+  // just returns null for THIS call without writing anything to the cache, so the very next
+  // backfill pass (backfillMusicianGenres, authors.js) gets a fresh real attempt instead of
+  // silently reading back the same stuck miss for months. Only a genuine successful response
+  // (even one with zero results) still gets cached below — that's the only case that's actually
+  // safe to treat as a stable "this artist has no iTunes genre data" fact.
+  let resp;
   try {
     const url = `https://itunes.apple.com/search?term=${encodeURIComponent(artistName)}&entity=musicArtist&limit=1`;
-    const resp = await fetch(url);
-    if (resp.ok) {
-      const data = await resp.json();
-      genre = data.results?.[0]?.primaryGenreName || null;
-    }
-  } catch { /* leave genre null — cached as a miss below, retried after the TTL */ }
+    resp = await fetch(url);
+  } catch {
+    return null; // network error — leave uncached, retried fresh next time
+  }
+  if (!resp.ok) return null; // e.g. rate-limited — leave uncached, retried fresh next time
+  const data = await resp.json();
+  const genre = data.results?.[0]?.primaryGenreName || null;
   state.artistGenreCache[key] = { genre, fetchedAt: Date.now() };
   persistArtistGenreCache();
   return genre;

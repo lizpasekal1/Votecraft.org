@@ -19,10 +19,11 @@
 // Musician already in state.items, so re-running this is always safe/idempotent.
 
 import { state } from './state.js';
-import { persistItem } from './storage.js';
+import { persistItem, persistArtistGenreCache } from './storage.js';
 import { ensureArtistWikipediaInfo } from './api.js';
 import { renderSidebar } from './render.js';
 import { renderGrid } from './render.js';
+import { backfillMusicianGenres } from './authors.js';
 
 // Transcribed from the screenshots, in the order they were shared — duplicates (both within this
 // list and against already-saved artists) are dropped at import time below, not here, so this
@@ -233,4 +234,22 @@ export async function bulkImportMyArtists() {
   return { added: toAdd.length, skippedAlreadySaved };
 }
 
-if (typeof window !== 'undefined') window.bulkImportMyArtists = bulkImportMyArtists;
+// One-time companion fixup, per the ensureArtistGenre bug found and fixed alongside this file
+// (api.js) — a burst this large hit iTunes rate-limiting for a real fraction of the ~800 lookups,
+// and the old code cached those transient failures identically to a genuine "no genre data"
+// result for 90 days. The fix stops that going forward, but doesn't retroactively clear whatever
+// got wrongly cached during THIS import's own burst — this does that one-time clear, then kicks
+// off a fresh backfill pass immediately so every musician gets a real second attempt under the
+// corrected logic instead of silently reading back the same stuck miss.
+export function resetArtistGenreCache() {
+  const count = Object.keys(state.artistGenreCache).length;
+  state.artistGenreCache = {};
+  persistArtistGenreCache();
+  console.log(`[resetArtistGenreCache] Cleared ${count} cached genre lookups (hits and misses alike). Starting a fresh backfill pass...`);
+  backfillMusicianGenres();
+}
+
+if (typeof window !== 'undefined') {
+  window.bulkImportMyArtists = bulkImportMyArtists;
+  window.resetArtistGenreCache = resetArtistGenreCache;
+}
