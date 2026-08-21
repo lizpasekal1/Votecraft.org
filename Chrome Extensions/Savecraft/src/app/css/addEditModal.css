@@ -1873,10 +1873,17 @@
   color: var(--text-primary);
 }
 .modal-confirm-text strong { color: var(--primary); }
+/* Pinned to the popup's true bottom edge (not just "last in the flex column," which left them
+   wherever the checkmark/text happened to end) — per direct request ("make the buttons ...
+   30px from the bottom of the popup"). .modal itself carries position:relative (index.html
+   inline style), so this resolves against the popup's own box, not .modal-step-confirm's. */
 .modal-confirm-actions {
+  position: absolute;
+  left: 50%;
+  bottom: 30px;
+  transform: translateX(-50%);
   display: flex;
   gap: 10px;
-  margin-top: 4px;
 }
 .modal-confirm-actions button {
   min-width: 100px;
