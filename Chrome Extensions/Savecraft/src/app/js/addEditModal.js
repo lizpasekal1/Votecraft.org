@@ -21,6 +21,7 @@ import {
 import { autoSaveMusician } from './authors.js';
 import { openDetailModal } from './detailModal.js';
 import { openSwitchConfirm } from './confirmModal.js';
+import { showSaveConfirmationToast } from './toast.js';
 
 // ===== ADD-MODAL WIZARD STATE (screen 'category' → 'review') =====
 let _wizardScreen = 'category';    // which screen is currently visible — drives what the back icon does
@@ -1126,6 +1127,7 @@ export async function handleSaveItem() {
   closeAddModal();
   renderSidebar();
   renderGrid();
+  showSaveConfirmationToast(item);
 
   // Also runs on Edit now (not just Add) — adding/changing a URL on an item that still has no
   // image should fetch its featured image the same way a brand-new save does.
