@@ -1892,6 +1892,11 @@
     display: block;
     margin-top: 4px;
   }
+  /* 45 - 25, mobile only, per direct follow-up ("in mobile drop the buttons down 25px") —
+     desktop keeps the full 45px. */
+  .modal-confirm-actions {
+    bottom: 20px;
+  }
 }
 /* Pinned to the popup's true bottom edge (not just "last in the flex column," which left them
    wherever the checkmark/text happened to end) — per direct request ("make the buttons ...
