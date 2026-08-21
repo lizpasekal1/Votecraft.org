@@ -938,6 +938,14 @@ async function init() {
     setTimeout(hideTitleSearchResults, 150);
     kickOffTitleEnrichment();
   });
+  // Tapping the search icon itself runs the search right away instead of waiting on the 500ms
+  // typing debounce above — same handleTitleSearch, just triggered on demand. mousedown (not
+  // click) + preventDefault so tapping it doesn't blur #input-title first, same trick the result
+  // rows themselves use (renderTitleSearchResults) to survive the blur-hide/enrichment handler above.
+  document.getElementById('btn-title-search').addEventListener('mousedown', e => {
+    e.preventDefault();
+    handleTitleSearch();
+  });
   document.getElementById('btn-modal-back').addEventListener('click', () => {
     // Edit Item's own back arrow (state.editingId is only ever set while editing an existing item —
     // see openEditModal) — returns to that same item's detail/preview modal instead of the Add
