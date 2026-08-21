@@ -2,7 +2,7 @@
 // Author-record CRUD helpers, navigation to author pages, and the artist-album-metadata
 // backfill (year/collectionId/track-list resolution for Music Album items).
 
-import { state, CURATED_ITEMS, CURATED_NOTES_CATEGORIES } from './state.js';
+import { state, CURATED_ITEMS, CURATED_NOTES_CATEGORIES, MUSIC_GENRE_BUCKET_MAP } from './state.js';
 import { persistAuthor, persistItem, persistCuratedAlbumMetaCache, persistAlbumTrackListCache, persistAlbumArtCache } from './storage.js';
 import { ensureArtistWebsite, ensureArtistWikipediaInfo, ensureArtistGenre, fetchAlbumsFromItunes, fetchAlbumArtFromMusicBrainz } from './api.js';
 import { isItunesArtworkUrl, applyArtistPhotoToItem, patchCardImage } from './utils.js';
@@ -13,6 +13,17 @@ import { navigateToView } from './navigation.js';
 
 export function findAuthor(name, category) {
   return state.authors.find(a => a.name === name && a.category === category) ?? null;
+}
+
+// Which of the 15 Music-landing-page genre buckets a saved Musician item belongs to (see
+// MUSIC_GENRE_BUCKET_MAP, state.js) — resolved via the artist's own author record (`.genre`,
+// ensureArtistGenre/api.js), not the item itself (Musician items carry no genre of their own).
+// Returns null if the author record doesn't exist yet, its genre hasn't resolved yet, or its raw
+// iTunes genre string has no bucket mapping — callers treat null as "not shown in any bucket."
+export function bucketForMusicianItem(item) {
+  const author = findAuthor(item.title, 'Musician');
+  if (!author?.genre) return null;
+  return MUSIC_GENRE_BUCKET_MAP[author.genre.trim().toLowerCase()] || null;
 }
 
 // Promotes a curated item into a real personal item the first time it's queued/bookmarked — a
