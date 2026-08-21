@@ -751,6 +751,13 @@ async function init() {
 
   sortSelect.addEventListener('change', () => handleSort(sortSelect.value));
 
+  // Music landing page's genre drill-in filter (renderGrid.js populates/shows this only on
+  // musicgenre: views) — same "wired once here, driven by renderGrid() each render" pattern as
+  // sortSelect just above.
+  document.getElementById('musicgenre-select').addEventListener('change', e => {
+    navigateToView(`musicgenre:${e.target.value}`);
+  });
+
   // The options dropdown (Home/Shared Saves/Curated/⚡ VC) now lives under the same
   // button that toggles sidebar collapse — shown on hover (pure CSS, see .sidebar-collapse-wrap
   // in sidebar.css), so no click-to-open/click-outside-to-close JS is needed for visibility.

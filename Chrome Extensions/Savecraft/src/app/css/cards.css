@@ -18,8 +18,56 @@
   margin-bottom: 20px;
 }
 
-.grid-header .sort-select {
+/* Wraps #musicgenre-select + #sort-select (index.html) — margin-left: auto lives here, on the
+   pair as a group, rather than on .sort-select alone, so the pair pushes right together
+   regardless of whether the genre dropdown is currently shown (Music landing page drill-in only)
+   or hidden (every other page, where this wrapper just collapses to fit #sort-select alone). */
+.grid-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   margin-left: auto;
+}
+
+/* ===== Music landing page (state.view === 'Musician', renderGrid.js's renderMusicGenreLanding())
+   — a fixed 15-card grid of genre buckets instead of a flat item list. Modeled loosely on the Add
+   modal's .step1-category-tile (icon+label tile shape, addEditModal.css) plus a .sidebar-count-
+   style count badge (sidebar.css) — the two closest existing pieces, since no single component
+   already combined icon+label+count in a clickable grid card. ===== */
+.musicgenre-landing-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+.musicgenre-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 22px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+.musicgenre-card:hover {
+  border-color: var(--primary);
+  background: var(--hover-bg);
+}
+.musicgenre-card-icon {
+  font-size: 26px;
+  line-height: 1;
+}
+.musicgenre-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.musicgenre-card-count {
+  font-size: 12px;
+  color: var(--text-secondary);
 }
 
 

@@ -185,6 +185,54 @@ export const CAT_LABEL = {
 const CAT_EMOJI_NOTE_ICON = '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M447-207q-47-47-47-113t47-113q47-47 113-47 23 0 42.5 5.5T640-458v-342h240v120H720v360q0 66-47 113t-113 47q-66 0-113-47ZM80-320q0-99 38-186.5T221-659q65-65 152.5-103T560-800v80q-82 0-155 31.5t-127.5 86q-54.5 54.5-86 127T160-320H80Zm160 0q0-66 25.5-124.5t69-102Q378-590 436-615t124-25v80q-100 0-170 70t-70 170h-80Z"/></svg>';
 export const CAT_EMOJI = { 'News': '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M160-120q-33 0-56.5-23.5T80-200v-640l67 67 66-67 67 67 67-67 66 67 67-67 67 67 66-67 67 67 67-67 66 67 67-67v640q0 33-23.5 56.5T800-120H160Zm0-80h280v-240H160v240Zm360 0h280v-80H520v80Zm0-160h280v-80H520v80ZM160-520h640v-120H160v120Z"/></svg>', 'Music Album': '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M500-360q42 0 71-29t29-71v-220h120v-80H560v220q-13-10-28-15t-32-5q-42 0-71 29t-29 71q0 42 29 71t71 29ZM320-240q-33 0-56.5-23.5T240-320v-480q0-33 23.5-56.5T320-880h480q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H320Zm0-80h480v-480H320v480ZM160-80q-33 0-56.5-23.5T80-160v-560h80v560h560v80H160Zm160-720v480-480Z"/></svg>', Musician: CAT_EMOJI_NOTE_ICON, Show: '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="m460-380 280-180-280-180v360ZM320-240q-33 0-56.5-23.5T240-320v-480q0-33 23.5-56.5T320-880h480q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H320ZM160-80q-33 0-56.5-23.5T80-160v-560h80v560h560v80H160Z"/></svg>', Book: '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M270-80q-45 0-77.5-30.5T160-186v-558q0-38 23.5-68t61.5-38l395-78v640l-379 76q-9 2-15 9.5t-6 16.5q0 11 9 18.5t21 7.5h450v-640h80v720H270Zm10-217 80-16v-478l-80 16v478Z"/></svg>', Movie: '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 2 24 24" width="24px" fill="#5B5BEF"><path d="m7.727,7L13.727,1h3.422l-6,6h-3.422Zm9.672,0l5.4-5.4c-.501-.377-1.124-.6-1.798-.6h-1.023l-6,6h3.422Zm6.52-3.692l-3.692,3.692h3.773v-3c0-.238-.029-.47-.081-.692ZM4.898,7L10.898,1h-3.403L1.496,7h3.403ZM3,1C1.346,1,0,2.346,0,4v1.667L4.667,1h-1.667ZM0,9h24v14H0v-14Zm10,10.5l5.833-3.5-5.833-3.5v7Z"/></svg>', Game: '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M182-200q-51 0-79-35.5T82-322l42-300q9-60 53.5-99T282-760h396q60 0 104.5 39t53.5 99l42 300q7 51-21 86.5T778-200q-21 0-39-7.5T706-230l-90-90H344l-90 90q-15 15-33 22.5t-39 7.5Zm526.5-251.5Q720-463 720-480t-11.5-28.5Q697-520 680-520t-28.5 11.5Q640-497 640-480t11.5 28.5Q663-440 680-440t28.5-11.5Zm-80-120Q640-583 640-600t-11.5-28.5Q617-640 600-640t-28.5 11.5Q560-617 560-600t11.5 28.5Q583-560 600-560t28.5-11.5ZM310-440h60v-70h70v-60h-70v-70h-60v70h-70v60h70v70Z"/></svg>', 'Visual Art': '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 0 24 24" width="28px" fill="#5B5BEF"><path d="M5.61,12.17c-.12.12-.18.25-.18.4,0,.17.06.31.18.42.12.11.3.16.53.16s.47-.06.68-.18c.21-.12.36-.26.45-.43.09-.17.13-.39.13-.66v-.35c-.3.11-.61.2-.94.28-.44.12-.73.23-.84.35Z"/><path d="M19.94,2.82H4.06c-1.3,0-2.35,1.05-2.35,2.35v10.07c0,1.3,1.05,2.35,2.35,2.35h9.45l2.4,3.75,2.4-3.75h1.63c1.3,0,2.35-1.05,2.35-2.35V5.17c0-1.3-1.05-2.35-2.35-2.35ZM7.75,14.24c-.08-.15-.14-.26-.16-.34s-.05-.2-.08-.36c-.29.28-.57.47-.85.59-.39.16-.84.24-1.35.24-.68,0-1.2-.16-1.55-.47-.35-.32-.53-.7-.53-1.17,0-.43.13-.79.38-1.07s.72-.49,1.41-.62c.82-.16,1.35-.28,1.6-.35.24-.07.5-.15.77-.26,0-.27-.06-.46-.17-.56s-.31-.16-.59-.16c-.36,0-.63.06-.81.17-.14.09-.25.26-.34.5l-2.09-.22c.08-.37.19-.65.34-.86.15-.21.36-.39.64-.55.2-.11.48-.2.83-.26s.73-.09,1.14-.09c.66,0,1.18.04,1.58.11.4.07.73.23.99.46.19.16.33.39.44.68.11.3.16.58.16.85v2.52c0,.27.02.48.05.63.03.15.11.35.22.58h-2.05ZM10.86,8.54h2.05v.93c.2-.4.4-.68.61-.83.21-.15.47-.23.78-.23s.67.1,1.06.3l-.68,1.56c-.26-.11-.46-.16-.61-.16-.29,0-.51.12-.67.35-.23.33-.34.96-.34,1.87v1.91h-2.2v-5.7ZM18.68,14.37c-.54,0-.95-.07-1.2-.21-.26-.14-.45-.35-.57-.64-.12-.29-.19-.74-.19-1.38v-2.01h-.81v-1.6h.81v-1.05l2.19-1.12v2.17h1.2v1.6h-1.2v2.02c0,.24.02.4.07.48.07.12.2.18.38.18.16,0,.39-.05.68-.14l.16,1.51c-.54.12-1.05.18-1.51.18Z"/></svg>', 'Favorite Albums': '💿', 'Web Links': '<svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#5B5BEF"><path d="M325-111.5q-73-31.5-127.5-86t-86-127.5Q80-398 80-480.5t31.5-155q31.5-72.5 86-127t127.5-86Q398-880 480.5-880t155 31.5q72.5 31.5 127 86t86 127Q880-563 880-480.5T848.5-325q-31.5 73-86 127.5t-127 86Q563-80 480.5-80T325-111.5ZM480-162q26-36 45-75t31-83H404q12 44 31 83t45 75Zm-104-16q-18-33-31.5-68.5T322-320H204q29 50 72.5 87t99.5 55Zm208 0q56-18 99.5-55t72.5-87H638q-9 38-22.5 73.5T584-178ZM170-400h136q-3-20-4.5-39.5T300-480q0-21 1.5-40.5T306-560H170q-5 20-7.5 39.5T160-480q0 21 2.5 40.5T170-400Zm216 0h188q3-20 4.5-39.5T580-480q0-21-1.5-40.5T574-560H386q-3 20-4.5 39.5T380-480q0 21 1.5 40.5T386-400Zm268 0h136q5-20 7.5-39.5T800-480q0-21-2.5-40.5T790-560H654q3 20 4.5 39.5T660-480q0 21-1.5 40.5T654-400Zm-16-240h118q-29-50-72.5-87T584-782q18 33 31.5 68.5T638-640Zm-234 0h152q-12-44-31-83t-45-75q-26 36-45 75t-31 83Zm-200 0h118q9-38 22.5-73.5T376-782q-56 18-99.5 55T204-640Z"/></svg>' };
 
+// ===== MUSIC GENRE BUCKETS (Musician landing page) =====
+// A curated 15-bucket meta-taxonomy the Music landing page groups Musicians into — distinct from
+// (and unrelated to) CURATED_GENRES/GENRE_EMOJI above, which is SaveCraft's own curated-content
+// browsing concept (Top 100/Politics/etc., `state.view = 'genre:<name>'`). This one drives a
+// different, deliberately non-colliding view prefix — `musicgenre:<bucket>` — see renderGrid.js/
+// renderFilters.js. Alphabetical, per direct request.
+export const MUSIC_GENRE_BUCKETS = [
+  'Alternative/Indie', 'Blues/Funk', 'Classical', 'Country', 'Electronic', 'Folk', 'Hip-Hop',
+  'Jazz', 'Latin', 'Metal', 'Pop', 'R&B/Soul', 'Reggae', 'Rock', 'World',
+];
+
+export const MUSIC_GENRE_BUCKET_EMOJI = {
+  'Alternative/Indie': '🎧', 'Blues/Funk': '🎷', 'Classical': '🎻', 'Country': '🤠',
+  'Electronic': '🎹', 'Folk': '🪕', 'Hip-Hop': '🎤', 'Jazz': '🎺', 'Latin': '💃',
+  'Metal': '🤘', 'Pop': '⭐', 'R&B/Soul': '🎙️', 'Reggae': '🌴', 'Rock': '🎸', 'World': '🌍',
+};
+
+// Best-effort raw iTunes primaryGenreName (e.g. "Alternative", "R&B/Soul", "K-Pop" — see
+// ensureArtistGenre, api.js) -> one of the 15 buckets above. Lowercased keys (matched
+// case-insensitively by whatever reads this, e.g. authors.js's bucketForMusicianItem). A genre
+// string with no entry here maps to no bucket at all — that musician just won't show under any
+// of the 15 (still reachable via the sidebar's plain, unfiltered "Musicians" row) rather than
+// being force-fit somewhere wrong.
+export const MUSIC_GENRE_BUCKET_MAP = {
+  'alternative': 'Alternative/Indie', 'alternative rock': 'Alternative/Indie',
+  'indie rock': 'Alternative/Indie', 'indie pop': 'Alternative/Indie', 'indie': 'Alternative/Indie',
+  'blues': 'Blues/Funk', 'funk': 'Blues/Funk',
+  'classical': 'Classical', 'orchestral': 'Classical',
+  'country': 'Country',
+  'electronic': 'Electronic', 'dance': 'Electronic', 'dance pop': 'Electronic',
+  'electropop': 'Electronic', 'house': 'Electronic', 'techno': 'Electronic',
+  'dubstep': 'Electronic', 'edm': 'Electronic', 'fitness & workout': 'Electronic',
+  'folk': 'Folk', 'german folk': 'Folk', 'singer/songwriter': 'Folk',
+  'hip-hop/rap': 'Hip-Hop', 'hip-hop': 'Hip-Hop', 'rap': 'Hip-Hop',
+  'jazz': 'Jazz',
+  'latin': 'Latin', 'brazilian': 'Latin', 'cuban': 'Latin', 'reggaeton': 'Latin',
+  'salsa': 'Latin', 'bossa nova': 'Latin',
+  'metal': 'Metal', 'heavy metal': 'Metal',
+  'pop': 'Pop', 'french pop': 'Pop', 'german pop': 'Pop', 'j-pop': 'Pop', 'k-pop': 'Pop',
+  'adult contemporary': 'Pop',
+  'r&b/soul': 'R&B/Soul', 'soul': 'R&B/Soul', 'neo-soul': 'R&B/Soul',
+  'reggae': 'Reggae',
+  'rock': 'Rock', 'hard rock': 'Rock', 'punk': 'Rock',
+  'african': 'World', 'arabic': 'World', 'chinese': 'World', 'indian': 'World',
+  'korean': 'World', 'russian': 'World', 'turkish': 'World', 'worldwide': 'World',
+  'tarab': 'World', 'enka': 'World', 'kayokyoku': 'World', 'jewish music': 'World',
+};
+
 export const CATEGORY_PLATFORMS = {
   'Music Album':  { label: 'Web Links', platforms: [
     { id: 'amazon',      name: 'Amazon Music',  searchUrl: q => `https://music.amazon.com/search/${encodeURIComponent(q)}` },

@@ -704,6 +704,9 @@
   /* Single column cards */
   .cards-grid { grid-template-columns: 1fr; }
 
+  /* Music landing page's 15-card genre grid — 5 columns is too tight on a phone, 3 fits comfortably. */
+  .musicgenre-landing-grid { grid-template-columns: repeat(3, 1fr); }
+
   /* Empty states ("Nothing here yet", no results, curated prompts) — the landing-state box's own
      64px-per-side horizontal padding (cards.css) is sized for desktop's much wider canvas; on a
      phone that leaves very little width for the description, risking a 3rd line. Padding trimmed

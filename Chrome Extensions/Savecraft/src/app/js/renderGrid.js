@@ -3,6 +3,7 @@
 import {
   state, CURATED_ITEMS, CATEGORIES, CAT_LABEL, CAT_EMOJI, CURATED_NOTES_CATEGORIES,
   CREATOR_CARD_CATEGORY, BOOKMARK_OUTLINE_SVG, BOOKMARK_FILLED_SVG, CURATED_GENRE_LANDING_CONTENT,
+  MUSIC_GENRE_BUCKETS, MUSIC_GENRE_BUCKET_EMOJI,
 } from './state.js';
 import {
   escapeHtml, catClass, badgeLabel, isMusicAlbumsSectionView, isOwnAuthorPageView, getDomain,
@@ -26,7 +27,7 @@ import { renderAuthorPage } from './renderAuthorPage.js';
 import { renderCuratedGenreLanding, renderCuratedDirectory, renderCuratedBareList } from './renderCuratedPages.js';
 import { wireQuickQueueButtons } from './renderCardActions.js';
 import { fetchMissingCuratedImages, fetchMissingCuratedMusicianPhotos } from './renderCuratedImageFetch.js';
-import { getFilteredSortedItems } from './renderFilters.js';
+import { getFilteredSortedItems, getMusicGenreBucketCounts } from './renderFilters.js';
 import { resourceUrl } from './platform.js';
 
 // News cards' publication byline is folder-based, not author-based, so it doesn't go through
@@ -49,12 +50,18 @@ export function renderGrid() {
   // #sort-select node into its own content, below the hero — safe to do since it's the same
   // singleton element (not cloned, so main.js's existing change listener keeps working
   // regardless of where it sits), but it means every render needs to put it back in its normal
-  // .grid-header home FIRST, before any view (including a plain container.innerHTML= wipe)
-  // could otherwise destroy it as an orphaned child of #cards-grid.
+  // .grid-header-right home FIRST, before any view (including a plain container.innerHTML= wipe)
+  // could otherwise destroy it as an orphaned child of #cards-grid. .grid-header-right (not
+  // .grid-header directly) since the Music landing page's #musicgenre-select now sits paired with
+  // it there (index.html) — both need the same "always its real home first" guarantee, though only
+  // #sort-select ever actually gets relocated elsewhere today.
   const sortSelect = document.getElementById('sort-select');
+  const musicGenreSelect = document.getElementById('musicgenre-select');
   const gridHeader = document.querySelector('.grid-header');
-  if (sortSelect.parentElement !== gridHeader) gridHeader.appendChild(sortSelect);
+  const gridHeaderRight = document.querySelector('.grid-header-right');
+  if (sortSelect.parentElement !== gridHeaderRight) gridHeaderRight.appendChild(sortSelect);
   gridHeader.style.display = '';
+  musicGenreSelect.style.display = 'none';
 
   document.getElementById('btn-kanban-dashboard').style.display = 'none';
   document.getElementById('saves-list-wrap').style.display = 'none';
@@ -116,6 +123,18 @@ export function renderGrid() {
 
   if (state.view.startsWith('author:')) {
     renderAuthorPage();
+    return;
+  }
+
+  // Music landing page — replaces what used to be a flat A→Z Musician grid here, per direct
+  // request. 'Musician' itself is deliberately kept as this exact view string (rather than
+  // introducing a new root view) so navigateToView/the sidebar's own active-state check
+  // (state.view === cat, renderSidebar.js) both keep working unchanged; only the one-level-deeper
+  // drill-in (musicgenre:<bucket>, below) is new. The sidebar's own plain "Musicians" row
+  // (data-view=<primary folder id>) is untouched — still the unfiltered, all-musicians escape
+  // hatch, exactly as it works today.
+  if (state.view === 'Musician') {
+    renderMusicGenreLanding();
     return;
   }
 
@@ -209,6 +228,17 @@ export function renderGrid() {
       e.preventDefault();
       navigateToView(e.currentTarget.dataset.view);
     });
+  } else if (state.view.startsWith('musicgenre:')) {
+    // Music landing page drill-in — same page shape as any other category (search/sort/cards all
+    // work unchanged below), just an extra genre filter. #musicgenre-select pairs with #sort-select
+    // in .grid-header-right (index.html) — populated fresh each render so it always reflects the
+    // current bucket, same as sortSelect.value being set from state.sort elsewhere.
+    const bucket = state.view.slice(11);
+    gridTitle.innerHTML = `${CAT_EMOJI['Musician']} ${escapeHtml(bucket)}${scopedListSuffix}`;
+    musicGenreSelect.innerHTML = MUSIC_GENRE_BUCKETS
+      .map(b => `<option value="${escapeHtml(b)}"${b === bucket ? ' selected' : ''}>${escapeHtml(b)}</option>`)
+      .join('');
+    musicGenreSelect.style.display = '';
   } else if (CATEGORIES.includes(state.view)) {
     gridTitle.innerHTML = `${CAT_EMOJI[state.view]} ${CAT_LABEL[state.view] || state.view}${scopedListSuffix}`;
   } else {
@@ -390,6 +420,41 @@ export function renderGrid() {
       renderGrid();
     });
   });
+}
+
+// Music landing page (state.view === 'Musician', called from renderGrid() above) — a fixed
+// 15-card grid of genre buckets (icon + name + save count) instead of a flat item list, per
+// direct request. Structurally modeled on the savedlist: placeholder-landing branch above (no
+// items, no sort dropdown, its own container class) rather than the normal item-card path, since
+// this screen has nothing to sort/search — it's 15 fixed picker cards, not saved items.
+function renderMusicGenreLanding() {
+  const container = document.getElementById('cards-grid');
+  const gridTitle = document.getElementById('grid-title');
+  const sortSelect = document.getElementById('sort-select');
+  const musicGenreSelect = document.getElementById('musicgenre-select');
+
+  gridTitle.style.display = '';
+  gridTitle.innerHTML = `${CAT_EMOJI['Musician']} ${CAT_LABEL['Musician']}`;
+  sortSelect.style.display = 'none';
+  musicGenreSelect.style.display = 'none';
+
+  const counts = getMusicGenreBucketCounts();
+  container.className = 'musicgenre-landing-grid';
+  container.innerHTML = MUSIC_GENRE_BUCKETS.map(bucket => `
+    <button type="button" class="musicgenre-card" data-bucket="${escapeHtml(bucket)}">
+      <span class="musicgenre-card-icon">${MUSIC_GENRE_BUCKET_EMOJI[bucket] || ''}</span>
+      <span class="musicgenre-card-name">${escapeHtml(bucket)}</span>
+      <span class="musicgenre-card-count">${counts[bucket] || 0}</span>
+    </button>
+  `).join('');
+
+  container.querySelectorAll('.musicgenre-card').forEach(card => {
+    card.addEventListener('click', () => {
+      navigateToView(`musicgenre:${card.dataset.bucket}`);
+    });
+  });
+
+  persistViewState();
 }
 
 export function renderCard(item) {
