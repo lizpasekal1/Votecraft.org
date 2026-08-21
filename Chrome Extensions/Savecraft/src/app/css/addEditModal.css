@@ -1840,11 +1840,22 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* flex-start, not center — per direct follow-up ("bring the check mark up so it's just 15px
+     below the 'Excellent' title"), superseding the earlier vertical-centering approach. The
+     15px gap itself comes from .modal-header--confirm's own margin-bottom below, not padding
+     here — this way it's exactly 15px below the title regardless of how much room is left under
+     it, rather than just being pulled toward the middle of that space. */
+  justify-content: flex-start;
   text-align: center;
   gap: 16px;
-  padding: 24px 8px 8px;
+  padding: 0 8px 8px;
   min-height: 220px;
+}
+/* Add/Edit's own shared #modal-header rule sets margin-bottom: 24px, sized for every other
+   screen's fields sitting right below it — tightened to exactly 15px for the confirmation
+   screen only (toggled by showSaveConfirmationStep/openAddModal/openEditModal, addEditModal.js). */
+#modal-header.modal-header--confirm {
+  margin-bottom: 15px;
 }
 .modal-confirm-check {
   display: flex;
@@ -1857,7 +1868,7 @@
   color: #fff;
 }
 .modal-confirm-text {
-  font-size: 15px;
+  font-size: 19px;
   line-height: 1.4;
   color: var(--text-primary);
 }
