@@ -15,7 +15,7 @@ import { isExtension, storageSync, storageOnChanged, resourceUrl } from './platf
 import { debounce, escapeHtml } from './utils.js';
 import { renderSidebar, renderGrid, collapseAllSidebarSections } from './render.js';
 import { initShare, closeShareModal } from './share.js';
-import { navigateToView } from './navigation.js';
+import { navigateToView, urlParamToView } from './navigation.js';
 import { _closeEmbedBuilder } from './embedBuilder.js';
 import {
   openAddModal, closeAddModal, handleSaveItem, updatePlatformSummary,
@@ -503,7 +503,7 @@ function _handlePopstate(e) {
     // An entry this app didn't create (e.g. the user navigated away to another site and back) —
     // fall back to re-parsing the URL the same way initial load does, rather than guessing.
     const v = new URLSearchParams(location.search).get('v');
-    if (v) state.view = v;
+    if (v) state.view = urlParamToView(v);
   } else {
     state.view = e.state.view;
     if (e.state.sidebarMode !== undefined) state.sidebarMode = e.state.sidebarMode;
@@ -748,7 +748,7 @@ async function init() {
   const navOptions = startOnDashboard
     ? { sidebarMode: 'home', activeCuratedFolderId: null, authorReturnView: null }
     : { sidebarMode: state.sidebarMode, activeCuratedFolderId: state.activeCuratedFolderId, authorReturnView: state.authorReturnView };
-  navigateToView(startOnDashboard ? 'dashboard' : (urlView || state.view), { ...navOptions, replace: true });
+  navigateToView(startOnDashboard ? 'dashboard' : (urlParamToView(urlView) || state.view), { ...navOptions, replace: true });
   window.addEventListener('popstate', _handlePopstate);
   initShare();
   initSearch();
