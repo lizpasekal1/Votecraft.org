@@ -41,6 +41,23 @@
   row-gap: 30px;
   column-gap: 14px;
 }
+/* 20px above the first row and below the last row only, desktop only, per direct follow-up/
+   correction ("this twenty pixels of padding should just be below the top and bottom") — not
+   extra gap between every card (that was tried first and corrected). */
+@media (min-width: 481px) {
+  .musicgenre-landing-grid {
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
+  /* Cards themselves 20% larger, desktop only, per direct request — the name/count text
+     (.musicgenre-card-name/-count) was getting clipped at the previous size. Scales both the
+     card's width and its own padding so the extra room actually reaches the text, not just the
+     card's outer footprint. */
+  .musicgenre-card {
+    width: calc((50% + 30px) * 1.2);
+    padding: 26px 12px;
+  }
+}
 .musicgenre-card {
   display: flex;
   flex-direction: column;
