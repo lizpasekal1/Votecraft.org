@@ -3,7 +3,7 @@
 import {
   state, CURATED_ITEMS, CATEGORIES, CAT_LABEL, CAT_EMOJI, CURATED_NOTES_CATEGORIES,
   CREATOR_CARD_CATEGORY, BOOKMARK_OUTLINE_SVG, BOOKMARK_FILLED_SVG, CURATED_GENRE_LANDING_CONTENT,
-  MUSIC_GENRE_BUCKETS, MUSIC_GENRE_BUCKET_EMOJI,
+  MUSIC_GENRE_BUCKETS, MUSIC_GENRE_BUCKET_EMOJI, MUSIC_ALL_LABEL, PRIMARY_FOLDER_ID,
 } from './state.js';
 import {
   escapeHtml, catClass, badgeLabel, isMusicAlbumsSectionView, isOwnAuthorPageView, getDomain,
@@ -27,7 +27,7 @@ import { renderAuthorPage } from './renderAuthorPage.js';
 import { renderCuratedGenreLanding, renderCuratedDirectory, renderCuratedBareList } from './renderCuratedPages.js';
 import { wireQuickQueueButtons } from './renderCardActions.js';
 import { fetchMissingCuratedImages, fetchMissingCuratedMusicianPhotos } from './renderCuratedImageFetch.js';
-import { getFilteredSortedItems, getMusicGenreBucketCounts } from './renderFilters.js';
+import { getFilteredSortedItems, getMusicGenreBucketCounts, getMusicianTotalCount } from './renderFilters.js';
 import { resourceUrl } from './platform.js';
 
 // News cards' publication byline is folder-based, not author-based, so it doesn't go through
@@ -439,8 +439,18 @@ function renderMusicGenreLanding() {
   musicGenreSelect.style.display = 'none';
 
   const counts = getMusicGenreBucketCounts();
+  // "All Music" — a shortcut to the existing unfiltered "every saved musician" view (same
+  // destination the sidebar's own plain "Musicians" row already goes to), not a real genre
+  // bucket — pinned first, ahead of the alphabetical genre cards, per direct request.
+  const allBucketHtml = `
+    <button type="button" class="musicgenre-card" data-bucket="${escapeHtml(MUSIC_ALL_LABEL)}">
+      <span class="musicgenre-card-icon">${MUSIC_GENRE_BUCKET_EMOJI[MUSIC_ALL_LABEL] || ''}</span>
+      <span class="musicgenre-card-name">${escapeHtml(MUSIC_ALL_LABEL)}</span>
+      <span class="musicgenre-card-count">${getMusicianTotalCount()}</span>
+    </button>
+  `;
   container.className = 'musicgenre-landing-grid';
-  container.innerHTML = MUSIC_GENRE_BUCKETS.map(bucket => `
+  container.innerHTML = allBucketHtml + MUSIC_GENRE_BUCKETS.map(bucket => `
     <button type="button" class="musicgenre-card" data-bucket="${escapeHtml(bucket)}">
       <span class="musicgenre-card-icon">${MUSIC_GENRE_BUCKET_EMOJI[bucket] || ''}</span>
       <span class="musicgenre-card-name">${escapeHtml(bucket)}</span>
@@ -450,7 +460,13 @@ function renderMusicGenreLanding() {
 
   container.querySelectorAll('.musicgenre-card').forEach(card => {
     card.addEventListener('click', () => {
-      navigateToView(`musicgenre:${card.dataset.bucket}`);
+      // "All Music" goes straight to the primary Musicians folder view (unfiltered) — every real
+      // bucket goes through the musicgenre: filter branch as before.
+      if (card.dataset.bucket === MUSIC_ALL_LABEL) {
+        navigateToView(PRIMARY_FOLDER_ID['Musician']);
+      } else {
+        navigateToView(`musicgenre:${card.dataset.bucket}`);
+      }
     });
   });
 

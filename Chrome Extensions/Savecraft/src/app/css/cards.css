@@ -49,14 +49,6 @@
     padding-top: 20px;
     padding-bottom: 20px;
   }
-  /* Cards themselves 20% larger, desktop only, per direct request — the name/count text
-     (.musicgenre-card-name/-count) was getting clipped at the previous size. Scales both the
-     card's width and its own padding so the extra room actually reaches the text, not just the
-     card's outer footprint. */
-  .musicgenre-card {
-    width: calc((50% + 30px) * 1.2);
-    padding: 26px 12px;
-  }
 }
 .musicgenre-card {
   display: flex;
@@ -98,7 +90,16 @@
   font-size: 13px;
   color: rgba(255,255,255,0.8);
 }
-
+/* Cards 10% larger, desktop only, per direct follow-up (an earlier 20% attempt was placed before
+   the base .musicgenre-card rule above, so — same specificity, earlier source order — it was
+   silently overridden by it and never actually took effect; this one comes after, so it wins).
+   Font size deliberately left unscaled here, per direct request — only width/padding grow. */
+@media (min-width: 481px) {
+  .musicgenre-card {
+    width: calc((50% + 30px) * 1.1);
+    padding: 24px 11px;
+  }
+}
 
 .grid-title {
   display: flex;
