@@ -1147,6 +1147,15 @@ export async function runInitialSync(uid) {
       savecraft_lastfm_username: cloudSettings.lastfmUsername,
       savecraft_followed_curated_lists: cloudSettings.followedCuratedLists,
       savecraft_steam_id: cloudSettings.steamId,
+      // REAL BUG, found and fixed: savedLists (Profile > Saved Lists / the sidebar's own "My
+      // Saves Library" -> "+ Add List") is written to this same savecraft_users/{uid} doc by
+      // persistSavedLists() (below), but was never actually pulled back down here — every other
+      // field in this object round-trips, this one only ever wrote, never read. A list created on
+      // one device (and correctly saved to Firestore) would never appear on a second device/fresh
+      // session, since loadAll() only ever reads local storage and this is the one place that's
+      // supposed to reconcile it with the cloud copy (reported live: a "Civics" list created on
+      // desktop never showed up on mobile, even signed into the same account).
+      savecraft_saved_lists: cloudSettings.savedLists,
       // Not written by any persist* function here (no in-app UI sets it) — read-only from this
       // side, meant to be set directly on savecraft_users/{uid}.role via the Firebase console for
       // a future admin (see utils.js's isAdminUser). Included in this pull so a console-set role
@@ -1169,6 +1178,7 @@ export async function runInitialSync(uid) {
     if (cloudSettings.followedCuratedLists) state.followedCuratedLists = new Set(cloudSettings.followedCuratedLists);
     if (cloudSettings.steamId !== undefined) state.steamId = cloudSettings.steamId;
     if (cloudSettings.role != null) state.role = cloudSettings.role;
+    if (cloudSettings.savedLists) state.savedLists = cloudSettings.savedLists;
   }
 
   await _mergeCollection(uid, idToken, 'items', 'item_', state.items);
