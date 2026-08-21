@@ -20,10 +20,11 @@
 
 import { state } from './state.js';
 import { persistItem, persistArtistGenreCache } from './storage.js';
-import { ensureArtistWikipediaInfo } from './api.js';
+import { ensureArtistWikipediaInfo, isItunesRateLimited } from './api.js';
 import { renderSidebar } from './render.js';
 import { renderGrid } from './render.js';
 import { backfillMusicianGenres } from './authors.js';
+import { autoImportMusicianAlbums } from './addEditModal.js';
 
 // Transcribed from the screenshots, in the order they were shared — duplicates (both within this
 // list and against already-saved artists) are dropped at import time below, not here, so this
@@ -249,7 +250,39 @@ export function resetArtistGenreCache() {
   backfillMusicianGenres();
 }
 
+// One-time companion for the bulk import above, per direct follow-up ("i am not seeing their
+// albums coming in") — bulkImportMyArtists() deliberately skipped autoImportMusicianAlbums()
+// (addEditModal.js, exported for reuse here) at import time, since ~800 extra iTunes calls on top
+// of the genre lookups was too much for one burst. This runs it for every saved Musician
+// separately, more conservatively paced (600ms apart, not 150ms) given iTunes was already caught
+// rate-limiting this client once this session. Only processes artists with zero Music Album items
+// of their own yet — autoImportMusicianAlbums() already dedupes against existing album titles, but
+// skipping here too means re-running this after a rate-limit stop doesn't waste calls re-checking
+// artists already done, it just picks up where it left off.
+export async function bulkImportAlbumsForMyArtists() {
+  const albumAuthors = new Set(
+    state.items.filter(i => i.category === 'Music Album' && i.author).map(i => i.author.trim().toLowerCase())
+  );
+  const musicianItems = state.items.filter(i => i.category === 'Musician' && !albumAuthors.has((i.title || '').trim().toLowerCase()));
+  console.log(`[bulkImportAlbumsForMyArtists] Importing albums for ${musicianItems.length} musicians with none yet...`);
+
+  let processed = 0;
+  for (const item of musicianItems) {
+    if (isItunesRateLimited()) {
+      console.log(`[bulkImportAlbumsForMyArtists] Stopped after ${processed}/${musicianItems.length} — iTunes is rate-limiting this browser right now. Wait a few minutes and run this again; it'll pick up right where it left off.`);
+      return { processed, total: musicianItems.length, stoppedEarly: true };
+    }
+    await autoImportMusicianAlbums(item);
+    processed++;
+    if (processed % 25 === 0) console.log(`[bulkImportAlbumsForMyArtists] ${processed}/${musicianItems.length}...`);
+    await new Promise(resolve => setTimeout(resolve, 600));
+  }
+  console.log(`[bulkImportAlbumsForMyArtists] Done — processed all ${processed} musicians.`);
+  return { processed, total: musicianItems.length, stoppedEarly: false };
+}
+
 if (typeof window !== 'undefined') {
   window.bulkImportMyArtists = bulkImportMyArtists;
   window.resetArtistGenreCache = resetArtistGenreCache;
+  window.bulkImportAlbumsForMyArtists = bulkImportAlbumsForMyArtists;
 }
