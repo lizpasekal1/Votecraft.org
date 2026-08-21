@@ -234,11 +234,14 @@ export const CAT_EMOJI = { 'News': '<svg xmlns="http://www.w3.org/2000/svg" heig
 // unrelated to) CURATED_GENRES/GENRE_EMOJI above, which is SaveCraft's own curated-content
 // browsing concept (Top 100/Politics/etc., `state.view = 'genre:<name>'`). This one drives a
 // different, deliberately non-colliding view prefix — `musicgenre:<bucket>` — see renderGrid.js/
-// renderFilters.js. Alphabetical, per direct request (Reggae folded into World per a follow-up —
-// no separate Reggae bucket anymore).
+// renderFilters.js. Alphabetical, per direct request. Reggae was briefly folded into World, then
+// moved again into R&B/Soul per a later direct request (no World-vs-Reggae comment survives that
+// below — see MUSIC_GENRE_BUCKET_MAP's own note next to it). Metal folded into Rock (renamed
+// "Rock/Metal" to reflect that) rather than kept as its own bucket, freeing up a card slot that
+// became the new Meditation bucket.
 export const MUSIC_GENRE_BUCKETS = [
   'Alt/Indie', 'Blues/Funk', 'Classical', 'Country', 'Electronic', 'Folk', 'Hip-Hop',
-  'Jazz', 'Latin', 'Metal', 'Pop', 'R&B/Soul', 'Rock', 'World',
+  'Jazz', 'Latin', 'Meditation', 'Pop', 'R&B/Soul', 'Rock/Metal', 'World',
 ];
 
 // "All Music" — a 15th landing-grid card, pinned first (not alphabetized in with the real genre
@@ -252,7 +255,7 @@ export const MUSIC_GENRE_BUCKET_EMOJI = {
   [MUSIC_ALL_LABEL]: '🎶',
   'Alt/Indie': '🎧', 'Blues/Funk': '🎷', 'Classical': '🎻', 'Country': '🤠',
   'Electronic': '🎹', 'Folk': '🪕', 'Hip-Hop': '🎤', 'Jazz': '🎺', 'Latin': '💃',
-  'Metal': '🤘', 'Pop': '⭐', 'R&B/Soul': '🎙️', 'Rock': '🎸', 'World': '🌍',
+  'Meditation': '🧘', 'Pop': '⭐', 'R&B/Soul': '🎙️', 'Rock/Metal': '🎸', 'World': '🌍',
 };
 
 // Best-effort raw iTunes primaryGenreName (e.g. "Alternative", "R&B/Soul", "K-Pop" — see
@@ -275,14 +278,20 @@ export const MUSIC_GENRE_BUCKET_MAP = {
   'jazz': 'Jazz',
   'latin': 'Latin', 'brazilian': 'Latin', 'cuban': 'Latin', 'reggaeton': 'Latin',
   'salsa': 'Latin', 'bossa nova': 'Latin',
-  'metal': 'Metal', 'heavy metal': 'Metal',
+  // New bucket, per direct request — the card slot Metal vacated below became Meditation instead
+  // of just disappearing. "New Age" is iTunes' own real primaryGenreName category for this kind
+  // of music, not a guess.
+  'new age': 'Meditation',
   'pop': 'Pop', 'french pop': 'Pop', 'german pop': 'Pop', 'j-pop': 'Pop', 'k-pop': 'Pop',
   'adult contemporary': 'Pop',
-  'r&b/soul': 'R&B/Soul', 'soul': 'R&B/Soul', 'neo-soul': 'R&B/Soul',
-  'rock': 'Rock', 'hard rock': 'Rock', 'punk': 'Rock',
-  // Reggae folded into World, per direct follow-up ("put Reggae into world music") — no longer
-  // its own bucket.
-  'reggae': 'World',
+  // Reggae moved from World into R&B/Soul, per direct request ("put the reggae tag into
+  // r&b/soul") — an earlier follow-up had it folded into World instead; this supersedes that.
+  'r&b/soul': 'R&B/Soul', 'soul': 'R&B/Soul', 'neo-soul': 'R&B/Soul', 'reggae': 'R&B/Soul',
+  'rock': 'Rock/Metal', 'hard rock': 'Rock/Metal', 'punk': 'Rock/Metal',
+  // Metal folded into Rock, per direct request ("merge metal with rock"), then the bucket itself
+  // renamed "Rock/Metal" (was just "Rock") per a follow-up so the merge shows up in the label —
+  // no separate Metal bucket/card anymore.
+  'metal': 'Rock/Metal', 'heavy metal': 'Rock/Metal',
   'african': 'World', 'arabic': 'World', 'chinese': 'World', 'indian': 'World',
   'korean': 'World', 'russian': 'World', 'turkish': 'World', 'worldwide': 'World',
   'tarab': 'World', 'enka': 'World', 'kayokyoku': 'World', 'jewish music': 'World',
