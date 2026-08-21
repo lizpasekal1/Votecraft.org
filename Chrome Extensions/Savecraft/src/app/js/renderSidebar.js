@@ -789,9 +789,15 @@ export function renderSidebar() {
     e.stopPropagation();
     promptAddSavedList();
   });
+  // "+ Add List" under Curated Lists no longer creates a new row here at all, per direct request
+  // — every row besides the one hardcoded "VoteCraft" entry has no real content behind it and
+  // would just be another dead link (see promptAddCuratedListRow's own removed comment: "Curated
+  // Lists' own (separate, currently unwired) children"). Routes to the real Cause Curated page
+  // instead — same destination/options VoteCraft's own row, dashboard.js, and sharedSaves.js all
+  // already use to get there.
   sidebar.querySelector('.sidebar-add-curated-list')?.addEventListener('click', e => {
     e.stopPropagation();
-    promptAddCuratedListRow();
+    navigateToView('curated', { sidebarMode: 'curated' });
   });
 
   sidebar.querySelectorAll('.sidebar-delete-folder').forEach(btn => {
@@ -871,16 +877,5 @@ export function promptAddSavedList() {
   const name = prompt('New saved list name:');
   if (!name?.trim()) return;
   addSavedList(name);
-  renderSidebar();
-}
-
-// Same as promptAddSavedList above, for Curated Lists' own (separate, currently unwired) children.
-export function promptAddCuratedListRow() {
-  const name = prompt('New curated list name:');
-  if (!name?.trim()) return;
-
-  const row = { id: Date.now().toString(), name: name.trim() };
-  state.curatedListsRows.push(row);
-  storageSync.set({ savecraft_curated_lists_rows: state.curatedListsRows });
   renderSidebar();
 }
