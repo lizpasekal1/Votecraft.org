@@ -441,15 +441,14 @@ function renderMusicGenreLanding() {
   `;
   // "All Music" — a shortcut to the existing unfiltered "every saved musician" view (same
   // destination the sidebar's own plain "Musicians" row already goes to), not a real genre
-  // bucket — pinned first, ahead of the alphabetical genre cards, per direct request. Its own
-  // callout lists every mapped tag across every real bucket (tagsForMusicGenreBucket with no
-  // bucket arg), since it isn't a bucket of its own in MUSIC_GENRE_BUCKET_MAP.
+  // bucket — pinned first, ahead of the alphabetical genre cards, per direct request. No hover
+  // callout of its own, per direct follow-up — it isn't a real bucket in MUSIC_GENRE_BUCKET_MAP,
+  // so "every tag" wouldn't tell the user anything a specific bucket's own callout doesn't already.
   const allBucketHtml = `
     <button type="button" class="musicgenre-card" data-bucket="${escapeHtml(MUSIC_ALL_LABEL)}">
       <span class="musicgenre-card-icon">${MUSIC_GENRE_BUCKET_EMOJI[MUSIC_ALL_LABEL] || ''}</span>
       <span class="musicgenre-card-name">${escapeHtml(MUSIC_ALL_LABEL)}</span>
       <span class="musicgenre-card-count">${getMusicianTotalCount()}</span>
-      ${buildTooltipHtml(tagsForMusicGenreBucket())}
     </button>
   `;
   container.className = 'musicgenre-landing-grid';
