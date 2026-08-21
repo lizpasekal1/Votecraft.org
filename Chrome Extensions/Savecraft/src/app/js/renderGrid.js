@@ -28,6 +28,7 @@ import { renderCuratedGenreLanding, renderCuratedDirectory, renderCuratedBareLis
 import { wireQuickQueueButtons } from './renderCardActions.js';
 import { fetchMissingCuratedImages, fetchMissingCuratedMusicianPhotos } from './renderCuratedImageFetch.js';
 import { getFilteredSortedItems, getMusicGenreBucketCounts, getMusicianTotalCount } from './renderFilters.js';
+import { updateAzIndexRail } from './azIndexRail.js';
 import { resourceUrl } from './platform.js';
 
 // News cards' publication byline is folder-based, not author-based, so it doesn't go through
@@ -42,7 +43,16 @@ function wirePublicationLinks(container) {
   });
 }
 
+// Thin wrapper around the real render (below) — every view branch inside it has its own early
+// `return`, so rather than thread a "did we just render a flat card list" flag through each one,
+// the A-Z index rail (azIndexRail.js) just inspects the DOM afterward and shows/hides itself
+// based on what actually got rendered, same generic approach regardless of which branch ran.
 export function renderGrid() {
+  _renderGridBody();
+  updateAzIndexRail();
+}
+
+function _renderGridBody() {
   const container = document.getElementById('cards-grid');
   const gridTitle = document.getElementById('grid-title');
 
