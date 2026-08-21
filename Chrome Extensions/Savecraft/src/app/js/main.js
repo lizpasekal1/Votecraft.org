@@ -24,6 +24,7 @@ import {
 } from './addEditModal.js';
 import { openDetailModal, closeDetailModal, closeImageLightbox, getDetailItem, showNextImage, showPrevImage, handleGalleryLoadMoreClick, closeVideoLightbox } from './detailModal.js';
 import { initNoteToolbar } from './detailModalNotes.js';
+import { initAzIndexRail } from './azIndexRail.js';
 import { closeVoiceNoteModal, initVoiceNoteModal } from './voiceNotes.js';
 import { closeFetchAlbumsModal, handleImportAlbums, renderFetchAlbumsList } from './fetchAlbumsModal.js';
 // One-time personal bulk-import helper (window.bulkImportMyArtists()), see its own file header —
@@ -751,6 +752,7 @@ async function init() {
   window.addEventListener('popstate', _handlePopstate);
   initShare();
   initSearch();
+  initAzIndexRail();
 
   sortSelect.addEventListener('change', () => handleSort(sortSelect.value));
 
