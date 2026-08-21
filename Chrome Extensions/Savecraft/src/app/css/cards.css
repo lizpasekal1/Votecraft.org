@@ -1786,3 +1786,43 @@
     display: none;
   }
 }
+
+/* ===== A-Z INDEX RAIL ===== */
+/* position: fixed, repositioned in JS against .grid-area's own live rect (azIndexRail.js) — see
+   its own comment for why sticky isn't a fit here. Narrow/unobtrusive since it overlays the
+   rightmost edge of whatever card is beneath it rather than reserving its own column. */
+.az-index-rail {
+  position: fixed;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 4px 3px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.az-index-rail[hidden] {
+  display: none;
+}
+
+.az-index-letter {
+  background: none;
+  border: none;
+  padding: 1.5px 3px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--primary);
+  cursor: pointer;
+}
+
+.az-index-letter:hover,
+.az-index-letter:active {
+  color: #fff;
+  background: var(--primary);
+  border-radius: 3px;
+}
