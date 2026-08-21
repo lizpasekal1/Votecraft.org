@@ -10,7 +10,7 @@
 // at a time.
 
 import { state, CATEGORIES, CAT_LABEL, CAT_EMOJI, CATEGORY_PLATFORMS, MODAL_BOOKMARK_ICON_SVG, PRIMARY_FOLDER_ID } from './state.js';
-import { escapeHtml, isItunesArtworkUrl, folderIconHtml, sortFoldersForDisplay, getChildFolders } from './utils.js';
+import { escapeHtml, isItunesArtworkUrl, folderIconHtml, sortFoldersForDisplay, getChildFolders, getDomain } from './utils.js';
 import { persistItem, persistCuratedOverrides } from './storage.js';
 import { renderSidebar, renderGrid, promptAddFolder } from './render.js';
 import {
@@ -1015,7 +1015,10 @@ export async function handleSaveItem() {
   const youtubeUrl = document.getElementById('input-youtube-url').value.trim() || null;
   const platforms = getSelectedPlatforms();
 
-  if (!titleInput) {
+  // Title is only required when there's no URL either — a URL alone is enough to save (the
+  // domain fills in as a stand-in title below), per direct request ("i should be able to save
+  // an item with just the url"). Blocks only the genuinely empty case (neither field filled).
+  if (!titleInput && !url) {
     document.getElementById('input-title').focus();
     document.getElementById('input-title').style.borderColor = '#EF4444';
     setTimeout(() => document.getElementById('input-title').style.borderColor = '', 1500);
@@ -1092,7 +1095,9 @@ export async function handleSaveItem() {
   saveBtn.disabled = true;
   saveBtn.textContent = 'Saving...';
 
-  const title = titleInput;
+  // A URL-only save (see the relaxed guard above) still needs something to display as the card's
+  // title everywhere else in the app — the domain is the most useful stand-in available.
+  const title = titleInput || getDomain(url);
 
   let item;
   if (state.editingId && state.editingId.startsWith('cur-')) {
