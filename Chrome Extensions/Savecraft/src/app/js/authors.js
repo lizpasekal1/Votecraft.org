@@ -4,7 +4,7 @@
 
 import { state, CURATED_ITEMS, CURATED_NOTES_CATEGORIES } from './state.js';
 import { persistAuthor, persistItem, persistCuratedAlbumMetaCache, persistAlbumTrackListCache, persistAlbumArtCache } from './storage.js';
-import { ensureArtistWebsite, ensureArtistWikipediaInfo, fetchAlbumsFromItunes, fetchAlbumArtFromMusicBrainz } from './api.js';
+import { ensureArtistWebsite, ensureArtistWikipediaInfo, ensureArtistGenre, fetchAlbumsFromItunes, fetchAlbumArtFromMusicBrainz } from './api.js';
 import { isItunesArtworkUrl, applyArtistPhotoToItem, patchCardImage } from './utils.js';
 import { renderGrid } from './render.js';
 import { renderAuthorPage } from './render.js';
@@ -74,7 +74,7 @@ export async function autoSaveMusician(artistName) {
   // Ensure an author profile exists so a website lookup has somewhere to attach
   let author = findAuthor(artistName, 'Musician');
   if (!author) {
-    author = { id: Date.now().toString(), name: artistName, category: 'Musician', bio: null, imageUrl: null, websiteUrl: null, savedAt: Date.now() };
+    author = { id: Date.now().toString(), name: artistName, category: 'Musician', bio: null, imageUrl: null, websiteUrl: null, genre: null, savedAt: Date.now() };
     state.authors.push(author);
     await persistAuthor(author);
   }
@@ -82,6 +82,13 @@ export async function autoSaveMusician(artistName) {
     ensureArtistWebsite(artistName).then(url => {
       if (!url) return;
       author.websiteUrl = url;
+      persistAuthor(author);
+    });
+  }
+  if (!author.genre) {
+    ensureArtistGenre(artistName).then(genre => {
+      if (!genre) return;
+      author.genre = genre;
       persistAuthor(author);
     });
   }
@@ -107,7 +114,7 @@ export async function navigateToAuthor(name, category) {
   const authorReturnView = state.view;
   let author = findAuthor(name, category);
   if (!author) {
-    author = { id: Date.now().toString(), name, category, bio: null, imageUrl: null, websiteUrl: null, savedAt: Date.now() };
+    author = { id: Date.now().toString(), name, category, bio: null, imageUrl: null, websiteUrl: null, genre: null, savedAt: Date.now() };
     state.authors.push(author);
     await persistAuthor(author);
   }
@@ -117,6 +124,15 @@ export async function navigateToAuthor(name, category) {
     ensureArtistWebsite(name).then(url => {
       if (!url) return;
       author.websiteUrl = url;
+      persistAuthor(author);
+      if (state.view === `author:${category}:${name}`) renderGrid();
+    });
+  }
+
+  if (category === 'Musician' && !author.genre) {
+    ensureArtistGenre(name).then(genre => {
+      if (!genre) return;
+      author.genre = genre;
       persistAuthor(author);
       if (state.view === `author:${category}:${name}`) renderGrid();
     });

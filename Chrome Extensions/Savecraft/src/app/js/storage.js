@@ -895,6 +895,10 @@ export function persistArtistWebsiteCache() {
   storageLocal.set({ savecraft_artist_website_cache: state.artistWebsiteCache });
 }
 
+export function persistArtistGenreCache() {
+  storageLocal.set({ savecraft_artist_genre_cache: state.artistGenreCache });
+}
+
 // _v2: bumped when the cached shape grew a photoUrl field, so old bio-only cache entries
 // (which would otherwise short-circuit the photo lookup) don't linger.
 export function persistArtistBioCache() {
