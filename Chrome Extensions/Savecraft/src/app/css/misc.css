@@ -704,8 +704,35 @@
   /* Single column cards */
   .cards-grid { grid-template-columns: 1fr; }
 
-  /* Music landing page's 15-card genre grid — 5 columns is too tight on a phone, 3 fits comfortably. */
-  .musicgenre-landing-grid { grid-template-columns: repeat(3, 1fr); }
+  /* Music landing page's genre grid, mobile-optimized as its own pass:
+     - 2 columns, not 5 (or even 3) — the cards need real room for longer bucket names
+       ("Alternative/Indie", "R&B/Soul") on a narrow screen; 3+ columns left too little width per
+       card and the desktop "half width, centered" treatment (cards.css) would have made them
+       tiny and cramped here.
+     - row-gap trimmed from desktop's 50px — 15 cards at 2-per-row is already 8 rows; 50px between
+       each would add a lot of scroll for little benefit on a phone.
+     - .musicgenre-card gets its own mobile width (most of its column, not the desktop-style
+       half-width-plus-fixed-px formula, which was sized for 5 much-narrower desktop columns and
+       would look awkwardly small carried over here) so the icon/name/count actually have room. */
+  .musicgenre-landing-grid {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: 20px;
+  }
+  .musicgenre-card {
+    width: 85%;
+  }
+  /* #musicgenre-select (Music landing page's genre filter, only ever shown alongside #sort-select
+     on a musicgenre: page) stacks above #sort-select instead of sitting side by side — two
+     160px-wide dropdowns plus their gap don't reliably fit next to each other even on a mid-size
+     phone, let alone the smallest ones (this app's own 320px iPhone SE baseline elsewhere).
+     Unconditional (not gated on #musicgenre-select actually being visible) is deliberately safe:
+     with only one visible child (every non-musicgenre page), a column vs. row direction looks
+     identical, so this can't regress #sort-select's own presentation anywhere else. */
+  .grid-header-right {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
 
   /* Empty states ("Nothing here yet", no results, curated prompts) — the landing-state box's own
      64px-per-side horizontal padding (cards.css) is sized for desktop's much wider canvas; on a
