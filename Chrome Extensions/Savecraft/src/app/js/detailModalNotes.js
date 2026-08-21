@@ -547,9 +547,13 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
       favoritesField: 'noteFavorites', textsField: 'noteTexts', zeroSeededField: 'noteZeroSeeded', titlesField: 'noteTitles',
       zeroLabel: 'Summary', rowLabel: () => 'Note', notePlaceholder: 'Add a note…',
       addButtonLabel: '+ Add Note', addButtonId: 'btn-add-note', zeroNumberDisplay: '•',
-      // Musician's row 0 prefers the artist's Wikipedia bio (see applyMusicianBioFallback() below
-      // for the async first-lookup path) over the item's own general notes/description.
-      zeroFallback: isMusicianItem ? (ctaAuthor?.bio || text) : text,
+      // Musician's row 0 prefers the item's own summary first — set synchronously at Add time by
+      // kickOffTitleEnrichment (addEditModal.js), so the bio shows up immediately here without
+      // waiting on anything — then the separate author record's bio (ctaAuthor?.bio, only
+      // populated asynchronously the first time this item's detail page is opened — see
+      // applyMusicianBioFallback() below for that first-lookup path), then the item's own general
+      // notes/description, same last resort every other category already uses.
+      zeroFallback: isMusicianItem ? (item.summary || ctaAuthor?.bio || text) : text,
     });
   } else {
     notesListEl.style.display = 'none';
