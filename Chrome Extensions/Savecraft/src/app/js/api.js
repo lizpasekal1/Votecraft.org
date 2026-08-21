@@ -496,12 +496,39 @@ export async function ensureArtistWebsite(artistName) {
   return url;
 }
 
+// REAL BUG, found and fixed: the previous fix here (not caching transient failures, so a
+// rate-limited burst wouldn't poison an artist's genre for 90 days — see git history) had its own
+// side effect once iTunes actually started returning 403s for real: with nothing cached, every
+// subsequent backfill pass just re-attempted the same ~700 still-unresolved lookups all over
+// again, flooding the console with hundreds of doomed 403s per page visit instead of backing off
+// (reported live via a DevTools screenshot: "that is just failing over and over"). A 403
+// specifically (Apple's own rate-limit signal, confirmed live — a plain server-side curl to the
+// same endpoint succeeded, so this is a per-client/IP throttle, not the endpoint being down) now
+// trips a short in-memory circuit breaker: every ensureArtistGenre call for the next
+// ITUNES_COOLDOWN_MS returns null immediately, with no network request at all, so a burst of
+// already-scheduled backfill calls stops hammering the endpoint within one round-trip instead of
+// working through the whole remaining queue. Session-only (not persisted) — a page reload clears
+// it, but the very first real 403 after that reload re-trips it immediately, so at most a couple
+// of requests slip through before the breaker closes again.
+const ITUNES_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+let _itunesBlockedUntil = 0;
+
+// Exported so backfillMusicianGenres() (authors.js) can skip scheduling an entire pass while the
+// breaker is open, instead of scheduling hundreds of setTimeouts that would just call
+// ensureArtistGenre only to have it immediately no-op — cheap either way, but this gives a clear
+// single console line instead of silence.
+export function isItunesRateLimited() {
+  return Date.now() < _itunesBlockedUntil;
+}
+
 // Looks up an artist's genre via iTunes' musicArtist search (the same endpoint/field
 // searchMusicians already uses as its typeahead subtitle, api.js above — just a dedicated
 // single-artist lookup here instead, since that one's result gets discarded once a search result
 // is picked). iTunes only exposes one genre per artist, not a list — this returns a single string
 // or null, never an array. Cached indefinitely on success; cached "not found" results expire
-// after ARTIST_GENRE_CACHE_MISS_TTL, mirroring ensureArtistWebsite above exactly.
+// after ARTIST_GENRE_CACHE_MISS_TTL, mirroring ensureArtistWebsite above exactly. A transient
+// failure (network error, or any non-ok response) is never cached as a miss — only a genuine
+// successful response (even one with zero results) is a stable enough fact to cache for 90 days.
 export async function ensureArtistGenre(artistName) {
   if (!artistName) return null;
   const key = artistName.trim().toLowerCase();
@@ -509,15 +536,7 @@ export async function ensureArtistGenre(artistName) {
   if (cached && (cached.genre || (Date.now() - cached.fetchedAt < ARTIST_GENRE_CACHE_MISS_TTL))) {
     return cached.genre;
   }
-  // REAL BUG, found and fixed: a request that failed outright (network error, or iTunes
-  // returning a non-ok response — e.g. rate-limiting a large burst of lookups, hit live during a
-  // ~800-artist bulk import) used to be cached as a miss identically to a genuine "no such
-  // artist" empty result, poisoning it for the full 90-day TTL above. A transient failure now
-  // just returns null for THIS call without writing anything to the cache, so the very next
-  // backfill pass (backfillMusicianGenres, authors.js) gets a fresh real attempt instead of
-  // silently reading back the same stuck miss for months. Only a genuine successful response
-  // (even one with zero results) still gets cached below — that's the only case that's actually
-  // safe to treat as a stable "this artist has no iTunes genre data" fact.
+  if (Date.now() < _itunesBlockedUntil) return null; // circuit breaker open — don't even try
   let resp;
   try {
     const url = `https://itunes.apple.com/search?term=${encodeURIComponent(artistName)}&entity=musicArtist&limit=1`;
@@ -525,6 +544,7 @@ export async function ensureArtistGenre(artistName) {
   } catch {
     return null; // network error — leave uncached, retried fresh next time
   }
+  if (resp.status === 403) _itunesBlockedUntil = Date.now() + ITUNES_COOLDOWN_MS;
   if (!resp.ok) return null; // e.g. rate-limited — leave uncached, retried fresh next time
   const data = await resp.json();
   const genre = data.results?.[0]?.primaryGenreName || null;
