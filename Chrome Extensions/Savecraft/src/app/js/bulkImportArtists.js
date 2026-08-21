@@ -254,9 +254,11 @@ export function resetArtistGenreCache() {
 // albums coming in") — bulkImportMyArtists() deliberately skipped autoImportMusicianAlbums()
 // (addEditModal.js, exported for reuse here) at import time, since ~800 extra iTunes calls on top
 // of the genre lookups was too much for one burst. This runs it for every saved Musician
-// separately, more conservatively paced (600ms apart, not 150ms) given iTunes was already caught
-// rate-limiting this client once this session. Only processes artists with zero Music Album items
-// of their own yet — autoImportMusicianAlbums() already dedupes against existing album titles, but
+// separately, paced 3 seconds apart — Apple doesn't publish an official rate limit for this
+// endpoint, but the commonly-reported unofficial threshold other developers hit is roughly ~20
+// requests/minute per IP; this session's first attempt at 600ms (~100/min) tripped the breaker
+// almost immediately, well above that. Only processes artists with zero Music Album items of
+// their own yet — autoImportMusicianAlbums() already dedupes against existing album titles, but
 // skipping here too means re-running this after a rate-limit stop doesn't waste calls re-checking
 // artists already done, it just picks up where it left off.
 export async function bulkImportAlbumsForMyArtists() {
@@ -274,8 +276,8 @@ export async function bulkImportAlbumsForMyArtists() {
     }
     await autoImportMusicianAlbums(item);
     processed++;
-    if (processed % 25 === 0) console.log(`[bulkImportAlbumsForMyArtists] ${processed}/${musicianItems.length}...`);
-    await new Promise(resolve => setTimeout(resolve, 600));
+    if (processed % 10 === 0) console.log(`[bulkImportAlbumsForMyArtists] ${processed}/${musicianItems.length}...`);
+    await new Promise(resolve => setTimeout(resolve, 3000));
   }
   console.log(`[bulkImportAlbumsForMyArtists] Done — processed all ${processed} musicians.`);
   return { processed, total: musicianItems.length, stoppedEarly: false };
