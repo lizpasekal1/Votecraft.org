@@ -1253,7 +1253,10 @@ function showSaveConfirmationStep(item) {
   const catLabel = CAT_LABEL[item.category] || item.category;
   const folder = item.folderId ? state.folders.find(f => f.id === item.folderId) : null;
   const locationLabel = folder ? `${escapeHtml(catLabel)} &rarr; ${escapeHtml(folder.name)}` : escapeHtml(catLabel);
-  document.getElementById('modal-confirm-text').innerHTML = `Your save is in <strong>${locationLabel}</strong>.`;
+  // .modal-confirm-location is a separate span (not just inline text after "is in") so mobile's
+  // own CSS can force it onto its own line — was wrapping mid-phrase instead (e.g. "...is in
+  // Literature →" / "Books.", reported live/screenshotted).
+  document.getElementById('modal-confirm-text').innerHTML = `Your save is in <strong class="modal-confirm-location">${locationLabel}</strong>.`;
   document.getElementById('modal-step-confirm').style.display = '';
 
   document.getElementById('btn-confirm-view').onclick = () => {
