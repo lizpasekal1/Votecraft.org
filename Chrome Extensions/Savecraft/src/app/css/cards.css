@@ -584,15 +584,20 @@
   text-decoration: underline;
 }
 
-/* Musician pages only (renderAuthorPage.js) — replaces .author-page-website in that same spot,
-   per direct request. Not tied to the per-category .card-badge/badge-Musician color map (that's
+/* Musician pages only (renderAuthorPage.js) — "Genre | url" sits where .author-page-website used
+   to sit alone, per direct request. .author-page-genre-row wraps both pieces (align-self: flex-
+   start needed — .author-page-info is a flex-direction: column container with the default
+   align-items: stretch, which would otherwise stretch this to the column's full width). The
+   genre pill itself is not tied to the per-category .card-badge/badge-Musician color map (that's
    keyed by SaveCraft category; there's no sane way to map iTunes' 50+ genre strings to it) — a
-   plain neutral pill instead, same rounded-pill shape language as .card-badge.
-   align-self: flex-start is required — .author-page-info is a flex-direction: column container
-   with the default align-items: stretch, which would otherwise stretch this to the column's full
-   width instead of hugging its own text. */
-.author-page-genre {
+   plain neutral pill instead, same rounded-pill shape language as .card-badge. */
+.author-page-genre-row {
   align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.author-page-genre {
   font-size: 11px;
   font-weight: 600;
   padding: 2px 10px;
@@ -601,6 +606,10 @@
   letter-spacing: 0.03em;
   background: var(--hover-bg);
   color: var(--text-secondary);
+}
+.author-page-genre-sep {
+  color: var(--text-muted);
+  font-size: 12px;
 }
 
 .author-works-header {
