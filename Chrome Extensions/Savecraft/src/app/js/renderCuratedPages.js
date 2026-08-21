@@ -305,14 +305,23 @@ export function renderCuratedGenreLanding(container, genre, content) {
       </div>`;
   }).join('');
 
+  // Both optional (state.js) — a partner with no logo assets yet (e.g. RCV) gets a plain
+  // text-only hero instead of a broken/missing image, which is the correct look, not a bug.
+  const wordmarkHtml = content.wordmarkUrl
+    ? `<div class="top100-wordmark"><img src="${resourceUrl(content.wordmarkUrl)}" alt="${escapeHtml(content.headline)}" class="top100-wordmark-logo"></div>`
+    : '';
+  const iconBadgeHtml = content.iconUrl
+    ? `<div class="top100-icon-badge"><img src="${resourceUrl(content.iconUrl)}" alt=""></div>`
+    : '';
+
   container.innerHTML = `
     <div class="top100-hero">
       <div class="top100-hero-text">
-        <div class="top100-wordmark"><img src="${resourceUrl('images/logos/votecraft-logo_white.png')}" alt="VoteCraft" class="top100-wordmark-logo"></div>
+        ${wordmarkHtml}
         <h2 class="top100-hero-title">${escapeHtml(content.headline)}</h2>
         <p class="top100-hero-desc">${linkifyHeroDescription(content.description)}</p>
       </div>
-      <div class="top100-icon-badge"><img src="${resourceUrl('images/logos/votecraft_icon_white.png')}" alt=""></div>
+      ${iconBadgeHtml}
     </div>
     <div class="top100-sort-wrap"></div>
     ${rowsHtml}
