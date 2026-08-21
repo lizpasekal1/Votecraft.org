@@ -14,7 +14,7 @@ import { escapeHtml, isItunesArtworkUrl, folderIconHtml, sortFoldersForDisplay, 
 import { persistItem, persistCuratedOverrides } from './storage.js';
 import { renderSidebar, renderGrid, promptAddFolder } from './render.js';
 import {
-  searchMusicAlbums, searchShows, searchShowsWikipedia, searchBooks, searchGames, searchMoviesWikipedia,
+  searchMusicians, searchMusicAlbums, searchShows, searchShowsWikipedia, searchBooks, searchGames, searchMoviesWikipedia,
   ensureArtistWikipediaInfo, ensureItemWikipediaInfo, ensureItemCreator, fetchAlbumsFromItunes,
   fetchVideoThumbnail,
 } from './api.js';
@@ -90,11 +90,13 @@ async function searchShowsWithFallback(term) {
   try { return await searchShowsWikipedia(term); } catch { return []; }
 }
 
-// Musician is deliberately excluded — its background Wikipedia lookup (kickOffTitleEnrichment)
-// works fine off a plain typed name, and matching an exact catalog entry doesn't matter the way
-// it does for these five (which need the right result selected for links/art to populate
-// correctly). Visual Art/Web Links/News have no search source at all.
+// Musician added per direct request — searchMusicians (api.js) already existed for this (iTunes
+// musicArtist lookup) but wasn't wired in here yet. Its background Wikipedia lookup
+// (kickOffTitleEnrichment) still runs the same as before on the picked name, filling in bio/photo;
+// the search step now also fills the URL field from the picked result, same as every other
+// category below. Visual Art/Web Links/News have no search source at all.
 const TITLE_SEARCH_FN = {
+  Musician: searchMusicians,
   'Music Album': searchMusicAlbums,
   Show: searchShowsWithFallback,
   Book: searchBooks,
