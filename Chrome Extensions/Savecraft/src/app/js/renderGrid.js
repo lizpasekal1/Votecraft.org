@@ -12,7 +12,7 @@ import {
 import { persistViewState, persistItem, persistHiddenCurated, removeItem } from './storage.js';
 import { navigateToView } from './navigation.js';
 import { getCurrentUser } from './auth.js';
-import { wireCardAuthorLinks, backfillMusicianGenres, tagsForMusicGenreBucket } from './authors.js';
+import { wireCardAuthorLinks, backfillMusicianGenres, tagsForMusicGenreBucket, findAuthor } from './authors.js';
 import { renderKanbanBoard } from './kanban.js';
 import { renderAdminKanbanBoard } from './adminKanban.js';
 import { openDetailModal } from './detailModal.js';
@@ -509,6 +509,18 @@ export function renderCard(item) {
   const showsFolderName = folder && folder.name !== 'Favorites';
   const badgeText = showsFolderName ? folder.name : badgeLabel(item.category);
 
+  // Genre-tag badge, per direct request ("add the tag to the card to the left of musician") —
+  // the raw iTunes genre string (author.genre, editable from Edit Item's own genre-tag field)
+  // that sorts this artist into a Music landing page bucket. Musician-only, and only once
+  // resolved — no placeholder badge for one that hasn't backfilled yet. Sits immediately to the
+  // left of the category badge: it carries the shared margin-left: auto instead of the category
+  // badge when present, pushing both flush right as an adjacent pair rather than each badge
+  // fighting for its own auto margin (which would leave a gap between them).
+  const genreTag = item.category === 'Musician' ? findAuthor(item.title, 'Musician')?.genre : null;
+  const genreBadgeHtml = genreTag
+    ? `<span class="card-badge card-badge-genre" style="margin-left:auto">${escapeHtml(genreTag)}</span>`
+    : '';
+
   return `
     <div class="card" data-id="${item.id}">
       ${imageSection}
@@ -544,7 +556,8 @@ export function renderCard(item) {
         }
         ${item.category === 'Music Album' && item.year ? `<div class="card-album-year">${escapeHtml(item.year)}</div>` : ''}
         <div class="card-meta">
-          <span class="card-badge badge-${catClass(item.category)}" style="margin-left:auto">${escapeHtml(badgeText)}</span>
+          ${genreBadgeHtml}
+          <span class="card-badge badge-${catClass(item.category)}" style="${genreBadgeHtml ? '' : 'margin-left:auto'}">${escapeHtml(badgeText)}</span>
         </div>
       </div>
       ${item.curated ? (() => {

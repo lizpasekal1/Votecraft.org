@@ -528,6 +528,16 @@
 .badge-Visual-Art   { background: #FFEDD5; color: #9A3412; }
 .badge-Memes        { background: #FEE2E2; color: #991B1B; }
 .badge-Web-Links    { background: #CFFAFE; color: #155E75; }
+
+/* Genre-tag badge (renderGrid.js's renderCard()) — outlined rather than solid-filled like every
+   category badge above, so it reads as secondary/informational metadata next to the real category
+   badge it sits beside, not a second competing category. */
+.card-badge-genre {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
 /* Legacy names kept for any un-migrated items */
 .badge-Music  { background: #FCE7F3; color: #BE185D; }
 .badge-Shows  { background: #EDE9FE; color: #6D28D9; }
