@@ -37,6 +37,15 @@ export function renderAuthorPage() {
        <div class="author-page-photo-placeholder placeholder-${catClass(cat)}" style="display:none">${escapeHtml(name[0]?.toUpperCase() || '?')}</div>`
     : `<div class="author-page-photo-placeholder placeholder-${catClass(cat)}">${escapeHtml(name[0]?.toUpperCase() || '?')}</div>`;
 
+  // Musician pages show both, "Genre | url", per direct request — genre and website are fetched
+  // independently (authors.js) and can resolve at different times, so this only joins them with a
+  // separator once both are actually present; either one shows alone otherwise.
+  const genreTagHtml = author?.genre ? `<span class="author-page-genre">${escapeHtml(author.genre)}</span>` : '';
+  const websiteLinkHtml = author?.websiteUrl
+    ? `<a class="author-page-website" href="${escapeHtml(author.websiteUrl)}" target="_blank" rel="noopener">${escapeHtml(author.websiteUrl)}</a>`
+    : '';
+  const musicianTagLineHtml = [genreTagHtml, websiteLinkHtml].filter(Boolean).join('<span class="author-page-genre-sep">|</span>');
+
   container.className = 'cards-grid author-page-grid';
   container.innerHTML = `
     <div class="author-page-header">
@@ -47,8 +56,8 @@ export function renderAuthorPage() {
           : `<div class="author-page-name">${escapeHtml(name)}</div>`
         }
         ${cat === 'Musician'
-          ? (author?.genre ? `<span class="author-page-genre">${escapeHtml(author.genre)}</span>` : '')
-          : (author?.websiteUrl ? `<a class="author-page-website" href="${escapeHtml(author.websiteUrl)}" target="_blank" rel="noopener">${escapeHtml(author.websiteUrl)}</a>` : '')
+          ? (musicianTagLineHtml ? `<div class="author-page-genre-row">${musicianTagLineHtml}</div>` : '')
+          : websiteLinkHtml
         }
       </div>
       <div class="author-page-actions">
