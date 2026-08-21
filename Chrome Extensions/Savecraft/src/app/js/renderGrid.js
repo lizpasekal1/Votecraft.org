@@ -12,7 +12,7 @@ import {
 import { persistViewState, persistItem, persistHiddenCurated, removeItem } from './storage.js';
 import { navigateToView } from './navigation.js';
 import { getCurrentUser } from './auth.js';
-import { wireCardAuthorLinks } from './authors.js';
+import { wireCardAuthorLinks, backfillMusicianGenres } from './authors.js';
 import { renderKanbanBoard } from './kanban.js';
 import { renderAdminKanbanBoard } from './adminKanban.js';
 import { openDetailModal } from './detailModal.js';
@@ -453,6 +453,13 @@ function renderMusicGenreLanding() {
       navigateToView(`musicgenre:${card.dataset.bucket}`);
     });
   });
+
+  // Most already-saved musicians won't have a genre yet — it's only ever been fetched for a
+  // freshly-added Musician or one whose own author page has been opened. Backfills the rest in
+  // the background and re-renders these counts as each one resolves, so they settle in shortly
+  // after arriving here instead of staying permanently uncounted, per direct request ("sort the
+  // musicians I have into these 15 categories so the numbers on the cards are accurate").
+  backfillMusicianGenres();
 
   persistViewState();
 }
