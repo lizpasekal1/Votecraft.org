@@ -1850,6 +1850,9 @@
   gap: 16px;
   padding: 0 8px 8px;
   min-height: 220px;
+  /* Nudged up from dead-center, per direct follow-up — .modal-confirm-actions (the Done/View
+     row) is its own position:absolute element (see below), so this only moves the icon/text. */
+  transform: translateY(-30px);
 }
 /* Add/Edit's own shared #modal-header rule sets margin-bottom: 24px, sized for every other
    screen's fields sitting right below it — tightened to exactly 15px for the confirmation
