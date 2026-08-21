@@ -93,11 +93,13 @@
 /* Cards 10% larger, desktop only, per direct follow-up (an earlier 20% attempt was placed before
    the base .musicgenre-card rule above, so — same specificity, earlier source order — it was
    silently overridden by it and never actually took effect; this one comes after, so it wins).
-   Font size deliberately left unscaled here, per direct request — only width/padding grow. */
+   Font size deliberately left unscaled here, per direct request — only width/padding grow.
+   1.1 -> 1.2 per a further direct follow-up ("another ten percent larger"), still no font-size
+   change. */
 @media (min-width: 481px) {
   .musicgenre-card {
-    width: calc((50% + 30px) * 1.1);
-    padding: 24px 11px;
+    width: calc((50% + 30px) * 1.2);
+    padding: 26px 12px;
   }
 }
 
