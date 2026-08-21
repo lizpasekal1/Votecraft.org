@@ -1245,7 +1245,7 @@ function showSaveConfirmationStep(item) {
   // (openEditModal adds it directly) — dropped explicitly too, or Edit's confirmation heading
   // would render left-aligned instead of centered like Add's.
   _modalH2.classList.remove('modal-h2--left');
-  setModalHeading('Excellent!');
+  setModalHeading('Excellent save');
 
   // A folder-filed item names its folder too (e.g. "Sources → Websites"), same location detail
   // the retired toast showed — so "View" lands somewhere specific rather than just the category's
