@@ -256,3 +256,9 @@ export function getMusicGenreBucketCounts() {
     });
   return counts;
 }
+
+// The "All Music" landing-grid card's own count (renderGrid.js) — every saved musician, same
+// base set getMusicGenreBucketCounts() groups by bucket above, just not narrowed to a bucket.
+export function getMusicianTotalCount() {
+  return state.items.filter(i => !isQueueDemoId(i.id) && matchesPrimaryOrUnfoldered(i, 'Musician') && matchesActiveSavedListScope(i)).length;
+}
