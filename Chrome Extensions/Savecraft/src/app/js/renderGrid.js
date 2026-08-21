@@ -138,40 +138,6 @@ export function renderGrid() {
     return;
   }
 
-  // Saved Lists (Favorites/Health/Motivation/anything user-added, sidebar's Dashboard -> Saved
-  // Lists row) — a placeholder landing card "for the time being", explicitly requested to match
-  // the curated genre landing's own visual shape (isCuratedTop's empty-state below, e.g.
-  // "Futurism Saves") rather than showing a flat item.savedListIds-filtered grid — but with its
-  // own subtext copy ("add your specific saves", not "explore curated picks"), since these are
-  // personal/editable lists, not read-only curated content. Unconditional (doesn't route through
-  // getFilteredSortedItems()/its own "savedlist:" branch at all) — a full category/folder system
-  // for populating these lists (mirroring how a curated genre drills into Movies/Books/etc.) is
-  // planned but not built yet; the "savedlist:" filtering branch in renderFilters.js is left
-  // intact/unused for when that lands.
-  if (state.view.startsWith('savedlist:')) {
-    const listId = state.view.slice(10);
-    const list = state.savedLists.find(l => l.id === listId);
-    const listName = list ? list.name : 'List';
-    // "All My Saves" (default-favorites, renamed from "Favorites" -> "All Saves" -> "All My
-    // Saves") already reads as a complete title on its own — appending " Saves" would double up
-    // ("All My Saves Saves"). Every other list (Health, Motivation, anything user-added) still
-    // gets the " Saves" suffix to match the curated-genre landing card's own title shape (e.g.
-    // "Futurism Saves").
-    const cardTitle = listId === 'default-favorites' ? listName : `${listName} Saves`;
-    gridTitle.style.display = 'none';
-    sortSelect.style.display = 'none';
-    gridHeader.style.display = 'none';
-    container.className = 'cards-grid landing-state';
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">✨</div>
-        <h3>${escapeHtml(cardTitle)}</h3>
-        <p>Pick an option from the sidebar to add your specific saves.</p>
-      </div>
-    `;
-    return;
-  }
-
   container.className = 'cards-grid';
 
   // "Sources | Civics" — appended to the page's own title while browsing inside a scoped Saved
@@ -246,6 +212,20 @@ export function renderGrid() {
       .map(b => `<option value="${escapeHtml(b)}"${b === bucket ? ' selected' : ''}>${escapeHtml(b)}</option>`)
       .join('');
     musicGenreSelect.style.display = '';
+  } else if (state.view.startsWith('savedlist:')) {
+    // Saved Lists (Favorites/Health/Motivation/anything user-added) now show their own actual
+    // saved content here — same page shape as any other category/folder (search/sort/cards all
+    // work unchanged below) — per direct request, replacing the placeholder landing card this
+    // used to be. getFilteredSortedItems()'s own "savedlist:" branch (renderFilters.js) already
+    // did the actual item filtering; it just was never reached before now.
+    const listId = state.view.slice(10);
+    const list = state.savedLists.find(l => l.id === listId);
+    const listName = list ? list.name : 'List';
+    // "All My Saves" (default-favorites) never actually reaches this branch in practice today —
+    // the sidebar routes it straight to state.view === 'dashboard' instead (renderSidebar.js) —
+    // but this mirrors the placeholder's own "no ' Saves' suffix" exception defensively, in case
+    // it's ever reached directly (e.g. a bookmarked/typed ?v=savedlist:default-favorites URL).
+    gridTitle.textContent = listId === 'default-favorites' ? listName : `${listName} Saves`;
   } else if (CATEGORIES.includes(state.view)) {
     gridTitle.innerHTML = `${CAT_EMOJI[state.view]} ${CAT_LABEL[state.view] || state.view}${scopedListSuffix}`;
   } else {
