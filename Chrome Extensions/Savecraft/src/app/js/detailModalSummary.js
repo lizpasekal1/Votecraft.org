@@ -57,10 +57,13 @@ export function setupSummary(item, { isMusicAlbum, isMusicianItem, ctaAuthorName
     summaryToggleEl.classList.toggle('detail-summary-toggle--open', expanded);
   };
 
-  // Musician's bio no longer displays here — it pre-fills the My Notes textarea instead (see
-  // applyMusicianBioFallback(), detailModalNotes.js), so this plain block is left to whatever
-  // item.summary might independently hold (in practice, always empty for Musician).
-  const summaryText = item.summary || '';
+  // Musician's bio never displays here, per direct request — it belongs in the My Notes "Summary"
+  // row instead (see the zeroFallback wiring in detailModalNotes.js). REAL BUG, found and fixed:
+  // item.summary is actually populated for Musician now (kickOffTitleEnrichment, addEditModal.js,
+  // fills it in at Add time even though the Add form's own Summary field stays hidden for
+  // Musician), so this plain block was quietly showing the bio here too — excluding
+  // isMusicianItem is what actually enforces the design intent described above.
+  const summaryText = isMusicianItem ? '' : (item.summary || '');
   renderSummaryText(summaryText);
 
   // Appends a "Wikipedia" link into the Web Links accordion once a page is actually found —
