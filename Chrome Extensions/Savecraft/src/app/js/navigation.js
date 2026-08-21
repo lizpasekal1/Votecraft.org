@@ -27,6 +27,24 @@ import { renderSidebar, renderGrid } from './render.js';
 // inline string check, so a future pseudo-view can opt out the same way in one place.
 const NON_HISTORY_VIEWS = new Set(['embed-builder']);
 
+// A handful of internal state.view values read poorly as a public, shareable URL — 'Musician' is
+// the real category name (item.category, folders.parentCategory, CATEGORIES, ...) and
+// 'default-musicians-musicians' is the real folder id (storage.js's seed data), so neither can
+// just be renamed everywhere, but their own URLs should still read `?v=Music` and
+// `?v=default-musicians` respectively, per direct request. This is the one place that distinction
+// lives — everything else (state.view, history.state.view, CATEGORIES, folder ids, ...) keeps
+// using the real internal name/id unchanged.
+const VIEW_TO_URL_PARAM = { Musician: 'Music', 'default-musicians-musicians': 'default-musicians' };
+const URL_PARAM_TO_VIEW = Object.fromEntries(Object.entries(VIEW_TO_URL_PARAM).map(([k, v]) => [v, k]));
+
+// Reverses a raw `?v=` query value back to the internal view string it stands in for — exported
+// for main.js's own two raw-URL reads (initial load, and the popstate fallback for a history
+// entry this app didn't create), so both sides of the round-trip agree without duplicating this
+// table. A param with no alias just passes through unchanged.
+export function urlParamToView(param) {
+  return URL_PARAM_TO_VIEW[param] || param;
+}
+
 export function navigateToView(view, opts = {}) {
   const { sidebarMode, activeCuratedFolderId, authorReturnView, activeSavedListId, replace = false } = opts;
 
@@ -49,7 +67,7 @@ export function navigateToView(view, opts = {}) {
       authorReturnView: state.authorReturnView,
       activeSavedListId: state.activeSavedListId,
     };
-    const url = `?v=${encodeURIComponent(view)}`;
+    const url = `?v=${encodeURIComponent(VIEW_TO_URL_PARAM[view] || view)}`;
     if (replace) history.replaceState(historyState, '', url);
     else history.pushState(historyState, '', url);
   }

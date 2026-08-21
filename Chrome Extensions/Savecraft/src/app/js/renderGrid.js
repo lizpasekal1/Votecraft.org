@@ -3,7 +3,7 @@
 import {
   state, CURATED_ITEMS, CATEGORIES, CAT_LABEL, CAT_EMOJI, CURATED_NOTES_CATEGORIES,
   CREATOR_CARD_CATEGORY, BOOKMARK_OUTLINE_SVG, BOOKMARK_FILLED_SVG, CURATED_GENRE_LANDING_CONTENT,
-  MUSIC_GENRE_BUCKETS, MUSIC_GENRE_BUCKET_EMOJI, MUSIC_ALL_LABEL,
+  MUSIC_GENRE_BUCKETS, MUSIC_GENRE_BUCKET_EMOJI, MUSIC_ALL_LABEL, PRIMARY_FOLDER_ID,
 } from './state.js';
 import {
   escapeHtml, catClass, badgeLabel, isMusicAlbumsSectionView, isOwnAuthorPageView, getDomain,
@@ -249,10 +249,28 @@ function _renderGridBody() {
     gridTitle.innerHTML = `${CAT_EMOJI[state.view]} ${CAT_LABEL[state.view] || state.view}${scopedListSuffix}`;
   } else {
     const folder = state.folders.find(f => f.id === state.view);
-    // News outlet folders double as "publication profile pages" — a richer header (domain +
-    // paywalled badge, both already on the folder from the News-category work) instead of just
-    // the bare folder name every other folder gets.
-    if (folder && folder.parentCategory === 'News') {
+    // The sidebar's own plain "Musicians" accordion row (folder.id === PRIMARY_FOLDER_ID.Musician)
+    // — confirmed a deliberately separate destination from the picker/musicgenre: pages (see
+    // renderSidebar.js's own comment), but per direct request it should still LOOK like the
+    // musicgenre: page's shell (same "Musicians" title, same genre dropdown) rather than a bare
+    // folder title with no filter UI at all. Unlike musicgenre:<MUSIC_ALL_LABEL> (whose dropdown is
+    // deliberately hidden so it reads as unfiltered), this page's dropdown stays visible even at
+    // "All Music" — it's the escape hatch that lets you narrow into a bucket without first going
+    // back out to the 15-card picker. Selecting a bucket here hands off to the real musicgenre:
+    // page (musicgenre-select's shared change handler, main.js) rather than duplicating that
+    // filtering logic on this view; the items shown before that happens are already the full
+    // unfiltered set (matchesPrimaryOrUnfoldered, renderFilters.js) — same set musicgenre:All Music
+    // shows, just reached via its own URL/id instead.
+    if (folder && folder.id === PRIMARY_FOLDER_ID.Musician) {
+      gridTitle.innerHTML = `${CAT_EMOJI['Musician']} Musicians${scopedListSuffix}`;
+      musicGenreSelect.innerHTML = [MUSIC_ALL_LABEL, ...MUSIC_GENRE_BUCKETS]
+        .map(b => `<option value="${escapeHtml(b)}"${b === MUSIC_ALL_LABEL ? ' selected' : ''}>${escapeHtml(b)}</option>`)
+        .join('');
+      musicGenreSelect.style.display = '';
+    } else if (folder && folder.parentCategory === 'News') {
+      // News outlet folders double as "publication profile pages" — a richer header (domain +
+      // paywalled badge, both already on the folder from the News-category work) instead of just
+      // the bare folder name every other folder gets.
       const domainHtml = folder.domain ? `<span class="grid-title-domain">${escapeHtml(folder.domain)}</span>` : '';
       const paywalledHtml = folder.paywalled ? `<span class="grid-title-paywalled-badge">Paywalled</span>` : '';
       gridTitle.innerHTML = `${escapeHtml(folder.name)} ${domainHtml}${paywalledHtml}${scopedListSuffix}`;
