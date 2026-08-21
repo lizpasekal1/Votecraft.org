@@ -237,7 +237,7 @@ export const CAT_EMOJI = { 'News': '<svg xmlns="http://www.w3.org/2000/svg" heig
 // renderFilters.js. Alphabetical, per direct request (Reggae folded into World per a follow-up —
 // no separate Reggae bucket anymore).
 export const MUSIC_GENRE_BUCKETS = [
-  'Alternative/Indie', 'Blues/Funk', 'Classical', 'Country', 'Electronic', 'Folk', 'Hip-Hop',
+  'Alt/Indie', 'Blues/Funk', 'Classical', 'Country', 'Electronic', 'Folk', 'Hip-Hop',
   'Jazz', 'Latin', 'Metal', 'Pop', 'R&B/Soul', 'Rock', 'World',
 ];
 
@@ -250,7 +250,7 @@ export const MUSIC_ALL_LABEL = 'All Music';
 
 export const MUSIC_GENRE_BUCKET_EMOJI = {
   [MUSIC_ALL_LABEL]: '🎶',
-  'Alternative/Indie': '🎧', 'Blues/Funk': '🎷', 'Classical': '🎻', 'Country': '🤠',
+  'Alt/Indie': '🎧', 'Blues/Funk': '🎷', 'Classical': '🎻', 'Country': '🤠',
   'Electronic': '🎹', 'Folk': '🪕', 'Hip-Hop': '🎤', 'Jazz': '🎺', 'Latin': '💃',
   'Metal': '🤘', 'Pop': '⭐', 'R&B/Soul': '🎙️', 'Rock': '🎸', 'World': '🌍',
 };
@@ -262,8 +262,8 @@ export const MUSIC_GENRE_BUCKET_EMOJI = {
 // of them (still reachable via the sidebar's plain, unfiltered "Musicians" row, or the "All
 // Music" card above) rather than being force-fit somewhere wrong.
 export const MUSIC_GENRE_BUCKET_MAP = {
-  'alternative': 'Alternative/Indie', 'alternative rock': 'Alternative/Indie',
-  'indie rock': 'Alternative/Indie', 'indie pop': 'Alternative/Indie', 'indie': 'Alternative/Indie',
+  'alternative': 'Alt/Indie', 'alternative rock': 'Alt/Indie',
+  'indie rock': 'Alt/Indie', 'indie pop': 'Alt/Indie', 'indie': 'Alt/Indie',
   'blues': 'Blues/Funk', 'funk': 'Blues/Funk',
   'classical': 'Classical', 'orchestral': 'Classical',
   'country': 'Country',

@@ -718,7 +718,7 @@
 
   /* Music landing page's genre grid, mobile-optimized as its own pass:
      - 2 columns, not 5 (or even 3) — the cards need real room for longer bucket names
-       ("Alternative/Indie", "R&B/Soul") on a narrow screen; 3+ columns left too little width per
+       ("Alt/Indie", "R&B/Soul") on a narrow screen; 3+ columns left too little width per
        card and the desktop "half width, centered" treatment (cards.css) would have made them
        tiny and cramped here.
      - row-gap trimmed from desktop's 50px — 15 cards at 2-per-row is already 8 rows; 50px between

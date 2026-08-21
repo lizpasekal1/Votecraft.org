@@ -81,6 +81,7 @@
   }
 }
 .musicgenre-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -119,6 +120,82 @@
 .musicgenre-card-count {
   font-size: 13px;
   color: rgba(255,255,255,0.8);
+}
+
+/* Hover callout listing which saved musicians landed in this bucket, per direct request — same
+   visual language as the detail modal's "Why VoteCraft Recommends" tooltip (.vc-sponsored-tooltip,
+   detailModal.css): purple fill, small bold uppercase title, an upward-pointing arrow tail back at
+   the card that triggered it. Opens downward (below the card) rather than upward since these cards
+   sit at the very top of the page with no room above the first row. pointer-events: none — purely
+   informational, shouldn't intercept the click a user meant for the card underneath it. */
+.musicgenre-tooltip {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-top: 12px;
+  width: 260px;
+  max-width: 85vw;
+  box-sizing: border-box;
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: 10px;
+  padding: 12px 14px;
+  text-align: left;
+  white-space: normal;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, -4px);
+  transition: opacity 0.15s, transform 0.15s, visibility 0.15s;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.musicgenre-card:hover .musicgenre-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+}
+
+.musicgenre-tooltip::before,
+.musicgenre-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  border-style: solid;
+  border-color: transparent;
+}
+
+.musicgenre-tooltip::before {
+  border-width: 14px;
+  margin-left: -14px;
+  border-bottom-color: var(--primary);
+}
+
+.musicgenre-tooltip::after {
+  border-width: 13px;
+  margin-left: -13px;
+  margin-bottom: -1px;
+  border-bottom-color: var(--primary);
+}
+
+.musicgenre-tooltip-title {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  margin-bottom: 5px;
+}
+
+.musicgenre-tooltip-text {
+  display: block;
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.85);
+  line-height: 1.5;
 }
 /* Cards 10% larger, desktop only, per direct follow-up (an earlier 20% attempt was placed before
    the base .musicgenre-card rule above, so — same specificity, earlier source order — it was
