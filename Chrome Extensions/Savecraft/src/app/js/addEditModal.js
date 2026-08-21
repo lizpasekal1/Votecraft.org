@@ -727,6 +727,35 @@ function renderTitleSearchResults(results) {
       </div>
     </div>`).join('');
 
+  // Musician results have no artwork of their own — iTunes' musicArtist search doesn't return
+  // one (see searchMusicians, api.js) — so every row here would otherwise show just the generic
+  // placeholder icon (reported live, screenshotted: a "Panic! At the Disco" row with no photo).
+  // Same lazy-patch approach as patchCardImage/fetchMissingCuratedImages elsewhere: render the
+  // list instantly with placeholders, then fill in real photos as they arrive, reusing the exact
+  // cached Wikipedia/iTunes-fallback lookup selecting a result already kicks off (see
+  // kickOffTitleEnrichment) — just fired per-row here so the dropdown itself shows a real photo
+  // before the user even picks one. Guarded against `_wizardResults !== results` (not just
+  // `_wizardToken`, which only bumps on navigation, not on a second search within the same
+  // wizard step) so a photo resolving after the user's typed a different search doesn't land on
+  // an unrelated row that now happens to sit at the same index.
+  if (state.modalCategory === 'Musician') {
+    results.forEach((r, i) => {
+      if (r.imageUrl) return;
+      ensureArtistWikipediaInfo(r.title).then(({ photoUrl }) => {
+        if (!photoUrl || _wizardResults !== results) return;
+        const placeholder = el.querySelectorAll('.step1-result-art-placeholder')[i];
+        if (!placeholder) return;
+        const img = document.createElement('img');
+        img.className = 'step1-result-art';
+        img.src = photoUrl;
+        img.alt = '';
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        placeholder.replaceWith(img);
+      });
+    });
+  }
+
   el.querySelectorAll('.step1-result-row').forEach(row => {
     row.addEventListener('mousedown', e => {
       e.preventDefault();
