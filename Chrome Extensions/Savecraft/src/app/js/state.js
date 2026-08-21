@@ -44,15 +44,43 @@ export const CREATOR_CARD_CATEGORY = {
 };
 // Landing-page content for the curated genre picker (render.js's renderTop100Landing() and
 // friends) — keyed by genre so a future sponsored genre can get the same treatment later just by
-// adding an entry here, with no new rendering code. Only 'Top 100' is populated for now; every
-// other genre keeps the plain "Pick a category" empty state. `rows` picks which curated
-// categories get their own horizontal row and in what order — deliberately excludes Music Album
-// (not an actual curated shortlist, see CURATED_NOTES_CATEGORIES/session docs) and Visual Art
-// (no curated data exists for it at all).
+// adding an entry here, with no new rendering code. `rows` picks which curated categories get
+// their own horizontal row and in what order — deliberately excludes Music Album (not an actual
+// curated shortlist, see CURATED_NOTES_CATEGORIES/session docs) and Visual Art (no curated data
+// exists for it at all).
+//
+// wordmarkUrl/iconUrl (both optional): the hero's own logo images (renderCuratedGenreLanding(),
+// renderCuratedPages.js) — omit either/both for a plain text-only hero (headline/description
+// alone), which is the expected/correct look for a partner with no logo assets yet (e.g. RCV
+// below), not a missing-asset bug.
+//
+// categoryLogos (optional, keyed by category — independent of `rows`, since a category can carry
+// a data-provenance credit on its own drilldown title even without a landing-hero row of its own,
+// e.g. Top 100's "Show" below): a real data-provenance credit mark (e.g. "this list's Musicians
+// picks came from Rolling Stone") shown next to that category's title on its own drilldown page
+// (renderGrid.js's grid-title branch) — genuinely tied to where that category's content was
+// actually sourced from, so it's per-category/per-genre data, not decoration to copy onto every
+// list. Shape: `{ imageUrl, alt, wrapClassName, imgClassName }` (imageUrl resolved through
+// resourceUrl() at render time, same as every other logo asset in this app; wrapClassName/
+// imgClassName pick which existing cards.css classes to reuse for sizing/positioning, or new ones
+// for a partner with different branding) — or `{ svg: true, alt, wrapClassName }` for the one
+// case (NYT) using a hardcoded inline wordmark SVG instead of an image file.
 export const CURATED_GENRE_LANDING_CONTENT = {
   'Top 100': {
     headline: 'The Votecraft List',
     description: 'Explore and bookmark recommendations from major publications and experts! This collection has been assembled from the 100 essential picks across music, film, books, and games. Inquire to create a sponsored SaveCraft curated list!',
+    // The "<Category> | <shortName>" drilldown-title suffix (renderGrid.js) — the short brand
+    // name, distinct from the genre key itself ('Top 100' the list vs. 'Votecraft' the org).
+    shortName: 'Votecraft',
+    wordmarkUrl: 'images/logos/votecraft-logo_white.png',
+    iconUrl: 'images/logos/votecraft_icon_white.png',
+    categoryLogos: {
+      Musician: { imageUrl: 'images/logos/pngkey.com-rolling-stones-tongue-png-3135824.png', alt: 'Rolling Stone', wrapClassName: 'rs-logo-wrap', imgClassName: 'rs-logo-img' },
+      Show: { imageUrl: 'images/logos/pngkey.com-rolling-stones-tongue-png-3135824.png', alt: 'Rolling Stone', wrapClassName: 'rs-logo-wrap', imgClassName: 'rs-logo-img' },
+      Book: { imageUrl: 'images/logos/pngkey.com-rolling-stones-tongue-png-3135824.png', alt: 'Rolling Stone', wrapClassName: 'rs-logo-wrap', imgClassName: 'rs-logo-img' },
+      Game: { imageUrl: 'images/logos/steam.png', alt: 'Steam', wrapClassName: 'steam-logo-wrap', imgClassName: 'steam-logo-img' },
+      Movie: { svg: true, alt: 'The New York Times', wrapClassName: 'nyt-logo-wrap' },
+    },
     rows: [
       // `titles`, when set, hand-picks exactly these items (by exact title match) in this exact
       // order instead of the default "first 15 curated docs" — see renderCuratedGenreLanding()
@@ -61,6 +89,22 @@ export const CURATED_GENRE_LANDING_CONTENT = {
       { category: 'Movie', label: 'Top Films', titles: ['Everything Everywhere All at Once', 'Eternal Sunshine of the Spotless Mind', 'Arrival', 'Spirited Away', 'Citizen Kane', 'The Godfather', '2001: A Space Odyssey'] },
       { category: 'Book', label: 'Top Books' },
       { category: 'Game', label: 'Top Games' },
+    ],
+  },
+  // RCV's own curated content isn't seeded yet (no admin curation tooling exists — deliberately
+  // deferred), so its rows below will show the existing generic empty state until real items are
+  // added to CURATED_ITEMS.RCV. The hero itself still renders — no wordmarkUrl/iconUrl means a
+  // plain text-only hero (headline/description alone), the correct look for a partner with no
+  // logo assets yet, not a bug. This entry exists specifically to prove the template genuinely
+  // works for a second, differently-branded partner, not just VoteCraft.
+  'RCV': {
+    headline: 'Ranked Choice Voting',
+    description: 'A curated collection exploring ranked choice voting — how it works, where it’s used, and why it matters. Inquire to create a sponsored SaveCraft curated list!',
+    shortName: 'RCV',
+    rows: [
+      { category: 'News', label: 'RCV in the News' },
+      { category: 'Book', label: 'Books on Voting Reform' },
+      { category: 'Web Links', label: 'Resources' },
     ],
   },
 };
