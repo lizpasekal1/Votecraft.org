@@ -704,6 +704,18 @@
   /* Single column cards */
   .cards-grid { grid-template-columns: 1fr; }
 
+  /* REAL BUG, found and fixed: #grid-title (cards.css) is a flex row with no flex-wrap — on a
+     Top 100 drilldown that also carries a publication-credit logo (Rolling Stone/Steam/NYT,
+     renderGrid.js, margin-left: auto pushed to the row's right edge), the title text + logo
+     combined can be wider than a phone's viewport, forcing the row itself — and, since nothing
+     clips it, the whole page — wider than the screen (reported live on an iPhone 16 Pro: the
+     page could be dragged left/right). flex-wrap here lets the logo drop to its own line instead
+     of forcing the row wider than the viewport; margin-left: auto still right-aligns it on
+     whichever line it lands on. */
+  .grid-title {
+    flex-wrap: wrap;
+  }
+
   /* Music landing page's genre grid, mobile-optimized as its own pass:
      - 2 columns, not 5 (or even 3) — the cards need real room for longer bucket names
        ("Alternative/Indie", "R&B/Soul") on a narrow screen; 3+ columns left too little width per
