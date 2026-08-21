@@ -26,6 +26,9 @@ import { openDetailModal, closeDetailModal, closeImageLightbox, getDetailItem, s
 import { initNoteToolbar } from './detailModalNotes.js';
 import { closeVoiceNoteModal, initVoiceNoteModal } from './voiceNotes.js';
 import { closeFetchAlbumsModal, handleImportAlbums, renderFetchAlbumsList } from './fetchAlbumsModal.js';
+// One-time personal bulk-import helper (window.bulkImportMyArtists()), see its own file header —
+// side-effect-only import (registers itself on window at load time), not otherwise used here.
+import './bulkImportArtists.js';
 
 // ===== SEARCH =====
 let searchDebounce;
