@@ -522,6 +522,17 @@
         </span>
       </div>
 
+      <!-- Musician-only: the raw iTunes genre tag (MUSIC_GENRE_BUCKET_MAP, state.js) that sorts
+           this artist into one of the Music landing page's genre buckets — lives on the artist's
+           own author record, not the item, so this reads/writes state.authors, not #modal-category
+           etc. A free-type field with autocomplete suggestions (datalist, ~59 known tags) rather
+           than a strict dropdown, per direct request ("like a type and auto fill field"). No
+           label, matching Folder's own treatment just above, per direct request. -->
+      <div class="form-group" id="genre-tag-group" style="display:none;">
+        <input type="text" id="input-genre-tag" list="genre-tag-datalist" placeholder="Genre tag" autocomplete="off">
+        <datalist id="genre-tag-datalist"></datalist>
+      </div>
+
       <!-- Musician/Music Album/Favorite Albums keep the original compact side-by-side pairing
            (left untouched per explicit request) — updateVideoUrlLayout() moves #platforms-section
            and #youtube-url-group into this row for those categories only; it's otherwise empty and
