@@ -234,7 +234,10 @@ export function renderGrid() {
     // in .grid-header-right (index.html) — populated fresh each render so it always reflects the
     // current bucket, same as sortSelect.value being set from state.sort elsewhere.
     const bucket = state.view.slice(11);
-    gridTitle.innerHTML = `${CAT_EMOJI['Musician']} ${escapeHtml(bucket)}${scopedListSuffix}`;
+    // Title stays "Music" regardless of which bucket is active — per direct request/correction,
+    // the dropdown itself is what shows/defines the current genre, not the page title (this used
+    // to swap the title to the bucket name, e.g. "Pop").
+    gridTitle.innerHTML = `${CAT_EMOJI['Musician']} ${CAT_LABEL['Musician']}${scopedListSuffix}`;
     // "All Music" listed first (matching its pinned-first spot on the landing grid), then the
     // real buckets alphabetically — every one of these routes through this exact same page now
     // (reported live: clicking "All Music" used to land somewhere with no genre dropdown at all,
