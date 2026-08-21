@@ -47,35 +47,39 @@
   align-items: center;
   gap: 6px;
   padding: 22px 10px;
-  border: 1.5px solid var(--border);
+  border: 1.5px solid var(--primary);
   border-radius: 12px;
-  background: var(--surface);
+  /* Purple fill per direct request — same "filled purple, flip to white on hover" swap already
+     used elsewhere (e.g. the modal header Save button, the Add-item search icon). */
+  background: var(--primary);
   cursor: pointer;
   text-align: center;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
   /* Half the width of its grid column (grid items stretch to fill their track by default —
      justify-items: stretch — so this needs both an explicit width and justify-self: center to
-     actually narrow the card rather than just its content), +15px per a direct follow-up
-     ("too narrow now, make them 15 pixels wider"). */
-  width: calc(50% + 15px);
+     actually narrow the card rather than just its content), +30px total per two direct
+     follow-ups (+15px, then +15px again). */
+  width: calc(50% + 30px);
   justify-self: center;
 }
 .musicgenre-card:hover {
-  border-color: var(--primary);
-  background: var(--hover-bg);
+  background: #fff;
+  color: var(--primary);
 }
+.musicgenre-card:hover .musicgenre-card-name { color: var(--primary); }
+.musicgenre-card:hover .musicgenre-card-count { color: var(--primary); opacity: 0.75; }
 .musicgenre-card-icon {
   font-size: 26px;
   line-height: 1;
 }
 .musicgenre-card-name {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #fff;
 }
 .musicgenre-card-count {
-  font-size: 12px;
-  color: var(--text-secondary);
+  font-size: 13px;
+  color: rgba(255,255,255,0.8);
 }
 
 
