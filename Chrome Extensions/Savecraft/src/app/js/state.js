@@ -333,6 +333,7 @@ export const state = {
   albumArtCache: {}, // { [cacheKey]: { images: [{full,thumb,type}], fetchedAt } } — fetched on demand via MusicBrainz/Cover Art Archive (manual "Load More Art" button), never expires. cacheKey is `mb:<collectionId>` when known, else `<artist>|<title>` lowercased
   artistWebsiteCache: {}, // { [normalizedArtistName]: { url: string|null, fetchedAt: number } } — auto-fetched via MusicBrainz/Wikidata
   artistBioCache: {}, // { [normalizedArtistName]: { bio: string|null, photoUrl: string|null, fetchedAt: number } } — auto-fetched via Wikipedia
+  artistGenreCache: {}, // { [normalizedArtistName]: { genre: string|null, fetchedAt: number } } — auto-fetched via iTunes (one genre per artist, not a list)
   itemWikiCache: {}, // { [normalizedTitle]: { bio: string|null, photoUrl: string|null, fetchedAt: number } } — auto-fetched via Wikipedia for Book/Show/Movie/Game items
   creatorCache: {}, // { [category:title]: { creator: string|null, fetchedAt: number } } — Movie director/Show creator via Wikidata, Game studio via Steam
   tutorialSeen: false,

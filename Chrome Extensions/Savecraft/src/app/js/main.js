@@ -622,6 +622,7 @@ async function init() {
   await loadLocalCache('savecraft_album_art_cache', 'albumArtCache');
   await loadLocalCache('savecraft_artist_website_cache', 'artistWebsiteCache');
   await loadLocalCache('savecraft_artist_bio_cache_v2', 'artistBioCache');
+  await loadLocalCache('savecraft_artist_genre_cache', 'artistGenreCache');
   await loadLocalCache('savecraft_item_wiki_cache', 'itemWikiCache');
   await loadLocalCache('savecraft_creator_cache', 'creatorCache');
   await loadLocalCache('savecraft_lastfm_cache', 'lastfmCache');

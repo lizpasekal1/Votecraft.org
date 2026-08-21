@@ -4,7 +4,7 @@
 
 import { state } from './state.js';
 import {
-  persistArtistBioCache, persistArtistWebsiteCache, persistItemWikiCache,
+  persistArtistBioCache, persistArtistWebsiteCache, persistArtistGenreCache, persistItemWikiCache,
   persistLastfmCache, persistSteamCache, persistCreatorCache,
 } from './storage.js';
 import { getYoutubeVideoId, getVimeoVideoId } from './utils.js';
@@ -15,6 +15,7 @@ const MUSIC_ENTITY_KEYWORDS = /\b(band|singer|musician|rapper|duo|group|composer
 
 const ARTIST_WEBSITE_CACHE_MISS_TTL = 90 * 24 * 60 * 60 * 1000; // 90 days
 const ARTIST_BIO_CACHE_MISS_TTL = 90 * 24 * 60 * 60 * 1000; // 90 days
+const ARTIST_GENRE_CACHE_MISS_TTL = 90 * 24 * 60 * 60 * 1000; // 90 days
 const ITEM_WIKI_CACHE_MISS_TTL = 90 * 24 * 60 * 60 * 1000; // 90 days
 
 // iTunes's Search API has no dedicated "artist photo" field — the closest available image is
@@ -493,6 +494,33 @@ export async function ensureArtistWebsite(artistName) {
   state.artistWebsiteCache[key] = { url, fetchedAt: Date.now() };
   persistArtistWebsiteCache();
   return url;
+}
+
+// Looks up an artist's genre via iTunes' musicArtist search (the same endpoint/field
+// searchMusicians already uses as its typeahead subtitle, api.js above — just a dedicated
+// single-artist lookup here instead, since that one's result gets discarded once a search result
+// is picked). iTunes only exposes one genre per artist, not a list — this returns a single string
+// or null, never an array. Cached indefinitely on success; cached "not found" results expire
+// after ARTIST_GENRE_CACHE_MISS_TTL, mirroring ensureArtistWebsite above exactly.
+export async function ensureArtistGenre(artistName) {
+  if (!artistName) return null;
+  const key = artistName.trim().toLowerCase();
+  const cached = state.artistGenreCache[key];
+  if (cached && (cached.genre || (Date.now() - cached.fetchedAt < ARTIST_GENRE_CACHE_MISS_TTL))) {
+    return cached.genre;
+  }
+  let genre = null;
+  try {
+    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(artistName)}&entity=musicArtist&limit=1`;
+    const resp = await fetch(url);
+    if (resp.ok) {
+      const data = await resp.json();
+      genre = data.results?.[0]?.primaryGenreName || null;
+    }
+  } catch { /* leave genre null — cached as a miss below, retried after the TTL */ }
+  state.artistGenreCache[key] = { genre, fetchedAt: Date.now() };
+  persistArtistGenreCache();
+  return genre;
 }
 
 // ===== Creator auto-fill (Movie director, Show creator, Game studio) =====
