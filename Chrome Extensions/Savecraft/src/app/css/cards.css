@@ -37,7 +37,9 @@
 .musicgenre-landing-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 14px;
+  /* More space between rows than between columns, per direct request. */
+  row-gap: 30px;
+  column-gap: 14px;
 }
 .musicgenre-card {
   display: flex;
