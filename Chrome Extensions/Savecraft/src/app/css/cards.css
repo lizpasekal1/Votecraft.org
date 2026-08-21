@@ -51,6 +51,11 @@
   cursor: pointer;
   text-align: center;
   transition: border-color 0.15s, background 0.15s;
+  /* Half the width of its grid column, per direct request — grid items stretch to fill their
+     track by default (justify-items: stretch), so this needs both an explicit width and
+     justify-self: center to actually narrow the card rather than just its content. */
+  width: 50%;
+  justify-self: center;
 }
 .musicgenre-card:hover {
   border-color: var(--primary);
