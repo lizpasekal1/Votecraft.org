@@ -283,15 +283,20 @@ export function renderSidebar() {
   // ("savedlist:<id>", wired below via the generic subfolder click handler +
   // renderGrid()'s own "savedlist:" landing-card branch — see there for what that currently
   // shows).
-  function _renderDashboardListRow({ key, icon, label, items, linkClass, childClass, addClass, viewPrefix, itemExtraClass, itemIsActive, showRadio }) {
+  function _renderDashboardListRow({ key, icon, label, items, linkClass, childClass, addClass, addLabel, addFirst, viewPrefix, itemExtraClass, itemIsActive, showRadio }) {
     const rowCollapsed = state.collapsed.has(key);
     const rowArrow = rowCollapsed ? '▶' : '▼';
+    const addRowHtml = `
+    <div class="sidebar-item sidebar-add-folder sidebar-subfolder--nested ${addClass}">
+      ${addLabel || '+ Add List'}
+    </div>`;
     return `
     <div class="sidebar-item sidebar-subfolder ${linkClass}" data-toggle-list="${key}">
       <span class="sidebar-label"><span class="sidebar-list-icon-box">${icon}</span> ${label}</span>
       <span class="sidebar-right"><span class="sidebar-arrow">${rowArrow}</span></span>
     </div>
     ${rowCollapsed ? '' : `
+    ${addFirst ? addRowHtml : ''}
     ${items.map(item => {
       // An item with its own itemExtraClass has a hardcoded destination wired separately (see
       // above) — never give it the generic viewPrefix-derived data-view too, or it'd get two
@@ -316,9 +321,7 @@ export function renderSidebar() {
       ${radioHtml} ${escapeHtml(item.name)}
     </div>`;
     }).join('')}
-    <div class="sidebar-item sidebar-add-folder sidebar-subfolder--nested ${addClass}">
-      + Add List
-    </div>`}
+    ${addFirst ? '' : addRowHtml}`}
     `;
   }
 
@@ -354,6 +357,12 @@ export function renderSidebar() {
       ${_renderDashboardListRow({
         key: 'curated-lists', icon: CURATED_LISTS_ICON_SVG, label: 'Curated Lists', items: state.curatedListsRows,
         linkClass: 'sidebar-curated-lists-link', childClass: 'sidebar-curated-lists-child', addClass: 'sidebar-add-curated-list',
+        // "+Add/Explore" (not "+ Add List") + purple (sidebar.css) + listed first (above
+        // Votecraft/RCV instead of below), per direct request — this row no longer creates a new
+        // list at all (it opens the real Cause Curated page instead, see its own click handler
+        // below), so the label reads as an invitation to explore rather than an editing action,
+        // distinct from Saved Lists' own "+ Add List" (bottom, default) just above.
+        addLabel: '+Add/Explore', addFirst: true,
         // Generic now — every row with a `genre` field (state.curatedListsRows, storage.js) is
         // real/clickable, not just "default-votecraft" specifically (a second list, "RCV", used
         // to sit here with no destination at all). No viewPrefix is passed to this call, so `view`
