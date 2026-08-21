@@ -1883,6 +1883,16 @@
   transform: translateY(-30px);
 }
 .modal-confirm-text strong { color: var(--primary); }
+/* Mobile only, per direct request ("in mobile make 'your save is in' one line and then the
+   folder name below") — was wrapping mid-phrase instead (e.g. "...is in Literature →" / "Books.").
+   Desktop has enough width that this never wrapped there in the first place, so left as inline
+   text there. */
+@media (max-width: 480px) {
+  .modal-confirm-location {
+    display: block;
+    margin-top: 4px;
+  }
+}
 /* Pinned to the popup's true bottom edge (not just "last in the flex column," which left them
    wherever the checkmark/text happened to end) — per direct request ("make the buttons ...
    30px from the bottom of the popup"). .modal itself carries position:relative (index.html
