@@ -5,7 +5,7 @@
 import { state, CURATED_ITEMS, CURATED_NOTES_CATEGORIES, MUSIC_GENRE_BUCKET_MAP } from './state.js';
 import { persistAuthor, persistItem, persistCuratedAlbumMetaCache, persistAlbumTrackListCache, persistAlbumArtCache } from './storage.js';
 import { ensureArtistWebsite, ensureArtistWikipediaInfo, ensureArtistGenre, fetchAlbumsFromItunes, fetchAlbumArtFromMusicBrainz } from './api.js';
-import { isItunesArtworkUrl, applyArtistPhotoToItem, patchCardImage } from './utils.js';
+import { isItunesArtworkUrl, applyArtistPhotoToItem, patchCardImage, isQueueDemoId } from './utils.js';
 import { renderGrid } from './render.js';
 import { renderAuthorPage } from './render.js';
 import { openDetailModal } from './detailModal.js';
@@ -24,6 +24,48 @@ export function bucketForMusicianItem(item) {
   const author = findAuthor(item.title, 'Musician');
   if (!author?.genre) return null;
   return MUSIC_GENRE_BUCKET_MAP[author.genre.trim().toLowerCase()] || null;
+}
+
+// Backfills genre for every already-saved Musician whose author record doesn't have one yet —
+// most musicians saved before the genre-bucket feature existed, or whose author page has never
+// been opened (the only two places that fetch it today: autoSaveMusician/navigateToAuthor), sit
+// at author.genre === null and so don't count toward any of the 15 bucket cards. Called from
+// renderMusicGenreLanding() (renderGrid.js) so the landing page's own counts settle in shortly
+// after arriving, without needing to visit every artist's page individually first. Staggered
+// 150ms apart, same reasoning as fetchMissingCuratedMusicianPhotos (renderCuratedImageFetch.js)
+// — Wikipedia/iTunes rate-limit bursts, and a real library can have dozens of these queue up at
+// once on a single render. Computes its own item list (no args) — every real saved Musician,
+// queue-demo placeholders excluded (they have no real title/url to look anything up by).
+const _genreBackfillInFlight = new Set();
+export function backfillMusicianGenres() {
+  const musicianItems = state.items.filter(i => i.category === 'Musician' && !isQueueDemoId(i.id));
+  const missing = musicianItems.filter(i => {
+    const author = findAuthor(i.title, 'Musician');
+    return !author?.genre && !_genreBackfillInFlight.has(i.title);
+  });
+  if (!missing.length) return;
+  missing.forEach((item, idx) => {
+    _genreBackfillInFlight.add(item.title);
+    setTimeout(() => {
+      ensureArtistGenre(item.title)
+        .then(genre => {
+          if (!genre) return;
+          let author = findAuthor(item.title, 'Musician');
+          if (!author) {
+            author = { id: Date.now().toString(), name: item.title, category: 'Musician', bio: null, imageUrl: null, websiteUrl: null, genre: null, savedAt: Date.now() };
+            state.authors.push(author);
+          }
+          if (author.genre) return; // resolved by something else (e.g. the author page) meanwhile
+          author.genre = genre;
+          persistAuthor(author);
+          // Only the counts on the landing page itself need to reflect a newly-resolved genre —
+          // re-renders as each one lands rather than batching, since this grid is just 15 small
+          // cards (cheap to rebuild) and staggered fetches already spread the renders out in time.
+          if (state.view === 'Musician') renderGrid();
+        })
+        .finally(() => _genreBackfillInFlight.delete(item.title));
+    }, idx * 150);
+  });
 }
 
 // Promotes a curated item into a real personal item the first time it's queued/bookmarked — a
