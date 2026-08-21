@@ -1850,9 +1850,6 @@
   gap: 16px;
   padding: 0 8px 8px;
   min-height: 220px;
-  /* Nudged up from dead-center, per direct follow-up — .modal-confirm-actions (the Done/View
-     row) is its own position:absolute element (see below), so this only moves the icon/text. */
-  transform: translateY(-30px);
 }
 /* Add/Edit's own shared #modal-header rule sets margin-bottom: 24px, sized for every other
    screen's fields sitting right below it — tightened to exactly 15px for the confirmation
@@ -1860,6 +1857,14 @@
 #modal-header.modal-header--confirm {
   margin-bottom: 15px;
 }
+/* REAL BUG, found and fixed: this translateY(-30px) used to live on .modal-step-confirm itself
+   (the shared parent) — but a `transform` on an element makes it the containing block for any
+   position:absolute descendant, per the CSS spec. .modal-confirm-actions (the Done/View row,
+   position:absolute below) was silently hijacked into resolving its own `bottom` against that
+   translated box instead of .modal's true edge, undoing "30px/45px from the bottom of the
+   popup" the moment this nudge was added. Applied to the icon/text individually instead, so
+   .modal-step-confirm itself stays untransformed and .modal-confirm-actions keeps resolving
+   against .modal like it's meant to. */
 .modal-confirm-check {
   display: flex;
   align-items: center;
@@ -1869,11 +1874,13 @@
   border-radius: 50%;
   background: var(--primary);
   color: #fff;
+  transform: translateY(-30px);
 }
 .modal-confirm-text {
   font-size: 19px;
   line-height: 1.4;
   color: var(--text-primary);
+  transform: translateY(-30px);
 }
 .modal-confirm-text strong { color: var(--primary); }
 /* Pinned to the popup's true bottom edge (not just "last in the flex column," which left them
