@@ -26,6 +26,37 @@ export function bucketForMusicianItem(item) {
   return MUSIC_GENRE_BUCKET_MAP[author.genre.trim().toLowerCase()] || null;
 }
 
+// Display-label overrides for the handful of raw iTunes genre strings (MUSIC_GENRE_BUCKET_MAP
+// keys) where generic word-capitalization would look wrong — every other tag is capitalized
+// generically by _formatGenreTag below.
+const _GENRE_TAG_LABEL_OVERRIDES = {
+  edm: 'EDM',
+  'k-pop': 'K-Pop',
+  'j-pop': 'J-Pop',
+  'r&b/soul': 'R&B/Soul',
+  'hip-hop/rap': 'Hip-Hop/Rap',
+  'hip-hop': 'Hip-Hop',
+};
+
+function _formatGenreTag(tag) {
+  if (_GENRE_TAG_LABEL_OVERRIDES[tag]) return _GENRE_TAG_LABEL_OVERRIDES[tag];
+  return tag.replace(/(^|[\s/-])([a-z])/g, (m, sep, ch) => sep + ch.toUpperCase());
+}
+
+// The raw iTunes primaryGenreName strings (MUSIC_GENRE_BUCKET_MAP, state.js) that resolve into a
+// given Music-landing-page bucket — the reverse of bucketForMusicianItem above. Feeds the landing
+// page's per-card hover callout, which shows which iTunes tags feed each bucket (not which saved
+// musicians happen to be in it, per direct correction — "I wanted you to put the tags you're
+// sorting into these categories from itunes"). Pass no bucket (or null) to get every mapped tag
+// across every bucket — used for the "All Music" card's own callout, since it isn't a real bucket
+// in the map (see MUSIC_ALL_LABEL, state.js).
+export function tagsForMusicGenreBucket(bucket) {
+  return Object.entries(MUSIC_GENRE_BUCKET_MAP)
+    .filter(([, b]) => bucket == null || b === bucket)
+    .map(([tag]) => _formatGenreTag(tag))
+    .sort((a, b) => a.localeCompare(b));
+}
+
 // Backfills genre for every already-saved Musician whose author record doesn't have one yet —
 // most musicians saved before the genre-bucket feature existed, or whose author page has never
 // been opened (the only two places that fetch it today: autoSaveMusician/navigateToAuthor), sit
