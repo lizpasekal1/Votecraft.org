@@ -2,12 +2,23 @@
 .grid-area {
   flex: 1;
   padding: 24px 20px;
-  /* overflow-y: auto with no overflow-x set means the CSS spec forces overflow-x to compute as
-     'auto' too (a non-'visible' axis forces the other away from 'visible') — this is a real
-     scrollable-in-both-directions container, not just visually clipped. It doesn't need its own
-     touch-action though: body's touch-action: pan-y (base.css) already blocks horizontal touch
-     panning for its entire subtree, including this. */
+  /* REAL BUG, found and fixed: overflow-y: auto with no overflow-x set means the CSS spec forces
+     overflow-x to compute as 'auto' too (a non-'visible' axis forces the other away from
+     'visible') — this was a real scrollable-in-both-directions container, not just visually
+     clipped, and touch-action: pan-y (base.css) only blocks touch PANNING, not genuine layout
+     overflow. The .rs-logo-wrap/.nyt-logo-wrap/.steam-logo-wrap tooltip (its ::after, above) is
+     220px wide and centered under a logo that's flush against the right edge via margin-left:
+     auto — invisible (opacity:0/visibility:hidden) at rest, but visibility:hidden still generates
+     a box and still counts toward this container's scrollable overflow, so on a curated category
+     page with one of those logos (Book, Musician, Game, Movie) the tooltip alone was enough to
+     make the whole content area horizontally draggable on mobile, reported live ("the screen
+     moves left and right... the container isn't static horizontally") even while scrolled well
+     past the title row it lives in. overflow-x: hidden here is a safe hard backstop, not just a
+     tooltip-specific fix: every horizontally-scrolling row nested inside this container (the Top
+     100 carousels) scrolls via its own dedicated .dash-carousel-strip overflow-x: auto, which
+     keeps working fine nested inside an ancestor that's hidden on that axis. */
   overflow-y: auto;
+  overflow-x: hidden;
   align-self: stretch;
 }
 
