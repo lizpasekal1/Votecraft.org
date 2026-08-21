@@ -734,19 +734,29 @@
 }
 .btn-title-search {
   position: absolute;
-  right: 8px;
+  right: 6px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: none;
+  /* A real button now, per direct request — was a bare icon with no background/border at all.
+     Same rounded-square icon-button treatment as .card-action-btn (cards.css), sized down to fit
+     inside the input instead of that one's 30px. */
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: var(--hover-bg);
   border: none;
-  padding: 4px;
+  padding: 0;
   color: var(--text-muted);
   cursor: pointer;
+  transition: background 0.1s, color 0.1s;
 }
-.btn-title-search:hover { color: var(--primary); }
+.btn-title-search:hover {
+  background: var(--primary);
+  color: #fff;
+}
 .title-author-row:focus-within {
   border-color: var(--primary);
 }
