@@ -5,6 +5,7 @@ import {
   SPLIT_TITLE_CREATOR_CATEGORIES, splitCuratedTitleCreator, getStaticCuratedCreator,
 } from './curatedCreatorLookup.js';
 import { isItunesArtworkUrl, isQueueDemoId } from './utils.js';
+import { bucketForMusicianItem } from './authors.js';
 
 // An item counts as belonging to a category's primary folder if it's actually filed there, or
 // if it has no folder at all (un-foldered items are treated as primary so nothing already-saved
@@ -164,6 +165,16 @@ export function getFilteredSortedItems() {
           });
       }
     }
+  } else if (state.view.startsWith('musicgenre:')) {
+    // Music landing page drill-in (renderGrid.js's renderMusicGenreLanding()) — same base set the
+    // plain 'Musician' category view uses, further narrowed to one of the 15 genre buckets (see
+    // bucketForMusicianItem, authors.js, and MUSIC_GENRE_BUCKET_MAP, state.js). Deliberately not
+    // `genre:` — that prefix is SaveCraft's own unrelated curated-content-browsing concept
+    // (handled above), so this uses a distinct `musicgenre:` prefix to avoid colliding with it.
+    const bucket = state.view.slice(11);
+    items = items
+      .filter(i => matchesPrimaryOrUnfoldered(i, 'Musician'))
+      .filter(i => bucketForMusicianItem(i) === bucket);
   } else if (CATEGORIES.includes(state.view)) {
     // A top-level tab shows only its "primary" folder's items, plus anything with no folder
     // assigned yet — see matchesPrimaryOrUnfoldered() above.
@@ -227,4 +238,21 @@ export function getFilteredSortedItems() {
   });
 
   return items;
+}
+
+// Save counts for the Music landing page's 15 genre-bucket cards (renderGrid.js's
+// renderMusicGenreLanding()). Same base item set/scoping every other category/sidebar count
+// already uses (matchesPrimaryOrUnfoldered + matchesActiveSavedListScope + queue-demo exclusion),
+// grouped by bucketForMusicianItem instead of counted as one flat total. Musicians with no bucket
+// (unmapped/unresolved genre) are simply not counted anywhere here — same "not lost, just not
+// genre-browsable" behavior as the musicgenre: filter branch above.
+export function getMusicGenreBucketCounts() {
+  const counts = {};
+  state.items
+    .filter(i => !isQueueDemoId(i.id) && matchesPrimaryOrUnfoldered(i, 'Musician') && matchesActiveSavedListScope(i))
+    .forEach(i => {
+      const bucket = bucketForMusicianItem(i);
+      if (bucket) counts[bucket] = (counts[bucket] || 0) + 1;
+    });
+  return counts;
 }

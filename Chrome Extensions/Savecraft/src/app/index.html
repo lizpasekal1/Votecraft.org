@@ -155,14 +155,23 @@
             </div>
           </div>
         </div>
-        <select id="sort-select" class="sort-select">
-          <option value="newest">Newest first</option>
-          <option value="oldest">Oldest first</option>
-          <option value="az">A → Z</option>
-          <option value="za">Z → A</option>
-          <option value="release-new">Release Date (Newest)</option>
-          <option value="release-old">Release Date (Oldest)</option>
-        </select>
+        <!-- Right-aligned pair — the Music landing page's genre drill-in adds #musicgenre-select
+             here too (populated/shown by renderGrid.js), sitting left of the existing sort
+             dropdown. Wrapped together (rather than each carrying its own margin-left: auto) so
+             the pair pushes right as a unit regardless of which of the two is actually visible —
+             a lone margin-left:auto on #sort-select alone wouldn't group a second, independently
+             shown/hidden dropdown next to it. -->
+        <div class="grid-header-right">
+          <select id="musicgenre-select" class="sort-select" style="display:none"></select>
+          <select id="sort-select" class="sort-select">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="az">A → Z</option>
+            <option value="za">Z → A</option>
+            <option value="release-new">Release Date (Newest)</option>
+            <option value="release-old">Release Date (Oldest)</option>
+          </select>
+        </div>
       </div>
       <div class="cards-grid" id="cards-grid"></div>
     </main>
