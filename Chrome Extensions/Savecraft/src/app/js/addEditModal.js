@@ -21,7 +21,7 @@ import {
 import { autoSaveMusician } from './authors.js';
 import { openDetailModal } from './detailModal.js';
 import { openSwitchConfirm } from './confirmModal.js';
-import { showSaveConfirmationToast } from './toast.js';
+import { navigateToView } from './navigation.js';
 
 // ===== ADD-MODAL WIZARD STATE (screen 'category' → 'review') =====
 let _wizardScreen = 'category';    // which screen is currently visible — drives what the back icon does
@@ -904,6 +904,7 @@ export function openAddModal() {
   document.getElementById('modal-step-music-choice').style.display = 'none';
   document.getElementById('modal-step-folder').style.display = 'none';
   document.getElementById('modal-step2').style.display = 'none';
+  document.getElementById('modal-step-confirm').style.display = 'none'; // a prior save may have left this showing
   document.getElementById('btn-modal-back').style.display = 'none';
   document.getElementById('btn-modal-save').style.display = 'none';
   document.getElementById('modal-info-icon').style.display = 'none'; // review/input screen only now, per request — not this category screen
@@ -965,6 +966,7 @@ export function openEditModal(item) {
   document.getElementById('modal-step-music-choice').style.display = 'none';
   document.getElementById('modal-step-folder').style.display = 'none';
   document.getElementById('modal-step2').style.display = '';
+  document.getElementById('modal-step-confirm').style.display = 'none'; // a prior save may have left this showing
   document.getElementById('modal-info-icon').style.display = 'none';
   // Edit has no wizard screen history of its own, but the same corner icon still doubles as "back
   // to this item's preview" here (main.js's own #btn-modal-back click handler special-cases
@@ -1153,10 +1155,9 @@ export async function handleSaveItem() {
   await persistItem(item);
   saveBtn.disabled = false;
   saveBtn.textContent = 'Save';
-  closeAddModal();
   renderSidebar();
   renderGrid();
-  showSaveConfirmationToast(item);
+  showSaveConfirmationStep(item); // stays open on this same modal's own confirmation screen instead of closing — see its own comment
 
   // Also runs on Edit now (not just Add) — adding/changing a URL on an item that still has no
   // image should fetch its featured image the same way a brand-new save does.
@@ -1200,6 +1201,42 @@ export async function handleSaveItem() {
       if (musicianItem) autoImportMusicianAlbums(musicianItem);
     });
   }
+}
+
+// ===== Save confirmation (Screen C, index.html's #modal-step-confirm) =====
+// Shown inside this same modal right after a successful save (handleSaveItem's shared tail
+// above), instead of closing it immediately — reassures the user which category/folder the item
+// landed in, with a one-tap "View" straight to it. Per direct request ("change the 'your save'
+// confirmation to appear inside the add item popup" — this used to be a page-level toast,
+// toast.js, now retired). A dead-end screen: only reachable from a successful save, only left via
+// its own Done/View buttons below or the modal's existing backdrop-click/Escape close — never
+// wired into the other steps' own show/hide toggling.
+function showSaveConfirmationStep(item) {
+  document.getElementById('btn-modal-back').style.display = 'none';
+  document.getElementById('modal-info-icon').style.display = 'none';
+  document.getElementById('btn-modal-save').style.display = 'none';
+  document.getElementById('modal-step1').style.display = 'none';
+  document.getElementById('modal-step-music-choice').style.display = 'none';
+  document.getElementById('modal-step-folder').style.display = 'none';
+  document.getElementById('modal-step2').style.display = 'none';
+
+  // A folder-filed item names its folder too (e.g. "Sources → Websites"), same location detail
+  // the retired toast showed — so "View" lands somewhere specific rather than just the category's
+  // default/primary folder.
+  const catLabel = CAT_LABEL[item.category] || item.category;
+  const folder = item.folderId ? state.folders.find(f => f.id === item.folderId) : null;
+  const locationLabel = folder ? `${escapeHtml(catLabel)} &rarr; ${escapeHtml(folder.name)}` : escapeHtml(catLabel);
+  document.getElementById('modal-confirm-text').innerHTML = `Your save is in <strong>${locationLabel}</strong>.`;
+  document.getElementById('modal-step-confirm').style.display = '';
+
+  document.getElementById('btn-confirm-view').onclick = () => {
+    closeAddModal();
+    navigateToView(item.folderId || item.category);
+    openDetailModal(item);
+  };
+  document.getElementById('btn-confirm-done').onclick = () => {
+    closeAddModal();
+  };
 }
 
 // After adding a brand-new Musician, automatically pulls in their real full-length albums —
