@@ -212,10 +212,12 @@ function _renderGridBody() {
     // in .grid-header-right (index.html) — populated fresh each render so it always reflects the
     // current bucket, same as sortSelect.value being set from state.sort elsewhere.
     const bucket = state.view.slice(11);
-    // Title stays "Music" regardless of which bucket is active — per direct request/correction,
-    // the dropdown itself is what shows/defines the current genre, not the page title (this used
-    // to swap the title to the bucket name, e.g. "Pop").
-    gridTitle.innerHTML = `${CAT_EMOJI['Musician']} ${CAT_LABEL['Musician']}${scopedListSuffix}`;
+    // Title stays "Musicians" regardless of which bucket is active — per direct request/
+    // correction, the dropdown itself is what shows/defines the current genre, not the page
+    // title (this used to swap the title to the bucket name, e.g. "Pop"). "Musicians" (not
+    // CAT_LABEL['Musician'], which stays "Music" for the sidebar's own category row) per a
+    // further direct request.
+    gridTitle.innerHTML = `${CAT_EMOJI['Musician']} Musicians${scopedListSuffix}`;
     // "All Music" listed first (matching its pinned-first spot on the landing grid), then the
     // real buckets alphabetically — every one of these routes through this exact same page now
     // (reported live: clicking "All Music" used to land somewhere with no genre dropdown at all,
@@ -223,7 +225,12 @@ function _renderGridBody() {
     musicGenreSelect.innerHTML = [MUSIC_ALL_LABEL, ...MUSIC_GENRE_BUCKETS]
       .map(b => `<option value="${escapeHtml(b)}"${b === bucket ? ' selected' : ''}>${escapeHtml(b)}</option>`)
       .join('');
-    musicGenreSelect.style.display = '';
+    // "All Musicians" stays genuinely unfiltered, per direct correction — the dropdown control
+    // itself is filtering UI, and showing it (even pre-set to "All Music") read as this page
+    // having filtering applied when nothing actually is. Only a real bucket (reached by clicking
+    // one of the 15 picker cards, not "All Music") shows the dropdown, so you can hop to a
+    // sibling bucket without stepping back out to the picker first.
+    musicGenreSelect.style.display = bucket === MUSIC_ALL_LABEL ? 'none' : '';
   } else if (state.view.startsWith('savedlist:')) {
     // Saved Lists (Favorites/Health/Motivation/anything user-added) now show their own actual
     // saved content here — same page shape as any other category/folder (search/sort/cards all
