@@ -472,8 +472,20 @@ export function renderSidebar() {
         ${dashboardLinkHtml}
         ${CURATED_GENRES.map((genre, i) => `
           ${i > 0 ? '<div class="sidebar-divider"></div>' : ''}
-          <div class="sidebar-item sidebar-genre" data-genre="${genre}">
-            <span class="sidebar-label"><span class="cat-icon">${GENRE_EMOJI[genre] || '📁'}</span><span class="sidebar-label-text"> ${escapeHtml(genre)}</span></span>
+          <div class="sidebar-item sidebar-genre ${genre === 'Top 100' && state.view === 'curated' ? 'active' : ''}" data-genre="${genre}">
+            <span class="sidebar-label"><span class="cat-icon">${
+              // "Cause Curated" (formerly "Top 100") uses the same icon as the Dashboard's own
+              // "Curated Lists" row, per direct request, instead of GENRE_EMOJI's star — every
+              // other genre row keeps its own genre icon unchanged.
+              genre === 'Top 100' ? CURATED_LISTS_ICON_SVG : (GENRE_EMOJI[genre] || '📁')
+            }</span><span class="sidebar-label-text"> ${
+              // Display rename, per direct request ("change this link to be cause curated and
+              // bring the user back to the cause curated page") — data-genre stays the real
+              // 'Top 100' key (still used for GENRE_EMOJI/active-state lookups elsewhere), but
+              // the click handler below special-cases this one row to navigate back to this same
+              // picker screen instead of the VoteCraft hero every other genre row still opens.
+              escapeHtml(genre === 'Top 100' ? 'Cause Curated' : genre)
+            }</span></span>
             <svg class="sidebar-genre-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
         `).join('')}
@@ -483,7 +495,14 @@ export function renderSidebar() {
     wireDashboardLink();
     sidebar.querySelectorAll('.sidebar-genre').forEach(el => {
       el.addEventListener('click', () => {
-        navigateToView('genre:' + el.dataset.genre);
+        // "Cause Curated" (the former "Top 100" row, relabeled above) goes back to this same
+        // picker screen instead of drilling into the VoteCraft hero, per direct request — every
+        // other genre row still opens its own genre normally.
+        if (el.dataset.genre === 'Top 100') {
+          navigateToView('curated', { sidebarMode: 'curated' });
+        } else {
+          navigateToView('genre:' + el.dataset.genre);
+        }
       });
     });
     return;
