@@ -704,8 +704,14 @@ export async function handleTitleSearch() {
 
 function renderTitleSearchResults(results) {
   const el = document.getElementById('review-search-results');
-  if (results.length === 0) { el.style.display = 'none'; el.innerHTML = ''; return; }
   el.style.display = '';
+  // No hits (search actually ran, just found nothing) — rather than silently hiding, per direct
+  // request: nudge the user toward the fallback that always works, adding the item straight from
+  // its URL instead of a matched search result.
+  if (results.length === 0) {
+    el.innerHTML = `<div class="step1-search-no-results">No matches found. You can still add this by pasting its URL below.</div>`;
+    return;
+  }
   const placeholderIcon = CAT_EMOJI[state.modalCategory] || '';
   el.innerHTML = results.map((r, i) => `
     <div class="step1-result-row" data-index="${i}">
