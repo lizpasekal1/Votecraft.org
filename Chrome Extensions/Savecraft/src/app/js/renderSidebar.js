@@ -587,8 +587,13 @@ export function renderSidebar() {
       const isFolderCollapsed = !_expandedFolders.has(folder.id);
       const folderArrow = isFolderCollapsed ? '▶' : '▼';
       const nestedClass = depth > 0 ? 'sidebar-subfolder--nested' : '';
+      // Musician's folder row (just the one permanent "Musicians" folder — no "+ New folder"
+      // affordance to ever create siblings, see the addFolderRow exclusion above) gets no
+      // accordion at all, per direct request — a plain link, no toggle arrow, no nested children/
+      // add-subfolder row.
+      const isMusicianCategory = cat === 'Musician';
 
-      const childrenHtml = isFolderCollapsed ? '' : `
+      const childrenHtml = (isMusicianCategory || isFolderCollapsed) ? '' : `
         ${children.map(child => _renderFolderRow(child, depth + 1)).join('')}
         <div class="sidebar-item sidebar-add-folder sidebar-subfolder--nested" data-add-subfolder="${folder.id}">
           + New folder
@@ -598,7 +603,7 @@ export function renderSidebar() {
       return `
         <div class="sidebar-item sidebar-subfolder ${nestedClass} ${isActive ? 'active' : ''}"
              data-view="${folder.id}" data-curated-target="${escapeHtml(curatedTarget)}">
-          <span class="sidebar-folder-toggle" data-toggle-folder="${folder.id}">${folderArrow}</span>
+          ${isMusicianCategory ? '' : `<span class="sidebar-folder-toggle" data-toggle-folder="${folder.id}">${folderArrow}</span>`}
           ${folderIconHtml(folder.id, 16)} ${escapeHtml(folder.name)}
           ${fCountLabel}
           ${deleteBtn}
@@ -609,12 +614,20 @@ export function renderSidebar() {
 
     const subfolderRows = subfolders.map(folder => _renderFolderRow(folder, 0)).join('');
 
-    const expandedContent = isCollapsed ? '' : `
-      ${permanentSubfolders}
-      ${subfolderRows}
+    // Musicians (subfolderRows) above Albums (permanentSubfolders), per direct request — was the
+    // other way around.
+    // Musician gets no "+ New folder" row, per direct request — its own subfolder slot (the
+    // "Musicians" primary folder) plus the permanent Albums row are the whole of what belongs
+    // here; every other category keeps the normal add-folder affordance.
+    const addFolderRow = cat === 'Musician' ? '' : `
       <div class="sidebar-item sidebar-add-folder" data-add-folder="${cat}">
         + New folder
       </div>
+    `;
+    const expandedContent = isCollapsed ? '' : `
+      ${subfolderRows}
+      ${permanentSubfolders}
+      ${addFolderRow}
     `;
 
     return `
