@@ -37,8 +37,10 @@
 .musicgenre-landing-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  /* More space between rows than between columns, per direct request. */
-  row-gap: 30px;
+  /* More space between rows than between columns, per direct request. 30 -> 50 per a further
+     direct follow-up ("increase the vertical padding by twenty pixels" — clarified as "the
+     padding between the cards", i.e. this row-gap, not the cards' own internal padding). */
+  row-gap: 50px;
   column-gap: 14px;
 }
 /* 20px above the first row and below the last row only, desktop only, per direct follow-up/
