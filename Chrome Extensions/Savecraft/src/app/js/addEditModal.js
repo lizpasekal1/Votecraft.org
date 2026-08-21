@@ -1188,10 +1188,17 @@ async function autoImportMusicianAlbums(musicianItem) {
     return;
   }
   const lowerName = artistName.trim().toLowerCase();
+  // REAL BUG, found and fixed: iTunes often lists a live album twice — once as the audio album,
+  // once as a "(Video Album)" edition of the exact same release (reported live: "Uprising Live!
+  // (Live)" and "Uprising Live! (Video Album)" both auto-imported for Bob Marley) — different
+  // titles, so the Singles/EPs exclusion below never caught it, and this path has no review step
+  // (unlike fetchAlbumsModal.js's manual picker, where showing both is fine — the user can just
+  // leave the one they don't want unchecked) to let the user drop the redundant one themselves.
   const fullAlbums = albums.filter(a =>
     a.artist?.toLowerCase() === lowerName &&
     a.type !== 'Single' &&
-    !/\s[-–]\s*(single|ep)\s*$/i.test(a.title)
+    !/\s[-–]\s*(single|ep)\s*$/i.test(a.title) &&
+    !/\(video album\)\s*$/i.test(a.title)
   );
   if (fullAlbums.length === 0) return;
 
