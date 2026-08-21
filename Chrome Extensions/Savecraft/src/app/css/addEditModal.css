@@ -1840,12 +1840,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* flex-start, not center — per direct follow-up ("bring the check mark up so it's just 15px
-     below the 'Excellent' title"), superseding the earlier vertical-centering approach. The
-     15px gap itself comes from .modal-header--confirm's own margin-bottom below, not padding
-     here — this way it's exactly 15px below the title regardless of how much room is left under
-     it, rather than just being pulled toward the middle of that space. */
-  justify-content: flex-start;
+  /* Centered again, per direct follow-up ("center the icon and the 'your save is in..' text in
+     the vertical of the modal") — supersedes the earlier flex-start/15px-below-title approach.
+     Safe to center against this element's own full height now: .modal-confirm-actions (the
+     Done/View row) is position:absolute (see below), out of this flex flow entirely, so it no
+     longer competes for space or skews where the icon/text land. */
+  justify-content: center;
   text-align: center;
   gap: 16px;
   padding: 0 8px 8px;
@@ -1880,7 +1880,7 @@
 .modal-confirm-actions {
   position: absolute;
   left: 50%;
-  bottom: 30px;
+  bottom: 45px; /* 30 + 15, per direct follow-up ("bring the buttons up 15px") */
   transform: translateX(-50%);
   display: flex;
   gap: 10px;
