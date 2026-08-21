@@ -12,7 +12,7 @@ import {
 import { persistViewState, persistItem, persistHiddenCurated, removeItem } from './storage.js';
 import { navigateToView } from './navigation.js';
 import { getCurrentUser } from './auth.js';
-import { wireCardAuthorLinks, backfillMusicianGenres } from './authors.js';
+import { wireCardAuthorLinks, backfillMusicianGenres, tagsForMusicGenreBucket } from './authors.js';
 import { renderKanbanBoard } from './kanban.js';
 import { renderAdminKanbanBoard } from './adminKanban.js';
 import { openDetailModal } from './detailModal.js';
@@ -27,10 +27,7 @@ import { renderAuthorPage } from './renderAuthorPage.js';
 import { renderCuratedGenreLanding, renderCuratedDirectory, renderCuratedBareList } from './renderCuratedPages.js';
 import { wireQuickQueueButtons } from './renderCardActions.js';
 import { fetchMissingCuratedImages, fetchMissingCuratedMusicianPhotos } from './renderCuratedImageFetch.js';
-import {
-  getFilteredSortedItems, getMusicGenreBucketCounts,
-  getMusicGenreBucketItems, getAllMusicianItems,
-} from './renderFilters.js';
+import { getFilteredSortedItems, getMusicGenreBucketCounts, getMusicianTotalCount } from './renderFilters.js';
 import { resourceUrl } from './platform.js';
 
 // News cards' publication byline is folder-based, not author-based, so it doesn't go through
@@ -431,28 +428,28 @@ function renderMusicGenreLanding() {
   musicGenreSelect.style.display = 'none';
 
   const counts = getMusicGenreBucketCounts();
-  const bucketItems = getMusicGenreBucketItems();
-  // Hover callout listing which saved musicians landed in each bucket — same visual language as
-  // the detail modal's "Why VoteCraft Recommends" tooltip (.vc-sponsored-tooltip), reused here as
-  // .musicgenre-tooltip so it reads as the same kind of purple, arrow-pointing-up-at-the-trigger
-  // callout rather than a new, unfamiliar tooltip style. "No saves yet" placeholder when a
-  // bucket's list is empty rather than leaving the tooltip's body blank.
-  const buildTooltipHtml = items => `
+  // Hover callout listing the raw iTunes genre tags (MUSIC_GENRE_BUCKET_MAP, state.js) that sort
+  // into each bucket — not which saved musicians happen to be in it, per direct correction. Same
+  // visual language as the detail modal's "Why VoteCraft Recommends" tooltip
+  // (.vc-sponsored-tooltip), reused here as .musicgenre-tooltip so it reads as the same kind of
+  // purple, arrow-pointing-up-at-the-trigger callout rather than a new, unfamiliar tooltip style.
+  const buildTooltipHtml = tags => `
     <span class="musicgenre-tooltip">
       <span class="musicgenre-tooltip-title">Tags contained:</span>
-      <span class="musicgenre-tooltip-text">${items.length ? items.map(i => escapeHtml(i.title || '')).join(' | ') : 'No saves yet'}</span>
+      <span class="musicgenre-tooltip-text">${tags.map(t => escapeHtml(t)).join(' | ')}</span>
     </span>
   `;
   // "All Music" — a shortcut to the existing unfiltered "every saved musician" view (same
   // destination the sidebar's own plain "Musicians" row already goes to), not a real genre
-  // bucket — pinned first, ahead of the alphabetical genre cards, per direct request.
-  const allItems = getAllMusicianItems();
+  // bucket — pinned first, ahead of the alphabetical genre cards, per direct request. Its own
+  // callout lists every mapped tag across every real bucket (tagsForMusicGenreBucket with no
+  // bucket arg), since it isn't a bucket of its own in MUSIC_GENRE_BUCKET_MAP.
   const allBucketHtml = `
     <button type="button" class="musicgenre-card" data-bucket="${escapeHtml(MUSIC_ALL_LABEL)}">
       <span class="musicgenre-card-icon">${MUSIC_GENRE_BUCKET_EMOJI[MUSIC_ALL_LABEL] || ''}</span>
       <span class="musicgenre-card-name">${escapeHtml(MUSIC_ALL_LABEL)}</span>
-      <span class="musicgenre-card-count">${allItems.length}</span>
-      ${buildTooltipHtml(allItems)}
+      <span class="musicgenre-card-count">${getMusicianTotalCount()}</span>
+      ${buildTooltipHtml(tagsForMusicGenreBucket())}
     </button>
   `;
   container.className = 'musicgenre-landing-grid';
@@ -461,7 +458,7 @@ function renderMusicGenreLanding() {
       <span class="musicgenre-card-icon">${MUSIC_GENRE_BUCKET_EMOJI[bucket] || ''}</span>
       <span class="musicgenre-card-name">${escapeHtml(bucket)}</span>
       <span class="musicgenre-card-count">${counts[bucket] || 0}</span>
-      ${buildTooltipHtml(bucketItems[bucket] || [])}
+      ${buildTooltipHtml(tagsForMusicGenreBucket(bucket))}
     </button>
   `).join('');
 

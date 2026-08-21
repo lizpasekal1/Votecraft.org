@@ -265,26 +265,3 @@ export function getMusicGenreBucketCounts() {
 export function getMusicianTotalCount() {
   return state.items.filter(i => !isQueueDemoId(i.id) && matchesPrimaryOrUnfoldered(i, 'Musician') && matchesActiveSavedListScope(i)).length;
 }
-
-// Same base item set as getMusicGenreBucketCounts(), grouped by bucket but keeping the actual
-// items (sorted by title) instead of just a count — feeds the Music landing page's per-card
-// hover tooltip (renderGrid.js), which lists which saved musicians landed in each bucket.
-export function getMusicGenreBucketItems() {
-  const buckets = {};
-  state.items
-    .filter(i => !isQueueDemoId(i.id) && matchesPrimaryOrUnfoldered(i, 'Musician') && matchesActiveSavedListScope(i))
-    .forEach(i => {
-      const bucket = bucketForMusicianItem(i);
-      if (bucket) (buckets[bucket] = buckets[bucket] || []).push(i);
-    });
-  Object.values(buckets).forEach(items => items.sort((a, b) => (a.title || '').localeCompare(b.title || '')));
-  return buckets;
-}
-
-// Same base item set as getMusicianTotalCount(), sorted by title — feeds the "All Music" card's
-// own hover tooltip the same way getMusicGenreBucketItems() feeds every real genre bucket's.
-export function getAllMusicianItems() {
-  return state.items
-    .filter(i => !isQueueDemoId(i.id) && matchesPrimaryOrUnfoldered(i, 'Musician') && matchesActiveSavedListScope(i))
-    .sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-}
