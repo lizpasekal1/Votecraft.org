@@ -542,6 +542,24 @@
 
       </div><!-- /modal-step2 -->
 
+      <!-- ===== SCREEN C: save confirmation — shown inside this same modal right after a
+           successful save (Add or Edit) instead of closing it immediately, per direct request
+           ("change the 'your save' confirmation to appear inside the add item popup" — was a
+           page-level toast, toast.js). Filled in by showSaveConfirmationStep() (addEditModal.js);
+           empty/hidden here until then. A dead-end screen — only reachable from a successful
+           save, only left via its own Done/View buttons (or the modal's existing backdrop-click/
+           Escape close), so it's never wired into the other steps' show/hide toggling. ===== -->
+      <div class="modal-body modal-step-confirm" id="modal-step-confirm" style="display:none">
+        <div class="modal-confirm-check">
+          <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="currentColor"><path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/></svg>
+        </div>
+        <div class="modal-confirm-text" id="modal-confirm-text"></div>
+        <div class="modal-confirm-actions">
+          <button type="button" class="btn-cancel" id="btn-confirm-done">Done</button>
+          <button type="button" class="btn-primary" id="btn-confirm-view">View</button>
+        </div>
+      </div>
+
       <div class="modal-actions" id="modal-actions">
         <button class="btn-primary" id="btn-modal-save" style="display:none">Save</button>
       </div>
@@ -692,11 +710,6 @@
   </div>
 
   <button class="fab-add" id="fab-add" title="Add item">+</button>
-
-  <!-- Save confirmation toast (toast.js) — shown after an item is saved (Add or Edit), reassuring
-       the user which category it landed in with a one-tap way to go preview it there. Content is
-       filled in by showSaveConfirmationToast; empty here so it renders nothing until first shown. -->
-  <div class="save-toast" id="save-toast"></div>
 
   <script type="module" src="/src/app/js/main.js"></script>
 </body>
