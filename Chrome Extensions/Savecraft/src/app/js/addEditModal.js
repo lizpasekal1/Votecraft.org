@@ -1220,6 +1220,10 @@ function showSaveConfirmationStep(item) {
   document.getElementById('btn-modal-back').style.display = 'none';
   document.getElementById('modal-info-icon').style.display = 'none';
   document.getElementById('btn-modal-save').style.display = 'none';
+  // Lives in #modal-header (not one of the step bodies below), so it isn't hidden by any of
+  // those toggles — stays visible above the confirmation message otherwise. Add-flow only
+  // (openEditModal never shows it in the first place), per direct request.
+  document.getElementById('saved-lists-wrap').style.display = 'none';
   document.getElementById('modal-step1').style.display = 'none';
   document.getElementById('modal-step-music-choice').style.display = 'none';
   document.getElementById('modal-step-folder').style.display = 'none';
