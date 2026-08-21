@@ -18,6 +18,20 @@ const ARTIST_BIO_CACHE_MISS_TTL = 90 * 24 * 60 * 60 * 1000; // 90 days
 const ARTIST_GENRE_CACHE_MISS_TTL = 90 * 24 * 60 * 60 * 1000; // 90 days
 const ITEM_WIKI_CACHE_MISS_TTL = 90 * 24 * 60 * 60 * 1000; // 90 days
 
+// REAL BUG, found and fixed: a 403 from iTunes (confirmed live via a DevTools screenshot — a
+// per-client/IP throttle, not the endpoint being down; a plain server-side curl to the same
+// endpoint succeeded) used to just get silently retried on every subsequent call, flooding the
+// console with hundreds of doomed requests instead of backing off. Shared across every
+// itunes.apple.com call in this file (search-for-albums, musicArtist genre lookup, ...) — a 403 on
+// any one of them almost certainly means the whole domain is throttled for this client right now,
+// not just that one endpoint. Session-only (not persisted) — a page reload clears it, but the
+// very first real 403 after that reload re-trips it immediately.
+const ITUNES_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+let _itunesBlockedUntil = 0;
+export function isItunesRateLimited() {
+  return Date.now() < _itunesBlockedUntil;
+}
+
 // iTunes's Search API has no dedicated "artist photo" field — the closest available image is
 // an album cover, so we use the most relevant album's artwork as a stand-in for the artist photo.
 export async function fetchArtistPhotoFromItunes(artistName) {
@@ -36,8 +50,10 @@ export async function fetchArtistPhotoFromItunes(artistName) {
 }
 
 export async function fetchAlbumsFromItunes(artistName) {
+  if (isItunesRateLimited()) throw new Error('iTunes API rate-limited — breaker open');
   const url = `https://itunes.apple.com/search?term=${encodeURIComponent(artistName)}&entity=album&media=music&limit=200`;
   const resp = await fetch(url);
+  if (resp.status === 403) _itunesBlockedUntil = Date.now() + ITUNES_COOLDOWN_MS;
   if (!resp.ok) throw new Error(`iTunes API error: ${resp.status}`);
   const data = await resp.json();
   return data.results
@@ -494,31 +510,6 @@ export async function ensureArtistWebsite(artistName) {
   state.artistWebsiteCache[key] = { url, fetchedAt: Date.now() };
   persistArtistWebsiteCache();
   return url;
-}
-
-// REAL BUG, found and fixed: the previous fix here (not caching transient failures, so a
-// rate-limited burst wouldn't poison an artist's genre for 90 days — see git history) had its own
-// side effect once iTunes actually started returning 403s for real: with nothing cached, every
-// subsequent backfill pass just re-attempted the same ~700 still-unresolved lookups all over
-// again, flooding the console with hundreds of doomed 403s per page visit instead of backing off
-// (reported live via a DevTools screenshot: "that is just failing over and over"). A 403
-// specifically (Apple's own rate-limit signal, confirmed live — a plain server-side curl to the
-// same endpoint succeeded, so this is a per-client/IP throttle, not the endpoint being down) now
-// trips a short in-memory circuit breaker: every ensureArtistGenre call for the next
-// ITUNES_COOLDOWN_MS returns null immediately, with no network request at all, so a burst of
-// already-scheduled backfill calls stops hammering the endpoint within one round-trip instead of
-// working through the whole remaining queue. Session-only (not persisted) — a page reload clears
-// it, but the very first real 403 after that reload re-trips it immediately, so at most a couple
-// of requests slip through before the breaker closes again.
-const ITUNES_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
-let _itunesBlockedUntil = 0;
-
-// Exported so backfillMusicianGenres() (authors.js) can skip scheduling an entire pass while the
-// breaker is open, instead of scheduling hundreds of setTimeouts that would just call
-// ensureArtistGenre only to have it immediately no-op — cheap either way, but this gives a clear
-// single console line instead of silence.
-export function isItunesRateLimited() {
-  return Date.now() < _itunesBlockedUntil;
 }
 
 // Looks up an artist's genre via iTunes' musicArtist search (the same endpoint/field

@@ -11,14 +11,14 @@
 
 import { state, CATEGORIES, CAT_LABEL, CAT_EMOJI, CATEGORY_PLATFORMS, MODAL_BOOKMARK_ICON_SVG, PRIMARY_FOLDER_ID } from './state.js';
 import { escapeHtml, isItunesArtworkUrl, folderIconHtml, sortFoldersForDisplay, getChildFolders, getDomain } from './utils.js';
-import { persistItem, persistCuratedOverrides } from './storage.js';
+import { persistItem, persistCuratedOverrides, persistAuthor } from './storage.js';
 import { renderSidebar, renderGrid, promptAddFolder } from './render.js';
 import {
   searchMusicians, searchMusicAlbums, searchShows, searchShowsWikipedia, searchBooks, searchGames, searchMoviesWikipedia,
   ensureArtistWikipediaInfo, ensureItemWikipediaInfo, ensureItemCreator, fetchAlbumsFromItunes,
   fetchVideoThumbnail,
 } from './api.js';
-import { autoSaveMusician } from './authors.js';
+import { autoSaveMusician, findAuthor, tagsForMusicGenreBucket } from './authors.js';
 import { openDetailModal } from './detailModal.js';
 import { openSwitchConfirm } from './confirmModal.js';
 import { navigateToView } from './navigation.js';
@@ -894,6 +894,7 @@ export function openAddModal() {
   document.getElementById('folder-select-group').style.display = 'none';
   document.getElementById('saved-lists-wrap').style.display = 'none';
   document.getElementById('edit-saved-lists-group').style.display = 'none'; // Edit-only — reset in case a prior Edit session left it visible
+  document.getElementById('genre-tag-group').style.display = 'none'; // Edit-only — ditto
   _wizardSelectedListIds = new Set();
   hideTitleSearchResults();
 
@@ -962,6 +963,22 @@ export function openEditModal(item) {
   // hidden rather than just skipping the call, in case a prior Add-flow screen left it visible.
   renderStep2ImagePreview(null);
   populateFolderSelect(item.category, item.folderId);
+
+  // Musician-only genre-tag field, per direct request — reads/writes the artist's own author
+  // record (author.genre), not the item itself, so it's seeded here independently of every other
+  // field above (all of which map straight onto `item`). Datalist rebuilt on every open rather
+  // than once at init — cheap (~59 static options) and keeps this self-contained here rather than
+  // needing its own init hook in main.js.
+  const genreTagGroup = document.getElementById('genre-tag-group');
+  const genreTagInput = document.getElementById('input-genre-tag');
+  if (item.category === 'Musician') {
+    document.getElementById('genre-tag-datalist').innerHTML =
+      tagsForMusicGenreBucket().map(t => `<option value="${escapeHtml(t)}"></option>`).join('');
+    genreTagInput.value = findAuthor(item.title, 'Musician')?.genre || '';
+    genreTagGroup.style.display = '';
+  } else {
+    genreTagGroup.style.display = 'none';
+  }
 
   document.getElementById('modal-step1').style.display = 'none';
   document.getElementById('modal-step-music-choice').style.display = 'none';
@@ -1100,6 +1117,24 @@ export async function handleSaveItem() {
   // A URL-only save (see the relaxed guard above) still needs something to display as the card's
   // title everywhere else in the app — the domain is the most useful stand-in available.
   const title = titleInput || getDomain(url);
+
+  // Musician-only genre-tag field, per direct request — writes to the artist's own author record
+  // (author.genre), not `item`, so it's handled independently of the item-save branches below.
+  // Get-or-create the same way backfillMusicianGenres() (authors.js) does, so a Musician with no
+  // author record yet (e.g. saved before this feature existed) still gets one created here rather
+  // than silently no-oping.
+  if (state.editingId && category === 'Musician') {
+    const genreTagValue = document.getElementById('input-genre-tag').value.trim() || null;
+    let musicianAuthor = findAuthor(title, 'Musician');
+    if (!musicianAuthor) {
+      musicianAuthor = { id: Date.now().toString(), name: title, category: 'Musician', bio: null, imageUrl: null, websiteUrl: null, genre: null, savedAt: Date.now() };
+      state.authors.push(musicianAuthor);
+    }
+    if (musicianAuthor.genre !== genreTagValue) {
+      musicianAuthor.genre = genreTagValue;
+      await persistAuthor(musicianAuthor);
+    }
+  }
 
   let item;
   if (state.editingId && state.editingId.startsWith('cur-')) {
@@ -1274,7 +1309,11 @@ function showSaveConfirmationStep(item) {
 // search-term feature, tribute, or compilation) — so the user doesn't have to separately visit
 // the artist's page and run Fetch Albums. Mirrors the item shape fetchAlbumsModal.js's
 // handleImportAlbums() creates, but runs unattended with no review step.
-async function autoImportMusicianAlbums(musicianItem) {
+// Exported for bulkImportArtists.js's own one-time follow-up (window.bulkImportAlbumsForMyArtists)
+// — the bulk-imported Musicians deliberately skipped this at import time (~800 extra iTunes calls
+// on top of the genre lookups was too much for one burst), so it's reused as-is here rather than
+// reimplemented, per direct follow-up request ("i am not seeing their albums coming in").
+export async function autoImportMusicianAlbums(musicianItem) {
   const artistName = musicianItem.title;
   if (!artistName) return;
   let albums;
