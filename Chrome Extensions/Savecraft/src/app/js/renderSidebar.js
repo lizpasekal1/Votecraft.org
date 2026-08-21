@@ -619,14 +619,6 @@ export function renderSidebar() {
       // "default-") can't be deleted from the sidebar — only user-created ones (Date.now() ids) can.
       const isOfficialFolder = folder.id.startsWith('default-');
       const deleteBtn = isOfficialFolder ? '' : `<button class="sidebar-delete-folder" data-folder-id="${folder.id}" title="Delete folder">×</button>`;
-      // Several sibling folders can share the exact same curatedTarget (e.g. none currently do
-      // after the empty-fallback above, but kept for safety/future folders) — state.view alone
-      // can't always tell which specific folder was clicked, so state.activeCuratedFolderId
-      // (set on click) disambiguates which single row shows as active.
-      const isActive = isCuratedGenre
-        ? state.view === `genre:${curatedGenreBase}:${curatedTarget}` && state.activeCuratedFolderId === folder.id
-        : state.view === folder.id;
-
       const children = sortFoldersForDisplay(getChildFolders(state.folders, folder.id), cat);
       const isFolderCollapsed = !_expandedFolders.has(folder.id);
       const folderArrow = isFolderCollapsed ? '▶' : '▼';
@@ -636,6 +628,20 @@ export function renderSidebar() {
       // accordion at all, per direct request — a plain link, no toggle arrow, no nested children/
       // add-subfolder row.
       const isMusicianCategory = cat === 'Musician';
+      // Deliberately two distinct destinations, per direct confirmation ("the musician accordian
+      // show still be it's own page") — the top-level "Musician" category header goes to the
+      // 15-card genre picker (data-view="Musician"), while expanding that same category's
+      // accordion and clicking its nested "Musicians" folder row here goes to the plain,
+      // unfiltered flat list via this folder's own real id — a separate "see everything, no genre
+      // grouping" destination, not a duplicate/bug to unify away.
+      const effectiveView = folder.id;
+      // Several sibling folders can share the exact same curatedTarget (e.g. none currently do
+      // after the empty-fallback above, but kept for safety/future folders) — state.view alone
+      // can't always tell which specific folder was clicked, so state.activeCuratedFolderId
+      // (set on click) disambiguates which single row shows as active.
+      const isActive = isCuratedGenre
+        ? state.view === `genre:${curatedGenreBase}:${curatedTarget}` && state.activeCuratedFolderId === folder.id
+        : state.view === effectiveView;
 
       // Curated genre browsing is read-only, per direct request ("the user should not be able to
       // add new folders to the curated lists") — same folders/counts as the personal sidebar
@@ -653,7 +659,7 @@ export function renderSidebar() {
 
       return `
         <div class="sidebar-item sidebar-subfolder ${nestedClass} ${isActive ? 'active' : ''}"
-             data-view="${folder.id}" data-curated-target="${escapeHtml(curatedTarget)}">
+             data-view="${escapeHtml(effectiveView)}" data-curated-target="${escapeHtml(curatedTarget)}">
           ${isMusicianCategory ? '' : `<span class="sidebar-folder-toggle" data-toggle-folder="${folder.id}">${folderArrow}</span>`}
           ${folderIconHtml(folder.id, 16)} ${escapeHtml(folder.name)}
           ${fCountLabel}
