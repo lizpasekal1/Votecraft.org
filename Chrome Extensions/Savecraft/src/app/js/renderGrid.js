@@ -167,25 +167,25 @@ function _renderGridBody() {
     : '';
 
   // Shared "Musicians" title + genre-dropdown shell — both the musicgenre: flat-list branch and
-  // the sidebar's own plain Musicians folder page below render this exact same shell, just with
-  // different `hideDropdownAtAll` behavior (musicgenre: hides the dropdown at "All Music" so that
-  // page reads as genuinely unfiltered; the folder page keeps it visible even at "All Music" since
-  // it's the escape hatch into a bucket without stepping back out to the 15-card picker first).
-  // REAL BUG, found and fixed: this used to be hand-copied between the two branches — an easy way
-  // for a future edit to one to silently drift out of sync with the other.
-  const renderMusiciansDropdownShell = (selectedBucket, { hideDropdownAtAll }) => {
+  // the sidebar's own plain Musicians folder page below render this exact same shell. Always shows
+  // the dropdown now — REAL BUG, found and fixed: "All Music" used to reach a THIRD, dropdown-less
+  // destination of its own (musicgenre:All Music, distinct from both the picker and this folder
+  // page), a leftover from an earlier "hide the dropdown so this reads as unfiltered" request that
+  // nobody reconciled against the folder page's later, different escape-hatch-dropdown treatment —
+  // reported live as "is there a redundant extra 'musician' page or state without the dropdown?".
+  // musicgenre:All Music is no longer reachable at all (see the redirect at the top of the
+  // musicgenre: branch below, plus the picker card's and the dropdown's own click/change handlers),
+  // so this function never needs to hide its own dropdown anymore — one shell, one behavior.
+  const renderMusiciansDropdownShell = selectedBucket => {
     gridTitle.innerHTML = `${CAT_EMOJI['Musician']} Musicians${scopedListSuffix}`;
     musicGenreSelect.innerHTML = [MUSIC_ALL_LABEL, ...MUSIC_GENRE_BUCKETS]
       .map(b => `<option value="${escapeHtml(b)}"${b === selectedBucket ? ' selected' : ''}>${escapeHtml(b)}</option>`)
       .join('');
-    const showDropdown = !(hideDropdownAtAll && selectedBucket === MUSIC_ALL_LABEL);
-    musicGenreSelect.style.display = showDropdown ? '' : 'none';
-    // Marks .grid-header-right as actually holding BOTH selects right now (not just "on a Music
-    // page" — musicgenre:All Music still hides the dropdown, see hideDropdownAtAll above) — mobile
-    // CSS (misc.css) keys off this to size the pair to share one row only when there really are two
-    // of them, rather than narrowing #sort-select everywhere it appears just because this function
-    // ran once during the render.
-    gridHeaderRight.classList.toggle('grid-header-right--dual', showDropdown);
+    musicGenreSelect.style.display = '';
+    // Marks .grid-header-right as actually holding both selects right now — mobile CSS (misc.css)
+    // keys off this to size the pair to share one row, rather than narrowing #sort-select
+    // everywhere it appears just because this function ran once during the render.
+    gridHeaderRight.classList.add('grid-header-right--dual');
   };
 
   if (state.view === 'all') {
@@ -232,23 +232,25 @@ function _renderGridBody() {
       navigateToView(e.currentTarget.dataset.view);
     });
   } else if (state.view.startsWith('musicgenre:')) {
+    const bucket = state.view.slice(11);
+    // "All Music" isn't a real bucket to filter by — it belongs on the actual Musicians page
+    // (PRIMARY_FOLDER_ID.Musician) instead, not this one. Redirects rather than rendering here so
+    // musicgenre:All Music can't be reached at all (typed/bookmarked URL, a stray old link, ...),
+    // not just avoided by the picker card and dropdown's own handlers below — one canonical
+    // "unfiltered" destination, not two that happen to show the same items differently.
+    if (bucket === MUSIC_ALL_LABEL) {
+      navigateToView(PRIMARY_FOLDER_ID.Musician, { replace: true });
+      return;
+    }
     // Music landing page drill-in — same page shape as any other category (search/sort/cards all
     // work unchanged below), just an extra genre filter. #musicgenre-select pairs with #sort-select
     // in .grid-header-right (index.html) — populated fresh each render so it always reflects the
-    // current bucket, same as sortSelect.value being set from state.sort elsewhere.
-    const bucket = state.view.slice(11);
-    // Title stays "Musicians" regardless of which bucket is active — per direct request/
-    // correction, the dropdown itself is what shows/defines the current genre, not the page
-    // title (this used to swap the title to the bucket name, e.g. "Pop"). "Musicians" (not
-    // CAT_LABEL['Musician'], which stays "Music" for the sidebar's own category row) per a
-    // further direct request. "All Music" listed first (matching its pinned-first spot on the
-    // landing grid), then the real buckets alphabetically — every one of these routes through this
-    // exact same page now (reported live: clicking "All Music" used to land somewhere with no
-    // genre dropdown at all, because it went to a genuinely different view/branch than the real
-    // buckets did). "All Musicians" stays genuinely unfiltered, per direct correction — the
-    // dropdown control itself is filtering UI, and showing it (even pre-set to "All Music") read as
-    // this page having filtering applied when nothing actually is.
-    renderMusiciansDropdownShell(bucket, { hideDropdownAtAll: true });
+    // current bucket, same as sortSelect.value being set from state.sort elsewhere. Title stays
+    // "Musicians" regardless of which bucket is active — per direct request/correction, the
+    // dropdown itself is what shows/defines the current genre, not the page title (this used to
+    // swap the title to the bucket name, e.g. "Pop"). "Musicians" (not CAT_LABEL['Musician'], which
+    // stays "Music" for the sidebar's own category row) per a further direct request.
+    renderMusiciansDropdownShell(bucket);
   } else if (state.view.startsWith('savedlist:')) {
     // Saved Lists (Favorites/Health/Motivation/anything user-added) now show their own actual
     // saved content here — same page shape as any other category/folder (search/sort/cards all
@@ -268,19 +270,17 @@ function _renderGridBody() {
   } else {
     const folder = state.folders.find(f => f.id === state.view);
     // The sidebar's own plain "Musicians" accordion row (folder.id === PRIMARY_FOLDER_ID.Musician)
-    // — confirmed a deliberately separate destination from the picker/musicgenre: pages (see
-    // renderSidebar.js's own comment), but per direct request it should still LOOK like the
-    // musicgenre: page's shell (same "Musicians" title, same genre dropdown) rather than a bare
-    // folder title with no filter UI at all. Unlike musicgenre:<MUSIC_ALL_LABEL> (whose dropdown is
-    // deliberately hidden so it reads as unfiltered), this page's dropdown stays visible even at
-    // "All Music" — it's the escape hatch that lets you narrow into a bucket without first going
-    // back out to the 15-card picker. Selecting a bucket here hands off to the real musicgenre:
-    // page (musicgenre-select's shared change handler, main.js) rather than duplicating that
+    // — confirmed a deliberately separate destination from the picker (see renderSidebar.js's own
+    // comment: routes here via its own real folder id, not through the picker at all), but shares
+    // the exact same "Musicians" title + genre-dropdown shell the musicgenre: pages use, and is now
+    // ALSO the one and only "unfiltered, every musician" destination — both the picker's "All
+    // Music" card and the dropdown's own "All Music" option (main.js) navigate straight here
+    // instead of to a musicgenre:All Music page of their own. Selecting a real bucket from the
+    // dropdown here hands off to the real musicgenre:<bucket> page rather than duplicating that
     // filtering logic on this view; the items shown before that happens are already the full
-    // unfiltered set (matchesPrimaryOrUnfoldered, renderFilters.js) — same set musicgenre:All Music
-    // shows, just reached via its own URL/id instead.
+    // unfiltered set (matchesPrimaryOrUnfoldered, renderFilters.js).
     if (folder && folder.id === PRIMARY_FOLDER_ID.Musician) {
-      renderMusiciansDropdownShell(MUSIC_ALL_LABEL, { hideDropdownAtAll: false });
+      renderMusiciansDropdownShell(MUSIC_ALL_LABEL);
     } else if (folder && folder.parentCategory === 'News') {
       // News outlet folders double as "publication profile pages" — a richer header (domain +
       // paywalled badge, both already on the folder from the News-category work) instead of just
@@ -512,11 +512,13 @@ function renderMusicGenreLanding() {
 
   container.querySelectorAll('.musicgenre-card').forEach(card => {
     card.addEventListener('click', () => {
-      // "All Music" now routes through the exact same musicgenre: page every real bucket does
-      // (renderFilters.js treats MUSIC_ALL_LABEL as "no further narrowing" rather than a real
-      // bucket) — was its own separate primary-folder view, which meant no genre dropdown showed
-      // up there at all (reported live).
-      navigateToView(`musicgenre:${card.dataset.bucket}`);
+      const bucket = card.dataset.bucket;
+      // "All Music" goes straight to the real Musicians page (PRIMARY_FOLDER_ID.Musician) — REAL
+      // BUG, found and fixed: this used to route through musicgenre:All Music, a third
+      // "unfiltered, every musician" destination of its own that only differed from the Musicians
+      // page by lacking its genre dropdown (reported live as a confusing redundant state). Every
+      // real bucket still goes to its own musicgenre:<bucket> page, unchanged.
+      navigateToView(bucket === MUSIC_ALL_LABEL ? PRIMARY_FOLDER_ID.Musician : `musicgenre:${bucket}`);
     });
   });
 
