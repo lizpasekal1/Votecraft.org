@@ -224,7 +224,12 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 36px;
-  max-width: 560px;
+  /* width:80% (not just a smaller max-width) so this actually shrinks on mobile too, per direct
+     follow-up — mobile's own viewport was already narrower than the old 560px cap, so a max-width
+     cut alone would only have affected desktop. Icon/text sizes on the cards themselves are
+     untouched; each square just shrinks with the grid column width (aspect-ratio: 1/1). */
+  width: 80%;
+  max-width: 448px;
   margin: 0 auto;
 }
 @media (min-width: 481px) {
