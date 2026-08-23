@@ -22,6 +22,7 @@ export function setupSummary(item, { isMusicAlbum, isMusicianItem, ctaAuthorName
   const albumsListEl = document.getElementById('detail-albums-list');
   const albumsAccordionLabelEl = albumsAccordionHeaderEl.querySelector('span');
   albumsListEl.classList.remove('detail-albums-list--summary'); // re-added below only for Summary categories
+  albumsListEl.classList.remove('detail-albums-list--empty-fetch'); // re-added below only for the Musician empty-fetch case
   // Extra top gap needed only for the Book Summary header — the preceding My Notes section
   // (with the chapter list folded into it) sits flush against it otherwise when collapsed.
   albumsAccordionHeaderEl.classList.toggle('detail-accordion-header--book-summary', item.category === 'Book');
@@ -171,6 +172,11 @@ export function setupSummary(item, { isMusicAlbum, isMusicianItem, ctaAuthorName
     // would.
     const renderKnownAlbumsList = () => {
       const knownAlbums = getKnownAlbumsForArtist(item.title);
+      // .detail-albums-list--empty-fetch (cards.css/detailModal.css) caps this section's max-height
+      // much lower than the shared 168px (sized for ~3 known-album rows) — reported live: with just
+      // the single "Fetch Albums" button in it, that much reserved height left a big empty gap below
+      // the button before Web Links.
+      albumsListEl.classList.toggle('detail-albums-list--empty-fetch', !knownAlbums.length);
       if (knownAlbums.length) {
         albumsListEl.innerHTML = `<button class="detail-album-row detail-album-row--see-all" id="detail-albums-see-all">See all →</button>`
           + knownAlbums.slice(0, 5).map(a => `
