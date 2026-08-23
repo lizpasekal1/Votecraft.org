@@ -44,7 +44,18 @@ export function renderAuthorPage() {
   const websiteLinkHtml = author?.websiteUrl
     ? `<a class="author-page-website" href="${escapeHtml(author.websiteUrl)}" target="_blank" rel="noopener">${escapeHtml(author.websiteUrl)}</a>`
     : '';
-  const musicianTagLineHtml = [genreTagHtml, websiteLinkHtml].filter(Boolean).join('<span class="author-page-genre-sep">|</span>');
+  // Musician's website link renders twice — inline next to the genre pill (desktop) and again in
+  // its own row below the header's divider (mobile) — per direct request ("put the url below the
+  // divider line in mobile"); CSS toggles which copy actually shows per breakpoint (cards.css),
+  // same duplicate+toggle pattern already used for the Fetch Albums button above. Non-Musician
+  // pages keep the single plain websiteLinkHtml above, unaffected.
+  const websiteLinkInlineHtml = author?.websiteUrl
+    ? `<a class="author-page-website author-page-website--inline" href="${escapeHtml(author.websiteUrl)}" target="_blank" rel="noopener">${escapeHtml(author.websiteUrl)}</a>`
+    : '';
+  const websiteLinkStackedHtml = author?.websiteUrl
+    ? `<a class="author-page-website author-page-website--stacked" href="${escapeHtml(author.websiteUrl)}" target="_blank" rel="noopener">${escapeHtml(author.websiteUrl)}</a>`
+    : '';
+  const musicianTagLineHtml = [genreTagHtml, websiteLinkInlineHtml].filter(Boolean).join('<span class="author-page-genre-sep">|</span>');
 
   container.className = 'cards-grid author-page-grid';
   container.innerHTML = `
@@ -61,6 +72,7 @@ export function renderAuthorPage() {
         }
       </div>
     </div>
+    ${cat === 'Musician' && websiteLinkStackedHtml ? `<div class="author-page-website-row">${websiteLinkStackedHtml}</div>` : ''}
     <div class="author-works-header">
       <span>Works (${items.length})</span>
       ${cat === 'Musician' ? `<button class="btn-fetch-albums" id="btn-fetch-albums">Fetch Albums</button>` : ''}
