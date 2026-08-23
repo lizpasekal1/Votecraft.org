@@ -72,6 +72,9 @@ function _renderGridBody() {
   if (sortSelect.parentElement !== gridHeaderRight) gridHeaderRight.appendChild(sortSelect);
   gridHeader.style.display = '';
   musicGenreSelect.style.display = 'none';
+  // Default-off; renderMusiciansDropdownShell() (below) turns this back on for the one render path
+  // that actually shows #musicgenre-select alongside #sort-select — see its own comment.
+  gridHeaderRight.classList.remove('grid-header-right--dual');
 
   document.getElementById('btn-kanban-dashboard').style.display = 'none';
   document.getElementById('saves-list-wrap').style.display = 'none';
@@ -175,7 +178,14 @@ function _renderGridBody() {
     musicGenreSelect.innerHTML = [MUSIC_ALL_LABEL, ...MUSIC_GENRE_BUCKETS]
       .map(b => `<option value="${escapeHtml(b)}"${b === selectedBucket ? ' selected' : ''}>${escapeHtml(b)}</option>`)
       .join('');
-    musicGenreSelect.style.display = (hideDropdownAtAll && selectedBucket === MUSIC_ALL_LABEL) ? 'none' : '';
+    const showDropdown = !(hideDropdownAtAll && selectedBucket === MUSIC_ALL_LABEL);
+    musicGenreSelect.style.display = showDropdown ? '' : 'none';
+    // Marks .grid-header-right as actually holding BOTH selects right now (not just "on a Music
+    // page" — musicgenre:All Music still hides the dropdown, see hideDropdownAtAll above) — mobile
+    // CSS (misc.css) keys off this to size the pair to share one row only when there really are two
+    // of them, rather than narrowing #sort-select everywhere it appears just because this function
+    // ran once during the render.
+    gridHeaderRight.classList.toggle('grid-header-right--dual', showDropdown);
   };
 
   if (state.view === 'all') {
@@ -539,13 +549,19 @@ export function renderCard(item) {
   const badgeText = showsFolderName ? folder.name : badgeLabel(item.category);
 
   // Genre-tag badge, per direct request ("add the tag to the card to the left of musician") —
-  // the raw iTunes genre string (author.genre, editable from Edit Item's own genre-tag field)
-  // that sorts this artist into a Music landing page bucket. Musician-only, and only once
-  // resolved — no placeholder badge for one that hasn't backfilled yet. Sits immediately to the
-  // left of the category badge: it carries the shared margin-left: auto instead of the category
-  // badge when present, pushing both flush right as an adjacent pair rather than each badge
-  // fighting for its own auto margin (which would leave a gap between them).
-  const genreTag = item.category === 'Musician' ? findAuthor(item.title, 'Musician')?.genre : null;
+  // the raw iTunes genre string that sorts this artist/album into a Music landing page bucket:
+  // Musician reads it off the artist's own author record (author.genre, editable from Edit Item's
+  // genre-tag field); Music Album carries it directly on the item itself (item.genre, set at
+  // import time — fetchAlbumsModal.js/addEditModal.js). Only once resolved — no placeholder badge
+  // for one that hasn't backfilled yet.
+  const genreTag = item.category === 'Musician' ? findAuthor(item.title, 'Musician')?.genre
+    : item.category === 'Music Album' ? item.genre
+    : null;
+  // REAL BUG, found and fixed: this used to render ALONGSIDE the category badge (MUSICIAN/ALBUM),
+  // sharing the row's flush-right margin between the two. Per direct follow-up, the genre badge
+  // now REPLACES the category badge on these cards (styled in the same pink the category badge
+  // used, .card-badge-genre below) rather than sitting next to it — Kanban's cards are unaffected
+  // either way, since kanban.js has its own separate card markup that never calls this function.
   const genreBadgeHtml = genreTag
     ? `<span class="card-badge card-badge-genre" style="margin-left:auto">${escapeHtml(genreTag)}</span>`
     : '';
@@ -585,8 +601,7 @@ export function renderCard(item) {
         }
         ${item.category === 'Music Album' && item.year ? `<div class="card-album-year">${escapeHtml(item.year)}</div>` : ''}
         <div class="card-meta">
-          ${genreBadgeHtml}
-          <span class="card-badge badge-${catClass(item.category)}" style="${genreBadgeHtml ? '' : 'margin-left:auto'}">${escapeHtml(badgeText)}</span>
+          ${genreBadgeHtml || `<span class="card-badge badge-${catClass(item.category)}" style="margin-left:auto">${escapeHtml(badgeText)}</span>`}
         </div>
       </div>
       ${item.curated ? (() => {
