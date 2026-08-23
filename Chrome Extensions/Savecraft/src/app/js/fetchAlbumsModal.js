@@ -94,8 +94,14 @@ export function openFetchAlbumsModal(artistName) {
     controls.style.display = allAlbums.length > 0 ? '' : 'none';
     renderFetchAlbumsList(allAlbums, artistName, 'exact', true);
   }).catch(err => {
-    status.textContent = `Could not fetch albums: ${err.message}`;
+    // A retry button here (rather than just a dead-end error message) matters more for this
+    // fetch than most — it's this file's heaviest iTunes request (up to 200 unfiltered results,
+    // itunesFetch/api.js), so it's the one most exposed to a transient network drop on a weak
+    // connection; itunesFetch already retries once internally, this is the user's own manual
+    // second attempt without having to close and reopen the whole modal.
+    status.innerHTML = `Could not fetch albums: ${escapeHtml(err.message)} <button type="button" class="fetch-albums-retry-btn" id="fetch-albums-retry">Retry</button>`;
     status.className = 'fetch-albums-status fetch-albums-error';
+    document.getElementById('fetch-albums-retry')?.addEventListener('click', () => openFetchAlbumsModal(artistName));
   });
 }
 
