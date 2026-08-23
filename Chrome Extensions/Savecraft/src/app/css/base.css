@@ -482,9 +482,18 @@ body {
 }
 
 /* Wider than the trigger — "Release Date (Newest)" needs more room than the 160px pill to stay on
-   one line. left:0/top:calc(100% + 6px) come from the reused .board-filter-dropdown class. */
+   one line. top:calc(100% + 6px) comes from the reused .board-filter-dropdown class, but its own
+   left:0 is overridden here — REAL BUG, found and fixed: #sort-select always sits at (or very
+   near) the right edge of its row (.grid-header-right's own margin-left:auto pushes it there on
+   every page; the mobile dual-dropdown row puts it flush against the row's own right edge too),
+   so a 220px panel opening from the trigger's LEFT edge ran off the right side of the
+   viewport/content area (reported live, screenshot confirmed — cut off badly on mobile, slightly
+   on desktop). right:0 opens it from the trigger's right edge instead, growing leftward, which
+   stays inside the viewport regardless of how close to the edge the trigger itself sits. */
 .sort-select-dropdown {
   width: 220px;
+  left: auto;
+  right: 0;
 }
 
 .sort-select-search-row {
