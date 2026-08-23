@@ -99,7 +99,13 @@ export function setupQueue(item, { domain, isMusicAlbum }) {
     const platformsToShow = (savedPlatforms && savedPlatforms.length > 0)
       ? catConfig.platforms.filter(p => savedPlatforms.includes(p.id))
       : catConfig.platforms;
-    streamingEl.innerHTML = buildStreaming(websiteBtn + youtubeBtn + platformsToShow.map(p => `<a class="streaming-link-btn" href="${p.searchUrl(query)}" target="_blank">${p.name}</a>`).join(''));
+    // Every platform here searches by the item's own title (the album, for Music Album) except
+    // 'youtube-artist' (state.js) — that one is deliberately the ARTIST's page, not the album, so
+    // it needs item.author as its query instead of the shared `query` every other platform uses.
+    streamingEl.innerHTML = buildStreaming(websiteBtn + youtubeBtn + platformsToShow.map(p => {
+      const platformQuery = p.id === 'youtube-artist' ? (item.author || query) : query;
+      return `<a class="streaming-link-btn" href="${p.searchUrl(platformQuery)}" target="_blank">${p.name}</a>`;
+    }).join(''));
   } else {
     streamingEl.innerHTML = buildStreaming(websiteBtn + youtubeBtn);
   }
