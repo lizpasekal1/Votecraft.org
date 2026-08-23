@@ -33,7 +33,11 @@ function getAllFavoriteItems() {
   return state.items.filter(i => favFolderIds.has(i.folderId));
 }
 
-function resolveFavoriteSlides() {
+// Exported for reuse by categoryCarousel.js — the "Recent Saves" widget's own real-favorites/
+// admin-configured/curated-Top-100-fallback resolution is exactly the demo content the category
+// landing carousel wants too, per direct request ("put the generic demo content in here that
+// you're using for the recent saves widget"), rather than a second, unrelated placeholder set.
+export function resolveFavoriteSlides() {
   const real = getAllFavoriteItems();
   if (real.length > 0) return { items: real, isDemo: false };
 
