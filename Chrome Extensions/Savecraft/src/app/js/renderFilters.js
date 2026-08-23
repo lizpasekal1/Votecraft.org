@@ -264,3 +264,23 @@ export function getMusicGenreBucketCounts() {
     });
   return { counts, total };
 }
+
+// Per-folder save counts for a category's folder-picker landing page
+// (renderCategoryFolderLanding(), renderGrid.js) — every real subfolder of `category`
+// (state.folders), each counted using the exact same membership rule its own folder page already
+// uses if clicked directly (getFilteredSortedItems()'s own folder branch, below): the primary
+// folder's count includes un-foldered items too (matchesPrimaryOrUnfoldered), same as clicking it
+// directly does, so the number on the card matches what you'll actually see one click later; every
+// other folder counts only items actually filed there.
+export function getCategoryFolderCounts(category) {
+  const counts = {};
+  state.folders
+    .filter(f => f.parentCategory === category)
+    .forEach(folder => {
+      const isPrimary = PRIMARY_FOLDER_ID[category] === folder.id;
+      counts[folder.id] = state.items.filter(i => !isQueueDemoId(i.id) && matchesActiveSavedListScope(i) &&
+        (isPrimary ? matchesPrimaryOrUnfoldered(i, category) : i.folderId === folder.id)
+      ).length;
+    });
+  return counts;
+}

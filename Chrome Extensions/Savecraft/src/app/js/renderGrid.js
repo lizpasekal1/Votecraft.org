@@ -4,6 +4,7 @@ import {
   state, CURATED_ITEMS, CATEGORIES, CAT_LABEL, CAT_EMOJI, CURATED_NOTES_CATEGORIES,
   CREATOR_CARD_CATEGORY, BOOKMARK_OUTLINE_SVG, BOOKMARK_FILLED_SVG, CURATED_GENRE_LANDING_CONTENT,
   MUSIC_GENRE_BUCKETS, MUSIC_GENRE_BUCKET_EMOJI, MUSIC_ALL_LABEL, PRIMARY_FOLDER_ID,
+  GENERIC_FOLDER_ICON_PATH,
 } from './state.js';
 import {
   escapeHtml, catClass, badgeLabel, isMusicAlbumsSectionView, isOwnAuthorPageView, getDomain,
@@ -27,7 +28,7 @@ import { renderAuthorPage } from './renderAuthorPage.js';
 import { renderCuratedGenreLanding, renderCuratedDirectory, renderCuratedBareList } from './renderCuratedPages.js';
 import { wireQuickQueueButtons } from './renderCardActions.js';
 import { fetchMissingCuratedImages, fetchMissingCuratedMusicianPhotos } from './renderCuratedImageFetch.js';
-import { getFilteredSortedItems, getMusicGenreBucketCounts } from './renderFilters.js';
+import { getFilteredSortedItems, getMusicGenreBucketCounts, getCategoryFolderCounts } from './renderFilters.js';
 import { updateAzIndexRail } from './azIndexRail.js';
 import { resourceUrl } from './platform.js';
 
@@ -148,6 +149,23 @@ function _renderGridBody() {
   // hatch, exactly as it works today.
   if (state.view === 'Musician') {
     renderMusicGenreLanding();
+    return;
+  }
+
+  // Category folder-picker landing — every other top-level category tab (Musician/Music Album
+  // excluded per direct request: "DO NOT make this change for music though. leave the cards on
+  // music the way we have it") now shows its real subfolders as a picker grid instead of the
+  // primary-folder+unfoldered item list directly, per direct request — the old direct-list view
+  // could read as "Nothing here yet" even when the category actually had saved content, just
+  // filed under a different folder than the primary one. Modeled on the Music landing page's own
+  // card-grid mechanics (renderMusicGenreLanding, below) but a purple-OUTLINED style instead of
+  // Music's solid-fill (.category-folder-card, cards.css), and driven by this category's actual
+  // folders (state.folders) instead of a fixed bucket taxonomy. The folder some(...) check is
+  // defensive — every real category has folders today, but this falls through to the normal
+  // item-list rendering below instead of showing an empty grid if that ever weren't true.
+  if (CATEGORIES.includes(state.view) && !['Musician', 'Music Album'].includes(state.view)
+      && state.folders.some(f => f.parentCategory === state.view)) {
+    renderCategoryFolderLanding(state.view);
     return;
   }
 
@@ -528,6 +546,49 @@ function renderMusicGenreLanding() {
   // after arriving here instead of staying permanently uncounted, per direct request ("sort the
   // musicians I have into these 15 categories so the numbers on the cards are accurate").
   backfillMusicianGenres();
+
+  persistViewState();
+}
+
+// Category folder-picker landing (state.view === <category>, called from renderGrid() above) —
+// every top-level category tab except Musician/Music Album, per direct request. Same card-grid
+// shape/mechanics as renderMusicGenreLanding() above, just driven by this category's real folders
+// (state.folders) instead of a fixed bucket list, using a generic folder icon (GENERIC_FOLDER_ICON_PATH,
+// state.js — every folder here, not each one's own distinct icon, since the request was
+// specifically for one consistent "purple folder icon") rather than per-bucket emoji, and a
+// purple-OUTLINED card style (.category-folder-card, cards.css) instead of Music's solid-fill —
+// visually distinct on purpose, so this doesn't read as a second Music-style page.
+function renderCategoryFolderLanding(category) {
+  const container = document.getElementById('cards-grid');
+  const gridTitle = document.getElementById('grid-title');
+  const sortSelect = document.getElementById('sort-select');
+  const musicGenreSelect = document.getElementById('musicgenre-select');
+
+  gridTitle.style.display = '';
+  gridTitle.innerHTML = `${CAT_EMOJI[category] || ''} ${escapeHtml(CAT_LABEL[category] || category)}`;
+  sortSelect.style.display = 'none';
+  musicGenreSelect.style.display = 'none';
+
+  const folders = state.folders.filter(f => f.parentCategory === category);
+  const counts = getCategoryFolderCounts(category);
+  const folderIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" height="26px" viewBox="0 -960 960 960" width="26px" fill="currentColor"><path d="${GENERIC_FOLDER_ICON_PATH}"/></svg>`;
+
+  container.className = 'category-folder-landing-grid';
+  container.innerHTML = folders.map(folder => `
+    <button type="button" class="category-folder-card" data-folder-id="${escapeHtml(folder.id)}">
+      <span class="category-folder-card-icon">${folderIconSvg}</span>
+      <span class="category-folder-card-name">${escapeHtml(folder.name)}</span>
+      <span class="category-folder-card-count">${counts[folder.id] || 0}</span>
+    </button>
+  `).join('');
+
+  container.querySelectorAll('.category-folder-card').forEach(card => {
+    card.addEventListener('click', () => {
+      // The folder's own page renders its real content — or its own "Nothing here yet" if it's
+      // genuinely empty, exactly like any other folder page — one level deeper than this picker.
+      navigateToView(card.dataset.folderId);
+    });
+  });
 
   persistViewState();
 }
