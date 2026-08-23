@@ -979,6 +979,15 @@
   max-height: 168px;
 }
 
+/* Musician, zero known albums yet — just the single "Fetch Albums" row (detailModalSummary.js),
+   not up to 3 real album rows — reported live: the shared 168px cap left a large empty gap below
+   the button before Web Links, since max-height ends up read as reserved space during this
+   section's open transition rather than shrinking to the actual (much shorter) content. Four
+   classes (vs. the rule above's three) so this reliably wins regardless of source order. */
+.detail-albums-list.detail-albums-list--empty-fetch.detail-accordion-collapsible.open {
+  max-height: 56px;
+}
+
 /* Summary content (Book/Show/Movie/Game) reuses this same element/id, but is prose rather than
    fixed-height rows. Generously large rather than a tight cap — like the Chapters fix, this
    defers to .detail-body's own scroll (flex: 1 + flex-shrink: 0 children) instead of showing its
@@ -1460,7 +1469,7 @@
 .streaming-links-wrap {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
+  gap: 6px;
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.25s ease, margin-top 0.25s ease;
@@ -1475,7 +1484,12 @@
 }
 
 .streaming-link-btn {
-  padding: 6px 14px;
+  /* Trimmed from 6px/14px horizontal padding (and the wrap's own gap, above, from 7px) per direct
+     request — Wikipedia (the last pill, always appended after the category's own platform list)
+     was wrapping to its own row below YouTube Music/YouTube instead of sharing their row; flex-wrap
+     packs pills by whatever actually fits the container width, so shaving a little width off every
+     pill was the lever available to make three fit together instead of two. */
+  padding: 6px 11px;
   border-radius: 24px;
   border: 1px solid var(--border);
   background: var(--surface);
