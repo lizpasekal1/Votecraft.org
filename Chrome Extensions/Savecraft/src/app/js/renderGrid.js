@@ -574,7 +574,7 @@ function renderCategoryFolderLanding(category) {
   container.className = 'category-folder-landing-grid';
   container.innerHTML = folders.map(folder => `
     <button type="button" class="category-folder-card" data-folder-id="${escapeHtml(folder.id)}">
-      <span class="category-folder-card-icon">${folderIconHtml(folder.id, 26)}</span>
+      <span class="category-folder-card-icon">${folderIconHtml(folder.id, 34)}</span>
       <span class="category-folder-card-name">${escapeHtml(folder.name)}</span>
       <span class="category-folder-card-count">${counts[folder.id] || 0}</span>
     </button>
