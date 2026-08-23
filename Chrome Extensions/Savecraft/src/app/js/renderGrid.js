@@ -4,11 +4,10 @@ import {
   state, CURATED_ITEMS, CATEGORIES, CAT_LABEL, CAT_EMOJI, CURATED_NOTES_CATEGORIES,
   CREATOR_CARD_CATEGORY, BOOKMARK_OUTLINE_SVG, BOOKMARK_FILLED_SVG, CURATED_GENRE_LANDING_CONTENT,
   MUSIC_GENRE_BUCKETS, MUSIC_GENRE_BUCKET_EMOJI, MUSIC_ALL_LABEL, PRIMARY_FOLDER_ID,
-  GENERIC_FOLDER_ICON_PATH,
 } from './state.js';
 import {
   escapeHtml, catClass, badgeLabel, isMusicAlbumsSectionView, isOwnAuthorPageView, getDomain,
-  isAdminUser,
+  isAdminUser, folderIconHtml,
 } from './utils.js';
 import { persistViewState, persistItem, persistHiddenCurated, removeItem } from './storage.js';
 import { navigateToView } from './navigation.js';
@@ -553,11 +552,11 @@ function renderMusicGenreLanding() {
 // Category folder-picker landing (state.view === <category>, called from renderGrid() above) —
 // every top-level category tab except Musician/Music Album, per direct request. Same card-grid
 // shape/mechanics as renderMusicGenreLanding() above, just driven by this category's real folders
-// (state.folders) instead of a fixed bucket list, using a generic folder icon (GENERIC_FOLDER_ICON_PATH,
-// state.js — every folder here, not each one's own distinct icon, since the request was
-// specifically for one consistent "purple folder icon") rather than per-bucket emoji, and a
-// purple-OUTLINED card style (.category-folder-card, cards.css) instead of Music's solid-fill —
-// visually distinct on purpose, so this doesn't read as a second Music-style page.
+// (state.folders) instead of a fixed bucket list, using each folder's own real sidebar icon
+// (folderIconHtml, utils.js — the same helper the sidebar's own folder rows use, per direct
+// follow-up: "use the same icon for these that is in the sidebar") rather than per-bucket emoji,
+// and a purple-OUTLINED card style (.category-folder-card, cards.css) instead of Music's
+// solid-fill — visually distinct on purpose, so this doesn't read as a second Music-style page.
 function renderCategoryFolderLanding(category) {
   const container = document.getElementById('cards-grid');
   const gridTitle = document.getElementById('grid-title');
@@ -571,12 +570,11 @@ function renderCategoryFolderLanding(category) {
 
   const folders = state.folders.filter(f => f.parentCategory === category);
   const counts = getCategoryFolderCounts(category);
-  const folderIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" height="26px" viewBox="0 -960 960 960" width="26px" fill="currentColor"><path d="${GENERIC_FOLDER_ICON_PATH}"/></svg>`;
 
   container.className = 'category-folder-landing-grid';
   container.innerHTML = folders.map(folder => `
     <button type="button" class="category-folder-card" data-folder-id="${escapeHtml(folder.id)}">
-      <span class="category-folder-card-icon">${folderIconSvg}</span>
+      <span class="category-folder-card-icon">${folderIconHtml(folder.id, 26)}</span>
       <span class="category-folder-card-name">${escapeHtml(folder.name)}</span>
       <span class="category-folder-card-count">${counts[folder.id] || 0}</span>
     </button>
