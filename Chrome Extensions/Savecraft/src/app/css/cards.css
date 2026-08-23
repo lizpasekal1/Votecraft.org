@@ -217,10 +217,15 @@
    instead of the primary-folder+unfoldered item list directly. Same card-grid mechanics as
    .musicgenre-card above, but deliberately a DIFFERENT look — purple-outlined instead of
    solid-fill, per direct request, so this doesn't read as a second Music-style page. ===== */
+/* Fixed 2x2, per direct follow-up ("i want them to be two by two") — unlike auto-fit, this stays
+   two columns regardless of viewport width, not just narrow ones. Capped/centered so 4 cards on a
+   wide desktop screen don't stretch edge-to-edge into oversized tiles. */
 .category-folder-landing-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
+  max-width: 560px;
+  margin: 0 auto;
 }
 @media (min-width: 481px) {
   .category-folder-landing-grid {
@@ -257,13 +262,6 @@
   font-size: 13px;
   color: var(--primary);
   opacity: 0.75;
-}
-@media (max-width: 768px) {
-  .category-folder-landing-grid {
-    grid-template-columns: repeat(2, 1fr);
-    row-gap: 20px;
-    column-gap: 14px;
-  }
 }
 
 .grid-title {
