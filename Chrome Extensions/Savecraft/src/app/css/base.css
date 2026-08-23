@@ -317,10 +317,40 @@ body {
 
 /* Search expand */
 .search-expand-wrap {
+  position: relative;
   display: flex;
   flex-direction: row-reverse;
   align-items: center;
   gap: 0;
+}
+
+/* Global search results panel (globalSearch.js) — right-anchored to the wrap's own right edge
+   (not centered) since .search-expand-wrap grows toward the logo via row-reverse, so a
+   left-anchored panel would risk overflowing past the header's right edge on desktop. Rows reuse
+   .step1-result-row/-art/-info/-title/-meta (addEditModal.css) directly — same thumbnail+title+
+   meta visual language as the Add-modal's own title search, no new row-level CSS needed. z-index
+   above .header's own 400, below modal overlays (500+). */
+.global-search-results {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 320px;
+  max-width: 380px;
+  max-height: 340px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  z-index: 450;
+  padding: 4px;
+}
+.global-search-results[hidden] { display: none; }
+/* .step1-result-row (addEditModal.css) has no border-radius of its own — it normally sits in a
+   square-cornered results list; this panel is a rounded card, so its rows get a light radius to
+   match rather than looking squared-off inside a rounded container. */
+.global-search-results .step1-result-row {
+  border-radius: 8px;
 }
 
 .search-expand-input {
@@ -412,6 +442,73 @@ body {
   outline: none;
   color: var(--text-primary);
   width: 160px;
+}
+
+/* Custom replacement for what used to be a native #sort-select <select> (sortSelect.js) — this
+   class is only on #musicgenre-select now (still a real <select>, out of scope for the redesign);
+   #sort-select itself is the wrapper below. Positioning context for .sort-select-dropdown, which
+   reuses .board-filter-dropdown (kanban.css) for its own panel chrome. */
+.sort-select-custom {
+  position: relative;
+  display: inline-block;
+}
+
+/* Copies .sort-select's own pill box styling above, minus appearance:none/the baked-in
+   background-image chevron — this has a real child <svg> chevron instead (index.html), so
+   duplicating both would show two arrows. */
+.sort-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 160px;
+  padding: 7px 18px;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  font-size: 13px;
+  background-color: var(--surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  outline: none;
+}
+.sort-select-trigger svg {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+.sort-select-trigger-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Wider than the trigger — "Release Date (Newest)" needs more room than the 160px pill to stay on
+   one line. left:0/top:calc(100% + 6px) come from the reused .board-filter-dropdown class. */
+.sort-select-dropdown {
+  width: 220px;
+}
+
+.sort-select-search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  color: var(--text-muted);
+}
+.sort-select-search-row svg {
+  flex-shrink: 0;
+}
+.sort-select-search-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: none;
+  font-size: 13px;
+  color: var(--text-primary);
+  padding: 0;
+}
+.sort-select-search-input::placeholder {
+  color: var(--text-muted);
 }
 
 .btn-add-item {

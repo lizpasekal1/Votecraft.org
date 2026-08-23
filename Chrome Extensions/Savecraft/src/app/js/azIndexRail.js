@@ -11,6 +11,7 @@
 
 import { state } from './state.js';
 import { handleSort } from './main.js';
+import { setSortSelectValue } from './sortSelect.js';
 
 const LETTERS = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ', '#'];
 
@@ -66,15 +67,16 @@ function _jumpToLetter(letter, { smooth }) {
 
   // A letter jump only means something against an alphabetized list — same-lettered cards
   // wouldn't be contiguous under any other sort (newest/oldest/release date), so this switches to
-  // A→Z first (updating the real #sort-select too, so it stays truthful, not just state) via the
-  // same handleSort() the dropdown itself uses (main.js) — REAL BUG, found and fixed: this used to
-  // hand-roll its own "set state.sort + renderGrid()" instead, which skipped handleSort's own
-  // persistSort() call, so a letter-triggered switch to A→Z silently reverted to the previous sort
-  // on reload instead of sticking the way choosing it from the dropdown does. Re-render is
-  // synchronous enough that the fresh .card list is ready immediately after.
+  // A→Z first (updating the visible sort control too, so it stays truthful, not just state) via
+  // the same handleSort() the dropdown itself uses (main.js) — REAL BUG, found and fixed: this
+  // used to hand-roll its own "set state.sort + renderGrid()" instead, which skipped handleSort's
+  // own persistSort() call, so a letter-triggered switch to A→Z silently reverted to the previous
+  // sort on reload instead of sticking the way choosing it from the dropdown does. Re-render is
+  // synchronous enough that the fresh .card list is ready immediately after. setSortSelectValue()
+  // (sortSelect.js) replaces the old direct `sortSelect.value = 'az'` write now that #sort-select
+  // is a custom dropdown, not a native <select>.
   if (state.sort !== 'az') {
-    const sortSelect = document.getElementById('sort-select');
-    if (sortSelect) sortSelect.value = 'az';
+    setSortSelectValue('az');
     handleSort('az');
   }
 

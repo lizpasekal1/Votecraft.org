@@ -426,6 +426,20 @@
   .search-expand-input {
     font-size: 16px;
   }
+  /* base.css's .global-search-results is position:absolute against .search-expand-wrap, which
+     only spans the narrow 190px input above on mobile — nowhere near enough room for a
+     thumbnail+title+meta result row (globalSearch.js). Anchored to the viewport instead, spanning
+     close to the full header width. .header's own height is a hardcoded, non-responsive 64px
+     (base.css) at every breakpoint, so this fixed top offset is safe without a JS-measured
+     reposition (unlike e.g. azIndexRail.js's rail, whose anchor isn't a fixed size). */
+  .global-search-results {
+    position: fixed;
+    top: 64px;
+    left: 12px;
+    right: 12px;
+    min-width: 0;
+    max-width: none;
+  }
 
   /* Dashboard */
   .dash-widget-grid { grid-template-columns: 1fr; }
@@ -735,19 +749,28 @@
   }
   /* #musicgenre-select + #sort-select, when both are actually visible together (the Musicians/
      musicgenre: pages — .grid-header-right--dual, toggled in renderGrid.js right alongside
-     #musicgenre-select's own display, not just "any Music page" since musicgenre:All Music hides
-     the dropdown) — per direct request/follow-up, these now share one row on mobile instead of
-     stacking (an earlier pass stacked them: two fixed 160px-wide dropdowns plus their gap didn't
-     reliably fit side by side even on a mid-size phone). flex:1 1 0/min-width:0 lets each shrink
-     to split the row evenly instead of keeping their fixed desktop width, and the trimmed
-     padding/background-position keep the dropdown arrow from crowding a much narrower pill's text.
+     #musicgenre-select's own display) — per direct request/follow-up, these now share one row on
+     mobile instead of stacking (an earlier pass stacked them: two fixed 160px-wide dropdowns plus
+     their gap didn't reliably fit side by side even on a mid-size phone). flex:1 1 0/min-width:0
+     lets each shrink to split the row evenly instead of keeping their fixed desktop width.
      Scoped to the wrapper's real two-child state (not every .grid-header-right) so #sort-select's
      own presentation everywhere else — including every non-Music page, where it's still the only
      child — is completely unaffected. */
   .grid-header-right--dual {
     gap: 8px;
   }
-  .grid-header-right--dual #sort-select,
+  /* #sort-select is now a wrapper div (sortSelect.js's custom dropdown), not the visual pill
+     itself — the shrink lives on the wrapper, the tightened box styling on its trigger button. */
+  .grid-header-right--dual #sort-select {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .grid-header-right--dual #sort-select .sort-select-trigger {
+    width: 100%;
+    padding: 7px 10px;
+    font-size: 12px;
+    font-weight: 500;
+  }
   .grid-header-right--dual #musicgenre-select {
     width: auto;
     flex: 1 1 0;
@@ -756,7 +779,8 @@
     background-position: right 9px center;
     /* #musicgenre-select's own 15px/bold (cards.css) is sized for its normal fixed 160px width —
        at roughly half that here, the longer bucket names ("Rock/Metal", "R&B/Soul") need the
-       smaller, lighter treatment #sort-select already uses just to keep from crowding the arrow. */
+       smaller, lighter treatment #sort-select's own trigger already gets above, to keep from
+       crowding the arrow. */
     font-size: 12px;
     font-weight: 500;
     white-space: nowrap;
