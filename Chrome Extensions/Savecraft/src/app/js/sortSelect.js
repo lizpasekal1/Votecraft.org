@@ -31,12 +31,16 @@ const SORT_LABELS = {
   'release-old': 'Release Date (Oldest)',
 };
 
-// Updates the trigger's visible label + the dropdown's active-row highlight — the replacement for
-// the old native `sortSelect.value = ...` write. Safe to call even before initSortSelect() has run
-// (main.js's init() calls this before initSortSelect(), to set the correct label on first paint).
+// Updates the dropdown's active-row highlight — the replacement for the old native
+// `sortSelect.value = ...` write. The trigger's own visible label stays a static "Sort" (index.html),
+// per direct request — doesn't reflect the current value the way the old native <select> did; the
+// active option inside the (now-open) dropdown is the only indicator of what's currently selected.
+// A hover title still surfaces the current choice without needing to open the dropdown. Safe to
+// call even before initSortSelect() has run (main.js's init() calls this before initSortSelect(),
+// to set the correct active row/title before the dropdown's ever been opened once).
 export function setSortSelectValue(sort) {
-  const label = document.getElementById('sort-select-trigger-label');
-  if (label) label.textContent = SORT_LABELS[sort] || SORT_LABELS.newest;
+  const trigger = document.getElementById('sort-select-trigger');
+  if (trigger) trigger.title = `Sort: ${SORT_LABELS[sort] || SORT_LABELS.newest}`;
   document.querySelectorAll('#sort-select-dropdown .saves-list-option').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.sort === sort);
   });

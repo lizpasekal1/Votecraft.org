@@ -759,14 +759,17 @@
   .grid-header-right--dual {
     gap: 8px;
   }
-  /* #sort-select is now a wrapper div (sortSelect.js's custom dropdown), not the visual pill
-     itself — the shrink lives on the wrapper, the tightened box styling on its trigger button. */
+  /* Both fields equal width (flex:1 1 0 on both, no min-width floor favoring either one) and their
+     own content centered, per direct follow-up — #sort-select is now a wrapper div (sortSelect.js's
+     custom dropdown), not the visual pill itself, so the shrink lives on the wrapper, the
+     tightened box styling + centering on its trigger button. */
   .grid-header-right--dual #sort-select {
     flex: 1 1 0;
     min-width: 0;
   }
   .grid-header-right--dual #sort-select .sort-select-trigger {
     width: 100%;
+    justify-content: center;
     padding: 7px 10px;
     font-size: 12px;
     font-weight: 500;
@@ -777,6 +780,7 @@
     min-width: 0;
     padding: 7px 26px 7px 10px;
     background-position: right 9px center;
+    text-align: center;
     /* #musicgenre-select's own 15px/bold (cards.css) is sized for its normal fixed 160px width —
        at roughly half that here, the longer bucket names ("Rock/Metal", "R&B/Soul") need the
        smaller, lighter treatment #sort-select's own trigger already gets above, to keep from
