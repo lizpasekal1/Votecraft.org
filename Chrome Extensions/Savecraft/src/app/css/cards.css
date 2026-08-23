@@ -244,6 +244,18 @@
     padding-bottom: 20px;
   }
 }
+/* Mobile keeps the 2x2 layout even though desktop went back to a single row of 4, per direct
+   follow-up ("on mobile the folders should be 2 x 2 still") — a single row of 4 squares reads as
+   too cramped/tiny at phone widths. */
+@media (max-width: 768px) {
+  .category-folder-landing-grid {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 360px;
+  }
+}
+/* Solid purple fill with white icon/text, per direct follow-up — was purple-outlined/transparent
+   (deliberately distinct from Music's own solid-fill cards at the time); overridden here since
+   this is now the more recent direct instruction. */
 .category-folder-card {
   display: flex;
   flex-direction: column;
@@ -252,45 +264,65 @@
   gap: 6px;
   aspect-ratio: 1 / 1;
   padding: 22px 10px;
-  border: 1.5px solid var(--primary);
+  border: none;
   border-radius: 16px;
-  background: transparent;
+  background: var(--primary);
   cursor: pointer;
   text-align: center;
-  transition: background 0.15s;
+  transition: opacity 0.15s;
 }
 .category-folder-card:hover {
-  background: var(--hover-bg);
+  opacity: 0.85;
 }
 .category-folder-card-icon {
   display: flex;
-  color: var(--primary);
+  color: #fff;
+}
+/* folderIconHtml() (utils.js) bakes fill="#5B5BEF" onto the <svg> itself (inherited by its child
+   <path>, which sets no fill of its own) — a real CSS fill declaration on the same element still
+   overrides that presentation attribute (standard CSS-over-presentation-attribute precedence), so
+   this doesn't need any change on the shared helper itself, just this one override. */
+.category-folder-card-icon svg {
+  fill: #fff;
 }
 .category-folder-card-name {
   /* 15px -> 18px (20% larger), per direct follow-up. */
   font-size: 18px;
   font-weight: 600;
-  color: var(--primary);
+  color: #fff;
 }
 .category-folder-card-count {
   /* 13px -> 16px (20% larger), per direct follow-up. */
   font-size: 16px;
-  color: var(--primary);
-  opacity: 0.75;
+  color: #fff;
+  opacity: 0.8;
 }
 
 /* Wraps the folder-card grid above + the demo carousel below (categoryCarousel.js) — plain
    #cards-grid used to just BE the grid directly (container.className was the grid's own class);
    now it's a column layout holding both pieces, so container.className moved up one level. */
+/* Fills the available height and centers its own content vertically instead of stacking with a
+   large fixed top margin — per direct follow-up ("these landing pages should not be scrolling up
+   and down"). Paired with .grid-area:has(.category-landing-page) below, same established pattern
+   as .grid-area:has(.kanban-wrap) (kanban.css): the page fills exactly the available space below
+   the header and never scrolls itself, unlike every other view (which still needs normal
+   overflow-y:auto for long lists). */
 .category-landing-page {
   display: flex;
   flex-direction: column;
-  gap: 40px;
-  /* Extra room below the carousel specifically — the active slide's own 240px height (plus its
-     box-shadow) was reading as flush against the bottom of the screen, per direct follow-up.
-     .grid-area's own padding (cards.css) already accounts for a normal card grid's bottom edge,
-     not this page's much taller last element. */
-  padding-bottom: 40px;
+  justify-content: center;
+  /* NOT align-items: center — .category-carousel-wrap needs to stay stretched to the full page
+     width for its own centering math to hold (it assumes it spans close to the whole content
+     area); .category-folder-landing-grid centers itself instead, via its own explicit width +
+     align-self: center (below), same as before. */
+  gap: 24px;
+  flex: 1;
+  min-height: 0;
+}
+.grid-area:has(.category-landing-page) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* ===== Category landing carousel (categoryCarousel.js) — a center-emphasis horizontal scroller,
@@ -302,15 +334,19 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  /* 60px, then +50px, then +20px per further direct follow-ups (130px total). */
-  margin-top: 130px;
+  width: 100%;
 }
 /* The active/center slide's own title, below the whole carousel — per direct request ("put the
    title center cards title below it in purple text centered below all the cards"). Kept alongside
    the existing on-image overlay title, not a replacement for it. Updated in JS whenever the
    active slide changes (_updateActiveSlide, categoryCarousel.js). */
 .category-carousel-caption {
-  margin-top: 16px;
+  /* Negative — counteracts the strip's own 30px bottom padding (cards.css, headroom for the
+     active slide's scale-up) plus .category-landing-page's 24px flex gap between this and the
+     carousel above, netting out to sit ~15px below the active card's actual bottom edge, per
+     direct follow-up ("bring the center carosel card title up so it's 15px below the center
+     card"). */
+  margin-top: -39px;
   text-align: center;
   font-size: 18px;
   font-weight: 700;
