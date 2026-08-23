@@ -352,6 +352,10 @@
   border-color: #fff;
   box-shadow: 0 12px 32px rgba(0,0,0,0.35);
   z-index: 2;
+  /* Pulls the two neighbor slides in underneath it (negative margin eats into the strip's own
+     18px gap on both sides) — per direct follow-up ("make the center card overlap the two behind
+     it some"). z-index above wins the overlap, same as the reference image's own layered look. */
+  margin: 0 -26px;
 }
 .category-carousel-slide-overlay {
   position: absolute;

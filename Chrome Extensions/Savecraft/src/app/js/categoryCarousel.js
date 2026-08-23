@@ -22,6 +22,7 @@ const DEMO_SLIDES = [
   { gradient: 'linear-gradient(135deg, #2B2E33 0%, #4A5560 100%)', title: 'Precision', desc: 'Create focused layouts with clear visual hierarchy.' },
   { gradient: 'linear-gradient(135deg, #3D3835 0%, #6B5D52 100%)', title: 'Explore', desc: 'Dive into fresh recommendations.' },
   { gradient: 'linear-gradient(135deg, #5B1E1E 0%, #8B3A2E 100%)', title: 'Curated', desc: 'Handpicked selections just for you.' },
+  { gradient: 'linear-gradient(135deg, #1E3A3A 0%, #2F6B63 100%)', title: 'Highlight', desc: 'Surface the saves that matter most.' },
 ];
 
 export function renderCategoryCarouselHtml() {
