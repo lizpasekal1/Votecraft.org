@@ -5,13 +5,17 @@
 // now, per direct request — the same fixed slide set renders identically on every category page;
 // swapping in real per-category content is a later step, not part of this pass.
 //
-// The centered slide scales up and reveals a title/description/CTA overlay; scrolling the strip
-// (drag, wheel, or the prev/next arrows) re-centers a different slide. No infinite-loop trick like
-// the Dashboard's own .dash-carousel (dashboard.js) — this is a short, bounded demo list, so a
-// plain scrollable strip that stops at either end is simpler and sufficient; revisit if this ever
-// needs to loop.
+// The centered slide scales up and reveals a title/description/CTA overlay, playing a one-shot
+// slide-in-from-the-left entrance animation as it becomes active; scrolling the strip (drag,
+// wheel, or the prev/next arrows) loops infinitely in either direction, per direct request ("the
+// carosel should scroll as if it is on an infinite wheel") — reuses the Dashboard's own
+// triple-copy/recenter carousel mechanics (_wireCarouselArrows, dashboard.js) rather than building
+// a second infinite-loop implementation; that function's own header comment already documents it
+// as generic/reusable ("doesn't care what a 'card' looks like, only how wide the strip's first
+// child is").
 
 import { escapeHtml, debounce } from './utils.js';
+import { _wireCarouselArrows } from './dashboard.js';
 
 // Placeholder art via CSS gradients (no external image hosting/rights concerns for demo content) —
 // swap for real per-category imagery once this has real data behind it.
@@ -26,7 +30,12 @@ const DEMO_SLIDES = [
 ];
 
 export function renderCategoryCarouselHtml() {
-  const slidesHtml = DEMO_SLIDES.map((slide, i) => `
+  // Rendered three times in a row (same convention as the Dashboard's own carousels,
+  // dashboard.js's buildFavoritesWidget/buildCuratedListsWidget) so _wireCarouselArrows always has
+  // more (visually identical) content to page into in either direction — the actual infinite-loop
+  // illusion. Three independently-mapped copies (not one string repeated), matching that same
+  // convention, though nothing here currently keys off data-index.
+  const slidesHtml = [...DEMO_SLIDES, ...DEMO_SLIDES, ...DEMO_SLIDES].map((slide, i) => `
     <div class="category-carousel-slide" data-index="${i}" style="background:${slide.gradient}">
       <div class="category-carousel-slide-overlay">
         <div class="category-carousel-slide-title">${escapeHtml(slide.title)}</div>
@@ -37,14 +46,20 @@ export function renderCategoryCarouselHtml() {
   `).join('');
   return `
     <div class="category-carousel-wrap">
-      <button type="button" class="category-carousel-arrow category-carousel-prev" aria-label="Previous">&lsaquo;</button>
+      <button type="button" class="category-carousel-arrow dash-carousel-prev" aria-label="Previous">&lsaquo;</button>
       <div class="category-carousel-strip" id="category-carousel-strip">${slidesHtml}</div>
-      <button type="button" class="category-carousel-arrow category-carousel-next" aria-label="Next">&rsaquo;</button>
+      <button type="button" class="category-carousel-arrow dash-carousel-next" aria-label="Next">&rsaquo;</button>
     </div>
   `;
 }
 
-function _updateActiveSlide(strip) {
+// The slide that most recently played the "entering" animation below — module-level, not
+// per-strip, since only one of these carousels is ever in the DOM at once (a single-page app view
+// swap, not multiple simultaneous instances). Reset implicitly on each fresh render since
+// initCategoryCarousel() below always runs against a brand-new strip.
+let _prevActiveSlide = null;
+
+function _updateActiveSlide(strip, { animate = true } = {}) {
   const stripRect = strip.getBoundingClientRect();
   const stripCenter = stripRect.left + stripRect.width / 2;
   let closest = null;
@@ -55,30 +70,35 @@ function _updateActiveSlide(strip) {
     const dist = Math.abs((r.left + r.width / 2) - stripCenter);
     if (dist < closestDist) { closestDist = dist; closest = slide; }
   });
+  // Per direct request ("the large center feature item should change to the next item, come from
+  // the left side") — the newly-active slide plays a one-shot slide-in-from-the-left animation
+  // (.category-carousel-slide--entering, cards.css) instead of just popping to its enlarged size
+  // in place. Only when the active slide actually CHANGES (not every scroll-tick recompute while
+  // it's still the same one), and only once scrolling has actually happened (animate:false on the
+  // very first call, from initCategoryCarousel() below) — no entrance animation on first paint.
+  if (animate && closest && closest !== _prevActiveSlide) {
+    closest.classList.remove('category-carousel-slide--entering');
+    void closest.offsetWidth; // forces a reflow so re-adding the class below restarts the animation
+    closest.classList.add('category-carousel-slide--entering');
+    closest.addEventListener('animationend', () => closest.classList.remove('category-carousel-slide--entering'), { once: true });
+  }
   slides.forEach(slide => slide.classList.toggle('category-carousel-slide--active', slide === closest));
+  _prevActiveSlide = closest;
 }
 
 export function initCategoryCarousel(container) {
   const strip = container.querySelector('#category-carousel-strip');
   if (!strip) return;
 
-  // On a viewport wide enough that all 7 demo slides fit without overflowing, there's nothing to
-  // scroll and cards.css's justify-content: center handles this case on its own. When it DOES
-  // overflow, this centers the scrollable content itself (not any one slide's own offset — more
-  // robust against margin/gap rounding than computing a specific slide's position) so the middle
-  // slide lands at the strip's true center rather than wherever the default scrollLeft:0 happens
-  // to leave it (reported live — the active card wasn't centered under the folder cards above).
+  // Infinite-wheel scroll + prev/next arrow wiring (dashboard.js) — sets its own initial
+  // scrollLeft (one full copy-width in, i.e. the start of the middle copy) as a side effect, which
+  // this immediately refines below into an actually-centered starting position.
+  _wireCarouselArrows(container, strip);
+  // Centers the scrollable content's own midpoint in the viewport (not any one slide's specific
+  // offset — more robust against margin/gap rounding) so a real slide lands at the strip's true
+  // center on load, rather than just the start of the middle copy _wireCarouselArrows leaves it at.
   strip.scrollLeft = (strip.scrollWidth - strip.clientWidth) / 2;
 
-  _updateActiveSlide(strip);
+  _updateActiveSlide(strip, { animate: false });
   strip.addEventListener('scroll', debounce(() => _updateActiveSlide(strip), 60));
-
-  const scrollByOne = dir => {
-    const slide = strip.querySelector('.category-carousel-slide');
-    if (!slide) return;
-    const gap = 18; // matches .category-carousel-strip's own gap, cards.css
-    strip.scrollBy({ left: dir * (slide.getBoundingClientRect().width + gap), behavior: 'smooth' });
-  };
-  container.querySelector('.category-carousel-prev')?.addEventListener('click', () => scrollByOne(-1));
-  container.querySelector('.category-carousel-next')?.addEventListener('click', () => scrollByOne(1));
 }

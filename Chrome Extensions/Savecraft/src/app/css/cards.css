@@ -302,8 +302,16 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  /* Per direct follow-up ("drop the whole carosel down 60px"). */
+  margin-top: 60px;
 }
-.category-carousel-arrow {
+/* The prev/next buttons also carry .dash-carousel-prev/.dash-carousel-next (categoryCarousel.js)
+   so _wireCarouselArrows (dashboard.js) can find and wire them for its infinite-loop mechanics —
+   dashboard.css's own same-specificity .dash-carousel-prev/.dash-carousel-next rule loads AFTER
+   this file, so this compound selector (two classes, not one) is needed to keep this look winning
+   regardless of load order. */
+.category-carousel-arrow.dash-carousel-prev,
+.category-carousel-arrow.dash-carousel-next {
   flex-shrink: 0;
   border: none;
   background: none;
@@ -317,7 +325,8 @@
   padding: 4px 6px;
   transition: color 0.15s;
 }
-.category-carousel-arrow:hover {
+.category-carousel-arrow.dash-carousel-prev:hover,
+.category-carousel-arrow.dash-carousel-next:hover {
   color: var(--primary);
 }
 .category-carousel-strip {
@@ -370,6 +379,18 @@
      18px gap on both sides) — per direct follow-up ("make the center card overlap the two behind
      it some"). z-index above wins the overlap, same as the reference image's own layered look. */
   margin: 0 -26px;
+}
+/* One-shot entrance for whichever slide just became active, per direct request ("the large center
+   feature item should change to the next item, come from the left side") — toggled on/off in JS
+   (categoryCarousel.js) each time the active slide changes, rather than left permanently applied,
+   so it replays every time instead of only once. Ends at .category-carousel-slide--active's own
+   resting transform/opacity so there's no visual jump when the class is removed post-animation. */
+@keyframes categoryCarouselEnterFromLeft {
+  from { transform: translateX(-40px) scale(0.85); opacity: 0.5; }
+  to { transform: translateX(0) scale(1); opacity: 1; }
+}
+.category-carousel-slide--entering {
+  animation: categoryCarouselEnterFromLeft 0.4s ease-out;
 }
 .category-carousel-slide-overlay {
   position: absolute;
