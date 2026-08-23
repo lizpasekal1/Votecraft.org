@@ -29,6 +29,7 @@ import { wireQuickQueueButtons } from './renderCardActions.js';
 import { fetchMissingCuratedImages, fetchMissingCuratedMusicianPhotos } from './renderCuratedImageFetch.js';
 import { getFilteredSortedItems, getMusicGenreBucketCounts, getCategoryFolderCounts } from './renderFilters.js';
 import { updateAzIndexRail } from './azIndexRail.js';
+import { renderCategoryCarouselHtml, initCategoryCarousel } from './categoryCarousel.js';
 import { resourceUrl } from './platform.js';
 
 // News cards' publication byline is folder-based, not author-based, so it doesn't go through
@@ -571,14 +572,22 @@ function renderCategoryFolderLanding(category) {
   const folders = state.folders.filter(f => f.parentCategory === category);
   const counts = getCategoryFolderCounts(category);
 
-  container.className = 'category-folder-landing-grid';
-  container.innerHTML = folders.map(folder => `
-    <button type="button" class="category-folder-card" data-folder-id="${escapeHtml(folder.id)}">
-      <span class="category-folder-card-icon">${folderIconHtml(folder.id, 34)}</span>
-      <span class="category-folder-card-name">${escapeHtml(folder.name)}</span>
-      <span class="category-folder-card-count">${counts[folder.id] || 0}</span>
-    </button>
-  `).join('');
+  // Demo carousel below the folder cards, per direct request — every category landing page here
+  // gets it (Musician/Music Album never reach this function at all, per the exclusion in the
+  // caller above, so "not on Music" is automatic rather than a second check here).
+  container.className = 'category-landing-page';
+  container.innerHTML = `
+    <div class="category-folder-landing-grid">
+      ${folders.map(folder => `
+        <button type="button" class="category-folder-card" data-folder-id="${escapeHtml(folder.id)}">
+          <span class="category-folder-card-icon">${folderIconHtml(folder.id, 34)}</span>
+          <span class="category-folder-card-name">${escapeHtml(folder.name)}</span>
+          <span class="category-folder-card-count">${counts[folder.id] || 0}</span>
+        </button>
+      `).join('')}
+    </div>
+    ${renderCategoryCarouselHtml()}
+  `;
 
   container.querySelectorAll('.category-folder-card').forEach(card => {
     card.addEventListener('click', () => {
@@ -587,6 +596,8 @@ function renderCategoryFolderLanding(category) {
       navigateToView(card.dataset.folderId);
     });
   });
+
+  initCategoryCarousel(container);
 
   persistViewState();
 }
