@@ -1,48 +1,55 @@
 // ===== CATEGORY LANDING CAROUSEL =====
 // A horizontal, center-emphasis carousel added below the folder-picker cards on every top-level
 // category landing page (renderCategoryFolderLanding, renderGrid.js) EXCEPT Musician/Music Album,
-// per direct request ("do not add this slider to the music section though"). Demo content only for
-// now, per direct request — the same fixed slide set renders identically on every category page;
-// swapping in real per-category content is a later step, not part of this pass.
+// per direct request ("do not add this slider to the music section though"). Content is the same
+// generic demo set the Dashboard's own "Recent Saves" widget already resolves (real favorites if
+// the user has any, else the admin-configured demo cards, else the curated Top 100 fallback —
+// resolveFavoriteSlides(), dashboard.js), per direct follow-up ("put the generic 'demo' content in
+// here that you're using for the recent saves widget") — not a second, unrelated placeholder set.
 //
-// The centered slide scales up and reveals a title/description/CTA overlay, playing a one-shot
+// The centered slide scales up and reveals a title/category overlay, playing a one-shot
 // slide-in-from-the-left entrance animation as it becomes active; scrolling the strip (drag,
-// wheel, or the prev/next arrows) loops infinitely in either direction, per direct request ("the
-// carosel should scroll as if it is on an infinite wheel") — reuses the Dashboard's own
-// triple-copy/recenter carousel mechanics (_wireCarouselArrows, dashboard.js) rather than building
-// a second infinite-loop implementation; that function's own header comment already documents it
-// as generic/reusable ("doesn't care what a 'card' looks like, only how wide the strip's first
-// child is").
+// wheel, or the prev/next arrows) loops infinitely in either direction — reuses the Dashboard's
+// own triple-copy/recenter carousel mechanics (_wireCarouselArrows, dashboard.js) rather than
+// building a second infinite-loop implementation; that function's own header comment already
+// documents it as generic/reusable ("doesn't care what a 'card' looks like, only how wide the
+// strip's first child is"). Clicking a slide opens that item's real detail modal — genuine
+// behavior now that this is real save data, not decorative placeholder art.
 
+import { CAT_LABEL } from './state.js';
 import { escapeHtml, debounce } from './utils.js';
-import { _wireCarouselArrows } from './dashboard.js';
+import { _wireCarouselArrows, resolveFavoriteSlides } from './dashboard.js';
+import { openDetailModal } from './detailModal.js';
 
-// Placeholder art via CSS gradients (no external image hosting/rights concerns for demo content) —
-// swap for real per-category imagery once this has real data behind it.
-const DEMO_SLIDES = [
-  { gradient: 'linear-gradient(135deg, #74716D 0%, #A79E93 100%)', title: 'Discover', desc: 'Explore curated picks tailored to you.' },
-  { gradient: 'linear-gradient(135deg, #2E2A28 0%, #5B4A3F 100%)', title: 'Inspire', desc: 'Find your next favorite in seconds.' },
-  { gradient: 'linear-gradient(135deg, #7A2E12 0%, #C2571F 100%)', title: 'Connect', desc: 'See what’s trending across your saves.' },
-  { gradient: 'linear-gradient(135deg, #2B2E33 0%, #4A5560 100%)', title: 'Precision', desc: 'Create focused layouts with clear visual hierarchy.' },
-  { gradient: 'linear-gradient(135deg, #3D3835 0%, #6B5D52 100%)', title: 'Explore', desc: 'Dive into fresh recommendations.' },
-  { gradient: 'linear-gradient(135deg, #5B1E1E 0%, #8B3A2E 100%)', title: 'Curated', desc: 'Handpicked selections just for you.' },
-  { gradient: 'linear-gradient(135deg, #1E3A3A 0%, #2F6B63 100%)', title: 'Highlight', desc: 'Surface the saves that matter most.' },
-];
+// The exact item objects the currently-rendered strip's slides map to, one-to-one with the
+// tripled DOM order below — set fresh each render, read back by initCategoryCarousel() to wire
+// each slide's click without a second resolveFavoriteSlides() call (its own result already
+// reflects a specific moment's admin-config/favorites/curated-fallback state; re-deriving it a
+// second time separately, right after, is both wasted work and a theoretical (if unlikely) risk of
+// disagreeing with what actually got rendered).
+let _lastSlideItems = [];
 
 export function renderCategoryCarouselHtml() {
+  const { items, isDemo } = resolveFavoriteSlides();
+  _lastSlideItems = items;
+  if (!items.length) return ''; // no real saves and no curated fallback data available at all — nothing to show
+
   // Rendered three times in a row (same convention as the Dashboard's own carousels,
   // dashboard.js's buildFavoritesWidget/buildCuratedListsWidget) so _wireCarouselArrows always has
   // more (visually identical) content to page into in either direction — the actual infinite-loop
-  // illusion. Three independently-mapped copies (not one string repeated), matching that same
-  // convention, though nothing here currently keys off data-index.
-  const slidesHtml = [...DEMO_SLIDES, ...DEMO_SLIDES, ...DEMO_SLIDES].map((slide, i) => `
-    <div class="category-carousel-slide" data-index="${i}" style="background:${slide.gradient}">
+  // illusion.
+  const tripled = [...items, ...items, ...items];
+  const slidesHtml = tripled.map((item, i) => `
+    <button type="button" class="category-carousel-slide" data-index="${i}" title="${escapeHtml(item.title || '')}">
+      ${item.imageUrl
+        ? `<img class="category-carousel-slide-img" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">`
+        : ''}
+      ${isDemo ? '<span class="category-carousel-slide-demo-badge">✨ Demo</span>' : ''}
       <div class="category-carousel-slide-overlay">
-        <div class="category-carousel-slide-title">${escapeHtml(slide.title)}</div>
-        <div class="category-carousel-slide-desc">${escapeHtml(slide.desc)}</div>
-        <button type="button" class="category-carousel-slide-btn">Discover</button>
+        <div class="category-carousel-slide-title">${escapeHtml(item.title || '')}</div>
+        ${item.category ? `<div class="category-carousel-slide-desc">${escapeHtml(CAT_LABEL[item.category] || item.category)}</div>` : ''}
       </div>
-    </div>
+    </button>
   `).join('');
   return `
     <div class="category-carousel-wrap">
@@ -89,6 +96,11 @@ function _updateActiveSlide(strip, { animate = true } = {}) {
 export function initCategoryCarousel(container) {
   const strip = container.querySelector('#category-carousel-strip');
   if (!strip) return;
+
+  strip.querySelectorAll('.category-carousel-slide').forEach(slide => {
+    const item = _lastSlideItems[parseInt(slide.dataset.index, 10) % _lastSlideItems.length];
+    if (item) slide.addEventListener('click', () => openDetailModal(item));
+  });
 
   // Infinite-wheel scroll + prev/next arrow wiring (dashboard.js) — sets its own initial
   // scrollLeft (one full copy-width in, i.e. the start of the middle copy) as a side effect, which
