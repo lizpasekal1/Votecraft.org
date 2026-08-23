@@ -232,6 +232,12 @@
   width: 72%;
   max-width: 403px;
   margin: 0 auto;
+  /* Explicit, not just relying on the auto margins above — this is now a flex item inside
+     .category-landing-page (display:flex; flex-direction:column;), and align-self is the
+     unambiguous way to center a flex item along its container's cross axis, per direct follow-up
+     ("center the folder squares horizontally... within the page area" — they were reading as
+     off-center against the full width of .grid-area, the actual page content pane). */
+  align-self: center;
 }
 @media (min-width: 481px) {
   .category-folder-landing-grid {
@@ -326,8 +332,8 @@
 .category-carousel-slide {
   position: relative;
   flex-shrink: 0;
-  width: 150px;
-  height: 200px;
+  width: 170px;
+  height: 170px;
   border-radius: 16px;
   scroll-snap-align: center;
   background-size: cover;
@@ -339,8 +345,8 @@
   border: 3px solid transparent;
 }
 .category-carousel-slide--active {
-  width: 220px;
-  height: 280px;
+  width: 240px;
+  height: 240px;
   transform: scale(1);
   opacity: 1;
   border-color: #fff;
