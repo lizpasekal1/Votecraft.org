@@ -101,6 +101,18 @@
 .fetch-albums-status.fetch-albums-error {
   color: #e53e3e;
 }
+.fetch-albums-retry-btn {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: var(--primary);
+  cursor: pointer;
+  padding: 0 0 0 8px;
+  font-weight: 500;
+}
+.fetch-albums-retry-btn:hover {
+  text-decoration: underline;
+}
 .fetch-albums-loading::after {
   content: '';
   display: inline-block;

@@ -41,9 +41,27 @@ export function isItunesRateLimited() {
 // throttle worse. Throws on a rate-limited breaker or a non-ok response; every caller here already
 // wraps its own call in a try/catch (either locally or up the call chain) and treats a thrown error
 // as "no result", so a shared throw-based contract needs no per-caller special-casing.
+//
+// One free retry on a genuine network-level failure (fetch() itself rejecting — connection
+// dropped/reset, DNS hiccup, "Load failed" in Safari/"Failed to fetch" in Chrome) — reported live:
+// fetchAlbumsFromItunes's own request is far heavier than this file's other iTunes calls (up to 200
+// unfiltered results, since it has to search broadly then filter down to the exact artist
+// client-side — see fetchAlbumsModal.js), and a large response is more likely to get cut off
+// mid-transfer on a weak/flaky connection than the small ones (search typeahead, single-artist
+// genre lookup) that were succeeding right alongside it on the same device/network. A short pause
+// then one retry is usually enough to ride out a transient drop like that. Deliberately NOT applied
+// to a real HTTP error (resp.status, e.g. 403/500) or the breaker being open — neither of those
+// fixes itself by immediately trying again, so they still throw straight through on the first try.
 async function itunesFetch(url) {
   if (isItunesRateLimited()) throw new Error('iTunes API rate-limited — breaker open');
-  const resp = await fetch(url);
+  let resp;
+  try {
+    resp = await fetch(url);
+  } catch (err) {
+    if (!(err instanceof TypeError)) throw err;
+    await new Promise(r => setTimeout(r, 1200));
+    resp = await fetch(url); // one retry; a second failure here just throws normally
+  }
   if (resp.status === 403) _itunesBlockedUntil = Date.now() + ITUNES_COOLDOWN_MS;
   if (!resp.ok) throw new Error(`iTunes API error: ${resp.status}`);
   return resp.json();
