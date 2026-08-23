@@ -1,11 +1,8 @@
 /* ===== FETCH ALBUMS ===== */
-.author-page-actions {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
+/* Sits on the Works row (.author-works-header, cards.css) on both breakpoints — used to live up in
+   the header instead, with a separate mobile-only copy down here to dodge an overlap with the
+   genre/website line once flex-wrap kicked in on mobile; per direct follow-up, the header copy is
+   gone now and this is the only one, desktop and mobile alike. */
 .btn-fetch-albums {
   background: var(--primary);
   border: none;
@@ -21,18 +18,6 @@
 .btn-fetch-albums:active {
   background: #fff;
   color: var(--primary);
-}
-
-/* REAL BUG, found and fixed: cards.css's own mobile media query already tries to hide this
-   (.author-page-actions { display: none; }) so only the Works-row copy (.btn-fetch-albums--mobile)
-   shows on mobile — but this file loads AFTER cards.css (index.html), so this unconditional
-   display: flex above was winning the cascade at every width, including inside that media query,
-   and both buttons showed at once (reported live, screenshot confirmed). Overriding it here
-   instead, in the same file/after the rule it needs to beat, so load order can't undo it again. */
-@media (max-width: 768px) {
-  .author-page-actions {
-    display: none;
-  }
 }
 
 .fetch-albums-modal {
