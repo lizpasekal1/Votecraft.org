@@ -828,11 +828,9 @@
   margin-bottom: 12px;
 }
 
-/* Hidden by default (desktop keeps the one Fetch Albums button up in the header, next to the
-   photo) — shown only on mobile, see the media query below. text-transform: none overrides the
-   uppercase .author-works-header (its own parent here) would otherwise inherit onto it. */
-.btn-fetch-albums--mobile {
-  display: none;
+/* .author-works-header (its parent, above) is uppercase — this button sits inside it, so it needs
+   its own text-transform: none to keep "Fetch Albums" normal-case instead of inheriting that. */
+#btn-fetch-albums {
   text-transform: none;
 }
 
@@ -959,14 +957,6 @@
   }
   .author-page-header {
     flex-wrap: wrap;
-  }
-  /* Reported live: the header's own Fetch Albums button overlapped the genre/website line here —
-     moved down to its own copy on the Works row instead (renderAuthorPage.js), off the header
-     entirely, rather than fighting further with wrapping/widths to keep it up there.
-     .author-page-actions's own display:none override lives in fetchAlbumsModal.css, not here —
-     see that file's own comment for why (a load-order cascade fight, found and fixed). */
-  .btn-fetch-albums--mobile {
-    display: inline-flex;
   }
   /* Genre pill + website URL stack instead of sharing one line here, per direct request — the
      ellipsis-truncated .author-page-website (below) still needed real width to read as anything
