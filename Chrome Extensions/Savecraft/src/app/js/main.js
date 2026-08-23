@@ -25,13 +25,21 @@ import {
 import { openDetailModal, closeDetailModal, closeImageLightbox, getDetailItem, showNextImage, showPrevImage, handleGalleryLoadMoreClick, closeVideoLightbox } from './detailModal.js';
 import { initNoteToolbar } from './detailModalNotes.js';
 import { initAzIndexRail } from './azIndexRail.js';
+import { initSortSelect, setSortSelectValue } from './sortSelect.js';
+import { initGlobalSearch } from './globalSearch.js';
 import { closeVoiceNoteModal, initVoiceNoteModal } from './voiceNotes.js';
 import { closeFetchAlbumsModal, handleImportAlbums, renderFetchAlbumsList } from './fetchAlbumsModal.js';
 // One-time personal bulk-import helper (window.bulkImportMyArtists()), see its own file header —
 // side-effect-only import (registers itself on window at load time), not otherwise used here.
 import './bulkImportArtists.js';
 
-// ===== SEARCH =====
+// ===== PAGE SEARCH (sort dropdown's own embedded field, sortSelect.js) =====
+// Filters WITHIN whatever view is currently open — runs after the view's own category/folder
+// narrowing in renderFilters.js's getFilteredSortedItems(). Distinct from the header search icon's
+// global, library-wide search (globalSearch.js), which never touches state.search at all — kept
+// deliberately separate so the two features can't cross-wire each other. This used to be the
+// header icon's own handler before that search was redesigned to be global; it's unchanged here,
+// just called from a different UI entry point now.
 let searchDebounce;
 export function handleSearch(query) {
   clearTimeout(searchDebounce);
@@ -39,39 +47,6 @@ export function handleSearch(query) {
     state.search = query.trim();
     renderGrid();
   }, 220);
-}
-
-export function initSearch() {
-  const wrap = document.getElementById('search-expand-wrap');
-  const input = document.getElementById('search-expand-input');
-  const btn = document.getElementById('btn-search-icon');
-
-  function openSearch() {
-    wrap.classList.add('open');
-    input.focus();
-  }
-
-  function closeSearch() {
-    wrap.classList.remove('open');
-    input.value = '';
-    if (state.search) { state.search = ''; renderGrid(); }
-  }
-
-  btn.addEventListener('click', () => {
-    wrap.classList.contains('open') ? closeSearch() : openSearch();
-  });
-
-  input.addEventListener('input', e => handleSearch(e.target.value));
-
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeSearch();
-  });
-
-  document.addEventListener('click', e => {
-    if (!wrap.contains(e.target) && wrap.classList.contains('open')) {
-      if (!input.value) closeSearch();
-    }
-  });
 }
 
 // ===== SORT =====
@@ -728,8 +703,7 @@ async function init() {
     if (e.key === 'Escape') closeSteamModal();
   });
 
-  const sortSelect = document.getElementById('sort-select');
-  sortSelect.value = state.sort;
+  setSortSelectValue(state.sort);
 
   // A `?v=` in the URL (shared/pasted link, or reloading an already-navigated-to view) wins over
   // the last-stored view — loadAll()/runInitialSync() above already restored state.view from
@@ -751,14 +725,13 @@ async function init() {
   navigateToView(startOnDashboard ? 'dashboard' : (urlParamToView(urlView) || state.view), { ...navOptions, replace: true });
   window.addEventListener('popstate', _handlePopstate);
   initShare();
-  initSearch();
+  initGlobalSearch();
   initAzIndexRail();
-
-  sortSelect.addEventListener('change', () => handleSort(sortSelect.value));
+  initSortSelect();
 
   // Music landing page's genre drill-in filter (renderGrid.js populates/shows this only on
   // musicgenre: views) — same "wired once here, driven by renderGrid() each render" pattern as
-  // sortSelect just above.
+  // #sort-select (now wired inside sortSelect.js's own initSortSelect(), just above).
   document.getElementById('musicgenre-select').addEventListener('change', e => {
     // "All Music" goes to the real Musicians page, not a musicgenre:All Music page of its own —
     // same reasoning as the picker card's click handler (renderGrid.js) — one canonical
