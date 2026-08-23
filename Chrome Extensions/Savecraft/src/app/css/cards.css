@@ -816,6 +816,14 @@
   font-size: 12px;
 }
 
+/* Mobile-only duplicate of the website link, positioned below the header's own divider — hidden
+   by default (desktop shows .author-page-website--inline, up in the genre row, instead); see the
+   mobile media query below for the swap. */
+.author-page-website-row {
+  display: none;
+  margin-bottom: 12px;
+}
+
 .author-works-header {
   display: flex;
   align-items: center;
@@ -958,20 +966,22 @@
   .author-page-header {
     flex-wrap: wrap;
   }
-  /* Genre pill + website URL stack instead of sharing one line here, per direct request — the
-     ellipsis-truncated .author-page-website (below) still needed real width to read as anything
-     but a couple of characters on a narrow phone; stacking gives it the row's full width instead
-     of splitting it with the genre pill and separator. .author-page-genre-sep (the "|") only makes
-     sense between two things on the same line, so it's hidden here. */
-  .author-page-genre-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+  /* The website URL moves below the header's own divider here instead of sharing the genre row —
+     per direct request ("put the url below the divider line in mobile"). .author-page-website-row
+     (the mobile copy, positioned there in the DOM already — renderAuthorPage.js) swaps on;
+     .author-page-website--inline (the desktop copy, up in the genre row) swaps off. With the url
+     gone, the genre row holds just the pill, so its own separator ("|", only meaningful between
+     two things) hides too. */
+  .author-page-website-row {
+    display: block;
+  }
+  .author-page-website--inline {
+    display: none;
   }
   .author-page-genre-sep {
     display: none;
   }
-  .author-page-website {
+  .author-page-website-row .author-page-website {
     max-width: 100%;
   }
 }
