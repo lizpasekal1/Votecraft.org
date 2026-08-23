@@ -44,7 +44,7 @@ export function renderCategoryCarouselHtml() {
       ${item.imageUrl
         ? `<img class="category-carousel-slide-img" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">`
         : ''}
-      ${isDemo ? '<span class="category-carousel-slide-demo-badge">✨ Demo</span>' : ''}
+      ${isDemo ? '<span class="category-carousel-slide-demo-badge"><span class="category-carousel-slide-demo-badge-icon">✨</span> Demo</span>' : ''}
       <div class="category-carousel-slide-overlay">
         <div class="category-carousel-slide-title">${escapeHtml(item.title || '')}</div>
         ${item.category ? `<div class="category-carousel-slide-desc">${escapeHtml(CAT_LABEL[item.category] || item.category)}</div>` : ''}
