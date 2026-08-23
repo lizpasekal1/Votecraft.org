@@ -1032,6 +1032,18 @@
   justify-content: center;
 }
 
+.detail-album-row--fetch {
+  color: var(--primary);
+  font-weight: 600;
+  justify-content: center;
+  padding: 10px 2px;
+}
+.detail-album-row--fetch:disabled {
+  color: var(--text-muted);
+  cursor: default;
+  background: none;
+}
+
 .detail-tracklist {
   display: flex;
   flex-direction: column;
