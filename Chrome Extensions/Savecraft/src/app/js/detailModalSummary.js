@@ -9,6 +9,7 @@ import { persistItem, persistAuthor } from './storage.js';
 import { ensureArtistWikipediaInfo, ensureItemWikipediaInfo } from './api.js';
 import { findAuthor, getKnownAlbumsForArtist, navigateToAuthor } from './authors.js';
 import { openDetailModal, closeDetailModal, getDetailItem } from './detailModal.js';
+import { autoImportMusicianAlbums } from './addEditModal.js';
 import { registerAccordion, closeAccordionsExcept } from './detailModalAccordions.js';
 import { applyMusicianBioFallback } from './detailModalNotes.js';
 
@@ -156,38 +157,59 @@ export function setupSummary(item, { isMusicAlbum, isMusicianItem, ctaAuthorName
 
   if (isMusicianItem) {
     albumsAccordionLabelEl.textContent = 'Albums';
-    const knownAlbums = getKnownAlbumsForArtist(item.title);
     albumsAccordionHeaderEl.classList.remove('open');
     albumsListEl.classList.remove('open');
-    if (knownAlbums.length) {
-      albumsAccordionHeaderEl.style.display = '';
-      albumsListEl.style.display = '';
-      albumsListEl.classList.add('detail-accordion-collapsible');
-      albumsListEl.innerHTML = `<button class="detail-album-row detail-album-row--see-all" id="detail-albums-see-all">See all →</button>`
-        + knownAlbums.slice(0, 5).map(a => `
-        <button class="detail-album-row" data-album-id="${escapeHtml(a.id)}">
-          ${a.imageUrl ? `<img class="detail-album-row-thumb" src="${escapeHtml(a.imageUrl)}" alt="" loading="lazy" decoding="async">` : `<span class="detail-album-row-thumb"></span>`}
-          <span class="detail-album-row-title">${escapeHtml(a.title || '')}</span>
-        </button>`).join('');
-      albumsListEl.querySelectorAll('.detail-album-row[data-album-id]').forEach(row => {
-        row.addEventListener('click', () => {
-          const album = knownAlbums.find(a => a.id === row.dataset.albumId);
-          if (album) openDetailModal(album);
+    albumsAccordionHeaderEl.style.display = '';
+    albumsListEl.style.display = '';
+    albumsListEl.classList.add('detail-accordion-collapsible');
+
+    // Pulled out into its own function (rather than inlined once, as this used to be) so the
+    // "fetch, then fill in" button below (per direct request — "when the accordian opens up the
+    // button 'fetch albums' is there and then it fills in with the few and the see all") can
+    // re-render this same content in place once the fetch lands, without reopening the modal or
+    // resetting the accordion's own open/closed state the way re-running all of setupSummary
+    // would.
+    const renderKnownAlbumsList = () => {
+      const knownAlbums = getKnownAlbumsForArtist(item.title);
+      if (knownAlbums.length) {
+        albumsListEl.innerHTML = `<button class="detail-album-row detail-album-row--see-all" id="detail-albums-see-all">See all →</button>`
+          + knownAlbums.slice(0, 5).map(a => `
+          <button class="detail-album-row" data-album-id="${escapeHtml(a.id)}">
+            ${a.imageUrl ? `<img class="detail-album-row-thumb" src="${escapeHtml(a.imageUrl)}" alt="" loading="lazy" decoding="async">` : `<span class="detail-album-row-thumb"></span>`}
+            <span class="detail-album-row-title">${escapeHtml(a.title || '')}</span>
+          </button>`).join('');
+        albumsListEl.querySelectorAll('.detail-album-row[data-album-id]').forEach(row => {
+          row.addEventListener('click', () => {
+            const album = knownAlbums.find(a => a.id === row.dataset.albumId);
+            if (album) openDetailModal(album);
+          });
         });
-      });
-      document.getElementById('detail-albums-see-all')?.addEventListener('click', () => {
-        closeDetailModal();
-        navigateToAuthor(item.title, 'Musician');
-      });
-    } else {
-      // No known albums yet — shown as an empty placeholder row (same treatment as Visual Art
-      // below) rather than hidden entirely, so every category's modal keeps the same accordion
-      // row count/height when collapsed, regardless of how much real content a given item has.
-      albumsAccordionHeaderEl.style.display = '';
-      albumsListEl.style.display = '';
-      albumsListEl.classList.add('detail-accordion-collapsible');
-      albumsListEl.innerHTML = '';
-    }
+        document.getElementById('detail-albums-see-all')?.addEventListener('click', () => {
+          closeDetailModal();
+          navigateToAuthor(item.title, 'Musician');
+        });
+      } else {
+        // No known albums yet — a "Fetch Albums" button in the same row slot instead of either an
+        // empty accordion or a separate modal, per direct request. Reuses the same
+        // autoImportMusicianAlbums() the bulk-import tooling uses (addEditModal.js) — auto-saves
+        // whatever it finds directly, no selection step — rather than fetchAlbumsModal.js's picker
+        // modal, since the request was specifically for this row to "fill in" in place.
+        albumsListEl.innerHTML = `<button type="button" class="detail-album-row detail-album-row--fetch" id="detail-albums-fetch-btn">Fetch Albums</button>`;
+        document.getElementById('detail-albums-fetch-btn')?.addEventListener('click', async e => {
+          const btn = e.currentTarget;
+          btn.disabled = true;
+          btn.textContent = 'Fetching…';
+          await autoImportMusicianAlbums({ title: item.title });
+          if (getKnownAlbumsForArtist(item.title).length) {
+            renderKnownAlbumsList();
+          } else {
+            btn.disabled = false;
+            btn.textContent = 'No albums found — Retry';
+          }
+        });
+      }
+    };
+    renderKnownAlbumsList();
   } else if (isMusicAlbum) {
     // Music Album has its own Song List accordion in this slot instead — see below.
     albumsAccordionHeaderEl.style.display = 'none';
