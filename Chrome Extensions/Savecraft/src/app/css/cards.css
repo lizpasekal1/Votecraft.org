@@ -319,6 +319,8 @@
   gap: 24px;
   flex: 1;
   min-height: 0;
+  /* Nudges the whole vertically-centered content block up, per direct follow-up. */
+  margin-top: -20px;
 }
 .grid-area:has(.category-landing-page) {
   display: flex;
@@ -416,7 +418,8 @@
   scroll-snap-align: center;
   cursor: pointer;
   transform: scale(0.92);
-  opacity: 0.75;
+  /* 0.75 -> 0.55, per direct follow-up ("dim the other cards slightly"). */
+  opacity: 0.55;
   transition: transform 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   border: 3px solid transparent;
   padding: 0;
