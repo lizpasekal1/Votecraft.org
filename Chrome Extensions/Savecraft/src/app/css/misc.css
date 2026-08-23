@@ -733,17 +733,35 @@
   .musicgenre-card {
     width: 85%;
   }
-  /* #musicgenre-select (Music landing page's genre filter, only ever shown alongside #sort-select
-     on a musicgenre: page) stacks above #sort-select instead of sitting side by side — two
-     160px-wide dropdowns plus their gap don't reliably fit next to each other even on a mid-size
-     phone, let alone the smallest ones (this app's own 320px iPhone SE baseline elsewhere).
-     Unconditional (not gated on #musicgenre-select actually being visible) is deliberately safe:
-     with only one visible child (every non-musicgenre page), a column vs. row direction looks
-     identical, so this can't regress #sort-select's own presentation anywhere else. */
-  .grid-header-right {
-    flex-direction: column;
-    align-items: flex-end;
+  /* #musicgenre-select + #sort-select, when both are actually visible together (the Musicians/
+     musicgenre: pages — .grid-header-right--dual, toggled in renderGrid.js right alongside
+     #musicgenre-select's own display, not just "any Music page" since musicgenre:All Music hides
+     the dropdown) — per direct request/follow-up, these now share one row on mobile instead of
+     stacking (an earlier pass stacked them: two fixed 160px-wide dropdowns plus their gap didn't
+     reliably fit side by side even on a mid-size phone). flex:1 1 0/min-width:0 lets each shrink
+     to split the row evenly instead of keeping their fixed desktop width, and the trimmed
+     padding/background-position keep the dropdown arrow from crowding a much narrower pill's text.
+     Scoped to the wrapper's real two-child state (not every .grid-header-right) so #sort-select's
+     own presentation everywhere else — including every non-Music page, where it's still the only
+     child — is completely unaffected. */
+  .grid-header-right--dual {
     gap: 8px;
+  }
+  .grid-header-right--dual #sort-select,
+  .grid-header-right--dual #musicgenre-select {
+    width: auto;
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 7px 26px 7px 10px;
+    background-position: right 9px center;
+    /* #musicgenre-select's own 15px/bold (cards.css) is sized for its normal fixed 160px width —
+       at roughly half that here, the longer bucket names ("Rock/Metal", "R&B/Soul") need the
+       smaller, lighter treatment #sort-select already uses just to keep from crowding the arrow. */
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /* Empty states ("Nothing here yet", no results, curated prompts) — the landing-state box's own
