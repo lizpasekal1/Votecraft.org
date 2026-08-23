@@ -23,6 +23,18 @@
   color: var(--primary);
 }
 
+/* REAL BUG, found and fixed: cards.css's own mobile media query already tries to hide this
+   (.author-page-actions { display: none; }) so only the Works-row copy (.btn-fetch-albums--mobile)
+   shows on mobile — but this file loads AFTER cards.css (index.html), so this unconditional
+   display: flex above was winning the cascade at every width, including inside that media query,
+   and both buttons showed at once (reported live, screenshot confirmed). Overriding it here
+   instead, in the same file/after the rule it needs to beat, so load order can't undo it again. */
+@media (max-width: 768px) {
+  .author-page-actions {
+    display: none;
+  }
+}
+
 .fetch-albums-modal {
   width: 480px;
   max-width: 95vw;
