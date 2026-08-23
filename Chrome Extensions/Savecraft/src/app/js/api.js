@@ -83,7 +83,14 @@ export async function fetchArtistPhotoFromItunes(artistName) {
 }
 
 export async function fetchAlbumsFromItunes(artistName) {
-  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(artistName)}&entity=album&media=music&limit=200`;
+  // limit=200 (iTunes' max) used to be requested outright — reported live: this is by far the
+  // heaviest request this file makes (a broad term match, filtered down to the exact artist
+  // client-side, not a targeted lookup), and the one request failing with a raw network-level
+  // error on a phone where every lighter iTunes call on the same device/network succeeded. Trimmed
+  // to a smaller response as a mitigation regardless of the exact root cause — 100 raw (pre-filter)
+  // hits already comfortably covers even a prolific artist's real discography once narrowed down to
+  // just their own collectionType results, so this shouldn't cost real coverage in practice.
+  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(artistName)}&entity=album&media=music&limit=100`;
   const data = await itunesFetch(url);
   return data.results
     .filter(r => r.collectionType)
