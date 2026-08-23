@@ -217,20 +217,19 @@
    instead of the primary-folder+unfoldered item list directly. Same card-grid mechanics as
    .musicgenre-card above, but deliberately a DIFFERENT look — purple-outlined instead of
    solid-fill, per direct request, so this doesn't read as a second Music-style page. ===== */
-/* Fixed 2x2, per direct follow-up ("i want them to be two by two") — unlike auto-fit, this stays
-   two columns regardless of viewport width, not just narrow ones. Capped/centered so 4 cards on a
-   wide desktop screen don't stretch edge-to-edge into oversized tiles. */
+/* Back to a single row of 4, per direct follow-up ("put the 4 folders back into a row") — reverses
+   the earlier 2x2 pass. Capped/centered so 4 cards on a wide desktop screen don't stretch
+   edge-to-edge into oversized tiles. */
 .category-folder-landing-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 36px;
-  /* width:72% (not just a smaller max-width) so this actually shrinks on mobile too, per direct
-     follow-up — mobile's own viewport was already narrower than the old 560px cap, so a max-width
-     cut alone would only have affected desktop. Icon/text sizes on the cards themselves are
-     untouched; each square just shrinks with the grid column width (aspect-ratio: 1/1). Another
-     10% smaller per a further direct follow-up (80% -> 72%, 448px -> 403px). */
-  width: 72%;
-  max-width: 403px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  /* width:90% (not just a smaller max-width) so this actually shrinks on mobile too — mobile's own
+     viewport can be narrower than a fixed cap, which alone would only affect desktop. Icon/text
+     sizes on the cards themselves are untouched; each square just shrinks with the grid column
+     width (aspect-ratio: 1/1). */
+  width: 90%;
+  max-width: 800px;
   margin: 0 auto;
   /* Explicit, not just relying on the auto margins above — this is now a flex item inside
      .category-landing-page (display:flex; flex-direction:column;), and align-self is the
@@ -325,6 +324,14 @@
   flex: 1;
   display: flex;
   align-items: center;
+  /* REAL BUG, found and fixed: on a wide screen, 7 demo slides can be narrower than the strip's
+     own viewport, so there's nothing to scroll — flex's default justify-content: flex-start then
+     left-aligns the whole row flush against the left arrow instead of centering it, so the
+     "active" card landed left of the page's true center (reported live, screenshot confirmed).
+     justify-content: center fixes the no-overflow case; once there IS enough content to actually
+     scroll, this has no visible effect and the JS-driven scrollLeft centering (categoryCarousel.js)
+     takes over instead. */
+  justify-content: center;
   gap: 18px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
