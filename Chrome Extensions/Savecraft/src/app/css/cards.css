@@ -379,7 +379,8 @@
   /* Pulls the two neighbor slides in underneath it (negative margin eats into the strip's own
      18px gap on both sides) — per direct follow-up ("make the center card overlap the two behind
      it some"). z-index above wins the overlap, same as the reference image's own layered look. */
-  margin: 0 -26px;
+  /* -26px -> -50px (more overlap), per direct follow-up. */
+  margin: 0 -50px;
 }
 /* One-shot entrance for whichever slide just became active, per direct request ("the large center
    feature item should change to the next item, come from the left side") — toggled on/off in JS
