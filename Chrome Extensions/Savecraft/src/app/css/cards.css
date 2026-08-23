@@ -211,6 +211,61 @@
   }
 }
 
+/* ===== Category folder-picker landing (state.view === <category>, renderGrid.js's
+   renderCategoryFolderLanding()) — every top-level category tab except Musician/Music Album (both
+   stay their own thing, per direct request) now shows its real subfolders as a picker grid
+   instead of the primary-folder+unfoldered item list directly. Same card-grid mechanics as
+   .musicgenre-card above, but deliberately a DIFFERENT look — purple-outlined instead of
+   solid-fill, per direct request, so this doesn't read as a second Music-style page. ===== */
+.category-folder-landing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+}
+@media (min-width: 481px) {
+  .category-folder-landing-grid {
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
+}
+.category-folder-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 22px 10px;
+  border: 1.5px solid var(--primary);
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s;
+}
+.category-folder-card:hover {
+  background: var(--hover-bg);
+}
+.category-folder-card-icon {
+  display: flex;
+  color: var(--primary);
+}
+.category-folder-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--primary);
+}
+.category-folder-card-count {
+  font-size: 13px;
+  color: var(--primary);
+  opacity: 0.75;
+}
+@media (max-width: 768px) {
+  .category-folder-landing-grid {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: 20px;
+    column-gap: 14px;
+  }
+}
+
 .grid-title {
   display: flex;
   align-items: center;
