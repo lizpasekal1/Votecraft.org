@@ -32,14 +32,29 @@ export function isItunesRateLimited() {
   return Date.now() < _itunesBlockedUntil;
 }
 
+// Every itunes.apple.com call in this file (search-for-albums, musicArtist genre lookup, the
+// Add-modal typeahead searches, artist-photo lookup, ...) goes through this one helper — REAL BUG,
+// found and fixed: the breaker used to be checked/tripped by hand inside two of the seven call
+// sites (fetchAlbumsFromItunes, ensureArtistGenre), while the other five (searchMusicians,
+// searchMusicAlbums, searchShows, fetchArtistPhotoFromItunes) quietly kept hitting iTunes even
+// while the breaker was open, undermining the whole point of it and making the domain-wide
+// throttle worse. Throws on a rate-limited breaker or a non-ok response; every caller here already
+// wraps its own call in a try/catch (either locally or up the call chain) and treats a thrown error
+// as "no result", so a shared throw-based contract needs no per-caller special-casing.
+async function itunesFetch(url) {
+  if (isItunesRateLimited()) throw new Error('iTunes API rate-limited — breaker open');
+  const resp = await fetch(url);
+  if (resp.status === 403) _itunesBlockedUntil = Date.now() + ITUNES_COOLDOWN_MS;
+  if (!resp.ok) throw new Error(`iTunes API error: ${resp.status}`);
+  return resp.json();
+}
+
 // iTunes's Search API has no dedicated "artist photo" field — the closest available image is
 // an album cover, so we use the most relevant album's artwork as a stand-in for the artist photo.
 export async function fetchArtistPhotoFromItunes(artistName) {
   try {
     const url = `https://itunes.apple.com/search?term=${encodeURIComponent(artistName)}&entity=album&media=music&limit=5`;
-    const resp = await fetch(url);
-    if (!resp.ok) return null;
-    const data = await resp.json();
+    const data = await itunesFetch(url);
     const lowerName = artistName.trim().toLowerCase();
     const match = data.results.find(r => r.collectionType && r.artistName?.toLowerCase() === lowerName)
       || data.results.find(r => r.collectionType);
@@ -50,12 +65,8 @@ export async function fetchArtistPhotoFromItunes(artistName) {
 }
 
 export async function fetchAlbumsFromItunes(artistName) {
-  if (isItunesRateLimited()) throw new Error('iTunes API rate-limited — breaker open');
   const url = `https://itunes.apple.com/search?term=${encodeURIComponent(artistName)}&entity=album&media=music&limit=200`;
-  const resp = await fetch(url);
-  if (resp.status === 403) _itunesBlockedUntil = Date.now() + ITUNES_COOLDOWN_MS;
-  if (!resp.ok) throw new Error(`iTunes API error: ${resp.status}`);
-  const data = await resp.json();
+  const data = await itunesFetch(url);
   return data.results
     .filter(r => r.collectionType)
     .sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate))
@@ -79,9 +90,7 @@ export async function fetchAlbumsFromItunes(artistName) {
 
 export async function searchMusicians(term) {
   const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=musicArtist&limit=8`;
-  const resp = await fetch(url);
-  if (!resp.ok) throw new Error(`iTunes error: ${resp.status}`);
-  const data = await resp.json();
+  const data = await itunesFetch(url);
   return (data.results || []).map(r => ({
     title: r.artistName,
     author: null,
@@ -98,9 +107,7 @@ export async function searchMusicians(term) {
 // heuristic only made sense when the search box was specifically an Author field).
 export async function searchMusicAlbums(term) {
   const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=album&media=music&limit=15`;
-  const resp = await fetch(url);
-  if (!resp.ok) throw new Error(`iTunes error: ${resp.status}`);
-  const data = await resp.json();
+  const data = await itunesFetch(url);
   return data.results
     .filter(r => r.collectionType)
     .filter(r => !/\s[-–]\s*(single|ep)\s*$/i.test(r.collectionName))
@@ -120,9 +127,7 @@ export async function searchMusicAlbums(term) {
 // the first (most relevant) season per show, presenting the show itself as the result.
 export async function searchShows(term) {
   const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=tvSeason&media=tvShow&country=US&limit=10`;
-  const resp = await fetch(url);
-  if (!resp.ok) throw new Error(`iTunes error: ${resp.status}`);
-  const data = await resp.json();
+  const data = await itunesFetch(url);
   const seen = new Set();
   const shows = [];
   for (const r of (data.results || [])) {
@@ -527,17 +532,13 @@ export async function ensureArtistGenre(artistName) {
   if (cached && (cached.genre || (Date.now() - cached.fetchedAt < ARTIST_GENRE_CACHE_MISS_TTL))) {
     return cached.genre;
   }
-  if (Date.now() < _itunesBlockedUntil) return null; // circuit breaker open — don't even try
-  let resp;
+  let data;
   try {
     const url = `https://itunes.apple.com/search?term=${encodeURIComponent(artistName)}&entity=musicArtist&limit=1`;
-    resp = await fetch(url);
+    data = await itunesFetch(url);
   } catch {
-    return null; // network error — leave uncached, retried fresh next time
+    return null; // breaker open, network error, or non-ok response — leave uncached, retried fresh next time
   }
-  if (resp.status === 403) _itunesBlockedUntil = Date.now() + ITUNES_COOLDOWN_MS;
-  if (!resp.ok) return null; // e.g. rate-limited — leave uncached, retried fresh next time
-  const data = await resp.json();
   const genre = data.results?.[0]?.primaryGenreName || null;
   state.artistGenreCache[key] = { genre, fetchedAt: Date.now() };
   persistArtistGenreCache();

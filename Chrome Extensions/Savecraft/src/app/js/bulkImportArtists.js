@@ -1,9 +1,13 @@
 // ===== ONE-TIME PERSONAL BULK IMPORT — Spotify "Following" list =====
 // Built per direct request to add a large batch of artists (transcribed from ~39 scrolled
 // screenshots of a Spotify "Following" list, since Spotify doesn't offer an easy export) into the
-// signed-in user's own SaveCraft account as real Musician items. Deliberately NOT wired into any
-// UI — run once from the browser console (window.bulkImportMyArtists()) while signed into
-// savecraft.org, then this file can be deleted; it writes nothing on its own.
+// signed-in user's own SaveCraft account as real Musician items, plus the one-time follow-up
+// cleanup/backfill companions that import turned out to need. Deliberately NOT wired into any UI —
+// each function only runs when explicitly called from the browser console while signed into
+// savecraft.org; nothing here executes on its own just by loading the app. Once the whole batch
+// (import, genre/album backfill, and any bad-entry cleanup) is confirmed done, this file and its
+// `import './bulkImportArtists.js';` in main.js should both be deleted — there's no reason to keep
+// shipping an ~800-name personal artist list and its one-time scripts to every visitor forever.
 //
 // Mirrors the real Add-modal's own new-Musician item shape (see handleSaveItem, addEditModal.js)
 // and enrichment source (ensureArtistWikipediaInfo, same as kickOffTitleEnrichment uses) rather
@@ -19,7 +23,7 @@
 // Musician already in state.items, so re-running this is always safe/idempotent.
 
 import { state } from './state.js';
-import { persistItem, persistArtistGenreCache } from './storage.js';
+import { persistItem, persistArtistGenreCache, removeItem } from './storage.js';
 import { ensureArtistWikipediaInfo, isItunesRateLimited } from './api.js';
 import { renderSidebar } from './render.js';
 import { renderGrid } from './render.js';
@@ -283,8 +287,35 @@ export async function bulkImportAlbumsForMyArtists() {
   return { processed, total: musicianItems.length, stoppedEarly: false };
 }
 
+// Companion cleanup for the bulk import above — per direct report, a handful of the transcribed
+// screenshot rows turned out to be song titles rather than artist names (an OCR/transcription slip
+// against the real Spotify "Following" list, which only ever lists artists), and came in as
+// ordinary Musician items indistinguishable from a real save. Takes a list of exact titles (case-
+// insensitive, trimmed) and removes each matching Musician item — same removeItem() + state.items
+// splice the card grid's own delete button uses (renderGrid.js), just batched for a one-time
+// console cleanup instead of clicking delete on each one individually.
+export async function removeMusicianItemsByTitle(titles) {
+  const wanted = new Set(titles.map(t => t.trim().toLowerCase()));
+  const toRemove = state.items.filter(i => i.category === 'Musician' && wanted.has((i.title || '').trim().toLowerCase()));
+  const foundKeys = new Set(toRemove.map(i => (i.title || '').trim().toLowerCase()));
+  const notFound = [...wanted].filter(t => !foundKeys.has(t));
+  if (notFound.length) console.log(`[removeMusicianItemsByTitle] Not found (already removed, or a typo?): ${notFound.join(', ')}`);
+
+  for (const item of toRemove) {
+    await removeItem(item.id);
+    console.log(`[removeMusicianItemsByTitle] Removed: ${item.title}`);
+  }
+  state.items = state.items.filter(i => !toRemove.includes(i));
+
+  renderSidebar();
+  renderGrid();
+  console.log(`[removeMusicianItemsByTitle] Done. Removed ${toRemove.length}/${titles.length} requested.`);
+  return { removed: toRemove.length, notFound };
+}
+
 if (typeof window !== 'undefined') {
   window.bulkImportMyArtists = bulkImportMyArtists;
   window.resetArtistGenreCache = resetArtistGenreCache;
   window.bulkImportAlbumsForMyArtists = bulkImportAlbumsForMyArtists;
+  window.removeMusicianItemsByTitle = removeMusicianItemsByTitle;
 }

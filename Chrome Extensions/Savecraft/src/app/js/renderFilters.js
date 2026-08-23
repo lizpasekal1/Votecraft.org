@@ -243,25 +243,24 @@ export function getFilteredSortedItems() {
   return items;
 }
 
-// Save counts for the Music landing page's 15 genre-bucket cards (renderGrid.js's
-// renderMusicGenreLanding()). Same base item set/scoping every other category/sidebar count
-// already uses (matchesPrimaryOrUnfoldered + matchesActiveSavedListScope + queue-demo exclusion),
-// grouped by bucketForMusicianItem instead of counted as one flat total. Musicians with no bucket
-// (unmapped/unresolved genre) are simply not counted anywhere here — same "not lost, just not
-// genre-browsable" behavior as the musicgenre: filter branch above.
+// Counts for the Music landing page's 15 genre-bucket cards, including the pinned-first "All
+// Music" card's own total (renderGrid.js's renderMusicGenreLanding()) — one pass over state.items,
+// not two: `counts` (grouped by bucketForMusicianItem) and `total` (every saved musician,
+// unfiltered) used to be two separate exported functions that each independently re-filtered the
+// exact same base set (matchesPrimaryOrUnfoldered + matchesActiveSavedListScope + queue-demo
+// exclusion) every render, purely because they were built one request apart. Musicians with no
+// bucket (unmapped/unresolved genre) still count toward `total` but not toward any bucket in
+// `counts` — same "not lost, just not genre-browsable" behavior as the musicgenre: filter branch
+// above.
 export function getMusicGenreBucketCounts() {
   const counts = {};
+  let total = 0;
   state.items
     .filter(i => !isQueueDemoId(i.id) && matchesPrimaryOrUnfoldered(i, 'Musician') && matchesActiveSavedListScope(i))
     .forEach(i => {
+      total++;
       const bucket = bucketForMusicianItem(i);
       if (bucket) counts[bucket] = (counts[bucket] || 0) + 1;
     });
-  return counts;
-}
-
-// The "All Music" landing-grid card's own count (renderGrid.js) — every saved musician, same
-// base set getMusicGenreBucketCounts() groups by bucket above, just not narrowed to a bucket.
-export function getMusicianTotalCount() {
-  return state.items.filter(i => !isQueueDemoId(i.id) && matchesPrimaryOrUnfoldered(i, 'Musician') && matchesActiveSavedListScope(i)).length;
+  return { counts, total };
 }
