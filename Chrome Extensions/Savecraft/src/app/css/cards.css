@@ -529,13 +529,19 @@
 .badge-Memes        { background: #FEE2E2; color: #991B1B; }
 .badge-Web-Links    { background: #CFFAFE; color: #155E75; }
 
-/* Genre-tag badge (renderGrid.js's renderCard()) — outlined rather than solid-filled like every
-   category badge above, so it reads as secondary/informational metadata next to the real category
-   badge it sits beside, not a second competing category. */
+/* Genre-tag badge (renderGrid.js's renderCard()) — now REPLACES the Musician/Music Album category
+   badge on these cards rather than sitting beside it (see renderCard()'s own comment), so per
+   direct follow-up it's styled with the exact same pink fill .badge-Musician/.badge-Music-Album
+   use above instead of the outlined/neutral look this used to have when it was secondary metadata
+   next to a real category badge. Kept as its own class (not just reusing .badge-Musician directly)
+   since its content is a free-form genre string, not a fixed category label. */
 .card-badge-genre {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-muted);
+  background: #FCE7F3;
+  color: #BE185D;
+}
+[data-theme="dark"] .card-badge-genre {
+  background: #4A1830;
+  color: #F9A8D4;
 }
 
 /* Legacy names kept for any un-migrated items */
