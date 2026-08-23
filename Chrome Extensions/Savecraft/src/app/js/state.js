@@ -301,10 +301,22 @@ export const CATEGORY_PLATFORMS = {
   'Music Album':  { label: 'Web Links', platforms: [
     { id: 'amazon',      name: 'Amazon Music',  searchUrl: q => `https://music.amazon.com/search/${encodeURIComponent(q)}` },
     { id: 'deezer',      name: 'Deezer',        searchUrl: q => `https://www.deezer.com/search/${encodeURIComponent(q)}` },
+    // Album-title search, same as every other platform here — the item's own real iTunes link
+    // (collectionViewUrl, saved as item.url) already shows as "View on Apple Music" via websiteBtn
+    // (detailModalQueue.js) when present; this is the fallback for when that's missing (reported
+    // live), or just a second, explicitly-labeled way to jump straight to iTunes search.
+    { id: 'itunes',      name: 'iTunes',        searchUrl: q => `https://music.apple.com/search?term=${encodeURIComponent(q)}` },
     { id: 'soundcloud',  name: 'SoundCloud',    searchUrl: q => `https://soundcloud.com/search?q=${encodeURIComponent(q)}` },
     { id: 'spotify',     name: 'Spotify',       searchUrl: q => `https://open.spotify.com/search/${encodeURIComponent(q)}` },
     { id: 'tidal',       name: 'Tidal',         searchUrl: q => `https://listen.tidal.com/search/${encodeURIComponent(q)}` },
     { id: 'youtube',     name: 'YouTube Music', searchUrl: q => `https://music.youtube.com/search?q=${encodeURIComponent(q)}` },
+    // "Their" (the artist's) YouTube page, per direct request — distinct from the plain YouTube
+    // Music search above (which searches for the album) and from youtubeBtn (detailModalQueue.js,
+    // a specific saved video URL) — this searches YouTube filtered to Channel results
+    // (sp=EgIQAg%3D%3D, YouTube's own search-type filter encoding) for the artist's name
+    // specifically (see the query override in detailModalQueue.js — every other platform here
+    // searches the album title, this one needs the artist instead).
+    { id: 'youtube-artist', name: 'YouTube', searchUrl: q => `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}&sp=EgIQAg%3D%3D` },
   ]},
   'Musician':     { label: 'Web Links', platforms: null },
   'Favorite Albums': { label: 'Web Links', platforms: null },
