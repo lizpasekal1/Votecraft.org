@@ -268,12 +268,14 @@
   color: var(--primary);
 }
 .category-folder-card-name {
-  font-size: 15px;
+  /* 15px -> 18px (20% larger), per direct follow-up. */
+  font-size: 18px;
   font-weight: 600;
   color: var(--primary);
 }
 .category-folder-card-count {
-  font-size: 13px;
+  /* 13px -> 16px (20% larger), per direct follow-up. */
+  font-size: 16px;
   color: var(--primary);
   opacity: 0.75;
 }
