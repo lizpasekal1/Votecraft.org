@@ -223,7 +223,8 @@
 .category-folder-landing-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
+  /* 20px -> 30px, per direct follow-up. */
+  gap: 30px;
   /* width:90% (not just a smaller max-width) so this actually shrinks on mobile too — mobile's own
      viewport can be narrower than a fixed cap, which alone would only affect desktop. Icon/text
      sizes on the cards themselves are untouched; each square just shrinks with the grid column
