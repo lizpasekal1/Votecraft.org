@@ -1,6 +1,6 @@
 // ===== ENTRY POINT: search, sort, theme, mobile sidebar, live storage sync, init/event wiring =====
 
-import { state } from './state.js';
+import { state, MUSIC_ALL_LABEL, PRIMARY_FOLDER_ID } from './state.js';
 import {
   loadAll, loadLocalCache, initCuratedItems, initDashboardDemoConfig, persistSort, persistTheme, persistSidebarCollapsed,
   persistLastfmUsername, disconnectLastfm, persistSteamId, disconnectSteam,
@@ -760,7 +760,11 @@ async function init() {
   // musicgenre: views) — same "wired once here, driven by renderGrid() each render" pattern as
   // sortSelect just above.
   document.getElementById('musicgenre-select').addEventListener('change', e => {
-    navigateToView(`musicgenre:${e.target.value}`);
+    // "All Music" goes to the real Musicians page, not a musicgenre:All Music page of its own —
+    // same reasoning as the picker card's click handler (renderGrid.js) — one canonical
+    // "unfiltered" destination, reachable identically from either control.
+    const bucket = e.target.value;
+    navigateToView(bucket === MUSIC_ALL_LABEL ? PRIMARY_FOLDER_ID.Musician : `musicgenre:${bucket}`);
   });
 
   // The options dropdown (Home/Shared Saves/Curated/⚡ VC) now lives under the same
