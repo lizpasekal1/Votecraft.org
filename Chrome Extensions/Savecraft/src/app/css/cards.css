@@ -20,6 +20,18 @@
   overflow-y: auto;
   overflow-x: hidden;
   align-self: stretch;
+  /* REAL BUG, found and fixed: a flex item's default min-width is 'auto' (its content's own
+     min-content size), not 0 — a descendant with a wide min-content demand (the category
+     folder-picker grid's bare `1fr` columns, below — a classic CSS Grid gotcha) could force
+     .grid-area ITSELF wider than its flex:1 allocation to accommodate it, pushing the whole
+     .main-layout/body wider than the viewport and making the page horizontally scrollable —
+     reported live on mobile, screenshot confirmed a sliver of the sidebar peeking in from the
+     left edge. overflow-x: hidden above only clips a child's overflow *within* .grid-area's own
+     box; it does nothing once .grid-area's own box has already grown too wide. min-width: 0 here
+     is the same "hard backstop, not just a fix for one specific cause" philosophy as that
+     overflow-x: hidden rule — it rules out this entire class of bug regardless of what inside
+     .grid-area might someday have an oversized min-content demand, not just today's cause. */
+  min-width: 0;
 }
 
 .grid-header {
@@ -222,7 +234,13 @@
    edge-to-edge into oversized tiles. */
 .category-folder-landing-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* minmax(0, 1fr), not bare 1fr — REAL BUG, found and fixed: a bare `1fr` track still respects
+     its items' own min-content size as a floor (a folder name like "Publications"/"Board Games"
+     refusing to wrap below its own text width), which could force this whole grid — and, per the
+     .grid-area min-width:0 fix above, the whole page — wider than the viewport on mobile.
+     minmax(0, 1fr) is the standard fix: explicitly allows the track to shrink past its content's
+     natural width instead of using it as a floor. */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   /* 20px -> 30px, per direct follow-up. */
   gap: 30px;
   /* width:90% (not just a smaller max-width) so this actually shrinks on mobile too — mobile's own
@@ -250,7 +268,7 @@
    too cramped/tiny at phone widths. */
 @media (max-width: 768px) {
   .category-folder-landing-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     max-width: 360px;
   }
 }
@@ -271,6 +289,10 @@
   cursor: pointer;
   text-align: center;
   transition: opacity 0.15s;
+  /* Defensive, alongside the grid's own minmax(0, 1fr) fix above — a grid/flex item's default
+     min-width is 'auto' (its content's own size), so this card could still refuse to shrink below
+     its name text's width without this, even with a properly-shrinkable track. */
+  min-width: 0;
 }
 .category-folder-card:hover {
   opacity: 0.85;
@@ -291,6 +313,10 @@
   font-size: 18px;
   font-weight: 600;
   color: #fff;
+  /* Wraps onto a second line rather than forcing the card wider on a narrow phone (a longer name
+     like "Publications"/"Board Games" at 18px was part of what could blow the grid out — see the
+     minmax(0, 1fr)/min-width: 0 fixes above). */
+  overflow-wrap: break-word;
 }
 .category-folder-card-count {
   /* 13px -> 16px (20% larger), per direct follow-up. */
