@@ -962,10 +962,9 @@
   }
   /* Reported live: the header's own Fetch Albums button overlapped the genre/website line here —
      moved down to its own copy on the Works row instead (renderAuthorPage.js), off the header
-     entirely, rather than fighting further with wrapping/widths to keep it up there. */
-  .author-page-actions {
-    display: none;
-  }
+     entirely, rather than fighting further with wrapping/widths to keep it up there.
+     .author-page-actions's own display:none override lives in fetchAlbumsModal.css, not here —
+     see that file's own comment for why (a load-order cascade fight, found and fixed). */
   .btn-fetch-albums--mobile {
     display: inline-flex;
   }
