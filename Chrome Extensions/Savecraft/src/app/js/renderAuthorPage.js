@@ -64,7 +64,10 @@ export function renderAuthorPage() {
         ${cat === 'Musician' ? `<button class="btn-fetch-albums" id="btn-fetch-albums">Fetch Albums</button>` : ''}
       </div>
     </div>
-    <div class="author-works-header">Works (${items.length})</div>
+    <div class="author-works-header">
+      <span>Works (${items.length})</span>
+      ${cat === 'Musician' ? `<button class="btn-fetch-albums btn-fetch-albums--mobile" id="btn-fetch-albums-mobile">Fetch Albums</button>` : ''}
+    </div>
     <div class="author-works-grid" id="author-works-grid">
       ${items.length > 0
         ? items.map(item => renderCard(item)).join('')
@@ -77,7 +80,16 @@ export function renderAuthorPage() {
     openDetailModal(resolveMusicianItem(name));
   });
 
+  // Same handler wired to both buttons — #btn-fetch-albums (header, desktop) and
+  // #btn-fetch-albums-mobile (Works row, mobile-only — see cards.css) — reported live: the header
+  // button overlapped the genre/website line on mobile once flex-wrap kicked in there, so mobile
+  // gets its own copy positioned on the Works row instead, matching the profile page's own
+  // established "duplicate + CSS-toggle which one shows" pattern for exactly this kind of
+  // mobile-only reposition (see .profile-manage-account-mobile, misc.css).
   document.getElementById('btn-fetch-albums')?.addEventListener('click', () => {
+    openFetchAlbumsModal(name);
+  });
+  document.getElementById('btn-fetch-albums-mobile')?.addEventListener('click', () => {
     openFetchAlbumsModal(name);
   });
 

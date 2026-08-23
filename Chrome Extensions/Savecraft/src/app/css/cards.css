@@ -817,12 +817,23 @@
 }
 
 .author-works-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   font-size: 11px;
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin-bottom: 12px;
+}
+
+/* Hidden by default (desktop keeps the one Fetch Albums button up in the header, next to the
+   photo) — shown only on mobile, see the media query below. text-transform: none overrides the
+   uppercase .author-works-header (its own parent here) would otherwise inherit onto it. */
+.btn-fetch-albums--mobile {
+  display: none;
+  text-transform: none;
 }
 
 .author-works-grid {
@@ -948,6 +959,31 @@
   }
   .author-page-header {
     flex-wrap: wrap;
+  }
+  /* Reported live: the header's own Fetch Albums button overlapped the genre/website line here —
+     moved down to its own copy on the Works row instead (renderAuthorPage.js), off the header
+     entirely, rather than fighting further with wrapping/widths to keep it up there. */
+  .author-page-actions {
+    display: none;
+  }
+  .btn-fetch-albums--mobile {
+    display: inline-flex;
+  }
+  /* Genre pill + website URL stack instead of sharing one line here, per direct request — the
+     ellipsis-truncated .author-page-website (below) still needed real width to read as anything
+     but a couple of characters on a narrow phone; stacking gives it the row's full width instead
+     of splitting it with the genre pill and separator. .author-page-genre-sep (the "|") only makes
+     sense between two things on the same line, so it's hidden here. */
+  .author-page-genre-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .author-page-genre-sep {
+    display: none;
+  }
+  .author-page-website {
+    max-width: 100%;
   }
 }
 
