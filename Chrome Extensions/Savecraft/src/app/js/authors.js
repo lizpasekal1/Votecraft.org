@@ -63,10 +63,14 @@ export function tagsForMusicGenreBucket(bucket) {
 // at author.genre === null and so don't count toward any of the 15 bucket cards. Called from
 // renderMusicGenreLanding() (renderGrid.js) so the landing page's own counts settle in shortly
 // after arriving, without needing to visit every artist's page individually first. Staggered
-// 150ms apart, same reasoning as fetchMissingCuratedMusicianPhotos (renderCuratedImageFetch.js)
-// — Wikipedia/iTunes rate-limit bursts, and a real library can have dozens of these queue up at
-// once on a single render. Computes its own item list (no args) — every real saved Musician,
-// queue-demo placeholders excluded (they have no real title/url to look anything up by).
+// ITUNES_BACKFILL_STAGGER_MS apart (~20/min, iTunes' commonly-cited unofficial per-IP limit) —
+// REAL BUG, found and fixed: this used to stagger at 150ms (~400/min, 20x over that limit), which
+// on a library with dozens/hundreds of missing genres (e.g. right after a bulk import) tripped the
+// circuit breaker almost immediately — the exact same pacing mistake bulkImportAlbumsForMyArtists
+// (bulkImportArtists.js) made and was already corrected for, just never carried over to this call
+// site. Computes its own item list (no args) — every real saved Musician, queue-demo placeholders
+// excluded (they have no real title/url to look anything up by).
+const ITUNES_BACKFILL_STAGGER_MS = 3000;
 const _genreBackfillInFlight = new Set();
 export function backfillMusicianGenres() {
   // REAL BUG, found and fixed: this used to schedule a full pass regardless — while iTunes is
@@ -78,6 +82,16 @@ export function backfillMusicianGenres() {
     console.log('[backfillMusicianGenres] iTunes is rate-limiting this browser right now — skipping this pass, try again in a few minutes.');
     return;
   }
+  // A batch is already draining (every item it covers went into this Set synchronously, up front,
+  // when that batch was scheduled — see the forEach below) — REAL BUG, found and fixed: this used
+  // to have no such guard, so renderMusicGenreLanding()'s own re-render after each resolved genre
+  // (its `if (state.view === 'Musician') renderGrid();` below) re-invoked this whole function,
+  // re-scanning every saved Musician against state.authors from scratch on every single one of a
+  // batch's resolutions — O(missing²) work for a library with hundreds of artists. Skipping while a
+  // batch is in flight costs nothing today (nothing newly-missing could be scheduled until the
+  // current batch's staggered timers free up capacity anyway) and the next call once it drains to
+  // empty picks up anything genuinely still missing.
+  if (_genreBackfillInFlight.size > 0) return;
   const musicianItems = state.items.filter(i => i.category === 'Musician' && !isQueueDemoId(i.id));
   const missing = musicianItems.filter(i => {
     const author = findAuthor(i.title, 'Musician');
@@ -104,7 +118,7 @@ export function backfillMusicianGenres() {
           if (state.view === 'Musician') renderGrid();
         })
         .finally(() => _genreBackfillInFlight.delete(item.title));
-    }, idx * 150);
+    }, idx * ITUNES_BACKFILL_STAGGER_MS);
   });
 }
 

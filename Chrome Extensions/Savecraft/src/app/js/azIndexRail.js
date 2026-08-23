@@ -10,7 +10,7 @@
 // short list has nothing for a jump index to usefully do.
 
 import { state } from './state.js';
-import { renderGrid } from './render.js';
+import { handleSort } from './main.js';
 
 const LETTERS = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ', '#'];
 
@@ -44,10 +44,18 @@ export function updateAzIndexRail() {
 
   // Only real item cards count — landing/hero pages (Music genre picker, curated hero, Dashboard,
   // Kanban, ...) never render .card elements into #cards-grid at all, so this alone already
-  // excludes every one of those without needing to check state.view.
+  // excludes every one of those without needing to check state.view. Checked before the
+  // scrollHeight/clientHeight read below (rather than in the same expression) since that read
+  // forces a synchronous layout reflow — this function runs on every single renderGrid() call, so
+  // skipping it outright on the many renders that can't possibly have cards (every non-list page)
+  // avoids paying for a reflow whose result would just be discarded anyway.
   const hasCards = !!container.querySelector('.card');
+  if (!hasCards) {
+    rail.hidden = true;
+    return;
+  }
   const overflows = gridArea.scrollHeight > gridArea.clientHeight + 1;
-  rail.hidden = !(hasCards && overflows);
+  rail.hidden = !overflows;
   if (!rail.hidden) _positionRail(rail, gridArea);
 }
 
@@ -58,14 +66,16 @@ function _jumpToLetter(letter, { smooth }) {
 
   // A letter jump only means something against an alphabetized list — same-lettered cards
   // wouldn't be contiguous under any other sort (newest/oldest/release date), so this switches to
-  // A→Z first (updating the real #sort-select too, so it stays truthful, not just state) rather
-  // than silently landing somewhere meaningless under whatever sort was already active. Re-render
-  // is synchronous enough that the fresh .card list is ready immediately after.
+  // A→Z first (updating the real #sort-select too, so it stays truthful, not just state) via the
+  // same handleSort() the dropdown itself uses (main.js) — REAL BUG, found and fixed: this used to
+  // hand-roll its own "set state.sort + renderGrid()" instead, which skipped handleSort's own
+  // persistSort() call, so a letter-triggered switch to A→Z silently reverted to the previous sort
+  // on reload instead of sticking the way choosing it from the dropdown does. Re-render is
+  // synchronous enough that the fresh .card list is ready immediately after.
   if (state.sort !== 'az') {
-    state.sort = 'az';
     const sortSelect = document.getElementById('sort-select');
     if (sortSelect) sortSelect.value = 'az';
-    renderGrid();
+    handleSort('az');
   }
 
   const cards = [...container.querySelectorAll('.card')];

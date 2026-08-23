@@ -27,7 +27,7 @@ import { renderAuthorPage } from './renderAuthorPage.js';
 import { renderCuratedGenreLanding, renderCuratedDirectory, renderCuratedBareList } from './renderCuratedPages.js';
 import { wireQuickQueueButtons } from './renderCardActions.js';
 import { fetchMissingCuratedImages, fetchMissingCuratedMusicianPhotos } from './renderCuratedImageFetch.js';
-import { getFilteredSortedItems, getMusicGenreBucketCounts, getMusicianTotalCount } from './renderFilters.js';
+import { getFilteredSortedItems, getMusicGenreBucketCounts } from './renderFilters.js';
 import { updateAzIndexRail } from './azIndexRail.js';
 import { resourceUrl } from './platform.js';
 
@@ -163,6 +163,21 @@ function _renderGridBody() {
     ? ` <button type="button" class="grid-title-scope-link grid-title-savedlist-link">| ${escapeHtml(scopedListName)}</button>`
     : '';
 
+  // Shared "Musicians" title + genre-dropdown shell — both the musicgenre: flat-list branch and
+  // the sidebar's own plain Musicians folder page below render this exact same shell, just with
+  // different `hideDropdownAtAll` behavior (musicgenre: hides the dropdown at "All Music" so that
+  // page reads as genuinely unfiltered; the folder page keeps it visible even at "All Music" since
+  // it's the escape hatch into a bucket without stepping back out to the 15-card picker first).
+  // REAL BUG, found and fixed: this used to be hand-copied between the two branches — an easy way
+  // for a future edit to one to silently drift out of sync with the other.
+  const renderMusiciansDropdownShell = (selectedBucket, { hideDropdownAtAll }) => {
+    gridTitle.innerHTML = `${CAT_EMOJI['Musician']} Musicians${scopedListSuffix}`;
+    musicGenreSelect.innerHTML = [MUSIC_ALL_LABEL, ...MUSIC_GENRE_BUCKETS]
+      .map(b => `<option value="${escapeHtml(b)}"${b === selectedBucket ? ' selected' : ''}>${escapeHtml(b)}</option>`)
+      .join('');
+    musicGenreSelect.style.display = (hideDropdownAtAll && selectedBucket === MUSIC_ALL_LABEL) ? 'none' : '';
+  };
+
   if (state.view === 'all') {
     gridTitle.textContent = 'All Items';
   } else if (state.view.startsWith('genre:')) {
@@ -216,21 +231,14 @@ function _renderGridBody() {
     // correction, the dropdown itself is what shows/defines the current genre, not the page
     // title (this used to swap the title to the bucket name, e.g. "Pop"). "Musicians" (not
     // CAT_LABEL['Musician'], which stays "Music" for the sidebar's own category row) per a
-    // further direct request.
-    gridTitle.innerHTML = `${CAT_EMOJI['Musician']} Musicians${scopedListSuffix}`;
-    // "All Music" listed first (matching its pinned-first spot on the landing grid), then the
-    // real buckets alphabetically — every one of these routes through this exact same page now
-    // (reported live: clicking "All Music" used to land somewhere with no genre dropdown at all,
-    // because it went to a genuinely different view/branch than the real buckets did).
-    musicGenreSelect.innerHTML = [MUSIC_ALL_LABEL, ...MUSIC_GENRE_BUCKETS]
-      .map(b => `<option value="${escapeHtml(b)}"${b === bucket ? ' selected' : ''}>${escapeHtml(b)}</option>`)
-      .join('');
-    // "All Musicians" stays genuinely unfiltered, per direct correction — the dropdown control
-    // itself is filtering UI, and showing it (even pre-set to "All Music") read as this page
-    // having filtering applied when nothing actually is. Only a real bucket (reached by clicking
-    // one of the 15 picker cards, not "All Music") shows the dropdown, so you can hop to a
-    // sibling bucket without stepping back out to the picker first.
-    musicGenreSelect.style.display = bucket === MUSIC_ALL_LABEL ? 'none' : '';
+    // further direct request. "All Music" listed first (matching its pinned-first spot on the
+    // landing grid), then the real buckets alphabetically — every one of these routes through this
+    // exact same page now (reported live: clicking "All Music" used to land somewhere with no
+    // genre dropdown at all, because it went to a genuinely different view/branch than the real
+    // buckets did). "All Musicians" stays genuinely unfiltered, per direct correction — the
+    // dropdown control itself is filtering UI, and showing it (even pre-set to "All Music") read as
+    // this page having filtering applied when nothing actually is.
+    renderMusiciansDropdownShell(bucket, { hideDropdownAtAll: true });
   } else if (state.view.startsWith('savedlist:')) {
     // Saved Lists (Favorites/Health/Motivation/anything user-added) now show their own actual
     // saved content here — same page shape as any other category/folder (search/sort/cards all
@@ -262,11 +270,7 @@ function _renderGridBody() {
     // unfiltered set (matchesPrimaryOrUnfoldered, renderFilters.js) — same set musicgenre:All Music
     // shows, just reached via its own URL/id instead.
     if (folder && folder.id === PRIMARY_FOLDER_ID.Musician) {
-      gridTitle.innerHTML = `${CAT_EMOJI['Musician']} Musicians${scopedListSuffix}`;
-      musicGenreSelect.innerHTML = [MUSIC_ALL_LABEL, ...MUSIC_GENRE_BUCKETS]
-        .map(b => `<option value="${escapeHtml(b)}"${b === MUSIC_ALL_LABEL ? ' selected' : ''}>${escapeHtml(b)}</option>`)
-        .join('');
-      musicGenreSelect.style.display = '';
+      renderMusiciansDropdownShell(MUSIC_ALL_LABEL, { hideDropdownAtAll: false });
     } else if (folder && folder.parentCategory === 'News') {
       // News outlet folders double as "publication profile pages" — a richer header (domain +
       // paywalled badge, both already on the folder from the News-category work) instead of just
@@ -462,7 +466,7 @@ function renderMusicGenreLanding() {
   sortSelect.style.display = 'none';
   musicGenreSelect.style.display = 'none';
 
-  const counts = getMusicGenreBucketCounts();
+  const { counts, total } = getMusicGenreBucketCounts();
   // Hover callout listing the raw iTunes genre tags (MUSIC_GENRE_BUCKET_MAP, state.js) that sort
   // into each bucket — not which saved musicians happen to be in it, per direct correction. Same
   // visual language as the detail modal's "Why VoteCraft Recommends" tooltip
@@ -483,7 +487,7 @@ function renderMusicGenreLanding() {
     <button type="button" class="musicgenre-card" data-bucket="${escapeHtml(MUSIC_ALL_LABEL)}">
       <span class="musicgenre-card-icon">${MUSIC_GENRE_BUCKET_EMOJI[MUSIC_ALL_LABEL] || ''}</span>
       <span class="musicgenre-card-name">${escapeHtml(MUSIC_ALL_LABEL)}</span>
-      <span class="musicgenre-card-count">${getMusicianTotalCount()}</span>
+      <span class="musicgenre-card-count">${total}</span>
     </button>
   `;
   container.className = 'musicgenre-landing-grid';
