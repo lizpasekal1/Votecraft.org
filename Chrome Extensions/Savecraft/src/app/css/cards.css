@@ -271,6 +271,13 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     max-width: 360px;
   }
+  /* Shorter than square on mobile, per direct follow-up — full 1:1 squares (desktop's own shape)
+     ate too much of the limited vertical room these pages have to work with now that they don't
+     scroll (see .grid-area:has(.category-landing-page)). Width is untouched, still fills its 2x2
+     grid track. */
+  .category-folder-card {
+    aspect-ratio: 3 / 2;
+  }
 }
 /* Solid purple fill with white icon/text, per direct follow-up — was purple-outlined/transparent
    (deliberately distinct from Music's own solid-fill cards at the time); overridden here since
@@ -333,7 +340,10 @@
    and down"). Paired with .grid-area:has(.category-landing-page) below, same established pattern
    as .grid-area:has(.kanban-wrap) (kanban.css): the page fills exactly the available space below
    the header and never scrolls itself, unlike every other view (which still needs normal
-   overflow-y:auto for long lists). */
+   overflow-y:auto for long lists). Desktop only now — per a further direct follow-up ("the page
+   can scroll in mobile... just not desktop"), mobile gets normal scrolling back below, since
+   there isn't enough height there to actually fit the shorter (see the mobile aspect-ratio
+   override above) folder cards + carousel without it. */
 .category-landing-page {
   display: flex;
   flex-direction: column;
@@ -352,6 +362,16 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+@media (max-width: 768px) {
+  .grid-area:has(.category-landing-page) {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .category-landing-page {
+    justify-content: flex-start;
+    margin-top: 0;
+  }
 }
 
 /* ===== Category landing carousel (categoryCarousel.js) — a center-emphasis horizontal scroller,
