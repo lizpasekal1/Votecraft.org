@@ -305,6 +305,17 @@
   /* 60px, then +50px, then +20px per further direct follow-ups (130px total). */
   margin-top: 130px;
 }
+/* The active/center slide's own title, below the whole carousel — per direct request ("put the
+   title center cards title below it in purple text centered below all the cards"). Kept alongside
+   the existing on-image overlay title, not a replacement for it. Updated in JS whenever the
+   active slide changes (_updateActiveSlide, categoryCarousel.js). */
+.category-carousel-caption {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary);
+}
 /* The prev/next buttons also carry .dash-carousel-prev/.dash-carousel-next (categoryCarousel.js)
    so _wireCarouselArrows (dashboard.js) can find and wire them for its infinite-loop mechanics —
    dashboard.css's own same-specificity .dash-carousel-prev/.dash-carousel-next rule loads AFTER
