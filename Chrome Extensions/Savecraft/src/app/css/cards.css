@@ -302,8 +302,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  /* Per direct follow-up ("drop the whole carosel down 60px"). */
-  margin-top: 60px;
+  /* 60px, then another 50px per a further direct follow-up (110px total). */
+  margin-top: 110px;
 }
 /* The prev/next buttons also carry .dash-carousel-prev/.dash-carousel-next (categoryCarousel.js)
    so _wireCarouselArrows (dashboard.js) can find and wire them for its infinite-loop mechanics —
