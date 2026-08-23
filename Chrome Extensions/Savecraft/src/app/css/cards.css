@@ -395,6 +395,17 @@
   padding: 2px 7px;
   z-index: 1;
 }
+/* Light gray instead of purple on every slide except the active/center one, per direct follow-up
+   — keeps the purple reserved for the one card that's actually the visual focus. */
+.category-carousel-slide:not(.category-carousel-slide--active) .category-carousel-slide-demo-badge {
+  background: #D1D5DB;
+  color: #1F2328;
+}
+/* The ✨ icon drops too on every non-active badge, per direct follow-up — just the plain "Demo"
+   text there. */
+.category-carousel-slide:not(.category-carousel-slide--active) .category-carousel-slide-demo-badge-icon {
+  display: none;
+}
 .category-carousel-slide--active {
   width: 240px;
   height: 240px;
