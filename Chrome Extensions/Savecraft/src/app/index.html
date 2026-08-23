@@ -54,12 +54,18 @@
       <button class="btn-add-item" id="btn-add">+ Add Item</button>
 
       <div class="header-actions">
+        <!-- True global search across every saved item ("All My Saves"), not just the current
+             page — distinct from #sort-select-search-input (sortSelect.js), which searches only
+             what's already on screen. Results render into #global-search-results (globalSearch.js)
+             as a Spotlight-style dropdown panel; clicking a row opens that item's detail modal
+             directly rather than navigating anywhere. -->
         <div class="search-expand-wrap" id="search-expand-wrap">
           <input class="search-expand-input" id="search-expand-input" type="text" placeholder="Search your saves…" autocomplete="off">
           <button class="btn-search-icon" id="btn-search-icon" title="Search">
             <svg class="icon-search" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             <svg class="icon-close" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
+          <div class="global-search-results" id="global-search-results" hidden></div>
         </div>
         <div class="settings-wrap" id="settings-wrap">
           <button class="btn-theme" id="btn-theme" title="Settings">
@@ -163,14 +169,34 @@
              shown/hidden dropdown next to it. -->
         <div class="grid-header-right">
           <select id="musicgenre-select" class="sort-select" style="display:none"></select>
-          <select id="sort-select" class="sort-select">
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
-            <option value="az">A → Z</option>
-            <option value="za">Z → A</option>
-            <option value="release-new">Release Date (Newest)</option>
-            <option value="release-old">Release Date (Oldest)</option>
-          </select>
+          <!-- Custom-styled replacement for what used to be a native <select> — id="sort-select"
+               stays on this OUTER wrapper (not the trigger button) so every other file's existing
+               `document.getElementById('sort-select').style.display = ...`/reparent calls (see
+               sortSelect.js's own header comment for the full list) keep working completely
+               unchanged; only the 3 call sites that touched the old native .value/change API
+               (main.js, azIndexRail.js) needed updating. Static, page-load-once markup (unlike
+               e.g. Admin Kanban's own dropdown, which rebuilds via innerHTML each render) — never
+               destroyed, so #sort-select-search-input's typed value survives every renderGrid()
+               call for free. Wired by sortSelect.js's initSortSelect(). -->
+          <div class="sort-select-custom" id="sort-select">
+            <button type="button" class="sort-select-trigger" id="sort-select-trigger">
+              <span class="sort-select-trigger-label" id="sort-select-trigger-label">Newest first</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="sort-select-dropdown board-filter-dropdown" id="sort-select-dropdown" hidden>
+              <button type="button" class="saves-list-option" data-sort="newest">Newest first</button>
+              <button type="button" class="saves-list-option" data-sort="oldest">Oldest first</button>
+              <button type="button" class="saves-list-option" data-sort="az">A → Z</button>
+              <button type="button" class="saves-list-option" data-sort="za">Z → A</button>
+              <button type="button" class="saves-list-option" data-sort="release-new">Release Date (Newest)</button>
+              <button type="button" class="saves-list-option" data-sort="release-old">Release Date (Oldest)</button>
+              <div class="saves-list-divider"></div>
+              <div class="sort-select-search-row">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input type="text" class="sort-select-search-input" id="sort-select-search-input" placeholder="Filter this page…" autocomplete="off">
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="cards-grid" id="cards-grid"></div>
