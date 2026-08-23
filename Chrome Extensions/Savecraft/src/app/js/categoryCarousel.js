@@ -62,6 +62,18 @@ export function initCategoryCarousel(container) {
   const strip = container.querySelector('#category-carousel-strip');
   if (!strip) return;
 
+  // Starts with a specific slide (the middle of the demo set) actually scrolled to the strip's own
+  // center, rather than leaving scrollLeft at its default 0 — REAL BUG, found and fixed: without
+  // this, "active" on first paint was just whichever slide happened to be nearest center at the
+  // leftmost scroll position, which usually wasn't the page content area's true horizontal center
+  // (reported live). The strip spans the full width of .category-carousel-wrap, which itself spans
+  // the full page content width, so centering within the strip is centering within the page.
+  const slides = strip.querySelectorAll('.category-carousel-slide');
+  const middle = slides[Math.floor(slides.length / 2)];
+  if (middle) {
+    strip.scrollLeft = middle.offsetLeft + middle.offsetWidth / 2 - strip.clientWidth / 2;
+  }
+
   _updateActiveSlide(strip);
   strip.addEventListener('scroll', debounce(() => _updateActiveSlide(strip), 60));
 
