@@ -57,6 +57,7 @@ export function renderCategoryCarouselHtml() {
       <div class="category-carousel-strip" id="category-carousel-strip">${slidesHtml}</div>
       <button type="button" class="category-carousel-arrow dash-carousel-next" aria-label="Next">&rsaquo;</button>
     </div>
+    <div class="category-carousel-caption" id="category-carousel-caption"></div>
   `;
 }
 
@@ -77,6 +78,13 @@ function _updateActiveSlide(strip, { animate = true } = {}) {
     const dist = Math.abs((r.left + r.width / 2) - stripCenter);
     if (dist < closestDist) { closestDist = dist; closest = slide; }
   });
+  // The active slide's own title, centered in purple below the whole carousel — per direct
+  // request ("put the title center cards title below it in purple text centered below all the
+  // cards"). Reads the same title the on-image overlay already shows (the button's own `title`
+  // attribute, set once in renderCategoryCarouselHtml() above) rather than duplicating it as a
+  // separate data attribute.
+  const caption = document.getElementById('category-carousel-caption');
+  if (caption && closest) caption.textContent = closest.title || '';
   // Per direct request ("the large center feature item should change to the next item, come from
   // the left side") — the newly-active slide plays a one-shot slide-in-from-the-left animation
   // (.category-carousel-slide--entering, cards.css) instead of just popping to its enlarged size
