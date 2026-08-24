@@ -1,6 +1,6 @@
 // ===== DETAIL MODAL: WEB LINKS + QUEUE ACCORDIONS =====
 
-import { state, CATEGORY_PLATFORMS } from './state.js';
+import { state, CATEGORY_PLATFORMS, MANUAL_LINK_FOLDER_IDS } from './state.js';
 import { escapeHtml, getListIds } from './utils.js';
 import { persistItem } from './storage.js';
 import { ensureLiveItem } from './authors.js';
@@ -43,7 +43,13 @@ export function setupQueue(item, { domain, isMusicAlbum }) {
   queueEl.classList.add('detail-queue--tight');
   registerAccordion('streaming', streamingEl, streamingEl);
   registerAccordion('queue', queueEl, queueEl);
-  const catConfig = CATEGORY_PLATFORMS[item.category];
+  // MANUAL_LINK_FOLDER_IDS folders (Movie's Videos, Series' Short Form/Tutorials/Web Series) get
+  // no category-wide streaming-platform list here — a swing-dance tutorial or a Reel has no
+  // business showing Apple TV+/Disney+/Hulu/Netflix/etc. (Show's own shared platform list,
+  // CATEGORY_PLATFORMS['Show'] === CATEGORY_PLATFORMS['Movie']), per direct report ("do you see
+  // how all these links are not necessary here... just leave the one youtube link"). Falls to the
+  // !catConfig branch below (websiteBtn + youtubeBtn only — the item's own real saved link(s)).
+  const catConfig = MANUAL_LINK_FOLDER_IDS.has(item.folderId) ? null : CATEGORY_PLATFORMS[item.category];
   const query = item.title || domain;
   // Musician's `item.url` is very often an Apple Music artist page (the primary source behind
   // its search results) — shown the raw "music.apple.com" domain, unlike Music Album's own
