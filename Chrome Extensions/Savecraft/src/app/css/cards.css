@@ -2320,6 +2320,16 @@
   .cards-grid .card {
     margin-right: 22px;
   }
+  /* 20px -> 16px (20% smaller), per direct request ("make the card title font 20% smaller...
+     in mobile that is"/"only mobile") — desktop's 20px is untouched. */
+  .card-title {
+    font-size: 16px;
+  }
+  /* 11px -> 9px (20% smaller, rounded), per direct follow-up ("in mobile make the card tags 20%
+     smaller") — desktop's 11px is untouched. */
+  .card-badge {
+    font-size: 9px;
+  }
 
   /* Was padding-left: 40px only (no padding-right) — fine on desktop where .bare-list-rows'
      own max-width: 50% + margin-left: 160px kept everything well clear of the right edge anyway,
