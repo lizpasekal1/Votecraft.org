@@ -7,7 +7,7 @@ import {
 } from './state.js';
 import {
   escapeHtml, catClass, badgeLabel, isMusicAlbumsSectionView, isOwnAuthorPageView, getDomain,
-  isAdminUser, folderIconHtml,
+  isAdminUser, folderIconHtml, isYoutubeThumbnailUrl,
 } from './utils.js';
 import { persistViewState, persistItem, persistHiddenCurated, removeItem } from './storage.js';
 import { navigateToView } from './navigation.js';
@@ -758,8 +758,14 @@ export function renderCard(item) {
   const letter = domain[0]?.toUpperCase() || '?';
   const folder = item.folderId ? state.folders.find(f => f.id === item.folderId) : null;
 
+  // A slight extra zoom-crop for YouTube thumbnails specifically (isYoutubeThumbnailUrl, utils.js)
+  // — some have real black bars baked into the image itself that a plain object-fit: cover can
+  // shrink but not fully eliminate, per direct report ("i don't want to see black bands above or
+  // on the sides of the youtube videos... expand the youtube video images so they full bleed the
+  // image container").
+  const cardImageClass = isYoutubeThumbnailUrl(item.imageUrl) ? 'card-image card-image--zoom' : 'card-image';
   const imageSection = item.imageUrl
-    ? `<img class="card-image" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async"
+    ? `<img class="${cardImageClass}" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async"
             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
        <div class="card-placeholder placeholder-${catClass(item.category)}" style="display:none;">${letter}</div>`
     : `<div class="card-placeholder placeholder-${catClass(item.category)}">${letter}</div>`;
