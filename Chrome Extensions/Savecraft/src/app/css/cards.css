@@ -241,6 +241,17 @@
      minmax(0, 1fr) is the standard fix: explicitly allows the track to shrink past its content's
      natural width instead of using it as a floor. */
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* REAL BUG, found and fixed: grid items default to align-items: stretch — a row's height is
+     the tallest item's natural (aspect-ratio-preferred) height, but every item in that row then
+     gets STRETCHED to that same height, overriding their own square aspect-ratio in the process.
+     One card with a longer wrapped name (e.g. "Publications") could pull its whole row taller,
+     turning every card in it into a rectangle instead of a square (reported live on an iPhone,
+     screenshot confirmed). align-items: start opts every card out of that stretch — each card
+     sizes to its own aspect-ratio-preferred square instead of matching its row's tallest sibling;
+     grid-auto-rows: min-content backs that up by sizing rows to their content's minimum instead
+     of leaving any ambiguity for auto-sizing to fill via stretch. */
+  align-items: start;
+  grid-auto-rows: min-content;
   /* 20px -> 30px, per direct follow-up. */
   gap: 30px;
   /* width:90% (not just a smaller max-width) so this actually shrinks on mobile too — mobile's own
