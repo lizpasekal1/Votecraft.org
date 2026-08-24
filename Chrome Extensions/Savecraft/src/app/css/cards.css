@@ -476,12 +476,14 @@
   align-items: center;
   gap: 8px;
   width: 100%;
-  /* Per direct follow-up ("bring the carosel down 20px"), desktop only — mobile has its own,
-     tighter spacing needs elsewhere on this already-taller-relative-to-viewport page. */
 }
-@media (min-width: 769px) {
+/* "Bring the carousel up 20px", per direct follow-up, confirmed to apply to both desktop and
+   mobile — desktop's earlier +20px margin-top (from a prior "bring it down 20px" request) is
+   removed outright (net back to its original position, base rule above has no margin-top at all),
+   mobile gets a new -20px nudge since it had none before. */
+@media (max-width: 768px) {
   .category-carousel-wrap {
-    margin-top: 20px;
+    margin-top: -20px;
   }
 }
 /* The active/center slide's own title, below the whole carousel — per direct request ("put the
