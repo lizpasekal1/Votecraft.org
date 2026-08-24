@@ -366,8 +366,9 @@
   gap: 24px;
   flex: 1;
   min-height: 0;
-  /* Nudges the whole vertically-centered content block up, per direct follow-up. */
-  margin-top: -20px;
+  /* Nudges the whole vertically-centered content block up — -20px, then another -30px per a
+     further direct follow-up (-50px total), desktop only (overridden below on mobile). */
+  margin-top: -50px;
 }
 .grid-area:has(.category-landing-page) {
   display: flex;
@@ -381,7 +382,10 @@
   }
   .category-landing-page {
     justify-content: flex-start;
-    margin-top: 0;
+    /* Bring the folders up 5px on mobile, per direct follow-up — separate, smaller nudge from
+       desktop's own -50px above, since mobile no longer relies on this margin for vertical
+       centering (justify-content: flex-start above) the way desktop still does. */
+    margin-top: -5px;
   }
 }
 
