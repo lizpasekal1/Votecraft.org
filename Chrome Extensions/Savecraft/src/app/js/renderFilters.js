@@ -305,8 +305,20 @@ export function getMusicGenreBucketCounts() {
 // generic favorites/demo carousel content in that case, per direct follow-up ("if not then just
 // keep showing the demo content").
 export function getRecentCategoryItems(category, limit = 10) {
+  // REAL BUG, found and fixed: matching on item.category alone could silently disagree with the
+  // folder-card counts just above it on the same page (getCategoryFolderCounts, which matches
+  // non-primary folders purely by item.folderId, with no category check at all) — a folder card
+  // could show a real count while this returned nothing for that same content, if any item's own
+  // .category field ever drifted from what folder it's actually filed in (e.g. older data saved
+  // before a category was renamed/restructured). Reported live: Sources' "Articles" folder card
+  // showed 4, but the carousel fell all the way back to generic demo content instead of those 4.
+  // Matching on "filed in one of this category's own folders" too, not just the category field,
+  // makes this immune to that class of mismatch — same defensive category this category's own
+  // folder cards already effectively use.
+  const categoryFolderIds = new Set(state.folders.filter(f => f.parentCategory === category).map(f => f.id));
   return state.items
-    .filter(i => !isQueueDemoId(i.id) && i.category === category && matchesActiveSavedListScope(i))
+    .filter(i => !isQueueDemoId(i.id) && matchesActiveSavedListScope(i) &&
+      (i.category === category || categoryFolderIds.has(i.folderId)))
     .sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0))
     .slice(0, limit);
 }
