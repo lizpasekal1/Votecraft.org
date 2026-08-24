@@ -39,16 +39,16 @@ export function renderCategoryCarouselHtml() {
   // more (visually identical) content to page into in either direction — the actual infinite-loop
   // illusion.
   const tripled = [...items, ...items, ...items];
+  // No on-image title/category overlay text anymore, per direct request ("remove the text on the
+  // carosel cards") — the active slide's title is still shown via .category-carousel-caption
+  // (below the whole strip, wired in _updateActiveSlide), so nothing is lost, just no longer
+  // duplicated on top of the image itself.
   const slidesHtml = tripled.map((item, i) => `
     <button type="button" class="category-carousel-slide" data-index="${i}" title="${escapeHtml(item.title || '')}">
       ${item.imageUrl
         ? `<img class="category-carousel-slide-img" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">`
         : ''}
       ${isDemo ? '<span class="category-carousel-slide-demo-badge"><span class="category-carousel-slide-demo-badge-icon">✨</span> Demo</span>' : ''}
-      <div class="category-carousel-slide-overlay">
-        <div class="category-carousel-slide-title">${escapeHtml(item.title || '')}</div>
-        ${item.category ? `<div class="category-carousel-slide-desc">${escapeHtml(CAT_LABEL[item.category] || item.category)}</div>` : ''}
-      </div>
     </button>
   `).join('');
   return `
