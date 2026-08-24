@@ -646,8 +646,9 @@ export async function loadAll() {
 
       // One-time migration: TV Shows moved from the Shows category into Films — every item
       // already saved in Shows' old "TV Shows" folder (default-shows-shows) gets recategorized
-      // as a Movie item and refiled into Films' new "Series" folder (default-movies-series,
-      // seeded below), and the now-retired Shows folder itself is deleted. Shows keeps its
+      // as a Movie item and refiled into Films' new "Shows" folder (default-movies-series,
+      // seeded below — renamed from "Series" per direct correction, see the folder-rename
+      // migration further down), and the now-retired Shows folder itself is deleted. Shows keeps its
       // remaining folders (Podcasts/Webseries/Tutorials/Creators) untouched.
       const oldTvShowsFolder = state.folders.find(f => f.id === 'default-shows-shows');
       if (oldTvShowsFolder) {
@@ -746,7 +747,7 @@ export async function loadAll() {
         { id: 'default-movies-movies',       name: 'Movies',    parentCategory: 'Movie' },
         // TV Shows moved from Shows into Films — see the one-time migration below that also
         // recategorizes any items already saved in the old Shows "TV Shows" folder into this one.
-        { id: 'default-movies-series',       name: 'Series',    parentCategory: 'Movie' },
+        { id: 'default-movies-series',       name: 'Shows',     parentCategory: 'Movie' },
         { id: 'default-musicians-musicians', name: 'Musicians', parentCategory: 'Musician' },
         { id: 'default-books-books',         name: 'Books',     parentCategory: 'Book' },
         { id: 'default-books-pdfs',          name: 'PDFs',      parentCategory: 'Book' },
@@ -812,6 +813,17 @@ export async function loadAll() {
       if (webseriesFolder && webseriesFolder.name === 'Webseries') {
         webseriesFolder.name = 'Web Series';
         toSave[`folder_${webseriesFolder.id}`] = webseriesFolder;
+      }
+
+      // Renamed Films' "Series" -> "Shows" — per direct correction ("films/series should actually
+      // be films/shows"), the folder holding actual TV show content (the Shows->Movie/Series
+      // retag above) reads better as "Shows". The Show CATEGORY's own sidebar tab is renamed the
+      // other way, "Shows" -> "Series" (CAT_LABEL['Show'], state.js) — this folder's id
+      // (default-movies-series) is untouched either way, only its display name swaps.
+      const filmsSeriesFolder = state.folders.find(f => f.id === 'default-movies-series');
+      if (filmsSeriesFolder && filmsSeriesFolder.name === 'Series') {
+        filmsSeriesFolder.name = 'Shows';
+        toSave[`folder_${filmsSeriesFolder.id}`] = filmsSeriesFolder;
       }
 
       if (legacyKeys.length) {
