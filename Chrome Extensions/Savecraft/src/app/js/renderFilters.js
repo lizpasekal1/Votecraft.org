@@ -304,7 +304,7 @@ export function getMusicGenreBucketCounts() {
 // the user hasn't saved anything in this category yet — the caller falls back to the existing
 // generic favorites/demo carousel content in that case, per direct follow-up ("if not then just
 // keep showing the demo content").
-export function getRecentCategoryItems(category, limit = 12) {
+export function getRecentCategoryItems(category, limit = 10) {
   return state.items
     .filter(i => !isQueueDemoId(i.id) && i.category === category && matchesActiveSavedListScope(i))
     .sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0))

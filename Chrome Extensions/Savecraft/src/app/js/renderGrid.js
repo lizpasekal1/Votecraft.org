@@ -607,8 +607,9 @@ const CAROUSEL_DEMO_MATCHES_VOTECRAFT_LANDING = new Set(['Movie', 'Book', 'Game'
 // Blends this category's own real saves with demo filler for its carousel — per direct request
 // ("the demo content for each category should still show in the empty slots till the user has
 // saved enough items... each new save removes just one demo content and the center save is
-// always the most recent save"), replacing the earlier all-real-or-all-demo switch. Up to 12
-// slides total: as many of the user's own most-recent saves as exist, topped up with demo filler
+// always the most recent save"), replacing the earlier all-real-or-all-demo switch. Up to 10
+// slides total (per further follow-up — "the carousel should only display 10 items at a time"):
+// as many of the user's own most-recent saves as exist, topped up with demo filler
 // (same per-category source as before: the VoteCraft/Top 100 row for Films/Books/Games, else the
 // generic resolveFavoriteSlides() chain) for whatever's left — so each additional real save
 // displaces exactly one demo slide. The most recent real save always lands at the exact middle
@@ -616,7 +617,7 @@ const CAROUSEL_DEMO_MATCHES_VOTECRAFT_LANDING = new Set(['Movie', 'Book', 'Game'
 // categoryCarousel.js) puts the active/featured slide on load.
 function buildBlendedCategoryCarouselItems(category) {
   const real = getRecentCategoryItems(category).map(i => ({ ...i, _demoFallback: false }));
-  const demoNeeded = 12 - real.length;
+  const demoNeeded = 10 - real.length;
   let demoItems = [];
   if (demoNeeded > 0) {
     // For Films/Books/Games, the fallback (VoteCraft/Top 100 row content) is always genuinely not
@@ -717,7 +718,10 @@ function renderCuratedCategoryFolderLanding(genre, category) {
   // carousel"). isDemo:false — these are real curated picks, not placeholder content, so no "Demo"
   // badge. Renders nothing (renderCategoryCarouselHtml's own empty-items short-circuit) if this
   // genre/category has no curated data at all yet.
-  const carouselItems = resolveGenreRowItems(genre, category);
+  // Capped to 10, per direct request ("the carousel should only display 10 items at a time") —
+  // resolveGenreRowItems can return more (its own "first 15" default, or a longer hand-picked
+  // titles list).
+  const carouselItems = resolveGenreRowItems(genre, category).slice(0, 10);
 
   container.className = 'category-landing-page';
   container.innerHTML = `
