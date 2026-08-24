@@ -506,10 +506,10 @@
   gap: 8px;
   width: 100%;
 }
-/* Per direct follow-up ("bring the carousel up 15px" — desktop). */
+/* Per direct follow-ups ("bring the carousel up 15px" — desktop, then another 10px: -25px). */
 @media (min-width: 769px) {
   .category-carousel-wrap {
-    margin-top: -15px;
+    margin-top: -25px;
   }
 }
 /* "Bring the carousel up 20px", per direct follow-up, confirmed to apply to both desktop and
