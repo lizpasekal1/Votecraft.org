@@ -6,6 +6,26 @@ SaveCraft is a Chrome extension that acts as a personal media library. Users sav
 
 ## Recent Additions (latest session)
 
+An extremely long session, two major arcs. First, dozens of live-feedback polish rounds on the
+category folder-picker landing pages/carousel built last session — sizing, edge-to-edge mobile
+layout, a gradient edge fade, three real bugs found and fixed along the way (a
+`-webkit-overflow-scrolling: touch` scroll-trap, a `flex:1;min-height:0` scroll-clamp bug hiding
+the "+ Add" FAB behind content, an off-center-on-load carousel bug) — closing with FAB clearance
+becoming a standing "every mobile page gets this by default" convention. Second, by far the larger
+arc: extending that same folder-picker + carousel treatment to **curated** genre drilldown pages
+too, which required threading a brand-new `folderId` concept through curated Firestore data for
+the first time (see "Curated Data" below), paired with a real taxonomy overhaul (TV-show content
+moved from Shows into Films, several folder/tab renames, a Creators→Short Form folder swap) and a
+significant real bug where one-time data migrations were being silently reverted by Firestore's
+own "cloud wins" sync — fixed by making every migration's Firestore write both real and genuinely
+awaited before the next sync step can run. Two new manual admin seed tools (same pattern as the
+existing `seed-firestore.html`) still need to be run by hand. See `session-context.md` for the full
+blow-by-blow.
+
+---
+
+## Recent Additions (previous session)
+
 An exceptionally long session in two connected halves. First, closing out the Music genre-bucket
 taxonomy (Alt/Indie rename, Metal merged into "Rock/Metal," a new Meditation bucket, Reggae moved
 into R&B/Soul), a one-time bulk import of 791 artists transcribed from Spotify screenshots into the
@@ -25,7 +45,7 @@ top-level category except Music. See `session-context.md` for the full blow-by-b
 
 ---
 
-## Recent Additions (previous session)
+## Recent Additions (Music Genre Taxonomy / Curated List Template / Bulk Artist Import)
 
 Another very long, live-feedback-driven session, three main arcs: Musician/Music polish (title
 search, a genre tag, two real bugs — duplicate iTunes video-album cards, a Musician bio rendering
@@ -175,6 +195,8 @@ The library used to be one ~3,700-line `app.js`. It's now split into several doz
 
 One-off HTML tools for seeding curated Firestore data — plain `fetch()` against the Firestore REST API + Firebase Auth REST API, no SDK, no build step. Each has a Sign In *and* Create Account button, so seeding doesn't require an existing SaveCraft login. Require the `curated_items` Firestore rule to temporarily allow `if request.auth != null` (revert to `if false` after running). Notable ones: `seed-book-authors.html` (83 Book Author docs), `seed-creator-cards.html` (249 Movie Director/Show Creator/Game Studio docs combined).
 
+Two newer tools follow `seed-firestore.html`'s simpler pattern instead (Firebase JS SDK compat build, no own sign-in UI — rides on an already-authenticated browser session): `migrate-curated-categories.html` (Preview/Run buttons; normalizes stale plural curated category values to the app's real singular naming, and retags Top 100 "Show"/"Show Creator" docs to "Movie"/"Movie Director" with a `folderId`) and `seed-time-podcasts.html` (adds the first 49 of TIME's "100 Best Podcasts of All Time" under Series → Podcasts via the same `folderId` mechanism — the rest of TIME's list isn't reliably fetchable).
+
 ### `src/app/css/` stylesheets
 
 Split along the same lines from the original `app.css`, loaded as separate `<link>` tags in a fixed order (order matters — later files can override earlier ones): `base.css` (reset, theme variables, header), `sidebar.css` (the collapsible desktop rail **and** the mobile drawer — the latter moved here from `misc.css` so all of the sidebar's own responsive CSS lives in one file, matching every other feature file's convention of owning its own `@media` rules), `cards.css` (grid, cards, author pages), `detailModal.css`, `addEditModal.css`, `fetchAlbumsModal.css`, `kanban.css`, `dashboard.css`, `profile.css` (Profile page + its Connect Last.fm/Steam modals), `sharedSaves.css`, `embedBuilder.css` (Embed Builder page), `misc.css` (share modal, scrollbar, remaining mobile-only overrides not owned by a specific feature file — hamburger button, FAB, header search, etc.).
@@ -214,13 +236,13 @@ Categories use **singular names** in storage and the Add Item dropdown, and **pl
 | Game | Games | *(none)* |
 | Musician | Music | Musicians |
 | Music Album | *(hidden — accessed via subfolder)* | Albums |
-| Show | Shows | *(none — see Recent Additions: Shows' old primary folder moved into Films as "Series")* |
+| Show | Series (was "Shows" — renamed this session; the category id/dropdown value is still `Show`) | *(none — the old primary/TV-show folder moved into Films, which now has its own "Shows" folder — see Recent Additions)* |
 
 `CATEGORIES`' order (`state.js`) directly drives both the sidebar and the Add-wizard tile grid order — that's why the table above is in that order, not alphabetical. **News is no longer a `CATEGORIES` member** (dropped this session — see Recent Additions); an existing News item is still fully functional wherever already reachable, it just has no dedicated nav tab or wizard tile anymore. Web Links' "Blogs" folder was renamed "News" as an informal replacement destination.
 
 The `Music Album` category is not shown as a top-level sidebar entry. Instead, a permanent **Albums** subfolder (renamed from "Music Albums" — the badge/tag system below made the "Music" part redundant) appears under **Music** in the sidebar (the tab itself renamed from "Musicians" this session — see Recent Additions — but the permanent hardcoded subfolder for Musician items themselves is still labeled "Musicians"). This subfolder also works in Curated SaveCraft mode, navigating to the curated music album list for the selected genre.
 
-Beyond each category's primary folder, several categories also have a **creator-card folder** — a non-primary subfolder that doubles as an entry point into a curated "creator card" bucket when browsing a curated genre (see "Author / Artist Profile Pages" below): Book → **Authors**, Movie → **Directors**, Show → **Creators**, Game → **Game Companies**. Game additionally has **Board Games**/**Console Games**/**Mobile Games** (its first-ever folders besides Game Companies) — of these, only Console Games maps to the full curated Games list (Top 100 games are all console/PC titles); Board Games and Mobile Games correctly show empty while browsing a curated genre, since there's no curated data for those types yet. Films additionally has a **Series** folder (new this session — see Recent Additions), alongside its existing Movies/Videos/Directors.
+Beyond each category's primary folder, several categories also have a **creator-card folder** — a non-primary subfolder that doubles as an entry point into a curated "creator card" bucket when browsing a curated genre (see "Author / Artist Profile Pages" below): Book → **Authors**, Movie → **Directors**, Game → **Game Companies**. **Series no longer has a Creators folder** (retired this session — its old TV-showrunner creator cards moved into Films → Directors instead, alongside Movie Directors) — its own folders are now Podcasts/Tutorials/Web Series/**Short Form** (new this session, replacing Creators). Game additionally has **Board Games**/**Console Games**/**Mobile Games** (its first-ever folders besides Game Companies) — of these, only Console Games maps to the full curated Games list (Top 100 games are all console/PC titles); Board Games and Mobile Games correctly show empty while browsing a curated genre, since there's no curated data for those types yet. Films additionally has a **Shows** folder (renamed from "Series" this session — see Recent Additions, holds the TV-show content that used to live under Series), alongside its existing Movies/Videos/Directors.
 
 **`Web Links`** is a real `CATEGORIES` member now (promoted from a sidebar-only pseudo-category), shown as **Website** everywhere — sidebar, grid title, and Add-wizard tile all read from the same `CAT_LABEL['Web Links']` value now, no more special-cased "Webpages" text. An **"Articles"** shortcut tile (new this session) also appears in the Add Item wizard, filing straight into Web Links' Articles folder without going through the normal Websites tile/folder-picker flow — it's not a real category, no `CATEGORIES` entry or sidebar tab of its own.
 
@@ -340,7 +362,7 @@ A separate browsing mode (toggled via the sidebar options menu) that surfaces Vo
 - **Category drilldown** — clicking a genre shows categories; clicking a category shows curated items
 - **Musicians** — 100 top artists (from iTunes charts), each card's name links to their author profile page
 - **Music Albums** — a `Music Album`-category Firestore bucket under Top 100 (~2,400 docs), each showing the artist name as a clickable link; the Albums subfolder under Music navigates to this view. **Not currently a genuine curated Top 100 shortlist** — it's bulk auto-synced album metadata, not a hand-picked list; a real editorial pass is still needed (see Recent Additions' data-quality fix for a related bug that was found and fixed here — a legacy mislabeled category was leaking Musician-name cards into this bucket).
-- **Book Authors / Movie Directors / Show Creators / Game Studios** — curated "creator card" buckets (83/78/89/82 entries respectively), reached via each category's Authors/Directors/Creators/Game Companies folder. Same idea as Musicians, generalized this session — see "Recent Additions" for how the creator names were sourced (Wikidata/Steam) and why they're kept as static in-app data rather than stored in Firestore for Movie/Show/Game.
+- **Book Authors / Movie Directors / Game Studios** — curated "creator card" buckets, reached via each category's Authors/Directors/Game Companies folder. Same idea as Musicians, generalized this session — see "Recent Additions" for how the creator names were sourced (Wikidata/Steam) and why they're kept as static in-app data rather than stored in Firestore for Movie/Show/Game. **The old "Show Creators" bucket (89 entries, TV showrunners) was folded into Movie Directors this session** — Series no longer has a Creators folder/curated bucket of its own (see "Categories" above).
 - **Clicking a creator card** opens the detail popup; clicking the name navigates to their profile
 - **Curated cache** — data is cached in `chrome.storage.local` for 24 hours; cache is versioned so bumping `_CURATED_CACHE_VERSION` in `js/storage.js` forces a fresh fetch (currently `7`)
 - **Top 100 lists** — the "Top 100" genre shows a source-attribution logo next to the section title, indicating which outlet curated that list: Rolling Stone (Musicians, Shows, Books), The New York Times (Movies), Steam (Games). Hovering any logo shows a tooltip explaining the attribution. Curated categories are keyed by their singular `CATEGORIES` name internally (e.g. `genre:Top 100:Musician`, not `genre:Top 100:Music`) — this tripped up the logo-matching logic once before, so keep that in mind if extending it.
@@ -408,7 +430,9 @@ Two deliberately distinct searches, plus sort:
 - **Header search icon** (`globalSearch.js`) — a true library-wide search across every category/folder ("All My Saves"), shown as a results dropdown panel (thumbnail/title/category, same visual language as the Add-modal's own title search) rather than filtering the current page. Clicking a result opens that item's detail modal directly. Fully separate state from the sort dropdown's page-search, so neither can cross-wire the other.
 
 ### Category Landing Pages
-Every top-level category tab except Musician/Music Album (`renderCategoryFolderLanding()`, `renderGrid.js`) shows its real subfolders as a picker grid of solid-purple square cards (icon, name, save count) instead of a flat item list — clicking a card goes to that folder's own real page. Below the folder cards sits a demo center-emphasis carousel (`categoryCarousel.js`) that loops infinitely (reusing `dashboard.js`'s own `_wireCarouselArrows` mechanics) and shows the same real demo content the Dashboard's "Recent Saves" widget resolves (`resolveFavoriteSlides()`) — real favorites if the user has any, else admin-configured demo cards, else the curated Top 100 fallback. The Music/Musician category is explicitly excluded from both — it keeps its own 15-card genre-bucket picker instead (see "Music landing page" in Recent Additions).
+Every top-level category tab except Musician/Music Album (`renderCategoryFolderLanding()`, `renderGrid.js`) shows its real subfolders as a picker grid of solid-purple square cards (icon, name, save count) instead of a flat item list — clicking a card goes to that folder's own real page. Below the folder cards sits a "Featured Saves" center-emphasis carousel (`categoryCarousel.js`, `renderCategoryCarouselHtml()`) that loops infinitely (reusing `dashboard.js`'s own `_wireCarouselArrows` mechanics). Its content, in priority order: (1) that category's own most-recently-saved personal items (`getRecentCategoryItems()`, `renderFilters.js`), if the user has any; (2) for Films/Books/Games specifically, that category's own VoteCraft (Top 100) landing-page row content (`resolveGenreRowItems()`, `renderCuratedPages.js`) as the "nothing saved yet" fallback; (3) every other category falls back to the original generic chain (`resolveFavoriteSlides()`, `dashboard.js` — real global favorites, else admin-configured demo cards, else curated Top 100 Musician/Album). The Music/Musician category is explicitly excluded from the whole feature — it keeps its own 15-card genre-bucket picker instead (see "Music landing page" in Recent Additions).
+
+**Curated genre drilldowns get the same treatment.** A curated genre×category page (e.g. the "Shows | Votecraft" Top 100 page, `genre:<genre>:<category>`) also renders this same folder-picker + carousel shape (`renderCuratedCategoryFolderLanding()`), sourced from `CURATED_ITEMS` instead of `state.items`. This required adding a genuine `folderId` field to curated Firestore items (absent before this session — curated data had no folder concept at all) — threaded through `_loadCuratedFromFirestore()` (`storage.js`) and matched via `matchesFolder()`/`getCuratedCategoryFolderCounts()` (`renderFilters.js`), the curated-data equivalents of the personal `matchesPrimaryOrUnfoldered()`/`getCategoryFolderCounts()`. Clicking a folder card goes one level deeper via a new `genre:<genre>:<category>:<folderId>` view shape, with its own "Nothing here now" empty-state copy (distinct from the plain-folder "Nothing here yet") for folders with no tagged curated content yet.
 
 ### Saved Lists / Curated Lists (sidebar, under Dashboard)
 Two independently-collapsible rows nested under the sidebar's Dashboard entry, each with its own user-creatable, user-named list of child rows ("+ New folder"):
