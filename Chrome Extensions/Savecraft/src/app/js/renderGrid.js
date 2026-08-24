@@ -24,7 +24,7 @@ import { renderAboutPage } from './about.js';
 import { renderEmbedBuilder } from './embedBuilder.js';
 import { renderSidebar } from './renderSidebar.js';
 import { renderAuthorPage } from './renderAuthorPage.js';
-import { renderCuratedGenreLanding, renderCuratedDirectory, renderCuratedBareList } from './renderCuratedPages.js';
+import { renderCuratedGenreLanding, renderCuratedDirectory, renderCuratedBareList, resolveGenreRowItems } from './renderCuratedPages.js';
 import { wireQuickQueueButtons } from './renderCardActions.js';
 import { fetchMissingCuratedImages, fetchMissingCuratedMusicianPhotos } from './renderCuratedImageFetch.js';
 import { getFilteredSortedItems, getMusicGenreBucketCounts, getCategoryFolderCounts, getCuratedCategoryFolderCounts } from './renderFilters.js';
@@ -659,6 +659,15 @@ function renderCuratedCategoryFolderLanding(genre, category) {
   const folders = state.folders.filter(f => f.parentCategory === category);
   const counts = getCuratedCategoryFolderCounts(genre, category);
 
+  // The genre's own landing-page row content for this category (resolveGenreRowItems,
+  // renderCuratedPages.js — the exact same items/order its "Top Films"-style row shows), not the
+  // generic Dashboard-style favorites/demo fallback every personal category page's carousel uses —
+  // per direct request ("put the corresponding content from the votecraft landing page into the
+  // carousel"). isDemo:false — these are real curated picks, not placeholder content, so no "Demo"
+  // badge. Renders nothing (renderCategoryCarouselHtml's own empty-items short-circuit) if this
+  // genre/category has no curated data at all yet.
+  const carouselItems = resolveGenreRowItems(genre, category);
+
   container.className = 'category-landing-page';
   container.innerHTML = `
     <div class="category-folder-landing-grid">
@@ -670,7 +679,7 @@ function renderCuratedCategoryFolderLanding(genre, category) {
         </button>
       `).join('')}
     </div>
-    ${renderCategoryCarouselHtml()}
+    ${renderCategoryCarouselHtml({ items: carouselItems, isDemo: false })}
   `;
 
   container.querySelectorAll('.category-folder-card').forEach(card => {
