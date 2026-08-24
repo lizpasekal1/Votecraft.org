@@ -148,29 +148,6 @@ export async function searchMusicAlbums(term) {
     }));
 }
 
-// Each iTunes tvSeason result is one season; dedupe by artistId (stable per-show) and keep
-// the first (most relevant) season per show, presenting the show itself as the result.
-export async function searchShows(term) {
-  const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=tvSeason&media=tvShow&country=US&limit=10`;
-  const data = await itunesFetch(url);
-  const seen = new Set();
-  const shows = [];
-  for (const r of (data.results || [])) {
-    if (!r.artistId || seen.has(r.artistId)) continue;
-    seen.add(r.artistId);
-    shows.push({
-      title: r.artistName,
-      author: null,
-      imageUrl: r.artworkUrl100?.replace('100x100bb', '600x600bb') || null,
-      imageUrlLarge: r.artworkUrl100?.replace('100x100bb', '600x600bb') || null,
-      url: r.artistViewUrl || null,
-      year: r.releaseDate?.slice(0, 4) || null,
-      meta: r.releaseDate ? r.releaseDate.slice(0, 4) : null,
-    });
-  }
-  return shows.slice(0, 8);
-}
-
 export async function searchBooks(term) {
   const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(term)}&limit=8&fields=title,author_name,first_publish_year,cover_i,key`;
   const resp = await fetch(url);
