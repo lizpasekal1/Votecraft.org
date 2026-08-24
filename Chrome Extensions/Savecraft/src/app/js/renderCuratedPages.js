@@ -262,7 +262,18 @@ export function resolveGenreRowItems(genre, category) {
   const rawItems = row?.titles
     ? row.titles.map(t => categoryItems.find(i => i.title === t)).filter(i => i && !state.hiddenCurated.has(i.id))
     : categoryItems.filter(i => !state.hiddenCurated.has(i.id)).slice(0, 15);
-  return rawItems.map(i => ({ ...i, category, curated: true, imageUrl: resolveRowItemImage(i, category) }));
+  // REAL BUG, found and fixed: state.curatedOverrides (a per-user manual edit of a curated item —
+  // url/title/notes/imageUrl, set via the Edit modal) was applied everywhere else a curated item
+  // gets rendered (getFilteredSortedItems()'s genre: branch, renderFilters.js) but not here — an
+  // admin/user-set image override silently never showed up on this genre's own landing-page row
+  // or the category-carousel content that reuses this same function, per direct report ("that
+  // carosel image should also pull from the image override"). override.imageUrl (if manually set)
+  // now wins outright; resolveRowItemImage's own cache/Wikipedia-photo fallback chain only runs
+  // when there's no override image, same precedence the genre: branch's own merge uses.
+  return rawItems.map(i => {
+    const override = state.curatedOverrides[i.id] || {};
+    return { ...i, ...override, category, curated: true, imageUrl: override.imageUrl || resolveRowItemImage(i, category) };
+  });
 }
 
 export function renderCuratedGenreLanding(container, genre, content) {

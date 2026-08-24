@@ -652,6 +652,17 @@
   height: 100%;
   object-fit: cover;
 }
+/* Same gradient-plus-icon fallback every plain item card already uses when it has no image
+   (.card-placeholder/.placeholder-<Category>, above) — here filling the whole slide the way
+   .category-carousel-slide-img does, with a bigger icon to suit the larger box. */
+.category-carousel-slide-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+}
 .category-carousel-slide-demo-badge {
   position: absolute;
   /* Lower right corner, per direct request — was top-left. */
