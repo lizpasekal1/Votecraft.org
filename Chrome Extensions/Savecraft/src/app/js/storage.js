@@ -644,23 +644,39 @@ export async function loadAll() {
         storageSync.set(toMigrate);
       }
 
-      // REAL BUG, found and fixed: every one-time item migration below only ever rewrote
-      // storageSync (local) — for a signed-in web user, Firestore is the real source of truth, and
-      // runInitialSync()'s _mergeCollection has cloud win deterministically whenever the same item
-      // id exists in both ("cloud wins on this first merge", see that function's own comment).
-      // Left local-only, that silently reverted the very migration that just ran back to the
-      // stale, pre-migration cloud copy on the very next sync — every reload: migrate locally,
-      // then immediately get overwritten back by the still-unmigrated cloud data (reported live:
-      // "the creators still seem to be in the wrong location", persisting no matter how many times
-      // the app was reloaded). Explicitly pushing each migrated item to Firestore too — same
-      // per-item dual-write persistItem() already does for a normal edit — closes that gap; a
-      // signed-out user (no Firestore involved at all) is unaffected either way.
+      // REAL BUG, found and fixed: every one-time item/folder migration below only ever rewrote
+      // storageSync (local). For a signed-in web user, Firestore is the real source of truth, and
+      // runInitialSync()'s _mergeCollection has cloud win deterministically whenever the same
+      // id exists in both ("cloud wins on this first merge", see that function's own comment). Left
+      // local-only, that silently reverted the very migration that just ran back to the stale
+      // pre-migration cloud copy on the very next sync. Pushing to Firestore fixed that in
+      // principle, but fire-and-forget (.catch() with no await) wasn't enough on its own either —
+      // main.js's init() calls loadAll() then immediately awaits runInitialSync() right after, so
+      // that cloud GET could still fire and see the still-stale doc before this migration's PUT had
+      // actually landed, same reversion, just one race narrower (reported live: "still there when i
+      // access the sidebar" even after the first fix). pendingFirestorePushes collects every
+      // migration's Firestore promise below; loadAll()'s own resolve (bottom of this callback) now
+      // genuinely awaits all of them first, so runInitialSync() can never observe stale cloud data
+      // for anything this callback already fixed locally. Signed-out users are unaffected either
+      // way (no Firestore involved).
+      const pendingFirestorePushes = [];
       function pushMigratedItemsToFirestore(items) {
         const user = getCurrentUser();
         if (!user) return;
         items.forEach(item => {
-          _firestoreUpsert(`savecraft_users/${user.uid}/items/${item.id}`, item).catch(_syncError);
+          pendingFirestorePushes.push(
+            _firestoreUpsert(`savecraft_users/${user.uid}/items/${item.id}`, item).catch(_syncError)
+          );
         });
+      }
+      // Same fix, for the folder-rename migrations further down (Music Albums->Albums,
+      // Films' Series->Shows, etc.) — those have the identical local-only gap.
+      function pushMigratedFolderToFirestore(folder) {
+        const user = getCurrentUser();
+        if (!user) return;
+        pendingFirestorePushes.push(
+          _firestoreUpsert(`savecraft_users/${user.uid}/folders/${folder.id}`, folder).catch(_syncError)
+        );
       }
 
       // One-time migration: TV Shows moved from the Shows category into Films — every item
@@ -715,9 +731,8 @@ export async function loadAll() {
       // CREATOR_CARD_CATEGORY in state.js — a genuinely different item.category string from plain
       // 'Show', so the migration above didn't touch these) move to 'Movie Director'/
       // default-movies-directors, per direct request/correction: "for series the Creators should
-      // now be added to films/directors" — Series' own "Creators" folder is being repurposed for
-      // short-form web content creators going forward, distinct from these TV-showrunner-type
-      // creator cards (Aaron Sorkin, Armando Iannucci, etc.), which read more like film directors.
+      // now be added to films/directors" — these TV-showrunner-type creator cards (Aaron Sorkin,
+      // Armando Iannucci, etc.) read more like film directors.
       const showCreatorsMigrated = [];
       state.items.forEach(item => {
         if (item.category === 'Show Creator') {
@@ -731,6 +746,17 @@ export async function loadAll() {
         showCreatorsMigrated.forEach(item => { toMigrate[`item_${item.id}`] = item; });
         storageSync.set(toMigrate);
         pushMigratedItemsToFirestore(showCreatorsMigrated);
+      }
+
+      // One-time migration: Series' "Creators" folder removed entirely, per direct follow-up ("in
+      // fact i want the 'creators' folder just removed from series entirely") — superseding the
+      // earlier "repurpose it for short-form web creators" idea. Runs after the item migration
+      // just above, so anything still filed there has already been moved out to Films/Directors
+      // first — same order/pattern as the earlier default-shows-shows retirement.
+      const creatorsFolder = state.folders.find(f => f.id === 'default-shows-creators');
+      if (creatorsFolder) {
+        state.folders = state.folders.filter(f => f.id !== 'default-shows-creators');
+        removeFolder('default-shows-creators');
       }
 
       // Backfill: curated Music Album items stash their artist name in .notes while curated (see
@@ -786,7 +812,12 @@ export async function loadAll() {
         { id: 'default-shows-podcasts',  name: 'Podcasts',      parentCategory: 'Show' },
         { id: 'default-shows-webseries', name: 'Web Series',    parentCategory: 'Show' },
         { id: 'default-shows-tutorials', name: 'Tutorials',     parentCategory: 'Show' },
-        { id: 'default-shows-creators',  name: 'Creators',      parentCategory: 'Show' },
+        // 'Creators' -> 'Short Form', per direct follow-up ("instead add a folder called 'Short
+        // form'") — replaces the old creator-card folder (default-shows-creators, retired above)
+        // with a plain regular folder for short-form web content, same as Podcasts/Tutorials/Web
+        // Series. This new id gets auto-seeded for existing users too, by the same "add whatever
+        // default is missing" loop this array feeds (right below) — no separate migration needed.
+        { id: 'default-shows-shortform', name: 'Short Form',    parentCategory: 'Show' },
         { id: 'default-movies-movies',       name: 'Movies',    parentCategory: 'Movie' },
         // TV Shows moved from Shows into Films — see the one-time migration below that also
         // recategorizes any items already saved in the old Shows "TV Shows" folder into this one.
@@ -824,6 +855,7 @@ export async function loadAll() {
       if (musicAlbumsFolder && musicAlbumsFolder.name === 'Music Albums') {
         musicAlbumsFolder.name = 'Albums';
         toSave[`folder_${musicAlbumsFolder.id}`] = musicAlbumsFolder;
+        pushMigratedFolderToFirestore(musicAlbumsFolder);
       }
 
       // Renamed Web Links' "Blogs" -> "News" (same reasoning) — News' own top-level tab was
@@ -833,6 +865,7 @@ export async function loadAll() {
       if (blogsFolder && blogsFolder.name === 'Blogs') {
         blogsFolder.name = 'News';
         toSave[`folder_${blogsFolder.id}`] = blogsFolder;
+        pushMigratedFolderToFirestore(blogsFolder);
       }
 
       // Renamed Web Links' "Website" -> "Websites" (plural, matching every other folder name's
@@ -841,6 +874,7 @@ export async function loadAll() {
       if (websitesFolder && websitesFolder.name === 'Website') {
         websitesFolder.name = 'Websites';
         toSave[`folder_${websitesFolder.id}`] = websitesFolder;
+        pushMigratedFolderToFirestore(websitesFolder);
       }
 
       // Renamed Visual Art's "Dance" -> "Movement".
@@ -848,6 +882,7 @@ export async function loadAll() {
       if (danceFolder && danceFolder.name === 'Dance') {
         danceFolder.name = 'Movement';
         toSave[`folder_${danceFolder.id}`] = danceFolder;
+        pushMigratedFolderToFirestore(danceFolder);
       }
 
       // Renamed Shows' "Webseries" -> "Web Series" (two words, so it wraps to two lines on the
@@ -856,6 +891,7 @@ export async function loadAll() {
       if (webseriesFolder && webseriesFolder.name === 'Webseries') {
         webseriesFolder.name = 'Web Series';
         toSave[`folder_${webseriesFolder.id}`] = webseriesFolder;
+        pushMigratedFolderToFirestore(webseriesFolder);
       }
 
       // Renamed Films' "Series" -> "Shows" — per direct correction ("films/series should actually
@@ -867,17 +903,24 @@ export async function loadAll() {
       if (filmsSeriesFolder && filmsSeriesFolder.name === 'Series') {
         filmsSeriesFolder.name = 'Shows';
         toSave[`folder_${filmsSeriesFolder.id}`] = filmsSeriesFolder;
+        pushMigratedFolderToFirestore(filmsSeriesFolder);
       }
 
+      // Genuinely await every pending Firestore push above (pendingFirestorePushes) before
+      // resolving — loadAll()'s caller (main.js) awaits this, then immediately awaits
+      // runInitialSync() right after; if any migration's Firestore write hadn't actually landed
+      // yet, that sync's own cloud GET could still see the stale doc and revert this migration
+      // right back (see the REAL BUG comment above pendingFirestorePushes' own declaration).
+      const finish = () => Promise.allSettled(pendingFirestorePushes).then(resolve);
       if (legacyKeys.length) {
         storageSync.remove(legacyKeys, () => {
-          if (Object.keys(toSave).length) storageSync.set(toSave, resolve);
-          else resolve();
+          if (Object.keys(toSave).length) storageSync.set(toSave, finish);
+          else finish();
         });
       } else if (Object.keys(toSave).length) {
-        storageSync.set(toSave, resolve);
+        storageSync.set(toSave, finish);
       } else {
-        resolve();
+        finish();
       }
     });
   });
