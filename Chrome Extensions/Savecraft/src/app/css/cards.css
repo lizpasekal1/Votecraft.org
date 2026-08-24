@@ -2313,6 +2313,14 @@
 }
 
 @media (max-width: 768px) {
+  /* Narrower than the grid column's full width so the fixed A-Z jump index rail (azIndexRail.js,
+     below) — a fixed overlay pinned just inside .grid-area's own right padding — doesn't sit on
+     top of the card's own tag pill/text at its right edge. Per direct request ("make it so they
+     are a little less wide so that the letters don't overlap the cards"). */
+  .cards-grid .card {
+    margin-right: 22px;
+  }
+
   /* Was padding-left: 40px only (no padding-right) — fine on desktop where .bare-list-rows'
      own max-width: 50% + margin-left: 160px kept everything well clear of the right edge anyway,
      but on mobile (rows now full-width, right below) that left the row list's own right edge
