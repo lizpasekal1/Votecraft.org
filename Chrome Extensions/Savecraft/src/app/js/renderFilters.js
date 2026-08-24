@@ -297,6 +297,20 @@ export function getMusicGenreBucketCounts() {
 // folder's count includes un-foldered items too (matchesPrimaryOrUnfoldered), same as clicking it
 // directly does, so the number on the card matches what you'll actually see one click later; every
 // other folder counts only items actually filed there.
+// The user's own most-recently-saved items in `category` — for that category's own carousel
+// (renderCategoryFolderLanding, renderGrid.js), per direct request ("update the carousels on the
+// category pages to actually show the recent saves from those sections"). Same isQueueDemoId/
+// Saved-List-scope exclusions every other item list here uses. Empty (not a fallback itself) when
+// the user hasn't saved anything in this category yet — the caller falls back to the existing
+// generic favorites/demo carousel content in that case, per direct follow-up ("if not then just
+// keep showing the demo content").
+export function getRecentCategoryItems(category, limit = 12) {
+  return state.items
+    .filter(i => !isQueueDemoId(i.id) && i.category === category && matchesActiveSavedListScope(i))
+    .sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0))
+    .slice(0, limit);
+}
+
 export function getCategoryFolderCounts(category) {
   const counts = {};
   state.folders
