@@ -19,13 +19,15 @@
      keeps working fine nested inside an ancestor that's hidden on that axis. */
   overflow-y: auto;
   overflow-x: hidden;
-  /* Native iOS momentum/inertia scrolling on this — the actual vertical scroll container for
-     every page — per direct report ("scrolling the whole page up and down with my finger... the
-     haptics aren't quite right"). Modern Safari applies momentum scrolling to plain overflow:auto
-     elements by default in most cases, but this is the standard, no-downside hint that makes it
-     reliably use the same fluid, hardware-accelerated deceleration curve native iOS scroll views
-     use, rather than leaving it to whatever the browser falls back to. */
-  -webkit-overflow-scrolling: touch;
+  /* REAL BUG, found and fixed: -webkit-overflow-scrolling: touch was added here to try to smooth
+     out mobile scroll feel, but this legacy property has a long-documented WebKit quirk on nested
+     scroll containers (this one, inside body's own overflow:hidden) — after scrolling all the way
+     to the bottom (and briefly rubber-band overscrolling past it), a new touch often doesn't
+     re-engage the scroll cleanly, making it hard to drag back up (reported live: "it scrolls fine
+     till i hit the bottom of the page and then... it's hard to scroll back up"). Modern iOS Safari
+     (13+) already gives plain overflow:auto elements native momentum scrolling without this
+     property, so it wasn't buying anything — removed outright rather than chasing a workaround for
+     a legacy property most teams now recommend dropping entirely on current iOS versions. */
   align-self: stretch;
   /* REAL BUG, found and fixed: a flex item's default min-width is 'auto' (its content's own
      min-content size), not 0 — a descendant with a wide min-content demand (the category
