@@ -503,8 +503,8 @@
    mobile gets a new -20px nudge since it had none before. */
 @media (max-width: 768px) {
   .category-carousel-wrap {
-    /* -20px -> -30px -> -35px, per further direct follow-ups. */
-    margin-top: -35px;
+    /* -20px -> -30px -> -35px -> -38px, per further direct follow-ups. */
+    margin-top: -38px;
     /* Full-bleed to the actual screen edges, per direct follow-up ("make the carosol container
        touch the edges of the screen") — negative margins cancel out .grid-area's own mobile side
        padding (--page-mobile-pad, misc.css) exactly, rather than a hand-derived literal that'd
