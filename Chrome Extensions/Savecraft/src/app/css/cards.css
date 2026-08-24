@@ -367,8 +367,19 @@
    18px/16px (15px/14px) specifically so a wrapped 2-line folder name still fits within a square
    card's own preferred height instead of forcing it taller. */
 @media (max-width: 768px) {
+  /* A fixed, explicit height — not aspect-ratio — per direct follow-up ("they still look like
+     rectangles"/"they need to be less tall") after align-items: start + grid-auto-rows:
+     min-content (above) didn't fully resolve it live on an iPhone 16 Pro. An explicit height
+     gives the card a definite block-size outright, sidestepping aspect-ratio's dependency on the
+     grid's own (still seemingly inconsistent in practice here) row-sizing behavior entirely,
+     rather than continuing to chase exactly which part of that interaction WebKit was getting
+     wrong. Not literally square anymore on mobile as a result — a deliberate trade for something
+     that reliably renders short regardless of grid quirks. Explicitly resets the base rule's
+     aspect-ratio: 1/1 back to none here too, rather than just leaving height to quietly take
+     priority over it — belt and suspenders against any residual influence. */
   .category-folder-card {
-    aspect-ratio: 1 / 1;
+    aspect-ratio: none;
+    height: 130px;
   }
   .category-folder-card-name {
     font-size: 15px;
