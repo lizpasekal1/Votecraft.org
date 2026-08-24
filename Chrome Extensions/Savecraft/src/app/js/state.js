@@ -373,6 +373,24 @@ export const PRIMARY_FOLDER_ID = {
   'Web Links': 'default-weblinks-websites',
 };
 
+// Folders whose items are manually added (pasted link), not looked up by title — no title-search
+// UI, no Wikipedia autopopulate (search or background summary/photo enrichment) at all. Movie's
+// "Videos" (trailers/clips) was the original member; Series' Short Form/Web Series/Tutorials
+// folders added per direct request/clarification ("remove the search from the short form,
+// tutorial, and web series" ... "only podcasts should autopopulate from wikipedia" — Series' own
+// Podcasts folder is deliberately NOT in this set, it keeps its own Wikipedia search,
+// searchPodcastsWikipedia, api.js). Featured images for these folders instead come from
+// fetchVideoThumbnail's own YouTube/Vimeo/TikTok oEmbed lookups, falling back to Microlink like
+// any other category — never Wikipedia. Shared here (not just addEditModal.js, which owns the
+// search/enrichment logic) since detailModalSummary.js's own lazy on-view enrichment needs the
+// exact same exclusion.
+export const MANUAL_LINK_FOLDER_IDS = new Set([
+  'default-movies-videos',
+  'default-shows-shortform',
+  'default-shows-tutorials',
+  'default-shows-webseries',
+]);
+
 // Path data (viewBox "0 -960 960 960") for the plain folder icon every subfolder falls back to
 // unless it has its own entry in FOLDER_ICON below.
 export const GENERIC_FOLDER_ICON_PATH = 'M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h240l80 80h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Z';

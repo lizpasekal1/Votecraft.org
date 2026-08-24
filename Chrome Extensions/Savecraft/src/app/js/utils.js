@@ -26,6 +26,12 @@ export function getYoutubeVideoId(url) {
 export function getVimeoVideoId(url) {
   return url?.match(/vimeo\.com\/(?:video\/)?(\d+)/)?.[1] || null;
 }
+// TikTok has no single numeric id worth extracting on its own (its oEmbed call, api.js, just
+// takes the whole url) — this is purely a "is this a TikTok link" check, same role
+// getYoutubeVideoId/getVimeoVideoId play for their own platforms.
+export function isTiktokUrl(url) {
+  return !!url && /tiktok\.com\//i.test(url);
+}
 export function getVideoEmbedUrl(url) {
   const ytId = getYoutubeVideoId(url);
   if (ytId) return `https://www.youtube.com/embed/${ytId}?autoplay=1`;
@@ -43,8 +49,11 @@ export function isItunesArtworkUrl(url) {
 
 // Movie's folders show in a fixed order (not alphabetical) so "Directors" sits last, after
 // "Videos" — every other category still sorts its folders alphabetically by name.
+// REAL BUG, found and fixed: this list matches by folder NAME, not id — 'Series' stopped matching
+// anything once that folder was renamed to 'Shows' this session (storage.js), silently pushing it
+// to the alphabetical-fallback tail instead of its intended second position.
 const CUSTOM_FOLDER_ORDER = {
-  Movie: ['Movies', 'Series', 'Videos', 'Directors'],
+  Movie: ['Movies', 'Shows', 'Videos', 'Directors'],
 };
 export function sortFoldersForDisplay(folders, category) {
   const order = CUSTOM_FOLDER_ORDER[category];

@@ -9,7 +9,7 @@
 // or a separate search screen. A single back icon (top-left of the modal) steps back one screen
 // at a time.
 
-import { state, CATEGORIES, CAT_LABEL, CAT_EMOJI, CATEGORY_PLATFORMS, MODAL_BOOKMARK_ICON_SVG, PRIMARY_FOLDER_ID } from './state.js';
+import { state, CATEGORIES, CAT_LABEL, CAT_EMOJI, CATEGORY_PLATFORMS, MODAL_BOOKMARK_ICON_SVG, PRIMARY_FOLDER_ID, MANUAL_LINK_FOLDER_IDS } from './state.js';
 import { escapeHtml, isItunesArtworkUrl, folderIconHtml, sortFoldersForDisplay, getChildFolders, getDomain } from './utils.js';
 import { persistItem, persistCuratedOverrides, persistAuthor } from './storage.js';
 import { renderSidebar, renderGrid, promptAddFolder } from './render.js';
@@ -98,17 +98,6 @@ const TITLE_SEARCH_FN = {
   Movie: searchMoviesWikipedia,
 };
 
-// Folders with no title search at all, even though their own category has a search source —
-// items here are manually added, not looked up by title. Movie's "Videos" (trailers/clips) was
-// already excluded this way; Series' Short Form/Tutorials/Web Series folders added per direct
-// request ("remove the search from the short form, tutorial, and web series").
-const NO_TITLE_SEARCH_FOLDER_IDS = new Set([
-  'default-movies-videos',
-  'default-shows-shortform',
-  'default-shows-tutorials',
-  'default-shows-webseries',
-]);
-
 // Music Album (artist), Book (author), Movie (director), Show (creator), and Game (studio) each
 // have a meaningful separate "Author"-equivalent field — every other category collapses the
 // Title/Author row to a single field so it doesn't sit there empty.
@@ -134,11 +123,11 @@ export function updateTitleAuthorLayout(category, folderId) {
 }
 
 // Add-flow only — Edit always passes enabled=false, since re-searching an item you're already
-// editing (with its own Author/Summary fields visible) doesn't make sense. NO_TITLE_SEARCH_FOLDER_IDS
+// editing (with its own Author/Summary fields visible) doesn't make sense. MANUAL_LINK_FOLDER_IDS
 // folders are excluded even though their own category has a search source — those are manually
 // added, not looked up by title, same as Musician/Visual Art/Web Links/News.
 export function updateTitleSearchUi(category, enabled) {
-  const hasSearch = enabled && !!TITLE_SEARCH_FN[category] && !NO_TITLE_SEARCH_FOLDER_IDS.has(_wizardFolderId);
+  const hasSearch = enabled && !!TITLE_SEARCH_FN[category] && !MANUAL_LINK_FOLDER_IDS.has(_wizardFolderId);
   document.querySelector('.title-author-row').classList.toggle('has-search-icon', hasSearch);
   document.getElementById('btn-title-search').style.display = hasSearch ? '' : 'none';
   document.getElementById('input-title').placeholder = hasSearch ? 'Search title' : 'Title';
@@ -693,11 +682,11 @@ export async function handleTitleSearch() {
   if (state.editingId) return; // Edit mode never searches
   const input = document.getElementById('input-title');
   const term = input.value.trim();
-  // NO_TITLE_SEARCH_FOLDER_IDS folders are manually added, not looked up by title — same exclusion
+  // MANUAL_LINK_FOLDER_IDS folders are manually added, not looked up by title — same exclusion
   // as updateTitleSearchUi's icon/placeholder. Series' own Podcasts folder gets its own Wikipedia
   // search biased toward "podcast" instead of the whole Show category's "TV series" bias — per
   // direct request ("can the podcasts also auto populate from wikipedia?").
-  const searchFn = NO_TITLE_SEARCH_FOLDER_IDS.has(_wizardFolderId) ? null
+  const searchFn = MANUAL_LINK_FOLDER_IDS.has(_wizardFolderId) ? null
     : _wizardFolderId === 'default-shows-podcasts' ? searchPodcastsWikipedia
     : TITLE_SEARCH_FN[state.modalCategory];
   if (!searchFn || term.length < 2) { hideTitleSearchResults(); return; }
@@ -796,7 +785,7 @@ function selectTitleSearchResult(result) {
 // call this with no arguments and still get correct in-flight-request invalidation.
 export function kickOffTitleEnrichment() {
   if (state.editingId) return; // Edit mode's fields are already complete; no silent auto-fill
-  if (_wizardFolderId === 'default-movies-videos') return; // manually added — no title lookup to piggyback on
+  if (MANUAL_LINK_FOLDER_IDS.has(_wizardFolderId)) return; // manually added — no Wikipedia lookup to piggyback on
   const token = _wizardToken;
   const category = state.modalCategory;
   const title = document.getElementById('input-title').value.trim();
@@ -1225,16 +1214,24 @@ export async function handleSaveItem() {
       renderSidebar();
       renderGrid();
     };
-    if (item.folderId === 'default-movies-videos') {
-      // Videos-folder items skip Wikipedia enrichment entirely (see detailModalSummary.js) and
-      // Microlink actively blocks YouTube — this pulls the thumbnail straight from the video
-      // host instead (no summary source without an API key, so summary stays empty).
-      fetchVideoThumbnail(url).then(applyFetchedImage).catch(() => {});
+    const fetchViaMicrolink = () => fetch(`https://api.microlink.io?url=${encodeURIComponent(url)}`)
+      .then(r => r.json())
+      .then(data => applyFetchedImage(data?.data?.image?.url || null))
+      .catch(() => {});
+    if (MANUAL_LINK_FOLDER_IDS.has(item.folderId)) {
+      // Movie's Videos folder, and Series' Short Form/Web Series/Tutorials folders (per direct
+      // request — "I want the user to be able to add a link from sites like instagram, youtube,
+      // vimeo, ticktock and the featured image to appear properly") skip Wikipedia enrichment
+      // entirely (see detailModalSummary.js) and Microlink actively blocks YouTube (and doesn't
+      // reliably find an image for TikTok/Vimeo either) — this tries the thumbnail straight from
+      // the video/social host first (no summary source without an API key, so summary stays
+      // empty). fetchVideoThumbnail (api.js) only recognizes YouTube/Vimeo/TikTok; for anything
+      // else pasted into these folders (Instagram — no free unauthenticated thumbnail source
+      // exists there — or a plain website link), this now genuinely falls back to the same
+      // generic Microlink attempt every other category gets, rather than leaving no image at all.
+      fetchVideoThumbnail(url).then(imageUrl => imageUrl ? applyFetchedImage(imageUrl) : fetchViaMicrolink()).catch(fetchViaMicrolink);
     } else {
-      fetch(`https://api.microlink.io?url=${encodeURIComponent(url)}`)
-        .then(r => r.json())
-        .then(data => applyFetchedImage(data?.data?.image?.url || null))
-        .catch(() => {});
+      fetchViaMicrolink();
     }
   }
 
