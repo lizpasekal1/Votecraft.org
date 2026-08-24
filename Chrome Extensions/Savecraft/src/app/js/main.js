@@ -591,7 +591,14 @@ async function init() {
   // a second, already-signed-in device would only ever see its own last-synced-at-sign-in local
   // snapshot. Awaited (small network cost at startup) so the very first render already reflects
   // it, rather than the screen changing out from under the user a moment after paint.
-  if (getCurrentUser()) await runInitialSync(getCurrentUser().uid).catch(() => {});
+  // REAL BUG, found and fixed: this swallowed any runInitialSync failure completely silently —
+  // .catch(() => {}) with no logging at all — while auth.js's own two call sites for the exact
+  // same function already log via console.warn. A device whose sync silently fails here (network
+  // hiccup, an expired/invalid token slipping past getValidIdToken's own check, a Firestore REST
+  // error) just keeps rendering whatever local snapshot it already had, with zero trace anywhere
+  // that anything went wrong — reported live: cross-device edits/new items missing on one device,
+  // persisting even after a real sign-out/sign-in, with nothing to go on to diagnose why.
+  if (getCurrentUser()) await runInitialSync(getCurrentUser().uid).catch(err => console.warn('[SaveCraft] Initial sync failed:', err));
   await initCuratedItems();
   await initDashboardDemoConfig();
 
