@@ -967,13 +967,25 @@
   transform: translateY(-1px);
 }
 
+/* Owns the 100px slot + local clip boundary (REAL BUG, found and fixed: a scaled .card-image--zoom
+   painted past its own layout box and overlapped .card-body next to it — see that class's own
+   comment — since .card's own overflow: hidden only clips against the whole card, not this
+   specific slot). .card-image/.card-placeholder now just fill 100% of this wrapper instead of
+   sizing themselves directly. */
+.card-image-crop {
+  width: 100px;
+  height: 100%;
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+
 /* Left thumbnail — white background behind the image itself (not just the card), since some
    curated logos (TV show/movie logo PNGs especially) have transparent backgrounds and were
    nearly invisible against the dark card background showing through. */
 .card-image {
-  width: 100px;
+  width: 100%;
   height: 100%;
-  flex-shrink: 0;
   object-fit: cover;
   object-position: center;
   display: block;
@@ -983,16 +995,16 @@
    have real black letterboxing/pillarboxing baked into the image's own pixels (fetchVideoThumbnail's
    own comment, api.js) that object-fit: cover alone can shrink but not fully crop away on whichever
    axis isn't the one already being cropped, per direct report ("i don't want to see black bands...
-   full bleed the image container"). .card's own overflow: hidden clips the excess. */
+   full bleed the image container"). .card-image-crop's own overflow: hidden (above) clips the
+   excess locally now, instead of relying on .card's own overflow: hidden further out.  */
 .card-image--zoom {
   /* 1.2 -> 1.25 -> 1.35, per direct follow-ups. */
   transform: scale(1.35);
 }
 
 .card-placeholder {
-  width: 100px;
+  width: 100%;
   height: 100%;
-  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
