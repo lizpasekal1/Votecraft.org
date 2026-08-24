@@ -256,6 +256,12 @@
      ("center the folder squares horizontally... within the page area" — they were reading as
      off-center against the full width of .grid-area, the actual page content pane). */
   align-self: center;
+  /* Moves just the folder cards up, not the whole page/carousel — per direct correction ("i only
+     want the folder cards moved up"). A margin-top on .category-landing-page itself (tried first)
+     shifted the whole vertically-centered group as one block, so the carousel/caption moved too;
+     transform doesn't affect layout at all (siblings render exactly where they normally would),
+     it only visually offsets this one element. -30px desktop, -5px mobile (below). */
+  transform: translateY(-30px);
 }
 @media (min-width: 481px) {
   .category-folder-landing-grid {
@@ -274,6 +280,9 @@
     width: 96%;
     max-width: 420px;
     gap: 16px;
+    /* -30px desktop, -5px mobile (smaller nudge — mobile isn't vertically centered inside a huge
+       flex area the way desktop is, so it doesn't need as large an offset to read as "moved up"). */
+    transform: translateY(-5px);
   }
   /* Shorter than square on mobile, per direct follow-up — full 1:1 squares (desktop's own shape)
      ate too much of the limited vertical room these pages have to work with now that they don't
@@ -366,9 +375,6 @@
   gap: 24px;
   flex: 1;
   min-height: 0;
-  /* Nudges the whole vertically-centered content block up — -20px, then another -30px per a
-     further direct follow-up (-50px total), desktop only (overridden below on mobile). */
-  margin-top: -50px;
 }
 .grid-area:has(.category-landing-page) {
   display: flex;
@@ -382,10 +388,6 @@
   }
   .category-landing-page {
     justify-content: flex-start;
-    /* Bring the folders up 5px on mobile, per direct follow-up — separate, smaller nudge from
-       desktop's own -50px above, since mobile no longer relies on this margin for vertical
-       centering (justify-content: flex-start above) the way desktop still does. */
-    margin-top: -5px;
   }
 }
 
