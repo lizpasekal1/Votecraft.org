@@ -27,7 +27,7 @@ import { renderAuthorPage } from './renderAuthorPage.js';
 import { renderCuratedGenreLanding, renderCuratedDirectory, renderCuratedBareList } from './renderCuratedPages.js';
 import { wireQuickQueueButtons } from './renderCardActions.js';
 import { fetchMissingCuratedImages, fetchMissingCuratedMusicianPhotos } from './renderCuratedImageFetch.js';
-import { getFilteredSortedItems, getMusicGenreBucketCounts, getCategoryFolderCounts } from './renderFilters.js';
+import { getFilteredSortedItems, getMusicGenreBucketCounts, getCategoryFolderCounts, getCuratedCategoryFolderCounts } from './renderFilters.js';
 import { updateAzIndexRail } from './azIndexRail.js';
 import { renderCategoryCarouselHtml, initCategoryCarousel } from './categoryCarousel.js';
 import { resourceUrl } from './platform.js';
@@ -219,7 +219,10 @@ function _renderGridBody() {
     // Top 100 and RCV) — REAL BUG, found and fixed: this used to be hardcoded to the literal
     // string 'Top 100', so a second curated list would never have gotten this same
     // breadcrumb/logo treatment at all, no matter what content it had.
-    const isCuratedDrilldown = !!genreContent && parts.length === 2;
+    // parts.length >= 2 (not === 2) so the new folder-scoped drilldown (genre:<genre>:<category>:
+    // <folderId>, one level deeper than the plain category drilldown) also gets the clickable
+    // breadcrumb back to the genre landing page, not just the 2-part category-drilldown shape.
+    const isCuratedDrilldown = !!genreContent && parts.length >= 2;
     const genreLabel = isCuratedDrilldown
       ? `<button class="grid-title-link" data-view="genre:${escapeHtml(genre)}">${escapeHtml(genre)}</button>`
       : escapeHtml(genre);
@@ -229,7 +232,14 @@ function _renderGridBody() {
     // publication logo sits on this same row (#grid-title is itself a flex row — see cards.css),
     // pushed to the right edge via its own margin-left: auto.
     const categoryLogo = genreContent?.categoryLogos?.[parts[1]];
-    if (categoryLogo && genreContent.shortName) {
+    // Folder-scoped drilldown (genre:<genre>:<category>:<folderId>, from
+    // renderCuratedCategoryFolderLanding's own folder cards) — shows the real folder's name as the
+    // title, same breadcrumb-back-to-genre-landing link as the plain 2-part drilldown, but skips the
+    // category logo overlay (that's specific to the category-level page, not each folder beneath it).
+    if (parts.length === 3) {
+      const folder = state.folders.find(f => f.id === parts[2]);
+      gridTitle.innerHTML = `${genreLabel} ${escapeHtml(folder ? folder.name : parts[2])}`;
+    } else if (categoryLogo && genreContent.shortName) {
       const logoInner = categoryLogo.svg
         // The New York Times' own wordmark — no image asset for this one, so it's the one
         // genuinely bespoke piece left (an inline SVG can't be generalized into a plain <img>
@@ -327,11 +337,40 @@ function _renderGridBody() {
     navigateToView('genre:Top 100');
   });
 
+  // Curated-data equivalent of the personal folder-picker check above (CATEGORIES.includes(state.view)
+  // etc.) — a curated genre's category drilldown (genre:<genre>:<category>, e.g. the "Shows |
+  // Votecraft" Top 100 page) gets the same folder-card picker + carousel treatment instead of a flat
+  // list, per direct request. Checked here (after the title-setting genre: branch above, not
+  // alongside the personal picker earlier) so the exact same breadcrumb/logo title code already run
+  // above applies to this too, rather than duplicating it. Unconditional like the personal picker —
+  // shows even when every folder is empty (confirmed: "leave show's empty... Nothing here now"),
+  // not gated on CURATED_ITEMS actually having data for this genre/category yet. A 3-part view
+  // (genre:<genre>:<category>:<folderId>, one level deeper) does NOT match here — parts.length === 2
+  // guards that — so it falls through to the normal flat-list rendering below, now folder-scoped via
+  // getFilteredSortedItems()'s own folderId handling (renderFilters.js).
+  if (state.view.startsWith('genre:')) {
+    const genreParts = state.view.slice(6).split(':');
+    if (genreParts.length === 2) {
+      const [curatedGenre, curatedCat] = genreParts;
+      if (CATEGORIES.includes(curatedCat) && !['Musician', 'Music Album'].includes(curatedCat)
+          && state.folders.some(f => f.parentCategory === curatedCat)) {
+        renderCuratedCategoryFolderLanding(curatedGenre, curatedCat);
+        return;
+      }
+    }
+  }
+
   const items = getFilteredSortedItems();
 
   if (items.length === 0) {
     const isSearch = !!state.search;
     const isCuratedTop = state.view.startsWith('genre:') && state.view.split(':').length === 2;
+    // The new folder-scoped curated drilldown (genre:<genre>:<category>:<folderId>, one level
+    // deeper than isCuratedTop's bare genre landing) — reached by clicking a folder card on
+    // renderCuratedCategoryFolderLanding's picker. Every bucket is genuinely empty until curated
+    // items get explicitly tagged with a folderId (getCuratedCategoryFolderCounts, renderFilters.js),
+    // per direct request ("leave show's empty... Nothing here now").
+    const isCuratedFolder = state.view.startsWith('genre:') && state.view.split(':').length === 4;
     const isCuratedLanding = state.view === 'curated';
     const isCuratedFullList = state.view === 'curated-full-list';
     const genre = isCuratedTop ? state.view.slice(6) : null;
@@ -365,8 +404,8 @@ function _renderGridBody() {
     container.innerHTML = `
       <div class="empty-state">
         <div class="empty-state-icon">${isSearch ? '🔍' : isCuratedLanding ? '✨' : isCuratedTop ? '✨' : '📦'}</div>
-        <h3>${isSearch ? 'No results found' : isCuratedLanding ? 'Pick a category' : isCuratedTop ? `${genre} Saves` : 'Nothing here yet'}</h3>
-        <p>${isSearch ? `No items match "${escapeHtml(state.search)}"` : isCuratedLanding ? 'Explore the sidebar to see our curated picks.' : isCuratedTop ? 'Pick a category from the sidebar to explore curated picks.' : '+ Add Item to start building this library.'}</p>
+        <h3>${isSearch ? 'No results found' : isCuratedLanding ? 'Pick a category' : isCuratedTop ? `${genre} Saves` : isCuratedFolder ? 'Nothing here now' : 'Nothing here yet'}</h3>
+        <p>${isSearch ? `No items match "${escapeHtml(state.search)}"` : isCuratedLanding ? 'Explore the sidebar to see our curated picks.' : isCuratedTop ? 'Pick a category from the sidebar to explore curated picks.' : isCuratedFolder ? 'Check back soon — more curated picks are on the way.' : '+ Add Item to start building this library.'}</p>
       </div>
     `;
     return;
@@ -594,6 +633,54 @@ function renderCategoryFolderLanding(category) {
       // The folder's own page renders its real content — or its own "Nothing here yet" if it's
       // genuinely empty, exactly like any other folder page — one level deeper than this picker.
       navigateToView(card.dataset.folderId);
+    });
+  });
+
+  initCategoryCarousel(container);
+
+  persistViewState();
+}
+
+// Curated-data equivalent of renderCategoryFolderLanding() just above — same folder-card grid +
+// carousel markup/mechanics, sourced from CURATED_ITEMS instead of state.items. Reuses `category`'s
+// exact same real folder set (state.folders) as the personal version — no separate curated-only
+// folder taxonomy — so e.g. Series (under Movie) is the same folder either way; only which items
+// land in it differs. Called from _renderGridBody() AFTER that function's own genre: title-setting
+// code already ran, so — unlike renderCategoryFolderLanding() above — this does NOT set gridTitle
+// itself, just the body below it.
+function renderCuratedCategoryFolderLanding(genre, category) {
+  const container = document.getElementById('cards-grid');
+  const sortSelect = document.getElementById('sort-select');
+  const musicGenreSelect = document.getElementById('musicgenre-select');
+
+  sortSelect.style.display = 'none';
+  musicGenreSelect.style.display = 'none';
+
+  const folders = state.folders.filter(f => f.parentCategory === category);
+  const counts = getCuratedCategoryFolderCounts(genre, category);
+
+  container.className = 'category-landing-page';
+  container.innerHTML = `
+    <div class="category-folder-landing-grid">
+      ${folders.map(folder => `
+        <button type="button" class="category-folder-card" data-folder-id="${escapeHtml(folder.id)}">
+          <span class="category-folder-card-icon">${folderIconHtml(folder.id, 34)}</span>
+          <span class="category-folder-card-name">${escapeHtml(folder.name)}</span>
+          <span class="category-folder-card-count">${counts[folder.id] || 0}</span>
+        </button>
+      `).join('')}
+    </div>
+    ${renderCategoryCarouselHtml()}
+  `;
+
+  container.querySelectorAll('.category-folder-card').forEach(card => {
+    card.addEventListener('click', () => {
+      // One level deeper (genre:<genre>:<category>:<folderId>) — getFilteredSortedItems()'s own
+      // genre: branch (renderFilters.js) filters CURATED_ITEMS[genre][category] down to this
+      // specific folder, showing its real curated items or its own "Nothing here now" empty state
+      // (renderGrid.js's isCuratedFolder branch below) if it's genuinely empty, same as any other
+      // folder page.
+      navigateToView(`genre:${genre}:${category}:${card.dataset.folderId}`);
     });
   });
 

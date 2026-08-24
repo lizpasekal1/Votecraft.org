@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SaveCraft — Curated Category Cleanup</title>
+<style>
+  body { font-family: monospace; max-width: 700px; margin: 40px auto; padding: 20px; background: #111; color: #ddd; }
+  h1 { color: #7C6FF5; }
+  button { background: #7C6FF5; color: #fff; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  #log { margin-top: 20px; background: #1a1a1a; border: 1px solid #333; padding: 12px; border-radius: 6px; max-height: 500px; overflow-y: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.5; }
+  .ok { color: #4ade80; } .err { color: #f87171; } .info { color: #60a5fa; } .warn { color: #ffaa00; }
+  .warning { background: #332200; border: 1px solid #aa5500; border-radius: 6px; padding: 12px; margin-bottom: 20px; color: #ffaa00; }
+</style>
+</head>
+<body>
+<h1>SaveCraft — Curated Category Cleanup</h1>
+
+<div class="warning">
+  This PATCHES existing <code>curated_items</code> docs in place (Firestore <code>update()</code>,
+  not a full re-seed) — it only ever touches the <code>category</code>/<code>folderId</code> fields,
+  never <code>title</code>/<code>url</code>/<code>imageUrl</code>/<code>notes</code>. Requires
+  <code>curated_items</code>'s write rule temporarily set to
+  <code>allow write: if request.auth != null;</code> and an already-signed-in browser session
+  (same account you use for SaveCraft/the other seed tools) — revert the rule to
+  <code>allow write: if false;</code> once this is done.
+</div>
+
+<p>1. Sign in with your Firebase account in this browser (open the real SaveCraft app once if you
+haven't recently). 2. Click Preview to see exactly what would change with zero writes. 3. Click Run
+to actually apply it.</p>
+<button id="btn-preview">Preview (read-only)</button>
+<button id="btn-run" disabled>Run (writes)</button>
+
+<div id="log"></div>
+
+<!-- Firebase compat SDK (OK for a local one-off tool — not the extension) -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyArJ6pkXUDbZf4jcxRita0qcdr-hT46kI8",
+  authDomain: "votecraft-789.firebaseapp.com",
+  projectId: "votecraft-789",
+  storageBucket: "votecraft-789.firebasestorage.app",
+  messagingSenderId: "939909708303",
+  appId: "1:939909708303:web:b0663ec86e15c05b3a817a",
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const logEl = document.getElementById('log');
+function log(msg, cls = '') {
+  const line = document.createElement('div');
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// Same mapping as _CAT_NORMALIZE (storage.js) — writing these singular values directly into
+// Firestore is the whole point of this tool, so that runtime shim becomes a defensive fallback
+// instead of load-bearing.
+const CAT_NORMALIZE = {
+  'Movies': 'Movie', 'Books': 'Book', 'Games': 'Game',
+  'Shows': 'Show', 'Musicians': 'Musician', 'Music Albums': 'Music Album',
+};
+// Legacy duplicate-of-Musicians bucket (storage.js's own _CAT_NORMALIZE comment) — deliberately
+// left untouched. NOT a stale-naming issue, a duplicate-data one.
+const SKIP_CATEGORY = 'Music';
+const TARGET_GENRE = 'Top 100';
+const SHOWS_TO_FOLDER_ID = 'default-movies-series';
+const BATCH_SIZE = 400;
+
+// Computes what a doc's update should be (or null if it needs none) — shared by preview and run
+// so they can never disagree about what "would happen".
+function planUpdate(data) {
+  if (data.category === SKIP_CATEGORY) return null;
+
+  const update = {};
+  let category = data.category;
+
+  if (CAT_NORMALIZE[category]) {
+    category = CAT_NORMALIZE[category];
+    update.category = category;
+  }
+
+  // Shows -> Movie/Series retag, evaluated against the (possibly just-normalized) category so a
+  // still-plural "Shows" doc is caught too, not just an already-singular "Show" one.
+  if (category === 'Show' && data.genre === TARGET_GENRE) {
+    update.category = 'Movie';
+    update.folderId = SHOWS_TO_FOLDER_ID;
+  }
+
+  return Object.keys(update).length ? update : null;
+}
+
+async function collectPlannedUpdates() {
+  const snap = await db.collection('curated_items').get();
+  log(`Read ${snap.size} curated_items docs.`, 'info');
+  const planned = [];
+  snap.forEach(doc => {
+    const update = planUpdate(doc.data());
+    if (update) planned.push({ ref: doc.ref, id: doc.id, update, before: doc.data() });
+  });
+  return { total: snap.size, planned };
+}
+
+async function preview() {
+  const { total, planned } = await collectPlannedUpdates();
+  const normalizedOnly = planned.filter(p => !p.update.folderId).length;
+  const retagged = planned.filter(p => p.update.folderId).length;
+  log(`${total} total docs — ${planned.length} would change ` +
+      `(${normalizedOnly} category-only normalize, ${retagged} Shows->Movie/Series retag).`, 'info');
+  planned.slice(0, 15).forEach(p => {
+    log(`  ${p.id}: category "${p.before.category}" -> "${p.update.category}"` +
+        (p.update.folderId ? `, folderId -> "${p.update.folderId}"` : ''));
+  });
+  if (planned.length > 15) log(`  … and ${planned.length - 15} more`);
+  log('', '');
+  log(planned.length ? 'Preview only — no writes made. Click Run to apply.' : 'Nothing to change.', 'ok');
+  document.getElementById('btn-run').disabled = planned.length === 0;
+}
+
+async function run() {
+  const { planned } = await collectPlannedUpdates();
+  if (!planned.length) { log('Nothing to change.', 'ok'); return; }
+
+  log(`Writing ${planned.length} updates…`, 'info');
+  for (let i = 0; i < planned.length; i += BATCH_SIZE) {
+    const slice = planned.slice(i, i + BATCH_SIZE);
+    const batch = db.batch();
+    for (const p of slice) batch.update(p.ref, p.update);
+    await batch.commit();
+    log(`  ✓ ${Math.min(i + BATCH_SIZE, planned.length)} / ${planned.length} written`, 'ok');
+  }
+  const retagged = planned.filter(p => p.update.folderId).length;
+  log('', '');
+  log(`✅ Done. ${planned.length} docs updated (${retagged} retagged Shows -> Movie/Series).`, 'ok');
+  log('Now bump _CURATED_CACHE_VERSION in storage.js and deploy, so clients refetch instead of', 'info');
+  log('serving the stale 24h cache — this tool only touches Firestore, not any client cache.', 'info');
+}
+
+document.getElementById('btn-preview').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-preview');
+  btn.disabled = true;
+  logEl.textContent = '';
+  try { await preview(); }
+  catch (e) { log('Error: ' + e.message, 'err'); }
+  finally { btn.disabled = false; }
+});
+
+document.getElementById('btn-run').addEventListener('click', async () => {
+  if (!confirm('This will write to production Firestore. Continue?')) return;
+  const runBtn = document.getElementById('btn-run');
+  runBtn.disabled = true;
+  document.getElementById('btn-preview').disabled = true;
+  logEl.textContent = '';
+  try { await run(); }
+  catch (e) { log('Error: ' + e.message, 'err'); }
+  finally { document.getElementById('btn-preview').disabled = false; }
+});
+</script>
+</body>
+</html>
