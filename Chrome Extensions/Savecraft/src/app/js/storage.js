@@ -705,47 +705,59 @@ export async function loadAll() {
         removeFolder('default-shows-shows');
       }
 
-      // One-time migration: EVERY remaining personal Show item (any folder — Creators/Podcasts/
-      // Tutorials/Web Series, or unfoldered — not just the old default-shows-shows folder above)
-      // also moves to Movie/Series, per direct request ("also move ALL personal Show items into
-      // Movie/Series"). Folder DEFINITIONS themselves are deliberately left alone (not removeFolder()'d
-      // like default-shows-shows above) — they're still needed as the real folder set the new
-      // curated-genre folder-picker page renders (renderCuratedCategoryFolderLanding, renderGrid.js),
-      // just genuinely empty now for personal items too.
-      const showItemsMigrated = [];
-      state.items.forEach(item => {
-        if (item.category === 'Show') {
-          item.category = 'Movie';
-          item.folderId = 'default-movies-series';
-          showItemsMigrated.push(item);
-        }
-      });
-      if (showItemsMigrated.length) {
-        const toMigrate = {};
+      // REAL BUG, found and fixed: this migration (and the Show Creator one right after it) had no
+      // one-time gate at all — it just checked item.category === 'Show' on every single load, with
+      // nothing distinguishing "old data that still needs migrating" from "a brand-new item someone
+      // just saved under Series today". Series' own Podcasts/Short Form/Tutorials/Web Series
+      // folders all carry category 'Show', so ANY new save there was getting silently swept into
+      // Films -> Shows again on the very next reload, indefinitely (reported live: "did you remove
+      // the two series saves i made?" — they weren't removed, they were incorrectly re-migrated).
+      // Gated the same way _seedQueueDemoItems above already is — a persisted flag, checked once.
+      if (!data.savecraft_show_to_movie_migrated) {
+        // One-time migration: EVERY remaining personal Show item (any folder — Creators/Podcasts/
+        // Tutorials/Web Series, or unfoldered — not just the old default-shows-shows folder above)
+        // also moves to Movie/Series, per direct request ("also move ALL personal Show items into
+        // Movie/Series"). Folder DEFINITIONS themselves are deliberately left alone (not
+        // removeFolder()'d like default-shows-shows above) — they're still needed as the real
+        // folder set the new curated-genre folder-picker page renders
+        // (renderCuratedCategoryFolderLanding, renderGrid.js), just genuinely empty now for
+        // personal items too.
+        const showItemsMigrated = [];
+        state.items.forEach(item => {
+          if (item.category === 'Show') {
+            item.category = 'Movie';
+            item.folderId = 'default-movies-series';
+            showItemsMigrated.push(item);
+          }
+        });
+        const toMigrate = { savecraft_show_to_movie_migrated: true };
         showItemsMigrated.forEach(item => { toMigrate[`item_${item.id}`] = item; });
         storageSync.set(toMigrate);
-        pushMigratedItemsToFirestore(showItemsMigrated);
+        if (showItemsMigrated.length) pushMigratedItemsToFirestore(showItemsMigrated);
       }
 
-      // One-time migration: 'Show Creator' items (the creator-card pseudo-category,
-      // CREATOR_CARD_CATEGORY in state.js — a genuinely different item.category string from plain
-      // 'Show', so the migration above didn't touch these) move to 'Movie Director'/
-      // default-movies-directors, per direct request/correction: "for series the Creators should
-      // now be added to films/directors" — these TV-showrunner-type creator cards (Aaron Sorkin,
-      // Armando Iannucci, etc.) read more like film directors.
-      const showCreatorsMigrated = [];
-      state.items.forEach(item => {
-        if (item.category === 'Show Creator') {
-          item.category = 'Movie Director';
-          item.folderId = 'default-movies-directors';
-          showCreatorsMigrated.push(item);
-        }
-      });
-      if (showCreatorsMigrated.length) {
-        const toMigrate = {};
+      if (!data.savecraft_show_creator_to_movie_director_migrated) {
+        // One-time migration: 'Show Creator' items (the creator-card pseudo-category,
+        // CREATOR_CARD_CATEGORY in state.js — a genuinely different item.category string from
+        // plain 'Show', so the migration above didn't touch these) move to 'Movie Director'/
+        // default-movies-directors, per direct request/correction: "for series the Creators should
+        // now be added to films/directors" — these TV-showrunner-type creator cards (Aaron Sorkin,
+        // Armando Iannucci, etc.) read more like film directors. Same one-time-gate fix as above —
+        // 'Show Creator' has no live UI path that creates new items with that category anymore
+        // (the Creators folder itself is retired below), but gating it costs nothing and rules out
+        // the same class of bug entirely rather than relying on that staying true forever.
+        const showCreatorsMigrated = [];
+        state.items.forEach(item => {
+          if (item.category === 'Show Creator') {
+            item.category = 'Movie Director';
+            item.folderId = 'default-movies-directors';
+            showCreatorsMigrated.push(item);
+          }
+        });
+        const toMigrate = { savecraft_show_creator_to_movie_director_migrated: true };
         showCreatorsMigrated.forEach(item => { toMigrate[`item_${item.id}`] = item; });
         storageSync.set(toMigrate);
-        pushMigratedItemsToFirestore(showCreatorsMigrated);
+        if (showCreatorsMigrated.length) pushMigratedItemsToFirestore(showCreatorsMigrated);
       }
 
       // One-time migration: Series' "Creators" folder removed entirely, per direct follow-up ("in
