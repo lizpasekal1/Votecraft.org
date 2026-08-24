@@ -1,7 +1,7 @@
 // ===== DETAIL MODAL: HEADER (image, sponsored tag, bookmark/favorite, title/author, website CTA) =====
 
 import { state, CURATED_ITEMS, CATEGORY_WHY_TEXT, CURATED_NOTES_CATEGORIES, CREATOR_CARD_CATEGORY } from './state.js';
-import { escapeHtml, catClass, isMusicAlbumsSectionView, isOwnAuthorPageView, getVideoEmbedUrl } from './utils.js';
+import { escapeHtml, catClass, isMusicAlbumsSectionView, isOwnAuthorPageView, getVideoEmbedUrl, isYoutubeThumbnailUrl } from './utils.js';
 import { persistItem, persistAuthor } from './storage.js';
 import { ensureArtistWebsite } from './api.js';
 import { findAuthor, navigateToAuthor, ensureLiveItem, getCachedAlbumArt, ensureAlbumArt } from './authors.js';
@@ -161,7 +161,11 @@ export function setupHeader(item, { domain, isMusicAlbum, isMusicianItem }) {
     : null;
 
   const wrap = document.getElementById('detail-image-wrap');
-  const _imageClass = `detail-image${isMusicianItem ? ' detail-image--faces' : ''}${(isMusicAlbum || _videoEmbedUrl) ? ' detail-image--clickable' : ''}`;
+  // Extra zoom-crop for YouTube thumbnails specifically (isYoutubeThumbnailUrl, utils.js) — some
+  // have real black bars baked into the image itself that a plain object-fit: cover can shrink but
+  // not fully eliminate, per direct report ("i don't want to see black bands... expand the youtube
+  // video images so they full bleed the image container").
+  const _imageClass = `detail-image${isMusicianItem ? ' detail-image--faces' : ''}${(isMusicAlbum || _videoEmbedUrl) ? ' detail-image--clickable' : ''}${isYoutubeThumbnailUrl(item.imageUrl) ? ' detail-image--zoom' : ''}`;
   document.getElementById('detail-body').classList.toggle('detail-body--tight-bottom', isMusicianItem);
   document.getElementById('detail-bookmark-btn').style.display = '';
   document.getElementById('detail-favorite-btn').style.display = '';

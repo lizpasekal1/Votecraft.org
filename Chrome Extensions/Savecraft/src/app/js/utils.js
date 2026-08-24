@@ -32,6 +32,15 @@ export function getVimeoVideoId(url) {
 export function isTiktokUrl(url) {
   return !!url && /tiktok\.com\//i.test(url);
 }
+// True for a YouTube-hosted thumbnail image url (img.youtube.com/vi/<id>/...), not a YouTube
+// video url itself (that's getYoutubeVideoId above) — used to give these a slight extra zoom-crop
+// (.card-image--zoom/.detail-image--zoom, cards.css/detailModal.css) on top of the existing
+// object-fit: cover, since some of these thumbnails have real black letterboxing/pillarboxing
+// baked into their own pixels (fetchVideoThumbnail's own comment, api.js) that a plain crop can
+// shrink but not fully eliminate on whichever axis isn't the one already being cropped.
+export function isYoutubeThumbnailUrl(url) {
+  return !!url && /^https?:\/\/img\.youtube\.com\//i.test(url);
+}
 export function getVideoEmbedUrl(url) {
   const ytId = getYoutubeVideoId(url);
   if (ytId) return `https://www.youtube.com/embed/${ytId}?autoplay=1`;
