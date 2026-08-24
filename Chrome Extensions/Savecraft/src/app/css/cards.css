@@ -260,8 +260,9 @@
      want the folder cards moved up"). A margin-top on .category-landing-page itself (tried first)
      shifted the whole vertically-centered group as one block, so the carousel/caption moved too;
      transform doesn't affect layout at all (siblings render exactly where they normally would),
-     it only visually offsets this one element. -30px desktop, -5px mobile (below). */
-  transform: translateY(-30px);
+     it only visually offsets this one element. -30px, then another -20px per a further direct
+     follow-up scoped to desktop only (-50px total) — mobile stays its own separate -5px (below). */
+  transform: translateY(-50px);
 }
 @media (min-width: 481px) {
   .category-folder-landing-grid {
