@@ -87,7 +87,9 @@ export const CURATED_GENRE_LANDING_CONTENT = {
       // in render.js.
       { category: 'Musician', label: 'Top Musicians', titles: ['The Beatles', 'Aretha Franklin', 'Queen', 'Stevie Wonder', 'The Rolling Stones', 'Joni Mitchell', 'Muse', 'Johnny Cash'] },
       { category: 'Movie', label: 'Top Films', titles: ['Everything Everywhere All at Once', 'Eternal Sunshine of the Spotless Mind', 'Arrival', 'Spirited Away', 'Citizen Kane', 'The Godfather', '2001: A Space Odyssey'] },
-      { category: 'Book', label: 'Top Books' },
+      // 'Top Books' -> 'Top Literature', per direct request — matches CAT_LABEL['Book'] ('Literature')
+      // used everywhere else in the app (sidebar tab, etc.).
+      { category: 'Book', label: 'Top Literature' },
       { category: 'Game', label: 'Top Games' },
     ],
   },

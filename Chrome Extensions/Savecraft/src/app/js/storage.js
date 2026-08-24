@@ -690,6 +690,27 @@ export async function loadAll() {
         storageSync.set(toMigrate);
       }
 
+      // One-time migration: 'Show Creator' items (the creator-card pseudo-category,
+      // CREATOR_CARD_CATEGORY in state.js — a genuinely different item.category string from plain
+      // 'Show', so the migration above didn't touch these) move to 'Movie Director'/
+      // default-movies-directors, per direct request/correction: "for series the Creators should
+      // now be added to films/directors" — Series' own "Creators" folder is being repurposed for
+      // short-form web content creators going forward, distinct from these TV-showrunner-type
+      // creator cards (Aaron Sorkin, Armando Iannucci, etc.), which read more like film directors.
+      const showCreatorsMigrated = [];
+      state.items.forEach(item => {
+        if (item.category === 'Show Creator') {
+          item.category = 'Movie Director';
+          item.folderId = 'default-movies-directors';
+          showCreatorsMigrated.push(item);
+        }
+      });
+      if (showCreatorsMigrated.length) {
+        const toMigrate = {};
+        showCreatorsMigrated.forEach(item => { toMigrate[`item_${item.id}`] = item; });
+        storageSync.set(toMigrate);
+      }
+
       // Backfill: curated Music Album items stash their artist name in .notes while curated (see
       // detailModal.js's _detailAuthorName). Before a fix, promoting one to a real saved item
       // (detailModal.js's ensureLiveItem) left the artist name stranded in .notes instead of
