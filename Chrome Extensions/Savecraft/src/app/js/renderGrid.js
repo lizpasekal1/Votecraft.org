@@ -763,12 +763,22 @@ export function renderCard(item) {
   // shrink but not fully eliminate, per direct report ("i don't want to see black bands above or
   // on the sides of the youtube videos... expand the youtube video images so they full bleed the
   // image container").
+  // REAL BUG, found and fixed: a bare transform: scale() on .card-image doesn't change its own
+  // layout width — the scaled pixels were painting past their actual 100px flex-item box and
+  // visibly overlapping .card-body, the text column right next to it (reported live: "the image
+  // is too wide compared to the other images that come in" — this is also what the earlier
+  // "text getting cut off"/"LBS" report actually was, not a text-CSS issue at all). .card's own
+  // overflow: hidden clips against the whole *card*, not against this specific 100px slot, so it
+  // didn't help. Wrapping in .card-image-crop (same technique .detail-image-crop already uses for
+  // the identical reason) gives the scaled image its own local clip boundary instead.
   const cardImageClass = isYoutubeThumbnailUrl(item.imageUrl) ? 'card-image card-image--zoom' : 'card-image';
   const imageSection = item.imageUrl
-    ? `<img class="${cardImageClass}" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async"
-            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-       <div class="card-placeholder placeholder-${catClass(item.category)}" style="display:none;">${letter}</div>`
-    : `<div class="card-placeholder placeholder-${catClass(item.category)}">${letter}</div>`;
+    ? `<div class="card-image-crop">
+         <img class="${cardImageClass}" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+         <div class="card-placeholder placeholder-${catClass(item.category)}" style="display:none;">${letter}</div>
+       </div>`
+    : `<div class="card-image-crop"><div class="card-placeholder placeholder-${catClass(item.category)}">${letter}</div></div>`;
 
   // One badge now conveys both category (via its color, always badge-${catClass}) and folder
   // (via its text, when the item has one) — consistent across every category, not just Movie's
