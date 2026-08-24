@@ -98,6 +98,17 @@ const TITLE_SEARCH_FN = {
   Movie: searchMoviesWikipedia,
 };
 
+// Folders with no title search at all, even though their own category has a search source —
+// items here are manually added, not looked up by title. Movie's "Videos" (trailers/clips) was
+// already excluded this way; Series' Short Form/Tutorials/Web Series folders added per direct
+// request ("remove the search from the short form, tutorial, and web series").
+const NO_TITLE_SEARCH_FOLDER_IDS = new Set([
+  'default-movies-videos',
+  'default-shows-shortform',
+  'default-shows-tutorials',
+  'default-shows-webseries',
+]);
+
 // Music Album (artist), Book (author), Movie (director), Show (creator), and Game (studio) each
 // have a meaningful separate "Author"-equivalent field — every other category collapses the
 // Title/Author row to a single field so it doesn't sit there empty.
@@ -123,11 +134,11 @@ export function updateTitleAuthorLayout(category, folderId) {
 }
 
 // Add-flow only — Edit always passes enabled=false, since re-searching an item you're already
-// editing (with its own Author/Summary fields visible) doesn't make sense. Movie's own "Videos"
-// folder (trailers/clips) is excluded even though Movie itself has a search source — those are
-// manually added, not looked up by title, same as Musician/Visual Art/Web Links/News.
+// editing (with its own Author/Summary fields visible) doesn't make sense. NO_TITLE_SEARCH_FOLDER_IDS
+// folders are excluded even though their own category has a search source — those are manually
+// added, not looked up by title, same as Musician/Visual Art/Web Links/News.
 export function updateTitleSearchUi(category, enabled) {
-  const hasSearch = enabled && !!TITLE_SEARCH_FN[category] && _wizardFolderId !== 'default-movies-videos';
+  const hasSearch = enabled && !!TITLE_SEARCH_FN[category] && !NO_TITLE_SEARCH_FOLDER_IDS.has(_wizardFolderId);
   document.querySelector('.title-author-row').classList.toggle('has-search-icon', hasSearch);
   document.getElementById('btn-title-search').style.display = hasSearch ? '' : 'none';
   document.getElementById('input-title').placeholder = hasSearch ? 'Search title' : 'Title';
@@ -682,11 +693,11 @@ export async function handleTitleSearch() {
   if (state.editingId) return; // Edit mode never searches
   const input = document.getElementById('input-title');
   const term = input.value.trim();
-  // Movie's "Videos" folder is manually added (trailers/clips), not looked up by title — same
-  // exclusion as updateTitleSearchUi's icon/placeholder. Series' own Podcasts folder gets its own
-  // Wikipedia search biased toward "podcast" instead of the whole Show category's "TV series" bias
-  // — per direct request ("can the podcasts also auto populate from wikipedia?").
-  const searchFn = _wizardFolderId === 'default-movies-videos' ? null
+  // NO_TITLE_SEARCH_FOLDER_IDS folders are manually added, not looked up by title — same exclusion
+  // as updateTitleSearchUi's icon/placeholder. Series' own Podcasts folder gets its own Wikipedia
+  // search biased toward "podcast" instead of the whole Show category's "TV series" bias — per
+  // direct request ("can the podcasts also auto populate from wikipedia?").
+  const searchFn = NO_TITLE_SEARCH_FOLDER_IDS.has(_wizardFolderId) ? null
     : _wizardFolderId === 'default-shows-podcasts' ? searchPodcastsWikipedia
     : TITLE_SEARCH_FN[state.modalCategory];
   if (!searchFn || term.length < 2) { hideTitleSearchResults(); return; }
