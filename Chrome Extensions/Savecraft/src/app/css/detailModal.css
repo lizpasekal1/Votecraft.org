@@ -318,7 +318,8 @@
 /* Extra zoom-crop for YouTube thumbnails specifically (isYoutubeThumbnailUrl, utils.js) — same
    reasoning/values as .card-image--zoom, cards.css. .detail-image-crop's own overflow: hidden
    clips the excess. */
-.detail-image--zoom { transform: scale(1.2); }
+/* 1.2 -> 1.25 -> 1.35, per direct follow-ups. */
+.detail-image--zoom { transform: scale(1.35); }
 
 .detail-placeholder {
   width: 100%;
