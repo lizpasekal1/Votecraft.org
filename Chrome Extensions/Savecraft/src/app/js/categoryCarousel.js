@@ -34,8 +34,11 @@ let _lastSlideItems = [];
 // (renderCuratedCategoryFolderLanding, renderGrid.js) to show that genre+category's own real
 // curated picks (resolveGenreRowItems, renderCuratedPages.js — the exact same items its landing
 // page's own row shows) instead of generic favorites/demo content, per direct request ("put the
-// corresponding content from the votecraft landing page into the carousel"). Every other caller
-// (the personal category landing pages) passes nothing and gets the original behavior unchanged.
+// corresponding content from the votecraft landing page into the carousel"). `isDemo` badges every
+// slide uniformly unless an individual item carries its own `_demoFallback` boolean (see
+// renderCategoryFolderLanding's blended real-saves-plus-demo-filler strip below), which wins for
+// that slide specifically. Every other caller (the curated folder-picker page above) passes
+// nothing per-item and gets the original all-or-nothing behavior unchanged.
 export function renderCategoryCarouselHtml(override = null) {
   const { items, isDemo } = override || resolveFavoriteSlides();
   _lastSlideItems = items;
@@ -50,14 +53,21 @@ export function renderCategoryCarouselHtml(override = null) {
   // carosel cards") — the active slide's title is still shown via .category-carousel-caption
   // (below the whole strip, wired in _updateActiveSlide), so nothing is lost, just no longer
   // duplicated on top of the image itself.
-  const slidesHtml = tripled.map((item, i) => `
+  const slidesHtml = tripled.map((item, i) => {
+    // Per-item demo flag (item._demoFallback) wins when a caller sets it — lets a blended strip
+    // (some real saves, some demo filler, renderCategoryFolderLanding) badge only the demo slides
+    // instead of all-or-nothing; falls back to the whole-strip `isDemo` for every existing caller
+    // that doesn't set it (uniformly all-demo or all-real), unchanged.
+    const slideIsDemo = item._demoFallback !== undefined ? item._demoFallback : isDemo;
+    return `
     <button type="button" class="category-carousel-slide" data-index="${i}" title="${escapeHtml(item.title || '')}">
       ${item.imageUrl
         ? `<img class="category-carousel-slide-img" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">`
         : ''}
-      ${isDemo ? '<span class="category-carousel-slide-demo-badge"><span class="category-carousel-slide-demo-badge-icon">✨</span> Demo</span>' : ''}
+      ${slideIsDemo ? '<span class="category-carousel-slide-demo-badge"><span class="category-carousel-slide-demo-badge-icon">✨</span> Demo</span>' : ''}
     </button>
-  `).join('');
+  `;
+  }).join('');
   return `
     <div class="category-carousel-heading-wrap">
       <div class="category-carousel-heading">Featured Saves</div>
