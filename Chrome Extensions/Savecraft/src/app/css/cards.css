@@ -661,7 +661,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40px;
+  /* Large white letter, per direct follow-up ("change the icon to a white first letter of the
+     item. make that letter large") — same bold weight .card-placeholder's own monogram uses,
+     just bigger to suit this larger box. */
+  font-size: 72px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
 }
 .category-carousel-slide-demo-badge {
   position: absolute;

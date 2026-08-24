@@ -16,7 +16,7 @@
 // strip's first child is"). Clicking a slide opens that item's real detail modal — genuine
 // behavior now that this is real save data, not decorative placeholder art.
 
-import { CAT_LABEL, CAT_EMOJI, state, PRIMARY_FOLDER_ID } from './state.js';
+import { CAT_LABEL, state, PRIMARY_FOLDER_ID } from './state.js';
 import { escapeHtml, debounce, catClass } from './utils.js';
 import { _wireCarouselArrows, resolveFavoriteSlides } from './dashboard.js';
 import { openDetailModal } from './detailModal.js';
@@ -75,12 +75,15 @@ export function renderCategoryCarouselHtml(override = null) {
     const slideIsDemo = item._demoFallback !== undefined ? item._demoFallback : isDemo;
     // No image (or one that fails to actually load — the onerror swap below) used to just leave
     // a flat, empty-looking box, per direct report ("the empty unloaded images look odd"). Same
-    // gradient-background-plus-icon placeholder every plain item card already falls back to
+    // gradient-background placeholder every plain item card already falls back to
     // (.card-placeholder/.placeholder-<Category>, cards.css/renderGrid.js) — reused here rather
-    // than inventing a second fallback treatment, just with the category's own icon (CAT_EMOJI)
-    // instead of a domain-letter monogram, since there's no single item.url this slide reads from
-    // consistently across both real saves and curated/demo content.
-    const placeholderHtml = `<div class="category-carousel-slide-placeholder placeholder-${catClass(item.category)}"${item.imageUrl ? ' style="display:none;"' : ''}>${CAT_EMOJI[item.category] || ''}</div>`;
+    // than inventing a second fallback treatment. A large white first-letter-of-the-title
+    // monogram, per direct follow-up ("change the icon to a white first letter of the item. make
+    // that letter large") — not the category icon (CAT_EMOJI) this started as, and not a
+    // domain-letter either, since there's no single item.url this slide reads from consistently
+    // across both real saves and curated/demo content.
+    const monogramLetter = (item.title || '?').trim()[0]?.toUpperCase() || '?';
+    const placeholderHtml = `<div class="category-carousel-slide-placeholder placeholder-${catClass(item.category)}"${item.imageUrl ? ' style="display:none;"' : ''}>${escapeHtml(monogramLetter)}</div>`;
     return `
     <button type="button" class="category-carousel-slide" data-index="${i}" title="${escapeHtml(item.title || '')}">
       ${item.imageUrl
