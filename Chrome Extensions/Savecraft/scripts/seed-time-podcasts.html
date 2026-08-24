@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SaveCraft — Seed TIME Podcasts</title>
+<style>
+  body { font-family: monospace; max-width: 700px; margin: 40px auto; padding: 20px; background: #111; color: #ddd; }
+  h1 { color: #7C6FF5; }
+  button { background: #7C6FF5; color: #fff; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  #log { margin-top: 20px; background: #1a1a1a; border: 1px solid #333; padding: 12px; border-radius: 6px; max-height: 500px; overflow-y: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.5; }
+  .ok { color: #4ade80; } .err { color: #f87171; } .info { color: #60a5fa; }
+  .warning { background: #332200; border: 1px solid #aa5500; border-radius: 6px; padding: 12px; margin-bottom: 20px; color: #ffaa00; }
+</style>
+</head>
+<body>
+<h1>SaveCraft — Seed TIME "100 Best Podcasts" (partial: 49/100)</h1>
+
+<div class="warning">
+  Only the first 49 of TIME's 100 (their page lazy-loads the rest, not reliably fetchable) — the
+  remaining ~51 can be appended later with a second run of a similar tool once available. This
+  ADDS new curated_items docs (never overwrites/deletes existing ones) — safe to re-run, it skips
+  any id that already exists. Requires curated_items' write rule temporarily set to
+  <code>allow write: if request.auth != null;</code> and an already-signed-in browser session —
+  revert the rule after.
+</div>
+
+<p>1. Sign in with your Firebase account in this browser. 2. Click Preview (read-only) to confirm
+what would be added. 3. Click Run to write.</p>
+<button id="btn-preview">Preview (read-only)</button>
+<button id="btn-run" disabled>Run (writes)</button>
+
+<div id="log"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyArJ6pkXUDbZf4jcxRita0qcdr-hT46kI8",
+  authDomain: "votecraft-789.firebaseapp.com",
+  projectId: "votecraft-789",
+  storageBucket: "votecraft-789.firebasestorage.app",
+  messagingSenderId: "939909708303",
+  appId: "1:939909708303:web:b0663ec86e15c05b3a817a",
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const logEl = document.getElementById('log');
+function log(msg, cls = '') {
+  const line = document.createElement('div');
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// Verified directly against https://time.com/collections/100-best-podcasts/ (fetched twice,
+// consistent both times) — items 1-49 of 100; the page lazy-loads the rest past this point, not
+// reachable via a plain fetch. Title + TIME's own short description for each. No per-podcast URL
+// is reliably available (TIME's own slug ids aren't exposed in the static HTML), so every item
+// links back to the collection page itself rather than guessing a URL.
+const SOURCE_URL = 'https://time.com/collections/100-best-podcasts/';
+const PODCASTS = [
+  ['2 Dope Queens', 'Unfiltered conversation'],
+  ['30 for 30', 'More than the highlights'],
+  ['99% Invisible', 'Understanding our surroundings'],
+  ['Acquired', 'Deep dives on the biggest brands'],
+  ['Armchair Expert With Dax Shepard', 'Celebs getting vulnerable'],
+  ['Articles of Interest', 'The meaning behind what we wear'],
+  ['Bear Brook', 'A nuanced take on tragedy'],
+  ['Beautiful Stories From Anonymous People', 'Where strangers tell all'],
+  ['The Big Dig', 'Unearthing an infamous project'],
+  ['The Big Picture', 'A home for movie buffs'],
+  ['The Bill Simmons Podcast', 'The pioneering sports pod'],
+  ['Binge Mode', 'Nerd culture rules'],
+  ["Blank Check With Griffin & David", "On directors' passion projects"],
+  ['Bodega Boys', 'Casual riffing with great chemistry'],
+  ['Bodies', 'The female body and its ailments'],
+  ['Call Her Daddy', 'Headline-making interviews'],
+  ['Call Your Girlfriend', 'Eavesdropping on your smartest friends'],
+  ['Classy With Jonathan Menjivar', 'Money changes everything'],
+  ['Cocaine & Rhinestones', 'Country music unplugged'],
+  ['Code Switch', 'Unpacking race in America'],
+  ["Conan O'Brien Needs a Friend", 'Late night in your earbuds'],
+  ['Criminal', 'The human side of crime'],
+  ['The Daily', 'What you need to know today'],
+  ["Dan Carlin's Hardcore History", 'Unembellished history'],
+  ['Dead Eyes', 'Confronting the nicest guy in Hollywood'],
+  ['Dear Sugars', 'Empathetic advice'],
+  ['Death, Sex & Money', 'Frank talk about taboo topics'],
+  ['Decoder Ring', 'Mining cultural artifacts'],
+  ['Dirty John', 'A soap-worthy drama'],
+  ['The Dream', 'On get-rich-quick schemes'],
+  ['The Dropout', 'The Elizabeth Holmes saga'],
+  ['Ear Hustle', 'Life incarcerated'],
+  ['Embedded', 'On-the-ground storytelling'],
+  ['Everything Is Alive', 'Interviews with inanimate objects'],
+  ['The Ezra Klein Show', 'Wonks explain the world'],
+  ['Fiasco', 'American catastrophes'],
+  ['Fighting in the War Room', 'Debating movies and more'],
+  ['Fresh Air', 'The original interview show'],
+  ['Gilmore Guys', 'A pioneer of episode recaps'],
+  ['Good Hang With Amy Poehler', 'Sunny celebrity interviews'],
+  ['Good Inside With Dr. Becky', "Millennial parents' Dr. Spock"],
+  ['The Habitat', 'A rehearsal for life on Mars'],
+  ['Hard Fork', 'Making sense of AI and beyond'],
+  ['Heavyweight', 'Helping regular folks move on'],
+  ['Home Cooking', 'A feel-good cooking show'],
+  ['Homecoming', 'A throwback radio drama'],
+  ['In Our Time', 'Accessible intellectual discourse'],
+  ['In the Dark', 'The best true-crime podcast'],
+  ['Las Culturistas With Matt Rogers and Bowen Yang', 'Going viral'],
+];
+
+// Same folderId mechanism scripts/migrate-curated-categories.html introduced for the Shows->
+// Movie/Series retag — category matches Series' own real CATEGORIES member ('Show'), folderId
+// scopes these specifically to the Podcasts folder card (getCuratedCategoryFolderCounts,
+// renderFilters.js), same as any other folder-tagged curated item.
+const GENRE = 'Top 100';
+const CATEGORY = 'Show';
+const FOLDER_ID = 'default-shows-podcasts';
+const ID_PREFIX = 'cur-time-podcasts-';
+
+function buildDocs() {
+  return PODCASTS.map(([title, notes], idx) => ({
+    id: `${ID_PREFIX}${String(idx + 1).padStart(2, '0')}`,
+    data: { id: `${ID_PREFIX}${String(idx + 1).padStart(2, '0')}`, title, url: SOURCE_URL, imageUrl: null, notes, genre: GENRE, category: CATEGORY, folderId: FOLDER_ID },
+  }));
+}
+
+async function collectMissing() {
+  const docs = buildDocs();
+  const missing = [];
+  for (const d of docs) {
+    const snap = await db.collection('curated_items').doc(d.id).get();
+    if (!snap.exists) missing.push(d);
+  }
+  return { total: docs.length, missing };
+}
+
+async function preview() {
+  const { total, missing } = await collectMissing();
+  log(`${total} podcasts in this batch — ${missing.length} not yet in Firestore, ${total - missing.length} already present (skipped).`, 'info');
+  missing.slice(0, 10).forEach(d => log(`  + ${d.data.title}`));
+  if (missing.length > 10) log(`  … and ${missing.length - 10} more`);
+  log('', '');
+  log(missing.length ? 'Preview only — no writes made. Click Run to add them.' : 'Nothing new to add.', 'ok');
+  document.getElementById('btn-run').disabled = missing.length === 0;
+}
+
+async function run() {
+  const { missing } = await collectMissing();
+  if (!missing.length) { log('Nothing new to add.', 'ok'); return; }
+  log(`Adding ${missing.length} podcasts…`, 'info');
+  const batch = db.batch();
+  for (const d of missing) batch.set(db.collection('curated_items').doc(d.id), d.data);
+  await batch.commit();
+  log(`✅ Done. ${missing.length} podcasts added under Series -> Podcasts.`, 'ok');
+  log('Bump _CURATED_CACHE_VERSION in storage.js and deploy so clients refetch.', 'info');
+}
+
+document.getElementById('btn-preview').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-preview');
+  btn.disabled = true;
+  logEl.textContent = '';
+  try { await preview(); }
+  catch (e) { log('Error: ' + e.message, 'err'); }
+  finally { btn.disabled = false; }
+});
+
+document.getElementById('btn-run').addEventListener('click', async () => {
+  if (!confirm('This will write to production Firestore. Continue?')) return;
+  const runBtn = document.getElementById('btn-run');
+  runBtn.disabled = true;
+  document.getElementById('btn-preview').disabled = true;
+  logEl.textContent = '';
+  try { await run(); }
+  catch (e) { log('Error: ' + e.message, 'err'); }
+  finally { document.getElementById('btn-preview').disabled = false; }
+});
+</script>
+</body>
+</html>
