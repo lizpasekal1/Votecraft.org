@@ -30,8 +30,11 @@
     /* Extra room at the very end of the scroll so the last widget's own content (e.g. the
        Profile widget) doesn't end up sitting directly behind the floating "+ Add Item" FAB
        (misc.css's .fab-add — 56px tall, 24px off the bottom, so ~96px covers it plus a little
-       breathing room) once the user scrolls all the way down, per request. */
-    padding-bottom: 96px;
+       breathing room) once the user scrolls all the way down, per request. Now the same
+       --fab-clearance var (misc.css) every other mobile page's .grid-area gets by default as
+       standard practice — this page still needs its own override since it's otherwise
+       overflow:hidden (fixed-fit desktop layout, re-enabled to scroll only here on mobile). */
+    padding-bottom: var(--fab-clearance);
   }
   .dashboard-wrap {
     max-height: none;

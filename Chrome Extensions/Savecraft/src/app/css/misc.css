@@ -501,24 +501,19 @@
     --page-mobile-pad: 16px;
   }
 
-  /* Profile page */
-  /* Same fix as .grid-area:has(.dashboard-wrap) (dashboard.css) — the page-end "Manage account"
-     button below (moved here on mobile, see #profile-manage-account/.profile-manage-account-
-     mobile further down) was ending up hidden behind the floating "+ Add Item" FAB once scrolled
-     all the way down, per request. */
-  .grid-area:has(.profile-page-wrap) {
-    padding-bottom: var(--fab-clearance);
-  }
+  /* Profile page — FAB clearance below the page-end "Manage account" button (moved here on
+     mobile, see #profile-manage-account/.profile-manage-account-mobile further down) now comes
+     for free from the base .grid-area rule above (standard practice on every mobile page); this
+     page needs no override of its own. */
 
-  /* Shared Saves page — same :has() idiom as the profile-page rule above, used here for two
-     things sharedSaves.css used to instead fight from the child side: FAB clearance (was
-     duplicated as its own literal 96px there), and pulling the hero banner up by pinning this
-     rule's own padding-top to 6px directly (16px base − the 10px reduction requested) instead of
-     leaving the base 16px in place and applying a -10px margin-top on .shared-page-wrap to cancel
-     part of it back out. */
+  /* Shared Saves page — pulls the hero banner up by pinning this rule's own padding-top to 6px
+     directly (16px base − the 10px reduction requested) instead of leaving the base 16px in place
+     and applying a -10px margin-top on .shared-page-wrap to cancel part of it back out.
+     padding-bottom's own FAB clearance (was duplicated as its own literal 96px in sharedSaves.css,
+     then as its own var(--fab-clearance) restatement here) now comes for free from the base
+     .grid-area rule above instead — same standard-practice consolidation as the Profile page. */
   .grid-area:has(.shared-page-wrap) {
     padding-top: 6px;
-    padding-bottom: var(--fab-clearance);
   }
 
   /* Admin Kanban page — mobile only, scoped via the .admin-kanban-wrap hook adminKanban.js sets
@@ -713,7 +708,19 @@
      back to plain vh in the (now rare) browsers that don't support dvh, via the two-declaration
      fallback pattern below rather than @supports, since an unsupported value is simply ignored. */
   .main-layout { height: calc(100vh - 64px); height: calc(100dvh - 64px); }
-  .grid-area { padding: var(--page-mobile-pad); }
+  /* Standard mobile practice, per direct request ("I want this to be a standard practice for the
+     mobile design"): every normally-scrolling page gets --fab-clearance as its bottom padding by
+     default, not just the handful of pages that had separately asked for it below — so the last
+     item on ANY page's list/grid ends up above the floating "+ Add Item" FAB once scrolled all the
+     way down, not hidden behind it. A page that instead uses the .grid-area:has(<page>) fixed-fit/
+     overflow:hidden idiom (Kanban, Admin Kanban, Category landing on desktop) isn't affected by
+     this base rule at all — those already fully own their own padding via a higher-specificity
+     :has() selector. The two mobile :has() rules just below that used to each restate this same
+     --fab-clearance by hand (profile page, Shared Saves) now just inherit it from here instead. */
+  .grid-area {
+    padding: var(--page-mobile-pad);
+    padding-bottom: var(--fab-clearance);
+  }
 
   /* Single column cards */
   .cards-grid { grid-template-columns: 1fr; }
