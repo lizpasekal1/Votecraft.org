@@ -17,7 +17,7 @@ import { renderKanbanBoard } from './kanban.js';
 import { renderAdminKanbanBoard } from './adminKanban.js';
 import { openDetailModal } from './detailModal.js';
 import { openEditModal } from './addEditModal.js';
-import { renderDashboard } from './dashboard.js';
+import { renderDashboard, resolveFavoriteSlides } from './dashboard.js';
 import { renderProfilePage } from './profile.js';
 import { renderSharedSavesPage } from './sharedSaves.js';
 import { renderAboutPage } from './about.js';
@@ -604,6 +604,45 @@ function renderMusicGenreLanding() {
 // (CURATED_GENRE_LANDING_CONTENT['Top 100'].rows, state.js).
 const CAROUSEL_DEMO_MATCHES_VOTECRAFT_LANDING = new Set(['Movie', 'Book', 'Game']);
 
+// Blends this category's own real saves with demo filler for its carousel — per direct request
+// ("the demo content for each category should still show in the empty slots till the user has
+// saved enough items... each new save removes just one demo content and the center save is
+// always the most recent save"), replacing the earlier all-real-or-all-demo switch. Up to 12
+// slides total: as many of the user's own most-recent saves as exist, topped up with demo filler
+// (same per-category source as before: the VoteCraft/Top 100 row for Films/Books/Games, else the
+// generic resolveFavoriteSlides() chain) for whatever's left — so each additional real save
+// displaces exactly one demo slide. The most recent real save always lands at the exact middle
+// index of the returned array, which is where the carousel's own centering math (initCategoryCarousel,
+// categoryCarousel.js) puts the active/featured slide on load.
+function buildBlendedCategoryCarouselItems(category) {
+  const real = getRecentCategoryItems(category).map(i => ({ ...i, _demoFallback: false }));
+  const demoNeeded = 12 - real.length;
+  let demoItems = [];
+  if (demoNeeded > 0) {
+    // For Films/Books/Games, the fallback (VoteCraft/Top 100 row content) is always genuinely not
+    // the user's own — badge it Demo unconditionally. For every other category, resolveFavoriteSlides()
+    // already knows whether what it's returning is the user's own real (cross-category) favorites
+    // (isDemo: false, no badge) or genuine fallback content (isDemo: true) — respect that instead
+    // of blanket-marking everything from this source as demo.
+    const [demoSource, demoSourceIsDemo] = CAROUSEL_DEMO_MATCHES_VOTECRAFT_LANDING.has(category)
+      ? [resolveGenreRowItems('Top 100', category), true]
+      : (({ items, isDemo }) => [items, isDemo])(resolveFavoriteSlides());
+    const realIds = new Set(real.map(i => i.id));
+    demoItems = demoSource
+      .filter(i => !realIds.has(i.id)) // never show a demo slide for something already saved for real
+      .slice(0, demoNeeded)
+      .map(i => ({ ...i, _demoFallback: demoSourceIsDemo }));
+  }
+
+  if (!real.length) return demoItems; // nothing saved yet — plain demo strip, same as before
+
+  // Insert the most recent save (real[0]) at the exact middle index of the combined array — the
+  // rest (older real saves, then demo filler) split evenly on either side of it.
+  const rest = [...real.slice(1), ...demoItems];
+  const mid = Math.ceil(rest.length / 2);
+  return [...rest.slice(0, mid), real[0], ...rest.slice(mid)];
+}
+
 function renderCategoryFolderLanding(category) {
   const container = document.getElementById('cards-grid');
   const gridTitle = document.getElementById('grid-title');
@@ -620,30 +659,11 @@ function renderCategoryFolderLanding(category) {
 
   // Carousel below the folder cards, per direct request — every category landing page here gets
   // it (Musician/Music Album never reach this function at all, per the exclusion in the caller
-  // above, so "not on Music" is automatic rather than a second check here). Shows this category's
-  // own most-recently-saved items when the user has any (per direct follow-up: "update the
-  // carousels on the category pages to actually show the recent saves from those sections").
-  const recentCategoryItems = getRecentCategoryItems(category);
-  let carouselOverride;
-  if (recentCategoryItems.length) {
-    carouselOverride = { items: recentCategoryItems, isDemo: false };
-  } else if (CAROUSEL_DEMO_MATCHES_VOTECRAFT_LANDING.has(category)) {
-    // Films/Books/Games specifically get the VoteCraft (Top 100) landing page's own row content
-    // for this category as their demo fallback, per direct follow-up ("make the demo content
-    // match the votecraft landing page demo content in these sliders") — same
-    // resolveGenreRowItems() the curated folder-picker's own carousel already uses
-    // (renderCuratedCategoryFolderLanding, below), not the generic favorites/demo chain. isDemo:
-    // true (matches every other curated-fallback carousel here) since this isn't the user's own
-    // saved content.
-    const votecraftRowItems = resolveGenreRowItems('Top 100', category);
-    carouselOverride = votecraftRowItems.length ? { items: votecraftRowItems, isDemo: true } : null;
-  } else {
-    // Every other category's demo fallback is unchanged — renderCategoryCarouselHtml's own
-    // default (resolveFavoriteSlides: real global favorites, else admin demo config, else curated
-    // Top 100), per the earlier direct follow-up ("if not then just keep showing the demo
-    // content").
-    carouselOverride = null;
-  }
+  // above, so "not on Music" is automatic rather than a second check here). Blends this category's
+  // own real saves with demo filler (buildBlendedCategoryCarouselItems, above) rather than an
+  // all-or-nothing switch between the two.
+  const blendedItems = buildBlendedCategoryCarouselItems(category);
+  const carouselOverride = blendedItems.length ? { items: blendedItems, isDemo: false } : null;
 
   container.className = 'category-landing-page';
   container.innerHTML = `
