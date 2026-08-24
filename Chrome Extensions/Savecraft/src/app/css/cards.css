@@ -464,6 +464,7 @@
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 10px;
+  text-align: center;
 }
 .category-carousel-divider {
   height: 1px;
