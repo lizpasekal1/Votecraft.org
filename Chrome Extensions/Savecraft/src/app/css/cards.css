@@ -979,6 +979,14 @@
   display: block;
   background: #fff;
 }
+/* Extra zoom-crop for YouTube thumbnails specifically (isYoutubeThumbnailUrl, utils.js) — some
+   have real black letterboxing/pillarboxing baked into the image's own pixels (fetchVideoThumbnail's
+   own comment, api.js) that object-fit: cover alone can shrink but not fully crop away on whichever
+   axis isn't the one already being cropped, per direct report ("i don't want to see black bands...
+   full bleed the image container"). .card's own overflow: hidden clips the excess. */
+.card-image--zoom {
+  transform: scale(1.2);
+}
 
 .card-placeholder {
   width: 100px;
