@@ -383,14 +383,25 @@
      priority over it — belt and suspenders against any residual influence. */
   .category-folder-card {
     aspect-ratio: none;
-    height: 130px;
+    /* 10% smaller again (130px -> 117px), per direct follow-up ("make the folder cards 10%
+       smaller"). Grid width (above) untouched — that governs each card's actual WIDTH and was
+       just widened for less side padding, per a separate direct follow-up; shrinking it back down
+       here would fight that. This height is the one property that's independently "the card's
+       own size" outside of what the grid track dictates. */
+    height: 117px;
   }
   .category-folder-card-name {
-    font-size: 15px;
-  }
-  .category-folder-card-count {
+    /* 15px -> 14px, per direct follow-up ("decrease the font also"). */
     font-size: 14px;
   }
+  .category-folder-card-count {
+    /* 14px -> 13px, same follow-up. */
+    font-size: 13px;
+  }
+  /* Icon size explicitly left alone, per direct follow-up ("leave the icons their current
+     size") — folderIconHtml() (utils.js) bakes a fixed px width/height straight onto the <svg>
+     itself (not CSS/em-relative), so it was already unaffected by the card/font shrink above;
+     noted here so a future change doesn't assume it needs its own override too. */
 }
 
 /* Wraps the folder-card grid above + the demo carousel below (categoryCarousel.js) — plain
