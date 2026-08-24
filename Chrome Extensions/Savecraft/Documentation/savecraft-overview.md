@@ -6,6 +6,27 @@ SaveCraft is a Chrome extension that acts as a personal media library. Users sav
 
 ## Recent Additions (latest session)
 
+An exceptionally long session in two connected halves. First, closing out the Music genre-bucket
+taxonomy (Alt/Indie rename, Metal merged into "Rock/Metal," a new Meditation bucket, Reggae moved
+into R&B/Soul), a one-time bulk import of 791 artists transcribed from Spotify screenshots into the
+user's own account, a real two-stage iTunes rate-limiting bug (a cache-poisoning bug, then a
+flood-of-retries regression from fixing it), a generic A-Z jump-index rail, a Musician-only raw
+genre-tag field/badge, and a full confirmation of the Music section's navigation architecture
+(picker vs. flat filtered list vs. the sidebar's own folder page) with custom `?v=Music`/
+`?v=default-musicians` URL aliasing. Second, a `/simplify` pass over that work — which surfaced the
+real gap actually behind live "Load failed"/iTunes-overload reports (the rate-limit breaker only
+covered 2 of 7 iTunes call sites; a genre-backfill loop staggered 20x too fast) — followed by
+Web Links platform additions, an inline "Fetch Albums" affordance, eliminating a redundant Music
+page/state, and two major new features: a custom-styled sort dropdown with an embedded page-search
+field paired with turning the header search icon into a true library-wide search, and — the
+largest single piece — folder-picker landing pages (with a demo center-emphasis carousel reusing
+the Dashboard's own infinite-loop mechanics and real "Recent Saves" demo content) for every
+top-level category except Music. See `session-context.md` for the full blow-by-blow.
+
+---
+
+## Recent Additions (previous session)
+
 Another very long, live-feedback-driven session, three main arcs: Musician/Music polish (title
 search, a genre tag, two real bugs — duplicate iTunes video-album cards, a Musician bio rendering
 twice) closing with an in-modal save-confirmation redesign; a new **Music landing page** (15
@@ -22,7 +43,7 @@ blow-by-blow.
 
 ---
 
-## Recent Additions (previous session)
+## Recent Additions (older session)
 
 This session built the WordPress Admin Bridge (see "Key Features" above) — Phase 1 (Admin Kanban
 manageable from wp-admin) end to end: a dedicated, narrowly-scoped Firebase bot account; a new
@@ -38,24 +59,7 @@ See `session-context.md` for the full blow-by-blow.
 
 ---
 
-## Recent Additions (older session)
-
-This session spanned three efforts: a Profile page mobile pass, new Privacy Policy/Terms of Service pages, and a brand-new "Admin Kanban" board for tracking SaveCraft's own project tasks — closed by discovering that native HTML5 drag-and-drop never worked on iOS touch at all, on *either* kanban board, and fixing it for both. See `session-context.md` for the full blow-by-blow (real bugs found, exact CSS/selector details). (Note: this doc's own log also has a gap — a concurrent session's mobile polish pass across the sidebar drawer, Curated bare-list page, and Shared Saves page landed between this entry and the "older session" one below, but was only logged in `session-context.md`, not here.)
-
-- **Profile page mobile pass** — text sizes bumped throughout, Interests' checkbox grid forced to 2 columns on mobile, Connections rows restructured to stack instead of squeezing description text next to a fixed-width button, and a real bug fixed where `.profile-widget-grid`'s row-pairing stretched the Interests card to match Connections' height, leaving a large empty gap.
-- **New: Privacy Policy & Terms of Service** (`src/webpage/privacy-policy.html`, `terms-of-service.html`) — modeled on Raindrop.io's structure/philosophy where it fit, written honestly for what SaveCraft actually does (no fabricated payment/API terms). Both carry a "working draft" banner. Linked from the Profile page, Settings dropdown, and the Sponsored Statements footer.
-- **New: Admin Kanban board** (`src/app/js/adminKanban.js`) — see "Key Features" below for the full description.
-- **New: `Documentation/launch-requirements.md`** — a ~30-item checklist of what's outstanding before real user testing; seeded onto the Admin Kanban board as real cards, one per sub-task.
-- **Real bug found and fixed: native HTML5 drag-and-drop never fires from touch on iOS Safari** — true of the pre-existing Queue Kanban board, not something this session broke (reported live: "I can't drag on the queue kanban either"). Reimplemented with real touch events in both `kanban.js` and `adminKanban.js`, sharing the same reorder/persist logic as the existing mouse path via one `performDrop()` function per file.
-- Deployed live after every change; committed in two scoped batches (`bbc3019`, `c9d1d39`).
-
-- **Mobile sidebar drawer** (`misc.css`) — fixed-px width (not `vw`, which overshoots on iOS Safari), lighter overlay tint, tighter item padding, the Curated mode-tab made permanently purple/active-styled, and a tighter mobile-only indent for the Dashboard link. Tapping Curated or Shared on mobile now closes the drawer (`closeSidebar()` added to that click handler).
-- **Curated SaveCraft bare-list page** (`cards.css`/`renderCuratedPages.js`) — mobile row layout restructured to CSS Grid via a `display: contents` unwrap trick, avatar shrunk, redundant "View" button replaced by a chevron, Cause Area chips collapsed behind a "View more" toggle, and a new "Why Curated Lists" accordion added.
-- **Shared Saves page** (`sharedSaves.css`/`sharedSaves.js`) — fixed a real horizontal-centering bug (asymmetric mobile padding), added FAB clearance, resized cards for mobile, added a CSS-only compact-title swap for narrow screens, and fixed the slider bleed math to account for two stacked layers of ancestor padding.
-- **Two recurring bug patterns, each hit multiple times and fixed each time**: (1) an author rule giving an element its own non-`none` `display` silently beats the browser's `[hidden] { display: none }` UA rule at equal specificity — the fix is always ordering the base `display: none` rule before the later override in source order; (2) a bleed-past-parent negative margin that only accounts for the nearest ancestor's padding, missing that `.grid-area`'s own mobile padding (misc.css, applied to every page) stacks with a page wrapper's own copy of the same padding.
-- **Handled a concurrent second agent editing the Profile page mid-session** — inspected `git status` before every stage and left already-staged, not-mine files (`profile.css`, `profile.js`, `misc.css`, `index.html`) completely untouched rather than risk clobbering in-progress work; their commit landed with zero overlap against this session's own scoped commits.
-- **`/simplify` pass** — introduced two shared CSS custom properties (`--fab-clearance`, `--page-mobile-pad`) replacing hand-copied magic numbers across `misc.css`/`sharedSaves.css`; replaced a child-side negative-margin fight with a direct `.grid-area:has(.shared-page-wrap)` padding override; made two Curated-page toggle handlers flip their own `hidden`/class attributes instead of re-running the full list render. See `session-context.md` for the full applied/skipped breakdown.
-- Deployed live after every change, per standing instruction.
+*(Older session: a Profile page mobile pass (text sizes, Interests' checkbox grid, Connections rows restructured to stack), new Privacy Policy/Terms of Service pages, and a brand-new "Admin Kanban" board for tracking SaveCraft's own project tasks — closed by discovering that native HTML5 drag-and-drop never worked on iOS touch at all, on *either* kanban board, and fixing it for both. Same era, a separate pass fixed the mobile sidebar drawer, restructured the Curated bare-list page's mobile row layout, and fixed a real horizontal-centering bug on the Shared Saves page. Older still, spanned voice notes via the My Notes toolbar, a real My Notes Profile widget, a full sidebar reorganization, a new shared "You're opening X" confirm popup, a "Saved List scope" feature for browsing categories while scoped to a specific list, and — the largest single piece — dozens of live-feedback rounds rebuilding the Edit Item modal itself (sizing, a purple header bar, field reorganization). See `session-context.md` for the full blow-by-blow on all of the above.)*
 
 ---
 
@@ -123,7 +127,7 @@ Savecraft/
 
 ### `src/app/js/` modules
 
-The library used to be one ~3,700-line `app.js`. It's now split into 31 ES modules, loaded via `<script type="module" src="js/main.js">` in `index.html`. Modules import/export between each other (some circularly — safe under ES modules since nothing is called at module-evaluation time, only from inside functions):
+The library used to be one ~3,700-line `app.js`. It's now split into several dozen ES modules, loaded via `<script type="module" src="js/main.js">` in `index.html`. Modules import/export between each other (some circularly — safe under ES modules since nothing is called at module-evaluation time, only from inside functions):
 
 | Module | Responsibility |
 |--------|-----------------|
@@ -159,7 +163,13 @@ The library used to be one ~3,700-line `app.js`. It's now split into 31 ES modul
 | `sharedSaves.js` | The Shared Saves page — followed-curated-list portal cards + a Friends stub |
 | `share.js` | Share dropdown/modal (Saved Lists picker, link-sharing toggle, "Embed options" entry point), CSV export, Markdown export |
 | `embedBuilder.js` | The Embed Builder pseudo-view (`state.view === 'embed-builder'`) — source picking (category/folder/Custom Slider), the asset list, the style panel, the live carousel preview, and the "Embed code" link box |
-| `main.js` | Entry point — search, sort, theme, sidebar collapse, mobile sidebar, `init()`, all DOMContentLoaded event wiring |
+| `main.js` | Entry point — theme, sidebar collapse, mobile sidebar, `init()`, all DOMContentLoaded event wiring; page-scoped search (`handleSearch`, driven by the sort dropdown's own embedded field, see `sortSelect.js`) |
+| `navigation.js` | `navigateToView` — single entry point for every `state.view` change (History API sync, `persistViewState`, re-render); `VIEW_TO_URL_PARAM`/`urlParamToView` alias a couple of internal view strings to cleaner public `?v=` URLs |
+| `azIndexRail.js` | Generic right-edge A-Z jump-index rail, shown on any scrollable card-list page |
+| `sortSelect.js` | Custom-styled replacement for the header's old native sort `<select>` — a trigger+dropdown-panel component whose last row is a real text input driving `main.js`'s page-scoped search |
+| `globalSearch.js` | The header search icon's own logic — a true library-wide search (distinct from `sortSelect.js`'s page-scoped one) with a Spotlight-style results dropdown panel; reuses `resolveFavoriteSlides()` (`dashboard.js`) as its result-row visual language |
+| `categoryCarousel.js` | The demo center-emphasis carousel shown below the folder-picker cards on every non-Music category landing page (see "Category Landing Pages" below) — reuses `dashboard.js`'s own infinite-loop carousel mechanics and real "Recent Saves" demo content |
+| `bulkImportArtists.js` | One-time, console-only personal-migration script (bulk artist import from transcribed Spotify screenshots + follow-up cleanup/backfill helpers) — not part of the app's real feature surface, kept only until its one-time job is fully done |
 
 ### `scripts/` (admin tooling, not loaded by the extension)
 
@@ -186,6 +196,8 @@ The original monolithic `app.js`/`app.css` have been deleted (2026-07-29) — se
 **Extension-only, no web equivalent:** the right-click "Save to SaveCraft" capture (`src/background/background.js` + `src/content/content.js`) — web visitors add items through the Add modal only.
 
 **No build step.** Editing a `.js` or `.css` file and refreshing the extension in `chrome://extensions` (or just reloading the page, for web) is all that's needed to see changes.
+
+**Mobile FAB clearance — standard practice.** The floating "+ Add Item" button (`#fab-add`, `.fab-add` in `misc.css`) is `position: fixed; bottom: 24px;`, so it sits on top of whatever content is scrolled beneath it. Every normal (scrolling) mobile page must leave room below its last item so that content doesn't end up hidden behind the FAB once scrolled all the way down. This is handled centrally, not per-page: the base `.grid-area` mobile rule (`misc.css`, inside the `@media (max-width: 768px)` block) applies `padding-bottom: var(--fab-clearance)` (currently `130px`, defined once on `:root` in the same block) to every page automatically. **A new mobile page needs no FAB-clearance CSS of its own** unless it opts out of the default `.grid-area` scroll behavior (e.g. a fixed-fit, non-scrolling page like Kanban or Admin Kanban, which use `.grid-area:has(<page-class>) { overflow: hidden; ... }` and manage their own padding) — if such a page hides the FAB entirely (Admin Kanban does, via `body:has(.admin-kanban-wrap) .fab-add { display: none; }`) it doesn't need clearance either. If a page's content wrapper uses `flex: 1; min-height: 0;` (the "shrink to exactly fit the available box" pattern used by fixed-fit desktop layouts), make sure any **mobile** override for that same wrapper resets it back to `flex-shrink: 0; min-height: auto;` — otherwise the wrapper silently compresses its content to fit rather than growing past the viewport, and `.grid-area`'s scroll (and the FAB clearance padding) never actually has anything real to scroll into, even though the CSS looks correct (a real bug hit and fixed on the Category Landing Pages — see "Category Landing Pages" below).
 
 ---
 
@@ -390,7 +402,13 @@ This folder (`default-movies-videos`) is for manually-added video clips (YouTube
 Every card's badge (top-right, e.g. "BOOK"/"FILMS") is colored by category (`badge-${catClass(category)}`, unchanged) but shows the item's **folder name** instead of the generic category label when it has one — e.g. a Book in the "Authors" folder shows "AUTHORS", not "BOOK". This replaced a separate folder-icon label that used to sit next to the badge; one badge now conveys both. "Favorites" folders are excluded (shows the plain category label instead, since Favorites isn't a real subfolder of the category).
 
 ### Search & Sort
-The search bar and sort dropdown in the header filter both the grid view and the Kanban board in real time. Sort options: Newest/Oldest first (by save date), A → Z / Z → A (title), and Release Date (Newest/Oldest) — the latter two sort by an item's `year` field (populated for Music Albums via Fetch Albums import or the auto-backfill).
+Two deliberately distinct searches, plus sort:
+
+- **Sort dropdown** (`sortSelect.js`) — a custom-styled trigger+panel (not a native `<select>`), showing a static "Sort" label (the current choice is only surfaced via the panel's own highlighted row + a hover tooltip). Options: Newest/Oldest first (by save date), A → Z / Z → A (title), Release Date (Newest/Oldest) — the latter two sort by an item's `year` field. Its last row is a real text input that filters **the current page only** — the same mechanism the Kanban board's own search already used.
+- **Header search icon** (`globalSearch.js`) — a true library-wide search across every category/folder ("All My Saves"), shown as a results dropdown panel (thumbnail/title/category, same visual language as the Add-modal's own title search) rather than filtering the current page. Clicking a result opens that item's detail modal directly. Fully separate state from the sort dropdown's page-search, so neither can cross-wire the other.
+
+### Category Landing Pages
+Every top-level category tab except Musician/Music Album (`renderCategoryFolderLanding()`, `renderGrid.js`) shows its real subfolders as a picker grid of solid-purple square cards (icon, name, save count) instead of a flat item list — clicking a card goes to that folder's own real page. Below the folder cards sits a demo center-emphasis carousel (`categoryCarousel.js`) that loops infinitely (reusing `dashboard.js`'s own `_wireCarouselArrows` mechanics) and shows the same real demo content the Dashboard's "Recent Saves" widget resolves (`resolveFavoriteSlides()`) — real favorites if the user has any, else admin-configured demo cards, else the curated Top 100 fallback. The Music/Musician category is explicitly excluded from both — it keeps its own 15-card genre-bucket picker instead (see "Music landing page" in Recent Additions).
 
 ### Saved Lists / Curated Lists (sidebar, under Dashboard)
 Two independently-collapsible rows nested under the sidebar's Dashboard entry, each with its own user-creatable, user-named list of child rows ("+ New folder"):
