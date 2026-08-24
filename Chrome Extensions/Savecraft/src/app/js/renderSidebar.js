@@ -97,8 +97,13 @@ const CURATED_LISTS_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" height="
 const FOLDER_ID_TO_CURATED_CATEGORY = {
   'default-books-authors': 'Book Author',
   'default-movies-directors': 'Movie Director',
-  'default-shows-creators': 'Show Creator',
   'default-games-companies': 'Game Studio',
+  // 'default-shows-creators' ('Show Creator') deliberately removed, per direct request ("series/
+  // creators should not be liked to any other folder at the moment") — that content (TV
+  // showrunners) moved to Films/Directors ('Movie Director' above), and Series' own Creators
+  // folder is being repurposed for short-form web creators with no curated bucket of its own yet.
+  // Falls through to the folder's own id (below), same as Podcasts/Tutorials/Web Series — resolves
+  // to a genuinely empty list rather than showing stale/unrelated content.
 };
 
 // Folders that represent "the whole category" closely enough to show the full curated Top

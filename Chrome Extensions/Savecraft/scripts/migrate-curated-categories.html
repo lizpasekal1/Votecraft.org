@@ -72,6 +72,11 @@ const CAT_NORMALIZE = {
 const SKIP_CATEGORY = 'Music';
 const TARGET_GENRE = 'Top 100';
 const SHOWS_TO_FOLDER_ID = 'default-movies-series';
+// Show Creator -> Movie Director, per direct request ("all the current creators in the top 100
+// votecraft should be moved into film/directors") — same reasoning/destination as the personal-
+// item migration (storage.js): Series' own Creators folder is being repurposed for short-form web
+// creators, distinct from these TV-showrunner-type creator cards.
+const SHOW_CREATORS_TO_FOLDER_ID = 'default-movies-directors';
 const BATCH_SIZE = 400;
 
 // Computes what a doc's update should be (or null if it needs none) — shared by preview and run
@@ -92,6 +97,13 @@ function planUpdate(data) {
   if (category === 'Show' && data.genre === TARGET_GENRE) {
     update.category = 'Movie';
     update.folderId = SHOWS_TO_FOLDER_ID;
+  }
+
+  // Show Creator -> Movie Director (creator-card pseudo-category, unrelated to the plain "Show"
+  // normalization above — a different literal category string).
+  if (category === 'Show Creator' && data.genre === TARGET_GENRE) {
+    update.category = 'Movie Director';
+    update.folderId = SHOW_CREATORS_TO_FOLDER_ID;
   }
 
   return Object.keys(update).length ? update : null;
