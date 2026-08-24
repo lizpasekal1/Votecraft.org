@@ -473,7 +473,8 @@
    not a real carousel library) scales up; side slides stay small. No on-image title/description
    text on any slide (removed per direct follow-up, "remove the text on the carosel cards") — the
    active slide's title still surfaces via .category-carousel-caption below the whole strip. ===== */
-/* "Recent Saves" title + divider above the carousel strip, per direct request. Own wrapper (not
+/* "Featured Saves" title (was "Recent Saves", renamed per direct follow-up) + divider above the
+   carousel strip, per direct request. Own wrapper (not
    two separate flex children of .category-landing-page) so the tight title-to-divider spacing
    here is independent of that parent's own 24px gap between its top-level sections. */
 .category-carousel-heading-wrap {
