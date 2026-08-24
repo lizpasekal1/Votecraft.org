@@ -16,10 +16,24 @@
 // strip's first child is"). Clicking a slide opens that item's real detail modal — genuine
 // behavior now that this is real save data, not decorative placeholder art.
 
-import { CAT_LABEL } from './state.js';
+import { CAT_LABEL, state, PRIMARY_FOLDER_ID } from './state.js';
 import { escapeHtml, debounce } from './utils.js';
 import { _wireCarouselArrows, resolveFavoriteSlides } from './dashboard.js';
 import { openDetailModal } from './detailModal.js';
+
+// The folder-name badge shown on a real (non-demo) slide, in the same lower-right spot the "Demo"
+// badge occupies on a demo one — per direct request ("the carosule shuold have the folder tag
+// where the demo tag was"). item.folderId is the real, explicitly-filed folder if set; otherwise
+// falls back to the category's own primary folder (same "un-foldered counts as primary" convention
+// matchesPrimaryOrUnfoldered uses, renderFilters.js), and finally to the plain category label for
+// categories with no primary folder at all (e.g. Visual Art, Game).
+function resolveSlideFolderName(item) {
+  const explicitFolder = item.folderId ? state.folders.find(f => f.id === item.folderId) : null;
+  if (explicitFolder) return explicitFolder.name;
+  const primaryId = PRIMARY_FOLDER_ID[item.category];
+  const primaryFolder = primaryId ? state.folders.find(f => f.id === primaryId) : null;
+  return primaryFolder ? primaryFolder.name : (CAT_LABEL[item.category] || item.category || '');
+}
 
 // The exact item objects the currently-rendered strip's slides map to, one-to-one with the
 // tripled DOM order below — set fresh each render, read back by initCategoryCarousel() to wire
@@ -64,7 +78,9 @@ export function renderCategoryCarouselHtml(override = null) {
       ${item.imageUrl
         ? `<img class="category-carousel-slide-img" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">`
         : ''}
-      ${slideIsDemo ? '<span class="category-carousel-slide-demo-badge"><span class="category-carousel-slide-demo-badge-icon">✨</span> Demo</span>' : ''}
+      ${slideIsDemo
+        ? '<span class="category-carousel-slide-demo-badge"><span class="category-carousel-slide-demo-badge-icon">✨</span> Demo</span>'
+        : `<span class="category-carousel-slide-folder-badge">${escapeHtml(resolveSlideFolderName(item))}</span>`}
     </button>
   `;
   }).join('');
