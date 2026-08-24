@@ -14,7 +14,7 @@ import { escapeHtml, isItunesArtworkUrl, folderIconHtml, sortFoldersForDisplay, 
 import { persistItem, persistCuratedOverrides, persistAuthor } from './storage.js';
 import { renderSidebar, renderGrid, promptAddFolder } from './render.js';
 import {
-  searchMusicians, searchMusicAlbums, searchShowsWikipedia, searchBooks, searchGames, searchMoviesWikipedia,
+  searchMusicians, searchMusicAlbums, searchShowsWikipedia, searchPodcastsWikipedia, searchBooks, searchGames, searchMoviesWikipedia,
   ensureArtistWikipediaInfo, ensureItemWikipediaInfo, ensureItemCreator, fetchAlbumsFromItunes,
   fetchVideoThumbnail,
 } from './api.js';
@@ -683,8 +683,12 @@ export async function handleTitleSearch() {
   const input = document.getElementById('input-title');
   const term = input.value.trim();
   // Movie's "Videos" folder is manually added (trailers/clips), not looked up by title — same
-  // exclusion as updateTitleSearchUi's icon/placeholder.
-  const searchFn = _wizardFolderId === 'default-movies-videos' ? null : TITLE_SEARCH_FN[state.modalCategory];
+  // exclusion as updateTitleSearchUi's icon/placeholder. Series' own Podcasts folder gets its own
+  // Wikipedia search biased toward "podcast" instead of the whole Show category's "TV series" bias
+  // — per direct request ("can the podcasts also auto populate from wikipedia?").
+  const searchFn = _wizardFolderId === 'default-movies-videos' ? null
+    : _wizardFolderId === 'default-shows-podcasts' ? searchPodcastsWikipedia
+    : TITLE_SEARCH_FN[state.modalCategory];
   if (!searchFn || term.length < 2) { hideTitleSearchResults(); return; }
 
   const myToken = _wizardToken;
