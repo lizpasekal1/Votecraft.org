@@ -722,6 +722,13 @@
   .grid-area {
     padding: var(--page-mobile-pad);
     padding-bottom: var(--fab-clearance);
+    /* 10px less top padding, per direct follow-up ("bring all the page content up 10px") — tied
+       to --page-mobile-pad via calc() rather than a hand-derived literal, same reasoning as
+       --fab-clearance above. Pages with their own already-customized top padding (Kanban/Admin
+       Kanban's 15px — kanban.css, applies on every screen size, not mobile-specific; Shared
+       Saves' already-pulled-up 6px — misc.css below) are untouched, same scoping as the
+       FAB-clearance standard practice above: this covers the default case every other page uses. */
+    padding-top: calc(var(--page-mobile-pad) - 10px);
   }
 
   /* Single column cards */
