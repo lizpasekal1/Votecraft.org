@@ -597,6 +597,13 @@ function renderMusicGenreLanding() {
 // follow-up: "use the same icon for these that is in the sidebar") rather than per-bucket emoji,
 // and a purple-OUTLINED card style (.category-folder-card, cards.css) instead of Music's
 // solid-fill — visually distinct on purpose, so this doesn't read as a second Music-style page.
+// Categories whose folder-picker carousel's demo fallback (below) shows the VoteCraft/Top 100
+// landing page's own row content instead of the generic favorites/demo chain, per direct request
+// ("for films, books, and games make the demo content match the votecraft landing page demo
+// content in these carousels") — the three categories with real, populated Top 100 rows today
+// (CURATED_GENRE_LANDING_CONTENT['Top 100'].rows, state.js).
+const CAROUSEL_DEMO_MATCHES_VOTECRAFT_LANDING = new Set(['Movie', 'Book', 'Game']);
+
 function renderCategoryFolderLanding(category) {
   const container = document.getElementById('cards-grid');
   const gridTitle = document.getElementById('grid-title');
@@ -615,13 +622,28 @@ function renderCategoryFolderLanding(category) {
   // it (Musician/Music Album never reach this function at all, per the exclusion in the caller
   // above, so "not on Music" is automatic rather than a second check here). Shows this category's
   // own most-recently-saved items when the user has any (per direct follow-up: "update the
-  // carousels on the category pages to actually show the recent saves from those sections"); a
-  // null override falls back to renderCategoryCarouselHtml's existing default
-  // (resolveFavoriteSlides — real global favorites, else admin demo config, else curated Top 100)
-  // when this specific category has nothing yet, per further follow-up ("if not then just keep
-  // showing the demo content") — not a second, category-scoped fallback of its own.
+  // carousels on the category pages to actually show the recent saves from those sections").
   const recentCategoryItems = getRecentCategoryItems(category);
-  const carouselOverride = recentCategoryItems.length ? { items: recentCategoryItems, isDemo: false } : null;
+  let carouselOverride;
+  if (recentCategoryItems.length) {
+    carouselOverride = { items: recentCategoryItems, isDemo: false };
+  } else if (CAROUSEL_DEMO_MATCHES_VOTECRAFT_LANDING.has(category)) {
+    // Films/Books/Games specifically get the VoteCraft (Top 100) landing page's own row content
+    // for this category as their demo fallback, per direct follow-up ("make the demo content
+    // match the votecraft landing page demo content in these sliders") — same
+    // resolveGenreRowItems() the curated folder-picker's own carousel already uses
+    // (renderCuratedCategoryFolderLanding, below), not the generic favorites/demo chain. isDemo:
+    // true (matches every other curated-fallback carousel here) since this isn't the user's own
+    // saved content.
+    const votecraftRowItems = resolveGenreRowItems('Top 100', category);
+    carouselOverride = votecraftRowItems.length ? { items: votecraftRowItems, isDemo: true } : null;
+  } else {
+    // Every other category's demo fallback is unchanged — renderCategoryCarouselHtml's own
+    // default (resolveFavoriteSlides: real global favorites, else admin demo config, else curated
+    // Top 100), per the earlier direct follow-up ("if not then just keep showing the demo
+    // content").
+    carouselOverride = null;
+  }
 
   container.className = 'category-landing-page';
   container.innerHTML = `
