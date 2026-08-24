@@ -288,9 +288,13 @@
   .category-folder-landing-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     /* Wider (90%->96%/360px->420px), then 15% smaller again per a further direct follow-up
-       (96%*0.85≈82%, 420px*0.85≈357px) — net a bit smaller than the original 90%/360px. */
-    width: 82%;
-    max-width: 357px;
+       (96%*0.85≈82%, 420px*0.85≈357px) — net a bit smaller than the original 90%/360px.
+       82%->92%/357px->420px again per further direct follow-up ("less padding on the left and
+       right of the screen for the cards") — widens the grid back out (less side margin) without
+       touching the cards' own height/shape, which were separately tuned to fix the square/
+       rectangle rendering bug above. */
+    width: 92%;
+    max-width: 420px;
     gap: 16px;
     /* -30px desktop, -5px mobile (smaller nudge — mobile isn't vertically centered inside a huge
        flex area the way desktop is, so it doesn't need as large an offset to read as "moved up"). */
@@ -433,11 +437,35 @@
    Musician/Music Album, per direct request. The centered slide (JS-tracked via scroll position,
    not a real carousel library) scales up and reveals its title/description/CTA overlay; side
    slides stay small, plain images. ===== */
+/* "Recent Saves" title + divider above the carousel strip, per direct request. Own wrapper (not
+   two separate flex children of .category-landing-page) so the tight title-to-divider spacing
+   here is independent of that parent's own 24px gap between its top-level sections. */
+.category-carousel-heading-wrap {
+  width: 100%;
+}
+.category-carousel-heading {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+.category-carousel-divider {
+  height: 1px;
+  background: var(--border);
+  width: 100%;
+}
 .category-carousel-wrap {
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
+  /* Per direct follow-up ("bring the carosel down 20px"), desktop only — mobile has its own,
+     tighter spacing needs elsewhere on this already-taller-relative-to-viewport page. */
+}
+@media (min-width: 769px) {
+  .category-carousel-wrap {
+    margin-top: 20px;
+  }
 }
 /* The active/center slide's own title, below the whole carousel — per direct request ("put the
    title center cards title below it in purple text centered below all the cards"). Kept alongside
@@ -575,16 +603,21 @@
 /* Smaller on mobile, per direct follow-up ("reduce the large images size in the carousel in
    mobile") — the desktop sizes (170px resting / 240px active) left little headroom on a phone.
    Placed after the base rules above (not inside the earlier mobile block near the folder cards)
-   so this — same specificity, later in source order — actually wins over them. */
+   so this — same specificity, later in source order — actually wins over them.
+   120px/170px -> 15% smaller again (102px/145px), per further direct follow-up ("make the cards
+   15% smaller in mobile"), arriving mid-carousel-heading-work so read as this carousel rather
+   than the folder cards (already resized/reshaped repeatedly just prior). Active's overlap margin
+   scaled down proportionally too (-30px -> -25px) so it still reads the same relative amount of
+   overlap into the smaller neighbor slides. */
 @media (max-width: 768px) {
   .category-carousel-slide {
-    width: 120px;
-    height: 120px;
+    width: 102px;
+    height: 102px;
   }
   .category-carousel-slide--active {
-    width: 170px;
-    height: 170px;
-    margin: 0 -30px;
+    width: 145px;
+    height: 145px;
+    margin: 0 -25px;
   }
 }
 /* One-shot entrance for whichever slide just became active, per direct request ("the large center
