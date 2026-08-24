@@ -985,7 +985,8 @@
    axis isn't the one already being cropped, per direct report ("i don't want to see black bands...
    full bleed the image container"). .card's own overflow: hidden clips the excess. */
 .card-image--zoom {
-  transform: scale(1.2);
+  /* 1.2 -> 1.25 -> 1.35, per direct follow-ups. */
+  transform: scale(1.35);
 }
 
 .card-placeholder {
