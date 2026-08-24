@@ -19,6 +19,13 @@
      keeps working fine nested inside an ancestor that's hidden on that axis. */
   overflow-y: auto;
   overflow-x: hidden;
+  /* Native iOS momentum/inertia scrolling on this — the actual vertical scroll container for
+     every page — per direct report ("scrolling the whole page up and down with my finger... the
+     haptics aren't quite right"). Modern Safari applies momentum scrolling to plain overflow:auto
+     elements by default in most cases, but this is the standard, no-downside hint that makes it
+     reliably use the same fluid, hardware-accelerated deceleration curve native iOS scroll views
+     use, rather than leaving it to whatever the browser falls back to. */
+  -webkit-overflow-scrolling: touch;
   align-self: stretch;
   /* REAL BUG, found and fixed: a flex item's default min-width is 'auto' (its content's own
      min-content size), not 0 — a descendant with a wide min-content demand (the category
