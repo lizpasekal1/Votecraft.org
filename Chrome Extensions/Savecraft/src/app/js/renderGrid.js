@@ -27,7 +27,7 @@ import { renderAuthorPage } from './renderAuthorPage.js';
 import { renderCuratedGenreLanding, renderCuratedDirectory, renderCuratedBareList, resolveGenreRowItems } from './renderCuratedPages.js';
 import { wireQuickQueueButtons } from './renderCardActions.js';
 import { fetchMissingCuratedImages, fetchMissingCuratedMusicianPhotos } from './renderCuratedImageFetch.js';
-import { getFilteredSortedItems, getMusicGenreBucketCounts, getCategoryFolderCounts, getCuratedCategoryFolderCounts } from './renderFilters.js';
+import { getFilteredSortedItems, getMusicGenreBucketCounts, getCategoryFolderCounts, getCuratedCategoryFolderCounts, getRecentCategoryItems } from './renderFilters.js';
 import { updateAzIndexRail } from './azIndexRail.js';
 import { renderCategoryCarouselHtml, initCategoryCarousel } from './categoryCarousel.js';
 import { resourceUrl } from './platform.js';
@@ -611,9 +611,18 @@ function renderCategoryFolderLanding(category) {
   const folders = state.folders.filter(f => f.parentCategory === category);
   const counts = getCategoryFolderCounts(category);
 
-  // Demo carousel below the folder cards, per direct request — every category landing page here
-  // gets it (Musician/Music Album never reach this function at all, per the exclusion in the
-  // caller above, so "not on Music" is automatic rather than a second check here).
+  // Carousel below the folder cards, per direct request — every category landing page here gets
+  // it (Musician/Music Album never reach this function at all, per the exclusion in the caller
+  // above, so "not on Music" is automatic rather than a second check here). Shows this category's
+  // own most-recently-saved items when the user has any (per direct follow-up: "update the
+  // carousels on the category pages to actually show the recent saves from those sections"); a
+  // null override falls back to renderCategoryCarouselHtml's existing default
+  // (resolveFavoriteSlides — real global favorites, else admin demo config, else curated Top 100)
+  // when this specific category has nothing yet, per further follow-up ("if not then just keep
+  // showing the demo content") — not a second, category-scoped fallback of its own.
+  const recentCategoryItems = getRecentCategoryItems(category);
+  const carouselOverride = recentCategoryItems.length ? { items: recentCategoryItems, isDemo: false } : null;
+
   container.className = 'category-landing-page';
   container.innerHTML = `
     <div class="category-folder-landing-grid">
@@ -625,7 +634,7 @@ function renderCategoryFolderLanding(category) {
         </button>
       `).join('')}
     </div>
-    ${renderCategoryCarouselHtml()}
+    ${renderCategoryCarouselHtml(carouselOverride)}
   `;
 
   container.querySelectorAll('.category-folder-card').forEach(card => {
