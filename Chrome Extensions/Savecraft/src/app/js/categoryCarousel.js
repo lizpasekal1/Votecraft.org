@@ -52,6 +52,10 @@ export function renderCategoryCarouselHtml() {
     </button>
   `).join('');
   return `
+    <div class="category-carousel-heading-wrap">
+      <div class="category-carousel-heading">Recent Saves</div>
+      <div class="category-carousel-divider"></div>
+    </div>
     <div class="category-carousel-wrap">
       <button type="button" class="category-carousel-arrow dash-carousel-prev" aria-label="Previous">&lsaquo;</button>
       <div class="category-carousel-strip" id="category-carousel-strip">${slidesHtml}</div>
