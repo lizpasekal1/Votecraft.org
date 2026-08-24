@@ -825,6 +825,14 @@
 
   /* Grid header */
   .grid-header { margin-bottom: 14px; }
+  /* Right-edge clearance for the A-Z jump index rail (azIndexRail.js, cards.css) — it's a fixed
+     overlay pinned just inside .grid-area's own right padding, so anything already flush against
+     that edge (this wrapper's margin-left: auto pushes #sort-select/#musicgenre-select there) sat
+     right underneath the rail's letters. Per direct request ("move the dropdown buttons to the
+     left some so the letters also don't overlap the sort button"). */
+  .grid-header-right {
+    margin-right: 22px;
+  }
   /* Cause Curated specifically — per direct request, the gap between the Dashboard link (in
      .grid-header) and the banner below it (.bare-list-hero) should be exactly 20px, not this
      page's own general 14px mobile tightening above (which applies to every other view's
