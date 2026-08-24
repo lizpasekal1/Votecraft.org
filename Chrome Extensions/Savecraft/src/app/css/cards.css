@@ -285,20 +285,17 @@
        flex area the way desktop is, so it doesn't need as large an offset to read as "moved up"). */
     transform: translateY(-5px);
   }
-  /* Back to square (1:1, the base rule's own shape) on mobile — an earlier pass made these
-     shorter (3:2) to fit the limited vertical room before scrolling was re-enabled here; per
-     direct follow-up ("make sure the cards sizes are square") they're square again now that
-     scrolling absorbs whatever extra height that takes. */
-  .category-folder-card {
-    aspect-ratio: 1 / 1;
-  }
-  /* 10% smaller than the base 18px/16px, per direct follow-up, mobile only. */
-  .category-folder-card-name {
-    font-size: 16px;
-  }
-  .category-folder-card-count {
-    font-size: 14px;
-  }
+  /* REAL BUG, found and fixed: .category-folder-card/-name/-count's own mobile overrides used to
+     live here too, but this block sits BEFORE those selectors' base (unconditional) rules further
+     down this file (.category-folder-card at ~310, -name/-count at ~345/~355) — same specificity,
+     later source order, so the base rules were silently winning on every screen size, mobile
+     included. That's why an earlier "10% smaller text" request never visibly took effect, and
+     (more consequentially) why aspect-ratio wasn't actually reaching 1:1 on mobile either: at the
+     full un-shrunk 18px/16px text, a longer folder name ("Publications"/"Board Games") wrapped
+     onto 2 lines within the narrowed mobile card width, and a box's own automatic minimum height
+     (based on its content) can still force it taller than aspect-ratio's preferred square size
+     when content doesn't fit — aspect-ratio isn't a hard clip. The real overrides now live in
+     their own block right after those base rules, where source order actually favors them. */
 }
 /* Solid purple fill with white icon/text, per direct follow-up — was purple-outlined/transparent
    (deliberately distinct from Music's own solid-fill cards at the time); overridden here since
@@ -351,6 +348,23 @@
   font-size: 16px;
   color: #fff;
   opacity: 0.8;
+}
+/* Real mobile overrides for the three rules above — placed here, AFTER them, so source order
+   actually favors these (see the REAL BUG comment near .category-folder-landing-grid's own mobile
+   block, above, for why an earlier attempt positioned before these didn't work). Square (1:1) per
+   direct follow-up ("make sure the cards sizes are square") — text is 15% smaller than the base
+   18px/16px (15px/14px) specifically so a wrapped 2-line folder name still fits within a square
+   card's own preferred height instead of forcing it taller. */
+@media (max-width: 768px) {
+  .category-folder-card {
+    aspect-ratio: 1 / 1;
+  }
+  .category-folder-card-name {
+    font-size: 15px;
+  }
+  .category-folder-card-count {
+    font-size: 14px;
+  }
 }
 
 /* Wraps the folder-card grid above + the demo carousel below (categoryCarousel.js) — plain
