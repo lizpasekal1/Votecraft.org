@@ -180,15 +180,15 @@ export async function searchGames(term) {
   }));
 }
 
-// Movie typeahead via Wikipedia's generator=search (richer than plain opensearch — returns a
-// thumbnail + one-line description per result in a single request). Distinct from
+// Shared typeahead search via Wikipedia's generator=search (richer than plain opensearch —
+// returns a thumbnail + one-line description per result in a single request). Distinct from
 // fetchItemWikipediaSummary/ensureItemWikipediaInfo below, which fetch ONE page's full summary
-// for enrichment after a title is already chosen, not a multi-result live search. iTunes has no
-// working movie search anymore (Apple sunset movie purchases from this API — verified live,
-// zero results for well-known titles across every entity/media combination), so Wikipedia is
-// the only viable free source here.
-export async function searchMoviesWikipedia(term) {
-  const url = `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(term + ' film')}&gsrlimit=6&prop=pageimages|description&pithumbsize=100&format=json&origin=*`;
+// for enrichment after a title is already chosen, not a multi-result live search. `bias` (e.g.
+// "film"/"TV series"/"podcast") is appended to the raw search term to steer results toward the
+// right kind of page for a same-named ambiguous title. Used by every category-specific search
+// below instead of each duplicating this same fetch/parse — only the bias word differs.
+async function searchWikipediaTyped(term, bias) {
+  const url = `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(term + ' ' + bias)}&gsrlimit=6&prop=pageimages|description&pithumbsize=100&format=json&origin=*`;
   const resp = await fetch(url);
   if (!resp.ok) throw new Error(`Wikipedia error: ${resp.status}`);
   const data = await resp.json();
@@ -208,27 +208,21 @@ export async function searchMoviesWikipedia(term) {
   }));
 }
 
-// Show's search is iTunes-first (searchShows above) since it returns real artwork/year inline —
-// this is only called as a fallback when iTunes has nothing (older/indie/non-US shows its TV
-// catalog doesn't cover), same shape/pattern as searchMoviesWikipedia just biased toward TV
-// series instead of film.
-export async function searchShowsWikipedia(term) {
-  const url = `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(term + ' TV series')}&gsrlimit=6&prop=pageimages|description&pithumbsize=100&format=json&origin=*`;
-  const resp = await fetch(url);
-  if (!resp.ok) throw new Error(`Wikipedia error: ${resp.status}`);
-  const data = await resp.json();
-  const pages = Object.values(data.query?.pages || {});
-  pages.sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
-  return pages.map(p => ({
-    title: p.title,
-    author: null,
-    imageUrl: p.thumbnail?.source || null,
-    imageUrlLarge: p.thumbnail?.source || null,
-    url: `https://en.wikipedia.org/wiki/${encodeURIComponent(p.title.replace(/ /g, '_'))}`,
-    year: null,
-    meta: p.description || null,
-  }));
-}
+// iTunes has no working movie search anymore (Apple sunset movie purchases from this API —
+// verified live, zero results for well-known titles across every entity/media combination), so
+// Wikipedia is the only viable free source here.
+export async function searchMoviesWikipedia(term) { return searchWikipediaTyped(term, 'film'); }
+
+// Used directly now (not just as a fallback) — Show's own iTunes tvSeason search (searchShows)
+// was removed per direct correction ("the shows arean't appearing as correctly the way the movies
+// are from wikipedia"), since Wikipedia's own search covers this more reliably/consistently than
+// iTunes's sparser TV catalog did.
+export async function searchShowsWikipedia(term) { return searchWikipediaTyped(term, 'TV series'); }
+
+// Per direct request ("can the podcasts also auto populate from wikipedia?"), wired to Series' own
+// Podcasts folder specifically (see TITLE_SEARCH_FN's _wizardFolderId override, addEditModal.js),
+// not the whole Show category — a plain "TV series" bias would be wrong for an actual podcast.
+export async function searchPodcastsWikipedia(term) { return searchWikipediaTyped(term, 'podcast'); }
 
 // This is the shared low-level fetch every Wikipedia lookup in this file funnels through (up to
 // 6 calls per single artist/item lookup once the search-fallback candidates are counted), and
