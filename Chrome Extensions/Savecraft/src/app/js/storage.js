@@ -644,6 +644,25 @@ export async function loadAll() {
         storageSync.set(toMigrate);
       }
 
+      // REAL BUG, found and fixed: every one-time item migration below only ever rewrote
+      // storageSync (local) — for a signed-in web user, Firestore is the real source of truth, and
+      // runInitialSync()'s _mergeCollection has cloud win deterministically whenever the same item
+      // id exists in both ("cloud wins on this first merge", see that function's own comment).
+      // Left local-only, that silently reverted the very migration that just ran back to the
+      // stale, pre-migration cloud copy on the very next sync — every reload: migrate locally,
+      // then immediately get overwritten back by the still-unmigrated cloud data (reported live:
+      // "the creators still seem to be in the wrong location", persisting no matter how many times
+      // the app was reloaded). Explicitly pushing each migrated item to Firestore too — same
+      // per-item dual-write persistItem() already does for a normal edit — closes that gap; a
+      // signed-out user (no Firestore involved at all) is unaffected either way.
+      function pushMigratedItemsToFirestore(items) {
+        const user = getCurrentUser();
+        if (!user) return;
+        items.forEach(item => {
+          _firestoreUpsert(`savecraft_users/${user.uid}/items/${item.id}`, item).catch(_syncError);
+        });
+      }
+
       // One-time migration: TV Shows moved from the Shows category into Films — every item
       // already saved in Shows' old "TV Shows" folder (default-shows-shows) gets recategorized
       // as a Movie item and refiled into Films' new "Shows" folder (default-movies-series,
@@ -664,6 +683,7 @@ export async function loadAll() {
           const toMigrate = {};
           tvShowsMigrated.forEach(item => { toMigrate[`item_${item.id}`] = item; });
           storageSync.set(toMigrate);
+          pushMigratedItemsToFirestore(tvShowsMigrated);
         }
         state.folders = state.folders.filter(f => f.id !== 'default-shows-shows');
         removeFolder('default-shows-shows');
@@ -688,6 +708,7 @@ export async function loadAll() {
         const toMigrate = {};
         showItemsMigrated.forEach(item => { toMigrate[`item_${item.id}`] = item; });
         storageSync.set(toMigrate);
+        pushMigratedItemsToFirestore(showItemsMigrated);
       }
 
       // One-time migration: 'Show Creator' items (the creator-card pseudo-category,
@@ -709,6 +730,7 @@ export async function loadAll() {
         const toMigrate = {};
         showCreatorsMigrated.forEach(item => { toMigrate[`item_${item.id}`] = item; });
         storageSync.set(toMigrate);
+        pushMigratedItemsToFirestore(showCreatorsMigrated);
       }
 
       // Backfill: curated Music Album items stash their artist name in .notes while curated (see
