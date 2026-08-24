@@ -14,7 +14,10 @@ import { isAdminUser, isQueueDemoId } from './utils.js';
 
 const _FIREBASE_PROJECT = 'votecraft-789';
 const _FIREBASE_API_KEY = 'AIzaSyArJ6pkXUDbZf4jcxRita0qcdr-hT46kI8';
-const _CURATED_CACHE_VERSION = 10;
+// 10 -> 11: forces a refetch after the Firestore curated-category cleanup + Shows->Movie/Series
+// retag (scripts/migrate-curated-categories.html) — otherwise clients keep serving the stale
+// pre-migration 24h cache.
+const _CURATED_CACHE_VERSION = 11;
 
 const _CAT_NORMALIZE = {
   'Movies': 'Movie', 'Books': 'Book', 'Games': 'Game',
@@ -176,7 +179,10 @@ async function _loadCuratedFromFirestore() {
     const rawCat = fv(f.category);
     if (!genre || !rawCat) continue;
     const category = _CAT_NORMALIZE[rawCat] || rawCat;
-    const item = { id: fv(f.id), title: fv(f.title), url: fv(f.url), imageUrl: fv(f.imageUrl), notes: fv(f.notes) };
+    // folderId: new field (scripts/migrate-curated-categories.html sets it on the retagged Shows->
+    // Movie/Series docs) — absent on every other doc today, so this is null for those, same as
+    // before this field existed.
+    const item = { id: fv(f.id), title: fv(f.title), url: fv(f.url), imageUrl: fv(f.imageUrl), notes: fv(f.notes), folderId: fv(f.folderId) };
     if (!result[genre])           result[genre] = {};
     if (!result[genre][category]) result[genre][category] = [];
     result[genre][category].push(item);
@@ -660,6 +666,27 @@ export async function loadAll() {
         }
         state.folders = state.folders.filter(f => f.id !== 'default-shows-shows');
         removeFolder('default-shows-shows');
+      }
+
+      // One-time migration: EVERY remaining personal Show item (any folder — Creators/Podcasts/
+      // Tutorials/Web Series, or unfoldered — not just the old default-shows-shows folder above)
+      // also moves to Movie/Series, per direct request ("also move ALL personal Show items into
+      // Movie/Series"). Folder DEFINITIONS themselves are deliberately left alone (not removeFolder()'d
+      // like default-shows-shows above) — they're still needed as the real folder set the new
+      // curated-genre folder-picker page renders (renderCuratedCategoryFolderLanding, renderGrid.js),
+      // just genuinely empty now for personal items too.
+      const showItemsMigrated = [];
+      state.items.forEach(item => {
+        if (item.category === 'Show') {
+          item.category = 'Movie';
+          item.folderId = 'default-movies-series';
+          showItemsMigrated.push(item);
+        }
+      });
+      if (showItemsMigrated.length) {
+        const toMigrate = {};
+        showItemsMigrated.forEach(item => { toMigrate[`item_${item.id}`] = item; });
+        storageSync.set(toMigrate);
       }
 
       // Backfill: curated Music Album items stash their artist name in .notes while curated (see

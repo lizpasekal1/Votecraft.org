@@ -17,6 +17,19 @@ export function matchesPrimaryOrUnfoldered(item, category) {
   return item.category === category && (!primaryId || item.folderId === primaryId || !item.folderId);
 }
 
+// Whether `item` (already normalized to have .category/.folderId, personal or curated alike)
+// belongs in `folderId`'s bucket within `category` — the primary folder catches un-foldered items
+// too (matchesPrimaryOrUnfoldered's own rule above), any other folder needs an exact item.folderId
+// match. Used by the new curated-folder-picker machinery below (getCuratedCategoryFolderCounts,
+// and the genre: branch's own folder-drilldown filter) — same membership rule
+// getCategoryFolderCounts/the plain-folder-page branch already apply to personal items, just
+// exposed as a reusable function instead of only inlined at those two call sites.
+export function matchesFolder(item, category, folderId) {
+  return PRIMARY_FOLDER_ID[category] === folderId
+    ? matchesPrimaryOrUnfoldered(item, category)
+    : item.category === category && item.folderId === folderId;
+}
+
 // Whether item belongs to the currently active Saved List scope (state.activeSavedListId) —
 // trivially true when nothing's scoped. Shared by getFilteredSortedItems()'s category/folder
 // branches below and renderSidebar.js's own folder/subfolder count badges, so there's exactly one
@@ -56,12 +69,20 @@ export function getFilteredSortedItems() {
     const parts = state.view.slice(6).split(':');
     const genre = parts[0];
     const cat = parts[1];
+    // A 3rd segment (genre:<genre>:<category>:<folderId>) is a curated folder-picker drilldown one
+    // level deeper than the plain genre:<genre>:<category> list — renderCuratedCategoryFolderLanding
+    // (renderGrid.js) is what links a folder card here. Undefined for the plain 2-part shape.
+    const folderId = parts[2];
     if (cat && CURATED_ITEMS[genre] && CURATED_ITEMS[genre][cat]) {
       items = CURATED_ITEMS[genre][cat]
         .filter(i => !state.hiddenCurated.has(i.id))
         .map(i => {
           const override = state.curatedOverrides[i.id] || {};
-          const base = { ...i, ...override, category: cat, done: false, savedAt: 0, folderId: null, curated: true };
+          // folderId: real now (i.folderId, threaded from Firestore by _loadCuratedFromFirestore —
+          // storage.js) for the handful of curated items that have been explicitly filed into a
+          // folder (e.g. the Shows->Movie/Series retag); null for every other curated item, same
+          // as before this field existed.
+          const base = { ...i, ...override, category: cat, done: false, savedAt: 0, folderId: i.folderId || null, curated: true };
           if (!base.imageUrl && state.curatedImgCache[i.id]) base.imageUrl = state.curatedImgCache[i.id];
           if (SPLIT_TITLE_CREATOR_CATEGORIES.includes(cat) && !base.author) {
             const split = splitCuratedTitleCreator(base.title);
@@ -87,7 +108,11 @@ export function getFilteredSortedItems() {
             if (wikiPhoto && (!base.imageUrl || isItunesArtworkUrl(base.imageUrl))) base.imageUrl = wikiPhoto;
           }
           return base;
-        });
+        })
+        // Folder-scoped drilldown (3-part view shape) — same primary-folder-catches-unfoldered
+        // rule personal folder pages use (matchesFolder above). No-op (keeps every item) for the
+        // plain 2-part genre:<genre>:<category> shape, where folderId is undefined.
+        .filter(base => !folderId || matchesFolder(base, cat, folderId));
     } else {
       items = [];
     }
@@ -281,6 +306,22 @@ export function getCategoryFolderCounts(category) {
       counts[folder.id] = state.items.filter(i => !isQueueDemoId(i.id) && matchesActiveSavedListScope(i) &&
         (isPrimary ? matchesPrimaryOrUnfoldered(i, category) : i.folderId === folder.id)
       ).length;
+    });
+  return counts;
+}
+
+// Curated-data equivalent of getCategoryFolderCounts() above, for the new curated folder-picker
+// landing page (renderCuratedCategoryFolderLanding, renderGrid.js) — same per-folder counting idea,
+// same primary-folder-catches-unfoldered rule (via matchesFolder), just sourced from
+// CURATED_ITEMS[genre][category] instead of state.items (curated items have no Saved-List scoping
+// or queue-demo placeholders to exclude, so this is simpler than its personal-item counterpart).
+export function getCuratedCategoryFolderCounts(genre, category) {
+  const counts = {};
+  const rawItems = CURATED_ITEMS[genre]?.[category] || [];
+  state.folders
+    .filter(f => f.parentCategory === category)
+    .forEach(folder => {
+      counts[folder.id] = rawItems.filter(i => matchesFolder({ category, folderId: i.folderId || null }, category, folder.id)).length;
     });
   return counts;
 }
