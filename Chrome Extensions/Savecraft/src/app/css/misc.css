@@ -489,15 +489,17 @@
     transform: translateY(-30px);
   }
 
-  /* --fab-clearance: same 56px-tall + 24px-off-bottom "+ Add Item" FAB clearance dashboard.css's
-     own .grid-area:has(.dashboard-wrap) already uses — named here so this file's own :has() rules
-     (below, and sharedSaves.css) reference one number instead of each re-deriving 96px by hand.
+  /* --fab-clearance: 56px-tall + 24px-off-bottom "+ Add Item" FAB clearance, applied as
+     padding-bottom on the standard-practice .grid-area rule below (and dashboard.css's own
+     .grid-area:has(.dashboard-wrap)) — named here so nothing re-derives this by hand. 96px -> 130px
+     (a little more breathing room above the FAB itself, not just enough to clear it), per direct
+     follow-up ("add a little more negative space above the 'add item' in mobile").
      --page-mobile-pad: the standard mobile side padding every page gets from .grid-area below —
      named so a page wrap that re-applies the same 16px on itself (e.g. sharedSaves.css's
      .shared-page-wrap, which needs it for desktop too) can size a bleed past *both* stacked
      layers via calc() instead of a hand-derived literal that silently drifts if either changes. */
   :root {
-    --fab-clearance: 96px;
+    --fab-clearance: 130px;
     --page-mobile-pad: 16px;
   }
 
