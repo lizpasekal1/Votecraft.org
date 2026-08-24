@@ -637,11 +637,20 @@ function buildBlendedCategoryCarouselItems(category) {
 
   if (!real.length) return demoItems; // nothing saved yet — plain demo strip, same as before
 
-  // Insert the most recent save (real[0]) at the exact middle index of the combined array — the
-  // rest (older real saves, then demo filler) split evenly on either side of it.
+  // REAL BUG, found and fixed: this used to just concatenate [...real.slice(1), ...demoItems] and
+  // chop that combined array in half — since the older real saves were always listed first, they
+  // all landed in the LEFT half only, clustered off to one side instead of surrounding the centered
+  // slide. Reported live: a Show/Series folder showing "4" Tutorials saves, but the carousel only
+  // visibly showed the single centered one — the other 3 were real, just all bunched off-screen to
+  // the left of the initially-centered slide instead of split evenly around it as intended.
+  // Fix: alternate every remaining slot (older real saves first, since those matter more, then demo
+  // filler) between the two sides, nearest-to-center first on each side — so real saves surround the
+  // centered slide symmetrically instead of stacking on one side.
   const rest = [...real.slice(1), ...demoItems];
-  const mid = Math.ceil(rest.length / 2);
-  return [...rest.slice(0, mid), real[0], ...rest.slice(mid)];
+  const nearRight = [];
+  const nearLeft = [];
+  rest.forEach((item, i) => (i % 2 === 0 ? nearRight : nearLeft).push(item));
+  return [...nearLeft.reverse(), real[0], ...nearRight];
 }
 
 function renderCategoryFolderLanding(category) {
