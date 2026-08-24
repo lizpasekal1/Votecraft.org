@@ -477,6 +477,15 @@
   margin-bottom: 10px;
   text-align: center;
 }
+/* Matches the folder cards' own mobile name text size exactly (.category-folder-card-name, 14px
+   — below), per direct follow-up ("make the recent saves text the same size as the card font"),
+   rather than a separately-tuned value that could drift out of sync if the card text ever
+   changes again. */
+@media (max-width: 768px) {
+  .category-carousel-heading {
+    font-size: 14px;
+  }
+}
 .category-carousel-divider {
   height: 1px;
   background: var(--border);
