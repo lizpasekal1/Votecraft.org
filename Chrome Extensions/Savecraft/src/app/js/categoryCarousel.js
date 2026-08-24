@@ -124,5 +124,20 @@ export function initCategoryCarousel(container) {
   strip.scrollLeft = (strip.scrollWidth - strip.clientWidth) / 2;
 
   _updateActiveSlide(strip, { animate: false });
+  // REAL BUG, found and fixed: the scrollLeft set above centers the strip's own midpoint using
+  // every slide's BASE (edge-tier) size — but _updateActiveSlide just grew whichever slide it
+  // picked up to the active/neighbor tiers (cards.css's mobile 3-size-tier carousel), and CSS box
+  // growth only pushes LATER siblings over, it doesn't re-center anything already scrolled into
+  // place. Net effect: the actual active card could land visibly off-center on first load
+  // (reported live, "on mobile when the page launches i want the center card in the center").
+  // This re-measures the now-resized active slide directly and nudges scrollLeft by the exact
+  // pixel delta needed to put ITS real center on the strip's center — correct regardless of
+  // whatever tier sizes/margins cards.css happens to use, not a hand-tuned offset.
+  const initialActive = strip.querySelector('.category-carousel-slide--active');
+  if (initialActive) {
+    const stripRect = strip.getBoundingClientRect();
+    const activeRect = initialActive.getBoundingClientRect();
+    strip.scrollLeft += (activeRect.left + activeRect.width / 2) - (stripRect.left + stripRect.width / 2);
+  }
   strip.addEventListener('scroll', debounce(() => _updateActiveSlide(strip), 60));
 }
