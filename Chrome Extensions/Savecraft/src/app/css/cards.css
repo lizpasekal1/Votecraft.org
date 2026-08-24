@@ -624,8 +624,9 @@
 }
 .category-carousel-slide-demo-badge {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  /* Lower right corner, per direct request — was top-left. */
+  bottom: 8px;
+  right: 8px;
   background: var(--primary);
   color: #fff;
   font-size: 10px;
