@@ -7,7 +7,7 @@ import {
   persistArtistBioCache, persistArtistWebsiteCache, persistArtistGenreCache, persistItemWikiCache,
   persistLastfmCache, persistSteamCache, persistCreatorCache,
 } from './storage.js';
-import { getYoutubeVideoId, getVimeoVideoId } from './utils.js';
+import { getYoutubeVideoId, getVimeoVideoId, isTiktokUrl } from './utils.js';
 
 // Shared check for "does this Wikidata/Wikipedia result actually describe a musician/band" —
 // used to reject same-name but wrong-topic matches (e.g. "Eagles" the bird) rather than guessing.
@@ -621,16 +621,29 @@ export async function ensureItemCreator(title, category, { url } = {}) {
   return creator;
 }
 
-// Movie's "Videos" folder — Microlink (used for every other category's post-save image fallback,
-// see addEditModal.js's handleSaveItem) actively blocks YouTube with an antibot error, so this
-// gets the thumbnail straight from the video host instead. YouTube's is a plain predictable URL,
-// no request needed; Vimeo's isn't, so that one goes through its public oEmbed endpoint (no key).
+// Movie's "Videos" folder, and (per direct request) Series' Short Form/Web Series/Tutorials
+// folders — Microlink (used for every other category's post-save image fallback, see
+// addEditModal.js's handleSaveItem) actively blocks YouTube with an antibot error and doesn't
+// reliably surface these platforms' own images either, so this gets the thumbnail straight from
+// the video/social host instead. YouTube's is a plain predictable URL, no request needed; Vimeo
+// and TikTok both go through their own public oEmbed endpoints (no key needed for either).
+// Instagram deliberately isn't handled here — its oEmbed now requires a Meta app token/review, no
+// free unauthenticated path exists, so an Instagram link still falls back to the generic Microlink
+// attempt like any other URL (may or may not find an image, same as it does for any other site).
 export async function fetchVideoThumbnail(url) {
   const ytId = getYoutubeVideoId(url);
   if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
   if (getVimeoVideoId(url)) {
     try {
       const resp = await fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`);
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      return data.thumbnail_url || null;
+    } catch { return null; }
+  }
+  if (isTiktokUrl(url)) {
+    try {
+      const resp = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`);
       if (!resp.ok) return null;
       const data = await resp.json();
       return data.thumbnail_url || null;

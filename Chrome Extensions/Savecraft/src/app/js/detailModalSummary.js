@@ -3,7 +3,7 @@
 // slot (it has its own Song List accordion instead, in detailModalNotes.js), and Visual Art's
 // empty placeholder — one accordion row, four different bodies depending on category.
 
-import { state, SUMMARY_PLACEHOLDER_CATEGORIES } from './state.js';
+import { state, SUMMARY_PLACEHOLDER_CATEGORIES, MANUAL_LINK_FOLDER_IDS } from './state.js';
 import { escapeHtml, isItunesArtworkUrl, applyArtistPhotoToItem, patchCardImage } from './utils.js';
 import { persistItem, persistAuthor } from './storage.js';
 import { ensureArtistWikipediaInfo, ensureItemWikipediaInfo } from './api.js';
@@ -122,7 +122,7 @@ export function setupSummary(item, { isMusicAlbum, isMusicianItem, ctaAuthorName
   // often happens to match an unrelated real movie's Wikipedia page (e.g. a fan video sharing a
   // real film's name), which would otherwise silently overwrite the item with that film's summary/
   // director/poster the first time it's viewed.
-  const _needsItemWiki = SUMMARY_PLACEHOLDER_CATEGORIES.includes(item.category) && item.folderId !== 'default-movies-videos';
+  const _needsItemWiki = SUMMARY_PLACEHOLDER_CATEGORIES.includes(item.category) && !MANUAL_LINK_FOLDER_IDS.has(item.folderId);
   if (_needsItemWiki && item.title) {
     ensureItemWikipediaInfo(item.title, item.category).then(({ bio, photoUrl, wikiUrl }) => {
       if ((!bio && !photoUrl && !wikiUrl) || getDetailItem() !== item) return; // nothing found, or modal moved on
