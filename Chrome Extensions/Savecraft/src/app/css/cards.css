@@ -649,13 +649,32 @@
    scaled down proportionally too (-30px -> -25px) so it still reads the same relative amount of
    overlap into the smaller neighbor slides. */
 @media (max-width: 768px) {
+  /* Now the smallest/outermost tier (was every non-active slide's size) — per direct follow-up
+     ("so there are 3 card sizes"), this base size is only what's left once the two more specific
+     tiers below (immediate neighbors, active) claim their own slides. */
   .category-carousel-slide {
+    width: 80px;
+    height: 80px;
+  }
+  /* The two slides immediately beside the active/center one — a middle tier between the small
+     edge slides above and the active slide below, overlapping into the edge slides on their own
+     outer side the same way the active slide overlaps into these, per direct follow-up ("the two
+     cards behind the center card... overlap the cards on their sides touching the edges... a bit
+     [bigger than] the edge cards"). Pure CSS (:has()/adjacent-sibling, no JS) so this tracks
+     whichever slide is actually active automatically as _updateActiveSlide (categoryCarousel.js)
+     toggles that class during scroll — same live-relationship idiom as this codebase's other
+     :has() usages (e.g. .grid-area:has(<page>)), just keyed off a sibling instead of a descendant.
+     Specificity (0,2,0, two classes) beats the base rule above regardless of source order. */
+  .category-carousel-slide--active + .category-carousel-slide,
+  .category-carousel-slide:has(+ .category-carousel-slide--active) {
     width: 102px;
     height: 102px;
+    margin: 0 -18px;
+    z-index: 1;
   }
-  /* Active/center card only, 10% smaller again (145px -> 130px) + more overlap into the two
-     neighbor slides (-25px -> -40px), per direct follow-up ("make the center card 10% smaller
-     overlap the two cars behind it more") — the resting side slides above are untouched. */
+  /* Active/center card, 10% smaller again (145px -> 130px) + more overlap into its neighbor
+     slides (-25px -> -40px), per direct follow-up ("make the center card 10% smaller overlap the
+     two cars behind it more"). */
   .category-carousel-slide--active {
     width: 130px;
     height: 130px;
