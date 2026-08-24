@@ -276,21 +276,21 @@
 @media (max-width: 768px) {
   .category-folder-landing-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    /* Wider on mobile, per direct follow-up — width bumped from the base rule's 90% and the gap
-       trimmed, so each card gets more room within the same 2-column row. */
-    width: 96%;
-    max-width: 420px;
+    /* Wider (90%->96%/360px->420px), then 15% smaller again per a further direct follow-up
+       (96%*0.85≈82%, 420px*0.85≈357px) — net a bit smaller than the original 90%/360px. */
+    width: 82%;
+    max-width: 357px;
     gap: 16px;
     /* -30px desktop, -5px mobile (smaller nudge — mobile isn't vertically centered inside a huge
        flex area the way desktop is, so it doesn't need as large an offset to read as "moved up"). */
     transform: translateY(-5px);
   }
-  /* Shorter than square on mobile, per direct follow-up — full 1:1 squares (desktop's own shape)
-     ate too much of the limited vertical room these pages have to work with now that they don't
-     scroll (see .grid-area:has(.category-landing-page)). Width is untouched, still fills its 2x2
-     grid track. */
+  /* Back to square (1:1, the base rule's own shape) on mobile — an earlier pass made these
+     shorter (3:2) to fit the limited vertical room before scrolling was re-enabled here; per
+     direct follow-up ("make sure the cards sizes are square") they're square again now that
+     scrolling absorbs whatever extra height that takes. */
   .category-folder-card {
-    aspect-ratio: 3 / 2;
+    aspect-ratio: 1 / 1;
   }
   /* 10% smaller than the base 18px/16px, per direct follow-up, mobile only. */
   .category-folder-card-name {
