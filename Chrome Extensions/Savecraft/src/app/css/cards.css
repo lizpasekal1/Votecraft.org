@@ -653,10 +653,13 @@
     width: 102px;
     height: 102px;
   }
+  /* Active/center card only, 10% smaller again (145px -> 130px) + more overlap into the two
+     neighbor slides (-25px -> -40px), per direct follow-up ("make the center card 10% smaller
+     overlap the two cars behind it more") — the resting side slides above are untouched. */
   .category-carousel-slide--active {
-    width: 145px;
-    height: 145px;
-    margin: 0 -25px;
+    width: 130px;
+    height: 130px;
+    margin: 0 -40px;
   }
 }
 /* One-shot entrance for whichever slide just became active, per direct request ("the large center
