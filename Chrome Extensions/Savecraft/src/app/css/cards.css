@@ -484,6 +484,15 @@
 @media (max-width: 768px) {
   .category-carousel-wrap {
     margin-top: -20px;
+    /* Full-bleed to the actual screen edges, per direct follow-up ("make the carosol container
+       touch the edges of the screen") — negative margins cancel out .grid-area's own mobile side
+       padding (--page-mobile-pad, misc.css) exactly, rather than a hand-derived literal that'd
+       drift if that padding ever changes. width:auto lets the negative margins do the widening
+       instead of fighting the base rule's width:100% (which is 100% of the *padded* content box,
+       not the screen). */
+    margin-left: calc(-1 * var(--page-mobile-pad));
+    margin-right: calc(-1 * var(--page-mobile-pad));
+    width: auto;
   }
 }
 /* The active/center slide's own title, below the whole carousel — per direct request ("put the
@@ -525,6 +534,17 @@
 .category-carousel-arrow.dash-carousel-prev:hover,
 .category-carousel-arrow.dash-carousel-next:hover {
   color: var(--primary);
+}
+/* Hidden on mobile, per direct follow-up ("remove the arrows") — swiping the strip directly
+   already works (overflow-x: auto below), the arrows were just extra chrome eating into the
+   now-edge-to-edge width above. Same compound-selector specificity as the base rule right above
+   (a plain .category-carousel-arrow { display: none; } here would lose to it) — placed after in
+   source order so this wins on mobile. */
+@media (max-width: 768px) {
+  .category-carousel-arrow.dash-carousel-prev,
+  .category-carousel-arrow.dash-carousel-next {
+    display: none;
+  }
 }
 .category-carousel-strip {
   flex: 1;
