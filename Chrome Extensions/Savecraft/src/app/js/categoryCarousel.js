@@ -53,7 +53,7 @@ export function renderCategoryCarouselHtml() {
   `).join('');
   return `
     <div class="category-carousel-heading-wrap">
-      <div class="category-carousel-heading">Recent Saves</div>
+      <div class="category-carousel-heading">Featured Saves</div>
       <div class="category-carousel-divider"></div>
     </div>
     <div class="category-carousel-wrap">
