@@ -14,7 +14,7 @@ import { escapeHtml, isItunesArtworkUrl, folderIconHtml, sortFoldersForDisplay, 
 import { persistItem, persistCuratedOverrides, persistAuthor } from './storage.js';
 import { renderSidebar, renderGrid, promptAddFolder } from './render.js';
 import {
-  searchMusicians, searchMusicAlbums, searchShows, searchShowsWikipedia, searchBooks, searchGames, searchMoviesWikipedia,
+  searchMusicians, searchMusicAlbums, searchShowsWikipedia, searchBooks, searchGames, searchMoviesWikipedia,
   ensureArtistWikipediaInfo, ensureItemWikipediaInfo, ensureItemCreator, fetchAlbumsFromItunes,
   fetchVideoThumbnail,
 } from './api.js';
@@ -80,26 +80,19 @@ function reviewTitleHtml() {
   return `<span class="modal-category-title">${escapeHtml(reviewTitleName ? `Add ${reviewTitleName}` : '')}</span>`;
 }
 
-// Show's iTunes search (real artwork/year inline) runs first; Wikipedia is only queried as a
-// fallback when iTunes has nothing, for the shows its TV catalog doesn't cover — same "search
-// through Wikipedia the way Movie does" coverage, without losing iTunes's richer results when it
-// does have a match.
-async function searchShowsWithFallback(term) {
-  let results = [];
-  try { results = await searchShows(term); } catch { results = []; }
-  if (results.length > 0) return results;
-  try { return await searchShowsWikipedia(term); } catch { return []; }
-}
-
 // Musician added per direct request — searchMusicians (api.js) already existed for this (iTunes
 // musicArtist lookup) but wasn't wired in here yet. Its background Wikipedia lookup
 // (kickOffTitleEnrichment) still runs the same as before on the picked name, filling in bio/photo;
 // the search step now also fills the URL field from the picked result, same as every other
 // category below. Visual Art/Web Links/News have no search source at all.
+// Show searches Wikipedia directly now, same as Movie — was iTunes-first with Wikipedia only as a
+// fallback when iTunes had zero results, per direct correction ("the shows arean't appearing as
+// correctly the way the movies are from wikipedia... just make Shows search Wikipedia like Movies
+// do") — iTunes's TV catalog is sparser/less reliable than Wikipedia's own search for this.
 const TITLE_SEARCH_FN = {
   Musician: searchMusicians,
   'Music Album': searchMusicAlbums,
-  Show: searchShowsWithFallback,
+  Show: searchShowsWikipedia,
   Book: searchBooks,
   Game: searchGames,
   Movie: searchMoviesWikipedia,

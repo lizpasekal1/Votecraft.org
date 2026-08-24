@@ -16,8 +16,8 @@
 // strip's first child is"). Clicking a slide opens that item's real detail modal — genuine
 // behavior now that this is real save data, not decorative placeholder art.
 
-import { CAT_LABEL, state, PRIMARY_FOLDER_ID } from './state.js';
-import { escapeHtml, debounce } from './utils.js';
+import { CAT_LABEL, CAT_EMOJI, state, PRIMARY_FOLDER_ID } from './state.js';
+import { escapeHtml, debounce, catClass } from './utils.js';
 import { _wireCarouselArrows, resolveFavoriteSlides } from './dashboard.js';
 import { openDetailModal } from './detailModal.js';
 
@@ -73,11 +73,20 @@ export function renderCategoryCarouselHtml(override = null) {
     // instead of all-or-nothing; falls back to the whole-strip `isDemo` for every existing caller
     // that doesn't set it (uniformly all-demo or all-real), unchanged.
     const slideIsDemo = item._demoFallback !== undefined ? item._demoFallback : isDemo;
+    // No image (or one that fails to actually load — the onerror swap below) used to just leave
+    // a flat, empty-looking box, per direct report ("the empty unloaded images look odd"). Same
+    // gradient-background-plus-icon placeholder every plain item card already falls back to
+    // (.card-placeholder/.placeholder-<Category>, cards.css/renderGrid.js) — reused here rather
+    // than inventing a second fallback treatment, just with the category's own icon (CAT_EMOJI)
+    // instead of a domain-letter monogram, since there's no single item.url this slide reads from
+    // consistently across both real saves and curated/demo content.
+    const placeholderHtml = `<div class="category-carousel-slide-placeholder placeholder-${catClass(item.category)}"${item.imageUrl ? ' style="display:none;"' : ''}>${CAT_EMOJI[item.category] || ''}</div>`;
     return `
     <button type="button" class="category-carousel-slide" data-index="${i}" title="${escapeHtml(item.title || '')}">
       ${item.imageUrl
-        ? `<img class="category-carousel-slide-img" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">`
+        ? `<img class="category-carousel-slide-img" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`
         : ''}
+      ${placeholderHtml}
       ${slideIsDemo
         ? '<span class="category-carousel-slide-demo-badge"><span class="category-carousel-slide-demo-badge-icon">✨</span> Demo</span>'
         : `<span class="category-carousel-slide-folder-badge">${escapeHtml(resolveSlideFolderName(item))}</span>`}
