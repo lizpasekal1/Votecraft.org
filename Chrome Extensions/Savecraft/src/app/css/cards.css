@@ -429,6 +429,21 @@
   }
   .category-landing-page {
     justify-content: flex-start;
+    /* REAL BUG, found and fixed: this element's own flex:1; min-height:0; (base rule above) is
+       what let .grid-area's desktop overflow:hidden fixed-fit layout compress it to exactly fit
+       the available space with no scrolling — but that same shrink-to-fit behavior was still in
+       effect here on mobile too, silently defeating the overflow-y:auto override just above and
+       this page's own --fab-clearance bottom padding (misc.css's base .grid-area rule): with
+       min-height:0, this element obediently shrinks to fill whatever box .grid-area gives it
+       instead of growing to its true (taller) content size, so .grid-area never actually had
+       anything to scroll into — the folder cards + carousel just got squeezed into a shorter box,
+       and the FAB stayed visually overlapping the carousel regardless of how much clearance
+       padding was added (reported live: "the add item button is still overlapping the carousel in
+       mobile"). flex-shrink:0 + min-height:auto let it size to its own natural, un-squeezed
+       content height instead, so it can genuinely exceed the viewport and make .grid-area scroll
+       for real. */
+    flex-shrink: 0;
+    min-height: auto;
   }
 }
 
