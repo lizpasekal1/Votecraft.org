@@ -843,7 +843,7 @@ export async function loadAll() {
         // above, after that id got stuck mid-rename in a live install — see that entry's
         // comment) — reusing it would just fight the legacyIds cleanup forever.
         { id: 'default-weblinks-publications', name: 'Publications', parentCategory: 'Web Links' },
-        { id: 'default-art-dance',     name: 'Movement', parentCategory: 'Visual Art' },
+        { id: 'default-art-dance',     name: 'Styles',   parentCategory: 'Visual Art' },
         { id: 'default-art-comics',    name: 'Comics',    parentCategory: 'Visual Art' },
         { id: 'default-art-memes',     name: 'Memes',     parentCategory: 'Visual Art' },
         { id: 'default-art-artists',   name: 'Artists',   parentCategory: 'Visual Art' },
@@ -889,12 +889,18 @@ export async function loadAll() {
         pushMigratedFolderToFirestore(websitesFolder);
       }
 
-      // Renamed Visual Art's "Dance" -> "Movement".
+      // Renamed Visual Art's "Dance" -> "Movement" -> "Styles" (two rename passes, checked
+      // sequentially so a user still on the original "Dance" lands on "Styles" directly in one
+      // load instead of stopping at the intermediate "Movement").
       const danceFolder = state.folders.find(f => f.id === 'default-art-dance');
-      if (danceFolder && danceFolder.name === 'Dance') {
-        danceFolder.name = 'Movement';
-        toSave[`folder_${danceFolder.id}`] = danceFolder;
-        pushMigratedFolderToFirestore(danceFolder);
+      if (danceFolder) {
+        let danceFolderRenamed = false;
+        if (danceFolder.name === 'Dance') { danceFolder.name = 'Movement'; danceFolderRenamed = true; }
+        if (danceFolder.name === 'Movement') { danceFolder.name = 'Styles'; danceFolderRenamed = true; }
+        if (danceFolderRenamed) {
+          toSave[`folder_${danceFolder.id}`] = danceFolder;
+          pushMigratedFolderToFirestore(danceFolder);
+        }
       }
 
       // Renamed Shows' "Webseries" -> "Web Series" (two words, so it wraps to two lines on the

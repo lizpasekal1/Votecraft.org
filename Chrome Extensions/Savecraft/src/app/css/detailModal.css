@@ -315,6 +315,10 @@
 .detail-image--faces { object-position: center 20%; }
 .detail-image--clickable { cursor: pointer; transition: filter 0.15s ease; }
 .detail-image--clickable:hover { filter: brightness(0.7); }
+/* Extra zoom-crop for YouTube thumbnails specifically (isYoutubeThumbnailUrl, utils.js) — same
+   reasoning/values as .card-image--zoom, cards.css. .detail-image-crop's own overflow: hidden
+   clips the excess. */
+.detail-image--zoom { transform: scale(1.2); }
 
 .detail-placeholder {
   width: 100%;
