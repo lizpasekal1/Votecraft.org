@@ -2326,6 +2326,34 @@
     height: auto;
     min-height: 110px;
   }
+  /* REAL BUG, found and fixed: .card's height above went from a fixed 110px to auto — but
+     .card-image-crop is a flex item sized via height: 100% (cards.css), and a percentage height
+     on a flex item is spec'd to resolve as 'auto' whenever its flex container's own height is
+     itself indefinite/auto (exactly the circular case this now created). For an 'auto' height,
+     an <img> (a replaced element) falls back to its own intrinsic aspect ratio at its fixed
+     100px width instead of stretching to match the row — so every card's image (and, via the
+     stretch algorithm, the whole card) ended up sized to whatever THAT PHOTO's own aspect ratio
+     happened to be, wildly inconsistent card-to-card (reported live, screenshotted: portrait
+     photos producing much taller cards than landscape ones, all on the same list — confirmed
+     fine on desktop, where .card's height is still a fixed 110px there with no such ambiguity).
+     Fix: take the image wrapper out of flex flow entirely (absolute, pinned to .card's own
+     padding box via position:relative — already set — with top/left/bottom all literal 0s, not
+     percentages) so it can no longer influence the row's height calculation at all — same
+     already-proven technique .detail-image-crop (detailModal.css) uses for the same reason.
+     .card's own height is then driven purely by .card-body's natural content, and the image
+     simply fills whatever box results. .card-body gets a matching margin-left so its text no
+     longer renders underneath the now out-of-flow image. */
+  .card-image-crop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 100px;
+    height: auto;
+  }
+  .card-body {
+    margin-left: 100px;
+  }
   /* 20px -> 16px (20% smaller), per direct request ("make the card title font 20% smaller...
      in mobile that is"/"only mobile") — desktop's 20px is untouched. Also allowed to wrap to a
      second line here (1 -> 2), per direct follow-up ("in the other sections i also want the
