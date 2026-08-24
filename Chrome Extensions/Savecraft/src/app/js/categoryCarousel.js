@@ -29,8 +29,15 @@ import { openDetailModal } from './detailModal.js';
 // disagreeing with what actually got rendered).
 let _lastSlideItems = [];
 
-export function renderCategoryCarouselHtml() {
-  const { items, isDemo } = resolveFavoriteSlides();
+// `override` — { items, isDemo } — lets a caller supply its own slide source instead of the
+// generic Dashboard-style resolveFavoriteSlides() fallback. Used by the curated folder-picker page
+// (renderCuratedCategoryFolderLanding, renderGrid.js) to show that genre+category's own real
+// curated picks (resolveGenreRowItems, renderCuratedPages.js — the exact same items its landing
+// page's own row shows) instead of generic favorites/demo content, per direct request ("put the
+// corresponding content from the votecraft landing page into the carousel"). Every other caller
+// (the personal category landing pages) passes nothing and gets the original behavior unchanged.
+export function renderCategoryCarouselHtml(override = null) {
+  const { items, isDemo } = override || resolveFavoriteSlides();
   _lastSlideItems = items;
   if (!items.length) return ''; // no real saves and no curated fallback data available at all — nothing to show
 

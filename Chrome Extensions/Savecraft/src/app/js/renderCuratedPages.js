@@ -1,7 +1,7 @@
 // ===== CURATED (TOP 100 / DIRECTORY / BARE-LIST) LANDING PAGE RENDERING =====
 
 import {
-  state, CURATED_ITEMS, CAT_EMOJI, CURATED_DIRECTORY_CONTENT,
+  state, CURATED_ITEMS, CAT_EMOJI, CURATED_DIRECTORY_CONTENT, CURATED_GENRE_LANDING_CONTENT,
   BOOKMARK_OUTLINE_SVG, BOOKMARK_FILLED_SVG,
 } from './state.js';
 import { escapeHtml, isItunesArtworkUrl } from './utils.js';
@@ -233,6 +233,38 @@ export function renderCuratedDirectory(container) {
 // state. Deliberately styled distinct from the Dashboard (see cards.css's .top100-* rules) even
 // though it reuses the Dashboard's proven scroll-carousel mechanics (_wireCarouselArrows) —
 // same plumbing, different skin, so this reads as its own destination, not "the Dashboard again."
+// Every other curated view resolves an item's displayed image through this same fallback chain
+// (see getFilteredSortedItems()'s genre: branch) before ever falling back to a live fetch —
+// skipping it was why these rows used to show the fallback icon for almost everything instead of
+// real cover art, even for items that already had a cached image sitting in storage from being
+// viewed elsewhere in the app. Shared by renderCuratedGenreLanding's own rows and
+// resolveGenreRowItems() below.
+function resolveRowItemImage(i, category) {
+  let imageUrl = i.imageUrl || null;
+  if (!imageUrl && state.curatedImgCache[i.id]) imageUrl = state.curatedImgCache[i.id];
+  if (category === 'Musician') {
+    const wikiPhoto = state.artistBioCache[(i.title || '').trim().toLowerCase()]?.photoUrl;
+    if (wikiPhoto && (!imageUrl || isItunesArtworkUrl(imageUrl))) imageUrl = wikiPhoto;
+  }
+  return imageUrl;
+}
+
+// Resolves exactly the same item set + order a genre's landing page row (renderCuratedGenreLanding,
+// below) shows for `category` — hand-picked `titles` (CURATED_GENRE_LANDING_CONTENT, state.js) in
+// that exact order if the genre defines a row for this category, else the default "first 15"
+// curated docs. Exported for reuse by the curated folder-picker's own carousel
+// (renderCuratedCategoryFolderLanding, renderGrid.js), per direct request ("put the corresponding
+// content from the votecraft landing page into the carousel") — same resolution logic, not a
+// second, potentially-drifting copy of it.
+export function resolveGenreRowItems(genre, category) {
+  const row = CURATED_GENRE_LANDING_CONTENT[genre]?.rows?.find(r => r.category === category);
+  const categoryItems = CURATED_ITEMS[genre]?.[category] || [];
+  const rawItems = row?.titles
+    ? row.titles.map(t => categoryItems.find(i => i.title === t)).filter(i => i && !state.hiddenCurated.has(i.id))
+    : categoryItems.filter(i => !state.hiddenCurated.has(i.id)).slice(0, 15);
+  return rawItems.map(i => ({ ...i, category, curated: true, imageUrl: resolveRowItemImage(i, category) }));
+}
+
 export function renderCuratedGenreLanding(container, genre, content) {
   container.className = 'cards-grid top100-landing';
 
@@ -243,31 +275,10 @@ export function renderCuratedGenreLanding(container, genre, content) {
   document.getElementById('grid-title').style.display = 'none';
   document.querySelector('.grid-header').style.display = 'none';
 
-  // Every other curated view resolves an item's displayed image through this same fallback
-  // chain (see getFilteredSortedItems()'s genre: branch) before ever falling back to a live
-  // fetch — skipping it here was why these rows showed the fallback icon for almost everything
-  // instead of real cover art, even for items that already had a cached image sitting in
-  // storage from being viewed elsewhere in the app.
-  function resolveRowItemImage(i, category) {
-    let imageUrl = i.imageUrl || null;
-    if (!imageUrl && state.curatedImgCache[i.id]) imageUrl = state.curatedImgCache[i.id];
-    if (category === 'Musician') {
-      const wikiPhoto = state.artistBioCache[(i.title || '').trim().toLowerCase()]?.photoUrl;
-      if (wikiPhoto && (!imageUrl || isItunesArtworkUrl(imageUrl))) imageUrl = wikiPhoto;
-    }
-    return imageUrl;
-  }
-
   const allRowItems = []; // flattened, de-tripled — fed to the live-fetch calls below
-  const rowsHtml = content.rows.map(({ category, label, titles }) => {
-    const categoryItems = CURATED_ITEMS[genre]?.[category] || [];
-    // `titles` (see CURATED_GENRE_LANDING_CONTENT in state.js) hand-picks exactly these items, by
-    // exact title match, in this exact order — falls back to the default "first 15" otherwise.
-    const rawItems = titles
-      ? titles.map(t => categoryItems.find(i => i.title === t)).filter(i => i && !state.hiddenCurated.has(i.id))
-      : categoryItems.filter(i => !state.hiddenCurated.has(i.id)).slice(0, 15);
-    if (!rawItems.length) return '';
-    const rowItems = rawItems.map(i => ({ ...i, category, curated: true, imageUrl: resolveRowItemImage(i, category) }));
+  const rowsHtml = content.rows.map(({ category, label }) => {
+    const rowItems = resolveGenreRowItems(genre, category);
+    if (!rowItems.length) return '';
     allRowItems.push(...rowItems);
     // Tripled for the same "always room to scroll either direction" trick
     // _wireCarouselArrows() (dashboard.js) already relies on for the Dashboard's own rows.
