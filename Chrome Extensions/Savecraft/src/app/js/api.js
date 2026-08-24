@@ -630,9 +630,30 @@ export async function ensureItemCreator(title, category, { url } = {}) {
 // Instagram deliberately isn't handled here — its oEmbed now requires a Meta app token/review, no
 // free unauthenticated path exists, so an Instagram link still falls back to the generic Microlink
 // attempt like any other URL (may or may not find an image, same as it does for any other site).
+// YouTube's own thumbnail sizing quirk, worked around here: hqdefault.jpg (used previously) is a
+// fixed 480x360 (4:3) frame — for any video that isn't natively 16:9 at the source, YouTube bakes
+// real black letterboxing bars directly into that image's own pixels, which .detail-image's
+// existing object-fit: cover (detailModal.css) can crop AROUND but can't remove, since they're
+// part of the photo itself, not a CSS artifact (reported live: a video's card/detail image showing
+// visible black bars top and bottom despite the crop already being in place). maxresdefault.jpg is
+// the actual source frame at full resolution — true aspect ratio, no artificial padding — but
+// doesn't exist for every video; a missing one doesn't 404, YouTube's thumbnail server quietly
+// serves a tiny 120x90 gray placeholder with a real 200 instead, so an onerror handler alone can't
+// detect it. Load it and check its real width to tell a genuine thumbnail apart from that
+// placeholder, falling back to hqdefault (still cropped via object-fit: cover, just occasionally
+// still letterboxed for an older/non-16:9 upload) only when maxresdefault isn't actually available.
+function loadYoutubeMaxresThumbnail(ytId) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => resolve(img.naturalWidth > 120 ? img.src : null);
+    img.onerror = () => resolve(null);
+    img.src = `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`;
+  });
+}
+
 export async function fetchVideoThumbnail(url) {
   const ytId = getYoutubeVideoId(url);
-  if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+  if (ytId) return (await loadYoutubeMaxresThumbnail(ytId)) || `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
   if (getVimeoVideoId(url)) {
     try {
       const resp = await fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`);
