@@ -2319,10 +2319,29 @@
      are a little less wide so that the letters don't overlap the cards"). */
   .cards-grid .card {
     margin-right: 22px;
+    /* .card is a fixed height: 110px (desktop) with .card-body's own overflow: hidden — a title
+       that now wraps to a real second line (below) needs the card to grow to fit it instead of
+       that second line just getting silently clipped off. min-height keeps every other (1-line)
+       card at its normal compact size. */
+    height: auto;
+    min-height: 110px;
   }
   /* 20px -> 16px (20% smaller), per direct request ("make the card title font 20% smaller...
-     in mobile that is"/"only mobile") — desktop's 20px is untouched. */
+     in mobile that is"/"only mobile") — desktop's 20px is untouched. Also allowed to wrap to a
+     second line here (1 -> 2), per direct follow-up ("in the other sections i also want the
+     mobile card text to be able to be on two lines") — a long title truncating with an ellipsis
+     after just one line reads worse on a narrow phone screen than a real second line does. */
   .card-title {
+    font-size: 16px;
+    -webkit-line-clamp: 2;
+  }
+  /* .card-author-link.card-title (Musician/other creator-card titles — cards.css) is a 2-class
+     selector, so it out-specifies the plain 1-class .card-title rule above regardless of source
+     order — its own desktop font-size: 20px was silently winning here too, so the shrink above
+     never actually reached these cards. Per direct follow-up ("make font in the music cards in
+     mobile the same size you are using on the other sections"). Left at its own 1-line clamp
+     (not the 2-line change above) — that follow-up was scoped to "the other sections". */
+  .card-author-link.card-title {
     font-size: 16px;
   }
   /* 11px -> 9px (20% smaller, rounded), per direct follow-up ("in mobile make the card tags 20%
