@@ -460,10 +460,13 @@ let _heroItems = [];
 function buildHeroCollage() {
   const hour = new Date().getHours();
   const greeting = hour < 5 ? 'Good night' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-  // Per direct request ("change the demo site name to not have my name... make it say 'Good
-  // evening, friend' not Zil") — uses the real editable state.displayName (Profile > Account)
-  // once someone's set one, generic "friend" otherwise rather than a hardcoded name.
-  const greetingWithName = `${greeting}, ${state.displayName || 'friend'}`;
+  // Per direct follow-up ("i only want the demo site to say 'Good evening, friend' if i am not
+  // logged in... i want my profile page to display my name so it says the greeting and then my
+  // profile name") — signed-in shows the real editable state.displayName (Profile > Account,
+  // falling back to generic "friend" until one's actually set); signed-out always shows "friend"
+  // regardless of whatever state.displayName happens to still be cached locally from a prior
+  // signed-in session, since there's no real "you" to greet by name at that point.
+  const greetingWithName = `${greeting}, ${getCurrentUser() ? (state.displayName || 'friend') : 'friend'}`;
 
   let heroItems = state.items.filter(i => i.imageUrl);
   if (heroItems.length < 8) {
