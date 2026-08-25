@@ -415,35 +415,14 @@
   line-height: 1.5;
 }
 
-/* Account Details + VC Connector, side by side at half width on desktop, per direct request
-   ("make the 'account details' widget half width in desktop and put the 'VC connector' widget
-   to the right of it"). align-items: start (not the grid default stretch) so each card keeps its
-   own natural content height instead of both being forced to match whichever one is taller —
-   Account Details' longer form would otherwise stretch VC Connector's card far past its own
-   content, recreating the exact "flush margin-top:auto" look its own Learn More button was
-   already moved away from (see .vc-connect-learn-more-btn's comment above). Stacked to one column
-   on mobile (misc.css), matching every other Profile row's own mobile treatment. */
-/* REAL BUG, found and fixed: this was CSS Grid (grid-template-columns: 1fr 1fr) at first, with
-   min-width: 0 added on top once the Time Zone <select>'s long option text was found forcing the
-   column wide — but that still wasn't enough; live-reported afterward as genuinely broken (no
-   card background, no title, most fields gone; VC Connector full-width instead of beside it).
-   Grid's "1fr" track sizing still lets extreme content in one item influence how the browser
-   resolves both tracks' actual sizes in edge cases, even with min-width: 0 on the items
-   themselves — a more pathological failure than a plain width squeeze. Switched to the same
-   flexbox + flex-basis: 0 pattern already used elsewhere in this exact codebase for the identical
-   "two items share a row evenly, immune to content size" need (the mobile dual sort/genre
-   dropdown row, misc.css's .grid-header-right--dual #sort-select) — flex-basis: 0 starts both
-   items from zero width and grows them evenly, rather than sizing from an auto/content-based
-   track, which is the more robust of the two approaches for exactly this failure mode. */
-.profile-bottom-row {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-}
-.profile-bottom-row > * {
-  flex: 1 1 0;
-  min-width: 0;
-}
+/* .profile-bottom-row (Account Details + VC Connector side by side at half width) removed —
+   REAL BUG, reverted: never rendered correctly live across three fix attempts (CSS Grid with
+   min-width: 0, then flexbox with flex-basis: 0) — Account Details kept losing its own card
+   background/title/most fields regardless of the underlying layout mechanism, still unexplained
+   after a live DevTools inspection. Per direct request ("how about just revert this page back to
+   when the account details were full width") — both cards are plain full-width stacked children
+   of .profile-page again (renderProfilePage, profile.js), same as every other section on this
+   page; no special row wrapper needed. */
 
 /* --- Account Details --- */
 .profile-card--account-details .form-group:first-of-type {
