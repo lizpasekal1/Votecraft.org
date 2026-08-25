@@ -10,7 +10,7 @@
 import { state, CURATED_GENRES, CATEGORIES, CAT_LABEL, CAT_EMOJI } from './state.js';
 import { escapeHtml } from './utils.js';
 import { getCurrentUser, resendVerificationEmail, changeEmail, sendPasswordReset } from './auth.js';
-import { persistFollowedCuratedLists, persistSavedLists, persistFolder, persistItem, persistSelectedSharedFriends, disconnectLastfm, disconnectSteam, persistDisplayName, persistFullName, persistRecoveryEmail, persistTimeZone } from './storage.js';
+import { persistFollowedCuratedLists, persistSavedLists, persistFolder, persistItem, persistSelectedSharedFriends, disconnectLastfm, disconnectSteam, persistDisplayName, persistFullName, persistRecoveryEmail, persistTimeZone, getLocalCacheSizeBytes, clearLocalCaches } from './storage.js';
 import { ensureLastfmRecentTracks, ensureSteamRecentGames } from './api.js';
 import { CURATED_LIST_DISPLAY_NAMES, DEMO_PROFILE_NAME } from './dashboard.js';
 import { openAuthModal, openLastfmModal, openSteamModal } from './main.js';
@@ -149,25 +149,73 @@ const TIME_ZONE_OPTIONS = [
   'Asia/Kolkata', 'Asia/Shanghai', 'Asia/Tokyo', 'Australia/Sydney', 'Pacific/Auckland',
 ];
 
+// ===== settings =====
+// Per direct request ("add another half width widget to the left of the account details. give
+// this widget the title Settings") — a placeholder for now, same "Coming soon" convention already
+// used elsewhere on this page for a not-yet-built widget (Instagram connection, buildInstagramRow
+// above).
+// KB/MB display for getLocalCacheSizeBytes() below — this widget's only consumer, kept local
+// rather than a shared utils.js helper for one call site.
+function _formatCacheSize(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+// Per a live reference screenshot (Spotify's own Settings > Storage section) — "Downloads" row
+// deliberately excluded per direct follow-up ("don't include the 'remove all downloads' button"),
+// since SaveCraft has no offline-download concept to begin with; only "Cache" maps to something
+// real here — the same local-only lookup caches loadLocalCache() populates at startup
+// (LOCAL_CACHE_KEYS, storage.js), already genuinely clearable rather than a decorative mockup.
+function buildSettingsSection() {
+  const sizeLabel = _formatCacheSize(getLocalCacheSizeBytes());
+  return `
+    <div class="dash-card profile-card--settings">
+      <div class="profile-card-header"><span class="profile-card-title">Settings</span></div>
+      <div class="profile-settings-section-title">Storage</div>
+      <div class="profile-settings-row">
+        <div class="profile-settings-row-text">
+          <div class="profile-settings-row-label">Cache: <span class="profile-settings-row-value">${sizeLabel}</span></div>
+          <p class="profile-card-copy">Temporary lookups SaveCraft stores for a faster experience (artist bios, album art, track lists).</p>
+        </div>
+        <button type="button" class="btn-cancel profile-inline-field-btn" id="profile-clear-cache-btn">Clear Cache</button>
+      </div>
+    </div>`;
+}
+
+function wireSettingsSection(container) {
+  container.querySelector('#profile-clear-cache-btn')?.addEventListener('click', () => {
+    clearLocalCaches();
+    renderProfilePage(); // re-render so the Storage row reflects the now-empty caches immediately
+  });
+}
+
 function buildAccountDetailsSection(user) {
-  if (!user) return '';
+  // Per direct follow-up (Account Details now shares .profile-bottom-row with Settings, above) —
+  // returning '' entirely when signed out would collapse that row down to just Settings alone
+  // (full width via flex-grow), the exact same broken-looking asymmetry an earlier VC Connector
+  // pairing hit before. Every field below genuinely needs a real account to persist to, so a
+  // signed-out visitor can't edit them, but the same full card now always renders — empty values,
+  // disabled controls — rather than nothing at all. wireAccountDetailsSection below still no-ops
+  // entirely when signed out (disabled controls can't fire the events it would wire up anyway).
   const detectedTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const tzOptions = TIME_ZONE_OPTIONS.includes(state.timeZone || detectedTz)
     ? TIME_ZONE_OPTIONS
     : [state.timeZone || detectedTz, ...TIME_ZONE_OPTIONS];
   const selectedTz = state.timeZone || detectedTz;
+  const disabledAttr = user ? '' : ' disabled';
   return `
     <div class="profile-card profile-card--account-details">
       <div class="profile-card-title">Account Details</div>
       <div class="form-group">
         <label>Full Name</label>
-        <input type="text" id="profile-full-name-input" value="${escapeHtml(state.fullName || '')}" placeholder="Your full name" maxlength="100" />
+        <input type="text" id="profile-full-name-input" value="${user ? escapeHtml(state.fullName || '') : ''}" placeholder="Your full name" maxlength="100"${disabledAttr} />
       </div>
       <!-- Per direct request ("can you place time zone below the full name") — moved up from its
            original spot at the end of the field list, right after Email/Recovery Email. -->
       <div class="form-group">
         <label>Time Zone</label>
-        <select id="profile-timezone-select">
+        <select id="profile-timezone-select"${disabledAttr}>
           ${tzOptions.map(tz => `<option value="${escapeHtml(tz)}"${tz === selectedTz ? ' selected' : ''}>${escapeHtml(tz.replace(/_/g, ' '))}</option>`).join('')}
         </select>
       </div>
@@ -177,24 +225,24 @@ function buildAccountDetailsSection(user) {
       <div class="form-group">
         <label>Email</label>
         <div class="profile-masked-field-row">
-          <input type="email" value="${escapeHtml(user.email)}" disabled />
-          <button type="button" class="btn-primary profile-inline-field-btn" id="profile-change-email-btn">Update</button>
+          <input type="email" value="${user ? escapeHtml(user.email) : ''}"${user ? '' : ' placeholder="Demo email"'} disabled />
+          <button type="button" class="btn-primary profile-inline-field-btn" id="profile-change-email-btn"${disabledAttr}>Update</button>
         </div>
       </div>
       <div class="form-group">
         <label>Recovery Email</label>
         <div class="profile-masked-field-row">
-          <input type="password" id="profile-recovery-email-input" value="${escapeHtml(state.recoveryEmail || '')}" placeholder="Not set" autocomplete="off" />
+          <input type="password" id="profile-recovery-email-input" value="${user ? escapeHtml(state.recoveryEmail || '') : ''}" placeholder="Not set" autocomplete="off"${disabledAttr} />
           <!-- Masked (type="password") by default, per direct request — flips to type="text"
                only while this button is actively held down (wireAccountDetailsSection below),
                re-masking the instant it's released, rather than a click-to-toggle switch. -->
-          <button type="button" class="profile-reveal-btn" id="profile-recovery-email-reveal" title="Hold to reveal" aria-label="Hold to reveal recovery email">
+          <button type="button" class="profile-reveal-btn" id="profile-recovery-email-reveal" title="Hold to reveal" aria-label="Hold to reveal recovery email"${disabledAttr}>
             <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M480-320q75 0 127.5-52.5T660-500q0-75-52.5-127.5T480-680q-75 0-127.5 52.5T300-500q0 75 52.5 127.5T480-320Zm0-72q-45 0-76.5-31.5T372-500q0-45 31.5-76.5T480-608q45 0 76.5 31.5T588-500q0 45-31.5 76.5T480-392Zm0 192q-146 0-266-81.5T40-500q54-137 174-218.5T480-800q146 0 266 81.5T920-500q-54 137-174 218.5T480-200Z"/></svg>
           </button>
         </div>
       </div>
       <div class="profile-account-details-row">
-        <button type="button" class="btn-primary" id="profile-reset-password-btn">Reset Password</button>
+        <button type="button" class="btn-primary" id="profile-reset-password-btn"${disabledAttr}>Reset Password</button>
       </div>
     </div>`;
 }
@@ -1023,16 +1071,25 @@ export function renderProfilePage() {
         ${buildSharedListsSection()}
         ${buildVotecraftConnectionSection()}
       </div>
-      <!-- Per direct request ("put the whole account details below the other widgets") — moved
-           from right after the top Account card to here, below .profile-widget-grid. Stays
-           full-width, same as every other section on this page — no side-by-side pairing this
-           time (that half-width row never rendered correctly live, reverted entirely). -->
-      ${buildAccountDetailsSection(user)}
+      <!-- Per direct request ("add another half width widget to the left of the account
+           details") — Settings + Account Details now share a row, each at half width. Plain
+           flexbox with flex-basis: 0 (profile.css), the same pattern already used elsewhere in
+           this codebase for "two items split a row evenly" (misc.css's mobile dual dropdown row)
+           — not CSS Grid, which is what an earlier attempt at pairing Account Details with VC
+           Connector used before it was reverted (never rendered correctly live, cause still
+           unexplained even after a live DevTools inspection). Account Details itself has been
+           solid since, standalone at half-width (a previous commit) — this reintroduces a shared
+           row on that same proven-stable foundation. -->
+      <div class="profile-bottom-row">
+        ${buildSettingsSection()}
+        ${buildAccountDetailsSection(user)}
+      </div>
       <button class="btn-cancel profile-manage-account-mobile" id="profile-manage-account-mobile">Manage account</button>
       ${buildLegalLinksRow('profile-legal-links-bottom')}
     </div>`;
 
   wireAccountSection(container);
+  wireSettingsSection(container);
   wireAccountDetailsSection(container);
   wireConnectionsSection(container);
   wireInterestsSection(container);
