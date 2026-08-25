@@ -155,46 +155,56 @@ const TIME_ZONE_OPTIONS = [
 ];
 
 function buildAccountDetailsSection(user) {
-  if (!user) return '';
+  // Per direct follow-up ("the demo should show these widgets... just with empty fields") — this
+  // used to return '' entirely when signed out, which collapsed .profile-bottom-row down to just
+  // VC Connector alone (full width, not the half-width pairing this row exists for). Every field
+  // below genuinely needs a real account to persist to, so a signed-out visitor can't actually
+  // edit them, but the same full card now always renders — empty values, disabled controls —
+  // rather than a shorter placeholder card, matching this page's established "browsable without
+  // signing in, real layout either way" stance (buildAccountSection above does the same: full
+  // card, sign-in is a secondary action, never a gate on whether it renders at all). wireAccount-
+  // DetailsSection below still no-ops entirely when signed out (disabled controls can't fire the
+  // events it would otherwise wire up anyway).
   const detectedTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const tzOptions = TIME_ZONE_OPTIONS.includes(state.timeZone || detectedTz)
     ? TIME_ZONE_OPTIONS
     : [state.timeZone || detectedTz, ...TIME_ZONE_OPTIONS];
   const selectedTz = state.timeZone || detectedTz;
+  const disabledAttr = user ? '' : ' disabled';
   return `
     <div class="profile-card profile-card--account-details">
       <div class="profile-card-title">Account Details</div>
       <div class="form-group">
         <label>Full Name</label>
-        <input type="text" id="profile-full-name-input" value="${escapeHtml(state.fullName || '')}" placeholder="Your full name" maxlength="100" />
+        <input type="text" id="profile-full-name-input" value="${user ? escapeHtml(state.fullName || '') : ''}" placeholder="Your full name" maxlength="100"${disabledAttr} />
       </div>
       <div class="form-group">
         <label>Email</label>
-        <input type="email" value="${escapeHtml(user.email)}" disabled />
+        <input type="email" value="${user ? escapeHtml(user.email) : ''}"${user ? '' : ' placeholder="Demo email"'} disabled />
       </div>
       <div class="profile-account-details-row">
-        <button type="button" class="btn-cancel" id="profile-change-email-btn">Change Email</button>
+        <button type="button" class="btn-cancel" id="profile-change-email-btn"${disabledAttr}>Change Email</button>
       </div>
       <div class="form-group">
         <label>Recovery Email</label>
         <div class="profile-masked-field-row">
-          <input type="password" id="profile-recovery-email-input" value="${escapeHtml(state.recoveryEmail || '')}" placeholder="Not set" autocomplete="off" />
+          <input type="password" id="profile-recovery-email-input" value="${user ? escapeHtml(state.recoveryEmail || '') : ''}" placeholder="Not set" autocomplete="off"${disabledAttr} />
           <!-- Masked (type="password") by default, per direct request — flips to type="text"
                only while this button is actively held down (wireAccountDetailsSection below),
                re-masking the instant it's released, rather than a click-to-toggle switch. -->
-          <button type="button" class="profile-reveal-btn" id="profile-recovery-email-reveal" title="Hold to reveal" aria-label="Hold to reveal recovery email">
+          <button type="button" class="profile-reveal-btn" id="profile-recovery-email-reveal" title="Hold to reveal" aria-label="Hold to reveal recovery email"${disabledAttr}>
             <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M480-320q75 0 127.5-52.5T660-500q0-75-52.5-127.5T480-680q-75 0-127.5 52.5T300-500q0 75 52.5 127.5T480-320Zm0-72q-45 0-76.5-31.5T372-500q0-45 31.5-76.5T480-608q45 0 76.5 31.5T588-500q0 45-31.5 76.5T480-392Zm0 192q-146 0-266-81.5T40-500q54-137 174-218.5T480-800q146 0 266 81.5T920-500q-54 137-174 218.5T480-200Z"/></svg>
           </button>
         </div>
       </div>
       <div class="form-group">
         <label>Time Zone</label>
-        <select id="profile-timezone-select">
+        <select id="profile-timezone-select"${disabledAttr}>
           ${tzOptions.map(tz => `<option value="${escapeHtml(tz)}"${tz === selectedTz ? ' selected' : ''}>${escapeHtml(tz.replace(/_/g, ' '))}</option>`).join('')}
         </select>
       </div>
       <div class="profile-account-details-row">
-        <button type="button" class="btn-cancel" id="profile-reset-password-btn">Reset Password</button>
+        <button type="button" class="btn-cancel" id="profile-reset-password-btn"${disabledAttr}>Reset Password</button>
       </div>
     </div>`;
 }
