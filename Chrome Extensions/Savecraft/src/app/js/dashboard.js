@@ -82,11 +82,43 @@ export function _wireCarouselArrows(card, strip) {
     else if (strip.scrollLeft > w * 1.5) strip.scrollLeft -= w;
   };
 
+  // Per direct request ("make the carousel animation back and forth controls smoother and a
+  // little bouncier") — the native scrollBy({behavior:'smooth'}) this used to call hands the
+  // whole animation off to the browser's own built-in easing, which is a flat ease-out with no
+  // overshoot and an inconsistent duration across browsers (and can't be tuned at all). A custom
+  // rAF-driven animation with an easeOutBack curve (overshoots slightly past the target, then
+  // settles back) gives the actual spring/bounce feel instead — same technique as a CSS
+  // cubic-bezier bounce, just driven manually since scrollLeft has no CSS transition support.
+  // Each call reads strip.scrollLeft fresh as its start point, so a rapid second click chains
+  // smoothly from wherever the first animation currently is rather than needing to be queued.
+  const animateScrollBy = (delta, duration = 480) => {
+    const start = strip.scrollLeft;
+    const startTime = performance.now();
+    const c1 = 1.70158;
+    const c3 = c1 + 1;
+    const easeOutBack = t => 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+    // The category-landing carousel's strip (categoryCarousel.js) has its own CSS
+    // scroll-behavior: smooth (cards.css) — left in place, every direct scrollLeft write below
+    // would otherwise get asynchronously re-smoothed by the browser on top of this animation's
+    // own easing, fighting it frame to frame instead of tracking it directly. Suppressed for the
+    // animation's duration, restored after (a no-op for every other caller's strip, which never
+    // had scroll-behavior: smooth to begin with).
+    const prevScrollBehavior = strip.style.scrollBehavior;
+    strip.style.scrollBehavior = 'auto';
+    function step(now) {
+      const t = Math.min((now - startTime) / duration, 1);
+      strip.scrollLeft = start + delta * easeOutBack(t);
+      if (t < 1) requestAnimationFrame(step);
+      else strip.style.scrollBehavior = prevScrollBehavior;
+    }
+    requestAnimationFrame(step);
+  };
+
   const scrollByCard = dir => {
     recenter();
     const item = strip.firstElementChild;
     const amount = item ? item.getBoundingClientRect().width + 14 : 140;
-    strip.scrollBy({ left: dir * amount, behavior: 'smooth' });
+    animateScrollBy(dir * amount);
   };
 
   strip.scrollLeft = copyWidth(); // start centered in the middle copy
