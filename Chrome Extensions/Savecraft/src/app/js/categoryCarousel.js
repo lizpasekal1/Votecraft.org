@@ -113,13 +113,36 @@ export function renderCategoryCarouselHtml(override = null) {
 // The slide that most recently played the "entering" animation below — module-level, not
 // per-strip, since only one of these carousels is ever in the DOM at once (a single-page app view
 // swap, not multiple simultaneous instances). Reset implicitly on each fresh render since
-// initCategoryCarousel() below always runs against a brand-new strip.
+// initCategoryCarousel() below always runs against a brand-new strip. Also doubles as "whichever
+// slide is currently active" for the caption's own click handler (initCategoryCarousel) — no
+// separate _activeCaptionItem needed, since _itemForSlide() below can derive the real item from
+// this directly, the same way every other click handler in this file already does.
 let _prevActiveSlide = null;
-// The real item behind whichever slide is currently active — kept in sync alongside the purple
-// caption text below the carousel (both set together in _updateActiveSlide), so the caption's own
-// click handler (wired once, in initCategoryCarousel) always opens whatever's actually centered
-// right now. Same module-level, single-instance reasoning as _prevActiveSlide above.
-let _activeCaptionItem = null;
+
+// Resolves a slide element back to its real item — the tripled DOM order maps onto _lastSlideItems
+// via `dataset.index % _lastSlideItems.length` (renderCategoryCarouselHtml sets `data-index`).
+// Shared by the per-slide click wiring, the caption's click handler, and _updateActiveSlide — one
+// lookup formula instead of it being written out at each call site separately.
+function _itemForSlide(slideEl) {
+  if (!slideEl) return null;
+  return _lastSlideItems[parseInt(slideEl.dataset.index, 10) % _lastSlideItems.length] || null;
+}
+
+// Writes strip.scrollLeft with scroll-behavior forced to 'auto' for the duration, so it applies
+// instantly instead of respecting .category-carousel-strip's own CSS scroll-behavior: smooth —
+// shared by both the initial sync centering pass and the double-rAF safety net in
+// initCategoryCarousel below, which both need this same "move scrollLeft right now, no animation"
+// guarantee (previously duplicated as its own save/set/flush/restore sequence in each spot).
+// Callers are still responsible for their own category-carousel-strip--no-transition toggling
+// around this call (also suppresses scroll-snap-type, cards.css) since the two passes need it at
+// slightly different scopes — this only owns the scroll-behavior half of that suppression.
+function _setScrollLeftInstantly(strip, newScrollLeft) {
+  const prevBehavior = strip.style.scrollBehavior;
+  strip.style.scrollBehavior = 'auto';
+  strip.scrollLeft = newScrollLeft;
+  void strip.offsetWidth; // flushes the instant write before scroll-behavior is restored
+  strip.style.scrollBehavior = prevBehavior;
+}
 
 function _updateActiveSlide(strip, { animate = true } = {}) {
   const stripRect = strip.getBoundingClientRect();
@@ -139,12 +162,6 @@ function _updateActiveSlide(strip, { animate = true } = {}) {
   // separate data attribute.
   const caption = document.getElementById('category-carousel-caption');
   if (caption && closest) caption.textContent = closest.title || '';
-  // Per direct request ("make it so on desktop and mobile the center card title purple text is
-  // a link to that card") — resolves the same real item the closest slide's own click handler
-  // (initCategoryCarousel, below) would open, via the identical dataset.index -> _lastSlideItems
-  // lookup, so the caption always opens whatever's actually centered right now regardless of how
-  // it got there (arrow click, drag, wheel scroll, ...).
-  _activeCaptionItem = closest ? _lastSlideItems[parseInt(closest.dataset.index, 10) % _lastSlideItems.length] || null : null;
   // Per direct request ("the large center feature item should change to the next item, come from
   // the left side") — the newly-active slide plays a one-shot slide-in-from-the-left animation
   // (.category-carousel-slide--entering, cards.css) instead of just popping to its enlarged size
@@ -166,15 +183,19 @@ export function initCategoryCarousel(container) {
   if (!strip) return;
 
   strip.querySelectorAll('.category-carousel-slide').forEach(slide => {
-    const item = _lastSlideItems[parseInt(slide.dataset.index, 10) % _lastSlideItems.length];
+    const item = _itemForSlide(slide);
     if (item) slide.addEventListener('click', () => openDetailModal(item));
   });
   // Per direct request ("make it so on desktop and mobile the center card title purple text is
   // a link to that card") — wired once here (not per-render inside _updateActiveSlide, which
   // runs on every scroll tick) since the caption element itself is never replaced/re-created,
-  // only its text/target item change; _activeCaptionItem is kept current by _updateActiveSlide.
+  // only its text/target item change. Resolves whichever slide is active right now via
+  // _prevActiveSlide (kept current by _updateActiveSlide) rather than tracking a separate,
+  // redundant "active item" variable — same _itemForSlide lookup every other click handler here
+  // already uses.
   document.getElementById('category-carousel-caption')?.addEventListener('click', () => {
-    if (_activeCaptionItem) openDetailModal(_activeCaptionItem);
+    const item = _itemForSlide(_prevActiveSlide);
+    if (item) openDetailModal(item);
   });
 
   // Infinite-wheel scroll + prev/next arrow wiring (dashboard.js) — sets its own initial
@@ -187,16 +208,12 @@ export function initCategoryCarousel(container) {
   // smooth-scroll instead of snapping there instantly, so the page's actual first paint (and any
   // screenshot taken shortly after) could still show the strip mid-glide toward center rather
   // than already centered — reported live, screenshot confirmed, even surviving a hard refresh:
-  // "the center card is not in the center on page launch... it still looks like that." Forced to
-  // 'auto' for this entire initial setup, restored to the CSS default (empty string, letting
-  // scroll-behavior: smooth apply again) once the true final position is set, so real user-driven
-  // scrolling afterward is unaffected.
-  const prevScrollBehavior = strip.style.scrollBehavior;
-  strip.style.scrollBehavior = 'auto';
-  // Centers the scrollable content's own midpoint in the viewport (not any one slide's specific
-  // offset — more robust against margin/gap rounding) so a real slide lands at the strip's true
-  // center on load, rather than just the start of the middle copy _wireCarouselArrows leaves it at.
-  strip.scrollLeft = (strip.scrollWidth - strip.clientWidth) / 2;
+  // "the center card is not in the center on page launch... it still looks like that." Centers
+  // the scrollable content's own midpoint in the viewport (not any one slide's specific offset —
+  // more robust against margin/gap rounding) via _setScrollLeftInstantly, so a real slide lands
+  // at the strip's true center on load, rather than just the start of the middle copy
+  // _wireCarouselArrows leaves it at.
+  _setScrollLeftInstantly(strip, (strip.scrollWidth - strip.clientWidth) / 2);
 
   // REAL BUG, found and fixed: .category-carousel-slide's width/height/transform/margin all
   // animate now (the "zoom out as it gets replaced" fix, cards.css) — measuring the active
@@ -207,7 +224,9 @@ export function initCategoryCarousel(container) {
   // transition just for this one initial, non-animated activation (animate: false already says
   // "no entrance animation on first paint" — this extends that same intent to the underlying
   // CSS transition, not just the JS-driven --entering keyframe) makes it settle to its final
-  // size instantly, so the measurement below reads the true final geometry.
+  // size instantly, so the measurement below reads the true final geometry. Also suppresses
+  // scroll-snap-type for the same window (cards.css) — see _setScrollLeftInstantly's own comment
+  // for why that matters for the scrollLeft write just below.
   strip.classList.add('category-carousel-strip--no-transition');
   _updateActiveSlide(strip, { animate: false });
   // REAL BUG, found and fixed: the scrollLeft set above centers the strip's own midpoint using
@@ -223,11 +242,9 @@ export function initCategoryCarousel(container) {
   if (initialActive) {
     const stripRect = strip.getBoundingClientRect();
     const activeRect = initialActive.getBoundingClientRect();
-    strip.scrollLeft += (activeRect.left + activeRect.width / 2) - (stripRect.left + stripRect.width / 2);
+    _setScrollLeftInstantly(strip, strip.scrollLeft + (activeRect.left + activeRect.width / 2) - (stripRect.left + stripRect.width / 2));
   }
-  void strip.offsetWidth; // flushes the instant snap above before transitions are re-enabled below
   strip.classList.remove('category-carousel-strip--no-transition');
-  strip.style.scrollBehavior = prevScrollBehavior; // restores CSS's own scroll-behavior: smooth for real user scrolling from here on
   strip.addEventListener('scroll', debounce(() => _updateActiveSlide(strip), 60));
 
   // REAL BUG, found and fixed (still unresolved after 3 earlier attempts at the root cause —
@@ -241,28 +258,32 @@ export function initCategoryCarousel(container) {
   // second one is guaranteed to run only after that paint has actually happened. Purely a safety
   // net on top of the synchronous centering above, not a replacement for it — harmless no-op if
   // the sync version already landed correctly (the recomputed delta is ~0 in that case).
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    const settledActive = strip.querySelector('.category-carousel-slide--active');
-    if (!settledActive) return;
-    const stripRect2 = strip.getBoundingClientRect();
-    const activeRect2 = settledActive.getBoundingClientRect();
-    const residualDelta = (activeRect2.left + activeRect2.width / 2) - (stripRect2.left + stripRect2.width / 2);
-    if (Math.abs(residualDelta) > 1) {
-      // REAL BUG, found and fixed: this correction ran AFTER category-carousel-strip--no-
-      // transition had already been removed a few lines up — which is also what suppresses
-      // scroll-snap-type (cards.css). So this second pass was just as exposed to the same
-      // async scroll-snap settling the FIRST pass was originally protected against, and could
-      // get silently re-nudged toward a neighboring slide's own snap point right after setting
-      // scrollLeft. Reported live, specifically on mobile (confirmed fine on desktop, where none
-      // of this drag/touch/snap interaction applies at all): "it's still too far to the right in
-      // mobile." Re-applying the same suppression here, not just in the first pass.
-      strip.classList.add('category-carousel-strip--no-transition');
-      const prevBehavior = strip.style.scrollBehavior;
-      strip.style.scrollBehavior = 'auto';
-      strip.scrollLeft += residualDelta;
-      void strip.offsetWidth;
-      strip.style.scrollBehavior = prevBehavior;
-      strip.classList.remove('category-carousel-strip--no-transition');
-    }
-  }));
+  // /simplify pass: skipped entirely on desktop (pointer: fine) — the sync pass above already
+  // lands correctly there every time (confirmed live: "it looks perfect in desktop"), and this
+  // whole safety net exists specifically for mobile's async scroll-snap settling (dashboard.js's
+  // drag/momentum system is gated the same way, for the identical reason), so there's nothing for
+  // it to catch on desktop — running it anyway there was pure wasted work (2 more forced-layout
+  // getBoundingClientRect calls on every single page load) for a correction that always turns out
+  // to be a no-op.
+  if (!window.matchMedia('(pointer: fine)').matches) {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const settledActive = strip.querySelector('.category-carousel-slide--active');
+      if (!settledActive) return;
+      const stripRect2 = strip.getBoundingClientRect();
+      const activeRect2 = settledActive.getBoundingClientRect();
+      const residualDelta = (activeRect2.left + activeRect2.width / 2) - (stripRect2.left + stripRect2.width / 2);
+      if (Math.abs(residualDelta) > 1) {
+        // REAL BUG, found and fixed: this correction ran AFTER category-carousel-strip--no-
+        // transition had already been removed a few lines up — which is also what suppresses
+        // scroll-snap-type (cards.css). So this second pass was just as exposed to the same
+        // async scroll-snap settling the FIRST pass was originally protected against, and could
+        // get silently re-nudged toward a neighboring slide's own snap point right after setting
+        // scrollLeft. Reported live, specifically on mobile: "it's still too far to the right in
+        // mobile." Re-applying the same suppression here, not just in the first pass.
+        strip.classList.add('category-carousel-strip--no-transition');
+        _setScrollLeftInstantly(strip, strip.scrollLeft + residualDelta);
+        strip.classList.remove('category-carousel-strip--no-transition');
+      }
+    }));
+  }
 }
