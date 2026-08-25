@@ -772,6 +772,20 @@
   /* -26px -> -50px (more overlap), per direct follow-up. */
   margin: 0 -50px;
 }
+/* The two slides immediately beside the active/center one get their own intermediate opacity/
+   scale step, per direct request ("as the scroll happens make the two cards on the left and
+   right of the center card slightly fade down and slightly zoom down") — between the active
+   slide's full opacity: 1/scale(1) and every farther-out slide's dimmer opacity: 0.55/scale(0.92)
+   (base rule, above). :has()/adjacent-sibling (no JS) so this tracks whichever slide is actually
+   active automatically as _updateActiveSlide (categoryCarousel.js) toggles that class during
+   scroll — same live-relationship idiom as the mobile-only sizing tier below, just for
+   opacity/scale and not restricted to mobile. Already animates smoothly (not a snap) since
+   opacity/transform are both already in .category-carousel-slide's own transition list. */
+.category-carousel-slide--active + .category-carousel-slide,
+.category-carousel-slide:has(+ .category-carousel-slide--active) {
+  opacity: 0.8;
+  transform: scale(0.97);
+}
 /* Smaller on mobile, per direct follow-up ("reduce the large images size in the carousel in
    mobile") — the desktop sizes (170px resting / 240px active) left little headroom on a phone.
    Placed after the base rules above (not inside the earlier mobile block near the folder cards)
