@@ -500,6 +500,8 @@
   height: 1px;
   background: var(--border);
   width: 100%;
+  /* Per direct request ("drop down the divider line 8px"). */
+  margin-top: 8px;
 }
 .category-carousel-wrap {
   display: flex;
