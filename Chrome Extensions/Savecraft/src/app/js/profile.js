@@ -1071,18 +1071,17 @@ export function renderProfilePage() {
         ${buildSharedListsSection()}
         ${buildVotecraftConnectionSection()}
       </div>
-      <!-- Per direct request ("add another half width widget to the left of the account
-           details") — Settings + Account Details now share a row, each at half width. Plain
-           flexbox with flex-basis: 0 (profile.css), the same pattern already used elsewhere in
-           this codebase for "two items split a row evenly" (misc.css's mobile dual dropdown row)
-           — not CSS Grid, which is what an earlier attempt at pairing Account Details with VC
-           Connector used before it was reverted (never rendered correctly live, cause still
-           unexplained even after a live DevTools inspection). Account Details itself has been
-           solid since, standalone at half-width (a previous commit) — this reintroduces a shared
-           row on that same proven-stable foundation. -->
+      <!-- Settings + Account Details share a row, each at half width. Plain flexbox with
+           flex-basis: 0 (profile.css), the same pattern already used elsewhere in this codebase
+           for "two items split a row evenly" (misc.css's mobile dual dropdown row) — not CSS
+           Grid, which is what an earlier attempt at pairing Account Details with VC Connector
+           used before it was reverted (never rendered correctly live, cause still unexplained
+           even after a live DevTools inspection). Account Details first, Settings second — per
+           direct follow-up ("settings should be half width and to the right of the account
+           details widget"). -->
       <div class="profile-bottom-row">
-        ${buildSettingsSection()}
         ${buildAccountDetailsSection(user)}
+        ${buildSettingsSection()}
       </div>
       <button class="btn-cancel profile-manage-account-mobile" id="profile-manage-account-mobile">Manage account</button>
       ${buildLegalLinksRow('profile-legal-links-bottom')}
