@@ -691,6 +691,24 @@ body {
   background: var(--hover-bg);
 }
 
+/* Gray circle behind the profile row's person icon, per direct request ("put a gray circle
+   behind the only profile icon in the drop down") — the one icon in this menu that reads as a
+   real identity mark rather than a plain action glyph (Light/Dark mode, Sponsors, About), so it's
+   the only one singled out with a badge. Reuses .btn-theme's own gray-circle treatment
+   (background: var(--search-bg), same trigger button that opens this very dropdown) rather than
+   inventing a second gray. */
+.profile-menu-icon-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--search-bg);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
 .settings-divider {
   height: 1px;
   background: var(--border);
