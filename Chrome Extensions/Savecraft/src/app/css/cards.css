@@ -625,6 +625,13 @@
   cursor: grabbing;
   user-select: none;
 }
+/* Toggled briefly during initCategoryCarousel()'s first-paint centering measurement
+   (categoryCarousel.js) — see its own comment for why: forces the active slide to its final
+   settled size/position INSTANTLY for that one measurement, instead of the measurement catching
+   it still mid-zoom-transition and undershooting the centering math. */
+.category-carousel-strip--no-transition .category-carousel-slide {
+  transition: none !important;
+}
 /* REAL BUG, found and fixed — see .dash-carousel-strip's identical rule (dashboard.css) for why:
    native image/text drag was hijacking the click-and-drag panning gesture whenever it started
    directly on a card's own photo/label instead of the strip's empty background. */
