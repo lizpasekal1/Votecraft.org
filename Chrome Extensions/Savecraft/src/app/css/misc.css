@@ -556,9 +556,10 @@
      a huge empty gap under Interests' last checkboxes). none drops the explicit 2-row definition
      entirely, so all 4 cards fall back to implicit auto-height rows sized to their own content. */
   .profile-widget-grid { grid-template-columns: 1fr; grid-template-rows: none; height: auto; }
-  /* Account Details + VC Connector's desktop-only half-width pairing (profile.css) stacks back
-     to one column here, same treatment as the main widget grid just above. */
-  .profile-bottom-row { grid-template-columns: 1fr; }
+  /* Account Details + VC Connector's desktop-only half-width pairing (profile.css, now flexbox —
+     see its own comment for why) stacks back to one column here, same treatment as the main
+     widget grid just above. */
+  .profile-bottom-row { flex-direction: column; }
   /* Text across every Profile card bumped up again here, layered on top of profile.css's own
      base-size bump — mobile was the specific complaint ("very small — especially in mobile"),
      and there's width to spare once the grid above drops to a single column. Saved Lists' folder
