@@ -652,6 +652,10 @@
   .category-carousel-strip {
     mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
     -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+    /* 18px -> 9px (half), per direct request ("for the desktop carousel make the gap between
+       the nonoverlaping cards half the size") — only the active slide overlaps its neighbors
+       (its own negative margin, above); every other slide-to-slide spacing is this gap. */
+    gap: 9px;
   }
 }
 /* A <button> now (categoryCarousel.js — clicking opens the item's real detail modal, genuine
