@@ -10,7 +10,7 @@
 import { state, CURATED_GENRES, CATEGORIES, CAT_LABEL, CAT_EMOJI } from './state.js';
 import { escapeHtml } from './utils.js';
 import { getCurrentUser, resendVerificationEmail, changeEmail, sendPasswordReset } from './auth.js';
-import { persistFollowedCuratedLists, persistSavedLists, persistFolder, persistItem, persistSelectedSharedFriends, disconnectLastfm, disconnectSteam, persistDisplayName, persistFullName, persistRecoveryEmail, persistTimeZone, getLocalCacheSizeBytes, clearLocalCaches } from './storage.js';
+import { persistFollowedCuratedLists, persistSavedLists, persistFolder, persistItem, persistSelectedSharedFriends, disconnectLastfm, disconnectSteam, persistDisplayName, persistFullName, persistRecoveryEmail, persistTimeZone, getLocalCacheSizeBytes, clearLocalCaches, getFirestoreDataSizeBytes } from './storage.js';
 import { ensureLastfmRecentTracks, ensureSteamRecentGames } from './api.js';
 import { CURATED_LIST_DISPLAY_NAMES, DEMO_PROFILE_NAME } from './dashboard.js';
 import { openAuthModal, openLastfmModal, openSteamModal } from './main.js';
@@ -167,8 +167,21 @@ function _formatCacheSize(bytes) {
 // since SaveCraft has no offline-download concept to begin with; only "Cache" maps to something
 // real here — the same local-only lookup caches loadLocalCache() populates at startup
 // (LOCAL_CACHE_KEYS, storage.js), already genuinely clearable rather than a decorative mockup.
-function buildSettingsSection() {
+function buildSettingsSection(user) {
   const sizeLabel = _formatCacheSize(getLocalCacheSizeBytes());
+  // Per direct follow-up ("can the storage show how much data the user is storing on their
+  // account within the firestore") — only meaningful once actually signed in (Firestore data
+  // belongs to a real account; a signed-out visitor has none). No action button here, just an
+  // informational row, unlike Cache's — there's nothing to "clear" that wouldn't just delete the
+  // user's own real saved items/folders/authors, a much bigger, more consequential action than
+  // this row is meant to trigger (Delete Account, the auth modal, already covers that).
+  const accountDataRow = user ? `
+      <div class="profile-settings-row">
+        <div class="profile-settings-row-text">
+          <div class="profile-settings-row-label">Account Data: <span class="profile-settings-row-value">${_formatCacheSize(getFirestoreDataSizeBytes())}</span></div>
+          <p class="profile-card-copy">Items, folders, and creators saved to your account.</p>
+        </div>
+      </div>` : '';
   return `
     <div class="dash-card profile-card--settings">
       <div class="profile-card-header"><span class="profile-card-title">Settings</span></div>
@@ -180,6 +193,7 @@ function buildSettingsSection() {
         </div>
         <button type="button" class="btn-cancel profile-inline-field-btn" id="profile-clear-cache-btn">Clear Cache</button>
       </div>
+      ${accountDataRow}
     </div>`;
 }
 
@@ -1081,7 +1095,7 @@ export function renderProfilePage() {
            details widget"). -->
       <div class="profile-bottom-row">
         ${buildAccountDetailsSection(user)}
-        ${buildSettingsSection()}
+        ${buildSettingsSection(user)}
       </div>
       <button class="btn-cancel profile-manage-account-mobile" id="profile-manage-account-mobile">Manage account</button>
       ${buildLegalLinksRow('profile-legal-links-bottom')}
