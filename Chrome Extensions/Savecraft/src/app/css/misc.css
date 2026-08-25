@@ -556,12 +556,19 @@
      a huge empty gap under Interests' last checkboxes). none drops the explicit 2-row definition
      entirely, so all 4 cards fall back to implicit auto-height rows sized to their own content. */
   .profile-widget-grid { grid-template-columns: 1fr; grid-template-rows: none; height: auto; }
-  /* Settings + Account Details' desktop-only half-width row (profile.css) stacks back to one
-     column here, same treatment as the main widget grid just above. */
+  /* REAL BUG, found and fixed, reported live: "settings looks messed up in mobile" (screenshot
+     confirmed — the Settings card collapsed to just its title, its real content rendering
+     outside/below it, overlapping the FAB and the page-end Manage account button). .profile-
+     bottom-row > * (profile.css) sets flex: 1 1 0 for the DESKTOP row layout — flex-basis: 0 on
+     the flex MAIN axis, which is width in a row. Switching this row to flex-direction: column
+     here makes the main axis vertical instead, so that same flex-basis: 0 started governing
+     HEIGHT — both cards trying to split the row's own (intrinsic, content-driven) height evenly
+     from a zero basis, a genuinely circular calculation that collapsed real content out of its
+     box instead of just sizing it normally. flex: 1 1 auto here overrides the basis back to the
+     content's own natural size for this (column) direction, only on mobile — the desktop 1 1 0 is
+     untouched, still needed there for the actual side-by-side width split. */
   .profile-bottom-row { flex-direction: column; }
-  /* Account Details' own half-width sizing (profile.css) matches the grid above's column math —
-     back to full width here alongside it, once that grid itself drops to one column. */
-  .profile-card--account-details { width: 100%; }
+  .profile-bottom-row > * { flex: 1 1 auto; }
   /* Text across every Profile card bumped up again here, layered on top of profile.css's own
      base-size bump — mobile was the specific complaint ("very small — especially in mobile"),
      and there's width to spare once the grid above drops to a single column. Saved Lists' folder
