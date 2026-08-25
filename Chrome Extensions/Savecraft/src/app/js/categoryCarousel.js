@@ -198,6 +198,23 @@ export function initCategoryCarousel(container) {
     if (item) openDetailModal(item);
   });
 
+  // REAL BUG, found and fixed: this used to be added AFTER _wireCarouselArrows() and the rough
+  // midpoint centering write below — but _wireCarouselArrows() itself does a PLAIN, unsuppressed
+  // `strip.scrollLeft = copyWidth()` write as its very first action, at a point where
+  // .category-carousel-strip still has its own CSS scroll-snap-type: x mandatory fully active
+  // (cards.css). iOS Safari's snap settling isn't purely a scroll-behavior/smooth-scroll-animation
+  // thing that a later synchronous scrollLeft overwrite can cleanly cancel — it's allowed to
+  // settle to the nearest snap point on its own schedule, sometimes a frame or more later,
+  // regardless of how many more scrollLeft writes happen in between. So even though every
+  // subsequent write in this function was already wrapped in _setScrollLeftInstantly, that first
+  // unsuppressed write left a real window for iOS to silently nudge the strip toward whichever
+  // slide's own scroll-snap-align: center point was nearest — reported live, consistently in one
+  // direction: "the carousel is still too far to the right." Moving this to wrap the ENTIRE setup
+  // (starting before _wireCarouselArrows even runs) means scroll-snap-type: none is already in
+  // effect before the first scrollLeft write of any kind happens, closing that gap instead of
+  // just working around it after the fact.
+  strip.classList.add('category-carousel-strip--no-transition');
+
   // Infinite-wheel scroll + prev/next arrow wiring (dashboard.js) — sets its own initial
   // scrollLeft (one full copy-width in, i.e. the start of the middle copy) as a side effect, which
   // this immediately refines below into an actually-centered starting position.
@@ -227,7 +244,6 @@ export function initCategoryCarousel(container) {
   // size instantly, so the measurement below reads the true final geometry. Also suppresses
   // scroll-snap-type for the same window (cards.css) — see _setScrollLeftInstantly's own comment
   // for why that matters for the scrollLeft write just below.
-  strip.classList.add('category-carousel-strip--no-transition');
   _updateActiveSlide(strip, { animate: false });
   // REAL BUG, found and fixed: the scrollLeft set above centers the strip's own midpoint using
   // every slide's BASE (edge-tier) size — but _updateActiveSlide just grew whichever slide it
@@ -244,63 +260,53 @@ export function initCategoryCarousel(container) {
     const activeRect = initialActive.getBoundingClientRect();
     _setScrollLeftInstantly(strip, strip.scrollLeft + (activeRect.left + activeRect.width / 2) - (stripRect.left + stripRect.width / 2));
   }
-  strip.classList.remove('category-carousel-strip--no-transition');
 
-  // REAL BUG, found and fixed (still unresolved after 3 earlier attempts at the root cause —
-  // transition timing, scroll-snap-type, scroll-behavior: smooth — each addressed a real
-  // contributing issue but mobile centering-on-load kept resurfacing: "in mobile the launch of
-  // the page is still not showing the carousel having the center card centered"). Rather than
-  // chasing a 4th specific CSS property, this defers a full re-measure/re-correct pass with a
-  // double requestAnimationFrame — a standard technique for "wait until the browser has
-  // genuinely finished a real layout + paint cycle" that sidesteps needing to know the exact
-  // property/timing at fault. The first rAF fires before the next paint (still mid-frame); the
-  // second one is guaranteed to run only after that paint has actually happened. Purely a safety
-  // net on top of the synchronous centering above, not a replacement for it — harmless no-op if
-  // the sync version already landed correctly (the recomputed delta is ~0 in that case).
-  // /simplify pass: skipped entirely on desktop (pointer: fine) — the sync pass above already
-  // lands correctly there every time (confirmed live: "it looks perfect in desktop"), and this
-  // whole safety net exists specifically for mobile's async scroll-snap settling (dashboard.js's
-  // drag/momentum system is gated the same way, for the identical reason), so there's nothing for
-  // it to catch on desktop — running it anyway there was pure wasted work (2 more forced-layout
-  // getBoundingClientRect calls on every single page load) for a correction that always turns out
-  // to be a no-op.
-  if (!window.matchMedia('(pointer: fine)').matches) {
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      const settledActive = strip.querySelector('.category-carousel-slide--active');
-      if (!settledActive) return;
+  // Attaches the scroll listener as the very last step of whichever path below runs — never
+  // right after a setup write, since that write's own native 'scroll' event isn't guaranteed to
+  // dispatch synchronously, and a listener already attached when it lands would re-run
+  // _updateActiveSlide 60ms later and could visibly re-settle into the wrong slide (see its own
+  // history below). One function so both paths attach it identically instead of two copies.
+  const attachScrollListener = () => strip.addEventListener('scroll', debounce(() => _updateActiveSlide(strip), 60));
+
+  // /simplify pass: the async safety-net pass below is skipped entirely on desktop (pointer:
+  // fine) — the sync centering above already lands correctly there every time (confirmed live:
+  // "it looks perfect in desktop"), and that pass exists specifically for mobile's async native
+  // scroll-snap settling (dashboard.js's drag/momentum system is gated the same way, for the
+  // identical reason), so there's nothing for it to catch on desktop — running it anyway there
+  // was pure wasted work (2 more forced-layout getBoundingClientRect calls on every page load)
+  // for a correction that always turns out to be a no-op. Desktop can also safely lift
+  // suppression and attach the listener immediately — there's no async settling left to race.
+  if (window.matchMedia('(pointer: fine)').matches) {
+    strip.classList.remove('category-carousel-strip--no-transition');
+    attachScrollListener();
+    return;
+  }
+
+  // REAL BUG, found and fixed (still unresolved after 4 earlier attempts at the root cause —
+  // transition timing, scroll-snap-type, scroll-behavior: smooth, deferred listener attachment —
+  // each addressed a real contributing issue but mobile centering-on-load kept resurfacing, most
+  // recently reported directionally: "the carousel is still too far to the right"). The actual
+  // remaining gap: suppression used to get LIFTED right after the sync pass above, then
+  // RE-APPLIED only inside this rAF callback for its own correction — leaving one real, unpainted
+  // frame in between where scroll-snap-type: x mandatory was back in effect on a scrollLeft that
+  // hadn't been fully corrected yet, which is exactly the kind of moment iOS's native snap
+  // settling can silently act on (asynchronously, on its own schedule — not necessarily within
+  // this same rAF pair). Suppression now stays engaged continuously from before _wireCarouselArrows
+  // even runs (see that classList.add's own comment, above) all the way through this correction,
+  // with no gap in between where it's ever briefly lifted — only removed once, right here, after
+  // this is truly the last write. A double requestAnimationFrame still gates it (a standard "wait
+  // until the browser has genuinely finished a real layout + paint cycle" technique) so the
+  // measurement below reads the slide's true settled geometry, not mid-transition — harmless
+  // no-op if the sync pass above already landed correctly (the recomputed delta is ~0).
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const settledActive = strip.querySelector('.category-carousel-slide--active');
+    if (settledActive) {
       const stripRect2 = strip.getBoundingClientRect();
       const activeRect2 = settledActive.getBoundingClientRect();
       const residualDelta = (activeRect2.left + activeRect2.width / 2) - (stripRect2.left + stripRect2.width / 2);
-      if (Math.abs(residualDelta) > 1) {
-        // REAL BUG, found and fixed: this correction ran AFTER category-carousel-strip--no-
-        // transition had already been removed a few lines up — which is also what suppresses
-        // scroll-snap-type (cards.css). So this second pass was just as exposed to the same
-        // async scroll-snap settling the FIRST pass was originally protected against, and could
-        // get silently re-nudged toward a neighboring slide's own snap point right after setting
-        // scrollLeft. Reported live, specifically on mobile: "it's still too far to the right in
-        // mobile." Re-applying the same suppression here, not just in the first pass.
-        strip.classList.add('category-carousel-strip--no-transition');
-        _setScrollLeftInstantly(strip, strip.scrollLeft + residualDelta);
-        strip.classList.remove('category-carousel-strip--no-transition');
-      }
-    }));
-  }
-
-  // REAL BUG, found and fixed: this used to be attached immediately, right after the synchronous
-  // centering above — but every scrollLeft write during that setup (the rough-centering write,
-  // the fine-correction write) fires a genuine native 'scroll' event on the strip, and those
-  // events aren't guaranteed to dispatch synchronously. If even one landed asynchronously after
-  // this listener was already attached, its OWN debounced handler (_updateActiveSlide, 60ms
-  // later) would re-run the whole "find the closest slide" detection a second time — now with
-  // category-carousel-strip--no-transition already removed, so a real 0.3s CSS transition would
-  // play if that second pass happened to pick a different slide than the setup already correctly
-  // centered (even a one-pixel rounding difference is enough to flip which slide reads as
-  // "closest"). The carousel would look correctly centered for one frame, then visibly settle
-  // into the wrong position moments later — reads exactly like "still off-center on launch" in
-  // any screenshot taken after that point. Deferring attachment past the same double-rAF window
-  // the safety net above uses ensures this listener can only ever react to a REAL user-driven
-  // scroll (drag, wheel, arrow), never one of the setup's own internal writes.
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    strip.addEventListener('scroll', debounce(() => _updateActiveSlide(strip), 60));
+      if (Math.abs(residualDelta) > 1) _setScrollLeftInstantly(strip, strip.scrollLeft + residualDelta);
+    }
+    strip.classList.remove('category-carousel-strip--no-transition');
+    attachScrollListener();
   }));
 }
