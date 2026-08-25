@@ -229,61 +229,38 @@ export function initCategoryCarousel(container) {
   // for why that matters for the scrollLeft write just below.
   strip.classList.add('category-carousel-strip--no-transition');
   _updateActiveSlide(strip, { animate: false });
-  // REAL BUG, found and fixed: the scrollLeft set above centers the strip's own midpoint using
-  // every slide's BASE (edge-tier) size — but _updateActiveSlide just grew whichever slide it
-  // picked up to the active/neighbor tiers (cards.css's mobile 3-size-tier carousel), and CSS box
-  // growth only pushes LATER siblings over, it doesn't re-center anything already scrolled into
-  // place. Net effect: the actual active card could land visibly off-center on first load
-  // (reported live, "on mobile when the page launches i want the center card in the center").
-  // This re-measures the now-resized active slide directly and nudges scrollLeft by the exact
-  // pixel delta needed to put ITS real center on the strip's center — correct regardless of
-  // whatever tier sizes/margins cards.css happens to use, not a hand-tuned offset.
+  // REAL BUG, found and fixed (this replaces 4 earlier sequential attempts at this exact bug —
+  // transition timing, scroll-snap-type suppression, scroll-behavior: smooth forcing, and a
+  // double-rAF re-measure pass — none of which held up on a real device: "the mobile carousel is
+  // still launching with the center card on the left side" persisted through all four). Every
+  // earlier attempt hand-computed a scrollLeft delta from getBoundingClientRect() and wrote it
+  // directly, then fought the browser's own async scroll-snap/smooth-scroll machinery trying to
+  // make that raw write "stick." scrollIntoView({ inline: 'center', behavior: 'instant' }) hands
+  // the entire "center this specific element within its scrollable ancestor" computation to the
+  // browser's own native, spec'd implementation instead of reimplementing it by hand — behavior:
+  // 'instant' is defined to override the element's own CSS scroll-behavior for this one call, and
+  // being the browser's own primitive for exactly this task, it's far less likely to lose a race
+  // against the browser's own scroll-snap settling than a hand-rolled scrollLeft write is.
+  // block: 'nearest' stops it from also trying to vertically scroll the whole page into view.
   const initialActive = strip.querySelector('.category-carousel-slide--active');
-  if (initialActive) {
-    const stripRect = strip.getBoundingClientRect();
-    const activeRect = initialActive.getBoundingClientRect();
-    _setScrollLeftInstantly(strip, strip.scrollLeft + (activeRect.left + activeRect.width / 2) - (stripRect.left + stripRect.width / 2));
-  }
+  initialActive?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'instant' });
   strip.classList.remove('category-carousel-strip--no-transition');
   strip.addEventListener('scroll', debounce(() => _updateActiveSlide(strip), 60));
 
-  // REAL BUG, found and fixed (still unresolved after 3 earlier attempts at the root cause —
-  // transition timing, scroll-snap-type, scroll-behavior: smooth — each addressed a real
-  // contributing issue but mobile centering-on-load kept resurfacing: "in mobile the launch of
-  // the page is still not showing the carousel having the center card centered"). Rather than
-  // chasing a 4th specific CSS property, this defers a full re-measure/re-correct pass with a
-  // double requestAnimationFrame — a standard technique for "wait until the browser has
-  // genuinely finished a real layout + paint cycle" that sidesteps needing to know the exact
-  // property/timing at fault. The first rAF fires before the next paint (still mid-frame); the
-  // second one is guaranteed to run only after that paint has actually happened. Purely a safety
-  // net on top of the synchronous centering above, not a replacement for it — harmless no-op if
-  // the sync version already landed correctly (the recomputed delta is ~0 in that case).
-  // /simplify pass: skipped entirely on desktop (pointer: fine) — the sync pass above already
-  // lands correctly there every time (confirmed live: "it looks perfect in desktop"), and this
-  // whole safety net exists specifically for mobile's async scroll-snap settling (dashboard.js's
-  // drag/momentum system is gated the same way, for the identical reason), so there's nothing for
-  // it to catch on desktop — running it anyway there was pure wasted work (2 more forced-layout
-  // getBoundingClientRect calls on every single page load) for a correction that always turns out
-  // to be a no-op.
+  // Same scrollIntoView() approach, deferred a full paint cycle via double-rAF, as a safety net
+  // against any remaining first-paint mobile Safari quirk (scroll-snap-type is still suppressed
+  // for this call, same reasoning as above) — kept even though scrollIntoView is far more robust
+  // than the old hand-rolled version, since this exact bug has already survived several
+  // "should be fixed now" attempts. Desktop-only (pointer: fine) skips this entirely — confirmed
+  // live the synchronous call above always lands correctly there, so there's nothing for a
+  // second pass to catch, and running it anyway would be pure wasted work every page load.
   if (!window.matchMedia('(pointer: fine)').matches) {
     requestAnimationFrame(() => requestAnimationFrame(() => {
       const settledActive = strip.querySelector('.category-carousel-slide--active');
       if (!settledActive) return;
-      const stripRect2 = strip.getBoundingClientRect();
-      const activeRect2 = settledActive.getBoundingClientRect();
-      const residualDelta = (activeRect2.left + activeRect2.width / 2) - (stripRect2.left + stripRect2.width / 2);
-      if (Math.abs(residualDelta) > 1) {
-        // REAL BUG, found and fixed: this correction ran AFTER category-carousel-strip--no-
-        // transition had already been removed a few lines up — which is also what suppresses
-        // scroll-snap-type (cards.css). So this second pass was just as exposed to the same
-        // async scroll-snap settling the FIRST pass was originally protected against, and could
-        // get silently re-nudged toward a neighboring slide's own snap point right after setting
-        // scrollLeft. Reported live, specifically on mobile: "it's still too far to the right in
-        // mobile." Re-applying the same suppression here, not just in the first pass.
-        strip.classList.add('category-carousel-strip--no-transition');
-        _setScrollLeftInstantly(strip, strip.scrollLeft + residualDelta);
-        strip.classList.remove('category-carousel-strip--no-transition');
-      }
+      strip.classList.add('category-carousel-strip--no-transition');
+      settledActive.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'instant' });
+      strip.classList.remove('category-carousel-strip--no-transition');
     }));
   }
 }
