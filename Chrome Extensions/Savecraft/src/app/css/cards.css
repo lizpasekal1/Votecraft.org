@@ -632,6 +632,22 @@
 .category-carousel-strip--no-transition .category-carousel-slide {
   transition: none !important;
 }
+/* Same toggle window, targeting the strip itself rather than its slides — REAL BUG, found and
+   fixed: iOS Safari (where every mobile centering report so far has come from) can apply
+   scroll-snap-type: x mandatory's own snap settling to a programmatic scrollLeft assignment, not
+   just real user gestures, sometimes asynchronously — so the precise centered value
+   initCategoryCarousel() computes could still get nudged to whichever slide's own
+   scroll-snap-align: center point the browser considered "nearest" afterward, landing slightly
+   off from the intended target specifically on mobile (desktop wasn't affected, hence this
+   surviving the earlier scroll-behavior: smooth fix — reported live: "in mobile the center card
+   is not centered", confirmed via follow-up that scrolling manually *does* land correctly,
+   isolating this to the one-time initial placement specifically). Suppressed for the same
+   instant-snap window as the transition rule above, so nothing can second-guess the computed
+   position before it's actually painted; normal scroll-snap resumes immediately after for real
+   user interaction. */
+.category-carousel-strip--no-transition {
+  scroll-snap-type: none !important;
+}
 /* REAL BUG, found and fixed — see .dash-carousel-strip's identical rule (dashboard.css) for why:
    native image/text drag was hijacking the click-and-drag panning gesture whenever it started
    directly on a card's own photo/label instead of the strip's empty background. */
