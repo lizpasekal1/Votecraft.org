@@ -1163,6 +1163,43 @@ export function loadLocalCache(storageKey, stateProp) {
   });
 }
 
+// The full set of local-only caches main.js's init() loads via loadLocalCache() above, one
+// storageKey/stateProp pair per cache — exported so Profile > Settings' Storage row (profile.js)
+// can compute a total size and clear all of them without hardcoding this same list a second time.
+export const LOCAL_CACHE_KEYS = [
+  { storageKey: 'savecraft_curated_img', stateProp: 'curatedImgCache' },
+  { storageKey: 'savecraft_curated_album_meta', stateProp: 'curatedAlbumMetaCache' },
+  { storageKey: 'savecraft_album_tracklist', stateProp: 'albumTrackListCache' },
+  { storageKey: 'savecraft_album_art_cache', stateProp: 'albumArtCache' },
+  { storageKey: 'savecraft_artist_website_cache', stateProp: 'artistWebsiteCache' },
+  { storageKey: 'savecraft_artist_bio_cache_v2', stateProp: 'artistBioCache' },
+  { storageKey: 'savecraft_artist_genre_cache', stateProp: 'artistGenreCache' },
+  { storageKey: 'savecraft_item_wiki_cache', stateProp: 'itemWikiCache' },
+  { storageKey: 'savecraft_creator_cache', stateProp: 'creatorCache' },
+  { storageKey: 'savecraft_lastfm_cache', stateProp: 'lastfmCache' },
+  { storageKey: 'savecraft_steam_cache', stateProp: 'steamCache' },
+];
+
+// Profile > Settings' Storage row (profile.js) — sums each cache's own JSON size directly from
+// `state` (already loaded at startup, loadLocalCache() above) rather than a separate async
+// storageLocal read, since state is always the current source of truth for these once loaded.
+export function getLocalCacheSizeBytes() {
+  return LOCAL_CACHE_KEYS.reduce((total, { stateProp }) => {
+    try {
+      return total + JSON.stringify(state[stateProp] || {}).length;
+    } catch {
+      return total; // a cache holding something non-serializable shouldn't crash the whole total
+    }
+  }, 0);
+}
+
+// Profile > Settings' "Clear Cache" button (profile.js) — removes every local cache from both
+// storageLocal and `state` in one pass, same key list loadLocalCache() populated at startup.
+export function clearLocalCaches() {
+  storageLocal.remove(LOCAL_CACHE_KEYS.map(k => k.storageKey));
+  LOCAL_CACHE_KEYS.forEach(({ stateProp }) => { state[stateProp] = {}; });
+}
+
 // Thin wrappers around three call sites (main.js's handleSort/toggleTheme/toggleSidebarCollapsed)
 // and one in share.js that previously called storageSync.set directly, bypassing this
 // file entirely — bringing them under the same dual-write umbrella as everything else here.
