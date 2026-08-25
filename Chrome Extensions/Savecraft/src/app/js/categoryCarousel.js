@@ -248,11 +248,21 @@ export function initCategoryCarousel(container) {
     const activeRect2 = settledActive.getBoundingClientRect();
     const residualDelta = (activeRect2.left + activeRect2.width / 2) - (stripRect2.left + stripRect2.width / 2);
     if (Math.abs(residualDelta) > 1) {
+      // REAL BUG, found and fixed: this correction ran AFTER category-carousel-strip--no-
+      // transition had already been removed a few lines up — which is also what suppresses
+      // scroll-snap-type (cards.css). So this second pass was just as exposed to the same
+      // async scroll-snap settling the FIRST pass was originally protected against, and could
+      // get silently re-nudged toward a neighboring slide's own snap point right after setting
+      // scrollLeft. Reported live, specifically on mobile (confirmed fine on desktop, where none
+      // of this drag/touch/snap interaction applies at all): "it's still too far to the right in
+      // mobile." Re-applying the same suppression here, not just in the first pass.
+      strip.classList.add('category-carousel-strip--no-transition');
       const prevBehavior = strip.style.scrollBehavior;
       strip.style.scrollBehavior = 'auto';
       strip.scrollLeft += residualDelta;
       void strip.offsetWidth;
       strip.style.scrollBehavior = prevBehavior;
+      strip.classList.remove('category-carousel-strip--no-transition');
     }
   }));
 }
