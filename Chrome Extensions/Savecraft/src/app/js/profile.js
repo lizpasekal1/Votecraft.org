@@ -183,7 +183,7 @@ function buildSettingsSection(user) {
           <div class="profile-settings-row-label">Account Data: <span class="profile-settings-row-value">${_formatCacheSize(getFirestoreDataSizeBytes())}</span></div>
           <p class="profile-card-copy">Items, folders, and creators saved to your account.</p>
         </div>
-        <button type="button" class="btn-cancel profile-inline-field-btn" id="profile-download-data-btn">Download</button>
+        <button type="button" class="btn-cancel profile-inline-field-btn profile-settings-action-btn" id="profile-download-data-btn">Download</button>
       </div>` : '';
   // state.lastSyncAt is only ever set by a successful runInitialSync() (storage.js) — null until
   // the first one completes (a brand-new sign-in mid-sync, or a sync that's failed every time so
@@ -208,7 +208,7 @@ function buildSettingsSection(user) {
           <div class="profile-settings-row-label">Cache: <span class="profile-settings-row-value">${sizeLabel}</span></div>
           <p class="profile-card-copy">Temporary lookups SaveCraft stores for a faster experience (artist bios, album art, track lists).</p>
         </div>
-        <button type="button" class="btn-cancel profile-inline-field-btn" id="profile-clear-cache-btn">Clear Cache</button>
+        <button type="button" class="btn-primary profile-inline-field-btn profile-settings-action-btn" id="profile-clear-cache-btn">Clear Cache</button>
       </div>
     </div>`;
 }
