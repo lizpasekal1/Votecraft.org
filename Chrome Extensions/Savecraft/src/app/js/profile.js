@@ -13,7 +13,7 @@ import { getCurrentUser, resendVerificationEmail, changeEmail, sendPasswordReset
 import { persistFollowedCuratedLists, persistSavedLists, persistFolder, persistItem, persistSelectedSharedFriends, disconnectLastfm, disconnectSteam, persistDisplayName, persistFullName, persistRecoveryEmail, persistTimeZone } from './storage.js';
 import { ensureLastfmRecentTracks, ensureSteamRecentGames } from './api.js';
 import { CURATED_LIST_DISPLAY_NAMES, DEMO_PROFILE_NAME } from './dashboard.js';
-import { openAuthModal, openLastfmModal, openSteamModal } from './main.js';
+import { openAuthModal, openLastfmModal, openSteamModal, applyAuthUI } from './main.js';
 import { renderSidebar, renderGrid } from './render.js';
 import { navigateToView } from './navigation.js';
 import { DEMO_FRIENDS } from './sharedSaves.js';
@@ -123,6 +123,10 @@ function wireAccountSection(container) {
       if (save && trimmed !== (state.displayName || '')) {
         state.displayName = trimmed || null;
         persistDisplayName(state.displayName);
+        // Header dropdown label (#profile-label, main.js) shows this same displayName now, per
+        // direct request — its own applyAuthUI() only runs on real auth-state changes, so without
+        // this explicit call the new name wouldn't show up there until the next sign-in/reload.
+        applyAuthUI(getCurrentUser());
       }
       renderProfilePage();
     };
