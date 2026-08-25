@@ -6,6 +6,32 @@ SaveCraft is a Chrome extension that acts as a personal media library. Users sav
 
 ## Recent Additions (latest session)
 
+Another extremely long session, three arcs. First, real mobile rendering bugs on cards: a
+`transform: scale()` image-overlap bug, a CSS percentage-height circularity bug that made card
+thumbnails snap to random sizes matching each photo's own aspect ratio, an A-Z jump-index rail
+overlapping content, and font-size/line-wrap fixes — see `cards.css`'s `.card-image-crop` (now
+`position: absolute`, taken out of flex flow entirely) for the thumbnail fix. Second, a full
+editable-profile feature build: a pencil-on-hover display name (`state.displayName`) feeding the
+Dashboard greeting, plus a new Profile > Account Details card (Full Name, masked Recovery Email
+with press-and-hold reveal, Change Email via a new `auth.js` `changeEmail()`, Reset Password, Time
+Zone) — deliberately **not** a "show my password" feature, which is technically impossible
+(Firebase never stores a retrievable password). Third, by far the largest arc: an extensive
+category-carousel UX pass (click-and-drag panning, momentum glide, bouncy `easeOutBack` easing, a
+3-tier fade/zoom cascade toward the edges, two real slide-centering-on-load bugs) that led into a
+long cross-device sync investigation — which turned out to be the Firebase project's Spark-plan
+50,000-reads/day quota being exhausted by heavy live testing, not a code bug. Closed with two
+durable fixes: sync failures now surface a visible on-page banner instead of failing silently
+(`auth.js`'s `signIn()`/`signUp()` return a `syncError` field; `main.js` shows it), and a real
+**incremental sync rewrite** (`storage.js`) — Firestore `:runQuery` filtering on `updatedAt` plus
+soft-delete tombstones, replacing the old "re-list the entire items/folders/authors collections on
+every single page load" behavior that was the dominant read cost. A device's first sync (and a
+24h safety-net re-run after that) still does the original full listing; every sync in between is
+now cheap. See "Syncing" below and `session-context.md` for the full blow-by-blow.
+
+---
+
+## Recent Additions (previous session)
+
 An extremely long session, two major arcs. First, dozens of live-feedback polish rounds on the
 category folder-picker landing pages/carousel built last session — sizing, edge-to-edge mobile
 layout, a gradient edge fade, three real bugs found and fixed along the way (a
@@ -24,7 +50,7 @@ blow-by-blow.
 
 ---
 
-## Recent Additions (previous session)
+## Recent Additions (Music Taxonomy Finalized / iTunes Rate-Limit Fixes / Global Search+Sort Dropdown / Folder-Picker Landing Pages)
 
 An exceptionally long session in two connected halves. First, closing out the Music genre-bucket
 taxonomy (Alt/Indie rename, Metal merged into "Rock/Metal," a new Meditation bucket, Reggae moved
@@ -554,6 +580,43 @@ Book's curated `.title` combines `"Title — Author"` in one field (split apart 
 | `savecraft_curated_overrides` | User edits to curated items (notes, etc.) |
 | `savecraft_saved_lists` | Saved Lists (`{ id, name }[]`) — Favorites/Health/Motivation seeded, plus user-added ones; membership lives on the item itself (`item.favorite`/`item.savedListId`), not here |
 | `savecraft_curated_lists_rows` | Curated Lists' own child rows (`{ id, name }[]`) — seeded with "Votecraft"/"RCV" |
+
+---
+
+## Syncing (Firestore)
+
+Personal items/folders/authors sync to `savecraft_users/{uid}/{items|folders|authors}` via the
+Firestore REST API (no SDK — see `storage.js`'s `_firestoreUpsert`/`_firestoreListCollection`/
+`_firestoreQueryUpdatedSince`). `runInitialSync()` (called on every app launch, not just sign-in)
+reconciles local `chrome.storage.sync`/`localStorage` against the cloud.
+
+- **Incremental by default.** `_mergeCollection()` dispatches to either a full listing
+  (`_mergeCollectionFull`) or a cheap "what changed since my last sync" query
+  (`_mergeCollectionIncremental`, via `_firestoreQueryUpdatedSince`'s `:runQuery` structured
+  query on the `updatedAt` field every write already carries). A full listing only runs on a
+  device's very first sync (no local cursor yet) and, as a safety net, at least once every 24h
+  afterward — the only path that can catch a local item whose own push to Firestore silently
+  failed and was never retried, which an incremental query can't detect. The cursor
+  (`savecraft_sync_cursor_<subcollection>`) is the max `updatedAt` actually seen, not the local
+  clock's own `Date.now()` — deliberately clock-skew-tolerant.
+- **Deletes are soft (tombstones), not real Firestore deletes.** `removeItem()`/`removeFolder()`
+  write `{ deleted: true }` (via `_firestoreUpsert`, a full-document replace) instead of calling
+  `_firestoreDelete` — an actually-deleted doc is invisible to a "changed since X" query, so
+  without a tombstone, other devices' incremental syncs would never learn the item was removed.
+  Both merge paths check `doc.deleted` and remove the item locally instead of writing it down.
+  Tombstones are never pruned/garbage-collected (deferred — not needed yet, they're tiny).
+- **"Cloud wins"** on any id present in both places during a merge; a local-only doc (never
+  synced) gets pushed up. `_stripSyncMeta()` strips the `updatedAt` bookkeeping field before a
+  cloud record is written back into local storage — it must never leak into the shape the rest
+  of the app expects.
+- **Known constraint: the Firebase project (`votecraft-789`) is on the free Spark plan** —
+  50,000 Firestore reads/day, *project-wide*, shared across every visitor/device, not per-user.
+  Before the incremental-sync rewrite above, a full re-listing of every collection on *every
+  single page load* was the dominant read cost and hit this cap twice in one day of live
+  testing. If it recurs, `main.js`/`auth.js` now surface a visible red "Sync error: Quota
+  exceeded" banner (`showSyncErrorBanner()`) instead of failing silently — check that banner
+  before assuming a sync bug. The user has twice declined upgrading to Blaze (pay-as-you-go,
+  removes the cap) when asked directly; don't re-offer it unprompted.
 
 ---
 
