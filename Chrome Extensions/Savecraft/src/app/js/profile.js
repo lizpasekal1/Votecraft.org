@@ -9,8 +9,8 @@
 
 import { state, CURATED_GENRES, CATEGORIES, CAT_LABEL, CAT_EMOJI } from './state.js';
 import { escapeHtml } from './utils.js';
-import { getCurrentUser, resendVerificationEmail } from './auth.js';
-import { persistFollowedCuratedLists, persistSavedLists, persistFolder, persistItem, persistSelectedSharedFriends, disconnectLastfm, disconnectSteam, persistDisplayName } from './storage.js';
+import { getCurrentUser, resendVerificationEmail, changeEmail, sendPasswordReset } from './auth.js';
+import { persistFollowedCuratedLists, persistSavedLists, persistFolder, persistItem, persistSelectedSharedFriends, disconnectLastfm, disconnectSteam, persistDisplayName, persistFullName, persistRecoveryEmail, persistTimeZone } from './storage.js';
 import { ensureLastfmRecentTracks, ensureSteamRecentGames } from './api.js';
 import { CURATED_LIST_DISPLAY_NAMES, DEMO_PROFILE_NAME } from './dashboard.js';
 import { openAuthModal, openLastfmModal, openSteamModal } from './main.js';
@@ -127,6 +127,128 @@ function wireAccountSection(container) {
       else if (e.key === 'Escape') finish(false);
     });
     input.addEventListener('blur', () => finish(true));
+  });
+}
+
+// ===== account details =====
+// Only rendered when actually signed in — every field here (Full Name, Recovery Email, Time
+// Zone, Change Email, Reset Password) needs a real account to persist to, so the signed-out demo
+// view just skips this card entirely rather than showing fields with nowhere to save.
+
+// A short, commonly-used IANA zone list rather than the full ~400-zone Intl.supportedValuesOf
+// set — this is a plain <select>, not a searchable picker, so a shorter list stays usable. Falls
+// back to just the browser's own detected zone if it's not already one of these (still selected
+// correctly; just means the dropdown has one extra, unlabeled-by-region option at the top).
+const TIME_ZONE_OPTIONS = [
+  'Pacific/Honolulu', 'America/Anchorage', 'America/Los_Angeles', 'America/Denver',
+  'America/Chicago', 'America/New_York', 'America/Sao_Paulo', 'UTC', 'Europe/London',
+  'Europe/Paris', 'Europe/Berlin', 'Europe/Moscow', 'Africa/Cairo', 'Asia/Dubai',
+  'Asia/Kolkata', 'Asia/Shanghai', 'Asia/Tokyo', 'Australia/Sydney', 'Pacific/Auckland',
+];
+
+function buildAccountDetailsSection(user) {
+  if (!user) return '';
+  const detectedTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const tzOptions = TIME_ZONE_OPTIONS.includes(state.timeZone || detectedTz)
+    ? TIME_ZONE_OPTIONS
+    : [state.timeZone || detectedTz, ...TIME_ZONE_OPTIONS];
+  const selectedTz = state.timeZone || detectedTz;
+  return `
+    <div class="profile-card profile-card--account-details">
+      <div class="profile-card-title">Account Details</div>
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="profile-full-name-input" value="${escapeHtml(state.fullName || '')}" placeholder="Your full name" maxlength="100" />
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" value="${escapeHtml(user.email)}" disabled />
+      </div>
+      <div class="profile-account-details-row">
+        <button type="button" class="btn-cancel" id="profile-change-email-btn">Change Email</button>
+      </div>
+      <div class="form-group">
+        <label>Recovery Email</label>
+        <div class="profile-masked-field-row">
+          <input type="password" id="profile-recovery-email-input" value="${escapeHtml(state.recoveryEmail || '')}" placeholder="Not set" autocomplete="off" />
+          <!-- Masked (type="password") by default, per direct request — flips to type="text"
+               only while this button is actively held down (wireAccountDetailsSection below),
+               re-masking the instant it's released, rather than a click-to-toggle switch. -->
+          <button type="button" class="profile-reveal-btn" id="profile-recovery-email-reveal" title="Hold to reveal" aria-label="Hold to reveal recovery email">
+            <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M480-320q75 0 127.5-52.5T660-500q0-75-52.5-127.5T480-680q-75 0-127.5 52.5T300-500q0 75 52.5 127.5T480-320Zm0-72q-45 0-76.5-31.5T372-500q0-45 31.5-76.5T480-608q45 0 76.5 31.5T588-500q0 45-31.5 76.5T480-392Zm0 192q-146 0-266-81.5T40-500q54-137 174-218.5T480-800q146 0 266 81.5T920-500q-54 137-174 218.5T480-200Z"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Time Zone</label>
+        <select id="profile-timezone-select">
+          ${tzOptions.map(tz => `<option value="${escapeHtml(tz)}"${tz === selectedTz ? ' selected' : ''}>${escapeHtml(tz.replace(/_/g, ' '))}</option>`).join('')}
+        </select>
+      </div>
+      <div class="profile-account-details-row">
+        <button type="button" class="btn-cancel" id="profile-reset-password-btn">Reset Password</button>
+      </div>
+    </div>`;
+}
+
+function wireAccountDetailsSection(container) {
+  const user = getCurrentUser();
+  if (!user) return;
+
+  const fullNameInput = container.querySelector('#profile-full-name-input');
+  fullNameInput?.addEventListener('blur', () => {
+    const trimmed = fullNameInput.value.trim();
+    if (trimmed === (state.fullName || '')) return;
+    state.fullName = trimmed || null;
+    persistFullName(state.fullName);
+  });
+  fullNameInput?.addEventListener('keydown', e => { if (e.key === 'Enter') fullNameInput.blur(); });
+
+  const recoveryInput = container.querySelector('#profile-recovery-email-input');
+  recoveryInput?.addEventListener('blur', () => {
+    const trimmed = recoveryInput.value.trim();
+    if (trimmed === (state.recoveryEmail || '')) return;
+    state.recoveryEmail = trimmed || null;
+    persistRecoveryEmail(state.recoveryEmail);
+  });
+  recoveryInput?.addEventListener('keydown', e => { if (e.key === 'Enter') recoveryInput.blur(); });
+
+  // Press-and-hold reveal, per direct request — mousedown/touchstart unmasks, and every plausible
+  // "stopped holding" signal (mouseup/mouseleave/touchend/touchcancel) re-masks, so it can't get
+  // stuck revealed if the pointer drags off the button or the touch is interrupted.
+  const revealBtn = container.querySelector('#profile-recovery-email-reveal');
+  if (revealBtn && recoveryInput) {
+    const reveal = () => { recoveryInput.type = 'text'; };
+    const mask = () => { recoveryInput.type = 'password'; };
+    revealBtn.addEventListener('mousedown', reveal);
+    revealBtn.addEventListener('touchstart', e => { e.preventDefault(); reveal(); }, { passive: false });
+    ['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(evt => revealBtn.addEventListener(evt, mask));
+  }
+
+  container.querySelector('#profile-timezone-select')?.addEventListener('change', e => {
+    state.timeZone = e.target.value;
+    persistTimeZone(state.timeZone);
+  });
+
+  container.querySelector('#profile-change-email-btn')?.addEventListener('click', async () => {
+    const newEmail = prompt('New email address:', user.email);
+    if (!newEmail || !newEmail.trim() || newEmail.trim() === user.email) return;
+    const result = await changeEmail(newEmail.trim());
+    if (result.ok) {
+      alert('Email updated — check your inbox to verify the new address.');
+      renderProfilePage();
+    } else {
+      alert(result.error || 'Could not change email.');
+    }
+  });
+
+  container.querySelector('#profile-reset-password-btn')?.addEventListener('click', async e => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    const result = await sendPasswordReset(user.email);
+    btn.textContent = result.ok ? 'Sent!' : 'Reset Password';
+    btn.disabled = false;
   });
 }
 
@@ -885,6 +1007,7 @@ export function renderProfilePage() {
   container.innerHTML = `
     <div class="profile-page">
       ${buildAccountSection(user)}
+      ${buildAccountDetailsSection(user)}
       <div class="profile-widget-grid">
         ${buildConnectionsSection()}
         ${buildInterestsSection()}
@@ -898,6 +1021,7 @@ export function renderProfilePage() {
     </div>`;
 
   wireAccountSection(container);
+  wireAccountDetailsSection(container);
   wireConnectionsSection(container);
   wireInterestsSection(container);
   wireMyNotesSection(container);

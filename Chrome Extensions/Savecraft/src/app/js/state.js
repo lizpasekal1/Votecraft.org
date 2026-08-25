@@ -515,6 +515,14 @@ export const state = {
   displayName: null, // Editable profile name (Profile > Account, pencil-on-hover) — falls back to
                       // the account's email when unset. Same simple string-field persist pattern
                       // as lastfmUsername/steamId above (persistDisplayName, storage.js).
+  fullName: null,     // Profile > Account Details' "Full Name" field — separate from displayName
+                       // above (that one drives the dashboard greeting/short identity; this is the
+                       // fuller legal-name-style field), same persist pattern.
+  recoveryEmail: null, // Profile > Account Details — masked, press-and-hold-to-reveal. Reference
+                        // field only (stored, not wired into Firebase's own account-recovery flow
+                        // — the REST API used here has no secondary-recovery-email concept).
+  timeZone: null,       // Profile > Account Details' Time Zone field (IANA zone string, e.g.
+                         // "America/New_York") — same persist pattern.
   steamCache: {},  // { [normalizedInput]: { games: [...]|null, fetchedAt } } — auto-fetched via Steam Web API
   dashboardDemoConfig: null, // { queueKanban: {title,category,imageUrl}|null, recentSaves:
                               // {cards:[...]}|null, curatedLists: {genres:[...]}|null } — admin-
