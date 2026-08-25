@@ -557,6 +557,9 @@ export async function loadAll() {
       state.followedCuratedLists = new Set(data.savecraft_followed_curated_lists || []);
       state.steamId = data.savecraft_steam_id || null;
       state.displayName = data.savecraft_display_name || null;
+      state.fullName = data.savecraft_full_name || null;
+      state.recoveryEmail = data.savecraft_recovery_email || null;
+      state.timeZone = data.savecraft_time_zone || null;
       if (data.savecraft_view?.startsWith('author:')) {
         const rest = data.savecraft_view.slice(7);
         const colonIdx = rest.indexOf(':');
@@ -1193,6 +1196,24 @@ export function persistDisplayName(name) {
   if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { displayName: name }).catch(_syncError);
 }
 
+// Profile > Account Details section (profile.js) — same simple string-field persist pattern as
+// persistDisplayName above, one function per field.
+export function persistFullName(name) {
+  storageSync.set({ savecraft_full_name: name });
+  const user = getCurrentUser();
+  if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { fullName: name }).catch(_syncError);
+}
+export function persistRecoveryEmail(email) {
+  storageSync.set({ savecraft_recovery_email: email });
+  const user = getCurrentUser();
+  if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { recoveryEmail: email }).catch(_syncError);
+}
+export function persistTimeZone(tz) {
+  storageSync.set({ savecraft_time_zone: tz });
+  const user = getCurrentUser();
+  if (user) _firestoreUpsertFields(`savecraft_users/${user.uid}`, { timeZone: tz }).catch(_syncError);
+}
+
 export function persistSteamCache() {
   storageLocal.set({ savecraft_steam_cache: state.steamCache });
 }
@@ -1224,6 +1245,9 @@ function _readLocalSettingsSnapshot() {
       savecraft_followed_curated_lists: [],
       savecraft_steam_id: null,
       savecraft_display_name: null,
+      savecraft_full_name: null,
+      savecraft_recovery_email: null,
+      savecraft_time_zone: null,
     }, data => resolve({
       sort: data.savecraft_sort,
       tutorialSeen: data.savecraft_tutorial_seen,
@@ -1241,6 +1265,9 @@ function _readLocalSettingsSnapshot() {
       followedCuratedLists: data.savecraft_followed_curated_lists,
       steamId: data.savecraft_steam_id,
       displayName: data.savecraft_display_name,
+      fullName: data.savecraft_full_name,
+      recoveryEmail: data.savecraft_recovery_email,
+      timeZone: data.savecraft_time_zone,
     }));
   });
 }
@@ -1319,6 +1346,9 @@ export async function runInitialSync(uid) {
       // desktop never showed up on mobile, even signed into the same account).
       savecraft_saved_lists: cloudSettings.savedLists,
       savecraft_display_name: cloudSettings.displayName,
+      savecraft_full_name: cloudSettings.fullName,
+      savecraft_recovery_email: cloudSettings.recoveryEmail,
+      savecraft_time_zone: cloudSettings.timeZone,
       // Not written by any persist* function here (no in-app UI sets it) — read-only from this
       // side, meant to be set directly on savecraft_users/{uid}.role via the Firebase console for
       // a future admin (see utils.js's isAdminUser). Included in this pull so a console-set role
@@ -1343,6 +1373,9 @@ export async function runInitialSync(uid) {
     if (cloudSettings.role != null) state.role = cloudSettings.role;
     if (cloudSettings.savedLists) state.savedLists = cloudSettings.savedLists;
     if (cloudSettings.displayName !== undefined) state.displayName = cloudSettings.displayName;
+    if (cloudSettings.fullName !== undefined) state.fullName = cloudSettings.fullName;
+    if (cloudSettings.recoveryEmail !== undefined) state.recoveryEmail = cloudSettings.recoveryEmail;
+    if (cloudSettings.timeZone !== undefined) state.timeZone = cloudSettings.timeZone;
   }
 
   await _mergeCollection(uid, idToken, 'items', 'item_', state.items);
