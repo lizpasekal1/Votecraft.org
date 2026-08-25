@@ -443,6 +443,13 @@
 }
 
 /* --- Settings --- */
+/* More breathing room between the Last Synced/Account Data/Cache rows, per direct request ("add
+   more padding between these sections") — overrides .dash-card's own tighter 12px gap
+   (dashboard.css; profile.css loads after it in index.html, so this wins at equal specificity).
+   */
+.profile-card--settings {
+  gap: 20px;
+}
 /* .profile-settings-section-title ("Storage" sub-heading) removed per direct request ("remove
    the header word storage") — .profile-card-title ("Settings") is the only heading this card
    has now. */
@@ -469,7 +476,11 @@
 .profile-card--account-details .form-group:first-of-type {
   margin-top: 14px;
 }
+/* Per direct request ("center the 'reset password' button within it's widget") — the only thing
+   left in this row now that Change Email moved into the Email field's own row (above). */
 .profile-account-details-row {
+  display: flex;
+  justify-content: center;
   margin-bottom: 18px;
 }
 .profile-masked-field-row {
@@ -489,6 +500,14 @@
 .profile-inline-field-btn {
   flex-shrink: 0;
   white-space: nowrap;
+}
+/* Clear Cache + Download, per direct request ("make the clear cache and download buttons the
+   same width") — min-width fits "Clear Cache" (the longer of the two labels), Download's own
+   shorter text just centers within the same box via .btn-cancel/.btn-primary's existing
+   text-align: center. */
+.profile-settings-action-btn {
+  min-width: 118px;
+  text-align: center;
 }
 /* Press-and-hold reveal (wireAccountDetailsSection, profile.js flips the sibling input's own
    type between password/text on mousedown/touchstart vs mouseup/touchend/etc.) — this button
