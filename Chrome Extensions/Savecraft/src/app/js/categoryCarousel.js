@@ -163,6 +163,18 @@ export function initCategoryCarousel(container) {
   // scrollLeft (one full copy-width in, i.e. the start of the middle copy) as a side effect, which
   // this immediately refines below into an actually-centered starting position.
   _wireCarouselArrows(container, strip);
+  // REAL BUG, found and fixed: .category-carousel-strip has its own CSS scroll-behavior: smooth
+  // (cards.css) — every scrollLeft assignment below (this one and the fine-centering correction
+  // further down) was respecting that and animating into place with the browser's own native
+  // smooth-scroll instead of snapping there instantly, so the page's actual first paint (and any
+  // screenshot taken shortly after) could still show the strip mid-glide toward center rather
+  // than already centered — reported live, screenshot confirmed, even surviving a hard refresh:
+  // "the center card is not in the center on page launch... it still looks like that." Forced to
+  // 'auto' for this entire initial setup, restored to the CSS default (empty string, letting
+  // scroll-behavior: smooth apply again) once the true final position is set, so real user-driven
+  // scrolling afterward is unaffected.
+  const prevScrollBehavior = strip.style.scrollBehavior;
+  strip.style.scrollBehavior = 'auto';
   // Centers the scrollable content's own midpoint in the viewport (not any one slide's specific
   // offset — more robust against margin/gap rounding) so a real slide lands at the strip's true
   // center on load, rather than just the start of the middle copy _wireCarouselArrows leaves it at.
@@ -197,5 +209,6 @@ export function initCategoryCarousel(container) {
   }
   void strip.offsetWidth; // flushes the instant snap above before transitions are re-enabled below
   strip.classList.remove('category-carousel-strip--no-transition');
+  strip.style.scrollBehavior = prevScrollBehavior; // restores CSS's own scroll-behavior: smooth for real user scrolling from here on
   strip.addEventListener('scroll', debounce(() => _updateActiveSlide(strip), 60));
 }
