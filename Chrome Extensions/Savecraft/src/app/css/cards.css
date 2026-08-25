@@ -711,11 +711,11 @@
   }
   .category-carousel-slide--active + .category-carousel-slide + .category-carousel-slide,
   .category-carousel-slide:has(+ .category-carousel-slide + .category-carousel-slide--active) {
-    margin: 0 -24px; /* 170 * (1 - 0.715) / 2 ≈ 24.2px — the 3rd tier's own value, now explicit instead of inherited from the catch-all above */
+    margin: 0 -21px; /* 170 * (1 - 0.751) / 2 ≈ 21.2px — 5% larger, per direct follow-up ("make the 3rd card 5% larger") */
   }
   .category-carousel-slide--active + .category-carousel-slide,
   .category-carousel-slide:has(+ .category-carousel-slide--active) {
-    margin: 0 9px; /* matches the 1.1 scale set later in the file — see the size-bump block after the general tier rules for why */
+    margin: 0 4px; /* 170 * (1.045 - 1) / 2 ≈ 3.8px — 5% smaller, per direct follow-up ("i want the second card 5% smaller") */
   }
 }
 /* A <button> now (categoryCarousel.js — clicking opens the item's real detail modal, genuine
@@ -907,11 +907,11 @@
   }
   .category-carousel-slide--active + .category-carousel-slide + .category-carousel-slide,
   .category-carousel-slide:has(+ .category-carousel-slide + .category-carousel-slide--active) {
-    transform: scale(0.715); /* the 3rd tier's own value, now explicit instead of inherited from the catch-all above */
+    transform: scale(0.751); /* 5% larger, per direct follow-up */
   }
   .category-carousel-slide--active + .category-carousel-slide,
   .category-carousel-slide:has(+ .category-carousel-slide--active) {
-    transform: scale(1.1);
+    transform: scale(1.045); /* 5% smaller, per direct follow-up */
   }
 }
 /* Smaller on mobile, per direct follow-up ("reduce the large images size in the carousel in
