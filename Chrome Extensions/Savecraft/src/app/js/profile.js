@@ -194,7 +194,7 @@ function buildAccountDetailsSection(user) {
         </div>
       </div>
       <div class="profile-account-details-row">
-        <button type="button" class="btn-cancel" id="profile-reset-password-btn">Reset Password</button>
+        <button type="button" class="btn-primary" id="profile-reset-password-btn">Reset Password</button>
       </div>
     </div>`;
 }
