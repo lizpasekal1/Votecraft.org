@@ -645,6 +645,15 @@ async function init() {
     console.warn('[SaveCraft] Initial sync failed:', err);
     showSyncErrorBanner(err?.message || String(err));
   });
+  // REAL BUG, found and fixed: applyAuthUI() above (line 558) runs before loadAll()/
+  // runInitialSync() even start — but state.displayName (the header dropdown's own #profile-label
+  // text, per direct request) is only actually populated by THOSE, from local cache and/or
+  // Firestore. On a normal reload of an already-signed-in session, auth state itself never
+  // changes again, so onAuthChange's own applyAuthUI listener never re-fires either — nothing
+  // ever re-applied the label once the real name was loaded, so it stayed stuck on that first
+  // too-early call's email fallback. Reported live: "the drop down menu is still displaying my
+  // email." Re-applying here, now that state.displayName actually reflects reality.
+  applyAuthUI(getCurrentUser());
   await initCuratedItems();
   await initDashboardDemoConfig();
 
