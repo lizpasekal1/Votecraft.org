@@ -470,6 +470,39 @@
   border-color: var(--primary);
 }
 
+/* Email's inline "Change Email" pencil — per direct request ("remove the change email button
+   and instead add an edit button inside the email field"), sits inside the input itself rather
+   than as a separate button below it (contrast Recovery Email's .profile-masked-field-row above,
+   a button BESIDE its input — this one overlaps the input's own box). position: relative on the
+   row + absolute on the button, rather than reusing .profile-masked-field-row's flex layout,
+   since the button needs to render literally inside the input's padding area, not next to it. */
+.profile-inline-edit-field-row {
+  position: relative;
+}
+.profile-inline-edit-field-row input {
+  padding-right: 40px; /* room for the icon below so long email addresses don't run under it */
+}
+.profile-inline-edit-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.profile-inline-edit-btn:hover {
+  color: var(--primary);
+}
+
 /* --- Connections --- */
 .profile-connections-list {
   display: flex;
