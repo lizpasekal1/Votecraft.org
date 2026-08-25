@@ -187,12 +187,14 @@ function buildSettingsSection(user) {
       </div>` : '';
   // state.lastSyncAt is only ever set by a successful runInitialSync() (storage.js) — null until
   // the first one completes (a brand-new sign-in mid-sync, or a sync that's failed every time so
-  // far — the sync-error banner already covers that case elsewhere) — no row at all rather than a
-  // misleading "never" or a broken _timeAgo(null) call.
-  const lastSyncedRow = (user && state.lastSyncAt) ? `
+  // far — the sync-error banner already covers that case elsewhere). Per direct follow-up
+  // ("i don't see it. i want the title visable even if the data is empty right now") — the row
+  // itself always shows once signed in; only the value falls back to "Never" instead of a
+  // _timeAgo(null) call.
+  const lastSyncedRow = user ? `
       <div class="profile-settings-row">
         <div class="profile-settings-row-text">
-          <div class="profile-settings-row-label">Last Synced: <span class="profile-settings-row-value">${_timeAgo(state.lastSyncAt)}</span></div>
+          <div class="profile-settings-row-label">Last Synced: <span class="profile-settings-row-value">${state.lastSyncAt ? _timeAgo(state.lastSyncAt) : 'Never'}</span></div>
           <p class="profile-card-copy">When this device last synced with your account.</p>
         </div>
       </div>` : '';
