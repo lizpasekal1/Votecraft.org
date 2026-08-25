@@ -574,6 +574,17 @@
   #profile-download-data-btn {
     display: none;
   }
+  /* Per direct request ("in mobile put the 'clear cache' button below the text") — Cache's own
+     row (.profile-settings-row) stacks to a column here instead of sitting side by side with its
+     label/description; Account Data's own row is unaffected in practice (its Download button is
+     hidden on mobile, just above), and Last Synced has no button at all. */
+  .profile-settings-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .profile-settings-row .profile-settings-action-btn {
+    margin-top: 8px;
+  }
   /* Text across every Profile card bumped up again here, layered on top of profile.css's own
      base-size bump — mobile was the specific complaint ("very small — especially in mobile"),
      and there's width to spare once the grid above drops to a single column. Saved Lists' folder
