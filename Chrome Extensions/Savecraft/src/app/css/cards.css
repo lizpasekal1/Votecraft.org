@@ -668,10 +668,11 @@
   .category-carousel-strip {
     mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
     -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
-    /* 18px -> 9px (half), per direct request ("for the desktop carousel make the gap between
-       the nonoverlaping cards half the size") — only the active slide overlaps its neighbors
-       (its own negative margin, above); every other slide-to-slide spacing is this gap. */
-    gap: 9px;
+    /* 18px -> 9px (half, per direct request) -> 19px (+10px, per direct follow-up — "the gutter
+       is now too narrow increase the gutter by 10px", once the scale-compensation margins below
+       made the change actually visible) — only the active slide overlaps its neighbors (its own
+       negative margin, above); every other slide-to-slide spacing is this gap. */
+    gap: 19px;
   }
   /* REAL BUG, found and fixed: gap only affects the LAYOUT box, not the PAINTED size after
      transform: scale() — halving the gap above barely moved the visible gutter at all, because
@@ -679,16 +680,32 @@
      170px layout box, leaving a big chunk of that box visually empty on both sides. Reported
      live, screenshotted: "i don't see a change in the gutters between these cards." Fixed with
      negative margins sized to each tier's own per-side optical shrink (170px * (1 - scale) / 2),
-     pulling the PAINTED edges back to roughly the true 9px gap regardless of scale — desktop
+     pulling the PAINTED edges back to roughly the true gap value regardless of scale — desktop
      only, since mobile's own separate tier block (below) has its own already-tuned margins for a
-     different reason (deliberate overlap, not scale-compensation). */
+     different reason (deliberate overlap, not scale-compensation).
+     REAL BUG, found and fixed: this compensation was only applied to the exact "2 away from
+     active" selector, not to .category-carousel-slide's own base rule — so it correctly fixed
+     the immediate edge card, but every card further out than that (3rd, 4th, ... position, which
+     all share the exact same scale(0.65) via the base rule alone) never got it, leaving THEIR
+     gutters just as wide as before. Reported live: "the gutter change was only applied to the
+     second card from the center... all the cards except the 3 cards in the center should have
+     this." Moved onto the base rule instead (below), so it applies to every non-active,
+     non-immediate-neighbor card uniformly — the more specific neighbor-tier selector still wins
+     its own smaller compensation for the 2 cards immediately beside active, and active's own
+     selector still wins its own deliberate -50px overlap, so neither of those is affected. */
+  /* :not(.category-carousel-slide--active), not the plain base selector — .category-carousel-
+     slide--active is its own single-class selector (0,1,0), same specificity as plain
+     .category-carousel-slide, and this rule's declared LATER in the file (inside this media
+     query) — without the :not(), it would win over (and break) the active slide's own deliberate
+     -50px overlap margin declared earlier in the file. This exclusion bumps specificity to
+     (0,2,0), still safely losing to the neighbor-tier selector below (also (0,2,0), declared
+     after this) for the 2 cards immediately beside active. */
+  .category-carousel-slide:not(.category-carousel-slide--active) {
+    margin: 0 -30px; /* 170 * (1 - 0.65) / 2 ≈ 29.75px */
+  }
   .category-carousel-slide--active + .category-carousel-slide,
   .category-carousel-slide:has(+ .category-carousel-slide--active) {
     margin: 0 -13px; /* 170 * (1 - 0.85) / 2 ≈ 12.75px */
-  }
-  .category-carousel-slide--active + .category-carousel-slide + .category-carousel-slide,
-  .category-carousel-slide:has(+ .category-carousel-slide + .category-carousel-slide--active) {
-    margin: 0 -30px; /* 170 * (1 - 0.65) / 2 ≈ 29.75px */
   }
 }
 /* A <button> now (categoryCarousel.js — clicking opens the item's real detail modal, genuine
