@@ -168,6 +168,17 @@ export function initCategoryCarousel(container) {
   // center on load, rather than just the start of the middle copy _wireCarouselArrows leaves it at.
   strip.scrollLeft = (strip.scrollWidth - strip.clientWidth) / 2;
 
+  // REAL BUG, found and fixed: .category-carousel-slide's width/height/transform/margin all
+  // animate now (the "zoom out as it gets replaced" fix, cards.css) — measuring the active
+  // slide's real geometry immediately after toggling the class (below) caught it still
+  // mid-transition, still close to its smaller resting size, undershooting the centering math
+  // and landing it slightly off-center on first paint (reported live: "the center card is not
+  // in the center on page launch... it looks like it's slightly to the left"). Suppressing the
+  // transition just for this one initial, non-animated activation (animate: false already says
+  // "no entrance animation on first paint" — this extends that same intent to the underlying
+  // CSS transition, not just the JS-driven --entering keyframe) makes it settle to its final
+  // size instantly, so the measurement below reads the true final geometry.
+  strip.classList.add('category-carousel-strip--no-transition');
   _updateActiveSlide(strip, { animate: false });
   // REAL BUG, found and fixed: the scrollLeft set above centers the strip's own midpoint using
   // every slide's BASE (edge-tier) size — but _updateActiveSlide just grew whichever slide it
@@ -184,5 +195,7 @@ export function initCategoryCarousel(container) {
     const activeRect = initialActive.getBoundingClientRect();
     strip.scrollLeft += (activeRect.left + activeRect.width / 2) - (stripRect.left + stripRect.width / 2);
   }
+  void strip.offsetWidth; // flushes the instant snap above before transitions are re-enabled below
+  strip.classList.remove('category-carousel-strip--no-transition');
   strip.addEventListener('scroll', debounce(() => _updateActiveSlide(strip), 60));
 }
