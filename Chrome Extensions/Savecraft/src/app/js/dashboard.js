@@ -91,8 +91,27 @@ export function _wireCarouselArrows(card, strip) {
   // cubic-bezier bounce, just driven manually since scrollLeft has no CSS transition support.
   // Each call reads strip.scrollLeft fresh as its start point, so a rapid second click chains
   // smoothly from wherever the first animation currently is rather than needing to be queued.
+  // Single shared cancellation token for whichever scroll animation currently owns the strip
+  // (arrow-click or drag-release glide, below) — without this, a second animateScrollBy() call
+  // starting before the first one finished (e.g. an arrow click during a still-settling glide)
+  // would run both rAF loops at once, each writing strip.scrollLeft independently and visibly
+  // fighting each other instead of one cleanly taking over from the other.
+  let activeAnimRaf = null;
+  const cancelActiveAnim = () => {
+    if (activeAnimRaf) { cancelAnimationFrame(activeAnimRaf); activeAnimRaf = null; }
+  };
+
+  // Per direct request ("make the carousel animation back and forth controls smoother and a
+  // little bouncier") — the native scrollBy({behavior:'smooth'}) this used to call hands the
+  // whole animation off to the browser's own built-in easing, which is a flat ease-out with no
+  // overshoot and an inconsistent duration across browsers (and can't be tuned at all). A custom
+  // rAF-driven animation with an easeOutBack curve (overshoots slightly past the target, then
+  // settles back) gives the actual spring/bounce feel instead — same technique as a CSS
+  // cubic-bezier bounce, just driven manually since scrollLeft has no CSS transition support.
+  // Shared by the arrow-click scroll below AND the drag-release momentum glide further down, so
+  // every carousel motion has one consistent bouncy-but-eased personality.
   const animateScrollBy = (delta, duration = 480) => {
-    stopInertia(); // an arrow click while a drag-flick is still gliding takes over cleanly, rather than fighting it
+    cancelActiveAnim(); // takes over cleanly from whichever animation (if any) was still running
     const start = strip.scrollLeft;
     const startTime = performance.now();
     const c1 = 1.70158;
@@ -109,10 +128,14 @@ export function _wireCarouselArrows(card, strip) {
     function step(now) {
       const t = Math.min((now - startTime) / duration, 1);
       strip.scrollLeft = start + delta * easeOutBack(t);
-      if (t < 1) requestAnimationFrame(step);
-      else strip.style.scrollBehavior = prevScrollBehavior;
+      if (t < 1) {
+        activeAnimRaf = requestAnimationFrame(step);
+      } else {
+        activeAnimRaf = null;
+        strip.style.scrollBehavior = prevScrollBehavior;
+      }
     }
-    requestAnimationFrame(step);
+    activeAnimRaf = requestAnimationFrame(step);
   };
 
   const scrollByCard = dir => {
@@ -138,32 +161,18 @@ export function _wireCarouselArrows(card, strip) {
   let lastMoveX = 0;
   let lastMoveTime = 0;
   let velocity = 0;
-  let inertiaRaf = null;
-  const stopInertia = () => {
-    if (inertiaRaf) { cancelAnimationFrame(inertiaRaf); inertiaRaf = null; }
-  };
-  // Per direct follow-up ("i want that to feel really smooth") — the drag itself already tracked
-  // the pointer 1:1, but stopped scrolling dead the instant the mouse was released, which reads
-  // as abrupt/mechanical next to the native momentum scrolling every trackpad/touchscreen already
-  // has. Flicking and releasing now keeps gliding and decelerating on its own, same physics feel.
-  // Frame-rate-independent exponential decay (via Math.pow(0.998, dt), not a flat per-frame
-  // multiplier) so the glide's deceleration rate looks the same on a 60Hz vs. 120Hz display.
+  // Per direct follow-ups ("i want that to feel really smooth" then "i want it to be bouncier
+  // with a nice ease") — releasing a drag now projects the flick's total glide distance from its
+  // velocity (same idea as a real momentum scroll: a light flick barely nudges it, a hard flick
+  // carries much further) and plays it through the exact same springy easeOutBack curve/animator
+  // as the arrow-click scroll above, rather than a separate raw per-frame friction simulation —
+  // one consistent bouncy-but-eased feel across every carousel motion, not two different physics
+  // models bolted together. Distance/duration both scale with |v0|, clamped to sane ranges so an
+  // extreme flick can't send it flying absurdly far or fast.
   const startInertia = v0 => {
-    let v = v0;
-    let lastTime = performance.now();
-    function step(now) {
-      const dt = now - lastTime;
-      lastTime = now;
-      strip.scrollLeft -= v * dt;
-      v *= Math.pow(0.998, dt);
-      if (Math.abs(v) > 0.01) {
-        inertiaRaf = requestAnimationFrame(step);
-      } else {
-        inertiaRaf = null;
-        recenter(); // safety in case the glide crossed a copy boundary, same as scrollByCard gets
-      }
-    }
-    inertiaRaf = requestAnimationFrame(step);
+    const distance = -v0 * 500; // ~total travel a real friction decay at this velocity would cover
+    const duration = Math.min(900, Math.max(320, Math.abs(v0) * 900));
+    animateScrollBy(distance, duration);
   };
   strip.addEventListener('mousedown', e => {
     if (e.button !== 0) return; // primary button only
@@ -171,7 +180,7 @@ export function _wireCarouselArrows(card, strip) {
     // stops the browser's own native image/text drag-start from ever getting a chance to hijack
     // this gesture, regardless of which element inside the strip the press actually started on.
     e.preventDefault();
-    stopInertia(); // grabbing mid-glide takes over immediately, rather than fighting the glide
+    cancelActiveAnim(); // grabbing mid-glide takes over immediately, rather than fighting the glide
     dragging = true;
     dragMoved = false;
     recenter(); // same loop-illusion safety scrollByCard already gets, before reading the start position
