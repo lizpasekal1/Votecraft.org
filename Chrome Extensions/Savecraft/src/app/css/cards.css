@@ -700,39 +700,25 @@
      -50px overlap margin declared earlier in the file. This exclusion bumps specificity to
      (0,2,0), still safely losing to the neighbor-tier selector below (also (0,2,0), declared
      after this) for the 2 cards immediately beside active. */
-  /* REAL BUG, found and fixed: the desktop size-bump below (0.65 -> 0.75 -> 0.825) only updated
-     the exact "2 away from active" selector, not this catch-all base rule — so the 3rd card
-     (position 2, matching both selectors) got the new scale/margin, but every card further out
-     (4th, 5th, ...) stayed at the OLD 0.65 scale / -30px margin, mismatched with its own
-     immediate neighbor. Reported live: "the gutter between the 2nd and 3rd cards should match
-     the gutter between the 3rd and 4th cards." Kept in sync with the size-bump values below. */
+  /* Reverted back to the original scale-compensation values (0.65 / -30px) — per direct
+     follow-up, the "2nd"/"3rd cards" the earlier size-bump request meant were BOTH actually the
+     immediate-neighbor tier ("it was the 2nd cards that should have been bumped up... the ones
+     getting overlapped by the center card"), not this far/edge tier. Only the neighbor-tier
+     selector below keeps the bumped size now. */
   .category-carousel-slide:not(.category-carousel-slide--active) {
-    transform: scale(0.825);
-    margin: 0 -15px; /* 170 * (1 - 0.825) / 2 ≈ 14.9px */
+    margin: 0 -30px; /* 170 * (1 - 0.65) / 2 ≈ 29.75px */
   }
-  .category-carousel-slide--active + .category-carousel-slide,
-  .category-carousel-slide:has(+ .category-carousel-slide--active) {
-    margin: 0 -13px; /* 170 * (1 - 0.85) / 2 ≈ 12.75px */
-  }
-  /* Desktop-only size bump for the neighbor/edge tiers, per direct request ("in desktop, i also
-     think the 2nd... and 3rd cards out from the center are now too small. make those cards 15%
-     larger" -> "make those cards another 10% larger") — edge: 0.65 -> 0.75 -> 0.825. Neighbor:
-     0.85 -> 0.98 -> (0.98 * 1.1 = 1.078, capped to 1.0) — a further 10% on top of 0.98 would
-     have made the neighbor tier scale PAST the active/center slide's own scale(1), the one card
-     that's actually supposed to read as the biggest; capped there instead of following the math
-     past that ceiling. Re-derives the gutter compensation margins above (also desktop-only,
-     appears after them so it wins) for these new, smaller optical shrink amounts each time —
-     left at the old values, they'd overcompensate and crowd these bigger cards too close
-     together. */
-  .category-carousel-slide--active + .category-carousel-slide + .category-carousel-slide,
-  .category-carousel-slide:has(+ .category-carousel-slide + .category-carousel-slide--active) {
-    transform: scale(0.825);
-    margin: 0 -15px; /* 170 * (1 - 0.825) / 2 ≈ 14.9px */
-  }
+  /* Desktop-only size bump for the neighbor tier specifically ("the cards overlapped by the
+     center card"), per direct request/follow-up/correction — 0.85 -> 0.98 -> (0.98 * 1.1 =
+     1.078, capped to 1.0 — a further 10% on top of 0.98 would have made this tier scale PAST
+     the active/center slide's own scale(1), the one card that's actually supposed to read as
+     the biggest; capped there instead of following the math past that ceiling). Margin
+     re-derived for the new, smaller optical shrink amount each time (0 at scale(1) — nothing
+     left to compensate for). */
   .category-carousel-slide--active + .category-carousel-slide,
   .category-carousel-slide:has(+ .category-carousel-slide--active) {
     transform: scale(1);
-    margin: 0; /* scale(1) -> no optical shrink left to compensate for */
+    margin: 0;
   }
 }
 /* A <button> now (categoryCarousel.js — clicking opens the item's real detail modal, genuine
