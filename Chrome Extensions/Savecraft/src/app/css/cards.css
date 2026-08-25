@@ -700,8 +700,15 @@
      -50px overlap margin declared earlier in the file. This exclusion bumps specificity to
      (0,2,0), still safely losing to the neighbor-tier selector below (also (0,2,0), declared
      after this) for the 2 cards immediately beside active. */
+  /* REAL BUG, found and fixed: the desktop size-bump below (0.65 -> 0.75 -> 0.825) only updated
+     the exact "2 away from active" selector, not this catch-all base rule — so the 3rd card
+     (position 2, matching both selectors) got the new scale/margin, but every card further out
+     (4th, 5th, ...) stayed at the OLD 0.65 scale / -30px margin, mismatched with its own
+     immediate neighbor. Reported live: "the gutter between the 2nd and 3rd cards should match
+     the gutter between the 3rd and 4th cards." Kept in sync with the size-bump values below. */
   .category-carousel-slide:not(.category-carousel-slide--active) {
-    margin: 0 -30px; /* 170 * (1 - 0.65) / 2 ≈ 29.75px */
+    transform: scale(0.825);
+    margin: 0 -15px; /* 170 * (1 - 0.825) / 2 ≈ 14.9px */
   }
   .category-carousel-slide--active + .category-carousel-slide,
   .category-carousel-slide:has(+ .category-carousel-slide--active) {
