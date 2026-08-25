@@ -700,8 +700,18 @@
      -50px overlap margin declared earlier in the file. This exclusion bumps specificity to
      (0,2,0), still safely losing to the neighbor-tier selector below (also (0,2,0), declared
      after this) for the 2 cards immediately beside active. */
+  /* New 4th tier, per direct follow-up ("4th cards and the rest of the cards in the carousel
+     should be a little smaller than the 3rd cards") — this catch-all rule now covers only 4th
+     position and beyond (0.68 scale), since the new explicit "exactly 2 away" selector right
+     below claims the 3rd position specifically (0.715, unchanged) via higher specificity
+     ((0,3,0) vs. this rule's (0,2,0)) regardless of source order — same reasoning as the
+     neighbor-tier split just below it. */
   .category-carousel-slide:not(.category-carousel-slide--active) {
-    margin: 0 -24px; /* matches the 0.715 scale set later in the file — see the size-bump block after the general tier rules for why */
+    margin: 0 -27px; /* 170 * (1 - 0.68) / 2 ≈ 27.2px */
+  }
+  .category-carousel-slide--active + .category-carousel-slide + .category-carousel-slide,
+  .category-carousel-slide:has(+ .category-carousel-slide + .category-carousel-slide--active) {
+    margin: 0 -24px; /* 170 * (1 - 0.715) / 2 ≈ 24.2px — the 3rd tier's own value, now explicit instead of inherited from the catch-all above */
   }
   .category-carousel-slide--active + .category-carousel-slide,
   .category-carousel-slide:has(+ .category-carousel-slide--active) {
@@ -888,8 +898,16 @@
    positive for the neighbor tier at this scale — the painted card now overflows its 170px
    layout box, so neighboring cards need to be pushed away instead of pulled closer. */
 @media (min-width: 769px) {
+  /* 4th tier and beyond, per direct follow-up ("4th cards and the rest of the cards in the
+     carousel should be a little smaller than the 3rd cards") — this catch-all now covers only
+     4th+ (0.68); the explicit "exactly 2 away" selector right below claims the 3rd position on
+     its own, higher-specificity terms, same split as the margin block above. */
   .category-carousel-slide:not(.category-carousel-slide--active) {
-    transform: scale(0.715);
+    transform: scale(0.68);
+  }
+  .category-carousel-slide--active + .category-carousel-slide + .category-carousel-slide,
+  .category-carousel-slide:has(+ .category-carousel-slide + .category-carousel-slide--active) {
+    transform: scale(0.715); /* the 3rd tier's own value, now explicit instead of inherited from the catch-all above */
   }
   .category-carousel-slide--active + .category-carousel-slide,
   .category-carousel-slide:has(+ .category-carousel-slide--active) {
