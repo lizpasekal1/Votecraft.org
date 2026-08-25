@@ -151,77 +151,93 @@ export function _wireCarouselArrows(card, strip) {
   // free via native touch scrolling. mouseup/mousemove are wired on window, not the strip, so a
   // drag that continues past the strip's own edges (or ends outside it entirely) still tracks
   // and releases correctly.
-  let dragging = false;
-  let dragMoved = false;
-  let dragStartX = 0;
-  let dragStartScrollLeft = 0;
-  let prevScrollBehaviorDrag = '';
-  // Velocity tracking (px/ms of pointer movement, in mouse-space — scrollLeft moves the opposite
-  // direction, see mousemove below) for the momentum glide on release, just below.
-  let lastMoveX = 0;
-  let lastMoveTime = 0;
-  let velocity = 0;
-  // Per direct follow-ups ("i want that to feel really smooth" then "i want it to be bouncier
-  // with a nice ease") — releasing a drag now projects the flick's total glide distance from its
-  // velocity (same idea as a real momentum scroll: a light flick barely nudges it, a hard flick
-  // carries much further) and plays it through the exact same springy easeOutBack curve/animator
-  // as the arrow-click scroll above, rather than a separate raw per-frame friction simulation —
-  // one consistent bouncy-but-eased feel across every carousel motion, not two different physics
-  // models bolted together. Distance/duration both scale with |v0|, clamped to sane ranges so an
-  // extreme flick can't send it flying absurdly far or fast.
-  const startInertia = v0 => {
-    const distance = -v0 * 500; // ~total travel a real friction decay at this velocity would cover
-    const duration = Math.min(900, Math.max(320, Math.abs(v0) * 900));
-    animateScrollBy(distance, duration);
-  };
-  strip.addEventListener('mousedown', e => {
-    if (e.button !== 0) return; // primary button only
-    // Belt-and-suspenders alongside the CSS -webkit-user-drag: none (cards.css/dashboard.css) —
-    // stops the browser's own native image/text drag-start from ever getting a chance to hijack
-    // this gesture, regardless of which element inside the strip the press actually started on.
-    e.preventDefault();
-    cancelActiveAnim(); // grabbing mid-glide takes over immediately, rather than fighting the glide
-    dragging = true;
-    dragMoved = false;
-    recenter(); // same loop-illusion safety scrollByCard already gets, before reading the start position
-    dragStartX = e.pageX;
-    dragStartScrollLeft = strip.scrollLeft;
-    lastMoveX = e.pageX;
-    lastMoveTime = performance.now();
-    velocity = 0;
-    prevScrollBehaviorDrag = strip.style.scrollBehavior;
-    strip.style.scrollBehavior = 'auto'; // 1:1 tracking, not smoothed/queued behind the pointer
-    strip.classList.add('carousel-dragging');
-  });
-  window.addEventListener('mousemove', e => {
-    if (!dragging) return;
-    const delta = e.pageX - dragStartX;
-    if (Math.abs(delta) > 4) dragMoved = true; // small-move threshold — a near-stationary press+release still counts as a plain click, below
-    strip.scrollLeft = dragStartScrollLeft - delta;
-    const now = performance.now();
-    const dt = now - lastMoveTime;
-    // Skips near-zero dt ticks (some browsers can fire mousemove more than once per animation
-    // frame) — dividing by a near-zero dt would spike the velocity reading wildly.
-    if (dt > 4) {
-      velocity = (e.pageX - lastMoveX) / dt;
+  // REAL BUG, found and fixed: this whole block was wired unconditionally, but mobile Safari can
+  // fire synthetic mousedown/mousemove/mouseup events as compatibility shims for real touch
+  // gestures — so this "desktop" drag/momentum system was quietly also activating on mobile,
+  // fighting the browser's own native touch-scroll physics and scroll-snap settling underneath
+  // it (each touch potentially driving BOTH native touch scrolling AND this mouse-event-driven
+  // momentum glide at once). Confirmed live as the actual cause behind two still-unresolved
+  // mobile carousel bugs (centering-on-load never quite sticking despite two earlier fix
+  // attempts, and "it also looks like it double zooms in mobile as it scrolls") once the user
+  // clarified directly: "the whole recent carousel motion thread was desktop only." Gated behind
+  // `pointer: fine` — true only for a real mouse/trackpad pointer, false for touch-primary
+  // devices — rather than a viewport-width check, since this is fundamentally about *input
+  // type*, not screen size (a touch-screen laptop at a wide viewport should still skip this).
+  // Wraps only this drag-specific wiring — the arrow-click wiring and initial scrollLeft setup
+  // below still need to run on every device.
+  if (window.matchMedia('(pointer: fine)').matches) {
+    let dragging = false;
+    let dragMoved = false;
+    let dragStartX = 0;
+    let dragStartScrollLeft = 0;
+    let prevScrollBehaviorDrag = '';
+    // Velocity tracking (px/ms of pointer movement, in mouse-space — scrollLeft moves the opposite
+    // direction, see mousemove below) for the momentum glide on release, just below.
+    let lastMoveX = 0;
+    let lastMoveTime = 0;
+    let velocity = 0;
+    // Per direct follow-ups ("i want that to feel really smooth" then "i want it to be bouncier
+    // with a nice ease") — releasing a drag now projects the flick's total glide distance from its
+    // velocity (same idea as a real momentum scroll: a light flick barely nudges it, a hard flick
+    // carries much further) and plays it through the exact same springy easeOutBack curve/animator
+    // as the arrow-click scroll above, rather than a separate raw per-frame friction simulation —
+    // one consistent bouncy-but-eased feel across every carousel motion, not two different physics
+    // models bolted together. Distance/duration both scale with |v0|, clamped to sane ranges so an
+    // extreme flick can't send it flying absurdly far or fast.
+    const startInertia = v0 => {
+      const distance = -v0 * 500; // ~total travel a real friction decay at this velocity would cover
+      const duration = Math.min(900, Math.max(320, Math.abs(v0) * 900));
+      animateScrollBy(distance, duration);
+    };
+    strip.addEventListener('mousedown', e => {
+      if (e.button !== 0) return; // primary button only
+      // Belt-and-suspenders alongside the CSS -webkit-user-drag: none (cards.css/dashboard.css) —
+      // stops the browser's own native image/text drag-start from ever getting a chance to hijack
+      // this gesture, regardless of which element inside the strip the press actually started on.
+      e.preventDefault();
+      cancelActiveAnim(); // grabbing mid-glide takes over immediately, rather than fighting the glide
+      dragging = true;
+      dragMoved = false;
+      recenter(); // same loop-illusion safety scrollByCard already gets, before reading the start position
+      dragStartX = e.pageX;
+      dragStartScrollLeft = strip.scrollLeft;
       lastMoveX = e.pageX;
-      lastMoveTime = now;
-    }
-  });
-  window.addEventListener('mouseup', () => {
-    if (!dragging) return;
-    dragging = false;
-    strip.classList.remove('carousel-dragging');
-    strip.style.scrollBehavior = prevScrollBehaviorDrag;
-    if (Math.abs(velocity) > 0.05) startInertia(velocity);
-  });
-  // Suppresses the click a real drag's mouseup would otherwise still fire on whatever slide it
-  // released over — without this, dragging past a slide and letting go on top of it also "opens"
-  // that slide the same as a genuine click would. Capture phase so this runs before the slide's
-  // own click listener (openDetailModal etc.).
-  strip.addEventListener('click', e => {
-    if (dragMoved) { e.stopPropagation(); e.preventDefault(); dragMoved = false; }
-  }, true);
+      lastMoveTime = performance.now();
+      velocity = 0;
+      prevScrollBehaviorDrag = strip.style.scrollBehavior;
+      strip.style.scrollBehavior = 'auto'; // 1:1 tracking, not smoothed/queued behind the pointer
+      strip.classList.add('carousel-dragging');
+    });
+    window.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      const delta = e.pageX - dragStartX;
+      if (Math.abs(delta) > 4) dragMoved = true; // small-move threshold — a near-stationary press+release still counts as a plain click, below
+      strip.scrollLeft = dragStartScrollLeft - delta;
+      const now = performance.now();
+      const dt = now - lastMoveTime;
+      // Skips near-zero dt ticks (some browsers can fire mousemove more than once per animation
+      // frame) — dividing by a near-zero dt would spike the velocity reading wildly.
+      if (dt > 4) {
+        velocity = (e.pageX - lastMoveX) / dt;
+        lastMoveX = e.pageX;
+        lastMoveTime = now;
+      }
+    });
+    window.addEventListener('mouseup', () => {
+      if (!dragging) return;
+      dragging = false;
+      strip.classList.remove('carousel-dragging');
+      strip.style.scrollBehavior = prevScrollBehaviorDrag;
+      if (Math.abs(velocity) > 0.05) startInertia(velocity);
+    });
+    // Suppresses the click a real drag's mouseup would otherwise still fire on whatever slide it
+    // released over — without this, dragging past a slide and letting go on top of it also "opens"
+    // that slide the same as a genuine click would. Capture phase so this runs before the slide's
+    // own click listener (openDetailModal etc.).
+    strip.addEventListener('click', e => {
+      if (dragMoved) { e.stopPropagation(); e.preventDefault(); dragMoved = false; }
+    }, true);
+  }
 
   strip.scrollLeft = copyWidth(); // start centered in the middle copy
   // .dash-carousel-next was removed from the Dashboard's own two carousels (per direct request —
