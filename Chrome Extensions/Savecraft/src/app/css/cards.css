@@ -1145,6 +1145,21 @@
   min-width: 0;
   overflow: hidden;
 }
+/* Wraps the author/title/album-year text (renderCard(), renderGrid.js) separately from
+   .card-meta's badge row — per direct request ("for all the categories can you center the card
+   text in the cards"). flex: 1 claims all the vertical space .card-meta's own margin-top: auto
+   isn't using, and justify-content: center vertically centers the text within THAT space, while
+   .card-meta still ends up pinned to the very bottom of the card either way (it's the only
+   sibling left after this wrapper's flex: 1 growth eats the rest) — same visual anchor as
+   before, just with the text no longer stuck flush against the top above it. */
+.card-text-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+}
 
 .card-title {
   font-size: 20px;
