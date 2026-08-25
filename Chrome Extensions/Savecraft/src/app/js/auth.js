@@ -151,8 +151,13 @@ export async function signUp(email, password) {
     // for both signUp and signIn, and is a no-op if there's truly nothing local to upload. Errors
     // are swallowed here (not surfaced as a failed sign-in) since the account itself was created
     // successfully regardless of whether the sync round-trip succeeded.
-    await runInitialSync(auth.uid).catch(err => console.warn('[SaveCraft] Initial sync failed:', err));
-    return { ok: true };
+    // syncError (not swallowed into the void) — the account itself was created successfully
+    // regardless of whether the sync round-trip succeeded, so this still reports ok: true, but
+    // callers (main.js) can surface it visibly instead of it only ever reaching a console no one's
+    // looking at (a phone with no attached dev machine has no practical way to see a console.warn).
+    let syncError = null;
+    await runInitialSync(auth.uid).catch(err => { console.warn('[SaveCraft] Initial sync failed:', err); syncError = err?.message || String(err); });
+    return { ok: true, syncError };
   } catch {
     return { ok: false, error: 'Could not reach the server. Check your connection and try again.' };
   }
@@ -174,8 +179,10 @@ export async function signIn(email, password) {
     await _persistAuth(auth);
     await _refreshEmailVerified(auth).catch(err => console.warn('[SaveCraft] Could not refresh verification status:', err));
     _notify();
-    await runInitialSync(auth.uid).catch(err => console.warn('[SaveCraft] Initial sync failed:', err));
-    return { ok: true };
+    // syncError — see signUp's identical comment above.
+    let syncError = null;
+    await runInitialSync(auth.uid).catch(err => { console.warn('[SaveCraft] Initial sync failed:', err); syncError = err?.message || String(err); });
+    return { ok: true, syncError };
   } catch {
     return { ok: false, error: 'Could not reach the server. Check your connection and try again.' };
   }
