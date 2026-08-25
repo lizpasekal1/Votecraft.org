@@ -13,7 +13,7 @@ import { getCurrentUser, resendVerificationEmail, changeEmail, sendPasswordReset
 import { persistFollowedCuratedLists, persistSavedLists, persistFolder, persistItem, persistSelectedSharedFriends, disconnectLastfm, disconnectSteam, persistDisplayName, persistFullName, persistRecoveryEmail, persistTimeZone } from './storage.js';
 import { ensureLastfmRecentTracks, ensureSteamRecentGames } from './api.js';
 import { CURATED_LIST_DISPLAY_NAMES, DEMO_PROFILE_NAME } from './dashboard.js';
-import { openAuthModal, openLastfmModal, openSteamModal, applyAuthUI } from './main.js';
+import { openAuthModal, openLastfmModal, openSteamModal } from './main.js';
 import { renderSidebar, renderGrid } from './render.js';
 import { navigateToView } from './navigation.js';
 import { DEMO_FRIENDS } from './sharedSaves.js';
@@ -48,11 +48,11 @@ function buildAccountSection(user) {
   // Editable (Profile > Account, pencil-on-hover, wireAccountSection below) once signed in —
   // falls back to the account's email until a name is actually set. Signed-out demo view keeps
   // its own hardcoded persona (nothing to edit without a real account to persist it to).
-  // "Sign in" for the signed-out view, per direct follow-up ("if i am not signed in that profile
-  // name should say 'sign in'") — matches the header dropdown's own #profile-label, which already
-  // reads "Sign in" when signed out (main.js's applyAuthUI); this used to say the generic "Demo
-  // email" placeholder instead, which read as an odd mismatch next to that.
-  const nameText = user ? escapeHtml(state.displayName || user.email) : 'Sign in';
+  // Generic "Demo email" placeholder for the signed-out view, per direct request — the DEMO_PROFILE_NAME
+  // persona ('Zil') is also the exact name a real signed-in user might set as their own displayName
+  // (state.displayName, Profile > Account's pencil edit), so reusing it here risked reading like a
+  // real account's real data rather than an obviously-generic demo.
+  const nameText = user ? escapeHtml(state.displayName || user.email) : 'Demo email';
   // Purely informational — never blocks anything, same "never lock people out" stance as the rest
   // of this app's auth handling (matches the identical reminder in main.js's applyAuthUI, which
   // covers the auth modal's own signed-in view).
@@ -123,10 +123,6 @@ function wireAccountSection(container) {
       if (save && trimmed !== (state.displayName || '')) {
         state.displayName = trimmed || null;
         persistDisplayName(state.displayName);
-        // Header dropdown label (#profile-label, main.js) shows this same displayName now, per
-        // direct request — its own applyAuthUI() only runs on real auth-state changes, so without
-        // this explicit call the new name wouldn't show up there until the next sign-in/reload.
-        applyAuthUI(getCurrentUser());
       }
       renderProfilePage();
     };
@@ -155,56 +151,46 @@ const TIME_ZONE_OPTIONS = [
 ];
 
 function buildAccountDetailsSection(user) {
-  // Per direct follow-up ("the demo should show these widgets... just with empty fields") — this
-  // used to return '' entirely when signed out, which collapsed .profile-bottom-row down to just
-  // VC Connector alone (full width, not the half-width pairing this row exists for). Every field
-  // below genuinely needs a real account to persist to, so a signed-out visitor can't actually
-  // edit them, but the same full card now always renders — empty values, disabled controls —
-  // rather than a shorter placeholder card, matching this page's established "browsable without
-  // signing in, real layout either way" stance (buildAccountSection above does the same: full
-  // card, sign-in is a secondary action, never a gate on whether it renders at all). wireAccount-
-  // DetailsSection below still no-ops entirely when signed out (disabled controls can't fire the
-  // events it would otherwise wire up anyway).
+  if (!user) return '';
   const detectedTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const tzOptions = TIME_ZONE_OPTIONS.includes(state.timeZone || detectedTz)
     ? TIME_ZONE_OPTIONS
     : [state.timeZone || detectedTz, ...TIME_ZONE_OPTIONS];
   const selectedTz = state.timeZone || detectedTz;
-  const disabledAttr = user ? '' : ' disabled';
   return `
     <div class="profile-card profile-card--account-details">
       <div class="profile-card-title">Account Details</div>
       <div class="form-group">
         <label>Full Name</label>
-        <input type="text" id="profile-full-name-input" value="${user ? escapeHtml(state.fullName || '') : ''}" placeholder="Your full name" maxlength="100"${disabledAttr} />
+        <input type="text" id="profile-full-name-input" value="${escapeHtml(state.fullName || '')}" placeholder="Your full name" maxlength="100" />
       </div>
       <div class="form-group">
         <label>Email</label>
-        <input type="email" value="${user ? escapeHtml(user.email) : ''}"${user ? '' : ' placeholder="Demo email"'} disabled />
+        <input type="email" value="${escapeHtml(user.email)}" disabled />
       </div>
       <div class="profile-account-details-row">
-        <button type="button" class="btn-cancel" id="profile-change-email-btn"${disabledAttr}>Change Email</button>
+        <button type="button" class="btn-cancel" id="profile-change-email-btn">Change Email</button>
       </div>
       <div class="form-group">
         <label>Recovery Email</label>
         <div class="profile-masked-field-row">
-          <input type="password" id="profile-recovery-email-input" value="${user ? escapeHtml(state.recoveryEmail || '') : ''}" placeholder="Not set" autocomplete="off"${disabledAttr} />
+          <input type="password" id="profile-recovery-email-input" value="${escapeHtml(state.recoveryEmail || '')}" placeholder="Not set" autocomplete="off" />
           <!-- Masked (type="password") by default, per direct request — flips to type="text"
                only while this button is actively held down (wireAccountDetailsSection below),
                re-masking the instant it's released, rather than a click-to-toggle switch. -->
-          <button type="button" class="profile-reveal-btn" id="profile-recovery-email-reveal" title="Hold to reveal" aria-label="Hold to reveal recovery email"${disabledAttr}>
+          <button type="button" class="profile-reveal-btn" id="profile-recovery-email-reveal" title="Hold to reveal" aria-label="Hold to reveal recovery email">
             <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M480-320q75 0 127.5-52.5T660-500q0-75-52.5-127.5T480-680q-75 0-127.5 52.5T300-500q0 75 52.5 127.5T480-320Zm0-72q-45 0-76.5-31.5T372-500q0-45 31.5-76.5T480-608q45 0 76.5 31.5T588-500q0 45-31.5 76.5T480-392Zm0 192q-146 0-266-81.5T40-500q54-137 174-218.5T480-800q146 0 266 81.5T920-500q-54 137-174 218.5T480-200Z"/></svg>
           </button>
         </div>
       </div>
       <div class="form-group">
         <label>Time Zone</label>
-        <select id="profile-timezone-select"${disabledAttr}>
+        <select id="profile-timezone-select">
           ${tzOptions.map(tz => `<option value="${escapeHtml(tz)}"${tz === selectedTz ? ' selected' : ''}>${escapeHtml(tz.replace(/_/g, ' '))}</option>`).join('')}
         </select>
       </div>
       <div class="profile-account-details-row">
-        <button type="button" class="btn-cancel" id="profile-reset-password-btn"${disabledAttr}>Reset Password</button>
+        <button type="button" class="btn-cancel" id="profile-reset-password-btn">Reset Password</button>
       </div>
     </div>`;
 }
@@ -984,21 +970,6 @@ function buildVotecraftConnectionSection() {
     </div>`;
 }
 
-// ===== Sponsors Portal =====
-// Per direct request — takes VC Connector's old spot in the main widget grid (to the right of
-// Shared Lists), now that VC Connector itself has moved down to sit beside Account Details
-// instead (see renderProfilePage below). A plain outbound link, same "Become a Sponsor" target
-// every other sponsor CTA in the app already points at (renderCuratedPages.js's Top 100 hero/
-// footer, the header's own Sponsored Statements link) — not a new destination.
-function buildSponsorsPortalSection() {
-  return `
-    <div class="dash-card profile-card--sponsors-portal">
-      <div class="profile-card-header"><span class="profile-card-title">Sponsors Portal</span></div>
-      <p class="profile-card-copy">Three ways to put your organization in front of an audience that already cares — a branded page inside SaveCraft, a statement inside their favorite lists, or your own curated list embedded anywhere on the web.</p>
-      <a class="btn-primary profile-widget-add-new-btn" href="${resourceUrl('src/sponsored/sponsored.html')}" target="_blank" rel="noopener">Learn More</a>
-    </div>`;
-}
-
 const VOTECRAFT_WALLET_URL = 'https://votecraft.org/wp-content/uploads/pages/votecraft-coin/app/index.html';
 
 // Small transient confirmation modal shown before actually leaving to the VC Wallet — per direct
@@ -1040,27 +1011,15 @@ export function renderProfilePage() {
   container.innerHTML = `
     <div class="profile-page">
       ${buildAccountSection(user)}
+      ${buildAccountDetailsSection(user)}
       <div class="profile-widget-grid">
         ${buildConnectionsSection()}
         ${buildInterestsSection()}
         ${buildMyNotesSection()}
         ${buildSavedListsSection()}
         ${buildSharedListsSection()}
-        ${buildSponsorsPortalSection()}
+        ${buildVotecraftConnectionSection()}
       </div>
-      <!-- REAL BUG, reverted: the half-width side-by-side pairing (Account Details + VC
-           Connector sharing a row, profile-bottom-row) never rendered correctly live despite
-           three different fix attempts (min-width: 0 on a CSS Grid, then switching to flexbox
-           with flex-basis: 0) — Account Details kept losing its own card background/title/most
-           fields regardless of the underlying layout mechanism, still unexplained after a live
-           DevTools inspection. Per direct request ("how about just revert this page back to when
-           the account details were full width") — back to full-width, stacked, one after the
-           other, the last confirmed-working shape. Sponsors Portal stays in the main widget-grid
-           above (that part was rendering correctly) and Account Details keeps its own
-           signed-out/demo empty-fields state (also unrelated to the broken mechanism, still a
-           real improvement over returning '' entirely). */
-      ${buildAccountDetailsSection(user)}
-      ${buildVotecraftConnectionSection()}
       <button class="btn-cancel profile-manage-account-mobile" id="profile-manage-account-mobile">Manage account</button>
       ${buildLegalLinksRow('profile-legal-links-mobile')}
     </div>`;
