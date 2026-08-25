@@ -974,6 +974,21 @@ function buildVotecraftConnectionSection() {
     </div>`;
 }
 
+// ===== Sponsors Portal =====
+// Per direct request — takes VC Connector's old spot in the main widget grid (to the right of
+// Shared Lists), now that VC Connector itself has moved down to sit beside Account Details
+// instead (see renderProfilePage below). A plain outbound link, same "Become a Sponsor" target
+// every other sponsor CTA in the app already points at (renderCuratedPages.js's Top 100 hero/
+// footer, the header's own Sponsored Statements link) — not a new destination.
+function buildSponsorsPortalSection() {
+  return `
+    <div class="dash-card profile-card--sponsors-portal">
+      <div class="profile-card-header"><span class="profile-card-title">Sponsors Portal</span></div>
+      <p class="profile-card-copy">Three ways to put your organization in front of an audience that already cares — a branded page inside SaveCraft, a statement inside their favorite lists, or your own curated list embedded anywhere on the web.</p>
+      <a class="btn-primary profile-widget-add-new-btn" href="${resourceUrl('src/sponsored/sponsored.html')}" target="_blank" rel="noopener">Learn More</a>
+    </div>`;
+}
+
 const VOTECRAFT_WALLET_URL = 'https://votecraft.org/wp-content/uploads/pages/votecraft-coin/app/index.html';
 
 // Small transient confirmation modal shown before actually leaving to the VC Wallet — per direct
@@ -1021,9 +1036,17 @@ export function renderProfilePage() {
         ${buildMyNotesSection()}
         ${buildSavedListsSection()}
         ${buildSharedListsSection()}
+        ${buildSponsorsPortalSection()}
+      </div>
+      <!-- Per direct request ("make the 'account details' widget half width in desktop and put
+           the 'VC connector' widget to the right of it") — VC Connector moved out of the main
+           widget-grid above (Sponsors Portal takes its old spot) into its own row paired with
+           Account Details; profile.css sizes both to half width on desktop, misc.css stacks them
+           on mobile like every other Profile row. */
+      <div class="profile-bottom-row">
+        ${buildAccountDetailsSection(user)}
         ${buildVotecraftConnectionSection()}
       </div>
-      ${buildAccountDetailsSection(user)}
       <button class="btn-cancel profile-manage-account-mobile" id="profile-manage-account-mobile">Manage account</button>
       ${buildLegalLinksRow('profile-legal-links-mobile')}
     </div>`;
