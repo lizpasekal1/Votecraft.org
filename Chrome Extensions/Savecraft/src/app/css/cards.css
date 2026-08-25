@@ -549,6 +549,21 @@
   font-size: 18px;
   font-weight: 700;
   color: var(--primary);
+  /* A real <button> now, per direct request ("make it so on desktop and mobile the center card
+     title purple text is a link to that card") — reset to look exactly like the plain text it
+     was, since the browser's own button chrome would otherwise add a border/background/system
+     font. width: 100% since a button defaults to shrink-to-fit (inline-block-like) rather than
+     the block-level <div> this used to be, which is what let text-align: center work at all. */
+  display: block;
+  width: 100%;
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+.category-carousel-caption:hover {
+  text-decoration: underline;
 }
 /* The prev/next buttons also carry .dash-carousel-prev/.dash-carousel-next (categoryCarousel.js)
    so _wireCarouselArrows (dashboard.js) can find and wire them for its infinite-loop mechanics —

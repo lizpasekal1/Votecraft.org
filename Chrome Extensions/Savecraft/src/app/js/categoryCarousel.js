@@ -106,7 +106,7 @@ export function renderCategoryCarouselHtml(override = null) {
       <div class="category-carousel-strip" id="category-carousel-strip">${slidesHtml}</div>
       <button type="button" class="category-carousel-arrow dash-carousel-next" aria-label="Next">&rsaquo;</button>
     </div>
-    <div class="category-carousel-caption" id="category-carousel-caption"></div>
+    <button type="button" class="category-carousel-caption" id="category-carousel-caption"></button>
   `;
 }
 
@@ -115,6 +115,11 @@ export function renderCategoryCarouselHtml(override = null) {
 // swap, not multiple simultaneous instances). Reset implicitly on each fresh render since
 // initCategoryCarousel() below always runs against a brand-new strip.
 let _prevActiveSlide = null;
+// The real item behind whichever slide is currently active — kept in sync alongside the purple
+// caption text below the carousel (both set together in _updateActiveSlide), so the caption's own
+// click handler (wired once, in initCategoryCarousel) always opens whatever's actually centered
+// right now. Same module-level, single-instance reasoning as _prevActiveSlide above.
+let _activeCaptionItem = null;
 
 function _updateActiveSlide(strip, { animate = true } = {}) {
   const stripRect = strip.getBoundingClientRect();
@@ -134,6 +139,12 @@ function _updateActiveSlide(strip, { animate = true } = {}) {
   // separate data attribute.
   const caption = document.getElementById('category-carousel-caption');
   if (caption && closest) caption.textContent = closest.title || '';
+  // Per direct request ("make it so on desktop and mobile the center card title purple text is
+  // a link to that card") — resolves the same real item the closest slide's own click handler
+  // (initCategoryCarousel, below) would open, via the identical dataset.index -> _lastSlideItems
+  // lookup, so the caption always opens whatever's actually centered right now regardless of how
+  // it got there (arrow click, drag, wheel scroll, ...).
+  _activeCaptionItem = closest ? _lastSlideItems[parseInt(closest.dataset.index, 10) % _lastSlideItems.length] || null : null;
   // Per direct request ("the large center feature item should change to the next item, come from
   // the left side") — the newly-active slide plays a one-shot slide-in-from-the-left animation
   // (.category-carousel-slide--entering, cards.css) instead of just popping to its enlarged size
@@ -157,6 +168,13 @@ export function initCategoryCarousel(container) {
   strip.querySelectorAll('.category-carousel-slide').forEach(slide => {
     const item = _lastSlideItems[parseInt(slide.dataset.index, 10) % _lastSlideItems.length];
     if (item) slide.addEventListener('click', () => openDetailModal(item));
+  });
+  // Per direct request ("make it so on desktop and mobile the center card title purple text is
+  // a link to that card") — wired once here (not per-render inside _updateActiveSlide, which
+  // runs on every scroll tick) since the caption element itself is never replaced/re-created,
+  // only its text/target item change; _activeCaptionItem is kept current by _updateActiveSlide.
+  document.getElementById('category-carousel-caption')?.addEventListener('click', () => {
+    if (_activeCaptionItem) openDetailModal(_activeCaptionItem);
   });
 
   // Infinite-wheel scroll + prev/next arrow wiring (dashboard.js) — sets its own initial
@@ -211,4 +229,30 @@ export function initCategoryCarousel(container) {
   strip.classList.remove('category-carousel-strip--no-transition');
   strip.style.scrollBehavior = prevScrollBehavior; // restores CSS's own scroll-behavior: smooth for real user scrolling from here on
   strip.addEventListener('scroll', debounce(() => _updateActiveSlide(strip), 60));
+
+  // REAL BUG, found and fixed (still unresolved after 3 earlier attempts at the root cause —
+  // transition timing, scroll-snap-type, scroll-behavior: smooth — each addressed a real
+  // contributing issue but mobile centering-on-load kept resurfacing: "in mobile the launch of
+  // the page is still not showing the carousel having the center card centered"). Rather than
+  // chasing a 4th specific CSS property, this defers a full re-measure/re-correct pass with a
+  // double requestAnimationFrame — a standard technique for "wait until the browser has
+  // genuinely finished a real layout + paint cycle" that sidesteps needing to know the exact
+  // property/timing at fault. The first rAF fires before the next paint (still mid-frame); the
+  // second one is guaranteed to run only after that paint has actually happened. Purely a safety
+  // net on top of the synchronous centering above, not a replacement for it — harmless no-op if
+  // the sync version already landed correctly (the recomputed delta is ~0 in that case).
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const settledActive = strip.querySelector('.category-carousel-slide--active');
+    if (!settledActive) return;
+    const stripRect2 = strip.getBoundingClientRect();
+    const activeRect2 = settledActive.getBoundingClientRect();
+    const residualDelta = (activeRect2.left + activeRect2.width / 2) - (stripRect2.left + stripRect2.width / 2);
+    if (Math.abs(residualDelta) > 1) {
+      const prevBehavior = strip.style.scrollBehavior;
+      strip.style.scrollBehavior = 'auto';
+      strip.scrollLeft += residualDelta;
+      void strip.offsetWidth;
+      strip.style.scrollBehavior = prevBehavior;
+    }
+  }));
 }
