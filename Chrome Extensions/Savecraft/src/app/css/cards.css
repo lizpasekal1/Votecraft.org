@@ -604,8 +604,15 @@
      the strip's own edges. */
   padding: 30px 8px;
   scrollbar-width: none;
+  /* Click-and-drag panning (dashboard.js's _wireCarouselArrows) — grab/grabbing affordance so a
+     mouse user can tell this is draggable, same as the arrows already imply prev/next is. */
+  cursor: grab;
 }
 .category-carousel-strip::-webkit-scrollbar { display: none; }
+.category-carousel-strip.carousel-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
 /* Desktop-only edge fade, per direct request ("similar to the dashboard fade") — same technique
    and percentages as .dash-hero-collage's own mask (dashboard.css): a mask-image gradient stays
    pinned to the strip's own visible viewport as its content scrolls beneath it (mask-attachment's
