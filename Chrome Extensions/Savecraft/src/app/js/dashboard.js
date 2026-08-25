@@ -121,6 +121,48 @@ export function _wireCarouselArrows(card, strip) {
     animateScrollBy(dir * amount);
   };
 
+  // Desktop click-and-drag panning, per direct request ("let me drag it on my desktop") —
+  // overflow-x: auto alone only responds to wheel/trackpad scroll and dragging the (often
+  // hidden) scrollbar itself, not a plain click-and-hold the way touch users already get for
+  // free via native touch scrolling. mouseup/mousemove are wired on window, not the strip, so a
+  // drag that continues past the strip's own edges (or ends outside it entirely) still tracks
+  // and releases correctly.
+  let dragging = false;
+  let dragMoved = false;
+  let dragStartX = 0;
+  let dragStartScrollLeft = 0;
+  let prevScrollBehaviorDrag = '';
+  strip.addEventListener('mousedown', e => {
+    if (e.button !== 0) return; // primary button only
+    dragging = true;
+    dragMoved = false;
+    recenter(); // same loop-illusion safety scrollByCard already gets, before reading the start position
+    dragStartX = e.pageX;
+    dragStartScrollLeft = strip.scrollLeft;
+    prevScrollBehaviorDrag = strip.style.scrollBehavior;
+    strip.style.scrollBehavior = 'auto'; // 1:1 tracking, not smoothed/queued behind the pointer
+    strip.classList.add('carousel-dragging');
+  });
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const delta = e.pageX - dragStartX;
+    if (Math.abs(delta) > 4) dragMoved = true; // small-move threshold — a near-stationary press+release still counts as a plain click, below
+    strip.scrollLeft = dragStartScrollLeft - delta;
+  });
+  window.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    strip.classList.remove('carousel-dragging');
+    strip.style.scrollBehavior = prevScrollBehaviorDrag;
+  });
+  // Suppresses the click a real drag's mouseup would otherwise still fire on whatever slide it
+  // released over — without this, dragging past a slide and letting go on top of it also "opens"
+  // that slide the same as a genuine click would. Capture phase so this runs before the slide's
+  // own click listener (openDetailModal etc.).
+  strip.addEventListener('click', e => {
+    if (dragMoved) { e.stopPropagation(); e.preventDefault(); dragMoved = false; }
+  }, true);
+
   strip.scrollLeft = copyWidth(); // start centered in the middle copy
   // .dash-carousel-next was removed from the Dashboard's own two carousels (per direct request —
   // see their markup below), but this function is shared with Shared Saves/Embed Builder/Curated
