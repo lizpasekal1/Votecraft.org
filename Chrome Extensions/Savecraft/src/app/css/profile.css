@@ -501,6 +501,12 @@
   flex-shrink: 0;
   white-space: nowrap;
 }
+/* .profile-update-btn-icon hidden by default (desktop keeps the plain "Update" text button) —
+   misc.css's mobile media query swaps this in, per direct request ("in mobile make the update
+   button just be a pencil icon in a purple square. this way the email field can be longer."). */
+.profile-update-btn-icon {
+  display: none;
+}
 /* Clear Cache + Download, per direct request ("make the clear cache and download buttons the
    same width") — min-width fits "Clear Cache" (the longer of the two labels), Download's own
    shorter text just centers within the same box via .btn-cancel/.btn-primary's existing
