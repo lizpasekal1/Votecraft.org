@@ -419,19 +419,58 @@
   line-height: 1.5;
 }
 
-/* --- Account Details --- */
-/* Same width as one column of .profile-widget-grid above, per direct request ("make the account
-   details the same width as the other half width widgets on the page") — matches that grid's own
-   column math directly (repeat(2, 1fr), 16px gap: each column is (100% - 16px) / 2) rather than
-   actually joining that grid or a new flex row. The earlier attempt at sharing a row with VC
-   Connector never rendered correctly live across three separate fix attempts, cause still
-   unexplained even after a live DevTools inspection — sizing the card alone, still a plain
-   standalone block, sidesteps that failure mode entirely (no new container, nothing else
-   involved). Left-aligned by default (a block element's own natural placement), lining up under
-   Connections, the grid's own first column. */
-.profile-card--account-details {
-  width: calc((100% - 16px) / 2);
+/* --- Settings + Account Details row --- */
+/* Per direct request ("add another half width widget to the left of the account details") —
+   Settings and Account Details now share a row, each at half width. Plain flexbox with
+   flex-basis: 0, the same pattern already used elsewhere in this codebase for "two items split a
+   row evenly" (misc.css's mobile dual sort/genre dropdown row) — Account Details had been a
+   standalone block sized via width: calc((100% - 16px) / 2) instead (a previous commit, after an
+   earlier attempt at pairing it with VC Connector in a shared row never rendered correctly live
+   across three separate fix attempts, cause still unexplained even after a live DevTools
+   inspection) — that calc() width is gone now that it's back in a real row; flex-basis: 0 does
+   the same 50/50 job. */
+.profile-bottom-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
 }
+.profile-bottom-row > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* --- Settings --- */
+/* "Storage" sub-heading inside the card, per a live reference screenshot (Spotify's own
+   Settings > Storage section) — smaller/lighter than .profile-card-title (the card's own
+   "Settings" heading above it), same relationship a real settings page's section headers have to
+   the page title. */
+.profile-settings-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+.profile-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.profile-settings-row-text {
+  min-width: 0;
+}
+.profile-settings-row-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.profile-settings-row-value {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+/* --- Account Details --- */
 .profile-card--account-details .form-group:first-of-type {
   margin-top: 14px;
 }

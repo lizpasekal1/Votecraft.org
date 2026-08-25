@@ -2,7 +2,7 @@
 
 import { state, MUSIC_ALL_LABEL, PRIMARY_FOLDER_ID } from './state.js';
 import {
-  loadAll, loadLocalCache, initCuratedItems, initDashboardDemoConfig, persistSort, persistTheme, persistSidebarCollapsed,
+  loadAll, loadLocalCache, LOCAL_CACHE_KEYS, initCuratedItems, initDashboardDemoConfig, persistSort, persistTheme, persistSidebarCollapsed,
   persistLastfmUsername, disconnectLastfm, persistSteamId, disconnectSteam,
   runInitialSync,
 } from './storage.js';
@@ -657,17 +657,11 @@ async function init() {
   await initCuratedItems();
   await initDashboardDemoConfig();
 
-  await loadLocalCache('savecraft_curated_img', 'curatedImgCache');
-  await loadLocalCache('savecraft_curated_album_meta', 'curatedAlbumMetaCache');
-  await loadLocalCache('savecraft_album_tracklist', 'albumTrackListCache');
-  await loadLocalCache('savecraft_album_art_cache', 'albumArtCache');
-  await loadLocalCache('savecraft_artist_website_cache', 'artistWebsiteCache');
-  await loadLocalCache('savecraft_artist_bio_cache_v2', 'artistBioCache');
-  await loadLocalCache('savecraft_artist_genre_cache', 'artistGenreCache');
-  await loadLocalCache('savecraft_item_wiki_cache', 'itemWikiCache');
-  await loadLocalCache('savecraft_creator_cache', 'creatorCache');
-  await loadLocalCache('savecraft_lastfm_cache', 'lastfmCache');
-  await loadLocalCache('savecraft_steam_cache', 'steamCache');
+  // Per-cache list now shared with Profile > Settings' Storage row (storage.js's
+  // LOCAL_CACHE_KEYS, profile.js) rather than this same 11-line block being the only place it
+  // existed — that widget needs the identical storageKey/stateProp pairs to compute a total size
+  // and clear them all.
+  for (const { storageKey, stateProp } of LOCAL_CACHE_KEYS) await loadLocalCache(storageKey, stateProp);
 
   document.getElementById('btn-sidebar-collapse').addEventListener('click', toggleSidebarCollapsed);
 
