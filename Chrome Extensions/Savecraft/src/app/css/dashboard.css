@@ -309,6 +309,9 @@
   color: var(--text-secondary);
   border-radius: 50%;
   font-weight: 600;
+  /* Per direct request ("bring the circle and count number up 3px"). */
+  position: relative;
+  top: -3px;
 }
 
 .dash-kmini-col-cards { display: flex; flex-direction: column; gap: 6px; }
