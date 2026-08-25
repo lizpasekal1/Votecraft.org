@@ -1123,11 +1123,14 @@ export function renderProfilePage() {
   container.innerHTML = `
     <div class="profile-page">
       ${buildAccountSection(user)}
+      <!-- Per direct request ("put the my notes and saved list widgets at the top") — My Notes +
+           Saved Lists moved to the front of the grid (row 1), Connections/Interests pushed down
+           to row 2. -->
       <div class="profile-widget-grid">
-        ${buildConnectionsSection()}
-        ${buildInterestsSection()}
         ${buildMyNotesSection()}
         ${buildSavedListsSection()}
+        ${buildConnectionsSection()}
+        ${buildInterestsSection()}
         ${buildSharedListsSection()}
         ${buildVotecraftConnectionSection()}
       </div>
