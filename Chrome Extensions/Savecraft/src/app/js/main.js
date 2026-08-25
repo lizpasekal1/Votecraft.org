@@ -282,6 +282,31 @@ function showAuthError(message) {
   el.style.display = 'block';
 }
 
+// Surfaces a cloud-sync failure directly on the page instead of console-only (console.warn is
+// hard to reach on a phone with no attached dev machine) — per live investigation of a real,
+// still-unresolved cross-device sync bug where a device silently never receives cloud data (new
+// items, a display name set elsewhere, ...) with genuinely nothing else to go on to diagnose it.
+// Dismissible, not auto-hiding — this is meant to be read and relayed, not glanced past.
+function showSyncErrorBanner(message) {
+  let el = document.getElementById('sync-error-banner');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'sync-error-banner';
+    el.style.cssText = 'position:fixed; top:0; left:0; right:0; z-index:9999; background:#B91C1C; color:#fff; font-size:13px; padding:10px 16px; display:flex; align-items:center; gap:12px; justify-content:center; flex-wrap:wrap;';
+    document.body.appendChild(el);
+  }
+  el.innerHTML = '';
+  const text = document.createElement('span');
+  text.textContent = `Sync error: ${message}`;
+  const dismiss = document.createElement('button');
+  dismiss.type = 'button';
+  dismiss.textContent = 'Dismiss';
+  dismiss.style.cssText = 'background:none; border:1px solid #fff; color:#fff; border-radius:6px; padding:2px 10px; cursor:pointer; font-size:12px;';
+  dismiss.addEventListener('click', () => el.remove());
+  el.appendChild(text);
+  el.appendChild(dismiss);
+}
+
 function applyAuthUI(user) {
   const label = document.getElementById('profile-label');
   if (label) label.textContent = user ? user.email : 'Sign in';
@@ -327,6 +352,11 @@ async function handleSignIn() {
     closeAuthModal();
     renderSidebar();
     renderGrid();
+    // Sign-in itself succeeded, but the cloud data pull that normally follows it didn't — per live
+    // investigation, this is exactly what makes a device look "signed in" while still showing
+    // stale/missing data (a name set elsewhere, items saved on another device, ...) with no visible
+    // clue why. Surfaced directly on the page since a console.warn is hard to reach on a phone.
+    if (result.syncError) showSyncErrorBanner(result.syncError);
   } else {
     showAuthError(result.error);
   }
@@ -374,6 +404,7 @@ async function handleConfirmRobotCheck() {
     // updating on the next unrelated navigation.
     renderSidebar();
     renderGrid();
+    if (result.syncError) showSyncErrorBanner(result.syncError);
   } else if (result.code === 'EMAIL_EXISTS') {
     // Back to the normal create-account fields (still holding whatever was typed) rather than
     // leaving the checkbox step up with no way out, per request — Back to sign in is what's
@@ -598,7 +629,10 @@ async function init() {
   // error) just keeps rendering whatever local snapshot it already had, with zero trace anywhere
   // that anything went wrong — reported live: cross-device edits/new items missing on one device,
   // persisting even after a real sign-out/sign-in, with nothing to go on to diagnose why.
-  if (getCurrentUser()) await runInitialSync(getCurrentUser().uid).catch(err => console.warn('[SaveCraft] Initial sync failed:', err));
+  if (getCurrentUser()) await runInitialSync(getCurrentUser().uid).catch(err => {
+    console.warn('[SaveCraft] Initial sync failed:', err);
+    showSyncErrorBanner(err?.message || String(err));
+  });
   await initCuratedItems();
   await initDashboardDemoConfig();
 
