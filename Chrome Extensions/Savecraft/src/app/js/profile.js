@@ -1011,7 +1011,6 @@ export function renderProfilePage() {
   container.innerHTML = `
     <div class="profile-page">
       ${buildAccountSection(user)}
-      ${buildAccountDetailsSection(user)}
       <div class="profile-widget-grid">
         ${buildConnectionsSection()}
         ${buildInterestsSection()}
@@ -1020,6 +1019,11 @@ export function renderProfilePage() {
         ${buildSharedListsSection()}
         ${buildVotecraftConnectionSection()}
       </div>
+      <!-- Per direct request ("put the whole account details below the other widgets") — moved
+           from right after the top Account card to here, below .profile-widget-grid. Stays
+           full-width, same as every other section on this page — no side-by-side pairing this
+           time (that half-width row never rendered correctly live, reverted entirely). -->
+      ${buildAccountDetailsSection(user)}
       <button class="btn-cancel profile-manage-account-mobile" id="profile-manage-account-mobile">Manage account</button>
       ${buildLegalLinksRow('profile-legal-links-mobile')}
     </div>`;
