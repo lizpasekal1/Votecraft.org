@@ -594,6 +594,7 @@ export async function loadAll() {
       state.fullName = data.savecraft_full_name || null;
       state.recoveryEmail = data.savecraft_recovery_email || null;
       state.timeZone = data.savecraft_time_zone || null;
+      state.lastSyncAt = data.savecraft_last_sync_at || null;
       if (data.savecraft_view?.startsWith('author:')) {
         const rest = data.savecraft_view.slice(7);
         const colonIdx = rest.indexOf(':');
@@ -1571,6 +1572,12 @@ export async function runInitialSync(uid) {
   await _mergeCollection(uid, idToken, 'folders', 'folder_', state.folders);
   await _mergeCollection(uid, idToken, 'authors', 'author_', state.authors);
   await _syncAdminKanbanCards(idToken);
+
+  // Reaching here means every step above completed without throwing — Profile > Settings' "Last
+  // synced" row (profile.js) reads this back via state.lastSyncAt. Local-only (storageSync, not
+  // Firestore) — a per-device fact, not shared user data.
+  state.lastSyncAt = Date.now();
+  storageSync.set({ savecraft_last_sync_at: state.lastSyncAt });
 }
 
 // Admin Kanban isn't per-device personal data like items/folders/authors above (_mergeCollection's
