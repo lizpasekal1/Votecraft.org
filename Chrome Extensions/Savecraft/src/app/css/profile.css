@@ -420,6 +420,18 @@
 }
 
 /* --- Account Details --- */
+/* Same width as one column of .profile-widget-grid above, per direct request ("make the account
+   details the same width as the other half width widgets on the page") — matches that grid's own
+   column math directly (repeat(2, 1fr), 16px gap: each column is (100% - 16px) / 2) rather than
+   actually joining that grid or a new flex row. The earlier attempt at sharing a row with VC
+   Connector never rendered correctly live across three separate fix attempts, cause still
+   unexplained even after a live DevTools inspection — sizing the card alone, still a plain
+   standalone block, sidesteps that failure mode entirely (no new container, nothing else
+   involved). Left-aligned by default (a block element's own natural placement), lining up under
+   Connections, the grid's own first column. */
+.profile-card--account-details {
+  width: calc((100% - 16px) / 2);
+}
 .profile-card--account-details .form-group:first-of-type {
   margin-top: 14px;
 }
