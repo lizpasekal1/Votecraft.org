@@ -447,6 +447,15 @@
   flex: 1;
   min-width: 0;
 }
+/* Email's "Change Email" button, sharing this row (per direct request — "put the change email
+   button on the same row as the email field"). flex-shrink: 0 so it keeps its own natural width
+   instead of the input's flex: 1 squeezing it (same guarantee .profile-reveal-btn's fixed width
+   already gets); white-space: nowrap since Account Details now runs at half the page's width
+   (profile.css), narrow enough that "Change Email" could otherwise wrap to two lines. */
+.profile-inline-field-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
 /* Press-and-hold reveal (wireAccountDetailsSection, profile.js flips the sibling input's own
    type between password/text on mousedown/touchstart vs mouseup/touchend/etc.) — this button
    itself is just the eye affordance, no click-toggle state of its own. */
