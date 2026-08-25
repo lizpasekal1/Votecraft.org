@@ -171,12 +171,15 @@ function buildAccountDetailsSection(user) {
           ${tzOptions.map(tz => `<option value="${escapeHtml(tz)}"${tz === selectedTz ? ' selected' : ''}>${escapeHtml(tz.replace(/_/g, ' '))}</option>`).join('')}
         </select>
       </div>
+      <!-- Per direct request ("put the change email button on the same row as the email field")
+           — same input+button row pattern Recovery Email already uses (.profile-masked-field-row)
+           rather than a separate row below. -->
       <div class="form-group">
         <label>Email</label>
-        <input type="email" value="${escapeHtml(user.email)}" disabled />
-      </div>
-      <div class="profile-account-details-row">
-        <button type="button" class="btn-cancel" id="profile-change-email-btn">Change Email</button>
+        <div class="profile-masked-field-row">
+          <input type="email" value="${escapeHtml(user.email)}" disabled />
+          <button type="button" class="btn-cancel profile-inline-field-btn" id="profile-change-email-btn">Change Email</button>
+        </div>
       </div>
       <div class="form-group">
         <label>Recovery Email</label>
