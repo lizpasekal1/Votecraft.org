@@ -429,10 +429,13 @@
    across three separate fix attempts, cause still unexplained even after a live DevTools
    inspection) — that calc() width is gone now that it's back in a real row; flex-basis: 0 does
    the same 50/50 job. */
+/* align-items: stretch (the flex default — no longer overridden to flex-start) per direct
+   follow-up ("the setting widget should also be the same height as account details") — both
+   cards now match the taller one's height (Account Details' own form fields), Settings' shorter
+   content just leaving empty space below its one Storage row. */
 .profile-bottom-row {
   display: flex;
   gap: 16px;
-  align-items: flex-start;
 }
 .profile-bottom-row > * {
   flex: 1 1 0;
