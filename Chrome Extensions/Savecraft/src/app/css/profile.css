@@ -415,15 +415,6 @@
   line-height: 1.5;
 }
 
-/* .profile-bottom-row (Account Details + VC Connector side by side at half width) removed —
-   REAL BUG, reverted: never rendered correctly live across three fix attempts (CSS Grid with
-   min-width: 0, then flexbox with flex-basis: 0) — Account Details kept losing its own card
-   background/title/most fields regardless of the underlying layout mechanism, still unexplained
-   after a live DevTools inspection. Per direct request ("how about just revert this page back to
-   when the account details were full width") — both cards are plain full-width stacked children
-   of .profile-page again (renderProfilePage, profile.js), same as every other section on this
-   page; no special row wrapper needed. */
-
 /* --- Account Details --- */
 .profile-card--account-details .form-group:first-of-type {
   margin-top: 14px;
