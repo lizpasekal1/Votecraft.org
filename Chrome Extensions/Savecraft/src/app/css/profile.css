@@ -429,6 +429,21 @@
   gap: 16px;
   align-items: start;
 }
+/* REAL BUG, found and fixed: .profile-card (Account Details' own wrapper) never needed
+   min-width: 0 before — it only ever sat in a plain single-column flex layout, where a wide
+   child couldn't force anything else to squeeze. Now that it's a grid item here, grid tracks
+   default to an auto minimum equal to their content's max-content size, not 0 — the Time Zone
+   <select>'s widest option text (some `America/Argentina/...`-length IANA zone name) was forcing
+   the whole column wide regardless of its own width: 100% (a percentage can't un-do the browser's
+   own automatic minimum-size floor), squeezing/overflowing VC Connector's column and visibly
+   breaking Account Details' own fields in the process — reported live: "the account details
+   widget is super messed up... it's missing a container and nearly all its fields... VC
+   Connector should still be half width." Same fix .dash-card's own min-width: 0 already applies
+   for the identical reason (dashboard.css) — .profile-card just never needed it until this row
+   put it in a grid for the first time. */
+.profile-bottom-row > * {
+  min-width: 0;
+}
 
 /* --- Account Details --- */
 .profile-card--account-details .form-group:first-of-type {
