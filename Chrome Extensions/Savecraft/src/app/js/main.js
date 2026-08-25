@@ -307,9 +307,21 @@ function showSyncErrorBanner(message) {
   el.appendChild(dismiss);
 }
 
-function applyAuthUI(user) {
+// Exported so profile.js's display-name editor (buildAccountSection/wireAccountSection) can
+// refresh this header dropdown label immediately after a save — it only rebuilds the Profile
+// page's own DOM (renderProfilePage()), which doesn't touch this separate header element, so
+// without an explicit call here the new name wouldn't show up in the dropdown until the next
+// full auth-state change (a fresh sign-in or a page reload).
+export function applyAuthUI(user) {
   const label = document.getElementById('profile-label');
-  if (label) label.textContent = user ? user.email : 'Sign in';
+  // Per direct request ("make the profile drop down display my profile name, not my email —
+  // this should say [the display name] if i am signed in") — state.displayName is the same
+  // editable name the Profile page's pencil-on-hover field and the Dashboard greeting already
+  // use (profile.js), so this just reads that one existing source of truth instead of a second,
+  // separate name field. Falls back to the account email when no display name has been set yet
+  // (new account, never edited) — same fallback the Dashboard greeting and the name field's own
+  // placeholder already use, not a blank label.
+  if (label) label.textContent = user ? (state.displayName || user.email) : 'Sign in';
 
   document.getElementById('auth-modal-title').textContent = user
     ? 'Your account'
