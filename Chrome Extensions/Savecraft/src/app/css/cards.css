@@ -876,7 +876,12 @@
    design, not an incidental fallback. */
 .category-carousel-slide--active + .category-carousel-slide + .category-carousel-slide,
 .category-carousel-slide:has(+ .category-carousel-slide + .category-carousel-slide--active) {
-  opacity: 0.12;
+  /* 0.12 -> 0.35 (matches the neighbor/2nd tier's own opacity above), per direct request ("make
+     the 3rd tiers the level of dimness the 2nd currently is. the 3rd looks too dim") —
+     deliberately no longer matching the base/4th+ tier's own 0.12 (this used to read as "the
+     same as the catch-all," per the comment above; that's no longer true for opacity, just the
+     scale/margin still shared with it via cards.css's desktop split further down). */
+  opacity: 0.35;
   transform: scale(0.65);
 }
 /* REAL BUG, found and fixed: this desktop size-bump used to live INSIDE the earlier
