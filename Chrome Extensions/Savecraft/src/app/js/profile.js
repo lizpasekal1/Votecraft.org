@@ -178,7 +178,7 @@ function buildAccountDetailsSection(user) {
         <label>Email</label>
         <div class="profile-masked-field-row">
           <input type="email" value="${escapeHtml(user.email)}" disabled />
-          <button type="button" class="btn-cancel profile-inline-field-btn" id="profile-change-email-btn">Update</button>
+          <button type="button" class="btn-primary profile-inline-field-btn" id="profile-change-email-btn">Update</button>
         </div>
       </div>
       <div class="form-group">
