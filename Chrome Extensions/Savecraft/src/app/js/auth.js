@@ -19,6 +19,7 @@ const _SIGNIN_URL = `https://identitytoolkit.googleapis.com/v1/accounts:signInWi
 const _SEND_OOB_CODE_URL = `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${_FIREBASE_API_KEY}`;
 const _LOOKUP_URL = `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${_FIREBASE_API_KEY}`;
 const _DELETE_ACCOUNT_URL = `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${_FIREBASE_API_KEY}`;
+const _UPDATE_URL = `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${_FIREBASE_API_KEY}`;
 const _REFRESH_URL = `https://securetoken.googleapis.com/v1/token?key=${_FIREBASE_API_KEY}`;
 
 const _ERROR_MESSAGES = {
@@ -210,6 +211,39 @@ export async function sendPasswordReset(email) {
     if (data.error && data.error.message !== 'EMAIL_NOT_FOUND') {
       return { ok: false, error: _friendlyError(data.error.message) };
     }
+    return { ok: true };
+  } catch {
+    return { ok: false, error: 'Could not reach the server. Check your connection and try again.' };
+  }
+}
+
+// Profile > Account Details' "Change Email" button. Firebase's accounts:update endpoint changes
+// the sign-in email in place and returns a fresh idToken/refreshToken pair (the email itself is
+// baked into the token) — persisted the same way sign-in does. Also fires a fresh verification
+// email for the new address, matching signUp's own first-send behavior: changing the address
+// effectively un-verifies the account until it's confirmed again.
+export async function changeEmail(newEmail) {
+  const idToken = await getValidIdToken();
+  if (!idToken) return { ok: false, error: 'Not signed in.' };
+  try {
+    const resp = await fetch(_UPDATE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken, email: newEmail, returnSecureToken: true }),
+    });
+    const data = await resp.json();
+    if (data.error) return { ok: false, error: _friendlyError(data.error.message) };
+    const auth = {
+      uid: data.localId,
+      email: data.email,
+      idToken: data.idToken,
+      refreshToken: data.refreshToken,
+      idTokenExpiresAt: Date.now() + Number(data.expiresIn) * 1000,
+      emailVerified: false,
+    };
+    await _persistAuth(auth);
+    _notify();
+    _sendVerificationEmail(auth.idToken).catch(err => console.warn('[SaveCraft] Could not send verification email:', err));
     return { ok: true };
   } catch {
     return { ok: false, error: 'Could not reach the server. Check your connection and try again.' };

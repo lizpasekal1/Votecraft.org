@@ -415,6 +415,45 @@
   line-height: 1.5;
 }
 
+/* --- Account Details --- */
+.profile-card--account-details .form-group:first-of-type {
+  margin-top: 14px;
+}
+.profile-account-details-row {
+  margin-bottom: 18px;
+}
+.profile-masked-field-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.profile-masked-field-row input {
+  flex: 1;
+  min-width: 0;
+}
+/* Press-and-hold reveal (wireAccountDetailsSection, profile.js flips the sibling input's own
+   type between password/text on mousedown/touchstart vs mouseup/touchend/etc.) — this button
+   itself is just the eye affordance, no click-toggle state of its own. */
+.profile-reveal-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  touch-action: none;
+}
+.profile-reveal-btn:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
 /* --- Connections --- */
 .profile-connections-list {
   display: flex;
