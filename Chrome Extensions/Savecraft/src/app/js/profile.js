@@ -171,12 +171,19 @@ function buildAccountDetailsSection(user) {
           ${tzOptions.map(tz => `<option value="${escapeHtml(tz)}"${tz === selectedTz ? ' selected' : ''}>${escapeHtml(tz.replace(/_/g, ' '))}</option>`).join('')}
         </select>
       </div>
+      <!-- Per direct request ("remove the change email button and instead add an edit button
+           inside the email field") — the standalone "Change Email" button below is gone; this
+           pencil icon (same SVG/affordance as the top Account card's own name-edit button,
+           .profile-name-edit-btn) sits inside the email input itself instead, wired to the exact
+           same changeEmail() flow (wireAccountDetailsSection below). */
       <div class="form-group">
         <label>Email</label>
-        <input type="email" value="${escapeHtml(user.email)}" disabled />
-      </div>
-      <div class="profile-account-details-row">
-        <button type="button" class="btn-cancel" id="profile-change-email-btn">Change Email</button>
+        <div class="profile-inline-edit-field-row">
+          <input type="email" value="${escapeHtml(user.email)}" disabled />
+          <button type="button" class="profile-inline-edit-btn" id="profile-change-email-btn" title="Change email" aria-label="Change email">
+            <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg>
+          </button>
+        </div>
       </div>
       <div class="form-group">
         <label>Recovery Email</label>
