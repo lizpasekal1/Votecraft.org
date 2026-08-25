@@ -818,36 +818,38 @@ export function renderCard(item) {
     <div class="card" data-id="${item.id}">
       ${imageSection}
       <div class="card-body">
-        ${(() => {
-          const aName = item.author || (item.curated && CURATED_NOTES_CATEGORIES.includes(item.category) ? item.notes : null);
-          // When the name comes from the curated `.notes` fallback (no item.author), the profile
-          // page to link to is 'Musician' for a Music Album (the one category whose
-          // curated-notes creator isn't its own category) and item.category for everything else.
-          const aCat = item.author ? item.category : (item.category === 'Music Album' ? 'Musician' : item.category);
-          if (!aName) return '';
-          // A co-directed movie shows the lead director's name plus "…" to indicate collaborators
-          // — display-only, never part of the name used to link to/match that director's page.
-          const aDisplay = escapeHtml(aName) + (item.authorHasMore ? ' …' : '');
-          if ((item.category === 'Music Album' && isMusicAlbumsSectionView()) || isOwnAuthorPageView(aName)) {
-            return `<div class="card-author-name">${aDisplay}</div>`;
+        <div class="card-text-block">
+          ${(() => {
+            const aName = item.author || (item.curated && CURATED_NOTES_CATEGORIES.includes(item.category) ? item.notes : null);
+            // When the name comes from the curated `.notes` fallback (no item.author), the profile
+            // page to link to is 'Musician' for a Music Album (the one category whose
+            // curated-notes creator isn't its own category) and item.category for everything else.
+            const aCat = item.author ? item.category : (item.category === 'Music Album' ? 'Musician' : item.category);
+            if (!aName) return '';
+            // A co-directed movie shows the lead director's name plus "…" to indicate collaborators
+            // — display-only, never part of the name used to link to/match that director's page.
+            const aDisplay = escapeHtml(aName) + (item.authorHasMore ? ' …' : '');
+            if ((item.category === 'Music Album' && isMusicAlbumsSectionView()) || isOwnAuthorPageView(aName)) {
+              return `<div class="card-author-name">${aDisplay}</div>`;
+            }
+            return `<button class="card-author-link" data-author="${escapeHtml(aName)}" data-category="${escapeHtml(aCat)}">${aDisplay}</button>`;
+          })()}
+          ${(() => {
+            // News items don't have item.author — they're attributed via item.folderId pointing
+            // at a curated outlet folder instead (see the folder-header treatment in renderGrid()).
+            if (item.category !== 'News' || !item.folderId) return '';
+            const outletFolder = state.folders.find(f => f.id === item.folderId);
+            if (!outletFolder) return '';
+            return state.view === item.folderId
+              ? `<div class="card-author-name">${escapeHtml(outletFolder.name)}</div>`
+              : `<button class="card-author-link card-publication-link" data-folder-id="${escapeHtml(item.folderId)}">${escapeHtml(outletFolder.name)}</button>`;
+          })()}
+          ${CREATOR_CARD_CATEGORY[item.category] && !isOwnAuthorPageView(item.title)
+            ? `<button class="card-author-link card-title" data-author="${escapeHtml(item.title)}" data-category="${CREATOR_CARD_CATEGORY[item.category]}">${escapeHtml(item.title || '')}</button>`
+            : `<div class="card-title${item.category === 'Music Album' ? ' card-title--album' : ''}">${escapeHtml(item.title || '')}</div>`
           }
-          return `<button class="card-author-link" data-author="${escapeHtml(aName)}" data-category="${escapeHtml(aCat)}">${aDisplay}</button>`;
-        })()}
-        ${(() => {
-          // News items don't have item.author — they're attributed via item.folderId pointing
-          // at a curated outlet folder instead (see the folder-header treatment in renderGrid()).
-          if (item.category !== 'News' || !item.folderId) return '';
-          const outletFolder = state.folders.find(f => f.id === item.folderId);
-          if (!outletFolder) return '';
-          return state.view === item.folderId
-            ? `<div class="card-author-name">${escapeHtml(outletFolder.name)}</div>`
-            : `<button class="card-author-link card-publication-link" data-folder-id="${escapeHtml(item.folderId)}">${escapeHtml(outletFolder.name)}</button>`;
-        })()}
-        ${CREATOR_CARD_CATEGORY[item.category] && !isOwnAuthorPageView(item.title)
-          ? `<button class="card-author-link card-title" data-author="${escapeHtml(item.title)}" data-category="${CREATOR_CARD_CATEGORY[item.category]}">${escapeHtml(item.title || '')}</button>`
-          : `<div class="card-title${item.category === 'Music Album' ? ' card-title--album' : ''}">${escapeHtml(item.title || '')}</div>`
-        }
-        ${item.category === 'Music Album' && item.year ? `<div class="card-album-year">${escapeHtml(item.year)}</div>` : ''}
+          ${item.category === 'Music Album' && item.year ? `<div class="card-album-year">${escapeHtml(item.year)}</div>` : ''}
+        </div>
         <div class="card-meta">
           ${genreBadgeHtml || `<span class="card-badge badge-${catClass(item.category)}" style="margin-left:auto">${escapeHtml(badgeText)}</span>`}
         </div>
