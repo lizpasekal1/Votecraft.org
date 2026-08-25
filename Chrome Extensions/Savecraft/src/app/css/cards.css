@@ -700,28 +700,12 @@
      -50px overlap margin declared earlier in the file. This exclusion bumps specificity to
      (0,2,0), still safely losing to the neighbor-tier selector below (also (0,2,0), declared
      after this) for the 2 cards immediately beside active. */
-  /* Edge/far tier, 10% larger again per direct follow-up ("make the cards getting overlapped
-     and the cards beside them 10% larger", confirmed via screenshot against the far/small tier
-     specifically) — 0.65 -> 0.715. Margin re-derived for the smaller optical shrink this leaves
-     (170 * (1 - 0.715) / 2 ≈ 24.2px). Kept on this single catch-all rule (not also duplicated
-     onto an explicit "exactly 2 away" selector) so every far card (3rd, 4th, 5th, ...) stays
-     uniformly sized/spaced — a duplicated, drifting pair of rules here is exactly what caused
-     the earlier "gutter between 2nd/3rd doesn't match 3rd/4th" bug. */
   .category-carousel-slide:not(.category-carousel-slide--active) {
-    transform: scale(0.715);
-    margin: 0 -24px;
+    margin: 0 -24px; /* matches the 0.715 scale set later in the file — see the size-bump block after the general tier rules for why */
   }
-  /* Neighbor tier ("the cards overlapped by the center card"), also 10% larger again per the
-     same follow-up — 1.0 -> 1.1, past its own layout box for the first time (every earlier bump
-     stayed capped at the active slide's own scale(1)); the cap was dropped here since the user
-     kept asking for more after each previous ceiling, treating that as intentional rather than
-     re-imposing a limit unprompted. Margin flips positive at this scale — the painted card now
-     overflows its 170px layout box by (170 * (1.1 - 1) / 2) ≈ 8.5px per side, so neighboring
-     cards need to be pushed away (not pulled closer) to keep the same true gutter. */
   .category-carousel-slide--active + .category-carousel-slide,
   .category-carousel-slide:has(+ .category-carousel-slide--active) {
-    transform: scale(1.1);
-    margin: 0 9px;
+    margin: 0 9px; /* matches the 1.1 scale set later in the file — see the size-bump block after the general tier rules for why */
   }
 }
 /* A <button> now (categoryCarousel.js — clicking opens the item's real detail modal, genuine
@@ -884,6 +868,33 @@
 .category-carousel-slide:has(+ .category-carousel-slide + .category-carousel-slide--active) {
   opacity: 0.12;
   transform: scale(0.65);
+}
+/* REAL BUG, found and fixed: this desktop size-bump used to live INSIDE the earlier
+   @media (min-width: 769px) block (the one with the edge fade/gap), which is positioned BEFORE
+   the general (non-media) tier rules just above — for equal-specificity selectors, CSS favors
+   whichever rule is LATER in the file regardless of media-query nesting, so those later general
+   rules were silently winning and overriding these scale values right back down, while the
+   margin changes in that same earlier block (which the general rules never touch) applied fine.
+   Reported live: "i don't see the change" — this is what that "still doesn't show up" report
+   actually was. Moved down here, after the general rules, so it wins reliably, matching this
+   file's own established convention (see the mobile 3-size-tier block right below, whose own
+   comment already documents the exact same "placed after the base rules... so this wins" idea).
+   Per direct follow-up ("make the cards getting overlapped and the cards beside them 10%
+   larger", confirmed via screenshot — "the center card is the 1rst card... the overlapping
+   cards are the 2nd", i.e. the neighbor tier is #2 and this far tier is #3+) — 0.65 -> 0.715 far
+   tier, 1.0 -> 1.1 neighbor tier (past its own layout box for the first time; every earlier bump
+   stayed capped at the active slide's own scale(1), dropped here since the user kept asking for
+   more after each previous ceiling). Margins (set in the earlier block, kept in sync here) flip
+   positive for the neighbor tier at this scale — the painted card now overflows its 170px
+   layout box, so neighboring cards need to be pushed away instead of pulled closer. */
+@media (min-width: 769px) {
+  .category-carousel-slide:not(.category-carousel-slide--active) {
+    transform: scale(0.715);
+  }
+  .category-carousel-slide--active + .category-carousel-slide,
+  .category-carousel-slide:has(+ .category-carousel-slide--active) {
+    transform: scale(1.1);
+  }
 }
 /* Smaller on mobile, per direct follow-up ("reduce the large images size in the carousel in
    mobile") — the desktop sizes (170px resting / 240px active) left little headroom on a phone.
