@@ -150,6 +150,40 @@ async function _firestoreListCollection(path, idToken) {
   return allDocs.map(doc => _fromFirestoreFields(doc.fields));
 }
 
+// Incremental-sync counterpart to _firestoreListCollection above — returns only docs whose
+// `updatedAt` field (the same client-set ISO8601 timestamp _firestoreUpsert already writes on
+// every save) is strictly after `sinceIso`, via Firestore's :runQuery structured-query endpoint,
+// instead of reading the whole subcollection every time. `parentPath` is the document the
+// subcollection hangs off of (e.g. `savecraft_users/{uid}`), matching :runQuery's own convention
+// of resolving `from.collectionId` as an immediate child of whatever path it's POSTed to.
+// Firestore requires an inequality filter's field to also be the query's first orderBy — same
+// single field here, so this needs no manual composite index. See _mergeCollection's own comment
+// for the cursor/tombstone scheme this feeds into.
+async function _firestoreQueryUpdatedSince(parentPath, collectionId, idToken, sinceIso) {
+  const url = `https://firestore.googleapis.com/v1/projects/${_FIREBASE_PROJECT}/databases/(default)/documents/${parentPath}:runQuery?key=${_FIREBASE_API_KEY}`;
+  const body = {
+    structuredQuery: {
+      from: [{ collectionId }],
+      where: {
+        fieldFilter: {
+          field: { fieldPath: 'updatedAt' },
+          op: 'GREATER_THAN',
+          value: { timestampValue: sinceIso },
+        },
+      },
+      orderBy: [{ field: { fieldPath: 'updatedAt' }, direction: 'ASCENDING' }],
+    },
+  };
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+    body: JSON.stringify(body),
+  });
+  const data = await resp.json();
+  if (!Array.isArray(data)) throw new Error(data?.error?.message || 'Incremental query failed');
+  return data.filter(row => row.document).map(row => _fromFirestoreFields(row.document.fields));
+}
+
 async function _loadCuratedFromFirestore() {
   const base = `https://firestore.googleapis.com/v1/projects/${_FIREBASE_PROJECT}/databases/(default)/documents/curated_items`;
   let allDocs = [];
@@ -958,7 +992,12 @@ export function persistItem(item) {
 export function removeItem(id) {
   const local = new Promise(resolve => storageSync.remove(`item_${id}`, resolve));
   const user = getCurrentUser();
-  if (user) _firestoreDelete(`savecraft_users/${user.uid}/items/${id}`).catch(_syncError);
+  // Soft delete (a tombstone doc, not _firestoreDelete) — see _mergeCollection's own comment for
+  // why: incremental sync only learns about *changed* docs, and an actually-deleted doc simply
+  // stops existing, so a "changed since X" query would never surface it to other devices at all.
+  // A tombstone still shows up as "changed" (its own updatedAt just got bumped), letting every
+  // other device apply the removal locally on its next sync — full or incremental either way.
+  if (user) _firestoreUpsert(`savecraft_users/${user.uid}/items/${id}`, { id, deleted: true }).catch(_syncError);
   return local;
 }
 
@@ -1084,7 +1123,10 @@ export function persistFolder(folder) {
 export function removeFolder(id) {
   const local = new Promise(resolve => storageSync.remove(`folder_${id}`, resolve));
   const user = getCurrentUser();
-  if (user) _firestoreDelete(`savecraft_users/${user.uid}/folders/${id}`).catch(_syncError);
+  // Soft delete — see removeItem's identical comment just above for why (tombstone, not
+  // _firestoreDelete, so incremental sync's "changed since X" query still surfaces the removal
+  // to other devices instead of the doc just silently ceasing to exist).
+  if (user) _firestoreUpsert(`savecraft_users/${user.uid}/folders/${id}`, { id, deleted: true }).catch(_syncError);
   return local;
 }
 
@@ -1280,25 +1322,58 @@ function _stripSyncMeta(doc) {
   return rest;
 }
 
-async function _mergeCollection(uid, idToken, subcollection, keyPrefix, localList) {
+// Local storage keys for the incremental-sync cursor/throttle below — kept alongside the actual
+// item_*/folder_*/author_* keys in the same storageSync area, one pair per subcollection.
+function _syncCursorKey(subcollection) {
+  return `savecraft_sync_cursor_${subcollection}`;
+}
+function _fullSyncAtKey(subcollection) {
+  return `savecraft_full_sync_at_${subcollection}`;
+}
+
+// The original full-listing merge (unchanged logic, now also handling tombstones — see below) —
+// runs on a device's very first sync (no cursor yet) and, as a safety net, at least once every
+// 24h afterward even once incremental syncs are otherwise doing the day-to-day work: it's the
+// only path that can catch a local item whose own push to Firestore silently failed and was
+// never retried (an incremental "changed since X" query structurally can't detect that — there's
+// nothing in the cloud to be "changed" for a doc that never arrived). Same 24h freshness window
+// curated data's own cache already uses elsewhere in this file, so the tradeoff is a known,
+// already-accepted one, not a new kind of staleness risk.
+async function _mergeCollectionFull(uid, idToken, subcollection, keyPrefix, localList) {
   const cloudList = await _firestoreListCollection(`savecraft_users/${uid}/${subcollection}`, idToken);
   const cloudById = new Map(cloudList.filter(d => d && d.id).map(d => [d.id, d]));
   const localById = new Map(localList.map(d => [d.id, d]));
 
   const toUploadLocal = [];
   const toWriteLocal = {};
+  const toRemoveLocal = [];
+  // Tracks the newest updatedAt seen in this listing so the incremental path (below) has a real
+  // starting point to query forward from, rather than a hand-picked "now" that could (given any
+  // clock skew) sit slightly ahead of a write that's still in flight.
+  let maxUpdatedAt = null;
+  for (const doc of cloudList) {
+    if (doc.updatedAt && (!maxUpdatedAt || doc.updatedAt > maxUpdatedAt)) maxUpdatedAt = doc.updatedAt;
+  }
 
   for (const [id, localDoc] of localById) {
     const cloudDoc = cloudById.get(id);
     if (!cloudDoc) {
       toUploadLocal.push(localDoc);
+    } else if (cloudDoc.deleted) {
+      // REAL BUG, found and fixed as a side effect of adding tombstones: before these existed,
+      // "local has it, cloud doesn't" (the branch above) was the ONLY way this function reacted
+      // to a missing cloud doc — meaning a device that deleted something and a device that still
+      // had a stale local copy would, on that second device's next sync, silently re-upload the
+      // "deleted" item and undo the deletion everywhere. A tombstone is a cloud doc that DOES
+      // exist (with deleted: true), so it now hits this branch and gets removed locally instead.
+      toRemoveLocal.push(`${keyPrefix}${id}`);
     } else {
       // Present in both — cloud wins deterministically on this first merge (see file header).
       toWriteLocal[`${keyPrefix}${id}`] = _stripSyncMeta(cloudDoc);
     }
   }
   for (const [id, cloudDoc] of cloudById) {
-    if (!localById.has(id)) toWriteLocal[`${keyPrefix}${id}`] = _stripSyncMeta(cloudDoc);
+    if (!localById.has(id) && !cloudDoc.deleted) toWriteLocal[`${keyPrefix}${id}`] = _stripSyncMeta(cloudDoc);
   }
 
   for (const doc of toUploadLocal) {
@@ -1308,6 +1383,65 @@ async function _mergeCollection(uid, idToken, subcollection, keyPrefix, localLis
     // Fires the extension's existing chrome.storage.onChanged listener (main.js), which already
     // live-patches state.items/folders/authors and re-renders — no new render-wiring needed here.
     await new Promise(resolve => storageSync.set(toWriteLocal, resolve));
+  }
+  if (toRemoveLocal.length) {
+    await new Promise(resolve => storageSync.remove(toRemoveLocal, resolve));
+  }
+  await new Promise(resolve => storageSync.set({
+    [_syncCursorKey(subcollection)]: maxUpdatedAt || new Date().toISOString(),
+    [_fullSyncAtKey(subcollection)]: Date.now(),
+  }, resolve));
+}
+
+// The cheap path — only asks Firestore for docs that actually changed since the last sync
+// (_firestoreQueryUpdatedSince, above) instead of re-reading the whole subcollection every
+// single page load, which was the dominant Firestore-read cost this app had (confirmed live,
+// "Sync error: Quota exceeded" hit twice in one day of testing). A tombstone (deleted: true)
+// removes the doc locally the same way _mergeCollectionFull does; anything else is written down
+// same as before, cloud winning on whatever's newer. No-ops entirely (not even a cursor write)
+// when nothing changed — the single cheapest possible sync.
+async function _mergeCollectionIncremental(uid, idToken, subcollection, keyPrefix, sinceIso) {
+  const changed = await _firestoreQueryUpdatedSince(`savecraft_users/${uid}`, subcollection, idToken, sinceIso);
+  if (!changed.length) return;
+
+  const toWriteLocal = {};
+  const toRemoveLocal = [];
+  let maxUpdatedAt = sinceIso;
+  for (const doc of changed) {
+    if (!doc || !doc.id) continue;
+    if (doc.updatedAt && doc.updatedAt > maxUpdatedAt) maxUpdatedAt = doc.updatedAt;
+    if (doc.deleted) toRemoveLocal.push(`${keyPrefix}${doc.id}`);
+    else toWriteLocal[`${keyPrefix}${doc.id}`] = _stripSyncMeta(doc);
+  }
+  if (Object.keys(toWriteLocal).length) {
+    await new Promise(resolve => storageSync.set(toWriteLocal, resolve));
+  }
+  if (toRemoveLocal.length) {
+    await new Promise(resolve => storageSync.remove(toRemoveLocal, resolve));
+  }
+  await new Promise(resolve => storageSync.set({ [_syncCursorKey(subcollection)]: maxUpdatedAt }, resolve));
+}
+
+// Dispatches to whichever of the two paths above is appropriate — see each one's own comment
+// for what it does and why. Per direct request ("can some data be cached? to save this loading
+// fee" -> "real incremental sync") — this is what actually cuts the dominant Firestore read cost
+// (a full collection list on every single page load, regardless of whether anything changed)
+// without the freshness tradeoff a blanket cache would have reintroduced. This deliberately does
+// NOT cache stale data the way curated data's own 24h cache does — every sync (full or
+// incremental) still reflects the true current cloud state; it just avoids re-reading data that
+// didn't change.
+async function _mergeCollection(uid, idToken, subcollection, keyPrefix, localList) {
+  const local = await new Promise(resolve => storageSync.get({
+    [_syncCursorKey(subcollection)]: null,
+    [_fullSyncAtKey(subcollection)]: 0,
+  }, resolve));
+  const cursor = local[_syncCursorKey(subcollection)];
+  const lastFullSync = local[_fullSyncAtKey(subcollection)];
+  const needsFull = !cursor || (Date.now() - lastFullSync > 24 * 60 * 60 * 1000);
+  if (needsFull) {
+    await _mergeCollectionFull(uid, idToken, subcollection, keyPrefix, localList);
+  } else {
+    await _mergeCollectionIncremental(uid, idToken, subcollection, keyPrefix, cursor);
   }
 }
 
