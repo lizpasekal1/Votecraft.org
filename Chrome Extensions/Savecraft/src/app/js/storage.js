@@ -1193,6 +1193,24 @@ export function getLocalCacheSizeBytes() {
   }, 0);
 }
 
+// Profile > Settings' Storage row (profile.js) — approximates how much of a signed-in user's own
+// data is actually stored in Firestore, per direct request ("can the storage show how much data
+// the user is storing on their account within the firestore"). state.items/folders/authors are
+// the three real per-user subcollections runInitialSync()/_mergeCollection() above keep synced
+// with Firestore — already loaded locally as that sync's own mirror, so this reads directly from
+// `state` rather than any new Firestore call (this session already hit the Firestore free-tier
+// daily read quota twice from heavy testing — an extra read here on every Profile page view would
+// only make that worse, and state is already accurate). The much smaller savecraft_users/{uid}
+// settings doc (sort, theme, displayName, etc. — see runInitialSync's own field list) is left out
+// of this total; items/folders/authors are what actually make up a user's real "data," size-wise.
+export function getFirestoreDataSizeBytes() {
+  try {
+    return JSON.stringify(state.items).length + JSON.stringify(state.folders).length + JSON.stringify(state.authors).length;
+  } catch {
+    return 0;
+  }
+}
+
 // Profile > Settings' "Clear Cache" button (profile.js) — removes every local cache from both
 // storageLocal and `state` in one pass, same key list loadLocalCache() populated at startup.
 export function clearLocalCaches() {
