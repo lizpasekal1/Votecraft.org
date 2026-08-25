@@ -523,6 +523,11 @@ export const state = {
                         // — the REST API used here has no secondary-recovery-email concept).
   timeZone: null,       // Profile > Account Details' Time Zone field (IANA zone string, e.g.
                          // "America/New_York") — same persist pattern.
+  lastSyncAt: null, // Wall-clock ms timestamp of the last time runInitialSync() completed
+                     // successfully (storage.js) — Profile > Settings' Storage row (profile.js)
+                     // shows this as "Last synced: X ago". Local-only (savecraft_last_sync_at,
+                     // storageSync) — deliberately not written to Firestore itself, since it's a
+                     // per-device fact ("when did THIS device last sync"), not shared user data.
   steamCache: {},  // { [normalizedInput]: { games: [...]|null, fetchedAt } } — auto-fetched via Steam Web API
   dashboardDemoConfig: null, // { queueKanban: {title,category,imageUrl}|null, recentSaves:
                               // {cards:[...]}|null, curatedLists: {genres:[...]}|null } — admin-

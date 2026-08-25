@@ -169,24 +169,38 @@ function _formatCacheSize(bytes) {
 // (LOCAL_CACHE_KEYS, storage.js), already genuinely clearable rather than a decorative mockup.
 function buildSettingsSection(user) {
   const sizeLabel = _formatCacheSize(getLocalCacheSizeBytes());
-  // Per direct follow-up ("can the storage show how much data the user is storing on their
-  // account within the firestore") — only meaningful once actually signed in (Firestore data
-  // belongs to a real account; a signed-out visitor has none). No action button here, just an
-  // informational row, unlike Cache's — there's nothing to "clear" that wouldn't just delete the
-  // user's own real saved items/folders/authors, a much bigger, more consequential action than
-  // this row is meant to trigger (Delete Account, the auth modal, already covers that).
+  // Per direct follow-ups ("is there anything else that would be useful to add" -> "add 1 and 2"
+  // — Last Synced + Download my data). Both only meaningful once actually signed in (Firestore
+  // data, and the sync that pulls it down, both belong to a real account; a signed-out visitor
+  // has neither). Download pairs with Account Data's own row (the same items/folders/authors
+  // it's sizing) rather than a separate row of its own — one "here's your account data, and here's
+  // how to get a copy" unit. Account Data has no "clear" action the way Cache does — that would
+  // just be deleting the user's own real saved data, a much bigger, more consequential action
+  // than this row is meant to trigger (Delete Account, the auth modal, already covers that).
   const accountDataRow = user ? `
       <div class="profile-settings-row">
         <div class="profile-settings-row-text">
           <div class="profile-settings-row-label">Account Data: <span class="profile-settings-row-value">${_formatCacheSize(getFirestoreDataSizeBytes())}</span></div>
           <p class="profile-card-copy">Items, folders, and creators saved to your account.</p>
         </div>
+        <button type="button" class="btn-cancel profile-inline-field-btn" id="profile-download-data-btn">Download</button>
+      </div>` : '';
+  // state.lastSyncAt is only ever set by a successful runInitialSync() (storage.js) — null until
+  // the first one completes (a brand-new sign-in mid-sync, or a sync that's failed every time so
+  // far — the sync-error banner already covers that case elsewhere) — no row at all rather than a
+  // misleading "never" or a broken _timeAgo(null) call.
+  const lastSyncedRow = (user && state.lastSyncAt) ? `
+      <div class="profile-settings-row">
+        <div class="profile-settings-row-text">
+          <div class="profile-settings-row-label">Last Synced: <span class="profile-settings-row-value">${_timeAgo(state.lastSyncAt)}</span></div>
+          <p class="profile-card-copy">When this device last synced with your account.</p>
+        </div>
       </div>` : '';
   return `
     <div class="dash-card profile-card--settings">
       <div class="profile-card-header"><span class="profile-card-title">Settings</span></div>
-      <div class="profile-settings-section-title">Storage</div>
       ${accountDataRow}
+      ${lastSyncedRow}
       <div class="profile-settings-row">
         <div class="profile-settings-row-text">
           <div class="profile-settings-row-label">Cache: <span class="profile-settings-row-value">${sizeLabel}</span></div>
@@ -197,11 +211,33 @@ function buildSettingsSection(user) {
     </div>`;
 }
 
+// "Download" button (Account Data row, above) — a plain client-side JSON export, no server
+// round-trip needed since state.items/folders/authors are already the full, current local mirror
+// of the user's own Firestore data (runInitialSync, storage.js).
+function _downloadAccountDataJson() {
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    items: state.items,
+    folders: state.folders,
+    authors: state.authors,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `savecraft-data-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url); // frees the blob's memory now that the download has been handed off
+}
+
 function wireSettingsSection(container) {
   container.querySelector('#profile-clear-cache-btn')?.addEventListener('click', () => {
     clearLocalCaches();
     renderProfilePage(); // re-render so the Storage row reflects the now-empty caches immediately
   });
+  container.querySelector('#profile-download-data-btn')?.addEventListener('click', _downloadAccountDataJson);
 }
 
 function buildAccountDetailsSection(user) {

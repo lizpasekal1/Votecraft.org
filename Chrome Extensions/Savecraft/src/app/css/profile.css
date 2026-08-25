@@ -443,17 +443,9 @@
 }
 
 /* --- Settings --- */
-/* "Storage" sub-heading inside the card, per a live reference screenshot (Spotify's own
-   Settings > Storage section) — smaller/lighter than .profile-card-title (the card's own
-   "Settings" heading above it), same relationship a real settings page's section headers have to
-   the page title. */
-.profile-settings-section-title {
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-secondary);
-}
+/* .profile-settings-section-title ("Storage" sub-heading) removed per direct request ("remove
+   the header word storage") — .profile-card-title ("Settings") is the only heading this card
+   has now. */
 .profile-settings-row {
   display: flex;
   align-items: center;
