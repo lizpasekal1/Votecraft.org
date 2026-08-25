@@ -1048,15 +1048,19 @@ export function renderProfilePage() {
         ${buildSharedListsSection()}
         ${buildSponsorsPortalSection()}
       </div>
-      <!-- Per direct request ("make the 'account details' widget half width in desktop and put
-           the 'VC connector' widget to the right of it") — VC Connector moved out of the main
-           widget-grid above (Sponsors Portal takes its old spot) into its own row paired with
-           Account Details; profile.css sizes both to half width on desktop, misc.css stacks them
-           on mobile like every other Profile row. */
-      <div class="profile-bottom-row">
-        ${buildAccountDetailsSection(user)}
-        ${buildVotecraftConnectionSection()}
-      </div>
+      <!-- REAL BUG, reverted: the half-width side-by-side pairing (Account Details + VC
+           Connector sharing a row, profile-bottom-row) never rendered correctly live despite
+           three different fix attempts (min-width: 0 on a CSS Grid, then switching to flexbox
+           with flex-basis: 0) — Account Details kept losing its own card background/title/most
+           fields regardless of the underlying layout mechanism, still unexplained after a live
+           DevTools inspection. Per direct request ("how about just revert this page back to when
+           the account details were full width") — back to full-width, stacked, one after the
+           other, the last confirmed-working shape. Sponsors Portal stays in the main widget-grid
+           above (that part was rendering correctly) and Account Details keeps its own
+           signed-out/demo empty-fields state (also unrelated to the broken mechanism, still a
+           real improvement over returning '' entirely). */
+      ${buildAccountDetailsSection(user)}
+      ${buildVotecraftConnectionSection()}
       <button class="btn-cancel profile-manage-account-mobile" id="profile-manage-account-mobile">Manage account</button>
       ${buildLegalLinksRow('profile-legal-links-mobile')}
     </div>`;
