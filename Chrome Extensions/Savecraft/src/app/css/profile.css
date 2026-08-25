@@ -48,11 +48,15 @@
   opacity: 0.6;
 }
 
-/* Mobile-only duplicate (page-end, beside .profile-manage-account-mobile) — hidden by default,
-   same swap-on-mobile pattern misc.css already uses for the button itself: this one hides, the
-   page-end one shows. */
-.profile-legal-links-mobile {
-  display: none;
+/* Now the ONLY Privacy Policy · Terms of Service row on the page, on both desktop and mobile —
+   per direct request ("on desktop put the Privacy Policy · Terms of Service... below the account
+   details widget"). Used to be a mobile-only duplicate of a second copy pinned under the top
+   Account card's "Manage account" button (the mobile-only .profile-manage-account-mobile button
+   right above this one in the DOM, profile.js, is hidden on desktop — so this row sits directly
+   below Account Details there); that top copy is gone now (buildAccountSection, profile.js) —
+   this is the only one left. */
+.profile-legal-links-bottom {
+  display: flex;
   justify-content: center;
   margin-top: -4px;
 }

@@ -574,15 +574,9 @@
     width: 100%;
     margin-top: 8px;
   }
-  /* Same in-row/page-end swap as the button above, for its Privacy Policy · Terms of Service
-     row — hide the desktop card's copy (it's pinned under a button that's itself hidden here),
-     show the page-end one instead. */
-  .profile-account-actions .profile-legal-links {
-    display: none;
-  }
-  .profile-legal-links-mobile {
-    display: flex;
-  }
+  /* .profile-account-actions .profile-legal-links / .profile-legal-links-mobile's own in-row/
+     page-end swap removed — there's only one Privacy Policy · Terms of Service row now, on both
+     desktop and mobile (profile.css's .profile-legal-links-bottom), so nothing left to swap here. */
   .profile-card-title { font-size: 18px; }
   .profile-card-copy { font-size: 15px; line-height: 1.55; }
   .profile-account-email { font-size: 16px; }

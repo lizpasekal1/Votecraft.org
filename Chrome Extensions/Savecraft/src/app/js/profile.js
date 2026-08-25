@@ -76,7 +76,6 @@ function buildAccountSection(user) {
         </div>
         <div class="profile-account-actions">
           <button class="btn-cancel" id="profile-manage-account">Manage account</button>
-          ${buildLegalLinksRow()}
         </div>
       </div>
       ${verifyBanner}
@@ -1025,7 +1024,7 @@ export function renderProfilePage() {
            time (that half-width row never rendered correctly live, reverted entirely). -->
       ${buildAccountDetailsSection(user)}
       <button class="btn-cancel profile-manage-account-mobile" id="profile-manage-account-mobile">Manage account</button>
-      ${buildLegalLinksRow('profile-legal-links-mobile')}
+      ${buildLegalLinksRow('profile-legal-links-bottom')}
     </div>`;
 
   wireAccountSection(container);
