@@ -186,6 +186,7 @@ function buildSettingsSection(user) {
     <div class="dash-card profile-card--settings">
       <div class="profile-card-header"><span class="profile-card-title">Settings</span></div>
       <div class="profile-settings-section-title">Storage</div>
+      ${accountDataRow}
       <div class="profile-settings-row">
         <div class="profile-settings-row-text">
           <div class="profile-settings-row-label">Cache: <span class="profile-settings-row-value">${sizeLabel}</span></div>
@@ -193,7 +194,6 @@ function buildSettingsSection(user) {
         </div>
         <button type="button" class="btn-cancel profile-inline-field-btn" id="profile-clear-cache-btn">Clear Cache</button>
       </div>
-      ${accountDataRow}
     </div>`;
 }
 
