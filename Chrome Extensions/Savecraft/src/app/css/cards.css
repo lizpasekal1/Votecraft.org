@@ -662,9 +662,14 @@
   overflow: hidden;
   scroll-snap-align: center;
   cursor: pointer;
-  transform: scale(0.92);
-  /* 0.75 -> 0.55, per direct follow-up ("dim the other cards slightly"). */
-  opacity: 0.55;
+  /* 0.92 -> 0.65, per direct follow-up ("have them all completely zoom out... zoom and fade
+     completely to black as they zoom fade into the next slide") — a much more dramatic shrink so
+     the active slide reads as the overwhelming visual focus and everything else genuinely
+     "zooms out" rather than just sitting slightly smaller. */
+  transform: scale(0.65);
+  /* 0.75 -> 0.55 -> 0.12, per the same follow-up — against this app's dark theme, fading opacity
+     this far down reads as "fading to black" without needing an actual black overlay layer. */
+  opacity: 0.12;
   /* REAL BUG, found and fixed: width/height/margin (the slide's actual box size — 170px resting
      vs. 240px active, .category-carousel-slide--active below) weren't in this list, only
      transform/opacity/box-shadow/border-color were — so when the active slide loses that class
@@ -774,16 +779,19 @@
 /* The two slides immediately beside the active/center one get their own intermediate opacity/
    scale step, per direct request ("as the scroll happens make the two cards on the left and
    right of the center card slightly fade down and slightly zoom down") — between the active
-   slide's full opacity: 1/scale(1) and every farther-out slide's dimmer opacity: 0.55/scale(0.92)
-   (base rule, above). :has()/adjacent-sibling (no JS) so this tracks whichever slide is actually
+   slide's full opacity: 1/scale(1) and every farther-out slide's dimmer opacity/scale (base rule,
+   above). :has()/adjacent-sibling (no JS) so this tracks whichever slide is actually
    active automatically as _updateActiveSlide (categoryCarousel.js) toggles that class during
    scroll — same live-relationship idiom as the mobile-only sizing tier below, just for
    opacity/scale and not restricted to mobile. Already animates smoothly (not a snap) since
    opacity/transform are both already in .category-carousel-slide's own transition list. */
 .category-carousel-slide--active + .category-carousel-slide,
 .category-carousel-slide:has(+ .category-carousel-slide--active) {
-  opacity: 0.8;
-  transform: scale(0.97);
+  /* 0.8 -> 0.35, 0.97 -> 0.85 — pushed much further down, per direct follow-up ("have them all
+     completely zoom out... zoom and fade completely to black"), same reasoning as the base
+     rule's own steeper values just above. */
+  opacity: 0.35;
+  transform: scale(0.85);
 }
 /* The next pair out — the edge-touching slides, per direct follow-up ("then the cards to the
    left and right of those cards slightly fade down and slightly zoom down... these should zoom
@@ -793,12 +801,12 @@
    an X, followed by a Y" — the relative-selector combinator chain is what lets this skip past the
    immediate neighbor to target the one after it). These numbers happen to match
    .category-carousel-slide's own base rule already (nothing else needs this dim/small by
-   default) — written explicitly here anyway so the full 3-tier cascade (1 -> 0.97 -> 0.92 scale,
-   1 -> 0.8 -> 0.55 opacity) reads as one deliberate design, not an incidental fallback. */
+   default) — written explicitly here anyway so the full 3-tier cascade reads as one deliberate
+   design, not an incidental fallback. */
 .category-carousel-slide--active + .category-carousel-slide + .category-carousel-slide,
 .category-carousel-slide:has(+ .category-carousel-slide + .category-carousel-slide--active) {
-  opacity: 0.55;
-  transform: scale(0.92);
+  opacity: 0.12;
+  transform: scale(0.65);
 }
 /* Smaller on mobile, per direct follow-up ("reduce the large images size in the carousel in
    mobile") — the desktop sizes (170px resting / 240px active) left little headroom on a phone.
