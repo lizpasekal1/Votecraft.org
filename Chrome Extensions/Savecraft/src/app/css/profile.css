@@ -415,6 +415,21 @@
   line-height: 1.5;
 }
 
+/* Account Details + VC Connector, side by side at half width on desktop, per direct request
+   ("make the 'account details' widget half width in desktop and put the 'VC connector' widget
+   to the right of it"). align-items: start (not the grid default stretch) so each card keeps its
+   own natural content height instead of both being forced to match whichever one is taller —
+   Account Details' longer form would otherwise stretch VC Connector's card far past its own
+   content, recreating the exact "flush margin-top:auto" look its own Learn More button was
+   already moved away from (see .vc-connect-learn-more-btn's comment above). Stacked to one column
+   on mobile (misc.css), matching every other Profile row's own mobile treatment. */
+.profile-bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
 /* --- Account Details --- */
 .profile-card--account-details .form-group:first-of-type {
   margin-top: 14px;
