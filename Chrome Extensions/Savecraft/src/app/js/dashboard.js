@@ -134,6 +134,10 @@ export function _wireCarouselArrows(card, strip) {
   let prevScrollBehaviorDrag = '';
   strip.addEventListener('mousedown', e => {
     if (e.button !== 0) return; // primary button only
+    // Belt-and-suspenders alongside the CSS -webkit-user-drag: none (cards.css/dashboard.css) —
+    // stops the browser's own native image/text drag-start from ever getting a chance to hijack
+    // this gesture, regardless of which element inside the strip the press actually started on.
+    e.preventDefault();
     dragging = true;
     dragMoved = false;
     recenter(); // same loop-illusion safety scrollByCard already gets, before reading the start position
