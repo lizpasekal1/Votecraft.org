@@ -569,6 +569,11 @@
      untouched, still needed there for the actual side-by-side width split. */
   .profile-bottom-row { flex-direction: column; }
   .profile-bottom-row > * { flex: 1 1 auto; }
+  /* Per direct request ("in mobile remove the download button") — Account Data's own size/
+     description text stays, just the export action hides here. */
+  #profile-download-data-btn {
+    display: none;
+  }
   /* Text across every Profile card bumped up again here, layered on top of profile.css's own
      base-size bump — mobile was the specific complaint ("very small — especially in mobile"),
      and there's width to spare once the grid above drops to a single column. Saved Lists' folder
