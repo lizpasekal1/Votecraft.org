@@ -486,8 +486,15 @@
   scroll-snap-type: x proximity;
   padding: 4px 2px 8px;
   scrollbar-width: none;
+  /* Click-and-drag panning (dashboard.js's _wireCarouselArrows) — grab/grabbing affordance so a
+     mouse user can tell this is draggable, same as the arrows already imply prev/next is. */
+  cursor: grab;
 }
 .dash-carousel-strip::-webkit-scrollbar { display: none; }
+.dash-carousel-strip.carousel-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
 
 .dash-thumb-card {
   display: flex;
