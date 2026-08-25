@@ -636,10 +636,9 @@
   cursor: grab;
 }
 .category-carousel-strip::-webkit-scrollbar { display: none; }
-.category-carousel-strip.carousel-dragging {
-  cursor: grabbing;
-  user-select: none;
-}
+/* .category-carousel-strip.carousel-dragging's own cursor/user-select rule now lives in
+   dashboard.css, merged with .dash-carousel-strip's identical copy (/simplify pass) — both
+   carousels use the same _wireCarouselArrows drag mechanic. */
 /* Toggled briefly during initCategoryCarousel()'s first-paint centering measurement
    (categoryCarousel.js) — see its own comment for why: forces the active slide to its final
    settled size/position INSTANTLY for that one measurement, instead of the measurement catching
@@ -663,14 +662,9 @@
 .category-carousel-strip--no-transition {
   scroll-snap-type: none !important;
 }
-/* REAL BUG, found and fixed — see .dash-carousel-strip's identical rule (dashboard.css) for why:
-   native image/text drag was hijacking the click-and-drag panning gesture whenever it started
-   directly on a card's own photo/label instead of the strip's empty background. */
-.category-carousel-strip * {
-  -webkit-user-drag: none;
-  user-drag: none;
-  user-select: none;
-}
+/* .category-carousel-strip *'s own user-drag/user-select rule also now lives in dashboard.css,
+   merged with .dash-carousel-strip *'s identical copy — see that file's comment for why (native
+   image/text drag hijacking the click-and-drag panning gesture). */
 /* Desktop-only edge fade, per direct request ("similar to the dashboard fade") — same technique
    and percentages as .dash-hero-collage's own mask (dashboard.css): a mask-image gradient stays
    pinned to the strip's own visible viewport as its content scrolls beneath it (mask-attachment's
@@ -688,49 +682,6 @@
        made the change actually visible) — only the active slide overlaps its neighbors (its own
        negative margin, above); every other slide-to-slide spacing is this gap. */
     gap: 19px;
-  }
-  /* REAL BUG, found and fixed: gap only affects the LAYOUT box, not the PAINTED size after
-     transform: scale() — halving the gap above barely moved the visible gutter at all, because
-     each shrunk slide (scale(0.85) neighbor tier, scale(0.65) edge tier) still occupies its full
-     170px layout box, leaving a big chunk of that box visually empty on both sides. Reported
-     live, screenshotted: "i don't see a change in the gutters between these cards." Fixed with
-     negative margins sized to each tier's own per-side optical shrink (170px * (1 - scale) / 2),
-     pulling the PAINTED edges back to roughly the true gap value regardless of scale — desktop
-     only, since mobile's own separate tier block (below) has its own already-tuned margins for a
-     different reason (deliberate overlap, not scale-compensation).
-     REAL BUG, found and fixed: this compensation was only applied to the exact "2 away from
-     active" selector, not to .category-carousel-slide's own base rule — so it correctly fixed
-     the immediate edge card, but every card further out than that (3rd, 4th, ... position, which
-     all share the exact same scale(0.65) via the base rule alone) never got it, leaving THEIR
-     gutters just as wide as before. Reported live: "the gutter change was only applied to the
-     second card from the center... all the cards except the 3 cards in the center should have
-     this." Moved onto the base rule instead (below), so it applies to every non-active,
-     non-immediate-neighbor card uniformly — the more specific neighbor-tier selector still wins
-     its own smaller compensation for the 2 cards immediately beside active, and active's own
-     selector still wins its own deliberate -50px overlap, so neither of those is affected. */
-  /* :not(.category-carousel-slide--active), not the plain base selector — .category-carousel-
-     slide--active is its own single-class selector (0,1,0), same specificity as plain
-     .category-carousel-slide, and this rule's declared LATER in the file (inside this media
-     query) — without the :not(), it would win over (and break) the active slide's own deliberate
-     -50px overlap margin declared earlier in the file. This exclusion bumps specificity to
-     (0,2,0), still safely losing to the neighbor-tier selector below (also (0,2,0), declared
-     after this) for the 2 cards immediately beside active. */
-  /* New 4th tier, per direct follow-up ("4th cards and the rest of the cards in the carousel
-     should be a little smaller than the 3rd cards") — this catch-all rule now covers only 4th
-     position and beyond (0.68 scale), since the new explicit "exactly 2 away" selector right
-     below claims the 3rd position specifically (0.715, unchanged) via higher specificity
-     ((0,3,0) vs. this rule's (0,2,0)) regardless of source order — same reasoning as the
-     neighbor-tier split just below it. */
-  .category-carousel-slide:not(.category-carousel-slide--active) {
-    margin: 0 -27px; /* 170 * (1 - 0.68) / 2 ≈ 27.2px */
-  }
-  .category-carousel-slide--active + .category-carousel-slide + .category-carousel-slide,
-  .category-carousel-slide:has(+ .category-carousel-slide + .category-carousel-slide--active) {
-    margin: 0 -13px; /* 170 * (1 - 0.85) / 2 ≈ 12.75px — explicit scale(0.85), per direct request */
-  }
-  .category-carousel-slide--active + .category-carousel-slide,
-  .category-carousel-slide:has(+ .category-carousel-slide--active) {
-    margin: 0; /* explicit scale(1.0), per direct request — no optical overflow/shrink left to compensate for */
   }
 }
 /* A <button> now (categoryCarousel.js — clicking opens the item's real detail modal, genuine
@@ -899,46 +850,47 @@
   opacity: 0.35;
   transform: scale(0.65);
 }
-/* REAL BUG, found and fixed: this desktop size-bump used to live INSIDE the earlier
-   @media (min-width: 769px) block (the one with the edge fade/gap), which is positioned BEFORE
-   the general (non-media) tier rules just above — for equal-specificity selectors, CSS favors
-   whichever rule is LATER in the file regardless of media-query nesting, so those later general
-   rules were silently winning and overriding these scale values right back down, while the
-   margin changes in that same earlier block (which the general rules never touch) applied fine.
-   Reported live: "i don't see the change" — this is what that "still doesn't show up" report
-   actually was. Moved down here, after the general rules, so it wins reliably, matching this
-   file's own established convention (see the mobile 3-size-tier block right below, whose own
-   comment already documents the exact same "placed after the base rules... so this wins" idea).
-   Per direct follow-up ("make the cards getting overlapped and the cards beside them 10%
-   larger", confirmed via screenshot — "the center card is the 1rst card... the overlapping
-   cards are the 2nd", i.e. the neighbor tier is #2 and this far tier is #3+) — 0.65 -> 0.715 far
-   tier, 1.0 -> 1.1 neighbor tier (past its own layout box for the first time; every earlier bump
-   stayed capped at the active slide's own scale(1), dropped here since the user kept asking for
-   more after each previous ceiling). Margins (set in the earlier block, kept in sync here) flip
-   positive for the neighbor tier at this scale — the painted card now overflows its 170px
-   layout box, so neighboring cards need to be pushed away instead of pulled closer. */
+/* Desktop-only tier sizing — active/2nd(neighbor)/3rd/4th+, per many rounds of direct live
+   tuning. /simplify pass: this used to be TWO separate @media (min-width: 769px) blocks (one
+   for margin, one for transform), split purely because of a real cascade-ordering bug (a
+   same-specificity rule positioned before the general tier rules above loses to them regardless
+   of media-query nesting — reported live as "i don't see the change" when a scale edit landed in
+   the wrong block and got silently overridden back), with each tier's margin hand-computed via
+   "170 * (1 - scale) / 2" and kept in sync by hand every time its scale changed (this drifted out
+   of sync at least twice, also reported live: "the gutter change was only applied to the second
+   card"). Consolidated into one block, positioned after the general rules so it reliably wins,
+   driving both transform and margin from a single --tier-scale custom property per tier: only
+   the base (least-specific) selector needs the actual transform/margin formula, since CSS
+   applies each property from whichever rule declares it, independent of which rule "wins" as a
+   whole — a tier selector that sets only --tier-scale still gets transform/margin from the base
+   rule below, just with ITS OWN --tier-scale substituted in. Changing a tier's size is now a
+   one-line edit instead of two hand-paired numbers. */
 @media (min-width: 769px) {
-  /* 4th tier and beyond, per direct follow-up ("4th cards and the rest of the cards in the
-     carousel should be a little smaller than the 3rd cards") — this catch-all now covers only
-     4th+ (0.68); the explicit "exactly 2 away" selector right below claims the 3rd position on
-     its own, higher-specificity terms, same split as the margin block above. */
   .category-carousel-slide:not(.category-carousel-slide--active) {
-    transform: scale(0.68);
+    --tier-scale: 0.68; /* 4th position and beyond (the catch-all) */
+    transform: scale(var(--tier-scale));
+    /* 170px slide width / 2 = 85px half-width. Derives the compensating margin automatically
+       from whatever --tier-scale a given tier resolves to — positive when --tier-scale > 1 (the
+       painted card overflows its own layout box, so neighbors need to be pushed away), negative
+       when < 1 (the painted card shrinks inside its box, so neighbors need to be pulled closer)
+       — same formula either way, no separate hand-derived cases. */
+    margin: 0 calc((1 - var(--tier-scale)) * -85px);
   }
   .category-carousel-slide--active + .category-carousel-slide + .category-carousel-slide,
   .category-carousel-slide:has(+ .category-carousel-slide + .category-carousel-slide--active) {
-    transform: scale(0.85); /* explicit value, per direct request */
+    --tier-scale: 0.85; /* 3rd position */
   }
   .category-carousel-slide--active + .category-carousel-slide,
   .category-carousel-slide:has(+ .category-carousel-slide--active) {
-    transform: scale(1.0); /* explicit value, per direct request */
+    --tier-scale: 1.0; /* 2nd/neighbor position — the one overlapped by the active slide */
   }
 }
 /* Smaller on mobile, per direct follow-up ("reduce the large images size in the carousel in
    mobile") — the desktop sizes (170px resting / 240px active) left little headroom on a phone.
    Placed after the base rules above (not inside the earlier mobile block near the folder cards)
    so this — same specificity, later in source order — actually wins over them.
-   120px/170px -> 15% smaller again (102px/145px), per further direct follow-up ("make the cards
+   120px/170px -> 15% smaller again (102px/145px, later tuned to 130px for the active tier — see
+   its own more specific comment below), per further direct follow-up ("make the cards
    15% smaller in mobile"), arriving mid-carousel-heading-work so read as this carousel rather
    than the folder cards (already resized/reshaped repeatedly just prior). Active's overlap margin
    scaled down proportionally too (-30px -> -25px) so it still reads the same relative amount of
