@@ -85,31 +85,25 @@ export function _wireCarouselArrows(card, strip) {
   // Per direct request ("make the carousel animation back and forth controls smoother and a
   // little bouncier") — the native scrollBy({behavior:'smooth'}) this used to call hands the
   // whole animation off to the browser's own built-in easing, which is a flat ease-out with no
-  // overshoot and an inconsistent duration across browsers (and can't be tuned at all). A custom
-  // rAF-driven animation with an easeOutBack curve (overshoots slightly past the target, then
-  // settles back) gives the actual spring/bounce feel instead — same technique as a CSS
-  // cubic-bezier bounce, just driven manually since scrollLeft has no CSS transition support.
-  // Each call reads strip.scrollLeft fresh as its start point, so a rapid second click chains
-  // smoothly from wherever the first animation currently is rather than needing to be queued.
-  // Single shared cancellation token for whichever scroll animation currently owns the strip
-  // (arrow-click or drag-release glide, below) — without this, a second animateScrollBy() call
-  // starting before the first one finished (e.g. an arrow click during a still-settling glide)
-  // would run both rAF loops at once, each writing strip.scrollLeft independently and visibly
-  // fighting each other instead of one cleanly taking over from the other.
+  // overshoot and an inconsistent duration across browsers (and can't be tuned at all).
+  // animateScrollBy() below is a custom rAF-driven animation with an easeOutBack curve
+  // (overshoots slightly past the target, then settles back) that gives the actual spring/bounce
+  // feel instead — same technique as a CSS cubic-bezier bounce, just driven manually since
+  // scrollLeft has no CSS transition support. Shared by the arrow-click scroll AND the
+  // drag-release momentum glide further down, so every carousel motion has one consistent
+  // bouncy-but-eased personality; each call reads strip.scrollLeft fresh as its start point, so a
+  // rapid second click chains smoothly from wherever the animation currently is.
+  //
+  // activeAnimRaf/cancelActiveAnim below is the single shared cancellation token for whichever
+  // scroll animation currently owns the strip (arrow-click or drag-release glide) — without it, a
+  // second animateScrollBy() call starting before the first one finished (e.g. an arrow click
+  // during a still-settling glide) would run both rAF loops at once, each writing strip.scrollLeft
+  // independently and visibly fighting each other instead of one cleanly taking over the other.
   let activeAnimRaf = null;
   const cancelActiveAnim = () => {
     if (activeAnimRaf) { cancelAnimationFrame(activeAnimRaf); activeAnimRaf = null; }
   };
 
-  // Per direct request ("make the carousel animation back and forth controls smoother and a
-  // little bouncier") — the native scrollBy({behavior:'smooth'}) this used to call hands the
-  // whole animation off to the browser's own built-in easing, which is a flat ease-out with no
-  // overshoot and an inconsistent duration across browsers (and can't be tuned at all). A custom
-  // rAF-driven animation with an easeOutBack curve (overshoots slightly past the target, then
-  // settles back) gives the actual spring/bounce feel instead — same technique as a CSS
-  // cubic-bezier bounce, just driven manually since scrollLeft has no CSS transition support.
-  // Shared by the arrow-click scroll below AND the drag-release momentum glide further down, so
-  // every carousel motion has one consistent bouncy-but-eased personality.
   const animateScrollBy = (delta, duration = 480) => {
     cancelActiveAnim(); // takes over cleanly from whichever animation (if any) was still running
     const start = strip.scrollLeft;

@@ -494,7 +494,12 @@
   cursor: grab;
 }
 .dash-carousel-strip::-webkit-scrollbar { display: none; }
-.dash-carousel-strip.carousel-dragging {
+/* Shared with .category-carousel-strip (cards.css, the category-landing carousel) — both use the
+   same _wireCarouselArrows drag mechanic (dashboard.js) and previously carried byte-for-byte
+   identical copies of these two rules under their own selector; /simplify pass merged them into
+   one shared declaration instead of two files that could silently drift out of sync. */
+.dash-carousel-strip.carousel-dragging,
+.category-carousel-strip.carousel-dragging {
   cursor: grabbing;
   user-select: none;
 }
@@ -503,8 +508,10 @@
    triggered the browser's own native "drag this image out of the page" ghost gesture instead,
    which doesn't fire ordinary mousemove events the same way, breaking the drag entirely from
    that starting point (reported live: "i want to be able to grab any card and drag it"). Turned
-   off for every element inside the strip, not just <img>, since card text is just as grabbable. */
-.dash-carousel-strip * {
+   off for every element inside the strip, not just <img>, since card text is just as grabbable.
+   Shared with .category-carousel-strip — see the comment on the rule just above. */
+.dash-carousel-strip *,
+.category-carousel-strip * {
   -webkit-user-drag: none;
   user-drag: none;
   user-select: none;
