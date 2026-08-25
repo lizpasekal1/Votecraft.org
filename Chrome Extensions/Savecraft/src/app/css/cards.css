@@ -603,6 +603,16 @@
      so the strip needs headroom above/below it or the enlarged slide would visibly clip against
      the strip's own edges. */
   padding: 30px 8px;
+  /* REAL BUG, found and fixed: fixed here at the active slide's own max height (240px) + padding
+     (30px top/bottom) now that .category-carousel-slide's width/height actually animate (the
+     zoom-out fix above) — before that fix this was a non-issue (the box size snapped instantly,
+     so there was nothing to visibly reflow around), but with the size now easing over 0.3s, the
+     strip's own height (previously undeclared, driven purely by whichever slide inside it was
+     currently tallest) was recalculating on every animation frame too, pushing the caption below
+     the carousel — and everything under IT on the page — up and down for the whole transition.
+     Reserving the full height up front means an individual slide growing/shrinking now happens
+     entirely within a stable envelope instead of resizing the row itself. */
+  height: 300px;
   scrollbar-width: none;
   /* Click-and-drag panning (dashboard.js's _wireCarouselArrows) — grab/grabbing affordance so a
      mouse user can tell this is draggable, same as the arrows already imply prev/next is. */
@@ -796,6 +806,13 @@
     width: 130px;
     height: 130px;
     margin: 0 -40px;
+  }
+  /* Mobile-sized counterpart to the desktop fixed height above (300px = 240px active slide +
+     30px top/bottom padding) — 130px active slide + the same 30px padding = 190px. Same "stop
+     the strip resizing itself around the animating active slide" fix, just at mobile's own
+     active-slide size. */
+  .category-carousel-strip {
+    height: 190px;
   }
 }
 /* One-shot entrance for whichever slide just became active, per direct request ("the large center
