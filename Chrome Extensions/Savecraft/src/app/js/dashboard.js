@@ -92,6 +92,7 @@ export function _wireCarouselArrows(card, strip) {
   // Each call reads strip.scrollLeft fresh as its start point, so a rapid second click chains
   // smoothly from wherever the first animation currently is rather than needing to be queued.
   const animateScrollBy = (delta, duration = 480) => {
+    stopInertia(); // an arrow click while a drag-flick is still gliding takes over cleanly, rather than fighting it
     const start = strip.scrollLeft;
     const startTime = performance.now();
     const c1 = 1.70158;
@@ -132,17 +133,53 @@ export function _wireCarouselArrows(card, strip) {
   let dragStartX = 0;
   let dragStartScrollLeft = 0;
   let prevScrollBehaviorDrag = '';
+  // Velocity tracking (px/ms of pointer movement, in mouse-space — scrollLeft moves the opposite
+  // direction, see mousemove below) for the momentum glide on release, just below.
+  let lastMoveX = 0;
+  let lastMoveTime = 0;
+  let velocity = 0;
+  let inertiaRaf = null;
+  const stopInertia = () => {
+    if (inertiaRaf) { cancelAnimationFrame(inertiaRaf); inertiaRaf = null; }
+  };
+  // Per direct follow-up ("i want that to feel really smooth") — the drag itself already tracked
+  // the pointer 1:1, but stopped scrolling dead the instant the mouse was released, which reads
+  // as abrupt/mechanical next to the native momentum scrolling every trackpad/touchscreen already
+  // has. Flicking and releasing now keeps gliding and decelerating on its own, same physics feel.
+  // Frame-rate-independent exponential decay (via Math.pow(0.998, dt), not a flat per-frame
+  // multiplier) so the glide's deceleration rate looks the same on a 60Hz vs. 120Hz display.
+  const startInertia = v0 => {
+    let v = v0;
+    let lastTime = performance.now();
+    function step(now) {
+      const dt = now - lastTime;
+      lastTime = now;
+      strip.scrollLeft -= v * dt;
+      v *= Math.pow(0.998, dt);
+      if (Math.abs(v) > 0.01) {
+        inertiaRaf = requestAnimationFrame(step);
+      } else {
+        inertiaRaf = null;
+        recenter(); // safety in case the glide crossed a copy boundary, same as scrollByCard gets
+      }
+    }
+    inertiaRaf = requestAnimationFrame(step);
+  };
   strip.addEventListener('mousedown', e => {
     if (e.button !== 0) return; // primary button only
     // Belt-and-suspenders alongside the CSS -webkit-user-drag: none (cards.css/dashboard.css) —
     // stops the browser's own native image/text drag-start from ever getting a chance to hijack
     // this gesture, regardless of which element inside the strip the press actually started on.
     e.preventDefault();
+    stopInertia(); // grabbing mid-glide takes over immediately, rather than fighting the glide
     dragging = true;
     dragMoved = false;
     recenter(); // same loop-illusion safety scrollByCard already gets, before reading the start position
     dragStartX = e.pageX;
     dragStartScrollLeft = strip.scrollLeft;
+    lastMoveX = e.pageX;
+    lastMoveTime = performance.now();
+    velocity = 0;
     prevScrollBehaviorDrag = strip.style.scrollBehavior;
     strip.style.scrollBehavior = 'auto'; // 1:1 tracking, not smoothed/queued behind the pointer
     strip.classList.add('carousel-dragging');
@@ -152,12 +189,22 @@ export function _wireCarouselArrows(card, strip) {
     const delta = e.pageX - dragStartX;
     if (Math.abs(delta) > 4) dragMoved = true; // small-move threshold — a near-stationary press+release still counts as a plain click, below
     strip.scrollLeft = dragStartScrollLeft - delta;
+    const now = performance.now();
+    const dt = now - lastMoveTime;
+    // Skips near-zero dt ticks (some browsers can fire mousemove more than once per animation
+    // frame) — dividing by a near-zero dt would spike the velocity reading wildly.
+    if (dt > 4) {
+      velocity = (e.pageX - lastMoveX) / dt;
+      lastMoveX = e.pageX;
+      lastMoveTime = now;
+    }
   });
   window.addEventListener('mouseup', () => {
     if (!dragging) return;
     dragging = false;
     strip.classList.remove('carousel-dragging');
     strip.style.scrollBehavior = prevScrollBehaviorDrag;
+    if (Math.abs(velocity) > 0.05) startInertia(velocity);
   });
   // Suppresses the click a real drag's mouseup would otherwise still fire on whatever slide it
   // released over — without this, dragging past a slide and letting go on top of it also "opens"
