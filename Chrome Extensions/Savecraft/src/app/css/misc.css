@@ -585,6 +585,25 @@
   .profile-settings-row .profile-settings-action-btn {
     margin-top: 8px;
   }
+  /* Email's "Update" button collapses to an icon-only purple square, per direct request ("in
+     mobile make the update button just be a pencil icon in a purple square. this way the email
+     field can be longer.") — .profile-masked-field-row input already has flex: 1 (profile.css),
+     so shrinking this button's own footprint hands the freed-up width straight to the email
+     input, letting more of a long address stay visible before it needs to scroll/truncate. */
+  #profile-change-email-btn {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .profile-update-btn-icon {
+    display: block;
+  }
+  .profile-update-btn-label {
+    display: none;
+  }
   /* Text across every Profile card bumped up again here, layered on top of profile.css's own
      base-size bump — mobile was the specific complaint ("very small — especially in mobile"),
      and there's width to spare once the grid above drops to a single column. Saved Lists' folder
