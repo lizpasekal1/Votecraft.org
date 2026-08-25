@@ -350,6 +350,59 @@
   color: var(--text-primary);
 }
 
+/* Editable name row (Profile > Account) — the pencil button is opacity: 0 until the identity
+   area is hovered, per direct request ("on hover of the profile area add a little pencil to the
+   right of the account name"). @media (hover: none) covers touch devices (phones/tablets), which
+   have no real hover state at all — the pencil just stays visible there instead of being
+   permanently unreachable. */
+.profile-account-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.profile-name-edit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+}
+.profile-account-identity:hover .profile-name-edit-btn {
+  opacity: 1;
+}
+.profile-name-edit-btn:hover {
+  background: var(--hover-bg);
+  color: var(--primary);
+}
+@media (hover: none) {
+  .profile-name-edit-btn {
+    opacity: 1;
+  }
+}
+
+.profile-name-edit-input {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--primary);
+  border-radius: 6px;
+  padding: 3px 8px;
+  min-width: 160px;
+  font-family: inherit;
+}
+.profile-name-edit-input:focus {
+  outline: none;
+}
+
 /* Same treatment as .auth-verify-banner (addEditModal.css) — the identical reminder shown in the
    auth modal's signed-in view; .auth-resend-link (defined there) is shared by both buttons. */
 .profile-verify-banner {
