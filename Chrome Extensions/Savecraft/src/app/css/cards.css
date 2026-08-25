@@ -657,6 +657,23 @@
        (its own negative margin, above); every other slide-to-slide spacing is this gap. */
     gap: 9px;
   }
+  /* REAL BUG, found and fixed: gap only affects the LAYOUT box, not the PAINTED size after
+     transform: scale() — halving the gap above barely moved the visible gutter at all, because
+     each shrunk slide (scale(0.85) neighbor tier, scale(0.65) edge tier) still occupies its full
+     170px layout box, leaving a big chunk of that box visually empty on both sides. Reported
+     live, screenshotted: "i don't see a change in the gutters between these cards." Fixed with
+     negative margins sized to each tier's own per-side optical shrink (170px * (1 - scale) / 2),
+     pulling the PAINTED edges back to roughly the true 9px gap regardless of scale — desktop
+     only, since mobile's own separate tier block (below) has its own already-tuned margins for a
+     different reason (deliberate overlap, not scale-compensation). */
+  .category-carousel-slide--active + .category-carousel-slide,
+  .category-carousel-slide:has(+ .category-carousel-slide--active) {
+    margin: 0 -13px; /* 170 * (1 - 0.85) / 2 ≈ 12.75px */
+  }
+  .category-carousel-slide--active + .category-carousel-slide + .category-carousel-slide,
+  .category-carousel-slide:has(+ .category-carousel-slide + .category-carousel-slide--active) {
+    margin: 0 -30px; /* 170 * (1 - 0.65) / 2 ≈ 29.75px */
+  }
 }
 /* A <button> now (categoryCarousel.js — clicking opens the item's real detail modal, genuine
    behavior now that these are real save/curated items, not decorative placeholder art), so the
