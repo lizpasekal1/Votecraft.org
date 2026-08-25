@@ -447,8 +447,9 @@ onAuthChange(() => {
 
 // ===== hero collage =====
 
-// No real profile-name field exists yet (auth.js only tracks email) — hardcoded for the demo
-// until there's an actual name to pull from.
+// Profile page's own signed-out demo persona label (buildAccountSection, profile.js) — unrelated
+// to the hero greeting below, which now pulls the real state.displayName (Profile > Account,
+// pencil-on-hover) instead of a hardcoded name.
 export const DEMO_PROFILE_NAME = 'Zil';
 
 // The (deduped, non-marquee-doubled) items currently shown in the hero collage — kept around so
@@ -459,7 +460,10 @@ let _heroItems = [];
 function buildHeroCollage() {
   const hour = new Date().getHours();
   const greeting = hour < 5 ? 'Good night' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-  const greetingWithName = `${greeting}, ${DEMO_PROFILE_NAME}`;
+  // Per direct request ("change the demo site name to not have my name... make it say 'Good
+  // evening, friend' not Zil") — uses the real editable state.displayName (Profile > Account)
+  // once someone's set one, generic "friend" otherwise rather than a hardcoded name.
+  const greetingWithName = `${greeting}, ${state.displayName || 'friend'}`;
 
   let heroItems = state.items.filter(i => i.imageUrl);
   if (heroItems.length < 8) {
