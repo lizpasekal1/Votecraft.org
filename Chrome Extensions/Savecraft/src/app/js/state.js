@@ -512,6 +512,9 @@ export const state = {
   followedCuratedLists: new Set(), // Set of CURATED_GENRES keys the user has opted into via Profile > Interests
   lastfmCache: {}, // { [normalizedUsername]: { tracks: [...]|null, fetchedAt } } — auto-fetched via Last.fm, short TTL
   steamId: null,   // Steam vanity URL or numeric SteamID64 the user has linked, or null
+  displayName: null, // Editable profile name (Profile > Account, pencil-on-hover) — falls back to
+                      // the account's email when unset. Same simple string-field persist pattern
+                      // as lastfmUsername/steamId above (persistDisplayName, storage.js).
   steamCache: {},  // { [normalizedInput]: { games: [...]|null, fetchedAt } } — auto-fetched via Steam Web API
   dashboardDemoConfig: null, // { queueKanban: {title,category,imageUrl}|null, recentSaves:
                               // {cards:[...]}|null, curatedLists: {genres:[...]}|null } — admin-

@@ -10,7 +10,7 @@
 import { state, CURATED_GENRES, CATEGORIES, CAT_LABEL, CAT_EMOJI } from './state.js';
 import { escapeHtml } from './utils.js';
 import { getCurrentUser, resendVerificationEmail } from './auth.js';
-import { persistFollowedCuratedLists, persistSavedLists, persistFolder, persistItem, persistSelectedSharedFriends, disconnectLastfm, disconnectSteam } from './storage.js';
+import { persistFollowedCuratedLists, persistSavedLists, persistFolder, persistItem, persistSelectedSharedFriends, disconnectLastfm, disconnectSteam, persistDisplayName } from './storage.js';
 import { ensureLastfmRecentTracks, ensureSteamRecentGames } from './api.js';
 import { CURATED_LIST_DISPLAY_NAMES, DEMO_PROFILE_NAME } from './dashboard.js';
 import { openAuthModal, openLastfmModal, openSteamModal } from './main.js';
@@ -45,7 +45,10 @@ function buildAccountSection(user) {
   // NOT gated" comments on the two nav entry points, main.js/dashboard.js) — this is where that
   // shows up: no real user yet, so show the same demo persona used on the Dashboard's greeting
   // rather than a blank email. "Manage account" below is the actual sign-in entry point.
-  const displayName = user ? escapeHtml(user.email) : `${DEMO_PROFILE_NAME} (demo)`;
+  // Editable (Profile > Account, pencil-on-hover, wireAccountSection below) once signed in —
+  // falls back to the account's email until a name is actually set. Signed-out demo view keeps
+  // its own hardcoded persona (nothing to edit without a real account to persist it to).
+  const nameText = user ? escapeHtml(state.displayName || user.email) : `${DEMO_PROFILE_NAME} (demo)`;
   // Purely informational — never blocks anything, same "never lock people out" stance as the rest
   // of this app's auth handling (matches the identical reminder in main.js's applyAuthUI, which
   // covers the auth modal's own signed-in view).
@@ -61,7 +64,10 @@ function buildAccountSection(user) {
           <span class="profile-avatar">ZP</span>
           <div class="profile-account-text">
             <div class="profile-card-title">Account</div>
-            <div class="profile-account-email">${displayName}</div>
+            <div class="profile-account-name-row">
+              <span class="profile-account-email" id="profile-account-name-text">${nameText}</span>
+              ${user ? `<button type="button" class="profile-name-edit-btn" id="profile-edit-name-btn" title="Edit name" aria-label="Edit name"><svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg></button>` : ''}
+            </div>
           </div>
         </div>
         <div class="profile-account-actions">
@@ -86,6 +92,41 @@ function wireAccountSection(container) {
     const result = await resendVerificationEmail();
     btn.textContent = result.ok ? 'Sent!' : 'Resend email';
     btn.disabled = false;
+  });
+  container.querySelector('#profile-edit-name-btn')?.addEventListener('click', () => {
+    const row = container.querySelector('.profile-account-name-row');
+    const nameSpan = container.querySelector('#profile-account-name-text');
+    if (!row || !nameSpan) return;
+    const user = getCurrentUser();
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'profile-name-edit-input';
+    input.maxLength = 60;
+    input.value = state.displayName || '';
+    input.placeholder = user?.email || 'Your name';
+    // Swap the pencil button out for the input rather than hiding it — a floating edit control
+    // next to a focused text field would be confusing/redundant; Enter or blur below finishes
+    // the edit and swaps the static text (rebuilt by renderProfilePage) back in either way.
+    row.querySelector('#profile-edit-name-btn')?.remove();
+    nameSpan.replaceWith(input);
+    input.focus();
+    input.select();
+    let done = false;
+    const finish = save => {
+      if (done) return;
+      done = true;
+      const trimmed = input.value.trim();
+      if (save && trimmed !== (state.displayName || '')) {
+        state.displayName = trimmed || null;
+        persistDisplayName(state.displayName);
+      }
+      renderProfilePage();
+    };
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') finish(true);
+      else if (e.key === 'Escape') finish(false);
+    });
+    input.addEventListener('blur', () => finish(true));
   });
 }
 
