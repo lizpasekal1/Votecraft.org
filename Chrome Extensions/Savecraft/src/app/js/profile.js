@@ -48,11 +48,11 @@ function buildAccountSection(user) {
   // Editable (Profile > Account, pencil-on-hover, wireAccountSection below) once signed in —
   // falls back to the account's email until a name is actually set. Signed-out demo view keeps
   // its own hardcoded persona (nothing to edit without a real account to persist it to).
-  // Generic "Demo email" placeholder for the signed-out view, per direct request — the DEMO_PROFILE_NAME
-  // persona ('Zil') is also the exact name a real signed-in user might set as their own displayName
-  // (state.displayName, Profile > Account's pencil edit), so reusing it here risked reading like a
-  // real account's real data rather than an obviously-generic demo.
-  const nameText = user ? escapeHtml(state.displayName || user.email) : 'Demo email';
+  // "Sign in" for the signed-out view, per direct follow-up ("if i am not signed in that profile
+  // name should say 'sign in'") — matches the header dropdown's own #profile-label, which already
+  // reads "Sign in" when signed out (main.js's applyAuthUI); this used to say the generic "Demo
+  // email" placeholder instead, which read as an odd mismatch next to that.
+  const nameText = user ? escapeHtml(state.displayName || user.email) : 'Sign in';
   // Purely informational — never blocks anything, same "never lock people out" stance as the rest
   // of this app's auth handling (matches the identical reminder in main.js's applyAuthUI, which
   // covers the auth modal's own signed-in view).
@@ -1015,7 +1015,6 @@ export function renderProfilePage() {
   container.innerHTML = `
     <div class="profile-page">
       ${buildAccountSection(user)}
-      ${buildAccountDetailsSection(user)}
       <div class="profile-widget-grid">
         ${buildConnectionsSection()}
         ${buildInterestsSection()}
@@ -1024,6 +1023,7 @@ export function renderProfilePage() {
         ${buildSharedListsSection()}
         ${buildVotecraftConnectionSection()}
       </div>
+      ${buildAccountDetailsSection(user)}
       <button class="btn-cancel profile-manage-account-mobile" id="profile-manage-account-mobile">Manage account</button>
       ${buildLegalLinksRow('profile-legal-links-mobile')}
     </div>`;
