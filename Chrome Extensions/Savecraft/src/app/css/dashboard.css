@@ -495,6 +495,17 @@
   cursor: grabbing;
   user-select: none;
 }
+/* REAL BUG, found and fixed: browsers make <img> (and text) natively draggable by default —
+   starting the click-and-drag panning above directly on a card's own photo/label instead
+   triggered the browser's own native "drag this image out of the page" ghost gesture instead,
+   which doesn't fire ordinary mousemove events the same way, breaking the drag entirely from
+   that starting point (reported live: "i want to be able to grab any card and drag it"). Turned
+   off for every element inside the strip, not just <img>, since card text is just as grabbable. */
+.dash-carousel-strip * {
+  -webkit-user-drag: none;
+  user-drag: none;
+  user-select: none;
+}
 
 .dash-thumb-card {
   display: flex;
