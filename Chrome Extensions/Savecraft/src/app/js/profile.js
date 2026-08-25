@@ -199,8 +199,8 @@ function buildSettingsSection(user) {
   return `
     <div class="dash-card profile-card--settings">
       <div class="profile-card-header"><span class="profile-card-title">Settings</span></div>
-      ${accountDataRow}
       ${lastSyncedRow}
+      ${accountDataRow}
       <div class="profile-settings-row">
         <div class="profile-settings-row-text">
           <div class="profile-settings-row-label">Cache: <span class="profile-settings-row-value">${sizeLabel}</span></div>
