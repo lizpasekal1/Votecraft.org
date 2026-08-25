@@ -489,8 +489,20 @@ body {
    so a 220px panel opening from the trigger's LEFT edge ran off the right side of the
    viewport/content area (reported live, screenshot confirmed — cut off badly on mobile, slightly
    on desktop). right:0 opens it from the trigger's right edge instead, growing leftward, which
-   stays inside the viewport regardless of how close to the edge the trigger itself sits. */
-.sort-select-dropdown {
+   stays inside the viewport regardless of how close to the edge the trigger itself sits.
+   REAL BUG, found and fixed: that override never actually applied — .board-filter-dropdown
+   (kanban.css, loaded AFTER this file in index.html) also sets left:0 on this same element (it
+   carries both classes, index.html), and same-specificity + later-source-order meant its left:0
+   silently won regardless of what this rule said, still cutting the panel off on mobile (reported
+   live again on the Musicians/musicgenre: dual-dropdown row specifically: "the sort dropdown is
+   getting cut off on the right side"). With left, width, and right all specified on an
+   absolutely-positioned box, the browser drops `right` and anchors from `left` in LTR — so this
+   really was opening from the trigger's left edge the whole time, off the right side of the
+   screen, exactly matching the report. Selector bumped to two classes (matching the markup's own
+   `sort-select-dropdown board-filter-dropdown`) so its specificity wins outright, regardless of
+   which file loads last — the same fix shape already used elsewhere this session for this exact
+   class of cascade bug. */
+.sort-select-dropdown.board-filter-dropdown {
   width: 220px;
   left: auto;
   right: 0;
