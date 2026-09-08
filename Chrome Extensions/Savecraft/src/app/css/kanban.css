@@ -506,7 +506,7 @@
 }
 
 .admin-kcard-name {
-  font-size: 13px;
+  font-size: 20px; /* was 13px, per direct request */
   font-weight: 600;
   color: #111111;
   overflow: hidden;
