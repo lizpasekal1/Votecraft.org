@@ -350,11 +350,9 @@ const URGENCY_LABEL = { low: 'Low', medium: 'Medium', high: 'High' };
 // `position` is the card's 1-based rank in its column under whatever sort/order is currently
 // active — the card at the top of the list is always 1, per direct request.
 function renderAdminCard(card, position) {
-  // _detailsToEditableHtml handles both new (already-HTML) and legacy (plain-text) stored
-  // details — same helper the modal's own load path uses, so a card's formatting (bold/bullets/
-  // etc.) shows in this compact board preview too, not just once you open it to edit.
-  const detailsHtml = card.details
-    ? `<div class="admin-kcard-details">${_detailsToEditableHtml(card.details)}</div>` : '';
+  // Details preview removed from the board card entirely, per direct request ("can you remove
+  // the short description? i only want to see the titles") — still shown once a card is actually
+  // opened (the modal's own details field is untouched), just not previewed here.
   const demoTag = card._isDemo ? '<span class="kcard-demo-badge">DEMO</span>' : '';
   const removeBtn = !card._isDemo
     ? `<button class="admin-kcard-remove" data-id="${card.id}" title="Delete card">✕</button>` : '';
@@ -372,7 +370,6 @@ function renderAdminCard(card, position) {
       <div class="admin-kcard-body">
         ${demoTag}
         <div class="admin-kcard-name">${escapeHtml(card.name) || 'Untitled'}</div>
-        ${detailsHtml}
       </div>
       ${removeBtn}
       ${urgencyDot}
