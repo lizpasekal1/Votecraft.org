@@ -5,6 +5,7 @@ import { escapeHtml, catClass, badgeLabel, getListIds, isQueueDemoId } from './u
 import { persistViewState, persistItem } from './storage.js';
 import { openDetailModal } from './detailModal.js';
 import { storageSync } from './platform.js';
+import { confirmDialog } from './confirmModal.js';
 
 export const KANBAN_COLUMNS = [
   { key: 'in-queue',     label: 'QUEUE' },
@@ -409,11 +410,12 @@ export function renderKanbanBoard() {
       const item = state.items.find(i => i.id === id);
       if (!item) return;
       // Per direct request ("make it so the x to delet has the are you sure you want to delte
-      // message appear") — same confirm() pattern already used for Admin Kanban's delete button
-      // (adminKanban.js) and the account-deletion flow (main.js). Worded as "remove ... from the
-      // board" rather than "delete" since this only clears queueStatus (below) — the saved item
-      // itself, and its place in the library, isn't touched.
-      if (!confirm(`Remove "${item.title || 'this item'}" from the board?`)) return;
+      // message appear") — worded as "remove ... from the board" rather than "delete" since this
+      // only clears queueStatus (below) — the saved item itself, and its place in the library,
+      // isn't touched. confirmDialog (not native confirm()) per the later follow-up request that
+      // these always appear centered — see confirmModal.js.
+      const ok = await confirmDialog(`Remove "${item.title || 'this item'}" from the board?`, { confirmLabel: 'Remove' });
+      if (!ok) return;
       item.queueStatus = null;
       await persistItem(item);
       renderKanbanBoard();

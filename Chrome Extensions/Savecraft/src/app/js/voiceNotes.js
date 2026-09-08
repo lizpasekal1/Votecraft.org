@@ -16,6 +16,8 @@
 // display hint copied from the recording at insert time — the source of truth for playback is
 // always the real Blob in IndexedDB, looked up by data-audio-id.
 
+import { confirmDialog } from './confirmModal.js';
+
 // ===== INDEXEDDB =====
 // No IndexedDB usage exists anywhere else in this codebase — this is genuinely new
 // infrastructure, so (unlike the rest of the app's storage calls, which never check for a quota
@@ -332,7 +334,9 @@ async function _save() {
 
 async function _deleteExisting() {
   if (_currentTarget?.mode !== 'replace') return;
-  if (!confirm('Delete this voice note?')) return;
+  // confirmDialog (not native confirm()) so this always appears centered — per direct request;
+  // see confirmModal.js.
+  if (!(await confirmDialog('Delete this voice note?'))) return;
   const { markerEl } = _currentTarget;
   const id = markerEl.dataset.audioId;
   const container = markerEl.closest('.detail-tracklist-notes-input');
