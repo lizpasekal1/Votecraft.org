@@ -30,6 +30,18 @@ let _wizardFetchedImageUrl = null; // image resolved from a title-search selecti
 let _wizardToken = 0;              // bumped on every open/close/back/advance — in-flight search or enrichment callbacks compare against this and no-op if stale
 let _wizardFolderId = null;        // folder chosen on the folder-picker screen (null = "No folder")
 let _wizardHadFolderScreen = false; // whether the current category actually showed a folder screen — drives Back navigation
+
+// Pre-fills the review screen's Title/URL/Image with a page captured elsewhere — the extension's
+// popup (popup.js), which now just grabs the current tab's info and hands off to this same real
+// Add flow instead of re-implementing its own copy of it (per direct request: "simplify the code
+// so that we're not maintaining the redundant extension UI that can just be handled by the
+// savecraft.org website"). Set once by main.js's init() from the ?captureUrl=/&captureTitle=/
+// &captureImage= params the popup opens the site with; consumed (and cleared) the very next time
+// showReviewScreen() runs, so it only ever applies to the wizard run it was meant for.
+let _pendingCapture = null;
+export function setPendingCapture(capture) {
+  _pendingCapture = capture;
+}
 let _wizardHadMusicChoiceScreen = false; // whether the combined "Music" tile's Musician/Album sub-choice screen was shown — drives Back navigation
 let _wizardSelectedListIds = new Set(); // saved lists (other than the always-on "All My Saves") picked on the review screen's saved-lists dropdown — reset fresh each time showReviewScreen runs
 
@@ -601,6 +613,20 @@ function showReviewScreen() {
   // for themselves"). Desktop has no on-screen keyboard to fight, so auto-focusing straight into
   // Title there is still just a convenience, not an obstruction.
   if (!window.matchMedia('(max-width: 480px)').matches) document.getElementById('input-title').focus();
+
+  // Applied last, after every reset above — a page captured via the extension's popup (see
+  // setPendingCapture's own comment). One-shot: cleared immediately so it can't leak into a later
+  // Add run this same page session (e.g. the user backs out and starts a fresh Add manually).
+  if (_pendingCapture) {
+    document.getElementById('input-title').value = _pendingCapture.title || '';
+    document.getElementById('input-url').value = _pendingCapture.url || '';
+    if (_pendingCapture.imageUrl) {
+      _wizardFetchedImageUrl = _pendingCapture.imageUrl;
+      renderStep2ImagePreview(_pendingCapture.imageUrl);
+    }
+    updateSaveButtonEnabled();
+    _pendingCapture = null;
+  }
 }
 
 // ===== BACK NAVIGATION =====
