@@ -539,6 +539,18 @@ export function renderAdminKanbanBoard() {
       // Set (or cleared) alongside `pinned` itself — drives the pinned-group ordering in
       // _cardsInColumn's own comparator above ("in the order of their pinning").
       found.pinnedAt = found.pinned ? Date.now() : null;
+      if (!found.pinned) {
+        // Per direct request ("if i unpin the card the card should just stay at the top but
+        // other cards can be added over it") — give it the new lowest manualOrder in its column
+        // (same "one less than the current min" recipe the new-card path above uses), so it
+        // becomes the topmost *unpinned* card right where it visually sat a moment ago, while
+        // still leaving room for a genuinely new card (which claims an even lower manualOrder)
+        // to land above it.
+        const existingOrders = _cardsInColumn(found.status)
+          .filter(c => !c._isDemo && c.id !== found.id && !c.pinned)
+          .map(c => c.manualOrder ?? 0);
+        found.manualOrder = existingOrders.length ? Math.min(...existingOrders) - 1 : 0;
+      }
       persistAdminKanbanCard(found);
       renderAdminKanbanBoard();
       // Per direct request ("clickig the gray pin should make it disapear again") — without this,
