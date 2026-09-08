@@ -56,13 +56,10 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   await saveItem({ url, title, imageUrl, category: catId });
 });
 
-// Handle messages from popup and app page
+// Handle messages from the popup — 'openLibrary' removed, per direct request ("I think the 'open
+// library' can just open the website"): the popup now calls chrome.tabs.create(savecraft.org)
+// directly instead of round-tripping through here (it already has the "tabs" permission itself).
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  if (msg.action === 'openLibrary') {
-    chrome.tabs.create({ url: chrome.runtime.getURL('src/app/index.html') });
-    sendResponse({ ok: true });
-  }
-
   if (msg.action === 'fetchImage') {
     fetchImageFromMicrolink(msg.url).then(imageUrl => sendResponse({ imageUrl }));
     return true; // keep channel open for async response
