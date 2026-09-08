@@ -96,9 +96,14 @@ function _adminDemoCard() {
 export function _cardsInColumn(colKey) {
   const mode = SORT_MODES.find(m => m.key === state.adminKanbanSort) || SORT_MODES[0];
   const cmp = mode.cmp || ((a, b) => (a.manualOrder ?? Infinity) - (b.manualOrder ?? Infinity) || a.createdAt - b.createdAt);
+  // Pinned cards always float to the top of their column, per direct request ("add a pin button
+  // ... that pins the card to the top") — takes priority over whichever sort mode is active
+  // (custom order, A-Z, urgency, etc.), rather than only meaning something under one specific
+  // sort. Multiple pinned cards still order relative to each other/the rest via `cmp`.
+  const pinnedFirst = (a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || cmp(a, b);
   const real = state.adminKanbanCards
     .filter(c => c.status === colKey)
-    .sort(cmp);
+    .sort(pinnedFirst);
   if (colKey === 'todo' && state.adminKanbanCards.length === 0) return [_adminDemoCard()];
   return real;
 }
@@ -357,6 +362,15 @@ function renderAdminCard(card, position) {
   // Per direct request ("remove the x to delete in the corner of the cards") — deleting now only
   // happens from inside the Edit Task modal's own Delete button (which already has its own
   // confirm() prompt), not from a quick corner button on the board card itself.
+  // Pin button — takes the same top-right corner spot the delete "✕" used to occupy, per direct
+  // request ("add a pin button in that top right corner that pins the card to the top"). Always
+  // visible (not hover-revealed like the old "✕" was) so a pinned card's state reads at a glance
+  // without needing to hover it first — see .admin-kcard-pin--active (kanban.css) for the visual
+  // difference between pinned/unpinned.
+  const pinBtn = !card._isDemo
+    ? `<button class="admin-kcard-pin${card.pinned ? ' admin-kcard-pin--active' : ''}" data-id="${card.id}" title="${card.pinned ? 'Unpin' : 'Pin to top'}" aria-label="${card.pinned ? 'Unpin' : 'Pin to top'}">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
+      </button>` : '';
   // The dot's color still comes from urgency (Low/Medium/High), but the number inside it is now
   // the card's order/position in the list, not the urgency level — per direct request. Works for
   // legacy cards whose stored urgency is still a 1-10 number, via _urgencyLevel.
@@ -372,6 +386,7 @@ function renderAdminCard(card, position) {
         ${demoTag}
         <div class="admin-kcard-name">${escapeHtml(card.name) || 'Untitled'}</div>
       </div>
+      ${pinBtn}
       ${urgencyDot}
     </div>`;
 }
@@ -482,10 +497,22 @@ export function renderAdminKanbanBoard() {
   // x to delete in the corner of the cards"), deleting only happens from inside the Edit Task
   // modal's own Delete button now (which already has its own confirm() prompt).
   board.querySelectorAll('.admin-kcard').forEach(card => {
-    card.addEventListener('click', () => {
+    card.addEventListener('click', e => {
+      if (e.target.closest('.admin-kcard-pin')) return;
       if (card.dataset.id === '__admin_demo__') return;
       const found = state.adminKanbanCards.find(c => c.id === card.dataset.id);
       if (found) _openCardModal(found, null);
+    });
+  });
+
+  board.querySelectorAll('.admin-kcard-pin').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const found = state.adminKanbanCards.find(c => c.id === btn.dataset.id);
+      if (!found) return;
+      found.pinned = !found.pinned;
+      persistAdminKanbanCard(found);
+      renderAdminKanbanBoard();
     });
   });
 
