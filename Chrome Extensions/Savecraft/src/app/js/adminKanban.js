@@ -14,6 +14,7 @@ import { state } from './state.js';
 import { escapeHtml } from './utils.js';
 import { persistAdminKanbanCard, persistAdminKanbanCards, removeAdminKanbanCard } from './storage.js';
 import { storageSync } from './platform.js';
+import { sanitizeNoteHtml, noteHtmlHasContent } from './noteSanitizer.js';
 
 // One global sort applied across every column (unlike the real board's own per-column
 // kanbanSort) — driven by a dedicated dropdown next to this page's own title, not the shared
@@ -127,7 +128,34 @@ function _ensureModal() {
           <input type="text" id="admin-kcard-name-input" placeholder="Card name" maxlength="120" autocomplete="off">
         </div>
         <div class="form-group">
-          <textarea id="admin-kcard-details-input" placeholder="Details…" rows="6"></textarea>
+          <!-- Rich-text details field, per direct request ("text formating options... similare
+               to google keep... bold, bullett point, underline, italic, add link, add image") —
+               a contenteditable div (was a plain textarea, storing plain text) so the toolbar
+               below can actually apply real formatting rather than just inserting markdown-style
+               characters into a field that could never render them. Its data-placeholder attr
+               is shown via CSS (kanban.css) when empty — a contenteditable div has no native
+               placeholder the way a real input/textarea does. -->
+          <div id="admin-kcard-details-input" class="admin-kcard-details-input" contenteditable="true" data-placeholder="Details…" role="textbox" aria-multiline="true" aria-label="Details"></div>
+          <div class="admin-kcard-details-toolbar" id="admin-kcard-details-toolbar" role="toolbar" aria-label="Details formatting">
+            <button type="button" class="admin-kcard-details-toolbar-btn" data-format="bold" title="Bold" aria-label="Bold">
+              <svg viewBox="0 0 24 24" width="15" height="15"><text x="12" y="17" text-anchor="middle" font-size="15" font-weight="800" fill="currentColor">B</text></svg>
+            </button>
+            <button type="button" class="admin-kcard-details-toolbar-btn" data-format="italic" title="Italic" aria-label="Italic">
+              <svg viewBox="0 0 24 24" width="15" height="15"><text x="12" y="17" text-anchor="middle" font-size="16" font-style="italic" font-weight="700" fill="currentColor">I</text></svg>
+            </button>
+            <button type="button" class="admin-kcard-details-toolbar-btn" data-format="underline" title="Underline" aria-label="Underline">
+              <svg viewBox="0 0 24 24" width="15" height="15"><text x="12" y="16" text-anchor="middle" font-size="15" font-weight="700" fill="currentColor" text-decoration="underline">U</text></svg>
+            </button>
+            <button type="button" class="admin-kcard-details-toolbar-btn" data-format="bullet" title="Bullet list" aria-label="Bullet list">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><circle cx="4" cy="6" r="1.5"/><circle cx="4" cy="12" r="1.5"/><circle cx="4" cy="18" r="1.5"/><rect x="8" y="5" width="12" height="2"/><rect x="8" y="11" width="12" height="2"/><rect x="8" y="17" width="12" height="2"/></svg>
+            </button>
+            <button type="button" class="admin-kcard-details-toolbar-btn" data-format="link" title="Add link" aria-label="Add link">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            </button>
+            <button type="button" class="admin-kcard-details-toolbar-btn" data-format="image" title="Add image" aria-label="Add image">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+            </button>
+          </div>
         </div>
         <div class="form-group">
           <label class="admin-kcard-urgency-field-label" for="admin-kcard-urgency-input">Urgency</label>
@@ -170,7 +198,71 @@ function _ensureModal() {
     if (e.key === 'Escape' && overlay.classList.contains('open')) _closeCardModal();
   });
 
+  const detailsInput = document.getElementById('admin-kcard-details-input');
+  document.querySelectorAll('#admin-kcard-details-toolbar .admin-kcard-details-toolbar-btn').forEach(btn => {
+    // Keeps focus (and the live Selection/Range) on the contenteditable field instead of moving
+    // it to the button — same trick detailModalNotes.js's own note toolbar uses, and for the
+    // same reason: execCommand acts on whatever currently has focus/selection, and a plain click
+    // would move focus to the button first, losing the selection formatting needs to apply to.
+    btn.addEventListener('mousedown', e => e.preventDefault());
+    btn.addEventListener('click', () => _applyDetailsFormat(btn.dataset.format));
+  });
+  // Rich-text paste — sanitized the same way a save/reload already would be, so a paste from
+  // outside (a webpage, another app) can't carry disallowed tags/attributes into the live DOM
+  // even transiently. Same pattern as detailModalNotes.js's own note paste handler.
+  detailsInput.addEventListener('paste', e => {
+    e.preventDefault();
+    const cd = e.clipboardData || window.clipboardData;
+    const html = cd.getData('text/html');
+    const clean = html ? sanitizeNoteHtml(html) : escapeHtml(cd.getData('text/plain'));
+    document.execCommand('insertHTML', false, clean);
+  });
+
   return overlay;
+}
+
+// Existing cards saved before this change store plain text in `details`; new ones store
+// sanitized rich-text HTML (see _saveCardModal below). Detected by whether it already looks like
+// it contains one of the allowed tags — if not, it's treated as legacy plain text and needs
+// escaping (a literal '<'/'>' would otherwise be misread as markup) plus newline-to-<br>
+// conversion (a contenteditable div has no native way to preserve plain '\n' line breaks).
+function _detailsToEditableHtml(details) {
+  if (!details) return '';
+  if (/<(b|i|u|ul|li|br|img|a|mark)\b/i.test(details)) return sanitizeNoteHtml(details);
+  return escapeHtml(details).replace(/\n/g, '<br>');
+}
+
+function _applyDetailsFormat(cmd) {
+  document.getElementById('admin-kcard-details-input').focus();
+  if (cmd === 'bold') document.execCommand('bold');
+  else if (cmd === 'italic') document.execCommand('italic');
+  else if (cmd === 'underline') document.execCommand('underline');
+  else if (cmd === 'bullet') document.execCommand('insertUnorderedList');
+  else if (cmd === 'link') _insertDetailsLink();
+  else if (cmd === 'image') _insertDetailsImage();
+}
+
+// If text is already selected, wraps it in the link (createLink acts on the current selection);
+// otherwise inserts the URL itself as clickable link text — createLink alone does nothing useful
+// against a collapsed (empty) selection.
+function _insertDetailsLink() {
+  const sel = window.getSelection();
+  const hasSelection = !!sel && sel.rangeCount > 0 && !sel.isCollapsed;
+  const url = prompt('Link URL:');
+  if (!url || !url.trim()) return;
+  const trimmed = url.trim();
+  if (hasSelection) document.execCommand('createLink', false, trimmed);
+  else document.execCommand('insertHTML', false, `<a href="${escapeHtml(trimmed)}">${escapeHtml(trimmed)}</a>`);
+}
+
+// Same prompt()-for-a-URL pattern as detailModalNotes.js's own image button — no file upload/
+// hosting here, just links to an image already hosted somewhere else. The pasted URL itself isn't
+// otherwise validated — sanitizeNoteHtml (noteSanitizer.js) is the real gate, run on every save,
+// and silently drops the <img> entirely if the src doesn't look like a real http(s)/data:image URL.
+function _insertDetailsImage() {
+  const url = prompt('Image URL:');
+  if (!url || !url.trim()) return;
+  document.execCommand('insertHTML', false, `<img src="${escapeHtml(url.trim())}" alt="">`);
 }
 
 function _openCardModal(card, newInColumn) {
@@ -180,7 +272,7 @@ function _openCardModal(card, newInColumn) {
 
   document.getElementById('admin-kcard-modal-title').textContent = card ? 'Edit Task' : 'New Task';
   document.getElementById('admin-kcard-name-input').value = card?.name || '';
-  document.getElementById('admin-kcard-details-input').value = card?.details || '';
+  document.getElementById('admin-kcard-details-input').innerHTML = _detailsToEditableHtml(card?.details);
   document.getElementById('admin-kcard-urgency-input').value = _urgencyLevel(card?.urgency) || '';
   // Nothing to delete yet on a brand-new, unsaved card.
   document.getElementById('admin-kcard-delete-btn').style.display = card ? '' : 'none';
@@ -197,7 +289,8 @@ function _closeCardModal() {
 
 function _saveCardModal() {
   const name = document.getElementById('admin-kcard-name-input').value.trim();
-  const details = document.getElementById('admin-kcard-details-input').value.trim();
+  const detailsHtml = sanitizeNoteHtml(document.getElementById('admin-kcard-details-input').innerHTML);
+  const details = noteHtmlHasContent(detailsHtml) ? detailsHtml : '';
   // The dropdown only ever offers 'low' | 'medium' | 'high' (or blank). Empty selection -> null
   // (urgency stays optional, no dot shown on the card).
   const urgencyRaw = document.getElementById('admin-kcard-urgency-input').value;
@@ -253,8 +346,11 @@ const URGENCY_LABEL = { low: 'Low', medium: 'Medium', high: 'High' };
 // `position` is the card's 1-based rank in its column under whatever sort/order is currently
 // active — the card at the top of the list is always 1, per direct request.
 function renderAdminCard(card, position) {
+  // _detailsToEditableHtml handles both new (already-HTML) and legacy (plain-text) stored
+  // details — same helper the modal's own load path uses, so a card's formatting (bold/bullets/
+  // etc.) shows in this compact board preview too, not just once you open it to edit.
   const detailsHtml = card.details
-    ? `<div class="admin-kcard-details">${escapeHtml(card.details)}</div>` : '';
+    ? `<div class="admin-kcard-details">${_detailsToEditableHtml(card.details)}</div>` : '';
   const demoTag = card._isDemo ? '<span class="kcard-demo-badge">DEMO</span>' : '';
   const removeBtn = !card._isDemo
     ? `<button class="admin-kcard-remove" data-id="${card.id}" title="Delete card">✕</button>` : '';

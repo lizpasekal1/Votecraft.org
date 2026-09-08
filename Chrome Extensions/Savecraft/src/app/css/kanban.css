@@ -523,6 +523,15 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
+/* Inline formatting (bold/italic/underline/link) survives into this clamped preview now that
+   .details stores real rich-text HTML (see _detailsToEditableHtml, adminKanban.js) rather than
+   plain text — list/image tags are left at browser defaults here on purpose, since a bulleted
+   list or a full-size image doesn't read cleanly inside a 2-line clamp this small; both still
+   display normally once the card is actually opened in the editor. */
+.admin-kcard-details b { font-weight: 700; }
+.admin-kcard-details i { font-style: italic; }
+.admin-kcard-details u { text-decoration: underline; }
+.admin-kcard-details a { color: inherit; text-decoration: underline; }
 
 /* Same hover-revealed treatment as the real board's .kcard-remove — fixed dark gray rather than
    var(--text-muted) (a light gray meant for the dark theme's own cards, low-contrast against
@@ -661,6 +670,77 @@
   left: auto;
   right: 0;
   min-width: 200px;
+}
+
+/* Task Details field — a contenteditable div now (was a plain <textarea>), per direct request
+   ("text formating options... similare to google keep... bold, bullett point, underline,
+   italic, add link, add image"), so its own toolbar just below (.admin-kcard-details-toolbar)
+   can apply real formatting. Copies .form-group textarea's own look (addEditModal.css) rather
+   than matching it automatically — that selector targets the <textarea> tag specifically, which
+   this div isn't. */
+.admin-kcard-details-input {
+  width: 100%;
+  min-height: 110px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--surface);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.admin-kcard-details-input:focus {
+  border-color: var(--primary);
+}
+/* Placeholder text — a contenteditable div has no native placeholder attribute the way a real
+   <input>/<textarea> does. :empty alone isn't quite right here: Chrome's contenteditable can
+   leave a lone, contentless <br> behind after the last character is deleted, which still counts
+   as "not empty" to :empty — the placeholder would then never come back. Checking for that
+   specific husk state directly (no real child, or a single bare <br>) covers both. */
+.admin-kcard-details-input:empty::before,
+.admin-kcard-details-input:has(> br:only-child)::before {
+  content: attr(data-placeholder);
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+.admin-kcard-details-input b { font-weight: 700; }
+.admin-kcard-details-input i { font-style: italic; }
+.admin-kcard-details-input u { text-decoration: underline; }
+.admin-kcard-details-input a { color: var(--primary); }
+.admin-kcard-details-input ul { margin: 0; padding-left: 20px; }
+.admin-kcard-details-input img { max-width: 100%; border-radius: 6px; margin-top: 4px; }
+
+/* Formatting toolbar — Bold/Italic/Underline/Bullet/Link/Image, per the same direct request
+   above. Small bordered icon buttons (matches Profile's own .profile-reveal-btn treatment)
+   rather than the Detail modal's purple-filled .detail-note-toolbar-btn — that one's styled to
+   stand out on a sticky bar bleeding to the modal's edges; this is a plain, static row inside an
+   ordinary form, so a quieter treatment fits better. */
+.admin-kcard-details-toolbar {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.admin-kcard-details-toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.admin-kcard-details-toolbar-btn:hover {
+  color: var(--primary);
+  border-color: var(--primary);
 }
 
 /* Card editor modal (injected by adminKanban.js) — reuses the shared .modal/.form-group shell,
