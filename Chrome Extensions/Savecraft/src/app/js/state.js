@@ -493,8 +493,9 @@ export const state = {
   kanbanExpandedCol: null,         // column key currently expanded full-width, or null for the normal 4-column board — not persisted, resets every load
   kanbanExpandedFormat: 'two-col', // 'two-col' | 'four-col' | 'large' | 'detail' | 'simple' — only meaningful while a column is expanded, not persisted
   adminKanbanCards: [], // { id, name, details, urgency, status: ADMIN_KANBAN_COLUMNS key,
-                         // manualOrder, createdAt } — a second, separate board (adminKanban.js) of
-                         // freeform task cards, not tied to state.items at all (unlike the main
+                         // manualOrder, createdAt, pinned? } — a second, separate board
+                         // (adminKanban.js) of freeform task cards, not tied to state.items at all
+                         // (unlike the main
                          // Queue board above). Cached locally (storageSync) for offline/first-paint,
                          // but — unlike kanbanSort/kanbanLists — it's a *shared* board dual-written
                          // per-card to Firestore's admin_kanban_cards collection for admins (see
