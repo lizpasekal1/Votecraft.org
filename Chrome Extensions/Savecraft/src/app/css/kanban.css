@@ -561,13 +561,13 @@
 .admin-kcard-pin:hover { color: #888888; }
 /* Pinned used to turn purple here — per direct request ("make it so if i pin something to the
    top the pin icon stays gray"), it now keeps the exact same gray as an unpinned button, in both
-   its resting and hover states — .admin-kcard-pin--active is still applied (data-*/JS unchanged),
+   its resting and hover states — .admin-kcard-pin--active is still applied (data attrs, JS unchanged),
    just no longer given its own distinct color. */
 
 /* .admin-kcard-urgency (the separate circular badge, bottom-right corner) removed entirely, per
    direct request ("remove the number from the circle and place it vertically centered inside
    that colored side band") — its number now lives directly inside the strip below instead. */
-.admin-kcard-urgency--blue   { background: #7C6FF5; } /* Low — was blue (#3B82F6), trying purple per direct request to help pin down whether Low is rendering at all */
+.admin-kcard-urgency--blue   { background: #3B82F6; } /* Low */
 .admin-kcard-urgency--orange { background: #16A34A; } /* Medium — green, per direct request; deep enough that white text stays readable */
 .admin-kcard-urgency--red    { background: #EF4444; } /* High */
 
