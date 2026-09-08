@@ -99,8 +99,10 @@ export function _cardsInColumn(colKey) {
   // Pinned cards always float to the top of their column, per direct request ("add a pin button
   // ... that pins the card to the top") — takes priority over whichever sort mode is active
   // (custom order, A-Z, urgency, etc.), rather than only meaning something under one specific
-  // sort. Multiple pinned cards still order relative to each other/the rest via `cmp`.
-  const pinnedFirst = (a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || cmp(a, b);
+  // sort. Among multiple pinned cards, most-recently-pinned sits highest — per direct follow-up
+  // ("pined items should go to the top of the section in the order of their pinning") — falling
+  // back to `cmp` only for cards pinned at the exact same instant (or neither pinned at all).
+  const pinnedFirst = (a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || (b.pinnedAt || 0) - (a.pinnedAt || 0) || cmp(a, b);
   const real = state.adminKanbanCards
     .filter(c => c.status === colKey)
     .sort(pinnedFirst);
@@ -313,13 +315,19 @@ function _saveCardModal() {
     _editingCard.urgency = urgency;
     savedCard = _editingCard;
   } else {
+    // Per direct request ("if i add a new item it should appear at the top of the list but
+    // below the pinned items") — one less than the lowest manualOrder already in the column,
+    // rather than appending after everything (the old `.length`), so it sorts to the very front
+    // of the *unpinned* group under Custom order. Pinned cards still float above it regardless
+    // (_cardsInColumn's own pinnedFirst comparator), which is exactly "below the pinned items."
+    const existingOrders = _cardsInColumn(_newCardColumn).filter(c => !c._isDemo).map(c => c.manualOrder ?? 0);
     savedCard = {
       id: 'admin-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
       name,
       details,
       urgency,
       status: _newCardColumn,
-      manualOrder: _cardsInColumn(_newCardColumn).length,
+      manualOrder: existingOrders.length ? Math.min(...existingOrders) - 1 : 0,
       createdAt: Date.now(),
     };
     state.adminKanbanCards.push(savedCard);
@@ -511,8 +519,24 @@ export function renderAdminKanbanBoard() {
       const found = state.adminKanbanCards.find(c => c.id === btn.dataset.id);
       if (!found) return;
       found.pinned = !found.pinned;
+      // Set (or cleared) alongside `pinned` itself — drives the pinned-group ordering in
+      // _cardsInColumn's own comparator above ("in the order of their pinning").
+      found.pinnedAt = found.pinned ? Date.now() : null;
       persistAdminKanbanCard(found);
       renderAdminKanbanBoard();
+      // Per direct request ("clickig the gray pin should make it disapear again") — without this,
+      // the freshly re-rendered board's hover-revealed pin button (kanban.css) just keeps showing
+      // wherever the mouse still physically rests post-click — a genuine, continuously-recomputed
+      // :hover match, most visibly when pinning moves a DIFFERENT card into the exact screen spot
+      // the cursor never left, making THAT card's pin button appear to "not go away." Suppressing
+      // pointer-events for two frames means nothing in the freshly built board can register as
+      // :hover until the user genuinely moves the mouse again, so every pin button starts hidden
+      // right after any click regardless of where the cursor happens to still be resting.
+      const freshBoard = document.getElementById('cards-grid');
+      if (freshBoard) {
+        freshBoard.style.pointerEvents = 'none';
+        requestAnimationFrame(() => requestAnimationFrame(() => { freshBoard.style.pointerEvents = ''; }));
+      }
     });
   });
 
