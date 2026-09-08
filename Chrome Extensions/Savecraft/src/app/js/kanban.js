@@ -408,6 +408,12 @@ export function renderKanbanBoard() {
       const id = btn.dataset.id;
       const item = state.items.find(i => i.id === id);
       if (!item) return;
+      // Per direct request ("make it so the x to delet has the are you sure you want to delte
+      // message appear") — same confirm() pattern already used for Admin Kanban's delete button
+      // (adminKanban.js) and the account-deletion flow (main.js). Worded as "remove ... from the
+      // board" rather than "delete" since this only clears queueStatus (below) — the saved item
+      // itself, and its place in the library, isn't touched.
+      if (!confirm(`Remove "${item.title || 'this item'}" from the board?`)) return;
       item.queueStatus = null;
       await persistItem(item);
       renderKanbanBoard();
