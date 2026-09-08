@@ -533,31 +533,12 @@
 .admin-kcard-details u { text-decoration: underline; }
 .admin-kcard-details a { color: inherit; text-decoration: underline; }
 
-/* Same hover-revealed treatment as the real board's .kcard-remove — fixed dark gray rather than
-   var(--text-muted) (a light gray meant for the dark theme's own cards, low-contrast against
-   this card's fixed white background). Absolutely positioned in the top-right corner — the
-   urgency dot below now lives in the bottom-right instead (per direct request; the two used to
-   share the top-right corner and visibly collided there). */
-.admin-kcard-remove {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  background: none;
-  border: none;
-  color: #888888;
-  font-size: 12px;
-  cursor: pointer;
-  padding: 2px 4px;
-  border-radius: 4px;
-  line-height: 1;
-  opacity: 0;
-  transition: opacity 0.15s, color 0.15s;
-}
-.kcard:hover .admin-kcard-remove { opacity: 1; }
-.admin-kcard-remove:hover { color: #EF4444; }
+/* .admin-kcard-remove (hover-revealed corner "✕") removed entirely, per direct request ("remove
+   the x to delete in the corner of the cards") — deleting only happens from inside the Edit Task
+   modal's own Delete button now.
 
-/* Urgency dot — bottom-right corner (per direct request; was top-right, where it collided with
-   the remove "✕" above), colored by the Low/Medium/High level set in the edit popup. The number
+   Urgency dot — bottom-right corner (previously shared the top-right corner with the "✕" above,
+   where the two collided), colored by the Low/Medium/High level set in the edit popup. The number
    inside it is the card's order/position in the list (top card is always 1), not the urgency
    level — per direct request. */
 .admin-kcard-urgency {
