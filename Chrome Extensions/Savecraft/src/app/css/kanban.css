@@ -567,7 +567,7 @@
 /* .admin-kcard-urgency (the separate circular badge, bottom-right corner) removed entirely, per
    direct request ("remove the number from the circle and place it vertically centered inside
    that colored side band") — its number now lives directly inside the strip below instead. */
-.admin-kcard-urgency--blue   { background: #3B82F6; } /* Low */
+.admin-kcard-urgency--blue   { background: #7C6FF5; } /* Low — was blue (#3B82F6), trying purple per direct request to help pin down whether Low is rendering at all */
 .admin-kcard-urgency--orange { background: #16A34A; } /* Medium — green, per direct request; deep enough that white text stays readable */
 .admin-kcard-urgency--red    { background: #EF4444; } /* High */
 
