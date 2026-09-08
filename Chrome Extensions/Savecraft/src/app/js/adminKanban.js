@@ -16,23 +16,6 @@ import { persistAdminKanbanCard, persistAdminKanbanCards, removeAdminKanbanCard 
 import { storageSync } from './platform.js';
 import { sanitizeNoteHtml, noteHtmlHasContent } from './noteSanitizer.js';
 
-// TEMPORARY — diagnostic only, for the still-unresolved "urgency color not showing" report.
-// Run window.__dumpAdminKanbanUrgency() from the browser console to see each card's real,
-// raw urgency value/type (JSON.stringify + typeof, not just what it renders as) — safe to
-// remove once the actual stored shape is known. No UI, no behavior change on its own.
-if (typeof window !== 'undefined') {
-  window.__dumpAdminKanbanUrgency = () => {
-    const rows = state.adminKanbanCards.map(c => ({
-      name: c.name,
-      status: c.status,
-      urgency: JSON.stringify(c.urgency),
-      typeofUrgency: typeof c.urgency,
-    }));
-    console.table(rows);
-    return rows;
-  };
-}
-
 // One global sort applied across every column (unlike the real board's own per-column
 // kanbanSort) — driven by a dedicated dropdown next to this page's own title, not the shared
 // #sort-select singleton (its fixed option set — Newest/Oldest/A→Z/Z→A/Release Date — belongs to
