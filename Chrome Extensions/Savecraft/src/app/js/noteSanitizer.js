@@ -6,7 +6,11 @@
 // still stripped like every other tag.
 // Parsed via a disconnected <template> — its .content is an inert DocumentFragment, so a nested
 // <script>/<img onerror>/etc. never executes or fetches even transiently during the walk.
-const ALLOWED_TAGS = new Set(['B', 'MARK', 'UL', 'LI',
+const ALLOWED_TAGS = new Set(['B', 'I', 'U', 'MARK', 'UL', 'LI',
+  // I/U — Admin Kanban's own task-details toolbar (adminKanban.js) added Italic/Underline buttons
+  // alongside Bold/Bullet/Link/Image, per direct request ("bold, bullett point, underline,
+  // italic, add link, add image"); allowed here too (not a separate sanitizer) since both are
+  // inert, display-only tags with no attributes worth stripping — exactly the same shape as B.
   // BR is a deliberate addition beyond the literal bold/highlight/bullet spec: Chrome's
   // contenteditable wraps every Enter-created line in a <div> (or <p>, from external paste) by
   // default. Without *some* surviving representation of "line break", a multi-line note collapses
