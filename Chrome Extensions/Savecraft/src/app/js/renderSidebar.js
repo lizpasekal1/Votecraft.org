@@ -15,7 +15,7 @@ import { matchesPrimaryOrUnfoldered, matchesActiveSavedListScope } from './rende
 import { renderGrid } from './renderGrid.js';
 import { storageSync } from './platform.js';
 import { navigateToView } from './navigation.js';
-import { openSwitchConfirm } from './confirmModal.js';
+import { openSwitchConfirm, confirmDialog } from './confirmModal.js';
 
 // Collapses every accordion in the sidebar — Dashboard, Saved Lists, Curated Lists, and every
 // real category (Music Album excluded, same as sidebarCategoryList's own filter further down;
@@ -877,7 +877,9 @@ export function renderSidebar() {
       const confirmMsg = idsToDelete.length > 1
         ? `Delete this folder and its ${idsToDelete.length - 1} subfolder${idsToDelete.length - 1 === 1 ? '' : 's'}? Items inside will stay in the category.`
         : 'Delete this folder? Items inside will stay in the category.';
-      if (!confirm(confirmMsg)) return;
+      // confirmDialog (not native confirm()) so this always appears centered — per direct
+      // request; see confirmModal.js.
+      if (!(await confirmDialog(confirmMsg, { confirmLabel: 'Delete' }))) return;
 
       const affected = state.items.filter(i => idsToDelete.includes(i.folderId));
       for (const item of affected) {

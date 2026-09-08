@@ -5,6 +5,7 @@ import { escapeHtml, catClass } from './utils.js';
 import { persistViewState, removeItem } from './storage.js';
 import { navigateToView } from './navigation.js';
 import { findAuthor, resolveMusicianItem, wireCardAuthorLinks, backfillAlbumYears } from './authors.js';
+import { confirmDialog } from './confirmModal.js';
 import { openDetailModal } from './detailModal.js';
 import { openEditModal } from './addEditModal.js';
 import { openFetchAlbumsModal } from './fetchAlbumsModal.js';
@@ -133,7 +134,9 @@ export function renderAuthorPage() {
     btn.addEventListener('click', async e => {
       e.stopPropagation();
       const id = btn.dataset.id;
-      if (!confirm('Remove this item from SaveCraft?')) return;
+      // confirmDialog (not native confirm()) so this always appears centered — per direct
+      // request; see confirmModal.js.
+      if (!(await confirmDialog('Remove this item from SaveCraft?', { confirmLabel: 'Remove' }))) return;
       await removeItem(id);
       state.items = state.items.filter(i => i.id !== id);
       renderSidebar();
