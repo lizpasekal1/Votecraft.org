@@ -349,7 +349,12 @@ function _saveCardModal() {
 // above) — _urgencyLevel normalizes either representation to a level, so old data keeps working
 // without a migration step.
 function _urgencyLevel(u) {
-  if (u == null) return null;
+  // Per direct request ("make all the items assigned low by default") — unset urgency (null,
+  // including every existing card that predates this) now reads as Low rather than "no color at
+  // all," here at the single point every caller already goes through (the urgency sort modes, the
+  // Edit Task modal's own dropdown default, and the card's own strip) — no migration needed for
+  // existing cards, since this is evaluated at display time, not stored.
+  if (u == null) return 'low';
   if (typeof u === 'number') return u <= 3 ? 'low' : u <= 7 ? 'medium' : 'high';
   return u; // already 'low' | 'medium' | 'high'
 }
@@ -385,9 +390,12 @@ function renderAdminCard(card, position) {
   // Per direct follow-up ("remove the number from the circle and place it vertically centered
   // inside that colored side band") — the separate circular badge is gone; its number now lives
   // directly inside the strip itself instead.
-  const level = _urgencyLevel(card.urgency);
+  // !card._isDemo — now that unset urgency defaults to Low (_urgencyLevel above) rather than "no
+  // strip at all," the placeholder "Drag to progress" card (which has no real urgency field of
+  // its own) would otherwise also pick up a blue strip; excluded explicitly so it stays plain.
+  const level = !card._isDemo ? _urgencyLevel(card.urgency) : null;
   const urgencyStrip = level
-    ? `<span class="admin-kcard-urgency-strip ${_urgencyColorClass(level)}" title="Urgency: ${URGENCY_LABEL[level]} — position ${position}">${card._isDemo ? '' : position}</span>` : '';
+    ? `<span class="admin-kcard-urgency-strip ${_urgencyColorClass(level)}" title="Urgency: ${URGENCY_LABEL[level]} — position ${position}">${position}</span>` : '';
   return `
     <div class="kcard admin-kcard${card._isDemo ? ' kcard--demo' : ''}" data-id="${card.id}" draggable="${!card._isDemo}">
       ${urgencyStrip}
