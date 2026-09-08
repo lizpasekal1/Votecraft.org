@@ -597,7 +597,7 @@
   top: 0;
   left: 0;
   bottom: 0;
-  width: 10px; /* was 5px — twice the width, per direct request */
+  width: 15px; /* was 5px, then 10px (2x); now 50% wider than that, per direct requests */
 }
 
 /* Same reasoning as .admin-kcard-remove above — .kcard-demo-badge's own var(--text-muted) is
