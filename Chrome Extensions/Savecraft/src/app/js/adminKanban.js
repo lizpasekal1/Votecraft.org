@@ -183,6 +183,10 @@ function _ensureModal() {
   document.getElementById('admin-kcard-cancel-btn').addEventListener('click', _closeCardModal);
   document.getElementById('admin-kcard-save-btn').addEventListener('click', _saveCardModal);
   document.getElementById('admin-kcard-delete-btn').addEventListener('click', () => {
+    // Per direct request ("if i click the x to delet or the delet buttonn can you make a popup
+    // that asks if i'm sure") — same plain confirm() this app already uses for every other
+    // delete (Profile's Saved Lists, voice notes, Delete Account), not a custom modal.
+    if (_editingCard && !confirm(`Delete "${_editingCard.name || 'Untitled'}"?`)) return;
     if (_editingCard) {
       const id = _editingCard.id;
       state.adminKanbanCards = state.adminKanbanCards.filter(c => c.id !== id);
@@ -490,6 +494,11 @@ export function renderAdminKanbanBoard() {
     btn.addEventListener('click', e => {
       e.stopPropagation();
       const id = btn.dataset.id;
+      // Same confirm() as the modal's own Delete button, per direct request — this quick-delete
+      // button skips opening the modal entirely, so without its own confirm here a single
+      // misclick would delete a card with no chance to back out.
+      const found = state.adminKanbanCards.find(c => c.id === id);
+      if (!confirm(`Delete "${found?.name || 'Untitled'}"?`)) return;
       state.adminKanbanCards = state.adminKanbanCards.filter(c => c.id !== id);
       removeAdminKanbanCard(id);
       renderAdminKanbanBoard();
