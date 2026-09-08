@@ -13,6 +13,7 @@ import { persistViewState, persistItem, persistHiddenCurated, removeItem } from 
 import { navigateToView } from './navigation.js';
 import { getCurrentUser } from './auth.js';
 import { wireCardAuthorLinks, backfillMusicianGenres, tagsForMusicGenreBucket, findAuthor } from './authors.js';
+import { confirmDialog } from './confirmModal.js';
 import { renderKanbanBoard } from './kanban.js';
 import { renderAdminKanbanBoard } from './adminKanban.js';
 import { openDetailModal } from './detailModal.js';
@@ -503,7 +504,9 @@ function _renderGridBody() {
     btn.addEventListener('click', async e => {
       e.stopPropagation();
       const id = btn.dataset.id;
-      if (!confirm('Remove this item from SaveCraft?')) return;
+      // confirmDialog (not native confirm()) so this always appears centered — per direct
+      // request; see confirmModal.js.
+      if (!(await confirmDialog('Remove this item from SaveCraft?', { confirmLabel: 'Remove' }))) return;
       if (id.startsWith('cur-') && !state.items.find(i => i.id === id)) {
         state.hiddenCurated.add(id);
         await persistHiddenCurated();

@@ -946,3 +946,31 @@
     background: linear-gradient(to bottom, rgba(255,255,255,0.15), rgba(255,255,255,0) 65%);
   }
 }
+
+/* ===== SHARED CONFIRM DIALOG (confirmModal.js's confirmDialog) ===== */
+/* Replaces native window.confirm() across the app, per direct request ("make it so these types
+   of popup messages always appear in the center of the screen") — reuses the same .modal-overlay
+   every other modal centers itself with (position: fixed; inset: 0; display: flex; align-items/
+   justify-content: center — addEditModal.css), so this is guaranteed centered in the viewport
+   regardless of scroll position, unlike a native confirm() whose placement is entirely up to the
+   browser/OS chrome. .modal-header/.modal-body/.modal-actions/.btn-cancel/.btn-primary are all
+   already-shared classes (addEditModal.css) — only the width and the destructive-red button color
+   are specific to this dialog. */
+.confirm-dialog-modal {
+  width: 360px;
+}
+.confirm-dialog-modal .modal-body p {
+  margin: 0;
+  color: var(--text-secondary, #6B7280);
+  line-height: 1.5;
+}
+/* Red instead of the shared .btn-primary's purple — this dialog's confirm button is always the
+   destructive action (Delete/Remove), so it should read as a warning, not a routine primary CTA. */
+.confirm-dialog-modal .btn-danger {
+  background: #EF4444;
+}
+.confirm-dialog-modal .btn-danger:hover,
+.confirm-dialog-modal .btn-danger:active {
+  background: #fff;
+  color: #EF4444;
+}

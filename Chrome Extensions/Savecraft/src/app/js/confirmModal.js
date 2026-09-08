@@ -54,3 +54,46 @@ export function openSwitchConfirm({ name, subtitle, icon, iconColor, leadText = 
   overlay.querySelector('#switch-confirm-open').addEventListener('click', () => { close(); onConfirm(); });
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
 }
+
+// ===== SHARED "ARE YOU SURE?" YES/NO CONFIRM (replaces native confirm()) =====
+// Per direct request ("make it so these types of popup messages always appear in the center of
+// the screen") — a native window.confirm() is positioned entirely by the browser/OS, not by this
+// page's CSS, so it can't be guaranteed centered (some browser chrome/embedded-webview contexts
+// anchor it elsewhere, e.g. top-left, or show it as a thin OS-level bar rather than a real centered
+// dialog). This reuses the exact same .modal-overlay (position: fixed; inset: 0; display: flex;
+// align-items/justify-content: center — addEditModal.css) every other modal in the app already
+// centers itself with, so it's guaranteed to sit in the middle of the viewport regardless of page
+// scroll position or where on the page the triggering button was.
+// Returns a Promise<boolean> — every call site awaits it exactly where it used to check confirm()'s
+// own return value, so `if (!(await confirmDialog(...))) return;` is a drop-in replacement.
+export function confirmDialog(message, { title = 'Are you sure?', confirmLabel = 'Delete', cancelLabel = 'Cancel' } = {}) {
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay open';
+    overlay.innerHTML = `
+      <div class="modal confirm-dialog-modal" style="position:relative;">
+        <div class="modal-header"><h2>${escapeHtml(title)}</h2></div>
+        <div class="modal-body">
+          <p>${escapeHtml(message)}</p>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="confirm-dialog-cancel">${escapeHtml(cancelLabel)}</button>
+          <button type="button" class="btn-primary btn-danger" id="confirm-dialog-ok">${escapeHtml(confirmLabel)}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    const finish = result => { overlay.remove(); resolve(result); };
+    overlay.querySelector('#confirm-dialog-cancel').addEventListener('click', () => finish(false));
+    overlay.querySelector('#confirm-dialog-ok').addEventListener('click', () => finish(true));
+    overlay.addEventListener('click', e => { if (e.target === overlay) finish(false); });
+    // Esc cancels, matching a native confirm()'s own Esc-to-dismiss behavior. One-shot listener
+    // (not removed on Enter/click-away) is harmless — the overlay is already gone by the time a
+    // second Escape could ever reach this handler, and finish() only resolves the promise once
+    // (the caller's own subsequent code path, not this listener, decides what happens next).
+    document.addEventListener('keydown', function onKey(e) {
+      if (e.key !== 'Escape') return;
+      document.removeEventListener('keydown', onKey);
+      if (document.body.contains(overlay)) finish(false);
+    });
+  });
+}
