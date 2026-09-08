@@ -489,7 +489,7 @@
 .admin-kcard-body {
   flex: 1;
   min-width: 0;
-  padding: 10px 24px 22px 12px; /* right clears the remove button, bottom clears the urgency dot */
+  padding: 10px 24px 22px 27px; /* right clears the remove button, bottom clears the urgency dot; left was 12px, +15px per direct request */
   display: flex;
   flex-direction: column;
   justify-content: center; /* vertically centers name+details as a block, rather than pinned to the top */
