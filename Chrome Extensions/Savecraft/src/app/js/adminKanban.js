@@ -354,8 +354,9 @@ function renderAdminCard(card, position) {
   // the short description? i only want to see the titles") — still shown once a card is actually
   // opened (the modal's own details field is untouched), just not previewed here.
   const demoTag = card._isDemo ? '<span class="kcard-demo-badge">DEMO</span>' : '';
-  const removeBtn = !card._isDemo
-    ? `<button class="admin-kcard-remove" data-id="${card.id}" title="Delete card">✕</button>` : '';
+  // Per direct request ("remove the x to delete in the corner of the cards") — deleting now only
+  // happens from inside the Edit Task modal's own Delete button (which already has its own
+  // confirm() prompt), not from a quick corner button on the board card itself.
   // The dot's color still comes from urgency (Low/Medium/High), but the number inside it is now
   // the card's order/position in the list, not the urgency level — per direct request. Works for
   // legacy cards whose stored urgency is still a 1-10 number, via _urgencyLevel.
@@ -371,7 +372,6 @@ function renderAdminCard(card, position) {
         ${demoTag}
         <div class="admin-kcard-name">${escapeHtml(card.name) || 'Untitled'}</div>
       </div>
-      ${removeBtn}
       ${urgencyDot}
     </div>`;
 }
@@ -478,27 +478,14 @@ export function renderAdminKanbanBoard() {
     btn.addEventListener('click', () => _openCardModal(null, btn.dataset.col));
   });
 
+  // No more .admin-kcard-remove corner button/click-guard here — per direct request ("remove the
+  // x to delete in the corner of the cards"), deleting only happens from inside the Edit Task
+  // modal's own Delete button now (which already has its own confirm() prompt).
   board.querySelectorAll('.admin-kcard').forEach(card => {
-    card.addEventListener('click', e => {
-      if (e.target.closest('.admin-kcard-remove')) return;
+    card.addEventListener('click', () => {
       if (card.dataset.id === '__admin_demo__') return;
       const found = state.adminKanbanCards.find(c => c.id === card.dataset.id);
       if (found) _openCardModal(found, null);
-    });
-  });
-
-  board.querySelectorAll('.admin-kcard-remove').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      const id = btn.dataset.id;
-      // Same confirm() as the modal's own Delete button, per direct request — this quick-delete
-      // button skips opening the modal entirely, so without its own confirm here a single
-      // misclick would delete a card with no chance to back out.
-      const found = state.adminKanbanCards.find(c => c.id === id);
-      if (!confirm(`Delete "${found?.name || 'Untitled'}"?`)) return;
-      state.adminKanbanCards = state.adminKanbanCards.filter(c => c.id !== id);
-      removeAdminKanbanCard(id);
-      renderAdminKanbanBoard();
     });
   });
 
