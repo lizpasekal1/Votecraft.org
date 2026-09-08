@@ -18,6 +18,7 @@ import { renderSidebar, renderGrid } from './render.js';
 import { navigateToView } from './navigation.js';
 import { DEMO_FRIENDS } from './sharedSaves.js';
 import { resourceUrl } from './platform.js';
+import { confirmDialog } from './confirmModal.js';
 import { openDetailModal } from './detailModal.js';
 import { inspectNoteHtml, plainTextFromNoteHtml } from './noteSanitizer.js';
 
@@ -711,7 +712,9 @@ function _rebuildSavedListsCard() {
 async function _promptDeleteSavedList(listId) {
   const list = _getSavedListById(listId);
   if (!list) return;
-  if (!confirm(`Are you sure you want to delete "${list.name}"?`)) return;
+  // confirmDialog (not native confirm()) so this always appears centered — per direct request;
+  // see confirmModal.js.
+  if (!(await confirmDialog(`Are you sure you want to delete "${list.name}"?`))) return;
 
   const otherLists = state.savedLists.filter(l => l.id !== listId && l.id !== 'default-favorites');
   const mergeTargetId = otherLists.length ? await _promptMergeTarget(list, otherLists) : '';

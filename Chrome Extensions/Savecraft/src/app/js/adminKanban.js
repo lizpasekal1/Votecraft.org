@@ -15,6 +15,7 @@ import { escapeHtml } from './utils.js';
 import { persistAdminKanbanCard, persistAdminKanbanCards, removeAdminKanbanCard } from './storage.js';
 import { storageSync } from './platform.js';
 import { sanitizeNoteHtml, noteHtmlHasContent } from './noteSanitizer.js';
+import { confirmDialog } from './confirmModal.js';
 
 // One global sort applied across every column (unlike the real board's own per-column
 // kanbanSort) — driven by a dedicated dropdown next to this page's own title, not the shared
@@ -189,11 +190,11 @@ function _ensureModal() {
   document.getElementById('admin-kcard-modal-close').addEventListener('click', _closeCardModal);
   document.getElementById('admin-kcard-cancel-btn').addEventListener('click', _closeCardModal);
   document.getElementById('admin-kcard-save-btn').addEventListener('click', _saveCardModal);
-  document.getElementById('admin-kcard-delete-btn').addEventListener('click', () => {
+  document.getElementById('admin-kcard-delete-btn').addEventListener('click', async () => {
     // Per direct request ("if i click the x to delet or the delet buttonn can you make a popup
-    // that asks if i'm sure") — same plain confirm() this app already uses for every other
-    // delete (Profile's Saved Lists, voice notes, Delete Account), not a custom modal.
-    if (_editingCard && !confirm(`Delete "${_editingCard.name || 'Untitled'}"?`)) return;
+    // that asks if i'm sure") — confirmDialog (not native confirm()) so it always appears
+    // centered, per the later follow-up request; see confirmModal.js.
+    if (_editingCard && !(await confirmDialog(`Delete "${_editingCard.name || 'Untitled'}"?`))) return;
     if (_editingCard) {
       const id = _editingCard.id;
       state.adminKanbanCards = state.adminKanbanCards.filter(c => c.id !== id);

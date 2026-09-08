@@ -30,6 +30,7 @@ import { initSortSelect, setSortSelectValue } from './sortSelect.js';
 import { initGlobalSearch } from './globalSearch.js';
 import { closeVoiceNoteModal, initVoiceNoteModal } from './voiceNotes.js';
 import { closeFetchAlbumsModal, handleImportAlbums, renderFetchAlbumsList } from './fetchAlbumsModal.js';
+import { confirmDialog } from './confirmModal.js';
 // One-time personal bulk-import helper (window.bulkImportMyArtists()), see its own file header —
 // side-effect-only import (registers itself on window at load time), not otherwise used here.
 import './bulkImportArtists.js';
@@ -598,7 +599,13 @@ async function init() {
     closeAuthModal();
   });
   document.getElementById('btn-auth-delete-account').addEventListener('click', async () => {
-    if (!confirm('Delete your account? This permanently removes your saved items, folders, and account settings from the cloud. This cannot be undone.')) return;
+    // confirmDialog (not native confirm()) so this always appears centered — per direct request;
+    // see confirmModal.js.
+    const ok = await confirmDialog(
+      'Delete your account? This permanently removes your saved items, folders, and account settings from the cloud. This cannot be undone.',
+      { title: 'Delete account?', confirmLabel: 'Delete Account' }
+    );
+    if (!ok) return;
     const result = await deleteAccount();
     if (result.ok) {
       // Deliberately NOT closeAuthModal() — applyAuthUI's own reaction to the now-signed-out
