@@ -536,6 +536,10 @@
 /* .admin-kcard-remove (hover-revealed corner "✕") removed entirely, per direct request ("remove
    the x to delete in the corner of the cards") — deleting only happens from inside the Edit Task
    modal's own Delete button now. Its old top-right corner spot is now the pin button below. */
+/* Hover-revealed, per direct follow-up ("i only want the pin to appear onhover") — same
+   opacity-on-.kcard:hover treatment the old delete "✕" used. A pinned card's state still reads
+   without hovering, just via its position (pinned cards always float to the top of their column,
+   _cardsInColumn above) rather than the button's own always-visible color. */
 .admin-kcard-pin {
   position: absolute;
   top: 6px;
@@ -550,11 +554,13 @@
   padding: 3px;
   border-radius: 4px;
   line-height: 1;
-  transition: color 0.15s;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
 }
+.kcard:hover .admin-kcard-pin { opacity: 1; }
 .admin-kcard-pin:hover { color: #888888; }
-/* Pinned — filled purple rather than the plain hover-darkened gray above, so a pinned card's
-   state reads at a glance without needing to hover it, unlike the old hover-only "✕". */
+/* Pinned — filled purple rather than the plain hover-darkened gray above, so hovering a pinned
+   card's button still shows its state, just like an unpinned card's button shows plain gray. */
 .admin-kcard-pin--active,
 .admin-kcard-pin--active:hover {
   color: var(--primary);
