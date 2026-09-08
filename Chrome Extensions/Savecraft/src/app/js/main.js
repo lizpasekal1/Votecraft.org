@@ -21,6 +21,7 @@ import {
   openAddModal, closeAddModal, handleSaveItem, updatePlatformSummary,
   openEditModal, selectStep1Category, handleTitleSearch, hideTitleSearchResults, kickOffTitleEnrichment,
   handleModalBack, refreshStep2ImagePreviewFromManualInput, updateCategoryDependentUi, showInfoScreen,
+  setPendingCapture,
 } from './addEditModal.js';
 import { openDetailModal, closeDetailModal, closeImageLightbox, getDetailItem, showNextImage, showPrevImage, handleGalleryLoadMoreClick, closeVideoLightbox } from './detailModal.js';
 import { initNoteToolbar } from './detailModalNotes.js';
@@ -1057,6 +1058,33 @@ async function init() {
   });
 
   document.getElementById('fab-add').addEventListener('click', () => openAddModal());
+
+  // Hand-off from the extension's popup (popup.js) — it no longer re-implements its own copy of
+  // the Add wizard (category tiles, folder picker, review form), it just grabs the current tab's
+  // URL/title/best-effort image and opens this real site with them attached, per direct request
+  // ("simplify the code so that we're not maintaining the redundant extension UI that can just be
+  // handled by the savecraft.org website"). Landing straight on the real Add flow's category
+  // screen (openAddModal) with those three fields pre-filled once a category's chosen
+  // (setPendingCapture, consumed by addEditModal.js's showReviewScreen) means there's only ever
+  // one implementation of "add an item" to maintain, not two.
+  const captureParams = new URLSearchParams(location.search);
+  const captureUrl = captureParams.get('captureUrl');
+  if (captureUrl) {
+    setPendingCapture({
+      url: captureUrl,
+      title: captureParams.get('captureTitle') || '',
+      imageUrl: captureParams.get('captureImage') || null,
+    });
+    openAddModal();
+    // Strips the capture params back out of the address bar now that they've been consumed —
+    // without this, refreshing the page (or just glancing at the URL) would misleadingly still
+    // show them, and a stray Back navigation could re-trigger the modal a second time.
+    captureParams.delete('captureUrl');
+    captureParams.delete('captureTitle');
+    captureParams.delete('captureImage');
+    const rest = captureParams.toString();
+    history.replaceState(history.state, '', location.pathname + (rest ? `?${rest}` : ''));
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);

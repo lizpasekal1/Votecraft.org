@@ -17,10 +17,8 @@
   --primary:         #7C6FF5;
   --primary-bg:      #2D2945;
   --primary-hover:   #6A5EE0;
-  --hover-bg:        #2C2D32;
   --danger-bg:       #4A2C00;
   --danger-text:     #FCD34D;
-  --success:         #10B981;
 }
 
 [data-theme="light"] {
@@ -34,41 +32,23 @@
   --primary:         #5C4EFA;
   --primary-bg:      #EBE8FD;
   --primary-hover:   #4A3DD4;
-  --hover-bg:        #F1F3F4;
   --danger-bg:       #FEF3C7;
   --danger-text:     #B45309;
-  --success:         #059669;
 }
 
-/* Fixed width always; height is one of exactly two sizes (set via a class on body from
-   popup.js), not per-screen free growth — a compact size for the tile-picker screens
-   (category/music-choice/folder) and a taller one for the review/details screen, which has
-   more form content. Picking a tile never resizes the window mid-navigation within a size
-   class, and the one class swap between "compact" and "tall" is the only resize that happens. */
+/* Fixed size — this is now a single, always-the-same-shape screen (capture preview + one
+   button), not a multi-screen wizard that used to resize between a compact tile-picker size and
+   a taller review-form size. */
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  width: 360px;
+  width: 320px;
   overflow: hidden;
   border-radius: 12px;
   display: flex;
   flex-direction: column;
   background: var(--bg);
   color: var(--text-primary);
-  transition: background 0.15s, color 0.15s, height 0.15s;
 }
-
-body.size-compact { height: 320px; }
-/* The review screen's content height varies (banner, category label length, image preview),
-   so a guessed fixed number here always left an unpredictable amount of empty space below the
-   Save button. Sized to content instead — #step-review's own padding-bottom below is what
-   actually controls how much space sits below the button, precisely, in every case. */
-body.size-tall { height: auto; }
-
-/* The "can't be saved" banner (browser-internal pages) adds real height above the wizard
-   content — without accounting for it, the fixed compact size left too little room and the
-   tile grid below got squeezed/pushed down. Added once at load, never toggled mid-navigation.
-   size-tall doesn't need an equivalent — its height is already computed from real content. */
-body.has-banner.size-compact { height: 385px; }
 
 /* Top bar */
 .popup-header {
@@ -104,32 +84,11 @@ body.has-banner.size-compact { height: 385px; }
   color: white;
 }
 
-/* Content */
 .content {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-}
-
-/* Tile-picker screens (category / music-choice / folder) center their grid in whatever room is
-   left below the header, instead of hugging the top — most noticeable on screens with just a
-   couple of tiles. The review screen (a form, not a tile grid) stays top-anchored as normal. */
-.wizard-step--tiles {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-/* Nudge up 30px from dead-center — sitting exactly in the middle read as too far from the
-   header on screens with just a couple of tiles. */
-.wizard-step--tiles .cat-grid {
-  margin-top: -30px;
+  gap: 14px;
 }
 
 .unsaveable-msg {
@@ -139,295 +98,53 @@ body.has-banner.size-compact { height: 385px; }
   border-radius: 8px;
   padding: 8px 12px;
   text-align: center;
-  margin-bottom: 12px;
 }
 
-/* ===== Wizard header (mirrors the main app's Add Item modal header) ===== */
-.modal-header {
+/* Current-tab preview — thumbnail (if a page image was found) + title/url, so it's clear exactly
+   what "Save This Page" is about to capture before handing off to savecraft.org. */
+.capture-preview {
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin-bottom: 16px;
+  gap: 10px;
 }
 
-/* Folder-picker and music-choice screens only — their header text sat too close to the
-   unsaveable-page banner/top edge. The back arrow is absolutely positioned inside .modal-header,
-   so it would otherwise drift down along with the header's shifted box — counter that to keep
-   it in its usual spot. */
-body.screen-folder .modal-header,
-body.screen-music-choice .modal-header,
-body.screen-review .modal-header {
-  margin-top: 60px;
-}
-body.screen-folder .modal-back-icon,
-body.screen-music-choice .modal-back-icon,
-body.screen-review .modal-back-icon {
-  margin-top: -60px;
-}
-
-/* Same two screens — bring their tile buttons up an extra 20px on top of the base -30px nudge
-   (both screens dropped 20px further per a later request, matching the header position above). */
-body.screen-folder .cat-grid,
-body.screen-music-choice .cat-grid {
-  margin-top: -45px;
-}
-
-/* Folder screen — extra vertical breathing room between tile rows, and a wider gap between
-   columns (which also narrows each tile, since the columns are 1fr 1fr). */
-body.screen-folder .cat-grid {
-  row-gap: 18px;
-  column-gap: 18px;
-}
-
-/* Music-choice screen — Musician/Music Album stack in a single column instead of side by side. */
-body.screen-music-choice .cat-grid {
-  grid-template-columns: 1fr;
-  row-gap: 20px;
-}
-body.screen-music-choice .cat-btn {
-  width: calc(100% - 70px);
-  margin: 0 auto;
-}
-
-/* Book's (Authors/Books) and Movie's (Movies/Videos) folder screens — stacked layout matching
-   the music-choice screen, instead of the usual 2-column folder-tile grid every other category's
-   folder screen uses. Scoped to the folder screen's own grid element (not the shared .cat-grid
-   class every screen's grid uses) so a stale body class can't leak this into the category/
-   music-choice screens too. */
-body.screen-folder-stacked #folder-grid {
-  grid-template-columns: 1fr;
-  row-gap: 20px;
-}
-body.screen-folder-stacked #folder-grid .cat-btn {
-  width: calc(100% - 70px);
-  margin: 0 auto;
-}
-
-.modal-back-icon {
-  position: absolute;
-  top: -2px;
-  left: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 6px;
-  border-radius: 4px;
-  transition: color 0.15s;
-}
-.modal-back-icon:hover { color: var(--text-primary); }
-
-.modal-back-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--primary);
-}
-.modal-back-label:empty { display: none; }
-
-.modal-header h2 {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-primary);
-  text-align: center;
-}
-
-/* Folder and music-choice screens — "Choose a folder" text is 3px larger than other headers. */
-body.screen-folder .modal-header h2,
-body.screen-music-choice .modal-header h2 {
-  font-size: 18px;
-}
-
-/* Folder and music-choice screens — the bookmark icon next to "Choose a folder" is dropped. */
-body.screen-folder .modal-bookmark-icon,
-body.screen-music-choice .modal-bookmark-icon {
-  display: none;
-}
-
-.modal-bookmark-icon {
+.capture-preview-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
   flex-shrink: 0;
-  color: var(--primary);
-}
-
-/* ===== Category / folder tile grids (mirrors .step1-category-tile) ===== */
-.cat-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-
-.cat-btn {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 9px 10px;
-  border: 1.5px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-  text-align: left;
-  color: var(--text-primary);
-  transition: border-color 0.15s, background 0.15s;
-}
-
-.cat-btn svg {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  fill: var(--primary);
-}
-
-.cat-btn span.cat-btn-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.cat-btn:hover {
-  border-color: var(--primary);
-  background: var(--hover-bg);
-}
-
-.cat-btn.selected {
-  border-color: var(--primary);
-  background: var(--hover-bg);
-  box-shadow: 0 0 0 1px var(--primary);
-}
-
-/* ===== Saved-lists dropdown (review screen only) — mirrors the main app's #saved-lists-wrap
-   (addEditModal.css), scoped down for the popup's 360px width. ===== */
-.lists-row {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 10px;
-}
-
-.lists-dropdown {
-  position: relative;
-}
-
-.lists-summary {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: var(--primary);
-  color: white;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  list-style: none;
-  user-select: none;
-  white-space: nowrap;
-}
-
-.lists-summary::-webkit-details-marker { display: none; }
-
-.lists-summary svg {
-  flex-shrink: 0;
-  transition: transform 0.15s;
-}
-
-.lists-dropdown[open] .lists-summary svg {
-  transform: rotate(180deg);
-}
-
-.lists-options {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  min-width: 160px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 6px 0;
-  z-index: 10;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
 }
 
-.lists-option {
+.capture-preview-text {
+  min-width: 0;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 7px 12px;
-  font-size: 12.5px;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.capture-preview-title {
+  font-size: 13px;
+  font-weight: 600;
   color: var(--text-primary);
-  cursor: pointer;
-}
-
-.lists-option:hover {
-  background: var(--hover-bg);
-}
-
-.lists-option--locked {
-  color: var(--text-secondary);
-  cursor: default;
-}
-
-.lists-option--locked:hover {
-  background: none;
-}
-
-.lists-option-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* ===== Review screen ===== */
-/* With body.size-tall now auto-height (see above), this is what actually guarantees exactly
-   40px of space below the Save Page button, regardless of category/banner state. */
-#step-review {
-  padding-bottom: 40px;
+.capture-preview-url {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.form-group {
-  margin-bottom: 12px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--primary);
-  margin-bottom: 6px;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 9px 11px;
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  font-size: 13px;
-  outline: none;
-  color: var(--text-primary);
-  background: var(--surface);
-  transition: border-color 0.15s;
-}
-
-.form-group input:focus {
-  border-color: var(--primary);
-}
-
-/* Save button */
 .btn-save {
   width: 100%;
   padding: 10px;
-  margin-top: 4px;
   background: var(--primary);
   color: white;
   border: none;
@@ -446,43 +163,6 @@ body.screen-music-choice .modal-bookmark-icon {
   background: var(--primary-bg);
   color: var(--text-muted);
   cursor: not-allowed;
-}
-
-.saved-msg {
-  text-align: center;
-  font-size: 13px;
-  color: var(--success);
-  font-weight: 500;
-  padding: 6px;
-}
-
-.saved-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.saved-actions .btn-save {
-  margin-top: 0;
-}
-
-.btn-saved-close {
-  width: 100%;
-  padding: 9px;
-  background: none;
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-
-.btn-saved-close:hover {
-  background: var(--hover-bg);
-  color: var(--text-primary);
 }
 
 .hidden {

@@ -5,7 +5,7 @@
   <title>SaveCraft</title>
   <link rel="stylesheet" href="popup.css">
 </head>
-<body class="size-compact">
+<body>
   <div class="popup-header">
     <span class="logo">SaveCraft</span>
     <button id="btn-open-library" class="btn-library">Open Library →</button>
@@ -16,67 +16,18 @@
       This page can't be saved (browser internal page).
     </div>
 
-    <div class="modal-header" style="position:relative">
-      <button class="modal-back-icon" id="btn-back" title="Back" style="display:none">
-        <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M400-80 0-480l400-400 56 56-344 344 344 344-56 56Z"/></svg>
-        <span class="modal-back-label" id="modal-back-label"></span>
-      </button>
-      <h2 id="modal-title">
-        <svg class="modal-bookmark-icon" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor"><path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Z"/></svg>
-        <span id="modal-title-text">What are you adding to?</span>
-      </h2>
-    </div>
-
-    <!-- Screen 1: category -->
-    <div class="wizard-step wizard-step--tiles" id="step-category">
-      <div class="cat-grid" id="cat-grid"></div>
-    </div>
-
-    <!-- Screen 1.5: Musician vs Music Album sub-choice, shown only from the combined "Music" tile -->
-    <div class="wizard-step wizard-step--tiles" id="step-music-choice" style="display:none">
-      <div class="cat-grid" id="music-choice-grid"></div>
-    </div>
-
-    <!-- Screen 2: folder picker (only shown when the category has more than one folder) -->
-    <div class="wizard-step wizard-step--tiles" id="step-folder" style="display:none">
-      <div class="cat-grid" id="folder-grid"></div>
-    </div>
-
-    <!-- Screen 3: review + save -->
-    <div class="wizard-step" id="step-review" style="display:none">
-      <!-- Same checkbox-multi-select picker as the main app's own Add flow (addEditModal.js's
-           #saved-lists-wrap) — lets the item being saved be added to any of the user's saved
-           lists, not just the category-derived folder. Nothing persisted per click here, just
-           tracked in popup.js's selectedListIds until Save actually builds the item. -->
-      <div class="lists-row">
-        <details class="lists-dropdown" id="lists-wrap">
-          <summary class="lists-summary">
-            <span>Select Lists</span>
-            <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M480-360 280-560h400L480-360Z"/></svg>
-          </summary>
-          <div class="lists-options" id="lists-options"></div>
-        </details>
-      </div>
-
-      <div class="form-group">
-        <label>Title</label>
-        <input type="text" id="input-title" placeholder="Title" autocomplete="off" />
-      </div>
-
-      <div class="form-group">
-        <label>URL</label>
-        <input type="url" id="input-url" placeholder="https://…" autocomplete="off" />
-      </div>
-
-      <button id="btn-save" class="btn-save">Save Page</button>
-      <div id="saved-msg" class="saved-msg hidden">
-        ✅ Saved to SaveCraft!
-        <div class="saved-actions">
-          <button type="button" id="btn-saved-open-library" class="btn-save">Open Library →</button>
-          <button type="button" id="btn-saved-close" class="btn-saved-close">Close</button>
-        </div>
+    <!-- What "Save This Page" below is about to capture — the current tab's title/URL, plus a
+         best-effort thumbnail (popup.js). Everything else (category, folder, lists) is picked on
+         savecraft.org's own Add flow after handoff, not here. -->
+    <div id="capture-preview" class="capture-preview">
+      <img id="capture-preview-img" class="capture-preview-img hidden" alt="" />
+      <div class="capture-preview-text">
+        <span id="capture-preview-title" class="capture-preview-title"></span>
+        <span id="capture-preview-url" class="capture-preview-url"></span>
       </div>
     </div>
+
+    <button id="btn-save" class="btn-save">Save This Page</button>
   </div>
 
   <script type="module" src="popup.js"></script>
