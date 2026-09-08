@@ -371,14 +371,15 @@ function renderAdminCard(card, position) {
     ? `<button class="admin-kcard-pin${card.pinned ? ' admin-kcard-pin--active' : ''}" data-id="${card.id}" title="${card.pinned ? 'Unpin' : 'Pin to top'}" aria-label="${card.pinned ? 'Unpin' : 'Pin to top'}">
         <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
       </button>` : '';
-  // The dot's color still comes from urgency (Low/Medium/High), but the number inside it is now
-  // the card's order/position in the list, not the urgency level — per direct request. Works for
+  // The strip's color still comes from urgency (Low/Medium/High); the number inside it is the
+  // card's order/position in the list, not the urgency level — per direct request. Works for
   // legacy cards whose stored urgency is still a 1-10 number, via _urgencyLevel.
+  // Per direct follow-up ("remove the number from the circle and place it vertically centered
+  // inside that colored side band") — the separate circular badge is gone; its number now lives
+  // directly inside the strip itself instead.
   const level = _urgencyLevel(card.urgency);
-  const urgencyDot = (level && !card._isDemo)
-    ? `<span class="admin-kcard-urgency ${_urgencyColorClass(level)}" title="Urgency: ${URGENCY_LABEL[level]} — position ${position}">${position}</span>` : '';
   const urgencyStrip = level
-    ? `<span class="admin-kcard-urgency-strip ${_urgencyColorClass(level)}"></span>` : '';
+    ? `<span class="admin-kcard-urgency-strip ${_urgencyColorClass(level)}" title="Urgency: ${URGENCY_LABEL[level]} — position ${position}">${card._isDemo ? '' : position}</span>` : '';
   return `
     <div class="kcard admin-kcard${card._isDemo ? ' kcard--demo' : ''}" data-id="${card.id}" draggable="${!card._isDemo}">
       ${urgencyStrip}
@@ -387,7 +388,6 @@ function renderAdminCard(card, position) {
         <div class="admin-kcard-name">${escapeHtml(card.name) || 'Untitled'}</div>
       </div>
       ${pinBtn}
-      ${urgencyDot}
     </div>`;
 }
 
