@@ -6,11 +6,15 @@
 // still stripped like every other tag.
 // Parsed via a disconnected <template> — its .content is an inert DocumentFragment, so a nested
 // <script>/<img onerror>/etc. never executes or fetches even transiently during the walk.
-const ALLOWED_TAGS = new Set(['B', 'I', 'U', 'MARK', 'UL', 'LI',
+const ALLOWED_TAGS = new Set(['B', 'I', 'U', 'MARK', 'UL', 'OL', 'LI',
   // I/U — Admin Kanban's own task-details toolbar (adminKanban.js) added Italic/Underline buttons
   // alongside Bold/Bullet/Link/Image, per direct request ("bold, bullett point, underline,
   // italic, add link, add image"); allowed here too (not a separate sanitizer) since both are
   // inert, display-only tags with no attributes worth stripping — exactly the same shape as B.
+  // OL — per direct follow-up ("can you make it so text that i paste in keeps most of its
+  // formatting?") — numbered lists are extremely common in real-world pasted content and are the
+  // direct sibling of the bullet list the toolbar already supports; see TAG_ALIASES below for the
+  // other half of that same fix (STRONG/EM, which most pasted content uses instead of B/I).
   // BR is a deliberate addition beyond the literal bold/highlight/bullet spec: Chrome's
   // contenteditable wraps every Enter-created line in a <div> (or <p>, from external paste) by
   // default. Without *some* surviving representation of "line break", a multi-line note collapses
@@ -45,6 +49,14 @@ const SAFE_LINK_HREF = /^https?:/i;
 // rich-text paste, which _walk lets straight through) — run once per sanitize, after _walk, so it
 // only ever sees text that's already survived every other allow-list check.
 const URL_RE = /\bhttps?:\/\/[^\s<>"']+/gi;
+// Per direct request ("can you make it so text that i paste in keeps most of its formating?") —
+// real-world rich text (Google Docs, Word, most web pages) almost always marks up bold/italic as
+// STRONG/EM rather than the plain B/I this toolbar itself produces via execCommand. Without this,
+// pasted bold/italic text wasn't actually being preserved at all — STRONG/EM aren't on
+// ALLOWED_TAGS above, so _walk was silently unwrapping them (keeping the text, dropping the
+// formatting) on every paste. Normalized to the canonical tag _walk already knows how to handle,
+// rather than adding STRONG/EM as a second separate representation of the same formatting.
+const TAG_ALIASES = { STRONG: 'B', EM: 'I' };
 // Block-level wrappers get unwrapped like anything else disallowed, but with a trailing <br>
 // inserted first so the line break they represented isn't silently lost.
 const BLOCK_TAGS_UNWRAP_TO_BR = new Set(['DIV', 'P']);
@@ -58,6 +70,14 @@ function _walk(parent) {
     if (node.nodeType === Node.TEXT_NODE) return;
     if (node.nodeType !== Node.ELEMENT_NODE) { parent.removeChild(node); return; } // comments etc.
     if (DELETE_TAGS.has(node.tagName)) { parent.removeChild(node); return; }
+    if (TAG_ALIASES[node.tagName]) {
+      // tagName is read-only — swap in a real replacement element of the canonical tag, moving
+      // every child over, rather than trying to mutate node in place.
+      const replacement = document.createElement(TAG_ALIASES[node.tagName]);
+      while (node.firstChild) replacement.appendChild(node.firstChild);
+      parent.replaceChild(replacement, node);
+      node = replacement;
+    }
     _walk(node); // clean children first, whether this node survives or gets unwrapped
     if (ALLOWED_TAGS.has(node.tagName)) {
       const keepAttrs = ALLOWED_ATTRS[node.tagName];

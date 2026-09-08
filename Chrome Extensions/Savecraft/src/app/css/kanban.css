@@ -712,7 +712,8 @@
 .admin-kcard-details-input i { font-style: italic; }
 .admin-kcard-details-input u { text-decoration: underline; }
 .admin-kcard-details-input a { color: var(--primary); }
-.admin-kcard-details-input ul { margin: 0; padding-left: 20px; }
+.admin-kcard-details-input ul,
+.admin-kcard-details-input ol { margin: 0; padding-left: 20px; }
 .admin-kcard-details-input img { max-width: 100%; border-radius: 6px; margin-top: 4px; }
 
 /* Formatting toolbar — Bold/Italic/Underline/Bullet/Link/Image, per the same direct request
