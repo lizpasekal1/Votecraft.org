@@ -349,12 +349,21 @@ function _saveCardModal() {
 // above) — _urgencyLevel normalizes either representation to a level, so old data keeps working
 // without a migration step.
 function _urgencyLevel(u) {
-  // Per direct request ("make all the items assigned low by default") — unset urgency (null,
-  // including every existing card that predates this) now reads as Low rather than "no color at
-  // all," here at the single point every caller already goes through (the urgency sort modes, the
-  // Edit Task modal's own dropdown default, and the card's own strip) — no migration needed for
-  // existing cards, since this is evaluated at display time, not stored.
-  if (u == null) return 'low';
+  // Per direct request ("make all the items assigned low by default") — unset urgency now reads
+  // as Low rather than "no color at all," here at the single point every caller already goes
+  // through (the urgency sort modes, the Edit Task modal's own dropdown default, and the card's
+  // own strip) — no migration needed for existing cards, since this is evaluated at display time,
+  // not stored.
+  // REAL BUG, found and fixed: the first version of this only caught null/undefined (`u == null`)
+  // — still reported live afterward as not working for a real batch of cards even after a hard
+  // refresh confirmed fresh code. Those cards predate even the 1-10 numeric-urgency era this
+  // function already migrates below; their `urgency` turned out to be a different falsy value
+  // (not literally null) that the loose-equality check let straight through to the final
+  // `return u` line, itself falsy, which silently produced no strip at all rather than a wrong
+  // color — indistinguishable from "nothing rendered" in every screenshot taken while debugging
+  // it. `!u` catches every falsy shape (null, undefined, '', false, 0, NaN) in one check, not
+  // just the one this bug happened to be.
+  if (!u) return 'low';
   if (typeof u === 'number') return u <= 3 ? 'low' : u <= 7 ? 'medium' : 'high';
   return u; // already 'low' | 'medium' | 'high'
 }
