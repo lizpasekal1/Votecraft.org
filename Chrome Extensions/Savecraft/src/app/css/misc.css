@@ -958,11 +958,19 @@
    are specific to this dialog. */
 .confirm-dialog-modal {
   width: 360px;
+  text-align: center;
 }
+/* Title (.modal-header's own flex column + align-items: center — addEditModal.css — already
+   centers the h2 itself) and message text centered, and the Cancel/Delete buttons centered as a
+   pair too (overriding the shared .modal-actions' default flex-end/right-aligned layout) — per
+   direct request ("can you center the content in that popup"). */
 .confirm-dialog-modal .modal-body p {
   margin: 0;
   color: var(--text-secondary, #6B7280);
   line-height: 1.5;
+}
+.confirm-dialog-modal .modal-actions {
+  justify-content: center;
 }
 /* Red instead of the shared .btn-primary's purple — this dialog's confirm button is always the
    destructive action (Delete/Remove), so it should read as a warning, not a routine primary CTA. */
