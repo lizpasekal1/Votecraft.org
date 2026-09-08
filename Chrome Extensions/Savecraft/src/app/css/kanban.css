@@ -558,6 +558,10 @@
   transition: opacity 0.15s, color 0.15s;
 }
 .kcard:hover .admin-kcard-pin { opacity: 1; }
+/* Once pinned, stays visible even off-hover — per direct request ("if i click on the pin to top
+   button, I want the pin to stay gray till i click it again... it should not disapear if i am
+   not hovering the card"). Unpinned buttons keep the old hover-only opacity:0 above. */
+.admin-kcard-pin--active { opacity: 1; }
 .admin-kcard-pin:hover { color: #888888; }
 /* Pinned used to turn purple here — per direct request ("make it so if i pin something to the
    top the pin icon stays gray"), it now keeps the exact same gray as an unpinned button, in both
