@@ -33,7 +33,13 @@ let _bareListCategoryFilter = null;
 let _bareListChipsExpanded = false;
 const BARE_LIST_CHIPS_COLLAPSED_COUNT = 5;
 // "Why Curated Lists" accordion — collapsed by default, same reasoning as the chip list above.
-let _bareListWhyExpanded = false;
+// null = the user hasn't toggled it this session, so fall back to "open on desktop, closed on
+// narrower widths" (per direct request "keep the 'Why curated lists' toggled open on desktop" —
+// on a phone-width column it's just a wall of text taking the filter rail's whole height). Once
+// the user clicks the accordion, this holds their explicit true/false and the width no longer
+// matters.
+let _bareListWhyExpanded = null;
+const _bareListWhyDefault = () => (typeof window !== 'undefined' && window.innerWidth > 1200);
 
 // A palette rotated across avatar circles, standing in for a real org logo/photo.
 const DIRECTORY_AVATAR_COLORS = ['#5B5BEF', '#E0507A', '#2A9D8F', '#E76F51', '#8E44AD', '#F4A340'];
@@ -60,6 +66,10 @@ export function renderCuratedBareList(container) {
   // explicitly here (it defaults to visible there, unlike the Kanban-only controls).
   document.getElementById('sort-select').style.display = 'none';
   document.getElementById('btn-kanban-dashboard').style.display = '';
+
+  // Resolved once per render: the user's explicit toggle if they've made one, else the
+  // width-based default (open on desktop).
+  const whyExpanded = _bareListWhyExpanded ?? _bareListWhyDefault();
 
   const content = CURATED_DIRECTORY_CONTENT;
   const allOrgs = content.categories.flatMap(({ label, orgs }) => orgs.map(org => ({ ...org, category: label })));
@@ -114,11 +124,11 @@ export function renderCuratedBareList(container) {
           <div class="bare-list-chips bare-list-chips-more" ${_bareListChipsExpanded ? '' : 'hidden'}>${restChipsHtml}</div>
           <button class="bare-list-chips-toggle" type="button">${_bareListChipsExpanded ? 'View less' : 'View more'}</button>
           ` : ''}
-          <button class="bare-list-filter-section-title bare-list-why-title bare-list-accordion-toggle${_bareListWhyExpanded ? ' bare-list-accordion-toggle--open' : ''}" type="button">
+          <button class="bare-list-filter-section-title bare-list-why-title bare-list-accordion-toggle${whyExpanded ? ' bare-list-accordion-toggle--open' : ''}" type="button">
             Why Curated Lists
             <svg class="bare-list-accordion-arrow" xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor"><path d="M480-360 280-560h400L480-360Z"/></svg>
           </button>
-          <p class="bare-list-why-copy" ${_bareListWhyExpanded ? '' : 'hidden'}>A good list is a shortcut — built by people who already did the digging, so you don't have to. Curated lists surface what's worth your time from partners whose values you trust, instead of leaving it to chance.</p>
+          <p class="bare-list-why-copy" ${whyExpanded ? '' : 'hidden'}>A good list is a shortcut — built by people who already did the digging, so you don't have to. Curated lists surface what's worth your time from partners whose values you trust, instead of leaving it to chance.</p>
         </div>
         <div class="bare-list-rows">
           ${rowsHtml}
@@ -162,9 +172,14 @@ export function renderCuratedBareList(container) {
   });
 
   container.querySelector('.bare-list-why-title')?.addEventListener('click', e => {
-    _bareListWhyExpanded = !_bareListWhyExpanded;
-    e.currentTarget.classList.toggle('bare-list-accordion-toggle--open', _bareListWhyExpanded);
-    container.querySelector('.bare-list-why-copy').hidden = !_bareListWhyExpanded;
+    // Read the live open/closed state off the DOM (this handler is the only thing that changes
+    // it, so the class is always accurate) rather than a render-time closure var — then flip it
+    // and store it explicitly, so the width-based default no longer applies once the user has
+    // toggled it, and a second click still toggles correctly without a re-render.
+    const nowOpen = !e.currentTarget.classList.contains('bare-list-accordion-toggle--open');
+    _bareListWhyExpanded = nowOpen;
+    e.currentTarget.classList.toggle('bare-list-accordion-toggle--open', nowOpen);
+    container.querySelector('.bare-list-why-copy').hidden = !nowOpen;
   });
 
   container.querySelectorAll('.bare-list-chip').forEach(chip => {
