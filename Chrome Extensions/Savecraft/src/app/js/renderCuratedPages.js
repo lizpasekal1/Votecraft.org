@@ -84,6 +84,13 @@ export function renderCuratedBareList(container) {
   `;
   const filterChipsHtml = collapsedCategories.map(chipHtml).join('');
   const restChipsHtml = restCategories.map(chipHtml).join('');
+  // Mobile/tablet (<=1200px, see cards.css): the inline cause-area rail is hidden and this whole
+  // set of chips moves into a "Filter" modal instead, per direct request (ActBlue-style). One
+  // flat chip list (no collapsed/"View more" split — the modal has room to show them all).
+  const modalChipHtml = ({ label }) => `
+    <button class="bare-list-chip bare-list-filter-modal-chip${_bareListCategoryFilter === label ? ' bare-list-chip--active' : ''}" data-category="${escapeHtml(label)}">${escapeHtml(label)}</button>
+  `;
+  const modalChipsHtml = content.categories.map(modalChipHtml).join('');
 
   const rowsHtml = visibleOrgs.map((org, i) => {
     // Progressive List's logo specifically needs a white backdrop to read correctly; Votecraft
@@ -131,8 +138,25 @@ export function renderCuratedBareList(container) {
           <p class="bare-list-why-copy" ${whyExpanded ? '' : 'hidden'}>A good list is a shortcut — built by people who already did the digging, so you don't have to. Curated lists surface what's worth your time from partners whose values you trust, instead of leaving it to chance.</p>
         </div>
         <div class="bare-list-rows">
+          <button class="bare-list-filter-trigger" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="9" cy="7" r="2.4" fill="currentColor"/><circle cx="15" cy="12" r="2.4" fill="currentColor"/><circle cx="8" cy="17" r="2.4" fill="currentColor"/></svg>
+            <span>Filter${_bareListCategoryFilter ? ` · ${escapeHtml(_bareListCategoryFilter)}` : ''}</span>
+          </button>
           ${rowsHtml}
           <button class="bare-list-seeall-btn" data-view="curated-full-list">See all →</button>
+        </div>
+      </div>
+      <div class="bare-list-filter-modal" hidden>
+        <div class="bare-list-filter-modal-header">
+          <span class="bare-list-filter-modal-title">Filter by cause area</span>
+          <button class="bare-list-filter-modal-close" type="button" aria-label="Close">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="bare-list-filter-modal-body">${modalChipsHtml}</div>
+        <div class="bare-list-filter-modal-footer">
+          <button class="bare-list-filter-modal-clear" type="button">Clear</button>
+          <button class="bare-list-filter-modal-apply" type="button">Apply</button>
         </div>
       </div>
     </div>
@@ -182,12 +206,49 @@ export function renderCuratedBareList(container) {
     container.querySelector('.bare-list-why-copy').hidden = !nowOpen;
   });
 
-  container.querySelectorAll('.bare-list-chip').forEach(chip => {
+  container.querySelectorAll('.bare-list-chip:not(.bare-list-filter-modal-chip)').forEach(chip => {
     chip.addEventListener('click', () => {
       const cat = chip.dataset.category;
       _bareListCategoryFilter = _bareListCategoryFilter === cat ? null : cat;
       renderCuratedBareList(container);
     });
+  });
+
+  // ===== Mobile "Filter" modal (ActBlue-style) =====
+  // Same single-select behaviour as the inline chips, but staged: the modal edits `pendingFilter`
+  // and only commits it (a full re-render) on Apply. The X and Clear don't re-render on their own.
+  const filterModal = container.querySelector('.bare-list-filter-modal');
+  let pendingFilter = _bareListCategoryFilter;
+  const syncModalChips = () => {
+    filterModal.querySelectorAll('.bare-list-filter-modal-chip').forEach(c => {
+      c.classList.toggle('bare-list-chip--active', c.dataset.category === pendingFilter);
+    });
+  };
+  container.querySelector('.bare-list-filter-trigger')?.addEventListener('click', () => {
+    pendingFilter = _bareListCategoryFilter;
+    syncModalChips();
+    filterModal.hidden = false;
+    document.body.style.overflow = 'hidden'; // don't let the page behind the full-screen sheet scroll
+  });
+  const closeFilterModal = () => {
+    filterModal.hidden = true;
+    document.body.style.overflow = '';
+  };
+  filterModal.querySelector('.bare-list-filter-modal-close').addEventListener('click', closeFilterModal);
+  filterModal.querySelectorAll('.bare-list-filter-modal-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      pendingFilter = pendingFilter === chip.dataset.category ? null : chip.dataset.category;
+      syncModalChips();
+    });
+  });
+  filterModal.querySelector('.bare-list-filter-modal-clear').addEventListener('click', () => {
+    pendingFilter = null;
+    syncModalChips();
+  });
+  filterModal.querySelector('.bare-list-filter-modal-apply').addEventListener('click', () => {
+    _bareListCategoryFilter = pendingFilter;
+    closeFilterModal();
+    renderCuratedBareList(container);
   });
 }
 
