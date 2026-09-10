@@ -2356,6 +2356,100 @@
   text-decoration: underline;
 }
 
+/* ===== Mobile "Filter" trigger + modal (Cause Curated, <=1200px — see that media block for the
+   trigger's own layout). Hidden outright on desktop, where the inline .bare-list-filters rail
+   is used instead. ===== */
+.bare-list-filter-trigger {
+  display: none;
+}
+
+.bare-list-filter-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+}
+.bare-list-filter-modal[hidden] {
+  display: none;
+}
+.bare-list-filter-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.bare-list-filter-modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.bare-list-filter-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.bare-list-filter-modal-close:hover {
+  background: var(--hover-bg);
+}
+.bare-list-filter-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 10px;
+}
+.bare-list-filter-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.bare-list-filter-modal-clear {
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 4px;
+}
+.bare-list-filter-modal-clear:hover {
+  color: var(--text-primary);
+}
+.bare-list-filter-modal-apply {
+  padding: 11px 28px;
+  border: none;
+  border-radius: 8px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.bare-list-filter-modal-apply:hover {
+  background: #fff;
+  color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
 .bare-list-rows {
   flex: 1;
   min-width: 0;
@@ -2602,13 +2696,33 @@
   .bare-list-body {
     flex-direction: column;
   }
+  /* The whole inline filter rail is replaced by the "Filter" button + modal below this width,
+     per direct request ("in mobile i want the tag selection to go inside a filter popup like
+     these examples from actblue"). "Why Curated Lists" lived in here too — it's explainer copy,
+     not a control, so it just goes away at these widths (see _bareListWhyDefault in
+     renderCuratedPages.js, which already only defaults it open above 1200px). */
   .bare-list-filters {
-    width: 100%;
-    margin-left: 0;
-    margin-top: 20px;
+    display: none;
   }
-  .bare-list-why-title {
-    margin-top: 24px;
+  /* Full-width "Filter" trigger — first child of .bare-list-rows, above the list. */
+  .bare-list-filter-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 16px;
+    padding: 13px 16px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .bare-list-filter-trigger:hover {
+    border-color: var(--primary);
   }
   /* This part of the fix was previously missing: .bare-list-body switching to a column above
      stacks the filter rail above the list, but .bare-list-rows itself still kept its desktop
@@ -2711,16 +2825,6 @@
   }
 }
 
-/* Phone widths only — hide the "Why Curated Lists" accordion entirely, per direct request ("in
-   mobile i want 'why curated lists' to disappear"). It's pitch/explainer copy, not a control,
-   and on a single narrow column it's just a block of text between the cause-area chips and the
-   list. Kept for tablet/desktop (the >768px stacked layout still has rail width to spare). */
-@media (max-width: 768px) {
-  .bare-list-why-title,
-  .bare-list-why-copy {
-    display: none;
-  }
-}
 
 /* ===== A-Z INDEX RAIL ===== */
 /* position: fixed, repositioned in JS against .grid-area's own live rect (azIndexRail.js) — see
