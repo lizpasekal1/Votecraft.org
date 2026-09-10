@@ -2182,12 +2182,11 @@
   margin-right: -20px;
 }
 
-/* Cause Curated only — per direct request, this page's banner text is left-aligned instead of
-   the shared .bare-list-hero's own centered default (Shared Saves, which reuses this same class,
-   keeps center). */
+/* Cause Curated only — banner text centered per direct request ("center the text inside of the
+   cause currated banner"), matching the shared .bare-list-hero default (this page previously
+   overrode it to left-aligned; that override is now reverted). Only the margin fix below stays
+   page-scoped. */
 .bare-list-page .bare-list-hero {
-  text-align: left;
-  align-items: flex-start;
   /* Align the banner box with the .grid-header above it — "‹ My Dashboard" (and the top bar's
      "+ Add Item") share that left edge — and keep its right edge on the page content box, NOT
      the raw screen edge. The shared .bare-list-hero rule's margin-left/right: -20px was sized
