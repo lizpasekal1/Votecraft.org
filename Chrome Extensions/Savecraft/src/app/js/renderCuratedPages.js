@@ -104,7 +104,7 @@ export function renderCuratedBareList(container) {
     <div class="bare-list-page-inner">
       <div class="bare-list-header bare-list-hero">
         <h2 class="bare-list-title">Cause Curated</h2>
-        <p class="bare-list-desc">Browse nonprofit-sponsored curated lists.</p>
+        <p class="bare-list-desc">Browse foundations you're interested in or support</p>
       </div>
       <div class="bare-list-body">
         <div class="bare-list-filters">
