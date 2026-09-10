@@ -2413,6 +2413,18 @@
   align-content: flex-start;
   gap: 10px;
 }
+/* Solid purple + white text for every chip in the modal, per direct request (the inline rail's
+   chips keep their lighter tinted look). The selected one gets a white inner ring so it still
+   stands out against a wall of identical purple pills. */
+.bare-list-filter-modal-chip,
+.bare-list-filter-modal-chip:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.bare-list-filter-modal-chip.bare-list-chip--active {
+  box-shadow: inset 0 0 0 2px #fff, 0 0 0 2px var(--primary);
+}
 .bare-list-filter-modal-footer {
   display: flex;
   align-items: center;
