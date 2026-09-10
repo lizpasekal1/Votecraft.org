@@ -2188,6 +2188,16 @@
 .bare-list-page .bare-list-hero {
   text-align: left;
   align-items: flex-start;
+  /* Align the banner box with the .grid-header above it — "‹ My Dashboard" (and the top bar's
+     "+ Add Item") share that left edge — and keep its right edge on the page content box, NOT
+     the raw screen edge. The shared .bare-list-hero rule's margin-left/right: -20px was sized
+     for a symmetric-padding parent; .bare-list-page pads only its left (40px, no right), so
+     -20/-20 left this banner indented 20px on the left while bleeding 20px past the content on
+     the right (reported live: "the banner is touching the edge right of the screen"). -40px
+     cancels the full left padding; 0 pins the right edge to the content box. Mobile (symmetric
+     16px page padding) is overridden back below. */
+  margin-left: -40px;
+  margin-right: 0;
 }
 
 .bare-list-title {
@@ -2565,6 +2575,13 @@
      alone accounts for. Symmetric padding instead. */
   .bare-list-page {
     padding: 0 16px 24px;
+  }
+  /* Desktop's .bare-list-page .bare-list-hero override (-40px / 0) is sized for that breakpoint's
+     40px-left-only page padding — here the page padding is a symmetric 16px, so cancel that
+     instead to keep the banner spanning the same width as the rows/filters below it. */
+  .bare-list-page .bare-list-hero {
+    margin-left: -16px;
+    margin-right: -16px;
   }
   .bare-list-body {
     flex-direction: column;
