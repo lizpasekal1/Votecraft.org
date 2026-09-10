@@ -2232,15 +2232,21 @@
 
 .bare-list-body {
   display: flex;
-  gap: 32px;
+  /* Fluid gap instead of a fixed 32px — shrinks with the viewport so the two columns don't get
+     shoved together at mid widths. */
+  gap: clamp(24px, 4vw, 56px);
   align-items: flex-start;
 }
 
 .bare-list-filters {
   flex-shrink: 0;
-  width: 290px;
+  /* Was a fixed 290px + a 50px left margin. Between the mobile breakpoint and full desktop that
+     fixed rail (plus .bare-list-rows' old 160px left margin + 50% cap) left the row list only a
+     couple hundred px wide, wrapping every row's text. A proportional width with a sane min/max
+     keeps the rail readable without starving the list; the arbitrary 50px left margin is gone
+     (the body's own gap already separates the columns). */
+  width: clamp(220px, 24%, 290px);
   margin-top: 40px;
-  margin-left: 50px;
 }
 
 .bare-list-filter-section-title {
@@ -2353,8 +2359,12 @@
 .bare-list-rows {
   flex: 1;
   min-width: 0;
-  max-width: 50%; /* narrowed another 20 points past the earlier 70% */
-  margin-left: 160px; /* extra space between the filter rail and the list, on top of .bare-list-body's own gap */
+  /* Was max-width: 50% + margin-left: 160px — a percentage cap on a shrinking flex child plus a
+     big fixed indent collapsed the list to a narrow strip at any width below ~1300px (reported
+     live: every row's text wrapping one word per line). Now it just fills the space left beside
+     the filter rail, with a fixed readable cap so very wide screens don't stretch each row
+     edge-to-edge. The .bare-list-body gap already separates the two columns. */
+  max-width: 760px;
   margin-top: 40px;
   display: flex;
   flex-direction: column;
@@ -2566,12 +2576,19 @@
   .card-badge {
     font-size: 9px;
   }
+}
 
+/* Cause Curated's single-column layout + stacked row cards. Kicks in at 1200px, not 768px, per
+   direct request ("the cards style should switch to this look sooner") — the 300px sidebar plus
+   a ~290px filter rail leaves the row list too narrow to read comfortably at anything under
+   ~1200px, and the row cards look better stacked (avatar + name on one line, tagline and tag
+   each full-width) than crammed onto a single flex line. The plain .card / .card-image-crop
+   mobile fixes above stay at 768px — they're unrelated to this page. */
+@media (max-width: 1200px) {
   /* Was padding-left: 40px only (no padding-right) — fine on desktop where .bare-list-rows'
-     own max-width: 50% + margin-left: 160px kept everything well clear of the right edge anyway,
-     but on mobile (rows now full-width, right below) that left the row list's own right edge
-     flush against the real screen edge with zero margin, squeezing it further than the fix below
-     alone accounts for. Symmetric padding instead. */
+     own max-width + margin-left kept everything well clear of the right edge anyway, but once
+     rows go full-width that left the row list's own right edge flush against the real screen
+     edge with zero margin. Symmetric padding instead. */
   .bare-list-page {
     padding: 0 16px 24px;
   }
@@ -2690,6 +2707,17 @@
      handler in renderCuratedPages.js), so the button was redundant, and removing it frees up the
      row's own bottom padding above (was reserving 52px just for this). */
   .bare-list-view-btn {
+    display: none;
+  }
+}
+
+/* Phone widths only — hide the "Why Curated Lists" accordion entirely, per direct request ("in
+   mobile i want 'why curated lists' to disappear"). It's pitch/explainer copy, not a control,
+   and on a single narrow column it's just a block of text between the cause-area chips and the
+   list. Kept for tablet/desktop (the >768px stacked layout still has rail width to spare). */
+@media (max-width: 768px) {
+  .bare-list-why-title,
+  .bare-list-why-copy {
     display: none;
   }
 }
