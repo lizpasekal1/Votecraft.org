@@ -1,5 +1,7 @@
 # SaveCraft: Accounts & Security, in Plain Terms
 
+*(See `savecraft-documentation.md` for what every file in this folder is for.)*
+
 This is a basic, non-technical explainer of how signing in and data security currently work in
 SaveCraft — written for reference, not for developers. If you want the deeper technical version,
 ask and it can be written separately.
