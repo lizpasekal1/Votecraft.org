@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SaveCraft — Curated Lists Seeder</title>
+<style>
+  body { font-family: ui-monospace, Menlo, monospace; max-width: 760px; margin: 40px auto; padding: 20px; background: #111; color: #ddd; }
+  h1 { color: #7C6FF5; margin-bottom: 4px; }
+  .sub { color: #888; margin-top: 0; }
+  input { background: #222; border: 1px solid #555; color: #ddd; padding: 8px; width: 100%; margin: 6px 0; box-sizing: border-box; border-radius: 4px; font: inherit; }
+  button { background: #7C6FF5; color: #fff; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  #log { margin-top: 20px; background: #1a1a1a; border: 1px solid #333; padding: 12px; border-radius: 6px; max-height: 460px; overflow-y: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.5; }
+  .ok { color: #4ade80; } .err { color: #f87171; } .info { color: #60a5fa; } .warn { color: #ffb454; }
+  .box { background: #1c1a12; border: 1px solid #6a5321; border-radius: 6px; padding: 12px; margin-bottom: 18px; color: #ffcf6b; font-size: 13px; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row input { flex: 1; }
+  #signed-in { color: #4ade80; }
+</style>
+</head>
+<body>
+<h1>SaveCraft — Curated Lists Seeder</h1>
+<p class="sub">Writes <code>curated_lists</code> + <code>curated_items</code> from <code>curated-lists-payload.js</code>.</p>
+
+<div class="box">
+  Sign in with a <b>SaveCraft admin</b> account (<code>lizpasekal@gmail.com</code>, or any account
+  whose <code>savecraft_users/&lt;uid&gt;.role</code> is <code>"admin"</code>). The Firestore rules
+  let <code>isSaveCraftAdmin()</code> write these collections — no rule loosening needed.
+  Re-running is safe: it overwrites the same docs by id.
+</div>
+
+<div id="auth">
+  <div class="row"><input id="email" type="email" placeholder="admin email" autocomplete="username"></div>
+  <div class="row">
+    <input id="password" type="password" placeholder="password" autocomplete="current-password">
+    <button id="btn-signin">Sign in</button>
+  </div>
+</div>
+<p id="signed-in" hidden></p>
+
+<p><button id="btn-seed" disabled>Seed Firestore</button></p>
+
+<div id="log"></div>
+
+<!-- Firebase compat SDK — fine for a local one-off seed page (never shipped in the app). -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+<!-- The hand-authored demo content. Edit that file, not this one. -->
+<script src="./curated-lists-payload.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyArJ6pkXUDbZf4jcxRita0qcdr-hT46kI8",
+  authDomain: "votecraft-789.firebaseapp.com",
+  projectId: "votecraft-789",
+  storageBucket: "votecraft-789.firebasestorage.app",
+  messagingSenderId: "939909708303",
+  appId: "1:939909708303:web:b0663ec86e15c05b3a817a",
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const logEl = document.getElementById('log');
+function log(msg, cls = '') {
+  const line = document.createElement('div');
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+const PAYLOAD = window.CURATED_LISTS_PAYLOAD;
+const BATCH_SIZE = 400;
+
+// ── Auth ──
+auth.onAuthStateChanged(user => {
+  const signedInEl = document.getElementById('signed-in');
+  if (user) {
+    document.getElementById('auth').hidden = true;
+    signedInEl.hidden = false;
+    signedInEl.textContent = 'Signed in as ' + user.email;
+    document.getElementById('btn-seed').disabled = false;
+  } else {
+    document.getElementById('auth').hidden = false;
+    signedInEl.hidden = true;
+    document.getElementById('btn-seed').disabled = true;
+  }
+});
+
+document.getElementById('btn-signin').addEventListener('click', async () => {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+  } catch (e) {
+    log('Sign-in failed: ' + e.message, 'err');
+  }
+});
+
+// ── Seed ──
+async function seedAll() {
+  if (!PAYLOAD || !Array.isArray(PAYLOAD.lists) || !Array.isArray(PAYLOAD.items) || !Array.isArray(PAYLOAD.topics)) {
+    throw new Error('curated-lists-payload.js did not load a valid { topics, lists, items } object.');
+  }
+
+  const topicWrites = PAYLOAD.topics.map(t => {
+    const { id, ...data } = t;
+    return { col: 'curated_topics', docId: id, data };
+  });
+  const listWrites = PAYLOAD.lists.map(l => {
+    const { id, ...data } = l;
+    return { col: 'curated_lists', docId: id, data };
+  });
+  const itemWrites = PAYLOAD.items.map(it => {
+    const { docId, ...data } = it;
+    return { col: 'curated_items', docId, data };
+  });
+  const allWrites = [...topicWrites, ...listWrites, ...itemWrites];
+
+  log(`Seeding ${topicWrites.length} curated_topics + ${listWrites.length} curated_lists + ${itemWrites.length} curated_items = ${allWrites.length} docs…`, 'info');
+
+  for (let i = 0; i < allWrites.length; i += BATCH_SIZE) {
+    const slice = allWrites.slice(i, i + BATCH_SIZE);
+    const batch = db.batch();
+    for (const w of slice) batch.set(db.collection(w.col).doc(w.docId), w.data);
+    await batch.commit();
+    log(`  ✓ ${Math.min(i + BATCH_SIZE, allWrites.length)} / ${allWrites.length} written`, 'ok');
+  }
+
+  log('', '');
+  log('✅ Done.', 'ok');
+  log('Next: bump _CURATED_CACHE_VERSION and _CURATED_CMS_CACHE_VERSION in', 'warn');
+  log('src/app/js/storage.js, then `firebase deploy --only hosting`, so returning', 'warn');
+  log('visitors drop their 24h cache. A fresh visitor sees it immediately.', 'warn');
+}
+
+document.getElementById('btn-seed').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-seed');
+  btn.disabled = true;
+  logEl.textContent = '';
+  try {
+    await seedAll();
+  } catch (e) {
+    log('Error: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>

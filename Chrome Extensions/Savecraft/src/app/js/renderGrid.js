@@ -25,7 +25,7 @@ import { renderAboutPage } from './about.js';
 import { renderEmbedBuilder } from './embedBuilder.js';
 import { renderSidebar } from './renderSidebar.js';
 import { renderAuthorPage } from './renderAuthorPage.js';
-import { renderCuratedGenreLanding, renderCuratedDirectory, renderCuratedBareList, resolveGenreRowItems } from './renderCuratedPages.js';
+import { renderCuratedGenreLanding, renderCuratedDirectory, renderCuratedBareList, renderCuratedTopicPage, resolveGenreRowItems } from './renderCuratedPages.js';
 import { wireQuickQueueButtons } from './renderCardActions.js';
 import { fetchMissingCuratedImages, fetchMissingCuratedMusicianPhotos } from './renderCuratedImageFetch.js';
 import { getFilteredSortedItems, getMusicGenreBucketCounts, getCategoryFolderCounts, getCuratedCategoryFolderCounts, getRecentCategoryItems } from './renderFilters.js';
@@ -87,6 +87,19 @@ function _renderGridBody() {
   document.getElementById('board-info-popup')?.setAttribute('hidden', '');
   sortSelect.style.display = '';
   gridTitle.style.display = '';
+
+  // A curated genre's landing config: a published `curated_lists` doc (admin-editable from the
+  // WordPress plugin, see storage.js's initCuratedLists) wins over the hardcoded
+  // CURATED_GENRE_LANDING_CONTENT fallback for that genre; a missing/unpublished doc leaves the
+  // hardcoded object untouched. Shallow-merged so a Firestore doc that omits a rarely-set key
+  // (e.g. categoryLogos) still inherits the hardcoded value. Returns undefined for a genre with
+  // neither.
+  const curatedLanding = genre => {
+    const fromFirestore = state.curatedLists?.[genre];
+    const hardcoded = CURATED_GENRE_LANDING_CONTENT[genre];
+    if (!fromFirestore) return hardcoded;
+    return { ...hardcoded, ...fromFirestore };
+  };
 
   if (state.view === 'kanban') {
     renderKanbanBoard();
@@ -212,7 +225,7 @@ function _renderGridBody() {
   } else if (state.view.startsWith('genre:')) {
     const parts = state.view.slice(6).split(':');
     const genre = parts[0];
-    const genreContent = CURATED_GENRE_LANDING_CONTENT[genre];
+    const genreContent = curatedLanding(genre);
     // On a curated drilldown (e.g. "Top 100 Books"), just the genre word links back to that
     // genre's own landing page (genre:<genre> — see renderCuratedGenreLanding()); the category
     // name stays plain text. Styled to read as ordinary title text, not an obvious button — see
@@ -353,7 +366,14 @@ function _renderGridBody() {
     const genreParts = state.view.slice(6).split(':');
     if (genreParts.length === 2) {
       const [curatedGenre, curatedCat] = genreParts;
-      if (CATEGORIES.includes(curatedCat) && !['Musician', 'Music Album'].includes(curatedCat)
+      // When this genre has a curated_lists doc with an enabledCategories array (a partner list
+      // configured in the WordPress plugin), only its enabled categories get a tab/picker — so a
+      // list scoped to e.g. ["Web Links","Book"] doesn't surface pickers for the other six. A
+      // genre with no such doc (e.g. Top 100) keeps the old "any category that has folders" rule.
+      const enabled = state.curatedLists?.[curatedGenre]?.enabledCategories;
+      const categoryAllowed = Array.isArray(enabled) ? enabled.includes(curatedCat) : true;
+      if (categoryAllowed
+          && CATEGORIES.includes(curatedCat) && !['Musician', 'Music Album'].includes(curatedCat)
           && state.folders.some(f => f.parentCategory === curatedCat)) {
         renderCuratedCategoryFolderLanding(curatedGenre, curatedCat);
         return;
@@ -376,10 +396,22 @@ function _renderGridBody() {
     const isCuratedFullList = state.view === 'curated-full-list';
     const genre = isCuratedTop ? state.view.slice(6) : null;
 
-    // A handful of curated genres (currently just Top 100) get a richer, distinct landing page
-    // here instead of the plain "Pick a category" empty state below — see
-    // CURATED_GENRE_LANDING_CONTENT in state.js for which genres and what content.
-    const landingContent = isCuratedTop && !isSearch ? CURATED_GENRE_LANDING_CONTENT[genre] : null;
+    // Shared-cause aggregate page (topic:<slug>) — pools every published curated_lists nonprofit
+    // whose `topics` includes this slug. Its config is a curated_topics Firestore doc (no
+    // hardcoded fallback — a topic only exists if it's been created in the CMS).
+    if (state.view.startsWith('topic:') && !isSearch) {
+      const topicSlug = state.view.slice(6);
+      if (state.curatedTopics?.[topicSlug]) {
+        renderCuratedTopicPage(container, topicSlug);
+        return;
+      }
+    }
+
+    // A curated genre with its own landing config gets a richer, distinct landing page here
+    // instead of the plain "Pick a category" empty state below. Config is a published
+    // curated_lists Firestore doc (admin-editable) merged over the hardcoded
+    // CURATED_GENRE_LANDING_CONTENT fallback — see curatedLanding() near the top of this fn.
+    const landingContent = isCuratedTop && !isSearch ? curatedLanding(genre) : null;
     if (landingContent) {
       renderCuratedGenreLanding(container, genre, landingContent);
       return;

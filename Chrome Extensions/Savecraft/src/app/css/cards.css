@@ -1884,6 +1884,21 @@
   color: inherit;
 }
 
+/* Topic aggregate page (renderCuratedTopicPage) — the row header is a plain category label, not a
+   link into one nonprofit's drilldown (the row pools several), so it doesn't get the pointer/
+   hover-reveal treatment. */
+.top100-row-header--static {
+  cursor: default;
+}
+
+/* Per-nonprofit filter chips on the topic aggregate page. Chips reuse .bare-list-chip styling. */
+.topic-partner-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 26px;
+}
+
 .top100-row-title {
   font-size: 18px;
   font-weight: 700;

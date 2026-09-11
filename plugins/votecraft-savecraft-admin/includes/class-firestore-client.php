@@ -77,6 +77,197 @@ class VC_SaveCraft_Firestore_Client {
         return $data['id_token'];
     }
 
+    /* ─── Generic single-collection helpers ────────────────────────────────────────────────────
+       The admin_kanban_cards-specific methods below predate these and are kept as-is (they're
+       covered by the existing Kanban verification); new collections (curated_lists, curated_items)
+       use these instead. Same bot ID token, same Firestore REST shape, same value conversion. ─── */
+
+    /**
+     * Lists every doc in $collection, paginated 300/page like storage.js's _firestoreListCollection.
+     * Each returned row is the doc's decoded fields plus `_docId` (the Firestore document id).
+     *
+     * @return array|WP_Error
+     */
+    public static function list_collection( $collection ) {
+        $id_token = self::get_id_token();
+        if ( is_wp_error( $id_token ) ) {
+            return $id_token;
+        }
+
+        $rows = array();
+        $page_token = null;
+        do {
+            $url = 'https://firestore.googleapis.com/v1/projects/' . VC_SAVECRAFT_FIREBASE_PROJECT .
+                '/databases/(default)/documents/' . rawurlencode( $collection ) .
+                '?key=' . VC_SAVECRAFT_FIREBASE_API_KEY . '&pageSize=300';
+            if ( $page_token ) {
+                $url .= '&pageToken=' . urlencode( $page_token );
+            }
+
+            $response = wp_remote_get( $url, array(
+                'timeout' => 15,
+                'headers' => array( 'Authorization' => 'Bearer ' . $id_token ),
+            ) );
+            if ( is_wp_error( $response ) ) {
+                return $response;
+            }
+
+            $data = json_decode( wp_remote_retrieve_body( $response ), true );
+            if ( isset( $data['error'] ) ) {
+                return new WP_Error( 'vc_savecraft_firestore_error', $data['error']['message'] );
+            }
+
+            foreach ( ( $data['documents'] ?? array() ) as $doc ) {
+                $row = self::from_firestore_fields( $doc['fields'] ?? array() );
+                $row['_docId'] = isset( $doc['name'] ) ? substr( strrchr( $doc['name'], '/' ), 1 ) : null;
+                $rows[] = $row;
+            }
+            $page_token = $data['nextPageToken'] ?? null;
+        } while ( $page_token );
+
+        return $rows;
+    }
+
+    /**
+     * One doc's decoded fields (plus `_docId`), or null if it doesn't exist, or WP_Error.
+     *
+     * @return array|null|WP_Error
+     */
+    public static function get_doc( $collection, $id ) {
+        $id_token = self::get_id_token();
+        if ( is_wp_error( $id_token ) ) {
+            return $id_token;
+        }
+
+        $url = 'https://firestore.googleapis.com/v1/projects/' . VC_SAVECRAFT_FIREBASE_PROJECT .
+            '/databases/(default)/documents/' . rawurlencode( $collection ) . '/' . rawurlencode( $id ) .
+            '?key=' . VC_SAVECRAFT_FIREBASE_API_KEY;
+
+        $response = wp_remote_get( $url, array(
+            'timeout' => 15,
+            'headers' => array( 'Authorization' => 'Bearer ' . $id_token ),
+        ) );
+        if ( is_wp_error( $response ) ) {
+            return $response;
+        }
+
+        $data = json_decode( wp_remote_retrieve_body( $response ), true );
+        if ( isset( $data['error'] ) ) {
+            if ( ( $data['error']['status'] ?? '' ) === 'NOT_FOUND' ) {
+                return null;
+            }
+            return new WP_Error( 'vc_savecraft_firestore_error', $data['error']['message'] );
+        }
+        $row = isset( $data['fields'] ) ? self::from_firestore_fields( $data['fields'] ) : array();
+        $row['_docId'] = $id;
+        return $row;
+    }
+
+    /**
+     * Full-document replace (PATCH, no updateMask) — the caller sends the complete doc. Strips any
+     * `_docId` helper key before writing.
+     *
+     * @return true|WP_Error
+     */
+    public static function upsert_doc( $collection, $id, array $fields ) {
+        $id_token = self::get_id_token();
+        if ( is_wp_error( $id_token ) ) {
+            return $id_token;
+        }
+
+        unset( $fields['_docId'] );
+
+        $url = 'https://firestore.googleapis.com/v1/projects/' . VC_SAVECRAFT_FIREBASE_PROJECT .
+            '/databases/(default)/documents/' . rawurlencode( $collection ) . '/' . rawurlencode( $id ) .
+            '?key=' . VC_SAVECRAFT_FIREBASE_API_KEY;
+
+        $response = wp_remote_request( $url, array(
+            'method'  => 'PATCH',
+            'timeout' => 15,
+            'headers' => array(
+                'Authorization' => 'Bearer ' . $id_token,
+                'Content-Type'  => 'application/json',
+            ),
+            'body' => wp_json_encode( array( 'fields' => self::to_firestore_fields( $fields ) ) ),
+        ) );
+        if ( is_wp_error( $response ) ) {
+            return $response;
+        }
+
+        $data = json_decode( wp_remote_retrieve_body( $response ), true );
+        if ( isset( $data['error'] ) ) {
+            return new WP_Error( 'vc_savecraft_firestore_error', $data['error']['message'] );
+        }
+        return true;
+    }
+
+    /**
+     * @return true|WP_Error
+     */
+    public static function delete_doc( $collection, $id ) {
+        $id_token = self::get_id_token();
+        if ( is_wp_error( $id_token ) ) {
+            return $id_token;
+        }
+
+        $url = 'https://firestore.googleapis.com/v1/projects/' . VC_SAVECRAFT_FIREBASE_PROJECT .
+            '/databases/(default)/documents/' . rawurlencode( $collection ) . '/' . rawurlencode( $id ) .
+            '?key=' . VC_SAVECRAFT_FIREBASE_API_KEY;
+
+        $response = wp_remote_request( $url, array(
+            'method'  => 'DELETE',
+            'timeout' => 15,
+            'headers' => array( 'Authorization' => 'Bearer ' . $id_token ),
+        ) );
+        if ( is_wp_error( $response ) ) {
+            return $response;
+        }
+
+        $data = json_decode( wp_remote_retrieve_body( $response ), true );
+        if ( isset( $data['error'] ) ) {
+            return new WP_Error( 'vc_savecraft_firestore_error', $data['error']['message'] );
+        }
+        return true;
+    }
+
+    /**
+     * Lists every doc in curated_items (public-read collection, no auth) whose `genre` matches
+     * $genre_key. Returns each doc's decoded fields. Used by the Curated Items admin screen.
+     *
+     * @return array|WP_Error
+     */
+    public static function list_curated_items_for_genre( $genre_key ) {
+        $rows = array();
+        $page_token = null;
+        do {
+            $url = 'https://firestore.googleapis.com/v1/projects/' . VC_SAVECRAFT_FIREBASE_PROJECT .
+                '/databases/(default)/documents/curated_items' .
+                '?key=' . VC_SAVECRAFT_FIREBASE_API_KEY . '&pageSize=300';
+            if ( $page_token ) {
+                $url .= '&pageToken=' . urlencode( $page_token );
+            }
+            $response = wp_remote_get( $url, array( 'timeout' => 15 ) );
+            if ( is_wp_error( $response ) ) {
+                return $response;
+            }
+            $data = json_decode( wp_remote_retrieve_body( $response ), true );
+            if ( isset( $data['error'] ) ) {
+                return new WP_Error( 'vc_savecraft_firestore_error', $data['error']['message'] );
+            }
+            foreach ( ( $data['documents'] ?? array() ) as $doc ) {
+                $f = self::from_firestore_fields( $doc['fields'] ?? array() );
+                if ( ( $f['genre'] ?? null ) !== $genre_key ) {
+                    continue;
+                }
+                $f['_docId'] = substr( strrchr( $doc['name'], '/' ), 1 );
+                $rows[] = $f;
+            }
+            $page_token = $data['nextPageToken'] ?? null;
+        } while ( $page_token );
+
+        return $rows;
+    }
+
     /**
      * Lists every card in admin_kanban_cards, paginated the same way
      * storage.js's _firestoreListCollection is (300/page).
