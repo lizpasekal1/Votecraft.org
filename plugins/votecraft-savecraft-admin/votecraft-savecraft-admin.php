@@ -5,7 +5,7 @@
  *              SaveCraft login needed. Talks to Firestore server-side through a dedicated,
  *              narrowly-scoped bot account (see includes/class-firestore-client.php); the browser
  *              never sees any Firestore credential, only this plugin's own REST routes.
- * Version: 2.5
+ * Version: 2.6
  * Author: VoteCraft
  */
 
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'VC_SAVECRAFT_ADMIN_VERSION', '2.5' );
+define( 'VC_SAVECRAFT_ADMIN_VERSION', '2.6' );
 define( 'VC_SAVECRAFT_ADMIN_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'VC_SAVECRAFT_ADMIN_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 

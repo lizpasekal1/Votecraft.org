@@ -53,20 +53,28 @@
 
   /* ─────────────────────────── Curated Lists ─────────────────────────── */
 
-  function listFormHtml(list, isNew) {
+  function listFormHtml(list, isNew, items) {
     var enabled = list.enabledCategories || [];
     var listTopics = list.topics || [];
-    // null/undefined enabledFolderIds = unrestricted (every folder shows) — the default for any
-    // EXISTING list saved before this field existed, same convention allowedFolderIds uses in
-    // profile.js. A brand-new list gets [] instead (every folder starts unchecked, same opt-in
-    // starting point enabledCategories already gives it), not null — an admin filling out a new
-    // nonprofit page should explicitly pick what to enable rather than start fully open.
-    var enabledFolders = isNew ? [] : (list.enabledFolderIds || null);
-    // Accordion: each category tab's own checkbox (enabledCategories, unchanged) plus a nested,
-    // collapsed-by-default folder checklist (enabledFolderIds) — mirrors the Profile page's Saved
-    // Lists folder-scoping accordion (profile.js's _buildSavedListCategoryTree), except the
-    // category checkbox here only ever means "this tab shows at all"; it does not also drive the
-    // folder checkboxes, since enabledCategories and enabledFolderIds are two independent fields.
+    // Which folder ids this list's own curated_items actually use — drives the "only checked/
+    // open if it has real content" default below (items is this list's live curated_items,
+    // fetched by the toggle handler / passed empty for a brand-new list).
+    var itemFolderIds = {};
+    (items || []).forEach(function (it) { if (it.folderId) itemFolderIds[it.folderId] = true; });
+    // null/undefined enabledFolderIds = not yet explicitly narrowed — defaults to "checked only
+    // where there's real content" (itemFolderIds) rather than "every folder checked", per direct
+    // report: Games' folders all showed checked with zero curated Games items and Games itself
+    // unchecked, "for no reason". Once an admin explicitly saves a folder selection (even an
+    // empty one), that explicit array always wins outright — this default only fills the gap
+    // before that first save.
+    var enabledFolders = list.enabledFolderIds || null;
+    // Accordion: each category tab's own checkbox (enabledCategories, unchanged) plus a nested
+    // folder checklist (enabledFolderIds) — mirrors the Profile page's Saved Lists folder-scoping
+    // accordion (profile.js's _buildSavedListCategoryTree), except the category checkbox here
+    // only ever means "this tab shows at all"; it does not also drive the folder checkboxes,
+    // since enabledCategories and enabledFolderIds are two independent fields. Starts collapsed
+    // unless this category actually has content, in which case it opens by default too — same
+    // "unchecked+closed unless there's a real reason" rule as the folder checkboxes above.
     //
     // Music/Albums merge (per direct request/report: "Music should be: Musicians, Albums,
     // Playlists" — matches the web app's own sidebar, which shows those three as flat folders
@@ -80,22 +88,23 @@
     var catBoxes = CATEGORIES.filter(function (c) { return c !== 'Albums'; }).map(function (c) {
       var catFolders = (c === 'Music') ? Object.assign({}, FOLDERS['Music'], FOLDERS['Albums']) : (FOLDERS[c] || {});
       var folderIds = Object.keys(catFolders);
+      var catHasContent = folderIds.some(function (fid) { return itemFolderIds[fid]; });
       var folderRows = folderIds.map(function (fid) {
-        var checked = !enabledFolders || enabledFolders.indexOf(fid) !== -1;
+        var checked = enabledFolders ? enabledFolders.indexOf(fid) !== -1 : !!itemFolderIds[fid];
         return '<label class="vc-cat-folder"><input type="checkbox" data-field="folder" value="' + esc(fid) + '"' +
           (checked ? ' checked' : '') + '> ' + esc(catFolders[fid]) + '</label>';
       }).join('');
       return '' +
         '<div class="vc-cat-group">' +
           '<div class="vc-cat-row">' +
-            (folderIds.length ? '<span class="vc-cat-arrow" data-action="toggle-cat-folders">▶</span>' : '<span class="vc-cat-arrow vc-cat-arrow--empty"></span>') +
+            (folderIds.length ? '<span class="vc-cat-arrow" data-action="toggle-cat-folders">' + (catHasContent ? '▼' : '▶') + '</span>' : '<span class="vc-cat-arrow vc-cat-arrow--empty"></span>') +
             '<label class="vc-inline"><input type="checkbox" data-field="cat" value="' + esc(c) + '"' +
               // Music's box also reflects a stray 'Albums'-only state (shouldn't occur going
               // forward — collectListForm always keeps them paired — but defensive against
               // pre-merge data edited some other way).
               ((enabled.indexOf(c) !== -1 || (c === 'Music' && enabled.indexOf('Albums') !== -1)) ? ' checked' : '') + '> ' + esc(CAT_LABELS[c] || c) + '</label>' +
           '</div>' +
-          (folderIds.length ? '<div class="vc-cat-folders" hidden>' + folderRows + '</div>' : '') +
+          (folderIds.length ? '<div class="vc-cat-folders"' + (catHasContent ? '' : ' hidden') + '>' + folderRows + '</div>' : '') +
         '</div>';
     }).join('');
     var topicBoxes = topics.length ? topics.map(function (t) {
@@ -199,8 +208,13 @@
         if (!detail) return;
         if (detail.hidden) {
           var list = lists.filter(function (l) { return l.slug === toggle.dataset.slug; })[0] || {};
-          detail.innerHTML = listFormHtml(list, false);
+          detail.innerHTML = '<p>Loading…</p>';
           detail.hidden = false;
+          // Fetches this list's own curated_items so listFormHtml can default an unset folder
+          // checkbox to "has real content" instead of "checked" — see that function's own comment.
+          apiFetch('curated-items?list=' + encodeURIComponent(toggle.dataset.slug), { method: 'GET' })
+            .then(function (items) { detail.innerHTML = listFormHtml(list, false, Array.isArray(items) ? items : []); })
+            .catch(function () { detail.innerHTML = listFormHtml(list, false, []); });
         } else {
           detail.hidden = true;
           detail.innerHTML = '';
@@ -238,7 +252,7 @@
     addBtn.addEventListener('click', function () {
       var holder = document.createElement('div');
       holder.className = 'vc-curated-detail';
-      holder.innerHTML = listFormHtml({}, true);
+      holder.innerHTML = listFormHtml({}, true, []); // brand new — no items exist yet
       box.appendChild(holder);
       holder.scrollIntoView({ block: 'nearest' });
     });
