@@ -181,10 +181,15 @@ export function badgeLabel(cat) {
   return cat;
 }
 
-// True when browsing the dedicated "Music Albums" section (the Musicians > Music Albums
-// sidebar subfolder, personal or curated) — artist names aren't clickable links there.
+// True when browsing the dedicated "Music Albums" section (Music's own Albums/Playlists
+// sidebar folders, personal or curated) — artist names aren't clickable links there.
+// state.view is a real folder id now (renderSidebar.js flattens Albums' folders into the Music
+// section as plain folder rows, not a single hardcoded "Albums" link) — check the folder's own
+// parentCategory rather than a literal 'Albums' string, so this still covers both Albums AND
+// Playlists (previously only the former was reachable/checked at all).
 export function isMusicAlbumsSectionView() {
-  return state.view === 'Albums' || (state.view.startsWith('genre:') && state.view.endsWith(':Music Album'));
+  if (state.view.startsWith('genre:') && state.view.endsWith(':Music Album')) return true;
+  return state.folders.find(f => f.id === state.view)?.parentCategory === 'Albums';
 }
 
 // True when viewing a musician's own author page and this is one of their own works —

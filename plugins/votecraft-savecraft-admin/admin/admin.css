@@ -338,6 +338,49 @@
   gap: 4px;
   white-space: nowrap;
 }
+
+/* Category tabs accordion (Curated Lists' Add/Edit Nonprofit List form) — one row per category
+   (enabledCategories checkbox, unchanged) with a nested, collapsed-by-default folder checklist
+   (enabledFolderIds) behind a ▶/▼ arrow, same interaction shape as the Profile page's Saved Lists
+   folder-scoping accordion (profile.css's .profile-saved-list-* rules). */
+.vc-cat-tree {
+  column-count: 2;
+  column-gap: 24px;
+}
+.vc-cat-group {
+  break-inside: avoid;
+  margin-bottom: 6px;
+}
+.vc-cat-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.vc-cat-arrow {
+  font-size: 9px;
+  color: #646970;
+  width: 10px;
+  flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
+}
+.vc-cat-arrow--empty {
+  cursor: default;
+}
+.vc-cat-folders {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0 4px 24px;
+}
+.vc-cat-folder {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #50575e;
+  cursor: pointer;
+}
 .vc-items-table {
   margin-top: 10px;
 }
@@ -358,25 +401,43 @@
 
 /* ===== Tabbed nav + Home dashboard cards + Admin Users / My Profile (votecraft-savecraft-admin.php) ===== */
 
+/* Dark header band (per direct request/screenshot reference — a WP welcome-panel-style banner).
+   Same width as .vc-savecraft-nav below it (no side bleed past .wrap), not full-bleed to
+   #wpbody-content's own edges. */
+.vc-savecraft-header {
+  background: #1d2327;
+  margin: 0 0 20px;
+  padding: 32px 20px;
+}
+.vc-savecraft-header h1 {
+  margin: 0;
+  padding: 0;
+  font-size: 28px;
+  line-height: 1.2;
+}
 .vc-savecraft-title-link {
-  color: inherit;
+  color: #fff;
   text-decoration: none;
 }
 .vc-savecraft-title-link:hover {
-  color: #2271b1;
+  color: #fff;
+  opacity: 0.85;
 }
 
 /* Persistent top bar — mirrors the WP "Add Themes" screen's tab row (Popular/Latest/...), with an
-   "Admin User Profile" link on the right in place of that screen's search box. */
+   "Admin User Profile" link on the right in place of that screen's search box. A bordered white
+   bar, same as that reference screen, rather than just an underline under the tabs. */
 .vc-savecraft-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px;
-  border-bottom: 1px solid #c3c4c7;
+  background: #fff;
+  border: 1px solid #c3c4c7;
+  border-radius: 4px;
   margin: 12px 0 20px;
-  padding-bottom: 0;
+  padding: 4px 16px;
 }
 .vc-savecraft-nav-tabs {
   display: flex;
@@ -415,43 +476,56 @@
   color: #2271b1;
 }
 
-/* Home dashboard — white square icon cards, one per section, doubling as its launcher link. */
+/* Home dashboard — purple square icon cards, one per section, doubling as its launcher link.
+   auto-fit (not auto-fill): with only 4 cards, auto-fill would reserve empty phantom columns for
+   any further 260px+ card that *could* fit, pinning the 4 real ones narrow at the row's start with
+   dead space after them. auto-fit collapses those unused columns so the 1fr cards actually grow to
+   fill the row. */
 .vc-savecraft-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  padding-top: 50px;
 }
 .vc-savecraft-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 6px;
+  gap: 8px;
   /* SaveCraft brand purple — same --primary value as the app itself (src/app/css/base.css). */
   background: #5B5BEF;
   border: 1px solid #5B5BEF;
   border-radius: 6px;
-  padding: 32px 20px;
+  padding: 44px 24px;
   text-decoration: none;
   color: #fff;
-  transition: box-shadow 0.15s, border-color 0.15s, transform 0.15s;
+  transition: background-color 0.15s, box-shadow 0.15s, border-color 0.15s, transform 0.15s;
 }
 .vc-savecraft-card:hover {
+  /* Dim the purple. Title/desc color set explicitly here too (not just inherited from the
+     `color: #fff` above) because wp-admin's own default a:hover color would otherwise win on
+     specificity and turn the title link-blue instead of staying white. */
+  background: #4A3DD4;
   border-color: #4A3DD4;
+  color: #fff;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
   transform: translateY(-2px);
 }
+.vc-savecraft-card:hover .vc-savecraft-card-desc {
+  color: rgba(255, 255, 255, 0.75);
+}
 .vc-savecraft-card-icon {
-  font-size: 40px;
+  font-size: 48px;
   line-height: 1;
   margin-bottom: 6px;
 }
 .vc-savecraft-card-label {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
 }
 .vc-savecraft-card-desc {
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(255, 255, 255, 0.75);
 }
 

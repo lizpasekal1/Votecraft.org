@@ -104,6 +104,13 @@ const FOLDER_ID_TO_CURATED_CATEGORY = {
   // folder is being repurposed for short-form web creators with no curated bucket of its own yet.
   // Falls through to the folder's own id (below), same as Podcasts/Tutorials/Web Series — resolves
   // to a genuinely empty list rather than showing stale/unrelated content.
+  // Explicit (not FOLDER_SHOWS_FULL_CURATED_CATEGORY's cat-fallback, since this folder's own
+  // parentCategory is 'Albums' but it's displayed flattened into the Music section) — resolves
+  // straight to CURATED_ITEMS[genre]['Albums'], the real bucket key, same destination the old
+  // single hardcoded "Albums" sidebar link used to send this folder's click to.
+  'default-music-albums': 'Albums',
+  // Playlists has no curated-specific bucket of its own yet — falls through to its own id (below),
+  // same as every other folder with no curated data, correctly resolving to an empty list.
 };
 
 // Folders that represent "the whole category" closely enough to show the full curated Top
@@ -601,6 +608,20 @@ export function renderSidebar() {
     // Top-level only here — a folder's own subfolders (folder.parentFolderId) render recursively
     // inside _renderFolderRow below, not flattened into this same list.
     let subfolders = sortFoldersForDisplay(state.folders.filter(f => f.parentCategory === cat && !f.parentFolderId), cat);
+    // Music's section shows Albums' own folders (Albums, Playlists) as flat siblings of Musicians,
+    // not nested under a separate "Albums" link — per direct request/report ("Music should be:
+    // Musicians, Albums, Playlists" / "it looks like playlists is a subfolder of albums"). Albums
+    // stays its own real item.category value everywhere else (author/URL-pair/year/badge logic
+    // throughout the app all key off it, and the WordPress Admin Bridge's Curated Items category
+    // dropdown still needs it as a selectable value) — this only changes how its folders are
+    // grouped in this one sidebar tree. sortFoldersForDisplay('Albums') alphabetizes to
+    // Albums-then-Playlists, so concatenating after Music's own (already-sorted) folders lands
+    // in exactly Musicians → Albums → Playlists with no custom order table needed.
+    if (cat === 'Music') {
+      subfolders = subfolders.concat(
+        sortFoldersForDisplay(state.folders.filter(f => f.parentCategory === 'Albums' && !f.parentFolderId), 'Albums')
+      );
+    }
     if (folderScope) {
       const hadFolders = subfolders.length > 0;
       subfolders = subfolders.filter(f => folderScope.has(f.id));
@@ -614,32 +635,6 @@ export function renderSidebar() {
     const isCollapsed = state.collapsed.has(cat);
     const arrow = isCollapsed ? '▶' : '▼';
 
-    const musicAlbumActive = isCuratedGenre
-      ? state.view === `genre:${curatedGenreBase}:Music Album`
-      : state.view === 'Albums';
-    const musicAlbumCount = isCuratedGenre
-      ? (CURATED_ITEMS[curatedGenreBase]?.['Albums']?.length ?? 0)
-      // Queue-demo cards excluded from every real count here — same reasoning as
-      // renderFilters.js's getFilteredSortedItems() (they're Kanban-demo placeholders, not real
-      // saves, but were still showing up as a phantom "1" badge on whichever folder their
-      // category happens to land on). matchesActiveSavedListScope() narrows the same way
-      // getFilteredSortedItems() does when browsing inside a Saved List (reported live: an
-      // unscoped count badge kept showing e.g. "3"/"2" on a list's own folders even though
-      // nothing had actually been added to that list yet).
-      : state.items.filter(i => !isQueueDemoId(i.id) && matchesPrimaryOrUnfoldered(i, 'Albums') && matchesActiveSavedListScope(i)).length;
-    const musicAlbumCountLabel = musicAlbumCount > 0 ? `<span class="sidebar-count">${musicAlbumCount}</span>` : '';
-    // Music Album isn't part of sidebarCategoryList's own loop (it's excluded above, line
-    // 322-323) — it only ever shows via this "Albums" link nested under Musician, routed through
-    // its own primary folder id, so the same folderScope check applies here too.
-    const musicAlbumFolderAllowed = !folderScope || folderScope.has(PRIMARY_FOLDER_ID['Albums']);
-    const permanentSubfolders = (cat === 'Music' && musicAlbumFolderAllowed) ? `
-      <div class="sidebar-item sidebar-subfolder ${musicAlbumActive ? 'active' : ''}"
-           data-view="Albums" data-permanent="true">
-        <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M500-360q42 0 71-29t29-71v-220h120v-80H560v220q-13-10-28-15t-32-5q-42 0-71 29t-29 71q0 42 29 71t71 29ZM320-240q-33 0-56.5-23.5T240-320v-480q0-33 23.5-56.5T320-880h480q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H320Zm0-80h480v-480H320v480ZM160-80q-33 0-56.5-23.5T80-160v-560h80v560h560v80H160Zm160-720v480-480Z"/></svg> Albums
-        ${musicAlbumCountLabel}
-      </div>
-    ` : '';
-
     // Recursive — a folder can itself accordion-open to reveal its own subfolders plus a
     // "+ New folder" row to add more, same shape as a category itself, per direct request
     // ("folders also can accordion open to an add folder"). depth 0 is a normal top-level folder
@@ -651,7 +646,12 @@ export function renderSidebar() {
     // always shows all of that folder's subfolders too, a deliberate simplification rather than
     // threading folderScope recursively through every depth.
     function _renderFolderRow(folder, depth) {
-      const isPrimaryFolder = primaryId === folder.id;
+      // folder.parentCategory, not the enclosing section's own `cat` — normally identical, but
+      // Music's section now also renders Albums' own folders (see subfolders concat above), so a
+      // folder rendered here can genuinely belong to a different real category than the section
+      // it visually sits under.
+      const folderCat = folder.parentCategory;
+      const isPrimaryFolder = PRIMARY_FOLDER_ID[folderCat] === folder.id;
       // What this folder maps to while browsing a curated genre: its own dedicated "creator
       // card" bucket (Authors/Directors/Creators/Game Companies) if it has one; else the full
       // parent category if it's one of the handful of folders that closely represent "the whole
@@ -662,17 +662,17 @@ export function renderSidebar() {
       // would be misleading. Keeping the "genre:" prefix either way is what stays inside Top
       // 100/Fantasy/etc. instead of bouncing back to "My SaveCraft" (the original Authors bug).
       const curatedTarget = FOLDER_ID_TO_CURATED_CATEGORY[folder.id]
-        || (FOLDER_SHOWS_FULL_CURATED_CATEGORY.has(folder.id) ? cat : folder.id);
+        || (FOLDER_SHOWS_FULL_CURATED_CATEGORY.has(folder.id) ? folderCat : folder.id);
       const fCount = isCuratedGenre
         ? (CURATED_ITEMS[curatedGenreBase]?.[curatedTarget]?.length ?? 0)
-        // matchesActiveSavedListScope() narrows this the same way musicAlbumCount above does.
-        : state.items.filter(i => !isQueueDemoId(i.id) && (isPrimaryFolder ? matchesPrimaryOrUnfoldered(i, cat) : i.folderId === folder.id) && matchesActiveSavedListScope(i)).length;
+        // matchesActiveSavedListScope() narrows this the same way every other count here does.
+        : state.items.filter(i => !isQueueDemoId(i.id) && (isPrimaryFolder ? matchesPrimaryOrUnfoldered(i, folderCat) : i.folderId === folder.id) && matchesActiveSavedListScope(i)).length;
       const fCountLabel = fCount > 0 ? `<span class="sidebar-count">${fCount}</span>` : '';
       // Official/default folders (seeded in storage.js's `defaults` array, always id-prefixed
       // "default-") can't be deleted from the sidebar — only user-created ones (Date.now() ids) can.
       const isOfficialFolder = folder.id.startsWith('default-');
       const deleteBtn = isOfficialFolder ? '' : `<button class="sidebar-delete-folder" data-folder-id="${folder.id}" title="Delete folder">×</button>`;
-      const children = sortFoldersForDisplay(getChildFolders(state.folders, folder.id), cat);
+      const children = sortFoldersForDisplay(getChildFolders(state.folders, folder.id), folderCat);
       const isFolderCollapsed = !_expandedFolders.has(folder.id);
       const folderArrow = isFolderCollapsed ? '▶' : '▼';
       const nestedClass = depth > 0 ? 'sidebar-subfolder--nested' : '';
@@ -722,15 +722,16 @@ export function renderSidebar() {
       `;
     }
 
+    // subfolders is already Musicians, then Albums, then Playlists for the Music section (see the
+    // concat above), per direct request — was Musicians-then-a-separate-Albums-link the other way
+    // around before.
     const subfolderRows = subfolders.map(folder => _renderFolderRow(folder, 0)).join('');
 
-    // Musicians (subfolderRows) above Albums (permanentSubfolders), per direct request — was the
-    // other way around.
-    // Musician gets no "+ New folder" row, per direct request — its own subfolder slot (the
-    // "Musicians" primary folder) plus the permanent Albums row are the whole of what belongs
-    // here; every other category keeps the normal add-folder affordance. Curated genre browsing
-    // gets none either way, for every category — read-only, per direct request ("the user should
-    // not be able to add new folders to the curated lists").
+    // Music gets no "+ New folder" row, per direct request — its own subfolder slot (Musicians)
+    // plus Albums' own two folders (flattened in above) are the whole of what belongs here; every
+    // other category keeps the normal add-folder affordance. Curated genre browsing gets none
+    // either way, for every category — read-only, per direct request ("the user should not be
+    // able to add new folders to the curated lists").
     const addFolderRow = (cat === 'Music' || isCuratedGenre) ? '' : `
       <div class="sidebar-item sidebar-add-folder" data-add-folder="${cat}">
         + New folder
@@ -738,7 +739,6 @@ export function renderSidebar() {
     `;
     const expandedContent = isCollapsed ? '' : `
       ${subfolderRows}
-      ${permanentSubfolders}
       ${addFolderRow}
     `;
 
@@ -812,9 +812,7 @@ export function renderSidebar() {
   // so a click doesn't set state.view to undefined and break navigation).
   sidebar.querySelectorAll('.sidebar-subfolder:not(.sidebar-kanban-link):not(.sidebar-admin-kanban-link):not(.sidebar-saved-lists-link):not(.sidebar-curated-lists-link):not(.sidebar-curated-lists-child):not(.sidebar-saved-lists-child)').forEach(el => {
     el.addEventListener('click', () => {
-      if (isCuratedGenre && el.dataset.permanent) {
-        navigateToView(`genre:${curatedGenreBase}:${el.dataset.view}`, { activeCuratedFolderId: null });
-      } else if (isCuratedGenre && el.dataset.curatedTarget) {
+      if (isCuratedGenre && el.dataset.curatedTarget) {
         // Stays inside the genre by routing to this folder's curatedTarget (a dedicated creator
         // bucket, the full parent category, or — for folders with no curated data at all — the
         // folder's own id, which naturally resolves to an empty list). See the curatedTarget

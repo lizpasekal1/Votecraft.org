@@ -56,9 +56,47 @@
   function listFormHtml(list, isNew) {
     var enabled = list.enabledCategories || [];
     var listTopics = list.topics || [];
-    var catBoxes = CATEGORIES.map(function (c) {
-      return '<label class="vc-inline"><input type="checkbox" data-field="cat" value="' + esc(c) + '"' +
-        (enabled.indexOf(c) !== -1 ? ' checked' : '') + '> ' + esc(CAT_LABELS[c] || c) + '</label>';
+    // null/undefined enabledFolderIds = unrestricted (every folder shows) — the default for any
+    // EXISTING list saved before this field existed, same convention allowedFolderIds uses in
+    // profile.js. A brand-new list gets [] instead (every folder starts unchecked, same opt-in
+    // starting point enabledCategories already gives it), not null — an admin filling out a new
+    // nonprofit page should explicitly pick what to enable rather than start fully open.
+    var enabledFolders = isNew ? [] : (list.enabledFolderIds || null);
+    // Accordion: each category tab's own checkbox (enabledCategories, unchanged) plus a nested,
+    // collapsed-by-default folder checklist (enabledFolderIds) — mirrors the Profile page's Saved
+    // Lists folder-scoping accordion (profile.js's _buildSavedListCategoryTree), except the
+    // category checkbox here only ever means "this tab shows at all"; it does not also drive the
+    // folder checkboxes, since enabledCategories and enabledFolderIds are two independent fields.
+    //
+    // Music/Albums merge (per direct request/report: "Music should be: Musicians, Albums,
+    // Playlists" — matches the web app's own sidebar, which shows those three as flat folders
+    // under one Music section, renderSidebar.js). 'Albums' stays a real, independent
+    // enabledCategories value under the hood — the app's item.category/author/URL-pair/badge
+    // logic and this same screen's own Curated Items category dropdown all still need it as a
+    // distinct value — this only merges its ROW into Music's in this one checklist: no separate
+    // 'Albums' checkbox, and its two folders (Albums, Playlists) join Music's own (Musicians) in
+    // one combined accordion. Toggling the merged "Music" checkbox below enables/disables both
+    // 'Music' and 'Albums' together (see collectListForm).
+    var catBoxes = CATEGORIES.filter(function (c) { return c !== 'Albums'; }).map(function (c) {
+      var catFolders = (c === 'Music') ? Object.assign({}, FOLDERS['Music'], FOLDERS['Albums']) : (FOLDERS[c] || {});
+      var folderIds = Object.keys(catFolders);
+      var folderRows = folderIds.map(function (fid) {
+        var checked = !enabledFolders || enabledFolders.indexOf(fid) !== -1;
+        return '<label class="vc-cat-folder"><input type="checkbox" data-field="folder" value="' + esc(fid) + '"' +
+          (checked ? ' checked' : '') + '> ' + esc(catFolders[fid]) + '</label>';
+      }).join('');
+      return '' +
+        '<div class="vc-cat-group">' +
+          '<div class="vc-cat-row">' +
+            (folderIds.length ? '<span class="vc-cat-arrow" data-action="toggle-cat-folders">▶</span>' : '<span class="vc-cat-arrow vc-cat-arrow--empty"></span>') +
+            '<label class="vc-inline"><input type="checkbox" data-field="cat" value="' + esc(c) + '"' +
+              // Music's box also reflects a stray 'Albums'-only state (shouldn't occur going
+              // forward — collectListForm always keeps them paired — but defensive against
+              // pre-merge data edited some other way).
+              ((enabled.indexOf(c) !== -1 || (c === 'Music' && enabled.indexOf('Albums') !== -1)) ? ' checked' : '') + '> ' + esc(CAT_LABELS[c] || c) + '</label>' +
+          '</div>' +
+          (folderIds.length ? '<div class="vc-cat-folders" hidden>' + folderRows + '</div>' : '') +
+        '</div>';
     }).join('');
     var topicBoxes = topics.length ? topics.map(function (t) {
       return '<label class="vc-inline"><input type="checkbox" data-field="topic" value="' + esc(t.slug) + '"' +
@@ -77,7 +115,7 @@
           '<tr><th>Wordmark URL</th><td><input type="url" data-field="wordmarkUrl" class="regular-text" value="' + esc(list.wordmarkUrl || '') + '"></td></tr>' +
           '<tr><th>Icon URL</th><td><input type="url" data-field="iconUrl" class="regular-text" value="' + esc(list.iconUrl || '') + '"></td></tr>' +
           '<tr><th>Cover URL</th><td><input type="url" data-field="coverUrl" class="regular-text" value="' + esc(list.coverUrl || '') + '"></td></tr>' +
-          '<tr><th>Category tabs</th><td class="vc-checkgrid">' + catBoxes + '</td></tr>' +
+          '<tr><th>Category tabs</th><td class="vc-cat-tree">' + catBoxes + '</td></tr>' +
           '<tr><th>Topics</th><td class="vc-checkgrid">' + topicBoxes + '</td></tr>' +
           '<tr><th>Published</th><td><label><input type="checkbox" data-field="published"' + (list.published ? ' checked' : '') + '> visible in the app</label></td></tr>' +
           '<tr><th>WP owner user ID</th><td><input type="number" data-field="wpOwnerUserId" value="' + esc(list.wpOwnerUserId == null ? '' : list.wpOwnerUserId) + '"> <span class="description">Phase 2 — leave blank</span></td></tr>' +
@@ -111,6 +149,12 @@
   function collectListForm(form) {
     var v = function (f) { var i = form.querySelector('[data-field="' + f + '"]'); return i ? i.value.trim() : ''; };
     var checked = function (f) { var i = form.querySelector('[data-field="' + f + '"]'); return !!(i && i.checked); };
+    // Music/Albums merge (see listFormHtml's catBoxes comment) — 'Albums' has no checkbox of its
+    // own in this screen anymore, so pair it with whatever Music's own checkbox ends up as.
+    var enabledCategories = Array.prototype.map.call(form.querySelectorAll('[data-field="cat"]:checked'), function (c) { return c.value; });
+    if (enabledCategories.indexOf('Music') !== -1 && enabledCategories.indexOf('Albums') === -1) {
+      enabledCategories.push('Albums');
+    }
     return {
       name: v('name'),
       slug: slugify(v('slug')),
@@ -120,7 +164,11 @@
       wordmarkUrl: v('wordmarkUrl'),
       iconUrl: v('iconUrl'),
       coverUrl: v('coverUrl'),
-      enabledCategories: Array.prototype.map.call(form.querySelectorAll('[data-field="cat"]:checked'), function (c) { return c.value; }),
+      enabledCategories: enabledCategories,
+      // Every checked folder across every category (PHP re-derives which category each belongs
+      // to and normalizes "every real folder present" back to null/unrestricted) — an empty array
+      // here is a real, meaningful "hide every folder" state, distinct from null.
+      enabledFolderIds: Array.prototype.map.call(form.querySelectorAll('[data-field="folder"]:checked'), function (c) { return c.value; }),
       topics: Array.prototype.map.call(form.querySelectorAll('[data-field="topic"]:checked'), function (c) { return c.value; }),
       published: checked('published'),
       wpOwnerUserId: v('wpOwnerUserId'),
@@ -134,6 +182,17 @@
     if (!box || !addBtn) return;
 
     box.addEventListener('click', function (e) {
+      var catArrow = e.target.closest('.vc-cat-arrow[data-action="toggle-cat-folders"]');
+      if (catArrow) {
+        var group = catArrow.closest('.vc-cat-group');
+        var foldersBox = group && group.querySelector('.vc-cat-folders');
+        if (foldersBox) {
+          var wasHidden = foldersBox.hidden;
+          foldersBox.hidden = !wasHidden;
+          catArrow.textContent = wasHidden ? '▼' : '▶';
+        }
+        return;
+      }
       var toggle = e.target.closest('.vc-curated-toggle');
       if (toggle) {
         var detail = box.querySelector('.vc-curated-detail[data-slug="' + toggle.dataset.slug + '"]');

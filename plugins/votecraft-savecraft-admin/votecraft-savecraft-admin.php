@@ -5,7 +5,7 @@
  *              SaveCraft login needed. Talks to Firestore server-side through a dedicated,
  *              narrowly-scoped bot account (see includes/class-firestore-client.php); the browser
  *              never sees any Firestore credential, only this plugin's own REST routes.
- * Version: 1.0
+ * Version: 2.5
  * Author: VoteCraft
  */
 
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'VC_SAVECRAFT_ADMIN_VERSION', '1.4' );
+define( 'VC_SAVECRAFT_ADMIN_VERSION', '2.5' );
 define( 'VC_SAVECRAFT_ADMIN_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'VC_SAVECRAFT_ADMIN_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
@@ -392,7 +392,9 @@ function vc_savecraft_admin_page() {
     $tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'home';
     ?>
     <div class="wrap vc-savecraft-admin-wrap">
-        <h1><a href="<?php echo esc_url( vc_savecraft_tab_url( 'home' ) ); ?>" class="vc-savecraft-title-link">SaveCraft Admin</a></h1>
+        <div class="vc-savecraft-header">
+            <h1><a href="<?php echo esc_url( vc_savecraft_tab_url( 'home' ) ); ?>" class="vc-savecraft-title-link">SaveCraft Admin</a></h1>
+        </div>
         <?php
         vc_savecraft_render_nav( $tab );
         switch ( $tab ) {
@@ -649,6 +651,17 @@ const VC_SAVECRAFT_CATEGORY_FOLDERS = array(
     'Arts'        => array( 'default-art-artists' => 'Artists', 'default-art-dance' => 'Styles', 'default-art-comics' => 'Comics', 'default-art-memes' => 'Memes' ),
 );
 
+// Every valid folder id, across every category — used to validate an incoming enabledFolderIds
+// list and to detect "every real folder is present" (see vc_savecraft_admin_upsert_curated_list),
+// same normalization src/app/js/profile.js's _setFolderAllowed() uses for allowedFolderIds.
+function vc_savecraft_all_folder_ids() {
+    $all = array();
+    foreach ( VC_SAVECRAFT_CATEGORY_FOLDERS as $folders ) {
+        $all = array_merge( $all, array_keys( $folders ) );
+    }
+    return $all;
+}
+
 function vc_savecraft_admin_get_demo_config( $request ) {
     $doc_id = $request->get_param( 'doc' );
     $data = VC_SaveCraft_Firestore_Client::get_demo_config( $doc_id );
@@ -775,6 +788,20 @@ function vc_savecraft_admin_upsert_curated_list( $request ) {
         $rows[] = array( 'category' => $c, 'label' => VC_SAVECRAFT_CAT_LABEL[ $c ] ?? $c );
     }
 
+    // Folder-level narrowing within an enabled category (per direct request: unchecking a folder
+    // in the admin screen must hide that folder's card in the app's curated folder-picker,
+    // renderCuratedCategoryFolderLanding). null = unrestricted (every folder shows) — the default
+    // for any list saved before this field existed, and re-collapsed back to null here whenever
+    // every real folder id is present, same normalization src/app/js/profile.js's
+    // _setFolderAllowed() uses for allowedFolderIds, so "everything checked" never silently stops
+    // covering a folder added later.
+    $all_folder_ids = vc_savecraft_all_folder_ids();
+    $enabled_folder_ids = null;
+    if ( array_key_exists( 'enabledFolderIds', $body ) && is_array( $body['enabledFolderIds'] ) ) {
+        $provided = array_values( array_intersect( array_unique( $body['enabledFolderIds'] ), $all_folder_ids ) );
+        $enabled_folder_ids = ( count( $provided ) === count( $all_folder_ids ) ) ? null : $provided;
+    }
+
     $wp_owner = isset( $body['wpOwnerUserId'] ) && $body['wpOwnerUserId'] !== '' ? (int) $body['wpOwnerUserId'] : null;
     $client_owner = isset( $body['clientOwnerUid'] ) && $body['clientOwnerUid'] !== '' ? sanitize_text_field( $body['clientOwnerUid'] ) : null;
 
@@ -788,6 +815,7 @@ function vc_savecraft_admin_upsert_curated_list( $request ) {
         'iconUrl'          => ! empty( $body['iconUrl'] ) ? esc_url_raw( $body['iconUrl'] ) : '',
         'coverUrl'         => ! empty( $body['coverUrl'] ) ? esc_url_raw( $body['coverUrl'] ) : '',
         'enabledCategories' => $enabled,
+        'enabledFolderIds' => $enabled_folder_ids,
         'topics'           => $topics,
         'rows'             => $rows,
         'published'        => ! empty( $body['published'] ),

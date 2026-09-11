@@ -546,12 +546,15 @@ export const state = {
                               // never required to be configured.
   curatedLists: {},  // { [partnerSlug]: { name, slug, shortName, headline, description,
                      //   wordmarkUrl, iconUrl, coverUrl, enabledCategories: [...], rows: [...],
-                     //   topics: [...], published: true, wpOwnerUserId, clientOwnerUid } } — one
-                     //   per curated nonprofit "account", admin-editable from the WordPress
-                     //   "SaveCraft Admin" plugin. Public-read Firestore (curated_lists), fetched
-                     //   at startup by storage.js's initCuratedCms. Only `published` docs land here.
-                     //   Its curated_items carry genre == partnerSlug. renderGrid.js merges an
-                     //   entry over the hardcoded CURATED_GENRE_LANDING_CONTENT fallback.
+                     //   enabledFolderIds: [...]|null, topics: [...], published: true,
+                     //   wpOwnerUserId, clientOwnerUid } } — one per curated nonprofit "account",
+                     //   admin-editable from the WordPress "SaveCraft Admin" plugin.
+                     //   enabledFolderIds narrows which folders show in renderGrid.js's curated
+                     //   folder-picker for this partner (null = unrestricted). Public-read
+                     //   Firestore (curated_lists), fetched at startup by storage.js's
+                     //   initCuratedCms. Only `published` docs land here. Its curated_items carry
+                     //   genre == partnerSlug. renderGrid.js merges an entry over the hardcoded
+                     //   CURATED_GENRE_LANDING_CONTENT fallback.
   curatedTopics: {}, // { [topicSlug]: { name, slug, shortName, headline, description, iconUrl,
                      //   coverUrl, published: true } } — one per shared cause. Same collection
                      //   pattern (curated_topics). renderCuratedTopicPage (renderCuratedPages.js)
