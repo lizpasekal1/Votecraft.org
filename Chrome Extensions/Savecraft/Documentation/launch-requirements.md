@@ -1,5 +1,7 @@
 # SaveCraft — Launch Requirements for User Testing
 
+*(See `savecraft-documentation.md` for what every file in this folder is for.)*
+
 A working to-do list of what's outstanding before inviting real (non-team) users to test
 savecraft.org and/or the Chrome extension. Grounded in a review of the codebase — re-check items
 against the code before assuming they're still accurate, especially anything unconfirmed. Each
@@ -63,7 +65,8 @@ account).
 
 ### 4. savecraft.org requires signing in to use at all
 Unlike the extension (local-only browsing allowed), the website currently requires an account,
-with only a temporary "View Demo" as a workaround.
+with only a temporary "View Demo" as a workaround — see `savecraft-technical-runbook.md`'s own section on this for
+exactly what removing it (vs. making it permanent) would touch.
 
 - [ ] Decide: should savecraft.org get the extension's account-optional local browsing too, or
       stay sign-in-required for testing?
