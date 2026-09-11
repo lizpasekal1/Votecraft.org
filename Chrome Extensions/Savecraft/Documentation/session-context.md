@@ -1,6 +1,20 @@
 # SaveCraft — Session Context for AI
 
+*(See `savecraft-documentation.md` for what every file in this folder is for.)*
+
 This file helps Claude (or any AI assistant) quickly regain context on the SaveCraft project without re-reading the full codebase.
+
+**Division of labor with `savecraft-architecture.md`** (reorganized 2026-09-11, after these two
+files' Categories/Curated-Data/File-Locations sections were found to have silently drifted out of
+sync with each other): `savecraft-architecture.md` is the single source of truth for evergreen
+product reference — features, Categories table, Data Model/Firestore schema, file structure,
+architecture. This file covers what's genuinely unique to it — detailed technical session-by-
+session history (below), exact runtime mechanism reference not covered at that depth in
+architecture.md (State Object, View Routing, Author/Artist Profile System, External Search,
+Sidebar Structure, Curated Data loading/normalization, Dashboard, Key Architectural Patterns), and
+Known Open Issues / Planned But Not Yet Built. When something belongs in both, it should be written
+once in architecture.md and pointed to from here — don't let both files describe the same fact
+independently again.
 
 ---
 
@@ -33,7 +47,7 @@ This file helps Claude (or any AI assistant) quickly regain context on the SaveC
 - **Category landing page polish, many live rounds**: carousel vertical position adjusted repeatedly (a net desktop `margin-top: -25px`, mobile `-38px`); active/neighbor/edge slide sizing settled into **3 distinct tiers** on mobile (130px active / 102px neighbor / 80px edge) using pure CSS (`:has()` + adjacent-sibling selectors keyed off `.category-carousel-slide--active`, no JS needed) so neighbors visually overlap the edge slides the same way the active slide overlaps its neighbors; mobile carousel made edge-to-edge (negative margins canceling `--page-mobile-pad` exactly) with the prev/next arrows hidden there (swipe still works); on-image slide title/description text removed entirely (the purple caption below the strip already covers it); the "Demo" badge moved to the lower-right corner; heading renamed "Recent Saves" → "Featured Saves," later centered, and its mobile font-size unified to match the folder cards' own; folder cards themselves shrunk 10% on mobile (117px) with smaller text but explicitly untouched icon size (baked as a fixed px attribute in `folderIconHtml()`, never CSS-driven); added a desktop-only gradient edge fade on the carousel strip (`mask-image`, matching the Dashboard hero collage's own existing technique) — deliberately mobile-excluded since mobile is edge-to-edge already.
 - **Real bug found and fixed: `-webkit-overflow-scrolling: touch` caused a "scroll gets stuck right after hitting the bottom" symptom** (reported live: "it scrolls fine till i hit the bottom... then it's hard to scroll back up") — a well-documented legacy WebKit quirk on nested scroll containers. Had been added moments earlier to try to fix a *different*, vaguer "haptics aren't quite right" complaint; removed outright once the real symptom surfaced, since modern iOS Safari already gives plain `overflow: auto` elements native momentum scrolling without it.
 - **Real bug found and fixed: `.category-landing-page`'s own `flex: 1; min-height: 0;` (needed on desktop so the page compresses to fit its fixed, non-scrolling layout) was still active on mobile too**, silently letting the page shrink-to-fit `.grid-area`'s box instead of growing past the viewport — so mobile's own `overflow-y: auto` (and the FAB-clearance bottom padding, below) never had anything real to scroll into, and the floating "+" button stayed visually overlapping the carousel no matter how much clearance padding was added. Fixed with `flex-shrink: 0; min-height: auto;` on mobile only.
-- **New standing convention: FAB clearance is now "standard practice" on every mobile page.** The base `.grid-area` mobile rule now applies `padding-bottom: var(--fab-clearance)` (96px → 130px after a follow-up) to every normally-scrolling page automatically — the several pages that used to hand-roll this (Dashboard, Profile, Shared Saves) had their duplicate copies removed. Documented explicitly in `savecraft-overview.md`'s Architecture section as the pattern any *future* mobile page should rely on by default, including a callout for the `flex:1;min-height:0` trap above. Also nudged the base mobile top padding up 10px (`padding-top: calc(var(--page-mobile-pad) - 10px)`) for the same "default case" set of pages.
+- **New standing convention: FAB clearance is now "standard practice" on every mobile page.** The base `.grid-area` mobile rule now applies `padding-bottom: var(--fab-clearance)` (96px → 130px after a follow-up) to every normally-scrolling page automatically — the several pages that used to hand-roll this (Dashboard, Profile, Shared Saves) had their duplicate copies removed. Documented explicitly in `savecraft-architecture.md`'s Architecture section as the pattern any *future* mobile page should rely on by default, including a callout for the `flex:1;min-height:0` trap above. Also nudged the base mobile top padding up 10px (`padding-top: calc(var(--page-mobile-pad) - 10px)`) for the same "default case" set of pages.
 - **Real bug found and fixed: the initial carousel scroll position centered the strip using every slide's base (smallest) size, but `_updateActiveSlide` immediately grows whichever slide it picks to the larger active/neighbor tiers** — CSS box growth pushes later siblings over, it doesn't re-center anything already scrolled into place, so the active card could land visibly off-center on first mobile load. Fixed by re-measuring the actual (now-resized) active slide after it's picked and nudging `scrollLeft` by the exact delta needed.
 - **Major new feature: curated genre drilldown pages get the same folder-picker + carousel treatment as personal category pages.** The "Shows | Votecraft" (Top 100 curated) page used to be a flat, ungrouped list of ~90-196 items; it (and every other qualifying curated genre×category page) now shows the same 4-folder-card picker + "Featured Saves" carousel as its real personal-category counterpart. Required threading a genuinely new `folderId` concept through curated Firestore data end to end for the first time (curated items previously had zero folder concept — `getFilteredSortedItems()`'s `genre:` branch used to hardcode `folderId: null`): `_loadCuratedFromFirestore()` now reads a real `folderId` field; a new `matchesFolder()`/`getCuratedCategoryFolderCounts()` pair (`renderFilters.js`) mirrors the personal-item `matchesPrimaryOrUnfoldered()`/`getCategoryFolderCounts()` pattern; a new `renderCuratedCategoryFolderLanding()` (`renderGrid.js`) mirrors `renderCategoryFolderLanding()`; a new 3-segment view shape (`genre:<genre>:<category>:<folderId>`) handles the one-level-deeper folder drilldown, with its own "Nothing here now" empty state (distinct copy from the plain-folder "Nothing here yet," per direct request) and a title branch showing the real folder name. Planned via a full plan-mode pass (multiple `AskUserQuestion` rounds to pin down exact scope) before any code was touched, given the size.
 - **Carousel content sourcing overhauled, two rounds.** First: `renderCategoryCarouselHtml()` gained an optional `{ items, isDemo }` override parameter (default unchanged — the generic Dashboard-style `resolveFavoriteSlides()` fallback chain) so a caller can supply its own slide source; a new shared `resolveGenreRowItems(genre, category)` (extracted from `renderCuratedGenreLanding`'s own row-resolution logic, now reused by both) feeds the curated folder-picker's carousel the exact same items/order its VoteCraft landing-page row shows, instead of generic favorites/demo content. Second, per a further follow-up: the **personal** category-landing carousels now show that category's own most-recently-saved items (`getRecentCategoryItems()`, new) when the user has any; when they don't, most categories fall back to the original generic chain, but **Films/Books/Games specifically fall back to their own VoteCraft-landing-page row content instead** (`CAROUSEL_DEMO_MATCHES_VOTECRAFT_LANDING` set), per direct request to match branding across both surfaces.
@@ -233,119 +247,35 @@ This file helps Claude (or any AI assistant) quickly regain context on the SaveC
 
 ## Claude Code Permissions Setup
 
-`…/Savecraft/.claude/settings.json` (new) holds a project-level `permissions.allow` list to cut
-down repeated approval prompts, scoped deliberately narrow:
-
-```json
-{
-  "permissions": {
-    "allow": [
-      "Bash(grep *)",
-      "Bash(dig *)"
-    ]
-  }
-}
-```
-
-Both are unconditionally read-only regardless of flags (`grep` never writes; `dig` is a DNS
-lookup) — chosen by scanning ~50 recent session transcripts for the most frequent Bash calls,
-then keeping only patterns that (a) aren't already covered by Claude Code's own built-in
-read-only auto-allow list (`cd`, `cat`, `head`, `tail`, `echo`, `wc`, `ls`, `find`,
-`git status`/`diff`/`log`/`branch`/`rev-parse`, `lsof`, etc. — these never needed a rule) and
-(b) can't be turned destructive by a hidden flag. `curl` was deliberately left out despite being
-the next-most-frequent candidate — most calls used `-s`/`-sI`/`-sf` (all safe), but a wildcard
-rule can't distinguish those from `curl -sX POST ... -d '...'`, and this project's owner
-explicitly did not want anything that could enable a mutating request to slip through unprompted.
-Interpreters/shells/package-runners (`python3`, `node -e`, `npx`, `bash -c`, `source`) are never
-allowlisted here even when read-only in a specific observed use, since a wildcard rule covering
-them is equivalent to unprompted arbitrary code execution.
-
-**Separate, pre-existing file — not part of this setup, worth knowing about:**
-`/Users/lizpasekal/Documents/Votecraft.org/.claude/settings.local.json` (one directory *above*
-this project, at the shared monorepo root) already has its own, considerably more permissive
-`permissions.allow` list — including blanket `"Edit"`/`"Write"` and two genuinely risky entries,
-`Bash(python3 -c ' *)` and `Bash(node -e:*)`, both real arbitrary-code-execution allowances. It
-predates this session, wasn't created by this work, and hasn't been modified here. Because it
-lives at the monorepo root rather than at this project's own path, it may not even be in effect
-for sessions whose working directory is this Savecraft folder specifically (Claude Code project
-settings are path-scoped) — which could explain permission prompts persisting despite that file
-looking permissive on paper. Flagging this for whoever next touches permissions here, not
-recommending any specific change to it.
+Moved out of `Documentation/` (it's about Claude Code tooling config for this project, not
+SaveCraft itself) — see `.claude/PERMISSIONS.md`, next to the `settings.json` it documents.
 
 ---
 
 ## File Locations
 
-| What | Path |
-|------|------|
-| Chrome extension source | `/Users/lizpasekal/Documents/Votecraft.org/Chrome Extensions/Savecraft/` |
-| Manifest | `…/Savecraft/manifest.json` (must stay at extension root — Chrome requirement) |
-| Main library page | `…/Savecraft/src/app/index.html` |
-| Library logic | `…/Savecraft/src/app/js/*.js` — 30 ES modules; see `savecraft-overview.md`'s module table for what lives where (`render.js` and `detailModal.js` are now thin barrels/orchestrators over several `render*.js`/`detailModal*.js` files, not single large modules) |
-| Library styles | `…/Savecraft/src/app/css/*.css` — 10 files split by feature area |
-| Background service worker | `…/Savecraft/src/background/background.js` |
-| Content script | `…/Savecraft/src/content/content.js` |
-| Popup | `…/Savecraft/src/popup/popup.{html,css,js}` |
-| Sponsored/partner page | `…/Savecraft/src/sponsored/sponsored.html` + `sponsored.js` (module, wordmark link) + `vc-bonus.js` (VC bonus preview) — runs on extension and savecraft.org web build |
-| Logo assets | `…/Savecraft/images/logos/` |
-| Documentation | `/Users/lizpasekal/Documents/Votecraft.org/Chrome Extensions/Savecraft/Documentation/` |
-
-Always edit source code in `Votecraft.org/Chrome Extensions/Savecraft/`. Docs go in the same folder under `Documentation/`.
-
-**Note:** The original monolithic `src/app/app.js`/`app.css` have been deleted (2026-07-29) — the module split was confirmed working, and their one remaining dependent, `scripts/seed-curated.js`, was repointed at `scripts/seed-payload.json` (which already held the same curated data, extracted earlier) first.
+Superseded by `savecraft-architecture.md`'s "File Structure" section (the full annotated tree)
+and its `src/app/js/` module table — this file no longer keeps its own separate copy.
 
 ---
 
 ## Categories
 
-```js
-// News dropped as its own top-level tab this session — no CATEGORIES entry, but CAT_LABEL/
-// CAT_EMOJI/CATEGORY_PLATFORMS['News'] etc. are deliberately still defined below, since an
-// existing News item is still fully functional wherever it's already reachable.
-const CATEGORIES = ['Web Links', 'Show', 'Musician', 'Music Album', 'Game', 'Movie', 'Book', 'Visual Art'];
-
-const CAT_LABEL = {
-  'Web Links': 'Websites', 'News': 'News',
-  'Book': 'Books', 'Game': 'Games', 'Movie': 'Films',
-  'Musician': 'Music', 'Music Album': 'Albums', // 'Musician' renamed this session (was 'Musicians')
-  'Show': 'Shows', 'Visual Art': 'Arts',
-};
-
-const PRIMARY_FOLDER_ID = {
-  'Movie': 'default-movies-movies',
-  // 'Show' entry removed this session — Shows' old "TV Shows" folder (which was primary) moved
-  // into Films as "Series"; Shows' remaining folders have no one folder that represents "the
-  // whole category" anymore, so the Shows tab is now unfiltered, same as Visual Art.
-  'Musician': 'default-musicians-musicians', 'Music Album': 'default-music-albums',
-  'Book': 'default-books-books', 'Web Links': 'default-weblinks-websites',
-};
-```
-
-- **Singular** values used in storage and the Add Item dropdown
-- **CAT_LABEL** values used in the sidebar, grid title, and Add-wizard tile — all read from this same map now (previously the sidebar had separate hardcoded "Webpages" text for `'Web Links'`, since removed)
-- `CATEGORIES`' array order directly drives both the sidebar and Add-wizard tile order — `'Web Links'` (Website) is first
-- `Music Album` is **filtered out of the sidebar** category list — it appears only as a permanent hardcoded subfolder under `Musician` in the sidebar
-- A category's entry in `PRIMARY_FOLDER_ID` (if any) determines what its top-level tab actually filters to — see "Latest Session Summary" above
-- CSS class names use `catClass(cat)` helper: `'Music Album' → 'Music-Album'`, `'Visual Art' → 'Visual-Art'`
+Superseded by `savecraft-architecture.md`'s "Categories" section — this file no longer keeps its
+own separate old-name/new-name table. Quick pointer for AI pickup: `CATEGORIES`/`CAT_LABEL`/
+`PRIMARY_FOLDER_ID` all live in `state.js`; as of the app-wide category rename, `CAT_LABEL` is a
+pure identity map (internal value == display value), so `catClass(cat)` output needs no dash-
+escaping anymore (none of the 8 names contain a space).
 
 ---
 
-## Storage Layout (`chrome.storage.sync` in the extension / `localStorage` on web, same keys)
+## Storage Layout
 
-Key names below are identical in both environments — `platform.js`'s `storageSync`/`storageLocal` give `storage.js` an identical `get`/`set`/`remove` shape regardless of which one is actually backing it, so this table doesn't fork per-platform. On web these same keys additionally dual-write to Firestore (`savecraft_users/<uid>/...`) whenever signed in, which is mandatory there — see "Architecture" in `savecraft-overview.md`.
-
-| Key pattern | Contents |
-|------------|----------|
-| `item_<id>` | Personal item object |
-| `author_<id>` | Author/artist profile object |
-| `folder_<id>` | User-created folder |
-| `savecraft_view` | Last active view string (restored on open) |
-| `savecraft_kanban_sort` | Per-column sort prefs |
-| `savecraft_kanban_lists` | Kanban column definitions |
-| `savecraft_hidden_curated` | Array of dismissed curated IDs |
-| `savecraft_curated_overrides` | User edits to curated items |
-| `savecraft_saved_lists` | Array of `{ id, name }` — Saved Lists ("All My Saves"/Health/Motivation seeded, plus any user-added ones); an item's membership lives on the item itself (`item.favorite` for `default-favorites`, `item.savedListId` for every other list), not here. `default-favorites`'s display name has migrated in place twice — "Favorites" → "All Saves" → "All My Saves" (same id throughout, everything that cares checks the id, not the label) |
-| `savecraft_curated_lists_rows` | Array of `{ id, name }` — Curated Lists' own child rows (seeded with "Votecraft"/"RCV"); only the seeded "Votecraft" row (`default-votecraft`) has a real destination (`genre:Top 100`), the rest are still inert placeholders |
+Superseded by `savecraft-architecture.md`'s "Data Model" section (Personal Item/Author
+Profile/Folder shapes, plus the "Other `chrome.storage.sync` keys" table) — this file no longer
+keeps its own separate copy. One thing worth restating since it's easy to forget: key names are
+identical in both environments (`chrome.storage.sync` in the extension, `localStorage` on web via
+`platform.js`'s `storageSync`/`storageLocal` shim), so nothing here forks per-platform.
 
 ---
 
@@ -379,16 +309,16 @@ state = {
 |-------|-------|
 | `'dashboard'` | The Dashboard home page (`renderDashboard()`, in `js/dashboard.js`) — the default for a brand-new install with no saved state; no longer force-applied on every load (see the note below the table) |
 | `'All'` | All items |
-| `'Music Album'` | Items with category === 'Music Album' |
-| `'Musician'` | Items with category === 'Musician' |
+| `'Albums'` | Items with category === 'Albums' |
+| `'Music'` | Items with category === 'Music' |
 | `'<folder-id>'` | Items in that folder |
-| `'author:Musician:Gorillaz'` | Author page for Gorillaz (Musician category) |
-| `'author:Movie:Bong Joon-ho'` | Director page for Bong Joon-ho (new this session — same mechanism as Musician, generalized to Book/Movie/Show/Game) |
+| `'author:Music:Gorillaz'` | Author page for Gorillaz (Music category) |
+| `'author:Films:Bong Joon-ho'` | Director page for Bong Joon-ho (generalized from Music-only to Literature/Films/Series/Games) |
 | `'genre:Jazz'` | Curated genre landing — shows category list in sidebar |
-| `'genre:Jazz:Movie'` | Curated genre + category drilldown — shows curated items |
-| `'genre:Top 100:Musician'` | Curated Top 100 musician entries (100 artists) |
-| `'genre:Top 100:Music Album'` | Curated Top 100 albums (~2,439 entries — bulk auto-synced, not an actual hand-curated shortlist, see Curated Data below) |
-| `'genre:Top 100:Book Author'` / `'Movie Director'` / `'Show Creator'` / `'Game Studio'` | Curated "creator card" buckets (83/78/89/82 entries), reached via each category's Authors/Directors/Creators/Game Companies folder |
+| `'genre:Jazz:Films'` | Curated genre + category drilldown — shows curated items |
+| `'genre:Top 100:Music'` | Curated Top 100 musician entries (100 artists) |
+| `'genre:Top 100:Albums'` | Curated Top 100 albums (~2,439 entries — bulk auto-synced, not an actual hand-curated shortlist, see Curated Data below) |
+| `'genre:Top 100:Book Author'` / `'Movie Director'` / `'Show Creator'` / `'Game Studio'` | Curated "creator card" buckets (83/78/89/82 entries), reached via each category's Authors/Directors/Creators/Game Companies folder — these 4 pseudo-category strings are deliberately untouched by the category rename (see `savecraft-architecture.md`'s Categories section) |
 | `'curated'` | **New this session.** The top-level Curated SaveCraft landing — a bare-bones, ActBlue-style flat list of nonprofit-sponsored orgs (`renderCuratedBareList()`), not the old plain "Pick a category" empty state |
 | `'curated-full-list'` | **New this session.** The rich hero+carousel-rows page (`renderCuratedDirectory()` — this is the *same function* that used to be the direct top-level landing before this session's split), reached via the "See all →" button on `'curated'` above |
 | `'shared'` | The Shared Saves dashboard (`renderSharedSavesPage()`, `sharedSaves.js`) — "Lists You Follow" portal cards (one per genre in `state.followedCuratedLists`, real navigation) + a Friends stub (moved here from the Profile page) |
@@ -399,13 +329,13 @@ state = {
 
 `renderGrid()` early-returns to `renderAuthorPage()` when `state.view.startsWith('author:')`.
 
-For `author:Musician:X` views, `getFilteredSortedItems()` returns:
-1. User-saved `Musician` and `Music Album` items with `author === name`
-2. Curated `Music Album` items from `CURATED_ITEMS` where `notes === name`
+For `author:Music:X` views, `getFilteredSortedItems()` returns:
+1. User-saved `Music` and `Albums` items with `author === name`
+2. Curated `Albums` items from `CURATED_ITEMS` where `notes === name`
 
-Generalized this session to every `author:<cat>:X` view (`cat` one of `Musician`/`Book`/`Movie`/`Show`/`Game`):
-1. User-saved items in `cat` (or `Music Album` for `cat === 'Musician'`) with `author === name`
-2. Matching curated items pulled in from **every genre** in `CURATED_ITEMS`, via `resolveCuratedCreatorName(curatedCat, item)` — tries `item.author`, then Book's split-title, then Movie/Show/Game's static `curatedCreatorLookup.js` data, then (Musician only) `item.notes === name`. Deduped by resolved title (not just id) — the same work is frequently curated separately per genre.
+Generalized to every `author:<cat>:X` view (`cat` one of `Music`/`Literature`/`Films`/`Series`/`Games`):
+1. User-saved items in `cat` (or `Albums` for `cat === 'Music'`) with `author === name`
+2. Matching curated items pulled in from **every genre** in `CURATED_ITEMS`, via `resolveCuratedCreatorName(curatedCat, item)` — tries `item.author`, then Literature's split-title, then Films/Series/Games' static `curatedCreatorLookup.js` data, then (Music only) `item.notes === name`. Deduped by resolved title (not just id) — the same work is frequently curated separately per genre.
 
 ---
 
@@ -421,27 +351,27 @@ All in `js/authors.js` (profile CRUD/navigation) and `js/renderAuthorPage.js` (`
 
 ### Author page structure
 - Back button in `#grid-title` → returns to category view (or, if reached from curated genre browsing, keeps the sidebar showing that genre — see Sidebar Structure below)
-- Header: photo, name, bio, website — bio/photo enrichment is Musician-only; Book/Movie/Show/Game profile pages show a plain name until that's built (their curated "creator card" already has bio/photo, just not yet copied onto this stub — a known/flagged gap, not an oversight)
-- For `Musician` category: **Fetch Albums** button appears on the header
-- Works grid: all items by this author. For `Musician`, includes curated Music Albums from `CURATED_ITEMS` where `notes === artistName`. Generalized this session to Book/Movie/Show/Game — see the `author:` view routing entry above for the full resolution order.
+- Header: photo, name, bio, website — bio/photo enrichment is Music-only; Literature/Films/Series/Games profile pages show a plain name until that's built (their curated "creator card" already has bio/photo, just not yet copied onto this stub — a known/flagged gap, not an oversight)
+- For `Music` category: **Fetch Albums** button appears on the header
+- Works grid: all items by this author. For `Music`, includes curated Albums from `CURATED_ITEMS` where `notes === artistName`. Generalized to Literature/Films/Series/Games — see the `author:` view routing entry above for the full resolution order.
 - Clicking a card on the author page opens the detail popup
 
 ### Clickable names
-`CREATOR_CARD_CATEGORY` (`state.js`) — `{ Musician: 'Musician', 'Book Author': 'Book', 'Movie Director': 'Movie', 'Show Creator': 'Show', 'Game Studio': 'Game' }` — generalizes what used to be Musician-only logic:
-- **Curated creator cards** (Musician, and — new this session — Book Author/Movie Director/Show Creator/Game Studio): the title itself is rendered as a `card-author-link card-title` button (main grid) / the `_titleHtml` branch (detail modal, gated on `CREATOR_CARD_CATEGORY[item.category] && !isOwnAuthorPageView(item.title)`) → clicking it calls `navigateToAuthor(item.title, CREATOR_CARD_CATEGORY[item.category])`
-- **Curated Music Album cards**: the `item.notes` (artist name) is shown as a `card-author-link` above the title → navigates to that musician's page
-- **Curated Book/Movie/Show/Game cards** (the works themselves, not the creator cards): the resolved author/director/creator/studio name (`item.author`, filled in via `splitCuratedTitleCreator`/`getStaticCuratedCreator` at render time, see Curated Data below) shown as a `card-author-link` above the title, same as Music Album
+`CREATOR_CARD_CATEGORY` (`state.js`) — `{ Music: 'Music', 'Book Author': 'Literature', 'Movie Director': 'Films', 'Show Creator': 'Series', 'Game Studio': 'Games' }` — generalizes what used to be Music-only logic. The 4 pseudo-category keys on the left (`'Book Author'` etc.) are deliberately untouched by the category rename — only their *values* (the real `CATEGORIES` members they map to) got renamed:
+- **Curated creator cards** (Music, and Book Author/Movie Director/Show Creator/Game Studio): the title itself is rendered as a `card-author-link card-title` button (main grid) / the `_titleHtml` branch (detail modal, gated on `CREATOR_CARD_CATEGORY[item.category] && !isOwnAuthorPageView(item.title)`) → clicking it calls `navigateToAuthor(item.title, CREATOR_CARD_CATEGORY[item.category])`
+- **Curated Albums cards**: the `item.notes` (artist name) is shown as a `card-author-link` above the title → navigates to that musician's page
+- **Curated Literature/Films/Series/Games cards** (the works themselves, not the creator cards): the resolved author/director/creator/studio name (`item.author`, filled in via `splitCuratedTitleCreator`/`getStaticCuratedCreator` at render time, see Curated Data below) shown as a `card-author-link` above the title, same as Albums
 - **Detail modal**: creator-card title or work's author/artist name is a `.detail-author-link` → closes modal and navigates to that profile page
 - A co-directed movie's byline shows `${name} …` (`item.authorHasMore`) — display-only, the `data-author` attribute driving the actual link always stays the clean name
 - Author name is immutable — it's the lookup key. Changing it would break the link to all items.
 
 ### Auto-save musician
-`autoSaveMusician(artistName)` is called from `ensureLiveItem()` whenever a `Music Album` item is saved for the first time (e.g. when queued). It:
-1. Checks if a `Musician` item with that title already exists in `state.items`
-2. If not, creates one — pulling `url` and `imageUrl` from `CURATED_ITEMS[genre]['Musician']` if available
+`autoSaveMusician(artistName)` is called from `ensureLiveItem()` whenever an `Albums` item is saved for the first time (e.g. when queued). It:
+1. Checks if a `Music` item with that title already exists in `state.items`
+2. If not, creates one — pulling `url` and `imageUrl` from `CURATED_ITEMS[genre]['Music']` if available
 3. Persists it to `chrome.storage.sync`
 
-The reverse direction: `autoImportMusicianAlbums(musicianItem)` (in `js/addEditModal.js`) runs whenever a brand-new `Musician` is saved via `handleSaveItem()` — fire-and-forget, not awaited before the modal closes. Calls `fetchAlbumsFromItunes(artistName)`, filters to `artist === artistName` (exact, case-insensitive) and excludes anything matching the singles/EPs title pattern or `type === 'Single'` (same filter `fetchAlbumsModal.js` uses), dedupes against any already-saved albums by title, then creates+persists the rest as `Music Album` items and re-renders.
+The reverse direction: `autoImportMusicianAlbums(musicianItem)` (in `js/addEditModal.js`) runs whenever a brand-new `Music` artist is saved via `handleSaveItem()` — fire-and-forget, not awaited before the modal closes. Calls `fetchAlbumsFromItunes(artistName)`, filters to `artist === artistName` (exact, case-insensitive) and excludes anything matching the singles/EPs title pattern or `type === 'Single'` (same filter `fetchAlbumsModal.js` uses), dedupes against any already-saved albums by title, then creates+persists the rest as `Albums` items and re-renders.
 
 ---
 
@@ -460,21 +390,21 @@ The reverse direction: `autoImportMusicianAlbums(musicianItem)` (in `js/addEditM
 - Singles/EPs default to **unchecked**; proper albums default to **checked**
 - Already-saved albums are disabled
 
-`handleImportAlbums()` — creates `Music Album` items from checked results.
+`handleImportAlbums()` — creates `Albums` items from checked results.
 
 ### Add Modal Wizard (Screen B: category search)
 Add is a 3-screen wizard in `js/addEditModal.js`: category grid → live search → review/refine. Each category dispatches to a different search function in `js/api.js`, all returning the same normalized shape (`{ title, author, imageUrl, imageUrlLarge, url, year, meta }`) so the results-dropdown renderer and the review-screen pre-fill don't special-case each source:
 
 | Category | Function | Source |
 |----------|----------|--------|
-| Musician | `searchMusicians()` | iTunes `entity=musicArtist` |
-| Music Album | `searchMusicAlbums()` | iTunes `entity=album` (generalized from the old author-field-only lookup) |
-| Show | `searchShows()` | iTunes `entity=tvSeason`, deduped by `artistId` |
-| Book | `searchBooks()` | Open Library `search.json` |
-| Game | `searchGames()` | Steam `storesearch` |
-| Movie | `searchMoviesWikipedia()` | Wikipedia `generator=search` — iTunes movie search is dead |
+| Music | `searchMusicians()` | iTunes `entity=musicArtist` |
+| Albums | `searchMusicAlbums()` | iTunes `entity=album` (generalized from the old author-field-only lookup) |
+| Series | `searchShows()` | iTunes `entity=tvSeason`, deduped by `artistId` |
+| Literature | `searchBooks()` | Open Library `search.json` |
+| Games | `searchGames()` | Steam `storesearch` |
+| Films | `searchMoviesWikipedia()` | Wikipedia `generator=search` — iTunes movie search is dead |
 
-Search is debounced ~500ms on `#step1-search-input`. Selecting a result (or typing a title with no match and continuing manually) advances to the review screen (`showReviewScreen()`), which then kicks off background enrichment via the *existing* `ensureArtistWikipediaInfo`/`ensureItemWikipediaInfo` (Musician / Book·Show·Movie·Game respectively) to fill in Summary and upgrade the image — Music Album already has full data from iTunes, Visual Art has no source, neither triggers a lookup.
+Search is debounced ~500ms on `#step1-search-input`. Selecting a result (or typing a title with no match and continuing manually) advances to the review screen (`showReviewScreen()`), which then kicks off background enrichment via the *existing* `ensureArtistWikipediaInfo`/`ensureItemWikipediaInfo` (Music / Literature·Series·Films·Games respectively) to fill in Summary and upgrade the image — Albums already has full data from iTunes, Arts has no source, neither triggers a lookup.
 
 `handleSaveItem()` no longer requires a URL — Title is the required field instead (same red-border-flash validation UX, just checking a different field). This also fixed a latent bug: editing a curated item with a blank Title used to silently write `title: null` over the curated base item. **Note (latest session)**: the Save button's own disabled/grayed-out state (`updateSaveButtonEnabled()`, `addEditModal.js`) is looser than this — it enables as soon as *either* Title or URL has content, so it's possible to enable the button with URL alone and still hit this Title-required validation on click. Intentional as shipped (per direct request), not a bug.
 
@@ -482,25 +412,25 @@ Search is debounced ~500ms on `#step1-search-input`. Selecting a result (or typi
 
 ## Sidebar Structure
 
-`renderSidebar()` iterates `CATEGORIES.filter(cat => cat !== 'Music Album')` — Music Album is never a top-level sidebar entry.
+`renderSidebar()` iterates `CATEGORIES.filter(cat => cat !== 'Albums')` — Albums is never a top-level sidebar entry.
 
-For the `Musician` category, a **permanent hardcoded subfolder** is injected:
+For the `Music` category, a **permanent hardcoded subfolder** is injected:
 ```js
-<div class="sidebar-item sidebar-subfolder ..." data-view="Music Album" data-permanent="true">
+<div class="sidebar-item sidebar-subfolder ..." data-view="Albums" data-permanent="true">
   [Music Albums icon] Music Albums
 </div>
 ```
 
-In **regular mode**: clicking it sets `state.view = 'Music Album'`.
+In **regular mode**: clicking it sets `state.view = 'Albums'`.
 
-In **curated genre mode**: clicking it sets `state.view = 'genre:<genre>:Music Album'` — the `data-permanent="true"` attribute triggers this branch in the subfolder click handler.
+In **curated genre mode**: clicking it sets `state.view = 'genre:<genre>:Albums'` — the `data-permanent="true"` attribute triggers this branch in the subfolder click handler.
 
 ### Dashboard row + "Queue Kanban" link
 `dashboardLinkHtml` (rendered above the category list in every non-curated-picker branch) now has two rows: the Dashboard link itself, and a `.sidebar-subfolder.sidebar-kanban-link` row styled like a folder row, setting `state.view = 'kanban'`. The Dashboard row is collapsible (`data-toggle="dashboard"`, arrow on the right, no count badge) — `state.collapsed.has('dashboard')` gates whether the Queue Kanban row renders at all. `state.collapsed`'s default is `new Set([...CATEGORIES, 'dashboard'])` (`state.js`), so it's collapsed on first load; this is never persisted to `chrome.storage.sync`; it's pure in-memory default state that resets every reload. The Queue Kanban row is excluded from the generic `.sidebar-subfolder` click-wiring loop (`:not(.sidebar-kanban-link)`) since `wireDashboardLink()` already wires it explicitly — without the exclusion it'd get a second, redundant click handler.
 
 **Mutual exclusion with category tabs** — Dashboard's collapse state is part of the *same* mutual-exclusion group the category tabs share, not a standalone toggle: expanding a category tab collapses Dashboard, and expanding Dashboard collapses whichever category tab was open, so at most one top-level sidebar tab is ever expanded at once. `wireDashboardLink()`'s expand branch calls the shared `collapseAllSidebarSections()` helper (below) and then `state.collapsed.delete('dashboard')` to reopen just itself — it used to instead rebuild `state.collapsed` from an `otherCollapsibleIds` param closed over whichever render pass had wired the click handler (`sidebarCategoryList` in normal mode, `[]` in the curated genre-picker), which was a real, live-reported bug: clicking Dashboard from the curated-picker render left every category un-collapsed once the click switched back to the normal categorized sidebar, since that render pass's own `otherCollapsibleIds` was empty. Reusing the canonical category list `collapseAllSidebarSections()` builds fixed it for good, regardless of which render pass wired the click.
 
-**`collapseAllSidebarSections()`** (`renderSidebar.js`, exported and re-exported via `render.js`) — the canonical "close every accordion" helper: `dashboard`, `saved-lists`, `curated-lists`, and every real category (`CATEGORIES` minus Music Album, which is never its own top-level row). Called whenever the sidebar switches top-level mode — the mobile drawer's Curated/⚡ Shared tabs, and the desktop options dropdown (`main.js`) — so the new mode always starts fully collapsed instead of carrying over whatever was left open under the previous one. A superset is fine even when the new mode doesn't render every one of those ids; `state.collapsed` is just a lookup Set, an unused id in it is inert.
+**`collapseAllSidebarSections()`** (`renderSidebar.js`, exported and re-exported via `render.js`) — the canonical "close every accordion" helper: `dashboard`, `saved-lists`, `curated-lists`, and every real category (`CATEGORIES` minus Albums, which is never its own top-level row). Called whenever the sidebar switches top-level mode — the mobile drawer's Curated/⚡ Shared tabs, and the desktop options dropdown (`main.js`) — so the new mode always starts fully collapsed instead of carrying over whatever was left open under the previous one. A superset is fine even when the new mode doesn't render every one of those ids; `state.collapsed` is just a lookup Set, an unused id in it is inert.
 
 **Open-section gray highlight + animation (`.sidebar-group`/`.sidebar-group-bg`)** — Dashboard's own template and every category's own template (`renderSidebar.js`) each wrap their header row + expanded children in a `<div class="sidebar-group${open ? ' open' : ''}">`, with a `<div class="sidebar-group-bg">` as its first child. `.sidebar-group-bg` is what actually carries the gray fill (`background: var(--active-bg-light)`, `opacity: 0` → `1` on `.open`) and the rounded-right shape — it's a plain, absolutely-positioned, empty layer sitting *behind* the real row content (`z-index: -1`; `.sidebar-group` itself needs an explicit `z-index: 0`, not just `position: relative`, to actually contain that `-1` — otherwise it escapes past the sidebar's own stacking context and the fill renders invisible, a bug hit live). Clicking a header (`wireDashboardLink`'s Dashboard handler, and the `.sidebar-category` click handler) wraps its state-mutation + `navigateToView()` call in `withViewTransition()` (`document.startViewTransition`, feature-detected) so the section grows/shrinks smoothly instead of snapping. The `view-transition-name` given to each `.sidebar-group-bg` (via the memoized `sidebarGroupVtName()`/`catClass()`) is deliberately **not** on the row content itself — naming a growing/shrinking element makes the browser cross-fade a *stretched* snapshot of it mid-animation, invisible for a plain color fill but visibly warps real text (hit live, "bouncing" text). Saved Lists/Curated Lists' own nested toggle (`[data-toggle-list]`, inside `_renderDashboardListRow`) is a separate, simpler collapse — no `.sidebar-group` wrapper, no transition, still an instant snap.
 
@@ -518,7 +448,7 @@ const curatedTarget = FOLDER_ID_TO_CURATED_CATEGORY[folder.id]
 ```
 
 - **`FOLDER_ID_TO_CURATED_CATEGORY`** (`renderSidebar.js`) — folders that are their own dedicated curated "creator card" bucket: `{ 'default-books-authors': 'Book Author', 'default-movies-directors': 'Movie Director', 'default-shows-creators': 'Show Creator', 'default-games-companies': 'Game Studio' }`.
-- **`FOLDER_SHOWS_FULL_CURATED_CATEGORY`** (`renderSidebar.js`, a `Set`) — folders that represent "the whole category" closely enough to show the full curated list: `default-books-books`, `default-movies-movies`, `default-shows-shows`, `default-games-console`, `default-musicians-musicians` (the last one easy to forget — it's Musician's *own* primary folder, not a creator-card bucket, but still needs the full-category fallback or it silently shows 0 like a real no-data folder would).
+- **`FOLDER_SHOWS_FULL_CURATED_CATEGORY`** (`renderSidebar.js`, a `Set`) — folders that represent "the whole category" closely enough to show the full curated list: `default-books-books`, `default-movies-movies`, `default-shows-shows`, `default-games-console`, `default-musicians-musicians` (the last one easy to forget — it's Music's *own* primary folder, not a creator-card bucket, but still needs the full-category fallback or it silently shows 0 like a real no-data folder would).
 - **Anything else** (Videos, Podcasts, Webseries, Tutorials, Board Games, Mobile Games) falls through to `folder.id` itself as `curatedTarget` — since a real folder id never matches a key in `CURATED_ITEMS[genre]`, this is a deliberate no-op that resolves to an empty list via the exact same `if (cat && CURATED_ITEMS[genre] && CURATED_ITEMS[genre][cat]) {...} else { items = []; }` fallback `getFilteredSortedItems()`'s `genre:` branch already had — no new empty-state code needed, just routing into the existing one correctly.
 
 The subfolder click handler then does exactly one thing differently depending on what's on the row:
@@ -534,7 +464,7 @@ if (isCuratedGenre && el.dataset.permanent) {          // the hardcoded Music Al
 ```
 This is what fixes the original bug (clicking any subfolder while browsing Top 100 used to drop the `genre:` prefix and bounce back to "My SaveCraft") — every branch that's reachable while `isCuratedGenre` is true keeps the prefix.
 
-**Active-row highlighting** (`state.activeCuratedFolderId`) exists because `curatedTarget` isn't always unique per folder — before `FOLDER_SHOWS_FULL_CURATED_CATEGORY`/the empty-fallback were introduced, several sibling folders (Movie's Movies/Videos, Show's four folders, Game's four folders) all resolved to the *same* `curatedTarget` and would all light up as active together. The row's `isActive` check is:
+**Active-row highlighting** (`state.activeCuratedFolderId`) exists because `curatedTarget` isn't always unique per folder — before `FOLDER_SHOWS_FULL_CURATED_CATEGORY`/the empty-fallback were introduced, several sibling folders (Films' Movies/Videos, Series' four folders, Games' four folders) all resolved to the *same* `curatedTarget` and would all light up as active together. The row's `isActive` check is:
 ```js
 const isActive = isCuratedGenre
   ? state.view === `genre:${curatedGenreBase}:${curatedTarget}` && state.activeCuratedFolderId === folder.id
@@ -564,53 +494,60 @@ Top-level category tab counts (Books 89, Films 100, etc.) are suppressed while `
 ### Loading
 `_loadCuratedFromFirestore()` (in `js/storage.js`) paginates the collection in 300-doc pages.
 Loaded at startup via `initCuratedItems()`, which calls `setCuratedItems()` (in `js/state.js`) to populate the module-level `CURATED_ITEMS` binding — this indirection exists because ES modules can't let other files directly reassign an imported `let`, only the exporting module can, so `state.js` exposes a setter for it. `init()` (in `js/main.js`) calls `initCuratedItems()` on startup.
-Cached in `chrome.storage.local` for 24 hours. Cache version: `_CURATED_CACHE_VERSION` in `js/storage.js`, currently **10** (bump to force refresh — necessary any time `_loadCuratedFromFirestore()`'s parsing/bucketing logic changes, not just when the underlying Firestore data changes, since the cache stores the already-bucketed shape).
+Cached in `chrome.storage.local` for 24 hours. Cache version: `_CURATED_CACHE_VERSION` in `js/storage.js` (bump to force refresh — necessary any time `_loadCuratedFromFirestore()`'s parsing/bucketing logic changes, not just when the underlying Firestore data changes, since the cache stores the already-bucketed shape). **This number changes often enough that it's not worth restating here — check `storage.js` directly rather than trusting a stale snapshot in this doc.**
 
 ### Category normalization
-Firestore stores plural/legacy category names. `_CAT_NORMALIZE` maps them to internal singular names:
-```js
-const _CAT_NORMALIZE = {
-  'Movies': 'Movie', 'Books': 'Book', 'Games': 'Game',
-  'Shows': 'Show', 'Musicians': 'Musician', 'Music Albums': 'Music Album',
-  // NOTE: raw category "Music" (no "Album") is deliberately NOT mapped here — see below.
-};
-```
-Applied in `_loadCuratedFromFirestore()` before building `CURATED_ITEMS`. **Bug fixed this session**: `'Music': 'Music Album'` used to be in this map. Live Firestore data confirmed `genre: "Top 100"` + `category: "Music"` is a legacy, mislabeled duplicate of the Musicians list (101 docs, `docId` pattern `top-100-music-cur-rs100-*`, titles are artist names like "The Beatles") — that mapping was silently merging those 101 mislabeled docs into the `Music Album` bucket, rendering Musician-name cards under "Music Albums." Removed the mapping entirely; those docs now land in an inert `CURATED_ITEMS[genre]['Music']` bucket nothing reads, instead of leaking into a bucket they don't belong in. `'Music Album'`/`'Music Albums'` (the real album categories) are untouched.
+Firestore stores old/legacy category spellings on any doc not yet touched by the app-wide
+category rename (see `savecraft-architecture.md`'s "Categories" section for the full old→new
+table). `_CAT_NORMALIZE` (`storage.js`) maps every old spelling — both singular (`'Movie'`) and
+legacy plural (`'Movies'`) — directly to the current `CATEGORIES` name, single hop, applied in
+`_loadCuratedFromFirestore()` before building `CURATED_ITEMS`. **This table has grown/changed more
+than once** (most recently as part of the category rename) — read it directly in `storage.js`
+rather than trusting a copy pasted here. One standing exception worth knowing regardless of the
+table's exact current contents: raw category `"Music"` (no `"Album"`) is deliberately **not**
+mapped to anything — live Firestore data confirmed `genre: "Top 100"` + `category: "Music"` is a
+legacy, mislabeled duplicate of the Musicians list (101 docs, `docId` pattern
+`top-100-music-cur-rs100-*`, titles are artist names like "The Beatles"), not real album data.
+Mapping it would silently re-merge those into whichever real category now legitimately owns the
+value `"Music"` (that's a real risk post-rename, since `Music` is now also Music's own final
+category name — see `storage.js`'s own comment on this exact collision for the full reasoning).
 
-`'Book Author'`, `'Movie Director'`, `'Show Creator'`, `'Game Studio'` (new curated-only pseudo-categories, seeded this session) pass through unmapped/unchanged — they're stored in Firestore exactly as-typed, no normalization needed.
+`'Book Author'`, `'Movie Director'`, `'Show Creator'`, `'Game Studio'` (curated-only
+pseudo-categories) pass through unmapped/unchanged — they're stored in Firestore exactly as-typed,
+no normalization needed, and are deliberately untouched by the category rename.
 
 ### CURATED_ITEMS structure
 ```js
 CURATED_ITEMS = {
   'Top 100': {
-    'Musician':       [ { id, title, url, imageUrl, notes, genre, category }, ... ],  // 100 artists
-    'Music Album':    [ ... ],  // ~2,439 albums — bulk auto-synced, not an actual curated shortlist (see below)
-    'Book Author':    [ ... ],  // 83 — new this session
-    'Movie Director': [ ... ],  // 78 — new this session
-    'Show Creator':   [ ... ],  // 89 — new this session
-    'Game Studio':    [ ... ],  // 82 — new this session
+    'Music':          [ { id, title, url, imageUrl, notes, genre, category }, ... ],  // 100 artists
+    'Albums':         [ ... ],  // ~2,439 albums — bulk auto-synced, not an actual curated shortlist (see below)
+    'Book Author':    [ ... ],
+    'Movie Director': [ ... ],
+    'Show Creator':   [ ... ],
+    'Game Studio':    [ ... ],
   },
-  'Classic': { 'Movie': [...], 'Show': [...], 'Music Album': [...], ... },
-  'Jazz':    { 'Movie': [...], 'Music Album': [...], ... },
+  'Classic': { 'Films': [...], 'Series': [...], 'Albums': [...], ... },
+  'Jazz':    { 'Films': [...], 'Albums': [...], ... },
   // ... other genres
 }
 ```
 
-### Musician / Music Album data
-- **Artist entries** (`id: artist_itunes_<artistId>`): `category: 'Musician'`, title = artist name, `notes: null`
-- **Album entries** (`id: itunes_<collectionId>`): `category: 'Music Album'`, title = album title, `notes` = artist name
+### Music / Albums data
+- **Artist entries** (`id: artist_itunes_<artistId>`): `category: 'Music'`, title = artist name, `notes: null`
+- **Album entries** (`id: itunes_<collectionId>`): `category: 'Albums'`, title = album title, `notes` = artist name
 - All Top 100 entries have `genre: 'Top 100'`
 - Singles/EPs filtered out by title pattern at import time
-- **Not an actual curated Top 100 album shortlist** — confirmed this session via direct Firestore aggregation query (~2,439 docs, all `itunes_*` ids) that this is bulk auto-synced album metadata, not a hand-picked list. Flagged as a real editorial gap, separate from (and not fixed by) the category-normalization bug above.
+- **Not an actual curated Top 100 album shortlist** — confirmed via direct Firestore aggregation query (~2,439 docs, all `itunes_*` ids) that this is bulk auto-synced album metadata, not a hand-picked list. Flagged as a real editorial gap.
 
-### Book/Movie/Show/Game creator data (new this session)
-Unlike Music Album, **Movie/Show/Game curated items have no creator field anywhere in Firestore** — confirmed via direct query: plain titles ("Parasite", "Counter-Strike 2"), real description in `.notes`, nothing else. Resolved externally and kept as **static in-app data** (`js/curatedCreatorLookup.js`) rather than rewriting 300+ existing production `curated_items` documents:
+### Literature/Films/Series/Games creator data
+Unlike Albums, **Films/Series/Games curated items have no creator field anywhere in Firestore** — confirmed via direct query: plain titles ("Parasite", "Counter-Strike 2"), real description in `.notes`, nothing else. Resolved externally and kept as **static in-app data** (`js/curatedCreatorLookup.js`) rather than rewriting 300+ existing production `curated_items` documents:
 - **Movie director** — Wikidata property P57, two-hop resolution: `wbsearchentities` (search by title, filtered by a description-keyword regex) → `Special:EntityData/<QID>.json` (read the P57 claim) → if the claim value is itself an entity reference, a second `wbgetentities` call resolves it to a name.
 - **Show creator** — same two-hop pattern, property P170 (not P57 — verified P57 on a TV series returns per-episode directors, not a single showrunner).
 - **Game studio** — simpler: Steam's `appdetails` endpoint (`developers` field), using the Steam app ID already embedded in each curated game's stored `url` (`/app/(\d+)/`) — no search/entity-resolution step needed.
 - Bio/photo for all three — Wikipedia REST summary API, same pattern `ensureItemWikipediaInfo` already used. **Known failure mode, hit repeatedly**: an automated keyword-filtered match can reject a correct direct hit and fall through to a wrong search-retry result — happened for ~8 Show creators (fixed via direct `curl` verification against the expected exact title) and was much worse for Game studios (company names are far more ambiguous than person names — e.g. "Iron Gate" matched "Baldur's Gate 3"). Fixed for studios via an automated sanity filter (reject unless the studio name and matched article title share a normalized substring) rather than hand-checking all ~80.
-- Book is different — its curated `.title` combines `"Title — Author"` in one field (pre-existing data, not something this session added), split apart via `splitCuratedTitleCreator()`.
-- `curatedCreatorLookup.js` also exports the shared `getStaticCuratedCreator(cat, title)` (returns `{ name, hasMore }`) and `SPLIT_TITLE_CREATOR_CATEGORIES` — imported by `renderFilters.js`/`renderGrid.js` (rendering, since the 2026-07-29 `render.js` split) and `storage.js` (the already-saved-items backfill migration, see Earlier Session Summary above).
+- Literature is different — its curated `.title` combines `"Title — Author"` in one field (pre-existing data), split apart via `splitCuratedTitleCreator()`.
+- `curatedCreatorLookup.js` also exports the shared `getStaticCuratedCreator(cat, title)` (returns `{ name, hasMore }`) and `SPLIT_TITLE_CREATOR_CATEGORIES` — imported by `renderFilters.js`/`renderGrid.js` and `storage.js` (the already-saved-items backfill migration).
 
 ### Curated List landing template (`CURATED_GENRE_LANDING_CONTENT`, `state.js`)
 VoteCraft's own "Top 100" landing hero (`genre:Top 100`) is the reference implementation of a
@@ -652,7 +589,7 @@ hardcoded per rendering branch.
 The persistent home page. `renderDashboard()` is the sole export, dispatched from `renderGrid()` when `state.view === 'dashboard'`. Everything else in the module is private, split into per-widget `build*()` (returns an HTML string) / `wire*()` (attaches listeners after `innerHTML` is set) pairs — same idiom as the rest of this codebase's rendering.
 
 - **Favorites Spotlight widget, displayed as "Recent Saves"** — internal names (`.dash-card--favorites`, `_favSlides`, `buildFavoritesWidget()`, etc.) still say "Favorites" throughout this module; only the widget's own on-screen title text was renamed, so don't be thrown by the mismatch when grepping.
-- **Favorites aggregation** — `getAllFavoriteItems()` walks every `state.folders` entry named `'Favorites'` (one per category, created on-demand by `detailModal.js`) and collects their combined `folderId` membership from `state.items`. No prior helper did this across categories. `resolveFavoriteSlides()` falls back to `CURATED_ITEMS['Top 100']['Musician']` + `['Music Album']` (both defensively optional-chained) when the real list is empty.
+- **Favorites aggregation** — `getAllFavoriteItems()` walks every `state.folders` entry named `'Favorites'` (one per category, created on-demand by `detailModal.js`) and collects their combined `folderId` membership from `state.items`. No prior helper did this across categories. `resolveFavoriteSlides()` falls back to `CURATED_ITEMS['Top 100']['Music']` + `['Albums']` (both defensively optional-chained) when the real list is empty.
 - **Slideshow state** (`_favSlides`, `_favIndex`, `_favIsDemo`, `_favTimer`) is module-level, not part of `state` — ephemeral per-render UI state nothing else reads, matching how `kanban.js`/`render.js`/`detailModal.js` already keep private UI state module-local. The auto-advance `setInterval` self-clears on its own next tick if `.dash-fav-slideshow` is no longer in the DOM (i.e. the user navigated away), rather than relying on every navigation path remembering to call a cleanup function.
 - **Kanban mini-board** reuses `KANBAN_COLUMNS` and `KANBAN_DEMO()` (both exported from `kanban.js` specifically for this reuse) so the widget's columns/labels/demo content stay in sync with the real board by construction, not by copy-pasted constants.
 - **`.grid-header` gotcha**: `renderDashboard()` hides the `.grid-header` wrapper (sort/filter controls) entirely, not just its children — an earlier version only hid the children, leaving the wrapper's own `margin-bottom: 20px` unaccounted for in the "fill exactly this much height, no scroll" layout math, which caused a stray scrollbar. `renderGrid()`'s existing top-of-function reset block restores `.grid-header` to visible before any other view renders, so this doesn't leak into other views.
@@ -666,7 +603,7 @@ The persistent home page. `renderDashboard()` is the sole export, dispatched fro
 - `state.hiddenCurated` — Set of curated IDs the user has dismissed.
 - `state.curatedOverrides` — User edits to curated items stored separately.
 - `ensureLiveItem()` — clones a curated item into `state.items` the first time a user queues or bookmarks it.
-- When a `Music Album` is first saved via `ensureLiveItem()`, `autoSaveMusician()` is also called.
+- When an `Albums` item is first saved via `ensureLiveItem()`, `autoSaveMusician()` is also called.
 
 ### `chrome.storage.onChanged`
 Handles `item_`, `folder_`, and `author_` key prefixes. Guards against double-adding items.
@@ -693,53 +630,20 @@ The gap now is different: the *local* `savecraft-vc-coin-sponsored-page` branch 
 
 ## Planned But Not Yet Built
 
-### Spotify Integration
-Phase 2 of iTunes integration. Will add Spotify OAuth for richer artist data (artist photos, full discography). iTunes path is already established — Spotify would augment it.
+Spotify integration and removing the temporary web "View Demo" sign-in bypass are tracked in
+`savecraft-architecture.md`'s Roadmap table and `savecraft-technical-runbook.md`/`launch-requirements.md`
+respectively — not duplicated here. What's unique to this file:
 
 ### Kanban Search & Tutorial Banner
 - Add search/sort filtering inside `renderKanbanBoard()` (currently ignores `state.search`)
 - Add a first-time tutorial banner, permanently dismissed via `savecraft_tutorial_seen`
-
-### Remove the temporary web "View Demo" sign-in bypass
-`index.html`'s `#btn-auth-demo` and its handling in `main.js`'s `requireWebSignIn()` — both commented `TEMPORARY` — let a web visitor skip the mandatory sign-in gate for early demo purposes. Remove before real visitors are expected at savecraft.org.
 
 ### Sidebar drawer's icon-only mobile nav has no text labels
 Flagged live during the mobile pass — usable if you already know what each icon means, not self-explanatory otherwise. Open question, not yet decided either way.
 
 ---
 
-## CSS Design Tokens
+## CSS Design Tokens / How to Reload After Changes
 
-```css
---primary         /* purple accent */
---surface         /* card/modal background */
---border          /* border color */
---text-primary    /* main text */
---text-secondary  /* secondary text */
---text-muted      /* muted/icon text */
---hover-bg        /* hover state background */
---active-bg-light /* open/current sidebar section fill — currently == var(--bg), kept separate since the two are conceptually distinct */
---search-bg       /* search input / light-gray editable-field background */
-
-/* Material Design 3 motion easing curves (added for the detail modal's note-toolbar/accordion
-   transitions) — asymmetric on purpose: "accelerate" curves for exits (quick start, snappy finish),
-   "decelerate" for entrances (gentle settle), "emphasized" variants for more prominent motion. */
---m3-standard
---m3-standard-accelerate
---m3-standard-decelerate
---m3-emphasized-accelerate
---m3-emphasized-decelerate
-```
-
----
-
-## How to Reload After Changes
-
-1. Edit any file in `Chrome Extensions/Savecraft/`
-2. Go to `chrome://extensions`
-3. Click the **↺ refresh** icon on the SaveCraft card
-4. Reopen the library tab (or hard-refresh it)
-
-No build step — changes are live after reload. `src/app/js/main.js` is loaded as an ES module (`<script type="module">`), so `import`/`export` typos surface as console errors on the library tab, not silent failures — always check DevTools console after a reload when editing `js/` or `css/` files.
-
-**Web app** (savecraft.org / `votecraft-789.web.app`): `firebase deploy --only hosting` from the Savecraft folder, then a normal page reload — no hard-refresh needed, `firebase.json` sets `no-cache` on the app's own HTML/JS/CSS specifically so this stays true. See `Documentation/web-deploy.md`.
+Both moved into `savecraft-architecture.md`'s "Architecture" section — this file no longer keeps
+separate copies.
