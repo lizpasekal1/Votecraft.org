@@ -356,3 +356,158 @@
   line-height: 22px;
   padding: 0 8px;
 }
+
+/* ===== Tabbed nav + Home dashboard cards + Admin Users / My Profile (votecraft-savecraft-admin.php) ===== */
+
+.vc-savecraft-title-link {
+  color: inherit;
+  text-decoration: none;
+}
+.vc-savecraft-title-link:hover {
+  color: #2271b1;
+}
+
+/* Persistent top bar — mirrors the WP "Add Themes" screen's tab row (Popular/Latest/...), with an
+   "Admin User Profile" link on the right in place of that screen's search box. */
+.vc-savecraft-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-bottom: 1px solid #c3c4c7;
+  margin: 12px 0 20px;
+  padding-bottom: 0;
+}
+.vc-savecraft-nav-tabs {
+  display: flex;
+  gap: 4px;
+}
+.vc-savecraft-nav-tab {
+  display: inline-block;
+  padding: 10px 14px;
+  color: #50575e;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+}
+.vc-savecraft-nav-tab:hover {
+  color: #2271b1;
+}
+.vc-savecraft-nav-tab.active {
+  color: #1d2327;
+  font-weight: 600;
+  border-bottom-color: #2271b1;
+}
+.vc-savecraft-nav-profile {
+  font-size: 13px;
+  text-decoration: none;
+  padding: 6px 12px;
+  border: 1px solid #c3c4c7;
+  border-radius: 4px;
+  background: #fff;
+  color: #1d2327;
+  white-space: nowrap;
+}
+.vc-savecraft-nav-profile:hover,
+.vc-savecraft-nav-profile.active {
+  border-color: #2271b1;
+  color: #2271b1;
+}
+
+/* Home dashboard — white square icon cards, one per section, doubling as its launcher link. */
+.vc-savecraft-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  max-width: 1200px;
+}
+.vc-savecraft-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid #c3c4c7;
+  border-radius: 6px;
+  padding: 32px 20px;
+  text-decoration: none;
+  color: #1d2327;
+  transition: box-shadow 0.15s, border-color 0.15s, transform 0.15s;
+}
+.vc-savecraft-card:hover {
+  border-color: #2271b1;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+.vc-savecraft-card-icon {
+  font-size: 40px;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.vc-savecraft-card-label {
+  font-size: 16px;
+  font-weight: 600;
+}
+.vc-savecraft-card-desc {
+  font-size: 12px;
+  color: #646970;
+}
+
+/* A section alone on its own tab page (Kanban / Demo Content / Admin Users / My Profile) — the
+   plain-page replacement for the old <details> accordion wrapper those used to sit inside. */
+.vc-savecraft-section {
+  background: #fff;
+  border: 1px solid #c3c4c7;
+  border-radius: 4px;
+  padding: 20px;
+  max-width: 1200px;
+}
+.vc-savecraft-section h2 {
+  margin-top: 0;
+}
+
+/* Admin Users roster */
+.vc-users-table th,
+.vc-users-table td {
+  vertical-align: middle;
+  padding: 10px;
+}
+.vc-user-avatar img {
+  border-radius: 50%;
+  display: block;
+}
+.vc-user-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #2271b1;
+  background: #f0f6fc;
+  border: 1px solid #c5d9ed;
+  border-radius: 10px;
+  padding: 1px 8px;
+  margin-left: 4px;
+}
+
+/* My Profile */
+.vc-savecraft-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 16px 0;
+}
+.vc-savecraft-profile-card img {
+  border-radius: 50%;
+}
+.vc-savecraft-profile-name {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+.vc-savecraft-profile-email,
+.vc-savecraft-profile-role {
+  margin: 2px 0 0;
+  color: #50575e;
+}
