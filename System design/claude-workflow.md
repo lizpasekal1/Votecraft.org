@@ -40,7 +40,7 @@ Update this section as the project evolves.
 | VoteCraft Coin page | Live on GitHub Pages | `pages/votecraft-coin/index.html` — explains VC altruism currency, earning, spending, community exchange. CTA links to donate.html and app.html. |
 | Donate page | Live on GitHub Pages (UI only) | `pages/votecraft-coin/donate.html` — donation tiers, placeholder buttons (no payment processor yet). Cross-linked from vote.html sidebar ("Support Us") and VC coin index.html CTA. |
 | MyReps | Superseded by Vote platform | Address lookup merged into vote platform's left panel |
-| SaveCraft | Live — Chrome extension + savecraft.org web app | Firebase/Firestore backend (`votecraft-789`), own independent auth (not the shared Emporium account, see `firebase/votecraft-firebase.md`). New: a staff-only WordPress admin bridge (Admin Kanban board manageable from wp-admin) — see its Infrastructure line below and `Chrome Extensions/Savecraft/Documentation/savecraft-overview.md`. |
+| SaveCraft | Live — Chrome extension + savecraft.org web app | Firebase/Firestore backend (`votecraft-789`), own independent auth (not the shared Emporium account, see `firebase/votecraft-firebase.md`). New: a staff-only WordPress admin bridge (Admin Kanban board manageable from wp-admin) — see its Infrastructure line below and `Extensions/Savecraft/Documentation/3_savecraft-architecture.md`. |
 | JokeMaster | In development | Firebase/Firestore backend. Security rules need console verification. |
 | Scavenger Tours | Paused | Supabase project paused due to inactivity. 90-day window to unpause. |
 | Power Plays | In development | Static card game. |

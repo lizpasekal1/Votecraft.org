@@ -18,7 +18,7 @@
 # push fails loudly rather than clobbering whatever the other side just pushed — rerun
 # the script to pick up the new state and try again.
 set -euo pipefail
-cd "$(dirname "$0")/.."   # repo-relative: Chrome Extensions/Savecraft
+cd "$(dirname "$0")/.."   # repo-relative: Extensions/Savecraft
 
 echo "Fetching latest..."
 git fetch origin

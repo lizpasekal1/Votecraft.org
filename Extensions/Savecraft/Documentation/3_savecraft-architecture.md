@@ -2,143 +2,34 @@
 
 *(See `1_savecraft-documentation.md` for what every file in this folder is for.)*
 
-SaveCraft is a Chrome extension that acts as a personal media library. Users save links to movies, shows, music, books, games, and other content they want to experience. Curated recommendations from Votecraft are surfaced alongside personal saves, and a Kanban board ("My Saves Queue") lets users track what they've watched, read, or listened to.
+SaveCraft is a personal media library, primarily the web app at **savecraft.org**, with a Chrome extension today and browser extensions for other major browsers planned (see "Roadmap" below) — all sharing one codebase (`src/app/`). Users save links to movies, shows, music, books, games, and other content they want to experience. Curated recommendations from Votecraft are surfaced alongside personal saves, and a Kanban board ("My Saves Queue") lets users track what they've watched, read, or listened to.
 
 ---
 
-## Recent Additions (latest session)
+## Recent Additions
 
-By far the largest single piece of this session: an app-wide rename of the internal category
-system to match the friendly names visitors already saw everywhere (`Web Links`→**Sources**,
-`Show`→**Series**, `Musician`→**Music**, `Music Album`→**Albums**, `Game`→**Games**,
-`Movie`→**Films**, `Book`→**Literature**, `Visual Art`→**Arts**) — the technical/internal name and
-the display name are now the same string everywhere: `state.js`'s `CATEGORIES`/`CAT_LABEL` (the
-latter now a pure identity map), every literal category comparison across ~28 app files,
-`cards.css`'s `.placeholder-*`/`.badge-*` selectors, the stale hidden `#modal-category` select, the
-Chrome extension's own right-click menu (`background.js` — also fixed a real bug there where a
-"Memes" save had no migration entry and never converted; now maps straight to **Arts**), and the
-WordPress admin plugin's PHP mirrors. Old shared `?v=` links stay valid forever via an expanded
-`VIEW_TO_URL_PARAM` alias table in `navigation.js` (old spelling ↔ new internal value). See
-"Categories" below for the current table. Firestore migration: curated data via a new
-`scripts/migrate-category-names.html` (Preview/Run, same pattern as `migrate-curated-categories.html`);
-personal per-user items/folders via a new gated one-time migration in `storage.js`
-(`savecraft_category_rename_migrated`). That migration surfaced (and fixed) a second, more
-fundamental REAL BUG: `CAT_MIGRATION` (an older, unconditional every-load table) was renaming items
-in local memory before the new one-time migration's own loop ever saw them, so its Firestore push
-for items silently never fired — the local copy looked renamed, but the change never reached
-Firestore, and the next "cloud wins" full sync quietly reverted it. Confirmed against a real
-account's data (1006/1006 personal items still on old category names in Firestore despite the
-migration reporting success) before the fix — see `storage.js`'s comment above `CAT_MIGRATION` for
-the full history. `_CURATED_CACHE_VERSION` bumped 12→13, `_CURATED_CMS_CACHE_VERSION` 1→2.
+Reverse-chronological, most recent first. Each line is a one-line summary — for the detailed
+technical story behind any entry, see `2_savecraft-session-context.md`.
 
----
+- App-wide category rename — internal category names now match the display names shown everywhere (see "Categories" below); fixed a bug where personal-item renames were silently never reaching Firestore.
+- WordPress admin plugin redesign — tabbed navigation, an icon-card Home dashboard, an Admin Users roster page (see "WordPress Admin Bridge" below).
+- Curated Lists CMS — WordPress-managed nonprofit partner pages + shared cause "topic" aggregate pages (see "Curated Lists CMS" below).
+- Incremental Firestore sync — replaced re-listing entire items/folders/authors collections on every page load with a cheap "what changed" query; added a visible sync-error banner.
+- Editable profile (display name, Account Details card: Full Name, masked Recovery Email, Change Email, Reset Password, Time Zone).
+- Category-carousel UX overhaul — drag panning, momentum glide, 3-tier fade/zoom cascade; mobile card-rendering fixes.
+- Curated genre pages gained the same folder-picker + carousel treatment personal category pages already had; TV-show content moved from the Series category into Films' own "Shows" folder.
+- Music taxonomy finalized; iTunes rate-limiting fixed; global library search + a custom sort dropdown; folder-picker landing pages for every category.
+- Curated List template generalized (Top 100 → reusable `CURATED_GENRE_LANDING_CONTENT`, RCV added as a second instance); 791-artist bulk import; Saved Lists cross-device sync fix.
+- WordPress Admin Bridge Phase 1 — Admin Kanban board manageable directly from wp-admin.
+- Profile mobile pass; Privacy Policy/Terms of Service pages; Admin Kanban board built; iOS touch drag-and-drop fix (native HTML5 drag-and-drop never worked on iOS Safari).
+- Sponsored Statements page connected to VoteCraft Coin; SaveCraft made dual-mode (web app at savecraft.org via `platform.js`); mobile layout fixes.
+- Saved Lists sidebar navigation; Share modal rebuilt (Saved Lists picker + link-sharing toggle); Embed Builder built end to end.
+- My Notes formatting toolbar gained image/hyperlink support; category/sidebar navigation restructured.
+- Detail modal's My Notes/Chapters/Song List rebuilt from a plain textarea into a numbered-notes system with a formatting toolbar and focus mode.
+- Albums gallery upgraded from a single low-res iTunes cover to a real multi-image gallery (MusicBrainz + Cover Art Archive).
+- 214 more IMDb Top 250 movies seeded into curated Top 100; Curated SaveCraft reshaped into a two-tier browsing experience; Shared Saves wired up for the first time.
 
-## Recent Additions (Mobile Card Rendering / Editable Profile / Category-Carousel UX / Incremental Sync)
-
-Three arcs. First, real mobile rendering bugs on cards: a
-`transform: scale()` image-overlap bug, a CSS percentage-height circularity bug that made card
-thumbnails snap to random sizes matching each photo's own aspect ratio, an A-Z jump-index rail
-overlapping content, and font-size/line-wrap fixes — see `cards.css`'s `.card-image-crop` (now
-`position: absolute`, taken out of flex flow entirely) for the thumbnail fix. Second, a full
-editable-profile feature build: a pencil-on-hover display name (`state.displayName`) feeding the
-Dashboard greeting, plus a new Profile > Account Details card (Full Name, masked Recovery Email
-with press-and-hold reveal, Change Email via a new `auth.js` `changeEmail()`, Reset Password, Time
-Zone) — deliberately **not** a "show my password" feature, which is technically impossible
-(Firebase never stores a retrievable password). Third, by far the largest arc: an extensive
-category-carousel UX pass (click-and-drag panning, momentum glide, bouncy `easeOutBack` easing, a
-3-tier fade/zoom cascade toward the edges, two real slide-centering-on-load bugs) that led into a
-long cross-device sync investigation — which turned out to be the Firebase project's Spark-plan
-50,000-reads/day quota being exhausted by heavy live testing, not a code bug. Closed with two
-durable fixes: sync failures now surface a visible on-page banner instead of failing silently
-(`auth.js`'s `signIn()`/`signUp()` return a `syncError` field; `main.js` shows it), and a real
-**incremental sync rewrite** (`storage.js`) — Firestore `:runQuery` filtering on `updatedAt` plus
-soft-delete tombstones, replacing the old "re-list the entire items/folders/authors collections on
-every single page load" behavior that was the dominant read cost. A device's first sync (and a
-24h safety-net re-run after that) still does the original full listing; every sync in between is
-now cheap. See "Syncing" below and `2_savecraft-session-context.md` for the full blow-by-blow.
-
----
-
-## Recent Additions (Curated Folder-Picker Landing Pages / TV-Shows-into-Films Taxonomy)
-
-Two major arcs. First, dozens of live-feedback polish rounds on the
-category folder-picker landing pages/carousel built last session — sizing, edge-to-edge mobile
-layout, a gradient edge fade, three real bugs found and fixed along the way (a
-`-webkit-overflow-scrolling: touch` scroll-trap, a `flex:1;min-height:0` scroll-clamp bug hiding
-the "+ Add" FAB behind content, an off-center-on-load carousel bug) — closing with FAB clearance
-becoming a standing "every mobile page gets this by default" convention. Second, by far the larger
-arc: extending that same folder-picker + carousel treatment to **curated** genre drilldown pages
-too, which required threading a brand-new `folderId` concept through curated Firestore data for
-the first time (see "Curated Data" below), paired with a real taxonomy overhaul (TV-show content
-moved from Shows into Films, several folder/tab renames, a Creators→Short Form folder swap) and a
-significant real bug where one-time data migrations were being silently reverted by Firestore's
-own "cloud wins" sync — fixed by making every migration's Firestore write both real and genuinely
-awaited before the next sync step can run. Two new manual admin seed tools (same pattern as the
-existing `seed-firestore.html`) still need to be run by hand. See `2_savecraft-session-context.md` for the full
-blow-by-blow.
-
----
-
-## Recent Additions (Music Taxonomy Finalized / iTunes Rate-Limit Fixes / Global Search+Sort Dropdown / Folder-Picker Landing Pages)
-
-Two connected halves. First, closing out the Music genre-bucket
-taxonomy (Alt/Indie rename, Metal merged into "Rock/Metal," a new Meditation bucket, Reggae moved
-into R&B/Soul), a one-time bulk import of 791 artists transcribed from Spotify screenshots into the
-user's own account, a real two-stage iTunes rate-limiting bug (a cache-poisoning bug, then a
-flood-of-retries regression from fixing it), a generic A-Z jump-index rail, a Musician-only raw
-genre-tag field/badge, and a full confirmation of the Music section's navigation architecture
-(picker vs. flat filtered list vs. the sidebar's own folder page) with custom `?v=Music`/
-`?v=default-musicians` URL aliasing. Second, a `/simplify` pass over that work — which surfaced the
-real gap actually behind live "Load failed"/iTunes-overload reports (the rate-limit breaker only
-covered 2 of 7 iTunes call sites; a genre-backfill loop staggered 20x too fast) — followed by
-Web Links platform additions, an inline "Fetch Albums" affordance, eliminating a redundant Music
-page/state, and two major new features: a custom-styled sort dropdown with an embedded page-search
-field paired with turning the header search icon into a true library-wide search, and — the
-largest single piece — folder-picker landing pages (with a demo center-emphasis carousel reusing
-the Dashboard's own infinite-loop mechanics and real "Recent Saves" demo content) for every
-top-level category except Music. See `2_savecraft-session-context.md` for the full blow-by-blow.
-
----
-
-## Recent Additions (Music Genre Taxonomy / Curated List Template / Bulk Artist Import)
-
-Three main arcs: Musician/Music polish (title
-search, a genre tag, two real bugs — duplicate iTunes video-album cards, a Musician bio rendering
-twice) closing with an in-modal save-confirmation redesign; a new **Music landing page** (15
-curated genre-bucket cards with save counts, a genre dropdown, and a background backfill for
-already-saved musicians missing a genre); and — the largest arc — generalizing VoteCraft/"Top 100"
-from a hardcoded one-off into a real reusable **Curated List template**
-(`CURATED_GENRE_LANDING_CONTENT`, see "Curated SaveCraft" below), with "RCV" wired up as a second,
-genuinely content-empty real instance proving the template holds. Also fixed a major cross-device
-sync bug (`savedLists` was write-only, never pulled back down from Firestore), made Saved Lists
-show their own real content instead of a placeholder, and closed with two separately-reported
-mobile horizontal-drag bugs on curated pages (one from an unwrapped title row, one from an
-invisible hover-tooltip inflating scrollable overflow). See `2_savecraft-session-context.md` for the full
-blow-by-blow.
-
----
-
-## Recent Additions (older session)
-
-This session built the WordPress Admin Bridge (see "Key Features" above) — Phase 1 (Admin Kanban
-manageable from wp-admin) end to end: a dedicated, narrowly-scoped Firebase bot account; a new
-`admin_kanban_cards` Firestore rule mirroring `isAdminUser()`'s own email-allowlist-or-role logic;
-Admin Kanban itself moved from a local-only whole-array board (`persistAdminKanbanCards()`) to
-per-card Firestore sync (`persistAdminKanbanCard`/`removeAdminKanbanCard`, `storage.js`); and a new
-WordPress plugin (`plugins/votecraft-savecraft-admin/`, outside this folder) that talks only to its
-own REST routes server-side, never exposing any Firestore credential to the browser. All committed,
-merged with a concurrent session's own CSS work, pushed, and deployed. Phase 2 (viewing SaveCraft
-accounts from wp-admin) was fully designed but paused on a Blaze-billing decision — see
-"WordPress Admin Bridge" above and `/Users/lizpasekal/.claude/plans/can-we-separtarate-the-adaptive-breeze.md`.
-See `2_savecraft-session-context.md` for the full blow-by-blow.
-
----
-
-*(Older session: a Profile page mobile pass (text sizes, Interests' checkbox grid, Connections rows restructured to stack), new Privacy Policy/Terms of Service pages, and a brand-new "Admin Kanban" board for tracking SaveCraft's own project tasks — closed by discovering that native HTML5 drag-and-drop never worked on iOS touch at all, on *either* kanban board, and fixing it for both. Same era, a separate pass fixed the mobile sidebar drawer, restructured the Curated bare-list page's mobile row layout, and fixed a real horizontal-centering bug on the Shared Saves page. Older still, spanned voice notes via the My Notes toolbar, a real My Notes Profile widget, a full sidebar reorganization, a new shared "You're opening X" confirm popup, a "Saved List scope" feature for browsing categories while scoped to a specific list, and — the largest single piece — dozens of live-feedback rounds rebuilding the Edit Item modal itself (sizing, a purple header bar, field reorganization). See `2_savecraft-session-context.md` for the full blow-by-blow on all of the above.)*
-
----
-
-*(Older session: redesigned the Sponsored Statements partner-pitch page to connect it to VoteCraft Coin (VC) — each pricing tier gained an estimated VC bonus badge, a plain-language "VoteCraft Coin — a civic reward, not a cryptocurrency" section, styling deliberately kept in SaveCraft's own purple palette (not VC's teal), and a real bug fixed where `sponsored.js` crashed on the web build from an unconditional `chrome.runtime.getURL()` call. Older still, made SaveCraft dual-mode — the same `src/app/` codebase also runs as a plain web app at **savecraft.org** (Firebase Hosting, same `votecraft-789` Firestore project) via a new `src/app/js/platform.js` runtime shim — see "Architecture" → "Storage" below and `Documentation/5_savecraft-technical-runbook.md`. Same session, a full mobile-layout pass against a live iPhone 16 Pro fixed six real bugs: Dashboard not scrolling on mobile, the welcome banner collapsing to ~90px (a `height:100%`-of-`auto`-parent bug), the sign-in modal's buttons wrapping, a curated hero banner's icon badge overlapping its text, curated org-list rows squeezed to half-width, and the mobile sidebar drawer collapsing to 64px whenever desktop's own collapsed-sidebar preference was set. Earlier sessions: landed real Saved Lists sidebar navigation, rebuilt the Share modal (free-text Message → a Saved Lists picker + an on/off link-sharing toggle), broadened the sponsor pitch page to three offerings, and built a brand-new Embed Builder feature end to end (source picker, style panel, live carousel preview, shareable "Embed code" link) — two real bugs along the way (a CSS Grid track-blowout from an unbreakable URL string, a JS temporal-dead-zone crash from a `const` referenced before its own declaration line ran). Before that — added image/hyperlink support to the My Notes formatting toolbar, restructured category/sidebar navigation across four separate requests, and fixed three real bugs found live (a partial-highlight bug, a sidebar multi-tab-open bug, a toolbar spacing issue). Before that — rebuilt the detail modal's "My Notes"/Chapters/Song List from a plain textarea into a numbered-notes system with a formatting toolbar, focus mode, and per-row rename. Before that — replaced the Music Album gallery's single low-res iTunes cover with a real multi-image gallery sourced from MusicBrainz + the Cover Art Archive, plus several rounds of detail-modal visual polish. Before that — 214 more IMDb Top 250 movies seeded into curated Top 100, "Curated SaveCraft" reshaped into a two-tier browsing experience, and the previously-dead "Shared Saves" dropdown item wired up for the first time. See git history around those eras if needed.)*
+See git history for anything earlier.
 
 ---
 
@@ -149,7 +40,7 @@ The extension runs as an unpacked developer extension — it is not yet publishe
 1. Open Chrome and go to `chrome://extensions`
 2. Toggle **Developer mode** ON (top-right corner)
 3. Click **Load unpacked**
-4. Navigate to and select `Votecraft.org/Chrome Extensions/Savecraft/` (the folder containing `manifest.json`)
+4. Navigate to and select `Votecraft.org/Extensions/Savecraft/` (the folder containing `manifest.json`)
 5. The SaveCraft icon appears in the Chrome toolbar
 
 **After editing any file**, click the **↺ refresh icon** on the extension card in `chrome://extensions` to reload the changes. You do NOT need to remove and re-add the extension — refresh is enough.
@@ -299,7 +190,7 @@ The original monolithic `app.js`/`app.css` have been deleted (2026-07-29) — se
 
 ## Categories
 
-As of this session's app-wide rename, the internal/storage value **is** the display name — there's
+The internal/storage value **is** the display name — there's
 no separate technical name to translate anymore (`CAT_LABEL` in `state.js` is now a pure identity
 map, kept only so the many pre-existing `CAT_LABEL[cat] || cat` display call sites didn't all need
 touching). Old internal names still appear in a few deliberately-preserved places: `navigation.js`'s
@@ -340,7 +231,7 @@ Right-clicking any page or link shows **Save to SaveCraft → [category]**. The 
 
 ### Full Library (`src/app/index.html`)
 Opens as a new tab. Contains:
-- **Left sidebar** — category navigation plus a "My Saves Queue" entry that switches to the Kanban view. A collapsible "My Dashboard" row (renamed from "Dashboard," arrow on the right, like a category, collapsed by default) contains My Saves Library and Curated Lists (pinned at the top, mutually exclusive — opening one closes the other, each with its own purple icon badge) above the "Queue Kanban" link. Browsing a Saved List preserves that scope across category clicks (`state.activeSavedListId`) until the user explicitly leaves it. Music (renamed from "Musicians" this session) has a permanent Albums subfolder. Collapsible on desktop to a 64px icon-only rail (toggle button in the sidebar header, top-left) — collapse state persists across reloads via `chrome.storage.sync`. The mobile drawer is unaffected (full-width overlay, unchanged).
+- **Left sidebar** — category navigation plus a "My Saves Queue" entry that switches to the Kanban view. A collapsible "My Dashboard" row (renamed from "Dashboard," arrow on the right, like a category, collapsed by default) contains My Saves Library and Curated Lists (pinned at the top, mutually exclusive — opening one closes the other, each with its own purple icon badge) above the "Queue Kanban" link. Browsing a Saved List preserves that scope across category clicks (`state.activeSavedListId`) until the user explicitly leaves it. Music has a permanent Albums subfolder. Collapsible on desktop to a 64px icon-only rail (toggle button in the sidebar header, top-left) — collapse state persists across reloads via `chrome.storage.sync`. The mobile drawer is unaffected (full-width overlay, unchanged).
 - **Dashboard (Home)** — the persistent landing page shown on every app open; see its own section below
 - **Main grid** — responsive card grid of saved items with cover images, filtered by the selected category/search
 - **Curated SaveCraft** — a separate sidebar mode surfacing Votecraft-curated recommendations from Firestore, organized by genre and category
@@ -390,27 +281,61 @@ All 4 widget cards stretch to equal height and fill the available vertical space
 - **Touch drag-and-drop** — reimplemented manually (`touchstart`/`touchmove`/`touchend`) alongside the native mouse-based drag, since iOS Safari never fires HTML5 drag-and-drop events from touch at all; the real Queue Kanban board above got the identical fix in the same session.
 
 ### WordPress Admin Bridge
-Trusted staff can manage the Admin Kanban board directly inside votecraft.org's wp-admin, without a
-separate SaveCraft login — new WordPress plugin at `plugins/votecraft-savecraft-admin/` (outside
+Trusted staff manage SaveCraft content directly inside votecraft.org's wp-admin, without a
+separate SaveCraft login — a WordPress plugin at `plugins/votecraft-savecraft-admin/` (outside
 this folder, alongside the other VoteCraft WordPress plugins). Gated behind a dedicated WordPress
 capability (`manage_savecraft_admin`), not `manage_options`, so it can be granted to specific staff
 without making them full WP Admins.
 
+**Admin dashboard** — tabbed navigation (Admin Kanban / Demo Content / Curated Lists / Admin
+Users), a Home screen of icon-cards linking into each tab, and an **Admin Users** roster page
+listing every account with the `manage_savecraft_admin` capability. A separate **Admin User
+Profile** shortcut (distinct from the roster) lets a true site Administrator edit their own
+`_vc_savecraft_role_label` WP user-meta field.
+
+**Screens:**
+- **Admin Kanban** — manage SaveCraft's own project-tracking board (see "Admin Kanban" above).
+- **Demo Content** — edit the Dashboard's fallback demo cards (Queue Kanban demo card, Recent Saves demo cards, Curated Lists genre covers) shown to signed-out/no-data visitors.
+- **Curated Lists** — manage the Curated Lists CMS (see below).
+- **Admin Users** — the roster described above.
+
 **Credential design (the point of the whole thing):** a dedicated Firebase Auth account
-(`wp-savecraft-bot@votecraft-789.internal`) whose refresh token lives only in `wp-config.php`,
-scoped by `firestore.rules` to exactly the `admin_kanban_cards` collection — nothing under
-`savecraft_users`, no writes to `curated_items`, no account listing. The browser never sees this
+(`wp-savecraft-bot@votecraft-789.internal`) whose refresh token lives only in `wp-config.php`. Its
+Firestore access, scoped by `firestore.rules`' `isSaveCraftAdmin()`, covers `admin_kanban_cards`,
+`dashboard_demo_config`, `curated_items`, `curated_lists`, and `curated_topics` — nothing under
+`savecraft_users`, no personal-account access, no account listing. The browser never sees this
 token or any Firestore-scoped ID token: wp-admin's own JS calls only this plugin's REST routes, and
 PHP does the Firestore calls server-side (`includes/class-firestore-client.php`, a PHP port of this
 app's own `storage.js` Firestore REST helpers and `auth.js`'s refresh-token→ID-token exchange).
 
-A second phase (viewing SaveCraft accounts from wp-admin, read-only) was fully designed but is
+A further phase (viewing SaveCraft user accounts from wp-admin, read-only) was designed but is
 **paused** — it needs Firebase Cloud Functions, which require moving the `votecraft-789` project off
 its free Spark plan onto Blaze. Full plan:
 `/Users/lizpasekal/.claude/plans/can-we-separtarate-the-adaptive-breeze.md`.
 
+### Curated Lists CMS
+WordPress-managed content for nonprofit "partner" pages and the shared cause pages that pool them,
+backing Cause Curated's org-sponsored lists (see "Curated SaveCraft" below):
+
+- **`curated_lists`** (Firestore) — one doc per partner org (doc id = the partner's slug, e.g.
+  `fairvote`): profile copy, logo/cover image URLs, which category tabs are enabled
+  (`enabledCategories`), which shared topics it belongs to (`topics`), landing-page carousel rows
+  (`rows: [{ category, label, titles? }]`), and a `published` flag. Public-read, plugin-bot write
+  only, same rule pattern as `curated_items`.
+- **`curated_topics`** — one doc per shared cause (doc id = the topic slug, e.g.
+  `ranked-choice-voting`): hero copy for an aggregate page that pools every published
+  `curated_lists` doc tagged with that topic. Same read/write rule as `curated_lists`.
+- **Category tabs use the same friendly names as everywhere else** — the WordPress screen's
+  category checklist reads from the same identity-mapped `CAT_LABEL` values the rest of the app
+  uses, not a separate raw internal id list.
+- **Seed tooling** — `scripts/seed-curated-lists.html` (email/password sign-in) writes the content
+  authored in `scripts/curated-lists-payload.js` — currently seeded with FairVote's YouTube videos
+  and fairvote.org resource pages under the Ranked Choice Voting topic.
+- **Cache** — separate from curated_items' own cache, versioned by `_CURATED_CMS_CACHE_VERSION`
+  in `js/storage.js` (currently `2`) — bump it to force a fresh fetch after editing `curated_lists`/`curated_topics` content.
+
 ### Author / Artist / Director / Studio / Creator Profile Pages
-Every author/director/studio/creator name on a card or in a detail modal is a clickable link (`CREATOR_CARD_CATEGORY` in `state.js`, extended this session from Musician-only to Book/Movie/Show/Game). Clicking it navigates to a dedicated **profile page** for that person/studio within that category:
+Every author/director/studio/creator name on a card or in a detail modal is a clickable link (`CREATOR_CARD_CATEGORY` in `state.js`, covering Music/Literature/Films/Series/Games). Clicking it navigates to a dedicated **profile page** for that person/studio within that category:
 
 - **Profile header** — photo, name, bio, website link. Bio/photo enrichment (like Musician's) is not yet built for the new categories — the header shows a plain name until that's added; the curated "creator card" itself (in the Authors/Directors/Creators/Game Companies folder) already has bio/photo, just not yet copied onto this stub.
 - **Works grid** — all saved items by that person in that category. For **Musician** profiles, Music Album items by the same artist are also shown — including curated albums from Firestore where the artist name matches. For Book/Movie/Show/Game, curated items across every genre are pulled in too (a director's page shows their movies from Top 100 *and* Thriller *and* any other genre they're curated under), deduped by title since the same work is frequently curated separately per genre.
@@ -438,15 +363,15 @@ On a **Musician** author profile page, a **Fetch Albums** button queries the iTu
 A separate browsing mode (toggled via the sidebar options menu) that surfaces Votecraft-curated recommendations from Firestore:
 
 - **Genre picker** — genres like Top 100, Classic, Jazz, Pop, etc.
-- **Top 100 landing page** — clicking into Top 100 (before picking a category) shows a real landing page instead of the plain "Pick a category" state every other genre still has: a branded hero band, then Netflix-style horizontal rows (Musicians/Movies/Books/Games) with a quick-queue bookmark on every thumbnail, then a CTA linking to the Sponsored Statement pitch page. See "Recent Additions" and `renderCuratedGenreLanding()` in `render.js`. Built as a live demo for pitching nonprofits on sponsoring their own list.
+- **Top 100 landing page** — clicking into Top 100 (before picking a category) shows a real landing page instead of the plain "Pick a category" state every other genre still has: a branded hero band, then Netflix-style horizontal rows (Music/Films/Literature/Games) with a quick-queue bookmark on every thumbnail, then a CTA linking to the Sponsored Statement pitch page. See `renderCuratedGenreLanding()` in `render.js`. Built as a live demo for pitching nonprofits on sponsoring their own list.
 - **Category drilldown** — clicking a genre shows categories; clicking a category shows curated items
-- **Musicians** — 100 top artists (from iTunes charts), each card's name links to their author profile page
-- **Music Albums** — a `Music Album`-category Firestore bucket under Top 100 (~2,400 docs), each showing the artist name as a clickable link; the Albums subfolder under Music navigates to this view. **Not currently a genuine curated Top 100 shortlist** — it's bulk auto-synced album metadata, not a hand-picked list; a real editorial pass is still needed (see Recent Additions' data-quality fix for a related bug that was found and fixed here — a legacy mislabeled category was leaking Musician-name cards into this bucket).
-- **Book Authors / Movie Directors / Game Studios** — curated "creator card" buckets, reached via each category's Authors/Directors/Game Companies folder. Same idea as Musicians, generalized this session — see "Recent Additions" for how the creator names were sourced (Wikidata/Steam) and why they're kept as static in-app data rather than stored in Firestore for Movie/Show/Game. **The old "Show Creators" bucket (89 entries, TV showrunners) was folded into Movie Directors this session** — Series no longer has a Creators folder/curated bucket of its own (see "Categories" above).
+- **Music** — 100 top artists (from iTunes charts), each card's name links to their author profile page
+- **Albums** — an `Albums`-category Firestore bucket under Top 100 (~2,400 docs), each showing the artist name as a clickable link; the Albums subfolder under Music navigates to this view. **Not currently a genuine curated Top 100 shortlist** — it's bulk auto-synced album metadata, not a hand-picked list; a real editorial pass is still needed.
+- **Book Authors / Movie Directors / Game Studios** — curated "creator card" buckets, reached via each category's Authors/Directors/Game Companies folder. Same idea as Music, generalized to Literature/Films/Series/Games — the creator names are sourced externally (Wikidata/Steam) and kept as static in-app data rather than stored in Firestore for Films/Series/Games. The old "Show Creators" bucket (89 entries, TV showrunners) is folded into Movie Directors — Series has no Creators folder/curated bucket of its own (see "Categories" above).
 - **Clicking a creator card** opens the detail popup; clicking the name navigates to their profile
-- **Curated cache** — data is cached in `chrome.storage.local` for 24 hours; cache is versioned so bumping `_CURATED_CACHE_VERSION` in `js/storage.js` forces a fresh fetch (currently `13`). The newer Curated Lists CMS (`curated_lists`/`curated_topics` — see "WordPress Admin Bridge" and `plugins/votecraft-savecraft-admin/`) has its own separate `_CURATED_CMS_CACHE_VERSION` (currently `2`).
-- **Top 100 lists** — the "Top 100" genre shows a source-attribution logo next to the section title, indicating which outlet curated that list: Rolling Stone (Music, Series, Literature), The New York Times (Films), Steam (Games). Hovering any logo shows a tooltip explaining the attribution. Curated categories are keyed by the same `CATEGORIES` name used everywhere else (e.g. `genre:Top 100:Music`) — before this session's category rename, the internal/display names differed and this was a real source of logo-matching bugs; now that the two are the same string, that whole class of bug is gone.
-- **Sidebar navigation while browsing a curated genre** — every subfolder click stays inside the current genre (routing to a dedicated creator bucket, the full parent category, or an inert empty state — see Recent Additions), only the actually-clicked folder highlights, and visiting an author/creator page no longer resets the sidebar. See `2_savecraft-session-context.md`'s Sidebar Structure section for the full mechanism (`sidebarEffectiveView`, `state.activeCuratedFolderId`, `FOLDER_SHOWS_FULL_CURATED_CATEGORY`).
+- **Curated cache** — data is cached in `chrome.storage.local` for 24 hours; cache is versioned so bumping `_CURATED_CACHE_VERSION` in `js/storage.js` forces a fresh fetch (currently `13`). The Curated Lists CMS (`curated_lists`/`curated_topics` — see "Curated Lists CMS" above) has its own separate `_CURATED_CMS_CACHE_VERSION` (currently `2`).
+- **Top 100 lists** — the "Top 100" genre shows a source-attribution logo next to the section title, indicating which outlet curated that list: Rolling Stone (Music, Series, Literature), The New York Times (Films), Steam (Games). Hovering any logo shows a tooltip explaining the attribution. Curated categories are keyed by the same `CATEGORIES` name used everywhere else (e.g. `genre:Top 100:Music`).
+- **Sidebar navigation while browsing a curated genre** — every subfolder click stays inside the current genre (routing to a dedicated creator bucket, the full parent category, or an inert empty state), only the actually-clicked folder highlights, and visiting an author/creator page doesn't reset the sidebar. See `2_savecraft-session-context.md`'s Sidebar Structure section for the full mechanism (`sidebarEffectiveView`, `state.activeCuratedFolderId`, `FOLDER_SHOWS_FULL_CURATED_CATEGORY`).
 
 ### Item Detail Modal
 Clicking a card opens a detail modal. **Every category now shares the same accordion-based layout** (this used to be Musician/Music-Album-only, but was extended to all categories):
@@ -456,7 +381,7 @@ Clicking a card opens a detail modal. **Every category now shares the same accor
 - **Title area** — Musicians show their name with a clickable arrow to their author page. Music Albums show the artist name (in the brand purple) above the album title — the release year that used to appear on its own line here was removed; it's still shown on grid cards, just not in the modal.
 - **Bookmark / Favorite** — the save/bookmark icon lives inside the "Add to Queue" button (for every category now); the top-right corner is a Favorite star instead. Favoriting is now a plain `item.favorite` boolean (see Recent Additions) — it no longer touches `item.folderId` or creates a "Favorites" folder.
 - **Accordion rows** (icon + label + chevron, mutually exclusive — opening one closes the others):
-  - **My Notes** — a numbered note list ("+ Add Note", each row collapsible via its own pencil-turned-plus icon), not a plain textarea. Row 0 ("Summary") falls back to old notes/description text until edited; every row's title can be renamed via a small pencil that appears once that row is expanded (see "Rename a note's title" under Recent Additions). Opening this section (or Book's Chapters / Music Album's Song List below) swaps the modal's sticky title for a formatting toolbar (Bold/Highlight/Bullet/Image/Expand — Image inserts a note-body image via a pasted URL, new this session) — Expand is a distraction-free focus mode that hides the image, edit/bookmark/favorite icons, and the Albums/Web Links/Add to Queue rows so the open note is the only thing left visible. Note bodies are sanitized `contenteditable` divs (`noteSanitizer.js`), not `<textarea>`s. Shown for every category.
+  - **My Notes** — a numbered note list ("+ Add Note", each row collapsible via its own pencil-turned-plus icon), not a plain textarea. Row 0 ("Summary") falls back to old notes/description text until edited; every row's title can be renamed via a small pencil that appears once that row is expanded. Opening this section (or Literature's Chapters / Albums' Song List below) swaps the modal's sticky title for a formatting toolbar (Bold/Highlight/Bullet/Image/Expand — Image inserts a note-body image via a pasted URL) — Expand is a distraction-free focus mode that hides the image, edit/bookmark/favorite icons, and the Albums/Sources/Add to Queue rows so the open note is the only thing left visible. Note bodies are sanitized `contenteditable` divs (`noteSanitizer.js`), not `<textarea>`s. Shown for every category.
   - Second row, category-dependent: **Albums** (Musician only — the artist's known albums, capped at 5 with a "See all →" link to their profile; always shown, even with zero known albums, as an empty placeholder row like Visual Art's below — every category keeps the same accordion row count) / **Song List** (Music Album only — the album's tracks, lazily fetched via the iTunes lookup API on first expand using the item's `collectionId`; a one-time backfill resolves `collectionId`/`year` for older items that predate this field; per-track notes use the same collapsible-row UI as My Notes, but track titles themselves aren't renameable — they're real iTunes data) / **Summary** (Book, Show, Movie, Game — shows `item.summary`, auto-backfilled from Wikipedia if missing; see below) / **Placeholder** (Visual Art — reserved, intentionally empty for now).
   - **My Notes doubles as a bio fallback for Musician** — rather than its own separate read-only block, an artist's Wikipedia bio pre-fills My Notes' row-0 "Summary" the first time the modal opens for them, same fallback pattern as Book's Chapter 0. An `item.bioNotesSeeded` flag stops it from reappearing once the user edits (or intentionally clears) that field.
   - **Web Links** — same accordion treatment for every category; now also shows a real "YouTube" link (the item's own saved `youtubeUrl`, not a search) whenever one's set, regardless of category.
@@ -467,13 +392,13 @@ Clicking a card opens a detail modal. **Every category now shares the same accor
 For curated albums, the artist name is a clickable link in the title area (unless already on that artist's own page).
 
 ### Add / Edit Modal
-**Rebuilt this session into a simpler 3-screen wizard** (`js/addEditModal.js`) — the old separate "live search" screen is gone entirely, and the review screen itself is stripped down to just Title + URL for every category, since the full field set (Author, Summary, Platforms, Video URL, Image URL) made adding an item feel like too much work. Each screen is skipped automatically when there's nothing to choose:
+**A simpler 3-screen wizard** (`js/addEditModal.js`) — no separate "live search" screen; the review screen itself is stripped down to just Title + URL for every category, since the full field set (Author, Summary, Platforms, Video URL, Image URL) made adding an item feel like too much work. Each screen is skipped automatically when there's nothing to choose:
 
-1. **Category screen** — "What are you adding to?" plus a category tile grid (icon + label, same icons as the sidebar). Musician and Music Album are combined into one **"Music"** tile here (renamed from "Musicians" this session) — picking it shows a small Musician-vs-Album sub-choice screen (heading "Choose a folder", matching every other folder-picker screen) before continuing, but doesn't change which underlying category the item ends up as. An **"Articles"** shortcut tile (new this session) sits right after Websites — not a real category, it routes straight to Web Links pre-filed into the Articles folder, skipping the folder-picker screen entirely. No back icon here (nothing to go back to).
+1. **Category screen** — "What are you adding to?" plus a category tile grid (icon + label, same icons as the sidebar). Music and Albums are combined into one **"Music"** tile here — picking it shows a small Music-vs-Albums sub-choice screen (heading "Choose a folder", matching every other folder-picker screen) before continuing, but doesn't change which underlying category the item ends up as. An **"Articles"** shortcut tile sits right after Websites — not a real category, it routes straight to Sources pre-filed into the Articles folder, skipping the folder-picker screen entirely. No back icon here (nothing to go back to).
 2. **Folder-picker screen** — shown only when the chosen category has 2+ folders (0 or 1 auto-skips straight through, since there's no real choice to make). Picking a folder is mandatory — there is no "Skip"/"No folder" tile. Folders sort alphabetically **except** Movie's, which use a fixed order (`sortFoldersForDisplay()`, `utils.js`) so "Directors" sits last, after "Videos". For News specifically, this doubles as source verification (see below).
 3. **Review screen** (also used standalone for Edit) — just **Title** and **URL**. For **Music Album, Show, Book, Game, and Movie**, the Title field doubles as a live search box (placeholder "Search title", a small search icon on the right) — typing (debounced ~500ms) searches the same category-appropriate free APIs as before and shows a results dropdown; picking a result silently fills the *hidden* Author/Image-URL fields (still saved, just not shown) so cards/detail pages still get correct art and links. **Musician** (and Visual Art/Web Links/News, which never had a search source) gets a plain "Title" field with no search. Background enrichment (`ensureArtistWikipediaInfo`/`ensureItemWikipediaInfo`/`ensureItemCreator`) still fires — on selecting a search result, or on the Title field losing focus for manual entries — filling in the same hidden Author/Summary/Image fields.
 
-The Author/Summary/Platforms/Image-URL/Video-URL fields all still exist in the DOM and still get saved — they're just not shown or editable at add time. **Editing** an existing item (`openEditModal`) shows the full field set as before: Title | Author/Creator (order swapped this session — Title first), Image URL/URL (moved above Summary), Summary, Folder, and Web Links/Platforms (now always the *last* section, with a "YouTube URL" custom-link row appended after the per-service checkboxes inside that same dropdown — lets the user add one specific video link that isn't a generic per-service search; the dropdown opens *upward* now since it's always last, to avoid being clipped by the modal's bottom edge). Music/Albums/Favorite Albums keep a separate compact side-by-side Platforms+Video-URL pairing, untouched by any of the above. Films' own **Videos** folder hides the standalone Video-URL field entirely (redundant — see below) and shows "Creator" instead of "Director" as the Author-field placeholder.
+The Author/Summary/Platforms/Image-URL/Video-URL fields all still exist in the DOM and still get saved — they're just not shown or editable at add time. **Editing** an existing item (`openEditModal`) shows the full field set as before: Title | Author/Creator (Title first), Image URL/URL (above Summary), Summary, Folder, and Web Links/Platforms (now always the *last* section, with a "YouTube URL" custom-link row appended after the per-service checkboxes inside that same dropdown — lets the user add one specific video link that isn't a generic per-service search; the dropdown opens *upward* now since it's always last, to avoid being clipped by the modal's bottom edge). Music/Albums/Favorite Albums keep a separate compact side-by-side Platforms+Video-URL pairing, untouched by any of the above. Films' own **Videos** folder hides the standalone Video-URL field entirely (redundant — see below) and shows "Creator" instead of "Director" as the Author-field placeholder.
 
 The header changed shape too: no more X close button (click outside or Escape still close it); the back arrow now carries a label next to it (the current folder/category name, e.g. "‹ Blogs") instead of being a bare icon; "Choose a folder"/"Choose a folder" (music sub-choice) drop their bookmark icon; the review screen has no heading at all (just the back arrow + folder name); "Edit Item"'s heading is left-aligned so its icon lines up with the fields below instead of sitting centered above them. Both the category `<select>` (top-right, Edit only) and the Folder `<select>` now use a custom dropdown arrow (replacing the browser's native one) positioned at the same 6px right-inset as the "✕" clear buttons elsewhere in the form, for visual consistency.
 
@@ -494,7 +419,7 @@ Edit (`openEditModal`) always opens directly to the review-screen layout — no 
 
 #### Films' "Videos" folder — a special case throughout
 This folder (`default-movies-videos`) is for manually-added video clips (YouTube/Vimeo), not real movies, so it opts out of most of the category's normal machinery:
-- **No title search, no Wikipedia enrichment** (`updateTitleSearchUi`/`handleTitleSearch`/`kickOffTitleEnrichment`, `addEditModal.js`) — a clip's title often coincidentally matches an unrelated real movie's Wikipedia page, which used to silently overwrite the item with that movie's summary/director/poster (a real bug, found and fixed this session — see `detailModalSummary.js`'s `_needsItemWiki` exclusion, which also stops this from happening later just from *viewing* the item, independent of how it was added).
+- **No title search, no Wikipedia enrichment** (`updateTitleSearchUi`/`handleTitleSearch`/`kickOffTitleEnrichment`, `addEditModal.js`) — a clip's title often coincidentally matches an unrelated real movie's Wikipedia page, which would otherwise silently overwrite the item with that movie's summary/director/poster (see `detailModalSummary.js`'s `_needsItemWiki` exclusion, which also stops this from happening later just from *viewing* the item, independent of how it was added).
 - **URL field relabeled "Video URL"** with a `youtube.com/watch?v=…` placeholder, and the old separate "Video URL" field (`#youtube-url-group`, driven by `item.youtubeUrl`) is hidden — the plain URL field (`item.url`) is the one actually read by the thumbnail-fetch and lightbox features below.
 - **Thumbnail**: Microlink (used for every other category's post-save image fallback) actively blocks YouTube with an anti-bot error, so `fetchVideoThumbnail(url)` (`api.js`) gets it straight from the host instead — YouTube's `img.youtube.com/vi/<id>/hqdefault.jpg` is a plain predictable URL (no request needed, id extracted via `getYoutubeVideoId()`, `utils.js`); Vimeo goes through its public oEmbed endpoint. No summary source exists without an API key, so summary stays empty rather than guessing.
 - **Detail-modal lightbox**: clicking the featured image opens an embedded YouTube/Vimeo player (`openVideoLightbox()`/`closeVideoLightbox()`, `detailModal.js`, new `#video-lightbox-overlay` in `index.html`) instead of the plain image-zoom lightbox every other category gets — `getVideoEmbedUrl()` (`utils.js`) builds the iframe `src`. The image dims on hover (`.detail-image--clickable`, same treatment Albums' clickable gallery image already had).
@@ -512,7 +437,7 @@ Two deliberately distinct searches, plus sort:
 ### Category Landing Pages
 Every top-level category tab except Music/Albums (`renderCategoryFolderLanding()`, `renderGrid.js`) shows its real subfolders as a picker grid of solid-purple square cards (icon, name, save count) instead of a flat item list — clicking a card goes to that folder's own real page. Below the folder cards sits a "Featured Saves" center-emphasis carousel (`categoryCarousel.js`, `renderCategoryCarouselHtml()`) that loops infinitely (reusing `dashboard.js`'s own `_wireCarouselArrows` mechanics). Its content, in priority order: (1) that category's own most-recently-saved personal items (`getRecentCategoryItems()`, `renderFilters.js`), if the user has any; (2) for Films/Literature/Games specifically, that category's own VoteCraft (Top 100) landing-page row content (`resolveGenreRowItems()`, `renderCuratedPages.js`) as the "nothing saved yet" fallback; (3) every other category falls back to the original generic chain (`resolveFavoriteSlides()`, `dashboard.js` — real global favorites, else admin-configured demo cards, else curated Top 100 Music/Albums). The Music category is explicitly excluded from the whole feature — it keeps its own 15-card genre-bucket picker instead (see "Music landing page" in Recent Additions).
 
-**Curated genre drilldowns get the same treatment.** A curated genre×category page (e.g. the "Shows | Votecraft" Top 100 page, `genre:<genre>:<category>`) also renders this same folder-picker + carousel shape (`renderCuratedCategoryFolderLanding()`), sourced from `CURATED_ITEMS` instead of `state.items`. This required adding a genuine `folderId` field to curated Firestore items (absent before this session — curated data had no folder concept at all) — threaded through `_loadCuratedFromFirestore()` (`storage.js`) and matched via `matchesFolder()`/`getCuratedCategoryFolderCounts()` (`renderFilters.js`), the curated-data equivalents of the personal `matchesPrimaryOrUnfoldered()`/`getCategoryFolderCounts()`. Clicking a folder card goes one level deeper via a new `genre:<genre>:<category>:<folderId>` view shape, with its own "Nothing here now" empty-state copy (distinct from the plain-folder "Nothing here yet") for folders with no tagged curated content yet.
+**Curated genre drilldowns get the same treatment.** A curated genre×category page (e.g. the "Shows | Votecraft" Top 100 page, `genre:<genre>:<category>`) also renders this same folder-picker + carousel shape (`renderCuratedCategoryFolderLanding()`), sourced from `CURATED_ITEMS` instead of `state.items`. This relies on a real `folderId` field on curated Firestore items — threaded through `_loadCuratedFromFirestore()` (`storage.js`) and matched via `matchesFolder()`/`getCuratedCategoryFolderCounts()` (`renderFilters.js`), the curated-data equivalents of the personal `matchesPrimaryOrUnfoldered()`/`getCategoryFolderCounts()`. Clicking a folder card goes one level deeper via a new `genre:<genre>:<category>:<folderId>` view shape, with its own "Nothing here now" empty-state copy (distinct from the plain-folder "Nothing here yet") for folders with no tagged curated content yet.
 
 ### Saved Lists / Curated Lists (sidebar, under Dashboard)
 Two independently-collapsible rows nested under the sidebar's Dashboard entry, each with its own user-creatable, user-named list of child rows ("+ New folder"):
@@ -535,7 +460,7 @@ Reached via the Share dropdown's **Embed options** button (`</>` icon) — a new
 3. **Style panel** ("Style slider") — visible slide count, slide spacing (4-24px), autoplay + speed, arrow/dot/both nav style, a preview-only dark theme, aspect ratio, a curated web-safe font list, and a "Powered by SaveCraft" branding toggle — all reflected live in a carousel preview (reusing `dashboard.js`'s `_wireCarouselArrows`) that shows gray placeholder slides before any real assets are picked.
 4. **Embed code** — a URL + Copy pill (styled like a native share-link box), always visible, generating a link via the same base64 encoding `buildShareUrl()` uses, extended with the style config. Points at `savecraft/embed.html`, a hosted page that **doesn't exist yet** — Copy works today, the link itself is scoped/deferred work (see Roadmap).
 
-Nothing in the Embed Builder persists to storage yet — closing it discards the in-progress config. A phased follow-up (Firestore persistence for a "live" embed, a Profile page "Your Embeds" section, then the actual hosted rendering page) was scoped and approved but not built this session.
+Nothing in the Embed Builder persists to storage yet — closing it discards the in-progress config. A phased follow-up (Firestore persistence for a "live" embed, a Profile page "Your Embeds" section, then the actual hosted rendering page) is scoped and approved but not yet built.
 
 ---
 
@@ -613,9 +538,8 @@ Default/official folder ids are always prefixed `default-` (e.g. `default-movies
 {
   id: string,          // 'itunes_<collectionId>' or 'artist_itunes_<artistId>' or 'cur-*' or 'top-100-<kind>-<slug>'
   title: string,
-  category: string,    // a real CATEGORIES member ('Films', 'Albums', etc. — migrated to these
-                        // values this session, see "Recent Additions"); any doc still carrying an
-                        // old singular/plural spelling gets normalized on load by storage.js's
+  category: string,    // a real CATEGORIES member ('Films', 'Albums', etc.); any doc still
+                        // carrying an old singular/plural spelling gets normalized on load by storage.js's
                         // _CAT_NORMALIZE — 'Book Author'/'Movie Director'/'Show Creator'/
                         // 'Game Studio' are stored exactly as-is (curated-only pseudo-categories,
                         // not real CATEGORIES members, deliberately untouched by the rename)
@@ -711,10 +635,11 @@ All of the above are declared in `manifest.json` under `host_permissions`. YouTu
 
 | Phase | Status | Description |
 |-------|--------|-------------|
-| Phase 1 | ✅ Active | Core extension — personal saves, curated recommendations, Kanban, author pages, iTunes integration |
-| Phase 1.5 | ✅ Active | Accounts + Firestore sync + Profile page — see "Recent Additions" above. The Profile page itself is intentionally still browsable without signing in (a demo persona shows until "Manage account" is used); signing in is what unlocks cross-device sync, not a requirement to use the extension at all |
+| Phase 1 | ✅ Active | Core app — personal saves, curated recommendations, Kanban, author pages, iTunes integration |
+| Phase 1.5 | ✅ Active | Accounts + Firestore sync + Profile page — see "Recent Additions" above. The Profile page itself is intentionally still browsable without signing in (a demo persona shows until "Manage account" is used); signing in is what unlocks cross-device sync, not a requirement to use the app at all (except on web, which requires it — see "Storage" above) |
 | Phase 2 | Planned | Spotify integration for Music/Albums richer artist data (photos, full discography) |
 | Phase 3 | Unblocked, not built | Sharing with contacts — Firebase Auth + Firestore write access now exist (Phase 1.5); the sharing feature itself still isn't built |
 | Phase 3.5 | Scoped, not built | Embed Builder backend — a public, sign-in-gated `savecraft_embeds` Firestore collection (mirroring the existing `curated_items` public-read/admin-write-only rule pattern), a "Your Embeds" section on the Profile page, and the actual hosted `savecraft/embed.html` rendering page + generated `<iframe>` snippet. The client-side Builder UI itself (source picking, style panel, live preview, "Embed code" link) is already built — see "Embed Builder" above |
 | Phase 4 | Planned | AI recommendations (requires Claude API via Firebase Function) |
-| Chrome Web Store | Future | One-time $5 developer fee; publish when Phase 1 is stable |
+| Multi-browser extensions | Planned | Browser extensions for the other major browsers (Firefox, Safari, Edge) alongside the existing Chrome one — savecraft.org (the web app) is the primary product; each browser extension is a thin capture-and-sync layer on top of it. Not yet built or scoped in detail |
+| Chrome Web Store | Future | One-time $5 developer fee; publish the Chrome extension when Phase 1 is stable |

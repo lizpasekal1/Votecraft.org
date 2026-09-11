@@ -17,3 +17,7 @@ suggested reading order.
 pointed to from anywhere else it's relevant — not independently re-described in a second file.
 (This is the rule that broke down before this reorg: `3_savecraft-architecture.md` and
 `2_savecraft-session-context.md` had drifted into disagreeing copies of the same Categories table.)
+
+Coding-agent behavior policy (priorities, boundaries, commit rules, etc.) lives in `CLAUDE.md` at
+the project root, one directory up — not here, so this file stays a pure index.
+
