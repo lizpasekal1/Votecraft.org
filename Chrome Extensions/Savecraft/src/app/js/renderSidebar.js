@@ -26,7 +26,7 @@ import { openSwitchConfirm, confirmDialog } from './confirmModal.js';
 // won't render every one of these ids (e.g. a curated-genre view has no "Web Links" row) —
 // state.collapsed is just a lookup Set, an unused id in it is inert.
 export function collapseAllSidebarSections() {
-  state.collapsed = new Set([...CATEGORIES.filter(cat => cat !== 'Music Album'), 'dashboard', 'saved-lists', 'curated-lists']);
+  state.collapsed = new Set([...CATEGORIES.filter(cat => cat !== 'Music Album'), 'dashboard', 'saved-lists', 'curated-lists', 'curated-topics']);
 }
 
 // Wraps a state-change + re-render so the browser can animate between the old and new sidebar DOM
@@ -288,10 +288,12 @@ export function renderSidebar() {
   // ("savedlist:<id>", wired below via the generic subfolder click handler +
   // renderGrid()'s own "savedlist:" landing-card branch — see there for what that currently
   // shows).
-  function _renderDashboardListRow({ key, icon, label, items, linkClass, childClass, addClass, addLabel, addFirst, viewPrefix, itemExtraClass, itemIsActive, showRadio }) {
+  function _renderDashboardListRow({ key, icon, label, items, linkClass, childClass, addClass, addLabel, addFirst, noAdd, viewPrefix, itemExtraClass, itemIsActive, showRadio }) {
     const rowCollapsed = state.collapsed.has(key);
     const rowArrow = rowCollapsed ? '▶' : '▼';
-    const addRowHtml = `
+    // noAdd — this list has no "+ Add" affordance at all (e.g. Topics, whose docs are created in
+    // the WordPress plugin, not from the sidebar).
+    const addRowHtml = noAdd ? '' : `
     <div class="sidebar-item sidebar-add-folder sidebar-subfolder--nested ${addClass}">
       ${addLabel || '+ Add List'}
     </div>`;
@@ -322,13 +324,39 @@ export function renderSidebar() {
       return `
     <div class="sidebar-item sidebar-subfolder sidebar-subfolder--nested ${childClass} ${itemExtraClass?.(item) || ''} ${isActive ? 'active' : ''}"
          ${view ? `data-view="${escapeHtml(view)}"` : ''}
-         ${item.genre ? `data-genre="${escapeHtml(item.genre)}"` : ''}>
+         ${item.genre ? `data-genre="${escapeHtml(item.genre)}"` : ''}
+         ${item.topic ? `data-topic="${escapeHtml(item.topic)}"` : ''}>
       ${radioHtml} ${escapeHtml(item.name)}
     </div>`;
     }).join('')}
     ${addFirst ? '' : addRowHtml}`}
     `;
   }
+
+  // "Curated Lists" rows = the hardcoded seeds (state.curatedListsRows, e.g. Votecraft) plus every
+  // published curated_lists Firestore doc (admin-editable from the WordPress plugin) that doesn't
+  // already have a seed for its slug — so standing up a new nonprofit page there makes it reachable
+  // here with no code change. A published doc's `name` also overrides a matching seed's label.
+  // Each row routes to genre:<slug> via its data-genre.
+  const _publishedCuratedLists = Object.values(state.curatedLists || {}).filter(l => l && l.published && l.slug);
+  const _seededCuratedGenres = new Set(state.curatedListsRows.map(r => r.genre).filter(Boolean));
+  const curatedListRows = [
+    ...state.curatedListsRows.map(r => {
+      const fs = r.genre && _publishedCuratedLists.find(l => l.slug === r.genre);
+      return fs && fs.name ? { ...r, name: fs.name } : r;
+    }),
+    ..._publishedCuratedLists
+      .filter(l => !_seededCuratedGenres.has(l.slug))
+      .map(l => ({ id: 'curated-list-' + l.slug, name: l.name || l.slug, genre: l.slug })),
+  ];
+
+  // "Topics" rows — one per published curated_topics doc (shared-cause aggregate pages). Routes to
+  // topic:<slug>. Uses the same data-genre plumbing as the Curated Lists rows above but with a
+  // `topic:` prefix instead — see the click handler below.
+  const curatedTopicRows = Object.values(state.curatedTopics || {})
+    .filter(t => t && t.published && t.slug)
+    .sort((a, b) => (a.name || a.slug).localeCompare(b.name || b.slug))
+    .map(t => ({ id: 'curated-topic-' + t.slug, name: t.name || t.slug, topic: t.slug }));
 
   const dashboardLinkHtml = `
     <div class="sidebar-group${isDashboardCollapsed ? '' : ' open'}">
@@ -360,7 +388,7 @@ export function renderSidebar() {
         itemIsActive: item => item.id === 'default-favorites' && state.view === 'dashboard',
       })}
       ${_renderDashboardListRow({
-        key: 'curated-lists', icon: CURATED_LISTS_ICON_SVG, label: 'Curated Lists', items: state.curatedListsRows,
+        key: 'curated-lists', icon: CURATED_LISTS_ICON_SVG, label: 'Curated Lists', items: curatedListRows,
         linkClass: 'sidebar-curated-lists-link', childClass: 'sidebar-curated-lists-child', addClass: 'sidebar-add-curated-list',
         // "+Add/Explore" (not "+ Add List") + purple (sidebar.css) + listed first (above
         // Votecraft/RCV instead of below), per direct request — this row no longer creates a new
@@ -376,6 +404,15 @@ export function renderSidebar() {
         itemIsActive: item => !!item.genre && state.sidebarMode === 'curated' && sidebarEffectiveView === `genre:${item.genre}`,
         showRadio: true,
       })}
+      ${curatedTopicRows.length ? _renderDashboardListRow({
+        key: 'curated-topics', icon: CURATED_LISTS_ICON_SVG, label: 'Topics', items: curatedTopicRows,
+        linkClass: 'sidebar-topics-link', childClass: 'sidebar-topics-child',
+        // No add button — topics are created in the WordPress plugin, not here. Routed by the
+        // data-topic click handler below (no viewPrefix), same pattern as Curated Lists' rows.
+        noAdd: true,
+        itemIsActive: item => !!item.topic && sidebarEffectiveView === `topic:${item.topic}`,
+        showRadio: true,
+      }) : ''}
       <div class="sidebar-item sidebar-subfolder sidebar-kanban-link ${state.view === 'kanban' ? 'active' : ''}" data-view="kanban">
         ${KANBAN_ICON_SVG} Queue Kanban
       </div>
@@ -485,6 +522,17 @@ export function renderSidebar() {
             navigateToView(`genre:${genre}`, { sidebarMode: 'curated' });
           },
         });
+      });
+    });
+
+    // "Topics" rows — the shared-cause aggregate pages (renderCuratedTopicPage). Straight
+    // navigation (no "you're opening" popup — a topic isn't "someone's" saves, it's a pooled
+    // view), same accordion-collapse-on-open behavior as the Curated Lists rows above.
+    sidebar.querySelectorAll('.sidebar-topics-child[data-topic]').forEach(el => {
+      el.addEventListener('click', () => {
+        state.collapsed.add('curated-topics');
+        state.collapsed.add('dashboard');
+        navigateToView(`topic:${el.dataset.topic}`, { sidebarMode: 'curated' });
       });
     });
   }
@@ -731,7 +779,7 @@ export function renderSidebar() {
           // Music Album, which has its own separate collapse state via the Musician "Music Albums"
           // permanent subfolder link). 'saved-lists'/'curated-lists' included too — same full-Set-
           // rebuild issue as wireDashboardLink's own expand handler above.
-          state.collapsed = new Set([...sidebarCategoryList, 'dashboard', 'saved-lists', 'curated-lists']);
+          state.collapsed = new Set([...sidebarCategoryList, 'dashboard', 'saved-lists', 'curated-lists', 'curated-topics']);
           state.collapsed.delete(cat);
         } else {
           state.collapsed.add(cat);

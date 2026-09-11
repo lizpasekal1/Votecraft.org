@@ -2,7 +2,7 @@
 
 import { state, MUSIC_ALL_LABEL, PRIMARY_FOLDER_ID } from './state.js';
 import {
-  loadAll, loadLocalCache, LOCAL_CACHE_KEYS, initCuratedItems, initDashboardDemoConfig, persistSort, persistTheme, persistSidebarCollapsed,
+  loadAll, loadLocalCache, LOCAL_CACHE_KEYS, initCuratedItems, initCuratedCms, initDashboardDemoConfig, persistSort, persistTheme, persistSidebarCollapsed,
   persistLastfmUsername, disconnectLastfm, persistSteamId, disconnectSteam,
   runInitialSync,
 } from './storage.js';
@@ -662,8 +662,10 @@ async function init() {
   // too-early call's email fallback. Reported live: "the drop down menu is still displaying my
   // email." Re-applying here, now that state.displayName actually reflects reality.
   applyAuthUI(getCurrentUser());
-  await initCuratedItems();
-  await initDashboardDemoConfig();
+  // Three independent public Firestore reads (curated items, curated CMS = lists+topics, dashboard
+  // demo overrides) — every visitor needs all three before the first grid render, and none depends
+  // on another, so fetch them in parallel rather than in series.
+  await Promise.all([initCuratedItems(), initCuratedCms(), initDashboardDemoConfig()]);
 
   // Per-cache list now shared with Profile > Settings' Storage row (storage.js's
   // LOCAL_CACHE_KEYS, profile.js) rather than this same 11-line block being the only place it

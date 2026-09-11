@@ -303,3 +303,56 @@
   padding: 8px 0;
   border-bottom: 1px solid #dcdcde;
 }
+
+/* ===== Curated Lists / Topics / Items sections (admin-curated.js) ===== */
+.vc-curated-row,
+.vc-topic-detail {
+  border-bottom: 1px solid #dcdcde;
+  padding: 6px 0;
+}
+.vc-curated-toggle,
+.vc-topic-toggle {
+  font-size: 14px;
+  text-align: left;
+}
+.vc-curated-toggle code,
+.vc-topic-toggle code {
+  color: #646970;
+  font-size: 12px;
+}
+.vc-curated-detail,
+.vc-topic-detail {
+  padding: 6px 0 14px 14px;
+}
+.vc-curated-form .form-table th {
+  width: 150px;
+  padding: 8px 10px 8px 0;
+}
+.vc-checkgrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+.vc-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.vc-items-table {
+  margin-top: 10px;
+}
+.vc-items-table td {
+  vertical-align: top;
+}
+.vc-items-table input[type="text"],
+.vc-items-table input[type="url"],
+.vc-items-table select {
+  width: 100%;
+  min-width: 90px;
+}
+.button.button-small {
+  min-height: 24px;
+  line-height: 22px;
+  padding: 0 8px;
+}
