@@ -23,10 +23,10 @@ import { openSwitchConfirm, confirmDialog } from './confirmModal.js';
 // top-level mode (the mobile drawer's Curated/Shared tabs below, and the desktop options
 // dropdown in main.js) so the new mode always starts fully collapsed rather than carrying over
 // whatever was left expanded under the previous one. A superset is fine even when the new mode
-// won't render every one of these ids (e.g. a curated-genre view has no "Web Links" row) —
+// won't render every one of these ids (e.g. a curated-genre view has no "Sources" row) —
 // state.collapsed is just a lookup Set, an unused id in it is inert.
 export function collapseAllSidebarSections() {
-  state.collapsed = new Set([...CATEGORIES.filter(cat => cat !== 'Music Album'), 'dashboard', 'saved-lists', 'curated-lists', 'curated-topics']);
+  state.collapsed = new Set([...CATEGORIES.filter(cat => cat !== 'Albums'), 'dashboard', 'saved-lists', 'curated-lists', 'curated-topics']);
 }
 
 // Wraps a state-change + re-render so the browser can animate between the old and new sidebar DOM
@@ -42,7 +42,7 @@ function withViewTransition(fn) {
 }
 
 // view-transition-name has to be a valid CSS custom-ident (no spaces/punctuation) — several
-// category names aren't ("Web Links"), so this reuses catClass (utils.js), already the app's
+// category names aren't ("Sources"), so this reuses catClass (utils.js), already the app's
 // standard string->CSS-token sanitizer (renderGrid.js, dashboard.js, kanban.css class names,
 // etc.), rather than a second one-off regex. Applied to each section's .sidebar-group-bg (see
 // renderSidebar below) — deliberately NOT the row content itself: naming a growing/shrinking
@@ -594,7 +594,7 @@ export function renderSidebar() {
   // that's no longer true (RCV's own CURATED_GENRE_LANDING_CONTENT, state.js, has a Web Links
   // row), and an under-populated category elsewhere just shows an empty count/grid like any other
   // still-being-curated category — not actually broken.
-  const sidebarCategoryList = CATEGORIES.filter(cat => cat !== 'Music Album');
+  const sidebarCategoryList = CATEGORIES.filter(cat => cat !== 'Albums');
 
   const categorySections = sidebarCategoryList.map(cat => {
     const primaryId = PRIMARY_FOLDER_ID[cat];
@@ -616,9 +616,9 @@ export function renderSidebar() {
 
     const musicAlbumActive = isCuratedGenre
       ? state.view === `genre:${curatedGenreBase}:Music Album`
-      : state.view === 'Music Album';
+      : state.view === 'Albums';
     const musicAlbumCount = isCuratedGenre
-      ? (CURATED_ITEMS[curatedGenreBase]?.['Music Album']?.length ?? 0)
+      ? (CURATED_ITEMS[curatedGenreBase]?.['Albums']?.length ?? 0)
       // Queue-demo cards excluded from every real count here — same reasoning as
       // renderFilters.js's getFilteredSortedItems() (they're Kanban-demo placeholders, not real
       // saves, but were still showing up as a phantom "1" badge on whichever folder their
@@ -626,15 +626,15 @@ export function renderSidebar() {
       // getFilteredSortedItems() does when browsing inside a Saved List (reported live: an
       // unscoped count badge kept showing e.g. "3"/"2" on a list's own folders even though
       // nothing had actually been added to that list yet).
-      : state.items.filter(i => !isQueueDemoId(i.id) && matchesPrimaryOrUnfoldered(i, 'Music Album') && matchesActiveSavedListScope(i)).length;
+      : state.items.filter(i => !isQueueDemoId(i.id) && matchesPrimaryOrUnfoldered(i, 'Albums') && matchesActiveSavedListScope(i)).length;
     const musicAlbumCountLabel = musicAlbumCount > 0 ? `<span class="sidebar-count">${musicAlbumCount}</span>` : '';
     // Music Album isn't part of sidebarCategoryList's own loop (it's excluded above, line
     // 322-323) — it only ever shows via this "Albums" link nested under Musician, routed through
     // its own primary folder id, so the same folderScope check applies here too.
-    const musicAlbumFolderAllowed = !folderScope || folderScope.has(PRIMARY_FOLDER_ID['Music Album']);
-    const permanentSubfolders = (cat === 'Musician' && musicAlbumFolderAllowed) ? `
+    const musicAlbumFolderAllowed = !folderScope || folderScope.has(PRIMARY_FOLDER_ID['Albums']);
+    const permanentSubfolders = (cat === 'Music' && musicAlbumFolderAllowed) ? `
       <div class="sidebar-item sidebar-subfolder ${musicAlbumActive ? 'active' : ''}"
-           data-view="Music Album" data-permanent="true">
+           data-view="Albums" data-permanent="true">
         <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor"><path d="M500-360q42 0 71-29t29-71v-220h120v-80H560v220q-13-10-28-15t-32-5q-42 0-71 29t-29 71q0 42 29 71t71 29ZM320-240q-33 0-56.5-23.5T240-320v-480q0-33 23.5-56.5T320-880h480q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H320Zm0-80h480v-480H320v480ZM160-80q-33 0-56.5-23.5T80-160v-560h80v560h560v80H160Zm160-720v480-480Z"/></svg> Albums
         ${musicAlbumCountLabel}
       </div>
@@ -680,10 +680,10 @@ export function renderSidebar() {
       // affordance to ever create siblings, see the addFolderRow exclusion above) gets no
       // accordion at all, per direct request — a plain link, no toggle arrow, no nested children/
       // add-subfolder row.
-      const isMusicianCategory = cat === 'Musician';
+      const isMusicianCategory = cat === 'Music';
       // Deliberately two distinct destinations, per direct confirmation ("the musician accordian
-      // show still be it's own page") — the top-level "Musician" category header goes to the
-      // 15-card genre picker (data-view="Musician"), while expanding that same category's
+      // show still be it's own page") — the top-level "Music" category header goes to the
+      // 15-card genre picker (data-view="Music"), while expanding that same category's
       // accordion and clicking its nested "Musicians" folder row here goes to the plain,
       // unfiltered flat list via this folder's own real id — a separate "see everything, no genre
       // grouping" destination, not a duplicate/bug to unify away.
@@ -731,7 +731,7 @@ export function renderSidebar() {
     // here; every other category keeps the normal add-folder affordance. Curated genre browsing
     // gets none either way, for every category — read-only, per direct request ("the user should
     // not be able to add new folders to the curated lists").
-    const addFolderRow = (cat === 'Musician' || isCuratedGenre) ? '' : `
+    const addFolderRow = (cat === 'Music' || isCuratedGenre) ? '' : `
       <div class="sidebar-item sidebar-add-folder" data-add-folder="${cat}">
         + New folder
       </div>

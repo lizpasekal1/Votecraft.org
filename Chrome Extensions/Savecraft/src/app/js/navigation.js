@@ -9,7 +9,7 @@
 // scheme, deliberately. Firebase Hosting (firebase.json) only rewrites the bare `/` path, so a
 // path-based URL would 404 on reload/share without a hosting-config change; a query param keeps
 // the requested path as `/` and needs none. encodeURIComponent also losslessly round-trips every
-// current view-string shape (colons in `author:Musician:Name`, spaces in `Top 100`, arbitrary
+// current view-string shape (colons in `author:Music:Name`, spaces in `Top 100`, arbitrary
 // folder ids) with no custom parsing. Everything else worth restoring (sidebarMode,
 // activeCuratedFolderId, authorReturnView, activeSavedListId) travels in history.state instead of
 // the URL, handed straight back on popstate — keeps the URL itself minimal and stable.
@@ -27,14 +27,37 @@ import { renderSidebar, renderGrid } from './render.js';
 // inline string check, so a future pseudo-view can opt out the same way in one place.
 const NON_HISTORY_VIEWS = new Set(['embed-builder']);
 
-// A handful of internal state.view values read poorly as a public, shareable URL — 'Musician' is
-// the real category name (item.category, folders.parentCategory, CATEGORIES, ...) and
-// 'default-musicians-musicians' is the real folder id (storage.js's seed data), so neither can
-// just be renamed everywhere, but their own URLs should still read `?v=Music` and
-// `?v=default-musicians` respectively, per direct request. This is the one place that distinction
-// lives — everything else (state.view, history.state.view, CATEGORIES, folder ids, ...) keeps
-// using the real internal name/id unchanged.
-const VIEW_TO_URL_PARAM = { Musician: 'Music', 'default-musicians-musicians': 'default-musicians' };
+// A handful of internal state.view values read poorly (or, after the category rename below,
+// differently than they used to) as a public, shareable URL — this table is the one place that
+// distinction lives; everything else (state.view, history.state.view, CATEGORIES, folder ids,
+// ...) keeps using the real internal name/id unchanged.
+//
+// 'default-musicians-musicians' is a real folder id (storage.js's seed data) that reads poorly
+// as a URL, so it gets the short `?v=default-musicians` alias, per direct request — unrelated to
+// the category rename below.
+//
+// The other 8 entries exist for a different reason: CATEGORIES itself was renamed (state.js) from
+// old technical names (Web Links/Show/Musician/Music Album/Game/Movie/Book/Visual Art) to the
+// friendly names every visitor already saw (Sources/Series/Music/Albums/Games/Films/Literature/
+// Arts). Without this table, a link shared BEFORE that rename (e.g. `?v=Movie`) would silently
+// stop resolving to anything the moment `state.view` started using the new value ('Films')
+// instead — this table keeps every old public URL permanently valid by aliasing the OLD spelling
+// (the public, already-shared vocabulary, left stable forever) to the NEW internal state.view
+// value, decoupling the two completely. 'Musician' -> 'Music' is a coincidence worth noting: the
+// public URL for that tab already read `?v=Music` before this rename (a pre-existing alias, for
+// the same "reads poorly as a URL" reason above), which happens to already equal its own new
+// internal name — included here anyway for consistency/clarity, though it's a no-op today.
+const VIEW_TO_URL_PARAM = {
+  'default-musicians-musicians': 'default-musicians',
+  Music: 'Music',       // was Musician
+  Films: 'Movie',        // was Movie
+  Series: 'Show',        // was Show
+  Literature: 'Book',    // was Book
+  Games: 'Game',         // was Game
+  Sources: 'Web Links',  // was Web Links
+  Albums: 'Music Album', // was Music Album
+  Arts: 'Visual Art',    // was Visual Art
+};
 const URL_PARAM_TO_VIEW = Object.fromEntries(Object.entries(VIEW_TO_URL_PARAM).map(([k, v]) => [v, k]));
 
 // Reverses a raw `?v=` query value back to the internal view string it stands in for — exported

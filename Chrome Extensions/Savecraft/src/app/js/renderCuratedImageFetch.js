@@ -48,7 +48,7 @@ export function fetchMissingCuratedImages(items) {
 // ever need to.
 const _curatedMusicianPhotoFetchInFlight = new Set();
 export function fetchMissingCuratedMusicianPhotos(items) {
-  const missing = items.filter(i => i.curated && i.category === 'Musician' && (!i.imageUrl || isItunesArtworkUrl(i.imageUrl)) && !_curatedMusicianPhotoFetchInFlight.has(i.id));
+  const missing = items.filter(i => i.curated && i.category === 'Music' && (!i.imageUrl || isItunesArtworkUrl(i.imageUrl)) && !_curatedMusicianPhotoFetchInFlight.has(i.id));
   if (!missing.length) return;
   missing.forEach((item, i) => {
     _curatedMusicianPhotoFetchInFlight.add(item.id);

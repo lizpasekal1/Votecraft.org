@@ -138,7 +138,7 @@ function renderBoardFilterDropdown() {
   // Same list/order/labels the sidebar shows — excludes Music Album (folded into Musician's
   // "Music Albums" subfolder there, never its own top-level entry).
   const allOption = `<button class="saves-list-option${!state.kanbanCategory ? ' active' : ''}" data-cat="">All Categories</button>`;
-  const catOptions = CATEGORIES.filter(cat => cat !== 'Music Album').map(cat =>
+  const catOptions = CATEGORIES.filter(cat => cat !== 'Albums').map(cat =>
     `<button class="saves-list-option${state.kanbanCategory === cat ? ' active' : ''}" data-cat="${cat}">${CAT_LABEL[cat] || cat}</button>`
   ).join('');
   dd.innerHTML = allOption + `<div class="saves-list-divider"></div>` + catOptions;

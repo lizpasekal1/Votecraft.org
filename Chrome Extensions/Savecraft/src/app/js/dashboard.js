@@ -52,12 +52,12 @@ export function resolveFavoriteSlides() {
 
   // Fallback (unconfigured state): curated Top 100 Musician + Music Album — the two categories
   // confirmed to have real populated Top 100 data. Guarded against either being absent/empty.
-  const musicians = CURATED_ITEMS['Top 100']?.['Musician'] || [];
-  const albums = CURATED_ITEMS['Top 100']?.['Music Album'] || [];
+  const musicians = CURATED_ITEMS['Top 100']?.['Music'] || [];
+  const albums = CURATED_ITEMS['Top 100']?.['Albums'] || [];
   const demo = [...musicians, ...albums]
     .filter(i => i && i.imageUrl)
     .slice(0, 12)
-    .map(i => ({ ...i, category: musicians.includes(i) ? 'Musician' : 'Music Album', curated: true }));
+    .map(i => ({ ...i, category: musicians.includes(i) ? 'Music' : 'Albums', curated: true }));
   return { items: demo, isDemo: true };
 }
 
@@ -284,8 +284,8 @@ function wireFavoritesWidget(container) {
     // Same top-level category list/order/labels as the sidebar (Music Album excluded — it's
     // never its own top-level row there either, just a subfolder under Musician), per direct
     // request. data-cat stays the raw category value (items are tagged with that, e.g.
-    // "Musician" not "Music") — only the displayed label is the sidebar's friendlier CAT_LABEL.
-    const catOptions = CATEGORIES.filter(cat => cat !== 'Music Album').map(cat =>
+    // "Music" not "Music") — only the displayed label is the sidebar's friendlier CAT_LABEL.
+    const catOptions = CATEGORIES.filter(cat => cat !== 'Albums').map(cat =>
       `<button class="saves-list-option${_favCategoryFilter === cat ? ' active' : ''}" data-cat="${escapeHtml(cat)}">${escapeHtml(CAT_LABEL[cat] || cat)}</button>`
     ).join('');
     dd.innerHTML = allOption + `<div class="saves-list-divider"></div>` + catOptions;
@@ -615,8 +615,8 @@ function buildHeroCollage() {
   let heroItems = state.items.filter(i => i.imageUrl);
   if (heroItems.length < 8) {
     const fallback = [
-      ...(CURATED_ITEMS['Top 100']?.['Musician'] || []),
-      ...(CURATED_ITEMS['Top 100']?.['Music Album'] || []),
+      ...(CURATED_ITEMS['Top 100']?.['Music'] || []),
+      ...(CURATED_ITEMS['Top 100']?.['Albums'] || []),
     ].filter(i => i && i.imageUrl);
     heroItems = heroItems.concat(fallback);
   }

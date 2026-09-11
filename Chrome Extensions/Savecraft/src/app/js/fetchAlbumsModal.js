@@ -33,7 +33,7 @@ export function renderFetchAlbumsList(allAlbums, artistName, mode, hideSingles) 
 
   list.innerHTML = albums.map((album, i) => {
     const alreadySaved = state.items.some(
-      it => it.category === 'Music Album' && it.author === artistName && it.title === album.title
+      it => it.category === 'Albums' && it.author === artistName && it.title === album.title
     );
     const isSingle = /\s[-–]\s*(single|ep)\s*$/i.test(album.title) || album.type === 'Single';
     const defaultChecked = !alreadySaved && !isSingle;
@@ -142,7 +142,7 @@ export async function handleImportAlbums() {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       title: album.title,
       author: artistName,
-      category: 'Music Album',
+      category: 'Albums',
       url: album.url || null,
       imageUrl: album.imageUrl || null,
       notes: null,

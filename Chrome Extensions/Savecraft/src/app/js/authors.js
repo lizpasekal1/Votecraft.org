@@ -21,7 +21,7 @@ export function findAuthor(name, category) {
 // Returns null if the author record doesn't exist yet, its genre hasn't resolved yet, or its raw
 // iTunes genre string has no bucket mapping — callers treat null as "not shown in any bucket."
 export function bucketForMusicianItem(item) {
-  const author = findAuthor(item.title, 'Musician');
+  const author = findAuthor(item.title, 'Music');
   if (!author?.genre) return null;
   return MUSIC_GENRE_BUCKET_MAP[author.genre.trim().toLowerCase()] || null;
 }
@@ -85,16 +85,16 @@ export function backfillMusicianGenres() {
   // A batch is already draining (every item it covers went into this Set synchronously, up front,
   // when that batch was scheduled — see the forEach below) — REAL BUG, found and fixed: this used
   // to have no such guard, so renderMusicGenreLanding()'s own re-render after each resolved genre
-  // (its `if (state.view === 'Musician') renderGrid();` below) re-invoked this whole function,
+  // (its `if (state.view === 'Music') renderGrid();` below) re-invoked this whole function,
   // re-scanning every saved Musician against state.authors from scratch on every single one of a
   // batch's resolutions — O(missing²) work for a library with hundreds of artists. Skipping while a
   // batch is in flight costs nothing today (nothing newly-missing could be scheduled until the
   // current batch's staggered timers free up capacity anyway) and the next call once it drains to
   // empty picks up anything genuinely still missing.
   if (_genreBackfillInFlight.size > 0) return;
-  const musicianItems = state.items.filter(i => i.category === 'Musician' && !isQueueDemoId(i.id));
+  const musicianItems = state.items.filter(i => i.category === 'Music' && !isQueueDemoId(i.id));
   const missing = musicianItems.filter(i => {
-    const author = findAuthor(i.title, 'Musician');
+    const author = findAuthor(i.title, 'Music');
     return !author?.genre && !_genreBackfillInFlight.has(i.title);
   });
   if (!missing.length) return;
@@ -104,9 +104,9 @@ export function backfillMusicianGenres() {
       ensureArtistGenre(item.title)
         .then(genre => {
           if (!genre) return;
-          let author = findAuthor(item.title, 'Musician');
+          let author = findAuthor(item.title, 'Music');
           if (!author) {
-            author = { id: Date.now().toString(), name: item.title, category: 'Musician', bio: null, imageUrl: null, websiteUrl: null, genre: null, savedAt: Date.now() };
+            author = { id: Date.now().toString(), name: item.title, category: 'Music', bio: null, imageUrl: null, websiteUrl: null, genre: null, savedAt: Date.now() };
             state.authors.push(author);
           }
           if (author.genre) return; // resolved by something else (e.g. the author page) meanwhile
@@ -115,7 +115,7 @@ export function backfillMusicianGenres() {
           // Only the counts on the landing page itself need to reflect a newly-resolved genre —
           // re-renders as each one lands rather than batching, since this grid is just 15 small
           // cards (cheap to rebuild) and staggered fetches already spread the renders out in time.
-          if (state.view === 'Musician') renderGrid();
+          if (state.view === 'Music') renderGrid();
         })
         .finally(() => _genreBackfillInFlight.delete(item.title));
     }, idx * ITUNES_BACKFILL_STAGGER_MS);
@@ -142,7 +142,7 @@ export async function ensureLiveItem(item) {
     }
     state.items.push(liveItem);
     await persistItem(liveItem);
-    if (liveItem.category === 'Music Album') {
+    if (liveItem.category === 'Albums') {
       await autoSaveMusician(liveItem.author);
     }
   }
@@ -154,17 +154,17 @@ export async function ensureLiveItem(item) {
 // Firestore data if available, then enriching further via MusicBrainz/Wikipedia in the background.
 export async function autoSaveMusician(artistName) {
   if (!artistName) return;
-  let musicianItem = state.items.find(i => i.category === 'Musician' && i.title === artistName);
+  let musicianItem = state.items.find(i => i.category === 'Music' && i.title === artistName);
   if (!musicianItem) {
     let curated = null;
     for (const genre of Object.keys(CURATED_ITEMS)) {
-      curated = (CURATED_ITEMS[genre]['Musician'] || []).find(m => m.title === artistName);
+      curated = (CURATED_ITEMS[genre]['Music'] || []).find(m => m.title === artistName);
       if (curated) break;
     }
     musicianItem = {
       id: `item_${Date.now()}`,
       title: artistName,
-      category: 'Musician',
+      category: 'Music',
       author: null,
       url: curated?.url || '',
       imageUrl: curated?.imageUrl || null,
@@ -179,9 +179,9 @@ export async function autoSaveMusician(artistName) {
   }
 
   // Ensure an author profile exists so a website lookup has somewhere to attach
-  let author = findAuthor(artistName, 'Musician');
+  let author = findAuthor(artistName, 'Music');
   if (!author) {
-    author = { id: Date.now().toString(), name: artistName, category: 'Musician', bio: null, imageUrl: null, websiteUrl: null, genre: null, savedAt: Date.now() };
+    author = { id: Date.now().toString(), name: artistName, category: 'Music', bio: null, imageUrl: null, websiteUrl: null, genre: null, savedAt: Date.now() };
     state.authors.push(author);
     await persistAuthor(author);
   }
@@ -227,7 +227,7 @@ export async function navigateToAuthor(name, category) {
   }
   navigateToView(`author:${category}:${name}`, { authorReturnView });
 
-  if (category === 'Musician' && !author.websiteUrl) {
+  if (category === 'Music' && !author.websiteUrl) {
     ensureArtistWebsite(name).then(url => {
       if (!url) return;
       author.websiteUrl = url;
@@ -236,7 +236,7 @@ export async function navigateToAuthor(name, category) {
     });
   }
 
-  if (category === 'Musician' && !author.genre) {
+  if (category === 'Music' && !author.genre) {
     ensureArtistGenre(name).then(genre => {
       if (!genre) return;
       author.genre = genre;
@@ -245,10 +245,10 @@ export async function navigateToAuthor(name, category) {
     });
   }
 
-  const _navMusicianItem = state.items.find(i => i.category === 'Musician' && i.title === name);
+  const _navMusicianItem = state.items.find(i => i.category === 'Music' && i.title === name);
   const _navNeedsAuthorUpdate = !author.imageUrl || isItunesArtworkUrl(author.imageUrl) || !author.bio;
   const _navNeedsItemUpdate = _navMusicianItem && (!_navMusicianItem.imageUrl || isItunesArtworkUrl(_navMusicianItem.imageUrl));
-  if (category === 'Musician' && (_navNeedsAuthorUpdate || _navNeedsItemUpdate)) {
+  if (category === 'Music' && (_navNeedsAuthorUpdate || _navNeedsItemUpdate)) {
     ensureArtistWikipediaInfo(name).then(({ bio, photoUrl }) => {
       let changed = false;
       if (applyArtistPhotoToItem(author, photoUrl)) changed = true;
@@ -270,17 +270,17 @@ export async function navigateToAuthor(name, category) {
 // detail modal — used when clicking an artist's own name on their own album page, where
 // navigating to the page you're already on wouldn't make sense.
 export function resolveMusicianItem(name) {
-  const personal = state.items.find(i => i.category === 'Musician' && i.title === name);
+  const personal = state.items.find(i => i.category === 'Music' && i.title === name);
   if (personal) return personal;
   for (const genre of Object.keys(CURATED_ITEMS)) {
-    const curated = (CURATED_ITEMS[genre]['Musician'] || []).find(m => m.title === name);
-    if (curated) return { ...curated, category: 'Musician', curated: true, done: false, savedAt: 0, folderId: null };
+    const curated = (CURATED_ITEMS[genre]['Music'] || []).find(m => m.title === name);
+    if (curated) return { ...curated, category: 'Music', curated: true, done: false, savedAt: 0, folderId: null };
   }
-  const author = findAuthor(name, 'Musician');
+  const author = findAuthor(name, 'Music');
   return {
     id: `virtual-author-${name}`,
     title: name,
-    category: 'Musician',
+    category: 'Music',
     author: null,
     url: author?.websiteUrl || null,
     imageUrl: author?.imageUrl || null,
@@ -295,17 +295,17 @@ export function resolveMusicianItem(name) {
 
 // Finds already-known Music Album items for an artist — personal saves plus curated entries —
 // for the Albums accordion in the Musician quick-preview modal. Mirrors the same two lookups
-// getFilteredSortedItems() already does for the author:Musician:<name> full-page view.
+// getFilteredSortedItems() already does for the author:Music:<name> full-page view.
 export function getKnownAlbumsForArtist(name) {
-  const personal = state.items.filter(i => i.category === 'Music Album' && i.author === name);
+  const personal = state.items.filter(i => i.category === 'Albums' && i.author === name);
   const existingIds = new Set(personal.map(i => i.id));
   const curated = [];
   for (const genre of Object.keys(CURATED_ITEMS)) {
-    (CURATED_ITEMS[genre]['Music Album'] || [])
+    (CURATED_ITEMS[genre]['Albums'] || [])
       .filter(i => i.notes === name && !state.hiddenCurated.has(i.id) && !existingIds.has(i.id))
       .forEach(i => {
         const override = state.curatedOverrides[i.id] || {};
-        curated.push({ ...i, ...override, category: 'Music Album', curated: true, done: false, savedAt: 0, folderId: null });
+        curated.push({ ...i, ...override, category: 'Albums', curated: true, done: false, savedAt: 0, folderId: null });
       });
   }
   return [...personal, ...curated];
@@ -333,7 +333,7 @@ export async function backfillAlbumYears(artistName, items) {
   if (_albumYearBackfillAttempted.has(key)) return;
   // Also backfills collectionId (needed for the Song List accordion's iTunes track lookup) —
   // reuses this same per-artist iTunes search rather than adding a second network pass.
-  const missing = items.filter(i => i.category === 'Music Album' && (!i.year || !i.collectionId));
+  const missing = items.filter(i => i.category === 'Albums' && (!i.year || !i.collectionId));
   if (missing.length === 0) return;
   _albumYearBackfillAttempted.add(key);
   let albums;
@@ -362,7 +362,7 @@ export async function backfillAlbumYears(artistName, items) {
     }
     changed = true;
   }
-  if (changed && state.view === `author:Musician:${artistName}`) renderAuthorPage();
+  if (changed && state.view === `author:Music:${artistName}`) renderAuthorPage();
 }
 
 // Resolves an iTunes collectionId for a Music Album item so its track list can be looked up.

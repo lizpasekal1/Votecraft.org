@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SaveCraft — Category Rename Migration</title>
+<style>
+  body { font-family: monospace; max-width: 700px; margin: 40px auto; padding: 20px; background: #111; color: #ddd; }
+  h1 { color: #7C6FF5; }
+  button { background: #7C6FF5; color: #fff; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  #log { margin-top: 20px; background: #1a1a1a; border: 1px solid #333; padding: 12px; border-radius: 6px; max-height: 500px; overflow-y: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.5; }
+  .ok { color: #4ade80; } .err { color: #f87171; } .info { color: #60a5fa; } .warn { color: #ffaa00; }
+  .warning { background: #332200; border: 1px solid #aa5500; border-radius: 6px; padding: 12px; margin-bottom: 20px; color: #ffaa00; }
+</style>
+</head>
+<body>
+<h1>SaveCraft — Category Rename Migration</h1>
+
+<div class="warning">
+  This PATCHES existing <code>curated_items</code> docs in place (Firestore <code>update()</code>,
+  not a full re-seed) — it only ever touches the <code>category</code> field, never
+  <code>title</code>/<code>url</code>/<code>imageUrl</code>/<code>notes</code>/<code>folderId</code>.
+  It also PATCHES <code>curated_lists</code> docs' <code>enabledCategories</code> array and each
+  entry's <code>category</code> field inside <code>rows</code> (leaving <code>label</code>/
+  <code>titles</code> untouched). Requires an already-signed-in browser session as
+  <code>lizpasekal@gmail.com</code> in this browser (same account used for SaveCraft/the other seed
+  and migration tools) — the Firestore rules already allow that account to write
+  curated_items/curated_lists/curated_topics, same as
+  <code>scripts/migrate-curated-categories.html</code>, which this tool is modeled closely on.
+  This does NOT touch <code>curated_topics</code> — nothing in that collection carries a category
+  string.
+</div>
+
+<p>1. Sign in with your Firebase account in this browser (open the real SaveCraft app once if you
+haven't recently). 2. Click Preview to see exactly what would change with zero writes. 3. Click Run
+to actually apply it.</p>
+<button id="btn-preview">Preview (read-only)</button>
+<button id="btn-run" disabled>Run (writes)</button>
+
+<div id="log"></div>
+
+<!-- Firebase compat SDK (OK for a local one-off tool — not the extension) -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyArJ6pkXUDbZf4jcxRita0qcdr-hT46kI8",
+  authDomain: "votecraft-789.firebaseapp.com",
+  projectId: "votecraft-789",
+  storageBucket: "votecraft-789.firebasestorage.app",
+  messagingSenderId: "939909708303",
+  appId: "1:939909708303:web:b0663ec86e15c05b3a817a",
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const logEl = document.getElementById('log');
+function log(msg, cls = '') {
+  const line = document.createElement('div');
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// The internal content-category rename applied everywhere in this pass — state.js's
+// CATEGORIES/CAT_LABEL, storage.js's _CAT_NORMALIZE + CAT_MIGRATION + the one-time
+// savecraft_category_rename_migrated migration for personal data, and this tool for the shared
+// curated_items/curated_lists collections. Maps both the current OLD singular category name AND
+// the legacy stale plural spellings storage.js's own _CAT_NORMALIZE already knows how to read at
+// runtime (same scope — see that table's own comment for exactly which spellings) directly to the
+// NEW final name, single hop, never chained.
+const RENAME_MAP = {
+  // OLD singular -> NEW
+  'Movie': 'Films', 'Show': 'Series', 'Musician': 'Music', 'Music Album': 'Albums',
+  'Book': 'Literature', 'Game': 'Games', 'Web Links': 'Sources', 'Visual Art': 'Arts',
+  // Legacy stale plurals (same scope as storage.js's _CAT_NORMALIZE) -> NEW, directly
+  'Movies': 'Films', 'Books': 'Literature', 'Games': 'Games',
+  'Shows': 'Series', 'Musicians': 'Music', 'Music Albums': 'Albums',
+};
+// NOTE: deliberately no entry for raw "Music" (no "Album") — same legacy-duplicate-of-Musicians
+// bucket storage.js's _CAT_NORMALIZE comment documents (101 curated_items docs, genre "Top 100",
+// titles are artist names, not albums — originally left out of the older
+// migrate-curated-categories.html tool's own CAT_NORMALIZE/SKIP_CATEGORY for the same reason).
+// "Music" is ALSO the NEW final name this same rename gives to what used to be "Musician" —
+// RENAME_MAP has no "Music" key (it's a rename target, never a raw source here), so any doc
+// already literally carrying category "Music" is correctly left untouched by this tool, exactly
+// like the original tool's SKIP_CATEGORY did, rather than being force-merged into the real
+// Music/Musician bucket this migration is about to populate.
+const BATCH_SIZE = 400;
+
+// Computes a curated_items doc's update (or null if it needs none).
+function planItemUpdate(data) {
+  const newCat = RENAME_MAP[data.category];
+  if (!newCat) return null;
+  return { category: newCat };
+}
+
+// Computes a curated_lists doc's update (or null if it needs none) — renames every OLD entry in
+// enabledCategories, and every row's `category`, leaving `label`/`titles` and everything else on
+// the doc untouched. Firestore's update() can't patch individual array elements in place, so a
+// changed field is rewritten as a whole array — harmless, since the only thing that ever differs
+// per element is the renamed category string.
+function planListUpdate(data) {
+  const update = {};
+  if (Array.isArray(data.enabledCategories)) {
+    const renamed = data.enabledCategories.map(c => RENAME_MAP[c] || c);
+    if (renamed.some((c, i) => c !== data.enabledCategories[i])) update.enabledCategories = renamed;
+  }
+  if (Array.isArray(data.rows)) {
+    let rowsChanged = false;
+    const renamedRows = data.rows.map(row => {
+      const newCat = RENAME_MAP[row.category];
+      if (newCat) { rowsChanged = true; return { ...row, category: newCat }; }
+      return row;
+    });
+    if (rowsChanged) update.rows = renamedRows;
+  }
+  return Object.keys(update).length ? update : null;
+}
+
+// Computes what every doc's update should be (or nothing, if it needs none) across both
+// collections — shared by preview and run so they can never disagree about what "would happen".
+async function collectPlannedUpdates() {
+  const [itemsSnap, listsSnap] = await Promise.all([
+    db.collection('curated_items').get(),
+    db.collection('curated_lists').get(),
+  ]);
+  log(`Read ${itemsSnap.size} curated_items docs and ${listsSnap.size} curated_lists docs.`, 'info');
+
+  const planned = [];
+  itemsSnap.forEach(doc => {
+    const update = planItemUpdate(doc.data());
+    if (update) planned.push({ collection: 'curated_items', ref: doc.ref, id: doc.id, update, before: doc.data() });
+  });
+  listsSnap.forEach(doc => {
+    const update = planListUpdate(doc.data());
+    if (update) planned.push({ collection: 'curated_lists', ref: doc.ref, id: doc.id, update, before: doc.data() });
+  });
+  return { itemsTotal: itemsSnap.size, listsTotal: listsSnap.size, planned };
+}
+
+async function preview() {
+  const { itemsTotal, listsTotal, planned } = await collectPlannedUpdates();
+  const itemPlanned = planned.filter(p => p.collection === 'curated_items');
+  const listPlanned = planned.filter(p => p.collection === 'curated_lists');
+
+  log(`${itemsTotal} total curated_items — ${itemPlanned.length} would have their category renamed.`, 'info');
+  log(`${listsTotal} total curated_lists — ${listPlanned.length} would have enabledCategories/rows renamed.`, 'info');
+
+  itemPlanned.slice(0, 15).forEach(p => {
+    log(`  [curated_items] ${p.id}: category "${p.before.category}" -> "${p.update.category}"`);
+  });
+  if (itemPlanned.length > 15) log(`  … and ${itemPlanned.length - 15} more curated_items`);
+
+  listPlanned.forEach(p => {
+    const parts = [];
+    if (p.update.enabledCategories) {
+      parts.push(`enabledCategories ${JSON.stringify(p.before.enabledCategories)} -> ${JSON.stringify(p.update.enabledCategories)}`);
+    }
+    if (p.update.rows) {
+      parts.push(`row categories ${JSON.stringify(p.before.rows.map(r => r.category))} -> ${JSON.stringify(p.update.rows.map(r => r.category))}`);
+    }
+    log(`  [curated_lists] ${p.id}: ${parts.join('; ')}`);
+  });
+
+  log('', '');
+  log(planned.length ? 'Preview only — no writes made. Click Run to apply.' : 'Nothing to change.', 'ok');
+  document.getElementById('btn-run').disabled = planned.length === 0;
+}
+
+async function run() {
+  const { planned } = await collectPlannedUpdates();
+  if (!planned.length) { log('Nothing to change.', 'ok'); return; }
+
+  log(`Writing ${planned.length} updates…`, 'info');
+  for (let i = 0; i < planned.length; i += BATCH_SIZE) {
+    const slice = planned.slice(i, i + BATCH_SIZE);
+    const batch = db.batch();
+    for (const p of slice) batch.update(p.ref, p.update);
+    await batch.commit();
+    log(`  ✓ ${Math.min(i + BATCH_SIZE, planned.length)} / ${planned.length} written`, 'ok');
+  }
+
+  const itemCount = planned.filter(p => p.collection === 'curated_items').length;
+  const listCount = planned.filter(p => p.collection === 'curated_lists').length;
+  log('', '');
+  log(`✅ Done. ${itemCount} curated_items + ${listCount} curated_lists docs updated.`, 'ok');
+  log('_CURATED_CACHE_VERSION in storage.js has already been bumped (12 -> 13) as part of this same', 'info');
+  log('rename pass, so once that\'s deployed, clients will drop their stale pre-rename curated_items', 'info');
+  log('cache automatically instead of serving old category names for up to 24h.', 'info');
+  log('NOTE: curated_lists/curated_topics are cached separately, under their own', 'info');
+  log('_CURATED_CMS_CACHE_VERSION in storage.js — also already bumped (1 -> 2) as part of this same', 'info');
+  log('rename pass, so already-warm clients pick up the renamed enabledCategories/rows on their next', 'info');
+  log('load instead of serving the stale cache for up to 24h.', 'info');
+}
+
+document.getElementById('btn-preview').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-preview');
+  btn.disabled = true;
+  logEl.textContent = '';
+  try { await preview(); }
+  catch (e) { log('Error: ' + e.message, 'err'); }
+  finally { btn.disabled = false; }
+});
+
+document.getElementById('btn-run').addEventListener('click', async () => {
+  if (!confirm('This will write to production Firestore. Continue?')) return;
+  const runBtn = document.getElementById('btn-run');
+  runBtn.disabled = true;
+  document.getElementById('btn-preview').disabled = true;
+  logEl.textContent = '';
+  try { await run(); }
+  catch (e) { log('Error: ' + e.message, 'err'); }
+  finally { document.getElementById('btn-preview').disabled = false; }
+});
+</script>
+</body>
+</html>

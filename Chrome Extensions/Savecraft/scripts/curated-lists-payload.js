@@ -25,14 +25,14 @@
  *       folderId  = a default-* folder id for that category (storage.js `defaults`), or ""
  *
  * FOLDER IDS by category (from storage.js `defaults`):
- *   Movie:      default-movies-movies | default-movies-videos | default-movies-directors | default-movies-series
- *   Show:       default-shows-podcasts | default-shows-webseries | default-shows-tutorials | default-shows-shortform
- *   Book:       default-books-books | default-books-authors | default-books-pdfs | default-books-quotes
- *   Web Links:  default-weblinks-websites | default-weblinks-articles | default-weblinks-blogs | default-weblinks-publications
- *   Musician:   default-musicians-musicians
- *   Music Album:default-music-albums | default-music-playlists
- *   Game:       default-games-console | default-games-board | default-games-mobile | default-games-companies
- *   Visual Art: default-art-artists | default-art-dance | default-art-comics | default-art-memes
+ *   Films:      default-movies-movies | default-movies-videos | default-movies-directors | default-movies-series
+ *   Series:     default-shows-podcasts | default-shows-webseries | default-shows-tutorials | default-shows-shortform
+ *   Literature: default-books-books | default-books-authors | default-books-pdfs | default-books-quotes
+ *   Sources:    default-weblinks-websites | default-weblinks-articles | default-weblinks-blogs | default-weblinks-publications
+ *   Music:      default-musicians-musicians
+ *   Albums:     default-music-albums | default-music-playlists
+ *   Games:      default-games-console | default-games-board | default-games-mobile | default-games-companies
+ *   Arts:       default-art-artists | default-art-dance | default-art-comics | default-art-memes
  * =================================================================================== */
 
 window.CURATED_LISTS_PAYLOAD = {
@@ -66,11 +66,11 @@ window.CURATED_LISTS_PAYLOAD = {
       wordmarkUrl: '',
       iconUrl: '',
       coverUrl: '',
-      enabledCategories: ['Movie', 'Web Links'],
+      enabledCategories: ['Films', 'Sources'],
       topics: ['ranked-choice-voting'],
       rows: [
-        { category: 'Movie', label: 'Videos' },
-        { category: 'Web Links', label: 'Resources' },
+        { category: 'Films', label: 'Videos' },
+        { category: 'Sources', label: 'Resources' },
       ],
       published: true,
     },
@@ -116,13 +116,13 @@ window.CURATED_LISTS_PAYLOAD = {
   ],
 };
 
-// One FairVote YouTube video → a FairVote › Movie › Videos item.
+// One FairVote YouTube video → a FairVote › Films › Videos item.
 function _yt(videoId, title) {
   return {
     docId: 'fairvote-movie-' + videoId,
     id: 'cur-fairvote-' + videoId,
     genre: 'fairvote',
-    category: 'Movie',
+    category: 'Films',
     folderId: 'default-movies-videos',
     title,
     url: 'https://www.youtube.com/watch?v=' + videoId,
@@ -131,13 +131,13 @@ function _yt(videoId, title) {
   };
 }
 
-// One FairVote resource page → a FairVote › Web Links › Articles item.
+// One FairVote resource page → a FairVote › Sources › Articles item.
 function _src(slug, title, url) {
   return {
     docId: 'fairvote-weblinks-' + slug,
     id: 'cur-fairvote-' + slug,
     genre: 'fairvote',
-    category: 'Web Links',
+    category: 'Sources',
     folderId: 'default-weblinks-articles',
     title,
     url,

@@ -25,8 +25,8 @@ export function openDetailModal(item) {
   document.getElementById('detail-body').scrollTop = 0; // don't carry over a previous item's scroll position now that the title is sticky
 
   const domain = getDomain(item.url);
-  const isMusicAlbum = item.category === 'Music Album';
-  const isMusicianItem = item.category === 'Musician';
+  const isMusicAlbum = item.category === 'Albums';
+  const isMusicianItem = item.category === 'Music';
 
   const { ctaAuthorName, ctaAuthor } = setupHeader(item, { domain, isMusicAlbum, isMusicianItem });
   setupSummary(item, { isMusicAlbum, isMusicianItem, ctaAuthorName, ctaAuthor });

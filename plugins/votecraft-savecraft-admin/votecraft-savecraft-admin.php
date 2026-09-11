@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'VC_SAVECRAFT_ADMIN_VERSION', '1.3' );
+define( 'VC_SAVECRAFT_ADMIN_VERSION', '1.4' );
 define( 'VC_SAVECRAFT_ADMIN_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'VC_SAVECRAFT_ADMIN_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
@@ -236,10 +236,10 @@ function vc_savecraft_render_tab_demo_content() {
                 <td><input type="text" id="vc-savecraft-demo-qk-title" class="regular-text" placeholder="Drag to progress"></td></tr>
             <tr><th><label for="vc-savecraft-demo-qk-category">Category</label></th>
                 <td><select id="vc-savecraft-demo-qk-category">
-                    <option value="Book">Book</option><option value="Movie">Movie</option>
-                    <option value="Show">Show</option><option value="Game">Game</option>
-                    <option value="Musician">Musician</option><option value="Music Album">Music Album</option>
-                    <option value="Visual Art">Visual Art</option><option value="Web Links">Web Links</option>
+                    <option value="Literature">Literature</option><option value="Films">Films</option>
+                    <option value="Series">Series</option><option value="Games">Games</option>
+                    <option value="Music">Music</option><option value="Albums">Albums</option>
+                    <option value="Arts">Arts</option><option value="Sources">Sources</option>
                 </select></td></tr>
             <tr><th><label for="vc-savecraft-demo-qk-image">Image URL</label></th>
                 <td><input type="url" id="vc-savecraft-demo-qk-image" class="regular-text" placeholder="(optional)"></td></tr>
@@ -632,21 +632,21 @@ function vc_savecraft_admin_delete_card( $request ) {
 // Same values as state.js's CATEGORIES/CURATED_GENRES exports — kept in sync by hand since this
 // is server-side PHP with no access to the JS source; only used to validate incoming data, never
 // displayed, so a stale entry here would just reject a save rather than corrupt anything.
-const VC_SAVECRAFT_CATEGORIES = array( 'Web Links', 'Show', 'Musician', 'Music Album', 'Game', 'Movie', 'Book', 'Visual Art' );
+const VC_SAVECRAFT_CATEGORIES = array( 'Sources', 'Series', 'Music', 'Albums', 'Games', 'Films', 'Literature', 'Arts' );
 const VC_SAVECRAFT_CURATED_GENRES = array( 'Top 100', 'Futurism', 'Fantasy', 'Thriller', 'Pop', 'Classic', 'Jazz', 'Comedy' );
 
 // Mirror of storage.js's `defaults` seed — the built-in folder set per category. `_docId => label`.
 // Used to populate the folder/tab dropdown in the Curated Items screen and to validate an incoming
 // folderId. Same "kept in sync by hand" caveat as the two arrays above.
 const VC_SAVECRAFT_CATEGORY_FOLDERS = array(
-    'Web Links'   => array( 'default-weblinks-websites' => 'Websites', 'default-weblinks-articles' => 'Articles', 'default-weblinks-blogs' => 'News', 'default-weblinks-publications' => 'Publications' ),
-    'Show'        => array( 'default-shows-podcasts' => 'Podcasts', 'default-shows-webseries' => 'Web Series', 'default-shows-tutorials' => 'Tutorials', 'default-shows-shortform' => 'Short Form' ),
-    'Musician'    => array( 'default-musicians-musicians' => 'Musicians' ),
-    'Music Album' => array( 'default-music-albums' => 'Albums', 'default-music-playlists' => 'Playlists' ),
-    'Game'        => array( 'default-games-console' => 'Console Games', 'default-games-board' => 'Board Games', 'default-games-mobile' => 'Mobile Games', 'default-games-companies' => 'Game Companies' ),
-    'Movie'       => array( 'default-movies-movies' => 'Movies', 'default-movies-videos' => 'Videos', 'default-movies-directors' => 'Directors', 'default-movies-series' => 'Shows' ),
-    'Book'        => array( 'default-books-books' => 'Books', 'default-books-authors' => 'Authors', 'default-books-pdfs' => 'PDFs', 'default-books-quotes' => 'Quotes' ),
-    'Visual Art'  => array( 'default-art-artists' => 'Artists', 'default-art-dance' => 'Styles', 'default-art-comics' => 'Comics', 'default-art-memes' => 'Memes' ),
+    'Sources'     => array( 'default-weblinks-websites' => 'Websites', 'default-weblinks-articles' => 'Articles', 'default-weblinks-blogs' => 'News', 'default-weblinks-publications' => 'Publications' ),
+    'Series'      => array( 'default-shows-podcasts' => 'Podcasts', 'default-shows-webseries' => 'Web Series', 'default-shows-tutorials' => 'Tutorials', 'default-shows-shortform' => 'Short Form' ),
+    'Music'       => array( 'default-musicians-musicians' => 'Musicians' ),
+    'Albums'      => array( 'default-music-albums' => 'Albums', 'default-music-playlists' => 'Playlists' ),
+    'Games'       => array( 'default-games-console' => 'Console Games', 'default-games-board' => 'Board Games', 'default-games-mobile' => 'Mobile Games', 'default-games-companies' => 'Game Companies' ),
+    'Films'       => array( 'default-movies-movies' => 'Movies', 'default-movies-videos' => 'Videos', 'default-movies-directors' => 'Directors', 'default-movies-series' => 'Shows' ),
+    'Literature'  => array( 'default-books-books' => 'Books', 'default-books-authors' => 'Authors', 'default-books-pdfs' => 'PDFs', 'default-books-quotes' => 'Quotes' ),
+    'Arts'        => array( 'default-art-artists' => 'Artists', 'default-art-dance' => 'Styles', 'default-art-comics' => 'Comics', 'default-art-memes' => 'Memes' ),
 );
 
 function vc_savecraft_admin_get_demo_config( $request ) {
@@ -683,7 +683,7 @@ function vc_savecraft_admin_set_demo_config( $request ) {
             }
             $category = $c['category'] ?? '';
             if ( ! in_array( $category, VC_SAVECRAFT_CATEGORIES, true ) ) {
-                $category = 'Musician';
+                $category = 'Music';
             }
             $cards[] = array(
                 'id'       => sanitize_text_field( $c['id'] ?? ( 'demo-' . wp_generate_password( 8, false ) ) ),
@@ -735,8 +735,8 @@ function vc_savecraft_admin_curated_search( $request ) {
 // CATEGORIES -> sidebar label, mirror of state.js's CAT_LABEL (only the ones that differ from the
 // raw name need an entry; used to derive a list's `rows` from its enabledCategories).
 const VC_SAVECRAFT_CAT_LABEL = array(
-    'Web Links' => 'Sources', 'Book' => 'Literature', 'Game' => 'Games', 'Movie' => 'Films',
-    'Musician' => 'Music', 'Music Album' => 'Albums', 'Show' => 'Series', 'Visual Art' => 'Arts',
+    'Sources' => 'Sources', 'Literature' => 'Literature', 'Games' => 'Games', 'Films' => 'Films',
+    'Music' => 'Music', 'Albums' => 'Albums', 'Series' => 'Series', 'Arts' => 'Arts',
 );
 
 function vc_savecraft_wp_error_response( $err ) {
