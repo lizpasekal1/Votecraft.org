@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'VC_SAVECRAFT_ADMIN_VERSION', '1.1' );
+define( 'VC_SAVECRAFT_ADMIN_VERSION', '1.2' );
 define( 'VC_SAVECRAFT_ADMIN_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'VC_SAVECRAFT_ADMIN_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
@@ -96,6 +96,20 @@ function vc_savecraft_admin_assets( $hook ) {
         'restUrl' => esc_url_raw( rest_url( 'votecraft-savecraft/v1/' ) ),
         'nonce'   => wp_create_nonce( 'wp_rest' ),
     ) );
+
+    wp_enqueue_script(
+        'vc-savecraft-admin-curated',
+        VC_SAVECRAFT_ADMIN_PLUGIN_URL . 'admin/js/admin-curated.js',
+        array(),
+        VC_SAVECRAFT_ADMIN_VERSION,
+        true
+    );
+    wp_localize_script( 'vc-savecraft-admin-curated', 'vcSaveCraftCurated', array(
+        'restUrl'    => esc_url_raw( rest_url( 'votecraft-savecraft/v1/' ) ),
+        'nonce'      => wp_create_nonce( 'wp_rest' ),
+        'categories' => VC_SAVECRAFT_CATEGORIES,
+        'folders'    => VC_SAVECRAFT_CATEGORY_FOLDERS,
+    ) );
 }
 
 /* ─── Admin page shell — the board itself is rendered by admin-kanban.js from the REST data ─── */
@@ -166,6 +180,48 @@ function vc_savecraft_admin_page() {
         </details>
 
         <details class="votecraft-accordion">
+            <summary>🏛️ Curated Lists (nonprofits)</summary>
+            <div class="accordion-content">
+                <p class="description">
+                    One branded "Cause Curated" page per nonprofit. Each is reachable in the app at
+                    <code>genre:&lt;slug&gt;</code>. Pick which category tabs it shows and which shared
+                    topics it belongs to. Unpublished lists are ignored by the app.
+                </p>
+                <div id="vc-savecraft-curated-error" class="notice notice-error" style="display:none"></div>
+                <div id="vc-savecraft-curated-lists"><p>Loading…</p></div>
+                <p><button type="button" class="button" id="vc-savecraft-curated-list-add">+ Add Nonprofit List</button></p>
+            </div>
+        </details>
+
+        <details class="votecraft-accordion">
+            <summary>🏷️ Topics</summary>
+            <div class="accordion-content">
+                <p class="description">
+                    One shared-cause page per topic (app view <code>topic:&lt;slug&gt;</code>). Its page
+                    pools every published nonprofit list tagged with it. Tag lists from the Curated
+                    Lists section above.
+                </p>
+                <div id="vc-savecraft-topics-error" class="notice notice-error" style="display:none"></div>
+                <div id="vc-savecraft-topics"><p>Loading…</p></div>
+                <p><button type="button" class="button" id="vc-savecraft-topic-add">+ Add Topic</button></p>
+            </div>
+        </details>
+
+        <details class="votecraft-accordion">
+            <summary>📎 Curated Items</summary>
+            <div class="accordion-content">
+                <p class="description">Add, edit, and remove the resources inside a nonprofit list.</p>
+                <div id="vc-savecraft-items-error" class="notice notice-error" style="display:none"></div>
+                <p>
+                    <label for="vc-savecraft-items-list">List: </label>
+                    <select id="vc-savecraft-items-list"><option value="">— pick a list —</option></select>
+                </p>
+                <div id="vc-savecraft-items"></div>
+                <p><button type="button" class="button" id="vc-savecraft-item-add" disabled>+ Add Item</button></p>
+            </div>
+        </details>
+
+        <details class="votecraft-accordion">
             <summary>👥 Users</summary>
             <div class="accordion-content">
                 <p class="description">
@@ -228,6 +284,81 @@ function vc_savecraft_admin_register_routes() {
     register_rest_route( 'votecraft-savecraft/v1', '/curated-search', array(
         'methods'             => 'GET',
         'callback'            => 'vc_savecraft_admin_curated_search',
+        'permission_callback' => 'vc_savecraft_admin_permission_check',
+    ) );
+
+    // ── Curated Lists (curated_lists collection) ──
+    register_rest_route( 'votecraft-savecraft/v1', '/curated-lists', array(
+        'methods'             => 'GET',
+        'callback'            => 'vc_savecraft_admin_list_curated_lists',
+        'permission_callback' => 'vc_savecraft_admin_permission_check',
+    ) );
+    register_rest_route( 'votecraft-savecraft/v1', '/curated-lists/(?P<slug>[\w-]+)', array(
+        'methods'             => 'POST',
+        'callback'            => 'vc_savecraft_admin_upsert_curated_list',
+        'permission_callback' => 'vc_savecraft_admin_permission_check',
+        'args'                => array(
+            'slug' => array(
+                'required'          => true,
+                'validate_callback' => function ( $value ) {
+                    return is_string( $value ) && preg_match( '/^[\w-]+$/', $value );
+                },
+            ),
+        ),
+    ) );
+    register_rest_route( 'votecraft-savecraft/v1', '/curated-lists/(?P<slug>[\w-]+)', array(
+        'methods'             => 'DELETE',
+        'callback'            => 'vc_savecraft_admin_delete_curated_list',
+        'permission_callback' => 'vc_savecraft_admin_permission_check',
+    ) );
+
+    // ── Topics (curated_topics collection) ──
+    register_rest_route( 'votecraft-savecraft/v1', '/curated-topics', array(
+        'methods'             => 'GET',
+        'callback'            => 'vc_savecraft_admin_list_curated_topics',
+        'permission_callback' => 'vc_savecraft_admin_permission_check',
+    ) );
+    register_rest_route( 'votecraft-savecraft/v1', '/curated-topics/(?P<slug>[\w-]+)', array(
+        'methods'             => 'POST',
+        'callback'            => 'vc_savecraft_admin_upsert_curated_topic',
+        'permission_callback' => 'vc_savecraft_admin_permission_check',
+        'args'                => array(
+            'slug' => array(
+                'required'          => true,
+                'validate_callback' => function ( $value ) {
+                    return is_string( $value ) && preg_match( '/^[\w-]+$/', $value );
+                },
+            ),
+        ),
+    ) );
+    register_rest_route( 'votecraft-savecraft/v1', '/curated-topics/(?P<slug>[\w-]+)', array(
+        'methods'             => 'DELETE',
+        'callback'            => 'vc_savecraft_admin_delete_curated_topic',
+        'permission_callback' => 'vc_savecraft_admin_permission_check',
+    ) );
+
+    // ── Curated Items (curated_items collection, scoped to one list's genre) ──
+    register_rest_route( 'votecraft-savecraft/v1', '/curated-items', array(
+        'methods'             => 'GET',
+        'callback'            => 'vc_savecraft_admin_list_curated_items',
+        'permission_callback' => 'vc_savecraft_admin_permission_check',
+    ) );
+    register_rest_route( 'votecraft-savecraft/v1', '/curated-items/(?P<id>[\w-]+)', array(
+        'methods'             => 'POST',
+        'callback'            => 'vc_savecraft_admin_upsert_curated_item',
+        'permission_callback' => 'vc_savecraft_admin_permission_check',
+        'args'                => array(
+            'id' => array(
+                'required'          => true,
+                'validate_callback' => function ( $value ) {
+                    return is_string( $value ) && preg_match( '/^[\w-]+$/', $value );
+                },
+            ),
+        ),
+    ) );
+    register_rest_route( 'votecraft-savecraft/v1', '/curated-items/(?P<id>[\w-]+)', array(
+        'methods'             => 'DELETE',
+        'callback'            => 'vc_savecraft_admin_delete_curated_item',
         'permission_callback' => 'vc_savecraft_admin_permission_check',
     ) );
 }
@@ -300,6 +431,20 @@ function vc_savecraft_admin_delete_card( $request ) {
 // displayed, so a stale entry here would just reject a save rather than corrupt anything.
 const VC_SAVECRAFT_CATEGORIES = array( 'Web Links', 'Show', 'Musician', 'Music Album', 'Game', 'Movie', 'Book', 'Visual Art' );
 const VC_SAVECRAFT_CURATED_GENRES = array( 'Top 100', 'Futurism', 'Fantasy', 'Thriller', 'Pop', 'Classic', 'Jazz', 'Comedy' );
+
+// Mirror of storage.js's `defaults` seed — the built-in folder set per category. `_docId => label`.
+// Used to populate the folder/tab dropdown in the Curated Items screen and to validate an incoming
+// folderId. Same "kept in sync by hand" caveat as the two arrays above.
+const VC_SAVECRAFT_CATEGORY_FOLDERS = array(
+    'Web Links'   => array( 'default-weblinks-websites' => 'Websites', 'default-weblinks-articles' => 'Articles', 'default-weblinks-blogs' => 'News', 'default-weblinks-publications' => 'Publications' ),
+    'Show'        => array( 'default-shows-podcasts' => 'Podcasts', 'default-shows-webseries' => 'Web Series', 'default-shows-tutorials' => 'Tutorials', 'default-shows-shortform' => 'Short Form' ),
+    'Musician'    => array( 'default-musicians-musicians' => 'Musicians' ),
+    'Music Album' => array( 'default-music-albums' => 'Albums', 'default-music-playlists' => 'Playlists' ),
+    'Game'        => array( 'default-games-console' => 'Console Games', 'default-games-board' => 'Board Games', 'default-games-mobile' => 'Mobile Games', 'default-games-companies' => 'Game Companies' ),
+    'Movie'       => array( 'default-movies-movies' => 'Movies', 'default-movies-videos' => 'Videos', 'default-movies-directors' => 'Directors', 'default-movies-series' => 'Shows' ),
+    'Book'        => array( 'default-books-books' => 'Books', 'default-books-authors' => 'Authors', 'default-books-pdfs' => 'PDFs', 'default-books-quotes' => 'Quotes' ),
+    'Visual Art'  => array( 'default-art-artists' => 'Artists', 'default-art-dance' => 'Styles', 'default-art-comics' => 'Comics', 'default-art-memes' => 'Memes' ),
+);
 
 function vc_savecraft_admin_get_demo_config( $request ) {
     $doc_id = $request->get_param( 'doc' );
@@ -376,4 +521,209 @@ function vc_savecraft_admin_curated_search( $request ) {
         return new WP_REST_Response( array( 'message' => $items->get_error_message() ), 502 );
     }
     return new WP_REST_Response( $items, 200 );
+}
+
+/* ─── Curated CMS: nonprofit lists, shared topics, and their items ─────────────────────────────
+   All three collections are written through the same bot account isSaveCraftAdmin() covers. The
+   permission callback is the shared VC_SAVECRAFT_ADMIN_CAPABILITY check; a per-list ownership
+   check for a future scoped "Curated Partner" role slots into vc_savecraft_curated_item_can_edit()
+   below without touching anything else. ─── */
+
+// CATEGORIES -> sidebar label, mirror of state.js's CAT_LABEL (only the ones that differ from the
+// raw name need an entry; used to derive a list's `rows` from its enabledCategories).
+const VC_SAVECRAFT_CAT_LABEL = array(
+    'Web Links' => 'Sources', 'Book' => 'Literature', 'Game' => 'Games', 'Movie' => 'Films',
+    'Musician' => 'Music', 'Music Album' => 'Albums', 'Show' => 'Series', 'Visual Art' => 'Arts',
+);
+
+function vc_savecraft_wp_error_response( $err ) {
+    return new WP_REST_Response( array( 'message' => $err->get_error_message() ), 502 );
+}
+
+/* ── curated_lists ── */
+
+function vc_savecraft_admin_list_curated_lists( $request ) {
+    $rows = VC_SaveCraft_Firestore_Client::list_collection( 'curated_lists' );
+    return is_wp_error( $rows ) ? vc_savecraft_wp_error_response( $rows ) : new WP_REST_Response( $rows, 200 );
+}
+
+function vc_savecraft_admin_upsert_curated_list( $request ) {
+    $slug = $request->get_param( 'slug' );
+    $body = $request->get_json_params();
+    if ( ! is_array( $body ) ) {
+        return new WP_REST_Response( array( 'message' => 'Invalid request body.' ), 400 );
+    }
+
+    $enabled = array();
+    foreach ( (array) ( $body['enabledCategories'] ?? array() ) as $c ) {
+        if ( in_array( $c, VC_SAVECRAFT_CATEGORIES, true ) && ! in_array( $c, $enabled, true ) ) {
+            $enabled[] = $c;
+        }
+    }
+    $topics = array();
+    foreach ( (array) ( $body['topics'] ?? array() ) as $t ) {
+        if ( is_string( $t ) && preg_match( '/^[\w-]+$/', $t ) ) {
+            $topics[] = $t;
+        }
+    }
+    // rows are always derived from enabledCategories so the app's landing page matches the tabs.
+    $rows = array();
+    foreach ( $enabled as $c ) {
+        $rows[] = array( 'category' => $c, 'label' => VC_SAVECRAFT_CAT_LABEL[ $c ] ?? $c );
+    }
+
+    $wp_owner = isset( $body['wpOwnerUserId'] ) && $body['wpOwnerUserId'] !== '' ? (int) $body['wpOwnerUserId'] : null;
+    $client_owner = isset( $body['clientOwnerUid'] ) && $body['clientOwnerUid'] !== '' ? sanitize_text_field( $body['clientOwnerUid'] ) : null;
+
+    $fields = array(
+        'name'              => sanitize_text_field( $body['name'] ?? '' ),
+        'slug'              => $slug,
+        'shortName'         => sanitize_text_field( $body['shortName'] ?? '' ),
+        'headline'          => sanitize_text_field( $body['headline'] ?? '' ),
+        'description'       => sanitize_textarea_field( $body['description'] ?? '' ),
+        'wordmarkUrl'       => ! empty( $body['wordmarkUrl'] ) ? esc_url_raw( $body['wordmarkUrl'] ) : '',
+        'iconUrl'          => ! empty( $body['iconUrl'] ) ? esc_url_raw( $body['iconUrl'] ) : '',
+        'coverUrl'         => ! empty( $body['coverUrl'] ) ? esc_url_raw( $body['coverUrl'] ) : '',
+        'enabledCategories' => $enabled,
+        'topics'           => $topics,
+        'rows'             => $rows,
+        'published'        => ! empty( $body['published'] ),
+        'wpOwnerUserId'    => $wp_owner,
+        'clientOwnerUid'   => $client_owner,
+    );
+
+    $result = VC_SaveCraft_Firestore_Client::upsert_doc( 'curated_lists', $slug, $fields );
+    if ( is_wp_error( $result ) ) {
+        return vc_savecraft_wp_error_response( $result );
+    }
+    $fields['_docId'] = $slug;
+    return new WP_REST_Response( $fields, 200 );
+}
+
+function vc_savecraft_admin_delete_curated_list( $request ) {
+    $slug = $request->get_param( 'slug' );
+    $result = VC_SaveCraft_Firestore_Client::delete_doc( 'curated_lists', $slug );
+    return is_wp_error( $result ) ? vc_savecraft_wp_error_response( $result ) : new WP_REST_Response( array( 'deleted' => $slug ), 200 );
+}
+
+/* ── curated_topics ── */
+
+function vc_savecraft_admin_list_curated_topics( $request ) {
+    $rows = VC_SaveCraft_Firestore_Client::list_collection( 'curated_topics' );
+    return is_wp_error( $rows ) ? vc_savecraft_wp_error_response( $rows ) : new WP_REST_Response( $rows, 200 );
+}
+
+function vc_savecraft_admin_upsert_curated_topic( $request ) {
+    $slug = $request->get_param( 'slug' );
+    $body = $request->get_json_params();
+    if ( ! is_array( $body ) ) {
+        return new WP_REST_Response( array( 'message' => 'Invalid request body.' ), 400 );
+    }
+    $fields = array(
+        'name'        => sanitize_text_field( $body['name'] ?? '' ),
+        'slug'        => $slug,
+        'shortName'   => sanitize_text_field( $body['shortName'] ?? '' ),
+        'headline'    => sanitize_text_field( $body['headline'] ?? '' ),
+        'description' => sanitize_textarea_field( $body['description'] ?? '' ),
+        'iconUrl'    => ! empty( $body['iconUrl'] ) ? esc_url_raw( $body['iconUrl'] ) : '',
+        'coverUrl'   => ! empty( $body['coverUrl'] ) ? esc_url_raw( $body['coverUrl'] ) : '',
+        'published'  => ! empty( $body['published'] ),
+    );
+    $result = VC_SaveCraft_Firestore_Client::upsert_doc( 'curated_topics', $slug, $fields );
+    if ( is_wp_error( $result ) ) {
+        return vc_savecraft_wp_error_response( $result );
+    }
+    $fields['_docId'] = $slug;
+    return new WP_REST_Response( $fields, 200 );
+}
+
+function vc_savecraft_admin_delete_curated_topic( $request ) {
+    $slug = $request->get_param( 'slug' );
+    $result = VC_SaveCraft_Firestore_Client::delete_doc( 'curated_topics', $slug );
+    return is_wp_error( $result ) ? vc_savecraft_wp_error_response( $result ) : new WP_REST_Response( array( 'deleted' => $slug ), 200 );
+}
+
+/* ── curated_items (scoped to one list) ── */
+
+// Loads a curated_lists doc, or a WP_Error. Cached per-request.
+function vc_savecraft_get_curated_list( $slug ) {
+    static $cache = array();
+    if ( ! array_key_exists( $slug, $cache ) ) {
+        $cache[ $slug ] = VC_SaveCraft_Firestore_Client::get_doc( 'curated_lists', $slug );
+    }
+    return $cache[ $slug ];
+}
+
+// Future-proofing seam: today this is just the shared capability, but a scoped "Curated Partner"
+// (Phase 2) would additionally require ( (int) $list['wpOwnerUserId'] === get_current_user_id() ).
+function vc_savecraft_curated_item_can_edit( $list ) {
+    return current_user_can( VC_SAVECRAFT_ADMIN_CAPABILITY );
+}
+
+function vc_savecraft_admin_list_curated_items( $request ) {
+    $slug = sanitize_text_field( $request->get_param( 'list' ) ?? '' );
+    if ( $slug === '' ) {
+        return new WP_REST_Response( array( 'message' => 'Missing ?list=<slug>.' ), 400 );
+    }
+    $items = VC_SaveCraft_Firestore_Client::list_curated_items_for_genre( $slug );
+    return is_wp_error( $items ) ? vc_savecraft_wp_error_response( $items ) : new WP_REST_Response( $items, 200 );
+}
+
+function vc_savecraft_admin_upsert_curated_item( $request ) {
+    $id   = $request->get_param( 'id' );
+    $body = $request->get_json_params();
+    if ( ! is_array( $body ) ) {
+        return new WP_REST_Response( array( 'message' => 'Invalid request body.' ), 400 );
+    }
+
+    $list_slug = sanitize_text_field( $body['list'] ?? '' );
+    $list = vc_savecraft_get_curated_list( $list_slug );
+    if ( is_wp_error( $list ) ) {
+        return vc_savecraft_wp_error_response( $list );
+    }
+    if ( ! $list ) {
+        return new WP_REST_Response( array( 'message' => 'Unknown list "' . $list_slug . '".' ), 400 );
+    }
+    if ( ! vc_savecraft_curated_item_can_edit( $list ) ) {
+        return new WP_REST_Response( array( 'message' => 'Not allowed to edit this list.' ), 403 );
+    }
+
+    $enabled  = (array) ( $list['enabledCategories'] ?? array() );
+    $category = $body['category'] ?? '';
+    if ( ! in_array( $category, $enabled, true ) ) {
+        return new WP_REST_Response( array( 'message' => 'Category "' . $category . '" is not enabled for this list.' ), 400 );
+    }
+
+    $folder_id = $body['folderId'] ?? '';
+    $valid_folders = VC_SAVECRAFT_CATEGORY_FOLDERS[ $category ] ?? array();
+    if ( $folder_id !== '' && ! isset( $valid_folders[ $folder_id ] ) ) {
+        $folder_id = '';
+    }
+
+    $fields = array(
+        'id'       => $id,
+        'genre'    => $list_slug,          // == the list's slug; forced, never taken from the body
+        'category' => $category,
+        'folderId' => $folder_id,
+        'title'    => sanitize_text_field( $body['title'] ?? '' ),
+        'url'      => ! empty( $body['url'] ) ? esc_url_raw( $body['url'] ) : '',
+        'imageUrl' => ! empty( $body['imageUrl'] ) ? esc_url_raw( $body['imageUrl'] ) : '',
+        'notes'    => sanitize_textarea_field( $body['notes'] ?? '' ),
+    );
+
+    $result = VC_SaveCraft_Firestore_Client::upsert_doc( 'curated_items', $id, $fields );
+    if ( is_wp_error( $result ) ) {
+        return vc_savecraft_wp_error_response( $result );
+    }
+    $fields['_docId'] = $id;
+    return new WP_REST_Response( $fields, 200 );
+}
+
+function vc_savecraft_admin_delete_curated_item( $request ) {
+    $id = $request->get_param( 'id' );
+    // A DELETE has no body; scope-check via the doc's own genre would need a fetch. For the demo
+    // (admin-only) the shared capability check on the route is sufficient; Phase 2's scoped role
+    // adds a get_doc()+ownership check here.
+    $result = VC_SaveCraft_Firestore_Client::delete_doc( 'curated_items', $id );
+    return is_wp_error( $result ) ? vc_savecraft_wp_error_response( $result ) : new WP_REST_Response( array( 'deleted' => $id ), 200 );
 }

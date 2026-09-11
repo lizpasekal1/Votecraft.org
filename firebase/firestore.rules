@@ -31,12 +31,35 @@ service cloud.firestore {
     }
 
     // -----------------------------------------------------------------------
-    // SaveCraft — curated library (public read, admin-console write only)
+    // SaveCraft — curated library
     // -----------------------------------------------------------------------
 
+    // curated_items is now managed from the WordPress "SaveCraft Admin" plugin (the Curated Items
+    // screen), which writes through the same bot account isSaveCraftAdmin() already covers for
+    // admin_kanban_cards / dashboard_demo_config — so `write: if false` (Firebase-console-only)
+    // became `if isSaveCraftAdmin()`. App clients never write this collection directly today; a
+    // later phase adds a narrower per-list write for a partner org's own SaveCraft account.
     match /curated_items/{doc} {
       allow read:  if true;
-      allow write: if false;  // edit via Firebase console only
+      allow write: if isSaveCraftAdmin();
+    }
+
+    // curated_lists — one doc per curated partner "account" (id == the partner slug, e.g.
+    // `fairvote`): profile copy, logo URLs, which category tabs are enabled, which topics it
+    // belongs to, publish flag, and owner fields for the later per-org handoff. Public-read (every
+    // visitor's genre landing page reads it, same as curated_items), written only by the plugin's
+    // bot via the Curated Lists screen.
+    match /curated_lists/{doc} {
+      allow read:  if true;
+      allow write: if isSaveCraftAdmin();
+    }
+
+    // curated_topics — one doc per shared cause (id == the topic slug, e.g.
+    // `ranked-choice-voting`): hero copy for the aggregate page that pools every curated_lists
+    // doc tagged with this topic. Public-read, plugin-bot write, same as curated_lists.
+    match /curated_topics/{doc} {
+      allow read:  if true;
+      allow write: if isSaveCraftAdmin();
     }
 
     match /curated_genres/{doc} {
