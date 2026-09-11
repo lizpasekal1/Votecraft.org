@@ -9,6 +9,11 @@
 
   var CFG = window.vcSaveCraftCurated || {};
   var CATEGORIES = CFG.categories || [];
+  var CAT_LABELS = CFG.categoryLabels || {}; // { [category]: friendly display name } — e.g.
+    // "Web Links" -> "Sources", matching the same labels the SaveCraft app itself shows (its own
+    // sidebar/Profile category list) — see listFormHtml()'s catBoxes below. The raw category KEY
+    // is still what's stored in enabledCategories (it has to match state.js's CATEGORIES exactly),
+    // this map is display text only.
   var FOLDERS = CFG.folders || {}; // { [category]: { folderId: label } }
 
   var lists = [];   // curated_lists docs
@@ -53,7 +58,7 @@
     var listTopics = list.topics || [];
     var catBoxes = CATEGORIES.map(function (c) {
       return '<label class="vc-inline"><input type="checkbox" data-field="cat" value="' + esc(c) + '"' +
-        (enabled.indexOf(c) !== -1 ? ' checked' : '') + '> ' + esc(c) + '</label>';
+        (enabled.indexOf(c) !== -1 ? ' checked' : '') + '> ' + esc(CAT_LABELS[c] || c) + '</label>';
     }).join('');
     var topicBoxes = topics.length ? topics.map(function (t) {
       return '<label class="vc-inline"><input type="checkbox" data-field="topic" value="' + esc(t.slug) + '"' +
@@ -324,7 +329,7 @@
   function itemRowHtml(item) {
     var cats = (currentItemsList.enabledCategories || []);
     var catOpts = cats.map(function (c) {
-      return '<option value="' + esc(c) + '"' + (c === item.category ? ' selected' : '') + '>' + esc(c) + '</option>';
+      return '<option value="' + esc(c) + '"' + (c === item.category ? ' selected' : '') + '>' + esc(CAT_LABELS[c] || c) + '</option>';
     }).join('');
     return '' +
       '<tr class="vc-item-row" data-id="' + esc(item._docId || item.id) + '">' +

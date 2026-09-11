@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'VC_SAVECRAFT_ADMIN_VERSION', '1.2' );
+define( 'VC_SAVECRAFT_ADMIN_VERSION', '1.3' );
 define( 'VC_SAVECRAFT_ADMIN_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'VC_SAVECRAFT_ADMIN_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
@@ -67,119 +67,214 @@ function vc_savecraft_admin_assets( $hook ) {
         VC_SAVECRAFT_ADMIN_VERSION
     );
 
-    wp_enqueue_script(
-        'vc-savecraft-admin-kanban',
-        VC_SAVECRAFT_ADMIN_PLUGIN_URL . 'admin/js/admin-kanban.js',
-        array(),
-        VC_SAVECRAFT_ADMIN_VERSION,
-        true
-    );
+    // Which tab is showing decides which section's script (if any) actually needs to load — each
+    // one only ever wires up its own tab's DOM, so there's no reason to ship/run the other three
+    // on every page load. `home`/`my-profile` need no script at all.
+    $tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'home';
 
-    // restNonce is a standard `wp_rest` nonce (10-second-refreshed cookie + nonce pair WordPress
-    // already issues to every logged-in admin page) — proves "this request came from a logged-in
-    // wp-admin session", same mechanism core itself uses for its own REST calls from admin JS.
-    // It's not a credential of its own and grants nothing by itself; every route below still
-    // re-checks current_user_can() independently.
-    wp_localize_script( 'vc-savecraft-admin-kanban', 'vcSaveCraftAdmin', array(
-        'restUrl' => esc_url_raw( rest_url( 'votecraft-savecraft/v1/kanban' ) ),
-        'nonce'   => wp_create_nonce( 'wp_rest' ),
-    ) );
+    if ( $tab === 'kanban' ) {
+        wp_enqueue_script(
+            'vc-savecraft-admin-kanban',
+            VC_SAVECRAFT_ADMIN_PLUGIN_URL . 'admin/js/admin-kanban.js',
+            array(),
+            VC_SAVECRAFT_ADMIN_VERSION,
+            true
+        );
+        // restNonce is a standard `wp_rest` nonce (10-second-refreshed cookie + nonce pair
+        // WordPress already issues to every logged-in admin page) — proves "this request came
+        // from a logged-in wp-admin session", same mechanism core itself uses for its own REST
+        // calls from admin JS. It's not a credential of its own and grants nothing by itself;
+        // every route below still re-checks current_user_can() independently.
+        wp_localize_script( 'vc-savecraft-admin-kanban', 'vcSaveCraftAdmin', array(
+            'restUrl' => esc_url_raw( rest_url( 'votecraft-savecraft/v1/kanban' ) ),
+            'nonce'   => wp_create_nonce( 'wp_rest' ),
+        ) );
+    }
 
-    wp_enqueue_script(
-        'vc-savecraft-admin-demo-content',
-        VC_SAVECRAFT_ADMIN_PLUGIN_URL . 'admin/js/admin-demo-content.js',
-        array(),
-        VC_SAVECRAFT_ADMIN_VERSION,
-        true
-    );
-    wp_localize_script( 'vc-savecraft-admin-demo-content', 'vcSaveCraftDemoContent', array(
-        'restUrl' => esc_url_raw( rest_url( 'votecraft-savecraft/v1/' ) ),
-        'nonce'   => wp_create_nonce( 'wp_rest' ),
-    ) );
+    if ( $tab === 'demo-content' ) {
+        wp_enqueue_script(
+            'vc-savecraft-admin-demo-content',
+            VC_SAVECRAFT_ADMIN_PLUGIN_URL . 'admin/js/admin-demo-content.js',
+            array(),
+            VC_SAVECRAFT_ADMIN_VERSION,
+            true
+        );
+        wp_localize_script( 'vc-savecraft-admin-demo-content', 'vcSaveCraftDemoContent', array(
+            'restUrl' => esc_url_raw( rest_url( 'votecraft-savecraft/v1/' ) ),
+            'nonce'   => wp_create_nonce( 'wp_rest' ),
+        ) );
+    }
 
-    wp_enqueue_script(
-        'vc-savecraft-admin-curated',
-        VC_SAVECRAFT_ADMIN_PLUGIN_URL . 'admin/js/admin-curated.js',
-        array(),
-        VC_SAVECRAFT_ADMIN_VERSION,
-        true
-    );
-    wp_localize_script( 'vc-savecraft-admin-curated', 'vcSaveCraftCurated', array(
-        'restUrl'    => esc_url_raw( rest_url( 'votecraft-savecraft/v1/' ) ),
-        'nonce'      => wp_create_nonce( 'wp_rest' ),
-        'categories' => VC_SAVECRAFT_CATEGORIES,
-        'folders'    => VC_SAVECRAFT_CATEGORY_FOLDERS,
-    ) );
+    if ( $tab === 'curated-lists' ) {
+        wp_enqueue_script(
+            'vc-savecraft-admin-curated',
+            VC_SAVECRAFT_ADMIN_PLUGIN_URL . 'admin/js/admin-curated.js',
+            array(),
+            VC_SAVECRAFT_ADMIN_VERSION,
+            true
+        );
+        wp_localize_script( 'vc-savecraft-admin-curated', 'vcSaveCraftCurated', array(
+            'restUrl'        => esc_url_raw( rest_url( 'votecraft-savecraft/v1/' ) ),
+            'nonce'          => wp_create_nonce( 'wp_rest' ),
+            'categories'     => VC_SAVECRAFT_CATEGORIES,
+            // Friendly display names for the category checklist — per direct request/screenshot
+            // ("the tabs should be like the way we set it up on the profile page": Sources/Series/
+            // Music/Albums/Games/Films/Literature/Arts). The raw keys above are what's actually
+            // stored in enabledCategories (they have to match state.js's CATEGORIES exactly for the
+            // app to read them) — this is *only* for the checkbox label text, not the stored value.
+            'categoryLabels' => VC_SAVECRAFT_CAT_LABEL,
+            'folders'        => VC_SAVECRAFT_CATEGORY_FOLDERS,
+        ) );
+    }
+
+    if ( $tab === 'admin-users' ) {
+        wp_enqueue_script(
+            'vc-savecraft-admin-users',
+            VC_SAVECRAFT_ADMIN_PLUGIN_URL . 'admin/js/admin-users.js',
+            array(),
+            VC_SAVECRAFT_ADMIN_VERSION,
+            true
+        );
+        wp_localize_script( 'vc-savecraft-admin-users', 'vcSaveCraftUsers', array(
+            'restUrl' => esc_url_raw( rest_url( 'votecraft-savecraft/v1/' ) ),
+            'nonce'   => wp_create_nonce( 'wp_rest' ),
+            // Only a true site Administrator may edit role labels (direct decision) — everyone
+            // else with SaveCraft Admin access can still view the roster, just read-only. The JS
+            // never needs to *check* this beyond rendering; the REST route re-checks it for real.
+            'canEdit' => current_user_can( 'manage_options' ),
+        ) );
+    }
 }
 
-/* ─── Admin page shell — the board itself is rendered by admin-kanban.js from the REST data ─── */
+/* ─── Admin page shell — tabbed: one URL (?tab=<x>) per section, not one long accordion page.
+   The board/lists/roster/etc. themselves are rendered by each tab's own JS from REST data (or,
+   for My Profile, plain PHP — it's read-only server data, no fetch needed). ─── */
 
-function vc_savecraft_admin_page() {
+// Definitive list of the 4 real nav destinations (icon + label) — used for both the persistent nav
+// bar and the Home dashboard's card grid, so the two never drift out of sync with each other.
+function vc_savecraft_nav_tabs() {
+    return array(
+        'kanban'        => array( 'icon' => '🗂️', 'label' => 'Admin Kanban', 'desc' => 'Shared to-do board with the SaveCraft app.' ),
+        'demo-content'  => array( 'icon' => '🎬', 'label' => 'Demo Content', 'desc' => 'Fallback content shown to signed-out visitors.' ),
+        'curated-lists' => array( 'icon' => '🏛️', 'label' => 'Curated Lists', 'desc' => 'Nonprofit pages, shared topics, and their items.' ),
+        'admin-users'   => array( 'icon' => '👤', 'label' => 'Admin Users', 'desc' => 'Who has SaveCraft Admin access, and their role.' ),
+    );
+}
+
+function vc_savecraft_tab_url( $tab ) {
+    $url = admin_url( 'admin.php?page=vc-savecraft-admin' );
+    return $tab === 'home' ? $url : add_query_arg( 'tab', $tab, $url );
+}
+
+// Persistent top bar on every tab — the 4 section links (screenshot's "Popular / Latest / …" tab
+// row) plus, in place of that screenshot's search box, a link to the CURRENT user's own profile
+// (distinct from the "Admin Users" tab, which is the full roster of everyone).
+function vc_savecraft_render_nav( $active_tab ) {
     ?>
-    <div class="wrap vc-savecraft-admin-wrap">
-        <h1>SaveCraft Admin</h1>
+    <div class="vc-savecraft-nav">
+        <div class="vc-savecraft-nav-tabs">
+            <?php foreach ( vc_savecraft_nav_tabs() as $key => $t ) : ?>
+                <a href="<?php echo esc_url( vc_savecraft_tab_url( $key ) ); ?>" class="vc-savecraft-nav-tab<?php echo $active_tab === $key ? ' active' : ''; ?>">
+                    <?php echo esc_html( $t['icon'] . ' ' . $t['label'] ); ?>
+                </a>
+            <?php endforeach; ?>
+        </div>
+        <a href="<?php echo esc_url( vc_savecraft_tab_url( 'my-profile' ) ); ?>" class="vc-savecraft-nav-profile<?php echo $active_tab === 'my-profile' ? ' active' : ''; ?>">
+            👤 Admin User Profile
+        </a>
+    </div>
+    <?php
+}
+
+// Home ("?tab=" absent/unknown) — the white icon-card grid, one card per nav destination, doubling
+// as a launcher (per direct request: "white square containers with the icon and link inside").
+function vc_savecraft_render_tab_home() {
+    ?>
+    <div class="vc-savecraft-card-grid">
+        <?php foreach ( vc_savecraft_nav_tabs() as $key => $t ) : ?>
+            <a class="vc-savecraft-card" href="<?php echo esc_url( vc_savecraft_tab_url( $key ) ); ?>">
+                <span class="vc-savecraft-card-icon"><?php echo esc_html( $t['icon'] ); ?></span>
+                <span class="vc-savecraft-card-label"><?php echo esc_html( $t['label'] ); ?></span>
+                <span class="vc-savecraft-card-desc"><?php echo esc_html( $t['desc'] ); ?></span>
+            </a>
+        <?php endforeach; ?>
+    </div>
+    <?php
+}
+
+function vc_savecraft_render_tab_kanban() {
+    ?>
+    <div class="vc-savecraft-section">
+        <h2>🗂️ Admin Kanban</h2>
+        <p class="description">
+            Shared with the SaveCraft app itself — changes made here show up there, and vice versa.
+        </p>
+        <div id="vc-savecraft-kanban-error" class="notice notice-error" style="display:none"></div>
+        <div id="vc-savecraft-kanban-board" class="vc-savecraft-kanban-board">
+            <p id="vc-savecraft-kanban-loading">Loading…</p>
+        </div>
+    </div>
+    <?php
+}
+
+function vc_savecraft_render_tab_demo_content() {
+    ?>
+    <div class="vc-savecraft-section">
+        <h2>🎬 Demo Content</h2>
+        <p class="description">
+            Controls what signed-out visitors and empty-state accounts see on the Dashboard
+            for the 3 widgets that show fallback/demo content instead of a user's own real
+            data. Nothing here is required — every section falls back to its own built-in
+            default until you configure it.
+        </p>
+        <div id="vc-savecraft-demo-error" class="notice notice-error" style="display:none"></div>
+
+        <h3>Queue Kanban demo card</h3>
+        <p class="description">Shown in the "Continue Your Queue" widget when nobody has queued anything yet.</p>
+        <table class="form-table" id="vc-savecraft-demo-queue-kanban-table">
+            <tr><th><label for="vc-savecraft-demo-qk-title">Title</label></th>
+                <td><input type="text" id="vc-savecraft-demo-qk-title" class="regular-text" placeholder="Drag to progress"></td></tr>
+            <tr><th><label for="vc-savecraft-demo-qk-category">Category</label></th>
+                <td><select id="vc-savecraft-demo-qk-category">
+                    <option value="Book">Book</option><option value="Movie">Movie</option>
+                    <option value="Show">Show</option><option value="Game">Game</option>
+                    <option value="Musician">Musician</option><option value="Music Album">Music Album</option>
+                    <option value="Visual Art">Visual Art</option><option value="Web Links">Web Links</option>
+                </select></td></tr>
+            <tr><th><label for="vc-savecraft-demo-qk-image">Image URL</label></th>
+                <td><input type="url" id="vc-savecraft-demo-qk-image" class="regular-text" placeholder="(optional)"></td></tr>
+        </table>
+        <p><button type="button" class="button button-primary" id="vc-savecraft-demo-qk-save">Save</button></p>
+
+        <hr>
+
+        <h3>Recent Saves demo cards</h3>
+        <p class="description">Shown in the "Recent Saves" widget when an account has no favorites yet — pick from existing curated Top 100 items, or add fully custom cards.</p>
+        <div id="vc-savecraft-demo-rs-list" class="vc-savecraft-demo-rs-list"></div>
+        <p>
+            <button type="button" class="button" id="vc-savecraft-demo-rs-add-curated">+ Add from Curated</button>
+            <button type="button" class="button" id="vc-savecraft-demo-rs-add-custom">+ Add Custom Card</button>
+        </p>
+
+        <hr>
+
+        <h3>Curated Lists widget</h3>
+        <p class="description">Controls the genre order, display names, and cover images shown in the "Curated Lists" widget.</p>
+        <div id="vc-savecraft-demo-cl-list" class="vc-savecraft-demo-cl-list"></div>
+        <p><button type="button" class="button button-primary" id="vc-savecraft-demo-cl-save">Save Curated Lists</button></p>
+    </div>
+    <?php
+}
+
+// Curated Lists (nonprofits) / Topics / Curated Items — per direct request, these three stay
+// together as one destination (their existing collapsible accordions, unchanged), not split into
+// three separate tabs.
+function vc_savecraft_render_tab_curated_lists() {
+    ?>
+    <div class="vc-savecraft-section">
+        <h2>🏛️ Curated Lists</h2>
 
         <details class="votecraft-accordion" open>
-            <summary>🗂️ Admin Kanban</summary>
-            <div class="accordion-content">
-                <p class="description">
-                    Shared with the SaveCraft app itself — changes made here show up there, and vice versa.
-                </p>
-                <div id="vc-savecraft-kanban-error" class="notice notice-error" style="display:none"></div>
-                <div id="vc-savecraft-kanban-board" class="vc-savecraft-kanban-board">
-                    <p id="vc-savecraft-kanban-loading">Loading…</p>
-                </div>
-            </div>
-        </details>
-
-        <details class="votecraft-accordion">
-            <summary>🎬 Demo Content</summary>
-            <div class="accordion-content">
-                <p class="description">
-                    Controls what signed-out visitors and empty-state accounts see on the Dashboard
-                    for the 3 widgets that show fallback/demo content instead of a user's own real
-                    data. Nothing here is required — every section falls back to its own built-in
-                    default until you configure it.
-                </p>
-                <div id="vc-savecraft-demo-error" class="notice notice-error" style="display:none"></div>
-
-                <h3>Queue Kanban demo card</h3>
-                <p class="description">Shown in the "Continue Your Queue" widget when nobody has queued anything yet.</p>
-                <table class="form-table" id="vc-savecraft-demo-queue-kanban-table">
-                    <tr><th><label for="vc-savecraft-demo-qk-title">Title</label></th>
-                        <td><input type="text" id="vc-savecraft-demo-qk-title" class="regular-text" placeholder="Drag to progress"></td></tr>
-                    <tr><th><label for="vc-savecraft-demo-qk-category">Category</label></th>
-                        <td><select id="vc-savecraft-demo-qk-category">
-                            <option value="Book">Book</option><option value="Movie">Movie</option>
-                            <option value="Show">Show</option><option value="Game">Game</option>
-                            <option value="Musician">Musician</option><option value="Music Album">Music Album</option>
-                            <option value="Visual Art">Visual Art</option><option value="Web Links">Web Links</option>
-                        </select></td></tr>
-                    <tr><th><label for="vc-savecraft-demo-qk-image">Image URL</label></th>
-                        <td><input type="url" id="vc-savecraft-demo-qk-image" class="regular-text" placeholder="(optional)"></td></tr>
-                </table>
-                <p><button type="button" class="button button-primary" id="vc-savecraft-demo-qk-save">Save</button></p>
-
-                <hr>
-
-                <h3>Recent Saves demo cards</h3>
-                <p class="description">Shown in the "Recent Saves" widget when an account has no favorites yet — pick from existing curated Top 100 items, or add fully custom cards.</p>
-                <div id="vc-savecraft-demo-rs-list" class="vc-savecraft-demo-rs-list"></div>
-                <p>
-                    <button type="button" class="button" id="vc-savecraft-demo-rs-add-curated">+ Add from Curated</button>
-                    <button type="button" class="button" id="vc-savecraft-demo-rs-add-custom">+ Add Custom Card</button>
-                </p>
-
-                <hr>
-
-                <h3>Curated Lists widget</h3>
-                <p class="description">Controls the genre order, display names, and cover images shown in the "Curated Lists" widget.</p>
-                <div id="vc-savecraft-demo-cl-list" class="vc-savecraft-demo-cl-list"></div>
-                <p><button type="button" class="button button-primary" id="vc-savecraft-demo-cl-save">Save Curated Lists</button></p>
-            </div>
-        </details>
-
-        <details class="votecraft-accordion">
             <summary>🏛️ Curated Lists (nonprofits)</summary>
             <div class="accordion-content">
                 <p class="description">
@@ -220,18 +315,106 @@ function vc_savecraft_admin_page() {
                 <p><button type="button" class="button" id="vc-savecraft-item-add" disabled>+ Add Item</button></p>
             </div>
         </details>
+    </div>
+    <?php
+}
 
-        <details class="votecraft-accordion">
-            <summary>👥 Users</summary>
-            <div class="accordion-content">
-                <p class="description">
-                    Not built yet — viewing SaveCraft accounts here needs a separate Firebase Cloud
-                    Function (this collection isn't reachable the same scoped way Admin Kanban is),
-                    which in turn needs switching the Firebase project off its free Spark plan onto
-                    Blaze (pay-as-you-go). Fully designed, but paused pending that decision.
+// Admin Users — the roster (new). Every WP user with manage_savecraft_admin, rendered/edited by
+// admin-users.js from the /admin-users REST route. Ends with the note the old "Users" accordion
+// carried (viewing SaveCraft's own signed-up accounts, not admin staff — paused on Blaze).
+function vc_savecraft_render_tab_admin_users() {
+    ?>
+    <div class="vc-savecraft-section">
+        <h2>👤 Admin Users</h2>
+        <p class="description">
+            Everyone with SaveCraft Admin access, and the role you've assigned them — useful once
+            more than one person has access, so it's clear who's responsible for what.
+            <?php if ( current_user_can( 'manage_options' ) ) : ?>
+                Only a site Administrator (you) can edit these labels.
+            <?php else : ?>
+                Only a site Administrator can edit these labels — you can view them here.
+            <?php endif; ?>
+        </p>
+        <div id="vc-savecraft-users-error" class="notice notice-error" style="display:none"></div>
+        <div id="vc-savecraft-users-list"><p>Loading…</p></div>
+
+        <hr>
+        <p class="description">
+            Looking for SaveCraft's own signed-up users (the app's actual customers, not admin
+            staff)? Not built yet — that needs a separate Firebase Cloud Function (this data isn't
+            reachable the same scoped way the sections above are), which in turn needs switching
+            the Firebase project off its free Spark plan onto Blaze (pay-as-you-go). Fully
+            designed, but paused pending that decision.
+        </p>
+    </div>
+    <?php
+}
+
+// My Profile — reachable only via the top-right nav link, not one of the 4 main tabs. Entirely
+// server-rendered (just the current user's own WP data), so it needs no JS/REST round trip at all.
+function vc_savecraft_render_tab_my_profile() {
+    $user = wp_get_current_user();
+    $role_label = get_user_meta( $user->ID, '_vc_savecraft_role_label', true );
+    $can_edit = current_user_can( 'manage_options' );
+    ?>
+    <div class="vc-savecraft-section">
+        <h2>👤 Admin User Profile</h2>
+        <p class="description">Your own SaveCraft Admin access, at a glance.</p>
+        <div class="vc-savecraft-profile-card">
+            <?php echo get_avatar( $user->ID, 64 ); ?>
+            <div class="vc-savecraft-profile-info">
+                <p class="vc-savecraft-profile-name"><?php echo esc_html( $user->display_name ); ?></p>
+                <p class="vc-savecraft-profile-email"><?php echo esc_html( $user->user_email ); ?></p>
+                <p class="vc-savecraft-profile-role">
+                    <strong>Role: </strong>
+                    <?php if ( $role_label ) : ?>
+                        <?php echo esc_html( $role_label ); ?>
+                    <?php else : ?>
+                        <em>Not set yet<?php echo $can_edit ? ' — set it below.' : '.'; ?></em>
+                    <?php endif; ?>
                 </p>
             </div>
-        </details>
+        </div>
+        <?php if ( $can_edit ) : ?>
+            <p class="description">
+                Set your own (or anyone else's) role label from the
+                <a href="<?php echo esc_url( vc_savecraft_tab_url( 'admin-users' ) ); ?>">Admin Users</a> page.
+            </p>
+        <?php else : ?>
+            <p class="description">Only a site Administrator can set role labels.</p>
+        <?php endif; ?>
+        <p><a href="<?php echo esc_url( admin_url( 'profile.php' ) ); ?>">Edit your full WordPress profile →</a></p>
+    </div>
+    <?php
+}
+
+function vc_savecraft_admin_page() {
+    $tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'home';
+    ?>
+    <div class="wrap vc-savecraft-admin-wrap">
+        <h1><a href="<?php echo esc_url( vc_savecraft_tab_url( 'home' ) ); ?>" class="vc-savecraft-title-link">SaveCraft Admin</a></h1>
+        <?php
+        vc_savecraft_render_nav( $tab );
+        switch ( $tab ) {
+            case 'kanban':
+                vc_savecraft_render_tab_kanban();
+                break;
+            case 'demo-content':
+                vc_savecraft_render_tab_demo_content();
+                break;
+            case 'curated-lists':
+                vc_savecraft_render_tab_curated_lists();
+                break;
+            case 'admin-users':
+                vc_savecraft_render_tab_admin_users();
+                break;
+            case 'my-profile':
+                vc_savecraft_render_tab_my_profile();
+                break;
+            default:
+                vc_savecraft_render_tab_home();
+        }
+        ?>
     </div>
     <?php
 }
@@ -361,10 +544,30 @@ function vc_savecraft_admin_register_routes() {
         'callback'            => 'vc_savecraft_admin_delete_curated_item',
         'permission_callback' => 'vc_savecraft_admin_permission_check',
     ) );
+
+    // ── Admin Users (WordPress users + user meta — no Firestore involved) ──
+    register_rest_route( 'votecraft-savecraft/v1', '/admin-users', array(
+        'methods'             => 'GET',
+        'callback'            => 'vc_savecraft_admin_list_admin_users',
+        // Viewing the roster only needs the shared capability — any SaveCraft Admin can see who
+        // else has access. Editing (below) is stricter.
+        'permission_callback' => 'vc_savecraft_admin_permission_check',
+    ) );
+    register_rest_route( 'votecraft-savecraft/v1', '/admin-users/(?P<user_id>\d+)', array(
+        'methods'             => 'POST',
+        'callback'            => 'vc_savecraft_admin_update_admin_user_role',
+        // Stricter than every other route in this plugin, per direct request — only a true site
+        // Administrator may relabel who's who, not just anyone with manage_savecraft_admin.
+        'permission_callback' => 'vc_savecraft_admin_manage_options_check',
+    ) );
 }
 
 function vc_savecraft_admin_permission_check() {
     return current_user_can( VC_SAVECRAFT_ADMIN_CAPABILITY );
+}
+
+function vc_savecraft_admin_manage_options_check() {
+    return current_user_can( 'manage_options' );
 }
 
 function vc_savecraft_admin_list_cards( $request ) {
@@ -726,4 +929,51 @@ function vc_savecraft_admin_delete_curated_item( $request ) {
     // adds a get_doc()+ownership check here.
     $result = VC_SaveCraft_Firestore_Client::delete_doc( 'curated_items', $id );
     return is_wp_error( $result ) ? vc_savecraft_wp_error_response( $result ) : new WP_REST_Response( array( 'deleted' => $id ), 200 );
+}
+
+/* ── Admin Users — plain WordPress user data (get_users() + user meta), no Firestore ── */
+
+// Every WP user who currently has manage_savecraft_admin, however they got it (the Administrator
+// role by default, or an individually-granted capability via a role-editor plugin). Deliberately
+// NOT get_users(['capability' => ...]) — that arg's behavior/version support has shifted across
+// WP releases; a plain user_can() filter over every user is slower but unambiguous.
+function vc_savecraft_get_admin_users() {
+    $admins = array_values( array_filter( get_users(), function ( $u ) {
+        return user_can( $u, VC_SAVECRAFT_ADMIN_CAPABILITY );
+    } ) );
+    usort( $admins, function ( $a, $b ) {
+        return strcasecmp( $a->display_name, $b->display_name );
+    } );
+    return $admins;
+}
+
+function vc_savecraft_admin_list_admin_users( $request ) {
+    $rows = array_map( function ( $u ) {
+        return array(
+            'id'          => $u->ID,
+            'name'        => $u->display_name,
+            'email'       => $u->user_email,
+            'avatarUrl'   => get_avatar_url( $u->ID, array( 'size' => 80 ) ),
+            'roleLabel'   => get_user_meta( $u->ID, '_vc_savecraft_role_label', true ),
+            'isSiteAdmin' => user_can( $u, 'manage_options' ),
+        );
+    }, vc_savecraft_get_admin_users() );
+    return new WP_REST_Response( $rows, 200 );
+}
+
+function vc_savecraft_admin_update_admin_user_role( $request ) {
+    $user_id = (int) $request->get_param( 'user_id' );
+    $user = get_user_by( 'id', $user_id );
+    // Only lets you label someone who actually has SaveCraft Admin access — not an arbitrary WP
+    // user id — keeping this roster's only meaning "who has access, and what's their role".
+    if ( ! $user || ! user_can( $user, VC_SAVECRAFT_ADMIN_CAPABILITY ) ) {
+        return new WP_REST_Response( array( 'message' => 'That user does not have SaveCraft Admin access.' ), 400 );
+    }
+    $body = $request->get_json_params();
+    if ( ! is_array( $body ) ) {
+        return new WP_REST_Response( array( 'message' => 'Invalid request body.' ), 400 );
+    }
+    $role_label = sanitize_text_field( $body['roleLabel'] ?? '' );
+    update_user_meta( $user_id, '_vc_savecraft_role_label', $role_label );
+    return new WP_REST_Response( array( 'id' => $user_id, 'roleLabel' => $role_label ), 200 );
 }
