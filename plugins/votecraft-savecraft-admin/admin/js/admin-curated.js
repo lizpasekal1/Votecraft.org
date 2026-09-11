@@ -85,7 +85,14 @@
     // 'Albums' checkbox, and its two folders (Albums, Playlists) join Music's own (Musicians) in
     // one combined accordion. Toggling the merged "Music" checkbox below enables/disables both
     // 'Music' and 'Albums' together (see collectListForm).
-    var catBoxes = CATEGORIES.filter(function (c) { return c !== 'Albums'; }).map(function (c) {
+    // Rendered as two independent, fixed columns (not CSS column-count) — per direct report,
+    // multi-column CSS *balances* height across columns, so opening one category's accordion
+    // (making it taller) could shove a later category from one visual column into the other.
+    // Splitting the array itself in JS and laying the two halves out as separate flex columns
+    // (admin.css's .vc-cat-tree-col) means a category's column is fixed by its position in
+    // CATEGORIES, never recalculated by content height.
+    var catList = CATEGORIES.filter(function (c) { return c !== 'Albums'; });
+    var catBoxesHtml = catList.map(function (c) {
       var catFolders = (c === 'Music') ? Object.assign({}, FOLDERS['Music'], FOLDERS['Albums']) : (FOLDERS[c] || {});
       var folderIds = Object.keys(catFolders);
       var catHasContent = folderIds.some(function (fid) { return itemFolderIds[fid]; });
@@ -106,7 +113,11 @@
           '</div>' +
           (folderIds.length ? '<div class="vc-cat-folders"' + (catHasContent ? '' : ' hidden') + '>' + folderRows + '</div>' : '') +
         '</div>';
-    }).join('');
+    });
+    var catSplit = Math.ceil(catBoxesHtml.length / 2);
+    var catBoxes =
+      '<div class="vc-cat-tree-col">' + catBoxesHtml.slice(0, catSplit).join('') + '</div>' +
+      '<div class="vc-cat-tree-col">' + catBoxesHtml.slice(catSplit).join('') + '</div>';
     var topicBoxes = topics.length ? topics.map(function (t) {
       return '<label class="vc-inline"><input type="checkbox" data-field="topic" value="' + esc(t.slug) + '"' +
         (listTopics.indexOf(t.slug) !== -1 ? ' checked' : '') + '> ' + esc(t.name || t.slug) + '</label>';

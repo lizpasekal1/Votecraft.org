@@ -340,15 +340,21 @@
 }
 
 /* Category tabs accordion (Curated Lists' Add/Edit Nonprofit List form) — one row per category
-   (enabledCategories checkbox, unchanged) with a nested, collapsed-by-default folder checklist
-   (enabledFolderIds) behind a ▶/▼ arrow, same interaction shape as the Profile page's Saved Lists
-   folder-scoping accordion (profile.css's .profile-saved-list-* rules). */
+   (enabledCategories checkbox, unchanged) with a nested folder checklist (enabledFolderIds)
+   behind a ▶/▼ arrow, same interaction shape as the Profile page's Saved Lists folder-scoping
+   accordion (profile.css's .profile-saved-list-* rules).
+   Two independent flex columns (admin-curated.js splits the category array itself, not CSS
+   column-count) — per direct report, CSS multi-column *balances* height across columns, so
+   opening one category's accordion could shove a later category into the other visual column. */
 .vc-cat-tree {
-  column-count: 2;
-  column-gap: 24px;
+  display: flex;
+  gap: 0 24px;
+}
+.vc-cat-tree-col {
+  flex: 1 1 0;
+  min-width: 0;
 }
 .vc-cat-group {
-  break-inside: avoid;
   margin-bottom: 6px;
 }
 .vc-cat-row {
@@ -372,6 +378,14 @@
   flex-direction: column;
   gap: 4px;
   padding: 4px 0 4px 24px;
+}
+/* Real bug found and fixed: [hidden] and .vc-cat-folders are equal CSS specificity, so the
+   author rule above silently won the tie over the browser's own `[hidden] { display: none }` —
+   toggling the hidden property/attribute in JS never actually hid anything, just flipped the
+   (inert) attribute while display: flex kept the folder list visible regardless. This compound
+   selector outranks the plain class rule, so [hidden] wins again like it should everywhere else. */
+.vc-cat-folders[hidden] {
+  display: none;
 }
 .vc-cat-folder {
   display: flex;
