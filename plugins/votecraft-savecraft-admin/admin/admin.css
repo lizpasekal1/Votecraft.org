@@ -427,17 +427,18 @@
   align-items: center;
   text-align: center;
   gap: 6px;
-  background: #fff;
-  border: 1px solid #c3c4c7;
+  /* SaveCraft brand purple — same --primary value as the app itself (src/app/css/base.css). */
+  background: #5B5BEF;
+  border: 1px solid #5B5BEF;
   border-radius: 6px;
   padding: 32px 20px;
   text-decoration: none;
-  color: #1d2327;
+  color: #fff;
   transition: box-shadow 0.15s, border-color 0.15s, transform 0.15s;
 }
 .vc-savecraft-card:hover {
-  border-color: #2271b1;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  border-color: #4A3DD4;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
   transform: translateY(-2px);
 }
 .vc-savecraft-card-icon {
@@ -451,7 +452,7 @@
 }
 .vc-savecraft-card-desc {
   font-size: 12px;
-  color: #646970;
+  color: rgba(255, 255, 255, 0.75);
 }
 
 /* A section alone on its own tab page (Kanban / Demo Content / Admin Users / My Profile) — the
