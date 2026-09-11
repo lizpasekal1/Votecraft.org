@@ -1,6 +1,6 @@
 # Deploying SaveCraft's web app (savecraft.org)
 
-*(See `savecraft-documentation.md` for what every file in this folder is for.)*
+*(See `1_savecraft-documentation.md` for what every file in this folder is for.)*
 
 SaveCraft now runs two ways from one codebase (`src/app/`): the Chrome extension (unchanged),
 and a plain web app hosted on Firebase Hosting under the existing `votecraft-789` Firebase
@@ -88,7 +88,7 @@ this before real visitors are expected at savecraft.org** — search both files 
 find every piece to delete (the button markup, its reveal/hide toggling, and the extra resolve
 path in the gate's Promise). Whether it's ever worth *keeping* some form of this (real local-only
 browsing on web, not just a stopgap) instead of deleting it outright is still an open decision —
-see `launch-requirements.md`'s item #4.
+see `6_savecraft-launch-requirements.md`'s item #4.
 
 ## Testing before you rely on it
 
