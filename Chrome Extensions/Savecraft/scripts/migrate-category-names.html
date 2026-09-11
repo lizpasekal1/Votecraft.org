@@ -11,6 +11,10 @@
   #log { margin-top: 20px; background: #1a1a1a; border: 1px solid #333; padding: 12px; border-radius: 6px; max-height: 500px; overflow-y: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.5; }
   .ok { color: #4ade80; } .err { color: #f87171; } .info { color: #60a5fa; } .warn { color: #ffaa00; }
   .warning { background: #332200; border: 1px solid #aa5500; border-radius: 6px; padding: 12px; margin-bottom: 20px; color: #ffaa00; }
+  input { background: #222; border: 1px solid #555; color: #ddd; padding: 8px; width: 100%; margin: 6px 0; box-sizing: border-box; border-radius: 4px; font: inherit; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row input { flex: 1; }
+  #signed-in { color: #4ade80; }
 </style>
 </head>
 <body>
@@ -22,17 +26,23 @@
   <code>title</code>/<code>url</code>/<code>imageUrl</code>/<code>notes</code>/<code>folderId</code>.
   It also PATCHES <code>curated_lists</code> docs' <code>enabledCategories</code> array and each
   entry's <code>category</code> field inside <code>rows</code> (leaving <code>label</code>/
-  <code>titles</code> untouched). Requires an already-signed-in browser session as
-  <code>lizpasekal@gmail.com</code> in this browser (same account used for SaveCraft/the other seed
-  and migration tools) — the Firestore rules already allow that account to write
-  curated_items/curated_lists/curated_topics, same as
-  <code>scripts/migrate-curated-categories.html</code>, which this tool is modeled closely on.
-  This does NOT touch <code>curated_topics</code> — nothing in that collection carries a category
-  string.
+  <code>titles</code> untouched). Sign in below as a SaveCraft admin
+  (<code>lizpasekal@gmail.com</code>, or any account whose <code>savecraft_users/&lt;uid&gt;.role</code>
+  is <code>"admin"</code>) — same isSaveCraftAdmin() check curated_items/curated_lists already grant
+  write access to, no rule loosening needed. This does NOT touch <code>curated_topics</code> —
+  nothing in that collection carries a category string.
 </div>
 
-<p>1. Sign in with your Firebase account in this browser (open the real SaveCraft app once if you
-haven't recently). 2. Click Preview to see exactly what would change with zero writes. 3. Click Run
+<div id="auth">
+  <div class="row"><input id="email" type="email" placeholder="admin email" autocomplete="username"></div>
+  <div class="row">
+    <input id="password" type="password" placeholder="password" autocomplete="current-password">
+    <button id="btn-signin">Sign in</button>
+  </div>
+</div>
+<p id="signed-in" hidden></p>
+
+<p>1. Sign in above. 2. Click Preview to see exactly what would change with zero writes. 3. Click Run
 to actually apply it.</p>
 <button id="btn-preview">Preview (read-only)</button>
 <button id="btn-run" disabled>Run (writes)</button>
@@ -55,6 +65,7 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
 
 const logEl = document.getElementById('log');
 function log(msg, cls = '') {
@@ -168,7 +179,7 @@ async function preview() {
 
   log('', '');
   log(planned.length ? 'Preview only — no writes made. Click Run to apply.' : 'Nothing to change.', 'ok');
-  document.getElementById('btn-run').disabled = planned.length === 0;
+  document.getElementById('btn-run').disabled = planned.length === 0 || !auth.currentUser;
 }
 
 async function run() {
@@ -196,6 +207,38 @@ async function run() {
   log('rename pass, so already-warm clients pick up the renamed enabledCategories/rows on their next', 'info');
   log('load instead of serving the stale cache for up to 24h.', 'info');
 }
+
+// REAL BUG, found and fixed: this tool (and migrate-curated-categories.html it was modeled on)
+// originally had no sign-in UI at all — it assumed opening this file would somehow inherit an
+// already-signed-in savecraft.org browser session. That doesn't hold for a locally-opened file:
+// Firebase Auth persistence is scoped per origin, and a file:// page is a different origin from
+// https://savecraft.org (this file also isn't deployed to hosting — scripts/** is in
+// firebase.json's ignore list — so there's no https://savecraft.org/scripts/... URL to open
+// either). Preview "worked" regardless, since curated_items/curated_lists are public-read; only
+// Run needs isSaveCraftAdmin(), so the missing sign-in only ever surfaced as an opaque "Missing or
+// insufficient permissions" on the write. Fixed the same way seed-curated-lists.html already does
+// it: a real email/password sign-in form right in this page.
+const authStatusEl = document.getElementById('signed-in');
+auth.onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById('auth').hidden = true;
+    authStatusEl.hidden = false;
+    authStatusEl.textContent = 'Signed in as ' + user.email;
+  } else {
+    document.getElementById('auth').hidden = false;
+    authStatusEl.hidden = true;
+  }
+});
+
+document.getElementById('btn-signin').addEventListener('click', async () => {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+  } catch (e) {
+    log('Sign-in failed: ' + e.message, 'err');
+  }
+});
 
 document.getElementById('btn-preview').addEventListener('click', async () => {
   const btn = document.getElementById('btn-preview');
