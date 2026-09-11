@@ -18,18 +18,35 @@ const _FIREBASE_API_KEY = 'AIzaSyArJ6pkXUDbZf4jcxRita0qcdr-hT46kI8';
 // retag (scripts/migrate-curated-categories.html) — otherwise clients keep serving the stale
 // pre-migration 24h cache. 11 -> 12: the FairVote demo seed (scripts/seed-curated-lists.html)
 // adds new curated_items docs; bump so a device with an already-warm cache picks them up now
-// instead of waiting out the 24h TTL.
-const _CURATED_CACHE_VERSION = 12;
+// instead of waiting out the 24h TTL. 12 -> 13: the internal category rename (Web Links->Sources,
+// Show->Series, Musician->Music, Music Album->Albums, Game->Games, Movie->Films, Book->Literature,
+// Visual Art->Arts) retags curated_items docs via scripts/migrate-category-names.html; bump so
+// clients drop the pre-rename cache instead of serving stale old category names for up to 24h.
+const _CURATED_CACHE_VERSION = 13;
 
 const _CAT_NORMALIZE = {
-  'Movies': 'Movie', 'Books': 'Book', 'Games': 'Game',
-  'Shows': 'Show', 'Musicians': 'Musician', 'Music Albums': 'Music Album',
-  // NOTE: raw category "Music" (no "Album") is deliberately NOT mapped to 'Music Album' here.
-  // Live Firestore data confirmed genre="Top 100" + category="Music" is a legacy duplicate of
+  // Old plural forms -> the NEW final category name, directly (single hop — see
+  // _loadCuratedFromFirestore's `_CAT_NORMALIZE[rawCat] || rawCat`, this table is never chained,
+  // so a value here must already be the final name a doc should resolve to, not an intermediate
+  // old-singular one).
+  'Movies': 'Films', 'Books': 'Literature', 'Games': 'Games',
+  'Shows': 'Series', 'Musicians': 'Music', 'Music Albums': 'Albums',
+  // Old singular category names -> NEW final category name — the 8-pair rename this whole task
+  // applies everywhere (state.js's CATEGORIES/CAT_LABEL, this file's CAT_MIGRATION + the one-time
+  // savecraft_category_rename_migrated migration below, and scripts/migrate-category-names.html).
+  'Movie': 'Films', 'Show': 'Series', 'Musician': 'Music', 'Music Album': 'Albums',
+  'Book': 'Literature', 'Game': 'Games', 'Web Links': 'Sources', 'Visual Art': 'Arts',
+  // NOTE: raw category "Music" (no "Album") is deliberately NOT mapped to 'Music Album'/'Albums'
+  // here. Live Firestore data confirmed genre="Top 100" + category="Music" is a legacy duplicate of
   // the Musicians list (101 docs, titles are artist names like "The Beatles", not albums) that
   // was previously leaking into the Music Album bucket via this exact mapping, showing musician
   // cards under "Music Albums". Left unmapped, these docs land in an inert "Music" bucket that
   // nothing in the app reads, instead of being force-merged somewhere they don't belong.
+  // Post-rename, "Music" is ALSO the new final category name for what used to be "Musician" — this
+  // table has no "Music" *key* (it's a target value now, never a raw source to remap), so that
+  // doesn't change this note's resolution at all; it just means these 101 legacy-duplicate docs, if
+  // never separately cleaned up, will now surface for real under the (renamed) Music tab instead of
+  // staying inert, since "Music" stops being an unused bucket the moment this rename ships.
 };
 
 // ===== SYNCED PERSONAL LIBRARY (Firestore dual-write, only active when signed in) =====
@@ -262,7 +279,7 @@ export async function initCuratedItems() {
 // converter, NOT curated_items' string-only `fv` shortcut, because these docs carry arrays
 // (enabledCategories, topics, rows). Only `published` docs are kept. renderGrid.js merges a
 // published curated_lists doc over the hardcoded CURATED_GENRE_LANDING_CONTENT fallback.
-const _CURATED_CMS_CACHE_VERSION = 1;
+const _CURATED_CMS_CACHE_VERSION = 2;
 
 async function _loadCuratedCollection(collection) {
   const base = `https://firestore.googleapis.com/v1/projects/${_FIREBASE_PROJECT}/databases/(default)/documents/${collection}`;
@@ -472,16 +489,16 @@ function _backfillSeedUrgency(cards) {
 // valid.
 function _seedQueueDemoItems() {
   const entries = [
-    ['The Great Gatsby',        'Book',        'in-queue'],
-    ['Inception',                'Movie',       'in-queue'],
-    ['Breaking Bad',             'Show',        'in-queue'],
-    ['Portal 2',                 'Game',        'in-progress'],
-    ['Random Access Memories',   'Music Album', 'in-progress'],
-    ['Radiohead',                'Musician',    'in-progress'],
-    ['Starry Night Study',       'Visual Art',  'my-review'],
-    ['An Interesting Article',   'Web Links',   'my-review'],
-    ['Dune',                     'Book',        'done'],
-    ['The Matrix',               'Movie',       'done'],
+    ['The Great Gatsby',        'Literature',  'in-queue'],
+    ['Inception',                'Films',      'in-queue'],
+    ['Breaking Bad',             'Series',     'in-queue'],
+    ['Portal 2',                 'Games',      'in-progress'],
+    ['Random Access Memories',   'Albums',     'in-progress'],
+    ['Radiohead',                'Music',      'in-progress'],
+    ['Starry Night Study',       'Arts',       'my-review'],
+    ['An Interesting Article',   'Sources',    'my-review'],
+    ['Dune',                     'Literature', 'done'],
+    ['The Matrix',               'Films',      'done'],
   ];
   const now = Date.now();
   return entries.map(([title, category, queueStatus], i) => ({
@@ -696,7 +713,32 @@ export async function loadAll() {
       state.folders = state.folders.filter(f => !legacyIds.includes(f.id));
 
       // Migrate old category names to new ones
-      const CAT_MIGRATION = { Books: 'Book', Games: 'Game', Movies: 'Movie', Music: 'Music Album', Shows: 'Show' };
+      const CAT_MIGRATION = {
+        // Old plural/legacy forms -> the NEW final category name directly (this table is
+        // unconditional/ungated — applied on every load, single lookup, never chained — so a value
+        // here must already be the final name, not an intermediate old-singular one; otherwise an
+        // item could get stuck one hop short until a second load happened to run this table again).
+        Books: 'Literature', Games: 'Games', Movies: 'Films', Shows: 'Series',
+        // Old singular -> NEW final category name — the same 8-pair rename applied everywhere else
+        // in this pass (_CAT_NORMALIZE above, the one-time savecraft_category_rename_migrated
+        // migration below, and scripts/migrate-category-names.html).
+        Movie: 'Films', Show: 'Series', Musician: 'Music', 'Music Album': 'Albums',
+        Book: 'Literature', Game: 'Games', 'Web Links': 'Sources', 'Visual Art': 'Arts',
+        // NO entry for legacy key `Music` (this table used to carry `Music: 'Music Album'`, from
+        // back when "Music" — no "Album" — was itself the old pre-split singular category name).
+        // Removed deliberately, not an oversight: "Music" is now ALSO the brand-new final category
+        // name for what used to be "Musician" (see the pair above). This table is unconditional and
+        // runs on literally every load forever, with no one-time gate — keeping a `Music: 'Albums'`
+        // entry here would permanently and silently re-corrupt every item that legitimately carries
+        // the new "Music" category (i.e. every renamed former-Musician item, starting the very next
+        // load after the one-time migration below first renames them) back into "Albums", forever.
+        // Any item that still carries the OLD pre-split literal "Music" value at this point has
+        // already had countless opportunities to be swept up by this exact unconditional table on
+        // every prior load since that entry was first added, so the far safer failure mode is to
+        // leave that vanishingly-rare straggler alone (worst case: it shows up mislabeled once,
+        // fixable by hand) rather than guarantee ongoing corruption of a real, current, correctly-
+        // renamed category going forward.
+      };
       const migrated = [];
       state.items.forEach(item => {
         if (CAT_MIGRATION[item.category]) {
@@ -885,7 +927,11 @@ export async function loadAll() {
       // it's a no-op once .author is set.
       const authorBackfilled = [];
       state.items.forEach(item => {
-        if (item.category === 'Music Album' && !item.curated && !item.author && item.notes) {
+        // 'Music Album' -> 'Albums' per the internal category rename — this check is unconditional/
+        // ungated (runs every load, forever), unlike the show_to_movie-style migrations above, so it
+        // must match the NEW category name going forward or it silently stops backfilling anything
+        // the moment items are renamed.
+        if (item.category === 'Albums' && !item.curated && !item.author && item.notes) {
           item.author = item.notes;
           item.notes = null;
           authorBackfilled.push(item);
@@ -919,44 +965,50 @@ export async function loadAll() {
       }
 
       // Seed new default folders if not present
+      // parentCategory values below use the NEW category names (post-rename: Web Links->Sources,
+      // Show->Series, Musician->Music, Music Album->Albums, Game->Games, Movie->Films,
+      // Book->Literature, Visual Art->Arts) — this array only affects brand-new accounts seeding
+      // these folders for the first time, so it's a direct literal edit, not a migration; existing
+      // accounts' already-seeded folders are handled by the one-time savecraft_category_rename_migrated
+      // migration below instead (it rewrites folder.parentCategory in place).
       const defaults = [
-        { id: 'default-music-albums',     name: 'Albums',       parentCategory: 'Music Album' },
-        { id: 'default-music-playlists',  name: 'Playlists',    parentCategory: 'Music Album' },
-        { id: 'default-books-authors',    name: 'Authors',      parentCategory: 'Book' },
-        { id: 'default-weblinks-articles', name: 'Articles',    parentCategory: 'Web Links' },
-        { id: 'default-weblinks-blogs',    name: 'News',        parentCategory: 'Web Links' },
-        { id: 'default-movies-videos',   name: 'Videos',        parentCategory: 'Movie' },
-        { id: 'default-movies-directors', name: 'Directors',    parentCategory: 'Movie' },
-        { id: 'default-shows-podcasts',  name: 'Podcasts',      parentCategory: 'Show' },
-        { id: 'default-shows-webseries', name: 'Web Series',    parentCategory: 'Show' },
-        { id: 'default-shows-tutorials', name: 'Tutorials',     parentCategory: 'Show' },
+        { id: 'default-music-albums',     name: 'Albums',       parentCategory: 'Albums' },
+        { id: 'default-music-playlists',  name: 'Playlists',    parentCategory: 'Albums' },
+        { id: 'default-books-authors',    name: 'Authors',      parentCategory: 'Literature' },
+        { id: 'default-weblinks-articles', name: 'Articles',    parentCategory: 'Sources' },
+        { id: 'default-weblinks-blogs',    name: 'News',        parentCategory: 'Sources' },
+        { id: 'default-movies-videos',   name: 'Videos',        parentCategory: 'Films' },
+        { id: 'default-movies-directors', name: 'Directors',    parentCategory: 'Films' },
+        { id: 'default-shows-podcasts',  name: 'Podcasts',      parentCategory: 'Series' },
+        { id: 'default-shows-webseries', name: 'Web Series',    parentCategory: 'Series' },
+        { id: 'default-shows-tutorials', name: 'Tutorials',     parentCategory: 'Series' },
         // 'Creators' -> 'Short Form', per direct follow-up ("instead add a folder called 'Short
         // form'") — replaces the old creator-card folder (default-shows-creators, retired above)
         // with a plain regular folder for short-form web content, same as Podcasts/Tutorials/Web
         // Series. This new id gets auto-seeded for existing users too, by the same "add whatever
         // default is missing" loop this array feeds (right below) — no separate migration needed.
-        { id: 'default-shows-shortform', name: 'Short Form',    parentCategory: 'Show' },
-        { id: 'default-movies-movies',       name: 'Movies',    parentCategory: 'Movie' },
+        { id: 'default-shows-shortform', name: 'Short Form',    parentCategory: 'Series' },
+        { id: 'default-movies-movies',       name: 'Movies',    parentCategory: 'Films' },
         // TV Shows moved from Shows into Films — see the one-time migration below that also
         // recategorizes any items already saved in the old Shows "TV Shows" folder into this one.
-        { id: 'default-movies-series',       name: 'Shows',     parentCategory: 'Movie' },
-        { id: 'default-musicians-musicians', name: 'Musicians', parentCategory: 'Musician' },
-        { id: 'default-books-books',         name: 'Books',     parentCategory: 'Book' },
-        { id: 'default-books-pdfs',          name: 'PDFs',      parentCategory: 'Book' },
-        { id: 'default-books-quotes',        name: 'Quotes',    parentCategory: 'Book' },
-        { id: 'default-weblinks-websites',   name: 'Websites',  parentCategory: 'Web Links' },
+        { id: 'default-movies-series',       name: 'Shows',     parentCategory: 'Films' },
+        { id: 'default-musicians-musicians', name: 'Musicians', parentCategory: 'Music' },
+        { id: 'default-books-books',         name: 'Books',     parentCategory: 'Literature' },
+        { id: 'default-books-pdfs',          name: 'PDFs',      parentCategory: 'Literature' },
+        { id: 'default-books-quotes',        name: 'Quotes',    parentCategory: 'Literature' },
+        { id: 'default-weblinks-websites',   name: 'Websites',  parentCategory: 'Sources' },
         // Fresh id, not the old 'default-weblinks-shops' (permanently retired via legacyIds
         // above, after that id got stuck mid-rename in a live install — see that entry's
         // comment) — reusing it would just fight the legacyIds cleanup forever.
-        { id: 'default-weblinks-publications', name: 'Publications', parentCategory: 'Web Links' },
-        { id: 'default-art-dance',     name: 'Styles',   parentCategory: 'Visual Art' },
-        { id: 'default-art-comics',    name: 'Comics',    parentCategory: 'Visual Art' },
-        { id: 'default-art-memes',     name: 'Memes',     parentCategory: 'Visual Art' },
-        { id: 'default-art-artists',   name: 'Artists',   parentCategory: 'Visual Art' },
-        { id: 'default-games-board',      name: 'Board Games',    parentCategory: 'Game' },
-        { id: 'default-games-console',    name: 'Console Games',  parentCategory: 'Game' },
-        { id: 'default-games-mobile',     name: 'Mobile Games',   parentCategory: 'Game' },
-        { id: 'default-games-companies',  name: 'Game Companies', parentCategory: 'Game' },
+        { id: 'default-weblinks-publications', name: 'Publications', parentCategory: 'Sources' },
+        { id: 'default-art-dance',     name: 'Styles',   parentCategory: 'Arts' },
+        { id: 'default-art-comics',    name: 'Comics',    parentCategory: 'Arts' },
+        { id: 'default-art-memes',     name: 'Memes',     parentCategory: 'Arts' },
+        { id: 'default-art-artists',   name: 'Artists',   parentCategory: 'Arts' },
+        { id: 'default-games-board',      name: 'Board Games',    parentCategory: 'Games' },
+        { id: 'default-games-console',    name: 'Console Games',  parentCategory: 'Games' },
+        { id: 'default-games-mobile',     name: 'Mobile Games',   parentCategory: 'Games' },
+        { id: 'default-games-companies',  name: 'Game Companies', parentCategory: 'Games' },
         // Curated News outlet folders removed for now — coming back to this (see legacyIds above).
       ];
       const toSave = {};
@@ -1028,6 +1080,45 @@ export async function loadAll() {
         filmsSeriesFolder.name = 'Shows';
         toSave[`folder_${filmsSeriesFolder.id}`] = filmsSeriesFolder;
         pushMigratedFolderToFirestore(filmsSeriesFolder);
+      }
+
+      // One-time migration: the internal content-category rename (Web Links -> Sources,
+      // Show -> Series, Musician -> Music, Music Album -> Albums, Game -> Games, Movie -> Films,
+      // Book -> Literature, Visual Art -> Arts — same 8-pair table state.js's CATEGORIES/CAT_LABEL
+      // and every literal category comparison across the app are being swept to in this same pass).
+      // Gated the same way savecraft_show_to_movie_migrated above is (a persisted one-time flag) —
+      // deliberately NOT folded into the unconditional CAT_MIGRATION table above: like Show->Movie
+      // before it, several of these OLD names can still be live (a new item/folder can still be
+      // created under an OLD category string until every other file in this rename lands), so this
+      // needs an explicit "have I done this" flag rather than assuming a single unconditional pass
+      // is enough. Runs after the show_to_movie/show_creator/folder-name migrations above, so
+      // anything those produced under an OLD name (e.g. the Show->Movie retag's own 'Movie') gets
+      // swept up into the corresponding NEW name ('Films') too, in this same load.
+      if (!data.savecraft_category_rename_migrated) {
+        const CATEGORY_RENAME_MAP = {
+          'Web Links': 'Sources', 'Show': 'Series', 'Musician': 'Music', 'Music Album': 'Albums',
+          'Game': 'Games', 'Movie': 'Films', 'Book': 'Literature', 'Visual Art': 'Arts',
+        };
+        const categoryRenamedItems = [];
+        state.items.forEach(item => {
+          if (CATEGORY_RENAME_MAP[item.category]) {
+            item.category = CATEGORY_RENAME_MAP[item.category];
+            categoryRenamedItems.push(item);
+          }
+        });
+        const categoryRenamedFolders = [];
+        state.folders.forEach(folder => {
+          if (CATEGORY_RENAME_MAP[folder.parentCategory]) {
+            folder.parentCategory = CATEGORY_RENAME_MAP[folder.parentCategory];
+            categoryRenamedFolders.push(folder);
+          }
+        });
+        const toMigrate = { savecraft_category_rename_migrated: true };
+        categoryRenamedItems.forEach(item => { toMigrate[`item_${item.id}`] = item; });
+        categoryRenamedFolders.forEach(folder => { toMigrate[`folder_${folder.id}`] = folder; });
+        storageSync.set(toMigrate);
+        if (categoryRenamedItems.length) pushMigratedItemsToFirestore(categoryRenamedItems);
+        categoryRenamedFolders.forEach(folder => pushMigratedFolderToFirestore(folder));
       }
 
       // Genuinely await every pending Firestore push above (pendingFirestorePushes) before
@@ -1401,7 +1492,7 @@ function _readLocalSettingsSnapshot() {
       savecraft_hidden_curated: [],
       savecraft_selected_shared_friends: [],
       savecraft_curated_overrides: {},
-      savecraft_view: 'Book',
+      savecraft_view: 'Literature',
       savecraft_sidebar_mode: 'home',
       savecraft_theme: 'dark',
       savecraft_sidebar_collapsed: true,

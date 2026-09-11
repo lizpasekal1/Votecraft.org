@@ -803,7 +803,7 @@ async function init() {
     // same reasoning as the picker card's click handler (renderGrid.js) — one canonical
     // "unfiltered" destination, reachable identically from either control.
     const bucket = e.target.value;
-    navigateToView(bucket === MUSIC_ALL_LABEL ? PRIMARY_FOLDER_ID.Musician : `musicgenre:${bucket}`);
+    navigateToView(bucket === MUSIC_ALL_LABEL ? PRIMARY_FOLDER_ID.Music : `musicgenre:${bucket}`);
   });
 
   // The options dropdown (Home/Shared Saves/Curated/⚡ VC) now lives under the same

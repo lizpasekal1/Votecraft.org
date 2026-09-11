@@ -63,20 +63,20 @@ export function renderAuthorPage() {
     <div class="author-page-header">
       <div class="author-page-photo-wrap">${photoHtml}</div>
       <div class="author-page-info">
-        ${cat === 'Musician'
+        ${cat === 'Music'
           ? `<button class="author-page-name author-page-name-btn" id="author-page-name-btn">${escapeHtml(name)}<svg class="detail-title-arrow" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m321-80-71-71 329-329-329-329 71-71 400 400L321-80Z"/></svg></button>`
           : `<div class="author-page-name">${escapeHtml(name)}</div>`
         }
-        ${cat === 'Musician'
+        ${cat === 'Music'
           ? (musicianTagLineHtml ? `<div class="author-page-genre-row">${musicianTagLineHtml}</div>` : '')
           : websiteLinkHtml
         }
       </div>
     </div>
-    ${cat === 'Musician' && websiteLinkStackedHtml ? `<div class="author-page-website-row">${websiteLinkStackedHtml}</div>` : ''}
+    ${cat === 'Music' && websiteLinkStackedHtml ? `<div class="author-page-website-row">${websiteLinkStackedHtml}</div>` : ''}
     <div class="author-works-header">
       <span>Works (${items.length})</span>
-      ${cat === 'Musician' ? `<button class="btn-fetch-albums" id="btn-fetch-albums">Fetch Albums</button>` : ''}
+      ${cat === 'Music' ? `<button class="btn-fetch-albums" id="btn-fetch-albums">Fetch Albums</button>` : ''}
     </div>
     <div class="author-works-grid" id="author-works-grid">
       ${items.length > 0
@@ -120,7 +120,7 @@ export function renderAuthorPage() {
   wireCardAuthorLinks(worksGrid);
   wireQuickQueueButtons(worksGrid);
 
-  if (cat === 'Musician') backfillAlbumYears(name, items);
+  if (cat === 'Music') backfillAlbumYears(name, items);
 
   worksGrid.querySelectorAll('.btn-edit').forEach(btn => {
     btn.addEventListener('click', e => {

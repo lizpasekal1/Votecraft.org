@@ -1,10 +1,17 @@
+// ids are the final internal category names directly (state.js's CATEGORIES, post-rename) — this
+// menu used to emit its own legacy id set (Music/Shows/Books/Movies/Games/Memes) and rely on
+// storage.js's CAT_MIGRATION to fix them up on next app load. REAL BUG, found and fixed: that
+// table had no entry for 'Memes', so a right-click save from this "Memes" item silently never got
+// migrated into a real category. Emitting the real names here directly (Arts for what used to be
+// Memes — its own default-art-memes folder already exists for exactly this) removes the need for
+// that lookup for freshly-saved items altogether.
 const CATEGORIES = [
   { id: 'Music', label: '🎵 Music' },
-  { id: 'Shows', label: '📺 Shows' },
-  { id: 'Books', label: '📚 Books' },
-  { id: 'Movies', label: '🎬 Movies' },
+  { id: 'Series', label: '📺 Shows' },
+  { id: 'Literature', label: '📚 Books' },
+  { id: 'Films', label: '🎬 Movies' },
   { id: 'Games', label: '🎮 Games' },
-  { id: 'Memes', label: '🤣 Memes' },
+  { id: 'Arts', label: '🤣 Memes' },
 ];
 
 // Create context menus on install
