@@ -7,7 +7,7 @@ import { CURATED_MOVIE_DIRECTOR, CURATED_SHOW_CREATOR, CURATED_GAME_STUDIO } fro
 // gets a clean title plus the artist name separately in .notes. Confirmed the same combined-title
 // convention applies to Book (Movie/Game/Show titles turned out to be plain — see
 // getStaticCuratedCreator below for how those resolve creator names instead).
-export const SPLIT_TITLE_CREATOR_CATEGORIES = ['Book', 'Movie', 'Game', 'Show'];
+export const SPLIT_TITLE_CREATOR_CATEGORIES = ['Literature', 'Films', 'Games', 'Series'];
 export function splitCuratedTitleCreator(title) {
   const idx = title?.indexOf(' — ');
   if (idx == null || idx === -1) return { title, author: null };
@@ -20,15 +20,15 @@ export function splitCuratedTitleCreator(title) {
 // flags a co-directed movie so renderers can append a "…" purely for display, without corrupting
 // the name used to link back to that director's own page.
 export function getStaticCuratedCreator(cat, title) {
-  if (cat === 'Movie') {
+  if (cat === 'Films') {
     const entry = CURATED_MOVIE_DIRECTOR[title];
     return entry ? { name: entry.name, hasMore: entry.coDirectorCount > 1 } : null;
   }
-  if (cat === 'Show') {
+  if (cat === 'Series') {
     const name = CURATED_SHOW_CREATOR[title];
     return name ? { name, hasMore: false } : null;
   }
-  if (cat === 'Game') {
+  if (cat === 'Games') {
     const name = CURATED_GAME_STUDIO[title];
     return name ? { name, hasMore: false } : null;
   }

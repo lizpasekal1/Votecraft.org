@@ -318,7 +318,7 @@ export function renderCuratedDirectory(container) {
 function resolveRowItemImage(i, category) {
   let imageUrl = i.imageUrl || null;
   if (!imageUrl && state.curatedImgCache[i.id]) imageUrl = state.curatedImgCache[i.id];
-  if (category === 'Musician') {
+  if (category === 'Music') {
     const wikiPhoto = state.artistBioCache[(i.title || '').trim().toLowerCase()]?.photoUrl;
     if (wikiPhoto && (!imageUrl || isItunesArtworkUrl(imageUrl))) imageUrl = wikiPhoto;
   }

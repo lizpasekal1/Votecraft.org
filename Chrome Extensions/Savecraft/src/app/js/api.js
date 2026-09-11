@@ -317,16 +317,16 @@ export async function ensureArtistWikipediaInfo(artistName) {
 // trusting it" approach as isMusicEntitySummary/fetchArtistWikipediaSummary above, so a generic
 // title (e.g. a movie called "Up" or "Cars") doesn't pull in the wrong same-named Wikipedia page.
 const CATEGORY_WIKI_KEYWORDS = {
-  Movie: /\b(film|movie)\b/i,
-  Show: /\b(television series|tv series|television show|web series)\b/i,
-  Game: /\b(video game)\b/i,
-  Book: /\b(novel|book|memoir)\b/i,
+  Films: /\b(film|movie)\b/i,
+  Series: /\b(television series|tv series|television show|web series)\b/i,
+  Games: /\b(video game)\b/i,
+  Literature: /\b(novel|book|memoir)\b/i,
 };
 const CATEGORY_WIKI_SEARCH_HINT = {
-  Movie: 'film',
-  Show: 'TV series',
-  Game: 'video game',
-  Book: 'novel',
+  Films: 'film',
+  Series: 'TV series',
+  Games: 'video game',
+  Literature: 'novel',
 };
 
 function isCategoryEntitySummary(summary, category) {
@@ -578,13 +578,13 @@ async function fetchWikidataEntityLabelViaProperty(title, property, descriptionR
 // P57 = director. A film's director claim is a single (or a couple, for co-directors) entity —
 // unlike a TV series (see below), this reliably names "the director."
 async function fetchMovieDirectorFromWikidata(title) {
-  return fetchWikidataEntityLabelViaProperty(title, 'P57', CATEGORY_WIKI_KEYWORDS.Movie);
+  return fetchWikidataEntityLabelViaProperty(title, 'P57', CATEGORY_WIKI_KEYWORDS.Films);
 }
 
 // P170 = creator, not P57 (director) — verified live that a TV series' P57 lists dozens of
 // per-episode directors, not a single showrunner, while P170 correctly names just the creator.
 async function fetchShowCreatorFromWikidata(title) {
-  return fetchWikidataEntityLabelViaProperty(title, 'P170', CATEGORY_WIKI_KEYWORDS.Show);
+  return fetchWikidataEntityLabelViaProperty(title, 'P170', CATEGORY_WIKI_KEYWORDS.Series);
 }
 
 // Steam's appdetails endpoint (distinct from searchGames()'s storesearch endpoint) returns the
@@ -612,9 +612,9 @@ export async function ensureItemCreator(title, category, { url } = {}) {
   }
   let creator = null;
   try {
-    if (category === 'Movie') creator = await fetchMovieDirectorFromWikidata(title);
-    else if (category === 'Show') creator = await fetchShowCreatorFromWikidata(title);
-    else if (category === 'Game') creator = await fetchGameStudioFromSteam(url);
+    if (category === 'Films') creator = await fetchMovieDirectorFromWikidata(title);
+    else if (category === 'Series') creator = await fetchShowCreatorFromWikidata(title);
+    else if (category === 'Games') creator = await fetchGameStudioFromSteam(url);
   } catch { /* no creator found */ }
   state.creatorCache[key] = { creator, fetchedAt: Date.now() };
   persistCreatorCache();

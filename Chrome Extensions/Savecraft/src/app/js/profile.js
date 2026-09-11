@@ -889,7 +889,7 @@ const NOTES_IMAGE_ICON = '<svg viewBox="0 0 24 24" width="13" height="13" fill="
 function _collectNotesItems() {
   return state.items
     .map(item => {
-      const isBook = item.category === 'Book';
+      const isBook = item.category === 'Literature';
       const textsField = isBook ? 'chapterNotes' : 'noteTexts';
       const titlesField = isBook ? 'chapterTitles' : 'noteTitles';
       const rows = Object.entries(item[textsField] || {})
@@ -992,7 +992,7 @@ function wireMyNotesSection(container) {
   const dd = card.querySelector('.profile-notes-category-dropdown');
   if (dd) {
     const allOption = `<button class="saves-list-option${!_notesCategoryFilter ? ' active' : ''}" data-cat="">All Categories</button>`;
-    const catOptions = CATEGORIES.filter(cat => cat !== 'Music Album').map(cat =>
+    const catOptions = CATEGORIES.filter(cat => cat !== 'Albums').map(cat =>
       `<button class="saves-list-option${_notesCategoryFilter === cat ? ' active' : ''}" data-cat="${escapeHtml(cat)}">${escapeHtml(CAT_LABEL[cat] || cat)}</button>`
     ).join('');
     dd.innerHTML = allOption + `<div class="saves-list-divider"></div>` + catOptions;

@@ -66,8 +66,8 @@ function setModalHeading(html, screenClass) {
 // Words whose plural doesn't singularize by the generic suffix rule below (SINGULARIZE_SUFFIX),
 // either because it's already invariant ("Web Series"/"Series"/"News") or because the "-ies" rule
 // would misfire on a word that just happens to end in "-ies" without being a "-y" plural ("Movies"
-// is "Movie" + "s", not "Movy" + "ies"). Keyed exactly as the folder/category name appears.
-const SINGULARIZE_OVERRIDES = { 'Movies': 'Movie', 'Web Series': 'Web Series', 'Series': 'Series', 'News': 'News', 'PDFs': 'PDF' };
+// is "Films" + "s", not "Movy" + "ies"). Keyed exactly as the folder/category name appears.
+const SINGULARIZE_OVERRIDES = { 'Movies': 'Films', 'Web Series': 'Web Series', 'Series': 'Series', 'News': 'News', 'PDFs': 'PDF' };
 // Review screen's title reads "Add <folder/category>" (e.g. "Add Podcast") instead of the plural
 // folder/category name as-is, per request. Handles the common English plural suffixes for the
 // current (and any future, user-created) folder names; anything that doesn't fit those rules
@@ -102,20 +102,20 @@ function reviewTitleHtml() {
 // correctly the way the movies are from wikipedia... just make Shows search Wikipedia like Movies
 // do") — iTunes's TV catalog is sparser/less reliable than Wikipedia's own search for this.
 const TITLE_SEARCH_FN = {
-  Musician: searchMusicians,
-  'Music Album': searchMusicAlbums,
-  Show: searchShowsWikipedia,
-  Book: searchBooks,
-  Game: searchGames,
-  Movie: searchMoviesWikipedia,
+  Music: searchMusicians,
+  Albums: searchMusicAlbums,
+  Series: searchShowsWikipedia,
+  Literature: searchBooks,
+  Games: searchGames,
+  Films: searchMoviesWikipedia,
 };
 
 // Music Album (artist), Book (author), Movie (director), Show (creator), and Game (studio) each
 // have a meaningful separate "Author"-equivalent field — every other category collapses the
 // Title/Author row to a single field so it doesn't sit there empty.
-const CATEGORIES_WITH_AUTHOR = new Set(['Music Album', 'Book', 'Movie', 'Show', 'Game']);
-const SINGLE_FIELD_PLACEHOLDER = { Musician: 'Name' }; // everything else defaults to "Title"
-const AUTHOR_FIELD_LABEL = { 'Music Album': 'Artist', Book: 'Author', Movie: 'Director', Show: 'Creator', Game: 'Studio' };
+const CATEGORIES_WITH_AUTHOR = new Set(['Albums', 'Literature', 'Films', 'Series', 'Games']);
+const SINGLE_FIELD_PLACEHOLDER = { Music: 'Name' }; // everything else defaults to "Title"
+const AUTHOR_FIELD_LABEL = { Albums: 'Artist', Literature: 'Author', Films: 'Director', Series: 'Creator', Games: 'Studio' };
 
 // Edit-mode only now — the Add flow always shows the single-field (Title-only) layout regardless
 // of category (see showReviewScreen). Purely visual (hide/show + placeholder) — deliberately
@@ -130,7 +130,7 @@ export function updateTitleAuthorLayout(category, folderId) {
     : (SINGLE_FIELD_PLACEHOLDER[category] || 'Title');
   // Movie's "Videos" folder has no director — it's a channel/uploader, so "Creator" fits better
   // than the default "Director" label there specifically.
-  const isVideosFolder = category === 'Movie' && folderId === 'default-movies-videos';
+  const isVideosFolder = category === 'Films' && folderId === 'default-movies-videos';
   document.getElementById('input-author').placeholder = isVideosFolder ? 'Creator' : (AUTHOR_FIELD_LABEL[category] || 'Author');
 }
 
@@ -177,27 +177,27 @@ function setAddSimpleMode(isSimple) {
 // expected kind of link regardless of the label. appendChild always moves a node to its new spot
 // (removing it from wherever it currently sits), so this is safe to call on every category switch
 // regardless of the field's current position/parent.
-const MUSIC_URL_PAIR_CATEGORIES = new Set(['Musician', 'Music Album', 'Favorite Albums']);
+const MUSIC_URL_PAIR_CATEGORIES = new Set(['Music', 'Albums', 'Favorite Albums']);
 export function updateVideoUrlLayout(category, folderId) {
   const group = document.getElementById('youtube-url-group');
   const labelText = document.getElementById('youtube-url-label-text');
   const platformsSection = document.getElementById('platforms-section');
   const musicPairRow = document.getElementById('music-url-pair-row');
 
-  labelText.textContent = category === 'Movie' ? 'Video URL' : 'YouTube URL';
+  labelText.textContent = category === 'Films' ? 'Video URL' : 'YouTube URL';
 
   // Movie's "Videos" folder already has its own "Video URL" field (the plain #input-url one,
   // relabeled in showReviewScreen/openEditModal) which is the field the thumbnail/lightbox
   // features actually read — this separate #input-youtube-url one would just be a confusing,
   // functionally-dead duplicate there, so it's hidden entirely for that specific case.
-  const isVideosFolder = category === 'Movie' && folderId === 'default-movies-videos';
+  const isVideosFolder = category === 'Films' && folderId === 'default-movies-videos';
   group.style.display = isVideosFolder ? 'none' : '';
 
   if (MUSIC_URL_PAIR_CATEGORIES.has(category)) {
     musicPairRow.appendChild(platformsSection);
     musicPairRow.appendChild(group);
   } else {
-    // Platforms/"Web Links" is always the very last field section for every non-Music category —
+    // Platforms/"Sources" is always the very last field section for every non-Music category —
     // appended to the end of the whole form. The video-link field's own position within it
     // (appended inside #platform-chips) is handled by updatePlatformsSection instead, not here.
     document.getElementById('modal-step2').appendChild(platformsSection);
@@ -281,9 +281,9 @@ export function getSelectedPlatforms() {
 // skips both the Websites tile and the folder-picker screen.
 function renderCategoryTiles() {
   const grid = document.getElementById('step1-category-grid');
-  const tiles = CATEGORIES.filter(cat => cat !== 'Music Album').map(cat => cat === 'Musician' ? `
+  const tiles = CATEGORIES.filter(cat => cat !== 'Albums').map(cat => cat === 'Music' ? `
     <button type="button" class="step1-category-tile" data-category="__music__">
-      <span class="cat-icon">${CAT_EMOJI['Music Album'] || ''}</span>
+      <span class="cat-icon">${CAT_EMOJI['Albums'] || ''}</span>
       <span class="step1-category-tile-label">Music</span>
     </button>` : `
     <button type="button" class="step1-category-tile" data-category="${cat}">
@@ -308,8 +308,8 @@ export function selectStep1Category(cat) {
     return;
   }
   if (cat === '__articles__') {
-    state.modalCategory = 'Web Links';
-    document.getElementById('modal-category').value = 'Web Links';
+    state.modalCategory = 'Sources';
+    document.getElementById('modal-category').value = 'Sources';
     _wizardHadFolderScreen = false;
     _wizardFolderId = 'default-weblinks-articles';
     showReviewScreen();
@@ -374,12 +374,12 @@ function showMusicChoiceScreen() {
   document.getElementById('modal-info-icon').style.display = 'none';
   setModalHeading('<span class="modal-category-title">Music</span><span class="modal-heading-text">Choose a folder</span>', 'modal-h2--music-offset');
 
-  // CAT_LABEL['Musician'] is "Music" (used for the combined top-level tile) — on this
+  // CAT_LABEL['Music'] is "Music" (used for the combined top-level tile) — on this
   // specific sub-choice screen that duplicates the tile you just clicked, so it's overridden to
-  // the singular "Musician" here only (mirrors the popup's own musicChoiceLabels).
-  const musicChoiceLabels = { Musician: 'Musician', 'Music Album': CAT_LABEL['Music Album'] };
+  // the singular "Music" here only (mirrors the popup's own musicChoiceLabels).
+  const musicChoiceLabels = { Music: 'Music', Albums: CAT_LABEL['Albums'] };
   const grid = document.getElementById('step1-music-choice-grid');
-  grid.innerHTML = ['Musician', 'Music Album'].map(cat => `
+  grid.innerHTML = ['Music', 'Albums'].map(cat => `
     <button type="button" class="step1-category-tile${folderTileIsOneLine(musicChoiceLabels[cat] || cat) ? ' step1-category-tile--one-line' : ''}" data-category="${cat}">
       <span class="cat-icon">${CAT_EMOJI[cat] || ''}</span>
       <span class="step1-category-tile-label">${musicChoiceLabels[cat] || cat}</span>
@@ -761,7 +761,7 @@ function renderTitleSearchResults(results) {
   // `_wizardToken`, which only bumps on navigation, not on a second search within the same
   // wizard step) so a photo resolving after the user's typed a different search doesn't land on
   // an unrelated row that now happens to sit at the same index.
-  if (state.modalCategory === 'Musician') {
+  if (state.modalCategory === 'Music') {
     results.forEach((r, i) => {
       if (r.imageUrl) return;
       ensureArtistWikipediaInfo(r.title).then(({ photoUrl }) => {
@@ -817,12 +817,12 @@ export function kickOffTitleEnrichment() {
   const title = document.getElementById('input-title').value.trim();
   if (!title) return;
 
-  if (category === 'Musician') {
+  if (category === 'Music') {
     ensureArtistWikipediaInfo(title).then(({ bio, photoUrl }) => {
       if (token !== _wizardToken) return; // Back/close/re-select happened before this resolved
       applyTitleEnrichment(bio, photoUrl);
     });
-  } else if (category === 'Book' || category === 'Show' || category === 'Movie' || category === 'Game') {
+  } else if (category === 'Literature' || category === 'Series' || category === 'Films' || category === 'Games') {
     ensureItemWikipediaInfo(title, category).then(({ bio, photoUrl }) => {
       if (token !== _wizardToken) return;
       applyTitleEnrichment(bio, photoUrl);
@@ -834,7 +834,7 @@ export function kickOffTitleEnrichment() {
   // Director/Creator/Studio auto-fill — separate from (and runs alongside) the bio/image
   // enrichment above, since Movie/Show/Game need both. Book/Music Album already get `author`
   // straight from their search results, so they don't need this.
-  if (category === 'Movie' || category === 'Show' || category === 'Game') {
+  if (category === 'Films' || category === 'Series' || category === 'Games') {
     const url = document.getElementById('input-url').value.trim();
     ensureItemCreator(title, category, { url }).then(creator => {
       if (token !== _wizardToken) return;
@@ -994,10 +994,10 @@ export function openEditModal(item) {
   // needing its own init hook in main.js.
   const genreTagGroup = document.getElementById('genre-tag-group');
   const genreTagInput = document.getElementById('input-genre-tag');
-  if (item.category === 'Musician') {
+  if (item.category === 'Music') {
     document.getElementById('genre-tag-datalist').innerHTML =
       tagsForMusicGenreBucket().map(t => `<option value="${escapeHtml(t)}"></option>`).join('');
-    genreTagInput.value = findAuthor(item.title, 'Musician')?.genre || '';
+    genreTagInput.value = findAuthor(item.title, 'Music')?.genre || '';
     genreTagGroup.style.display = '';
   } else {
     genreTagGroup.style.display = 'none';
@@ -1146,11 +1146,11 @@ export async function handleSaveItem() {
   // Get-or-create the same way backfillMusicianGenres() (authors.js) does, so a Musician with no
   // author record yet (e.g. saved before this feature existed) still gets one created here rather
   // than silently no-oping.
-  if (state.editingId && category === 'Musician') {
+  if (state.editingId && category === 'Music') {
     const genreTagValue = document.getElementById('input-genre-tag').value.trim() || null;
-    let musicianAuthor = findAuthor(title, 'Musician');
+    let musicianAuthor = findAuthor(title, 'Music');
     if (!musicianAuthor) {
-      musicianAuthor = { id: Date.now().toString(), name: title, category: 'Musician', bio: null, imageUrl: null, websiteUrl: null, genre: null, savedAt: Date.now() };
+      musicianAuthor = { id: Date.now().toString(), name: title, category: 'Music', bio: null, imageUrl: null, websiteUrl: null, genre: null, savedAt: Date.now() };
       state.authors.push(musicianAuthor);
     }
     if (musicianAuthor.genre !== genreTagValue) {
@@ -1261,11 +1261,11 @@ export async function handleSaveItem() {
     }
   }
 
-  if (!state.editingId && category === 'Musician') {
+  if (!state.editingId && category === 'Music') {
     autoImportMusicianAlbums(item); // fire-and-forget, doesn't block the modal closing
   }
 
-  if (!state.editingId && category === 'Music Album' && author) {
+  if (!state.editingId && category === 'Albums' && author) {
     // Fire-and-forget, mirroring the Musician branch above: get-or-create the artist's Musician
     // record (autoSaveMusician already dedupes by exact title match, so re-adding an album by an
     // artist you've already saved won't create a second Musician), then pull in the rest of
@@ -1370,7 +1370,7 @@ export async function autoImportMusicianAlbums(musicianItem) {
 
   const existingTitles = new Set(
     state.items
-      .filter(i => i.category === 'Music Album' && i.author === artistName)
+      .filter(i => i.category === 'Albums' && i.author === artistName)
       .map(i => i.title?.toLowerCase())
   );
 
@@ -1381,7 +1381,7 @@ export async function autoImportMusicianAlbums(musicianItem) {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       title: album.title,
       author: artistName,
-      category: 'Music Album',
+      category: 'Albums',
       url: album.url || null,
       imageUrl: album.imageUrl || null,
       notes: null,

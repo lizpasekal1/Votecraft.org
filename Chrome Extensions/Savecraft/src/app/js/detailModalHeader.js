@@ -156,7 +156,7 @@ export function setupHeader(item, { domain, isMusicAlbum, isMusicianItem }) {
 
   // Movie's "Videos" folder — clicking the featured image opens an embedded player for the
   // actual YouTube/Vimeo link instead of the plain image lightbox every other category gets.
-  const _videoEmbedUrl = item.category === 'Movie' && item.folderId === 'default-movies-videos'
+  const _videoEmbedUrl = item.category === 'Films' && item.folderId === 'default-movies-videos'
     ? getVideoEmbedUrl(item.url)
     : null;
 
@@ -237,9 +237,9 @@ export function setupHeader(item, { domain, isMusicAlbum, isMusicianItem }) {
   const _detailAuthorName = item.author
     || (item.curated && CURATED_NOTES_CATEGORIES.includes(item.category) ? item.notes : null);
   // When the name comes from the curated `.notes` fallback (no item.author), the profile page
-  // to link to is 'Musician' for a Music Album (the one category whose curated-notes creator
+  // to link to is 'Music' for a Music Album (the one category whose curated-notes creator
   // isn't its own category) and item.category for everything else.
-  const _detailAuthorCat = item.author ? item.category : (item.category === 'Music Album' ? 'Musician' : item.category);
+  const _detailAuthorCat = item.author ? item.category : (item.category === 'Albums' ? 'Music' : item.category);
   // True for any curated "creator card" (Musician, Book Author, Movie Director, Show Creator,
   // Game Studio) — the title itself already IS the creator's name/link, so the separate author
   // byline below would be redundant.
@@ -264,7 +264,7 @@ export function setupHeader(item, { domain, isMusicAlbum, isMusicianItem }) {
       : escapeHtml(item.title || '');
 
   const _authorHtml = !_isCuratedMusician && _detailAuthorName && !isMusicAlbum
-    ? `<span class="detail-title-sep"> | </span><button class="detail-author-link${item.category === 'Book' ? ' detail-book-author-link' : ''}" data-author="${escapeHtml(_detailAuthorName)}" data-category="${escapeHtml(_detailAuthorCat)}">${escapeHtml(_detailAuthorName)}${item.authorHasMore ? ' …' : ''}</button>`
+    ? `<span class="detail-title-sep"> | </span><button class="detail-author-link${item.category === 'Literature' ? ' detail-book-author-link' : ''}" data-author="${escapeHtml(_detailAuthorName)}" data-category="${escapeHtml(_detailAuthorCat)}">${escapeHtml(_detailAuthorName)}${item.authorHasMore ? ' …' : ''}</button>`
     : '';
 
   // News items don't have item.author — they're attributed via item.folderId pointing at a
@@ -280,10 +280,10 @@ export function setupHeader(item, { domain, isMusicAlbum, isMusicianItem }) {
   // Scoped strictly to Musician/Music Album so an unrelated item.author (e.g. a Book's author) never
   // gets matched against an existing Musician profile of the same name. Every other category falls
   // back to the item's own saved URL (same link the Web Links accordion's "View Source" uses).
-  const _ctaAuthorName = item.category === 'Musician' ? item.title
-    : item.category === 'Music Album' ? _detailAuthorName
+  const _ctaAuthorName = item.category === 'Music' ? item.title
+    : item.category === 'Albums' ? _detailAuthorName
     : null;
-  let _ctaAuthor = _ctaAuthorName ? findAuthor(_ctaAuthorName, 'Musician') : null;
+  let _ctaAuthor = _ctaAuthorName ? findAuthor(_ctaAuthorName, 'Music') : null;
   const buildWebsiteCta = () => {
     if (_ctaAuthor?.websiteUrl) {
       return `<a class="btn-detail-website" id="detail-website-cta" href="${escapeHtml(_ctaAuthor.websiteUrl)}" target="_blank" rel="noopener">Website</a>`;
@@ -311,9 +311,9 @@ export function setupHeader(item, { domain, isMusicAlbum, isMusicianItem }) {
   if (_ctaAuthorName && !_ctaAuthor?.websiteUrl) {
     ensureArtistWebsite(_ctaAuthorName).then(url => {
       if (!url || getDetailItem() !== item) return; // no result, or modal moved on to a different item
-      let author = findAuthor(_ctaAuthorName, 'Musician');
+      let author = findAuthor(_ctaAuthorName, 'Music');
       if (!author) {
-        author = { id: Date.now().toString(), name: _ctaAuthorName, category: 'Musician', bio: null, imageUrl: null, websiteUrl: null, savedAt: Date.now() };
+        author = { id: Date.now().toString(), name: _ctaAuthorName, category: 'Music', bio: null, imageUrl: null, websiteUrl: null, savedAt: Date.now() };
         state.authors.push(author);
       }
       author.websiteUrl = url;

@@ -25,7 +25,7 @@ export function setupSummary(item, { isMusicAlbum, isMusicianItem, ctaAuthorName
   albumsListEl.classList.remove('detail-albums-list--empty-fetch'); // re-added below only for the Musician empty-fetch case
   // Extra top gap needed only for the Book Summary header — the preceding My Notes section
   // (with the chapter list folded into it) sits flush against it otherwise when collapsed.
-  albumsAccordionHeaderEl.classList.toggle('detail-accordion-header--book-summary', item.category === 'Book');
+  albumsAccordionHeaderEl.classList.toggle('detail-accordion-header--book-summary', item.category === 'Literature');
   registerAccordion('albums', albumsAccordionHeaderEl, albumsListEl);
 
   const summaryEl = document.getElementById('detail-summary');
@@ -86,9 +86,9 @@ export function setupSummary(item, { isMusicAlbum, isMusicianItem, ctaAuthorName
     ensureArtistWikipediaInfo(ctaAuthorName).then(({ bio, photoUrl, wikiUrl }) => {
       if ((!bio && !photoUrl && !wikiUrl) || getDetailItem() !== item) return; // nothing found, or modal moved on
       addWikipediaLink(wikiUrl);
-      let author = findAuthor(ctaAuthorName, 'Musician');
+      let author = findAuthor(ctaAuthorName, 'Music');
       if (!author) {
-        author = { id: Date.now().toString(), name: ctaAuthorName, category: 'Musician', bio: null, imageUrl: null, websiteUrl: null, savedAt: Date.now() };
+        author = { id: Date.now().toString(), name: ctaAuthorName, category: 'Music', bio: null, imageUrl: null, websiteUrl: null, savedAt: Date.now() };
         state.authors.push(author);
       }
       let authorChanged = applyArtistPhotoToItem(author, photoUrl);
@@ -192,7 +192,7 @@ export function setupSummary(item, { isMusicAlbum, isMusicianItem, ctaAuthorName
         });
         document.getElementById('detail-albums-see-all')?.addEventListener('click', () => {
           closeDetailModal();
-          navigateToAuthor(item.title, 'Musician');
+          navigateToAuthor(item.title, 'Music');
         });
       } else {
         // No known albums yet — a "Fetch Albums" button in the same row slot instead of either an
@@ -225,7 +225,7 @@ export function setupSummary(item, { isMusicAlbum, isMusicianItem, ctaAuthorName
   } else if (SUMMARY_PLACEHOLDER_CATEGORIES.includes(item.category)) {
     // Book/Show/Movie/Game show the item's summary inside this accordion instead of the plain
     // text block above notes — content is populated/updated by renderSummaryText() above.
-    albumsAccordionLabelEl.textContent = item.category === 'Book' ? 'Book Summary' : 'Summary';
+    albumsAccordionLabelEl.textContent = item.category === 'Literature' ? 'Book Summary' : 'Summary';
     albumsAccordionHeaderEl.classList.remove('open');
     albumsListEl.classList.remove('open');
     albumsAccordionHeaderEl.style.display = '';

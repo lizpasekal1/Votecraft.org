@@ -62,7 +62,7 @@ export function isItunesArtworkUrl(url) {
 // anything once that folder was renamed to 'Shows' this session (storage.js), silently pushing it
 // to the alphabetical-fallback tail instead of its intended second position.
 const CUSTOM_FOLDER_ORDER = {
-  Movie: ['Movies', 'Shows', 'Videos', 'Directors'],
+  Films: ['Movies', 'Shows', 'Videos', 'Directors'],
 };
 export function sortFoldersForDisplay(folders, category) {
   const order = CUSTOM_FOLDER_ORDER[category];
@@ -173,7 +173,7 @@ export function getListIds(item) {
 
 // Shorter display text for category badges (the underlying category value is unchanged).
 export function badgeLabel(cat) {
-  if (cat === 'Music Album') return 'Album';
+  if (cat === 'Albums') return 'Album';
   if (cat === 'Book Author') return 'Author';
   if (cat === 'Movie Director') return 'Director';
   if (cat === 'Show Creator') return 'Creator';
@@ -184,7 +184,7 @@ export function badgeLabel(cat) {
 // True when browsing the dedicated "Music Albums" section (the Musicians > Music Albums
 // sidebar subfolder, personal or curated) — artist names aren't clickable links there.
 export function isMusicAlbumsSectionView() {
-  return state.view === 'Music Album' || (state.view.startsWith('genre:') && state.view.endsWith(':Music Album'));
+  return state.view === 'Albums' || (state.view.startsWith('genre:') && state.view.endsWith(':Music Album'));
 }
 
 // True when viewing a musician's own author page and this is one of their own works —

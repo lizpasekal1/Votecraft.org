@@ -93,10 +93,10 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
   // Which element actually holds My Notes' visible content for this category — Book keeps using
   // #detail-tracklist (unchanged); every other category (including Music Album, alongside its
   // separate Song List) uses the new #detail-notes-list.
-  const notesBodyEl = item.category === 'Book' ? tracklistEl : notesListEl;
+  const notesBodyEl = item.category === 'Literature' ? tracklistEl : notesListEl;
 
   document.getElementById('detail-notes-accordion-icon').querySelector('path')
-    .setAttribute('d', item.category === 'Book' ? BOOK_NOTES_ICON_PATH : NOTES_ICON_PATH);
+    .setAttribute('d', item.category === 'Literature' ? BOOK_NOTES_ICON_PATH : NOTES_ICON_PATH);
   registerAccordion('notes', notesAccordionHeaderEl, notesBodyEl);
   // Curated (not-yet-saved) items in creator-linked categories stash the creator's name in
   // item.notes (see _detailAuthorName in detailModalHeader.js) — that's never real user notes, so
@@ -118,7 +118,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
       _fitAccordionSection(notesBodyEl);
     } else {
       notesBodyEl.style.maxHeight = '';
-      _closeAllOpenRows(notesBodyEl, item.category === 'Book' ? 'chapterFavorites' : 'noteFavorites');
+      _closeAllOpenRows(notesBodyEl, item.category === 'Literature' ? 'chapterFavorites' : 'noteFavorites');
     }
     // The toggle above already changes notesBodyEl's 'open' class, which the MutationObserver set
     // up in initNoteToolbar() picks up and reacts to on its own (toolbar visibility, blurring any
@@ -509,7 +509,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
         _wireNoteRows(tracklistEl, { idAttr: 'trackNumber', favoritesField: 'favoriteTracks', textsField: 'trackNotes' });
       }
     };
-  } else if (item.category === 'Book') {
+  } else if (item.category === 'Literature') {
     // Manual chapter list — no reliable chapter/table-of-contents data source for books (unlike
     // ensureAlbumTrackList's iTunes track listings), so this is just a numbered placeholder list
     // (chapterCount, defaulting to 12) the user can extend, stored on the item like trackNotes.
@@ -537,7 +537,7 @@ export function setupNotesAndTracklist(item, { isMusicAlbum, isMusicianItem, cta
   // ----- Part 2: #detail-notes-list — the numbered "My Notes" list for every category except
   // Book (which used #detail-tracklist for this above instead). Independent of Part 1, so Music
   // Album gets both its own Song List *and* this. -----
-  if (item.category !== 'Book') {
+  if (item.category !== 'Literature') {
     notesListEl.style.display = '';
     notesListEl.classList.add('detail-accordion-collapsible');
     notesListEl.classList.remove('open');

@@ -1179,31 +1179,41 @@
   letter-spacing: -0.02em;
 }
 
-/* Placeholder gradients */
-.placeholder-Music-Album { background: linear-gradient(135deg, #EC4899 0%, #F9A8D4 100%); }
-.placeholder-Musician    { background: linear-gradient(135deg, #EC4899 0%, #F9A8D4 100%); }
-.placeholder-Show        { background: linear-gradient(135deg, #8B5CF6 0%, #C4B5FD 100%); }
-.placeholder-Book        { background: linear-gradient(135deg, #10B981 0%, #6EE7B7 100%); }
+/* Placeholder gradients — current category names (state.js CATEGORIES, post-rename). catClass()
+   is a plain space->dash replace, and none of these 8 names contain a space, so the selector is
+   just the category name itself. */
+.placeholder-Music      { background: linear-gradient(135deg, #EC4899 0%, #F9A8D4 100%); }
+.placeholder-Albums     { background: linear-gradient(135deg, #EC4899 0%, #F9A8D4 100%); }
+.placeholder-Series     { background: linear-gradient(135deg, #8B5CF6 0%, #C4B5FD 100%); }
+.placeholder-Literature { background: linear-gradient(135deg, #10B981 0%, #6EE7B7 100%); }
 .placeholder-Book-Author { background: linear-gradient(135deg, #10B981 0%, #6EE7B7 100%); }
-.placeholder-Movie       { background: linear-gradient(135deg, #3B82F6 0%, #93C5FD 100%); }
+.placeholder-Films      { background: linear-gradient(135deg, #3B82F6 0%, #93C5FD 100%); }
 .placeholder-Movie-Director { background: linear-gradient(135deg, #3B82F6 0%, #93C5FD 100%); }
 .placeholder-Show-Creator   { background: linear-gradient(135deg, #8B5CF6 0%, #C4B5FD 100%); }
-.placeholder-Game        { background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%); }
+.placeholder-Games      { background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%); }
 .placeholder-Game-Studio { background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%); }
-.placeholder-Visual-Art  { background: linear-gradient(135deg, #F97316 0%, #FDBA74 100%); }
+.placeholder-Arts       { background: linear-gradient(135deg, #F97316 0%, #FDBA74 100%); }
 .placeholder-Memes       { background: linear-gradient(135deg, #EF4444 0%, #FCA5A5 100%); }
-/* Web Links ("Sources") — REAL BUG, found and fixed: every other category had its own placeholder
-   gradient + badge color, but Web Links never got one, so a card with no fetched/manual image
-   (e.g. climate.us, reported live) just showed a blank, uncolored box instead of a colored
-   fallback like every other category's cards do. Teal, to stay visually distinct from every color
-   already in use above. */
+/* Sources — REAL BUG, found and fixed: every other category had its own placeholder
+   gradient + badge color, but Web Links (now "Sources") never got one, so a card with no
+   fetched/manual image (e.g. climate.us, reported live) just showed a blank, uncolored box
+   instead of a colored fallback like every other category's cards do. Teal, to stay visually
+   distinct from every color already in use above. */
+.placeholder-Sources     { background: linear-gradient(135deg, #06B6D4 0%, #67E8F9 100%); }
+/* Legacy names (pre-rename: Web Links/Show/Musician/Music Album/Game/Movie/Book/Visual Art, plus
+   the older Shows/Books/Movies plural forms from before that) kept for any items the gated
+   one-time category-rename migration (storage.js) hasn't reached yet. */
 .placeholder-Web-Links   { background: linear-gradient(135deg, #06B6D4 0%, #67E8F9 100%); }
-/* Legacy names kept for any un-migrated items */
-.placeholder-Music  { background: linear-gradient(135deg, #EC4899 0%, #F9A8D4 100%); }
+.placeholder-Musician    { background: linear-gradient(135deg, #EC4899 0%, #F9A8D4 100%); }
+.placeholder-Music-Album { background: linear-gradient(135deg, #EC4899 0%, #F9A8D4 100%); }
+.placeholder-Show        { background: linear-gradient(135deg, #8B5CF6 0%, #C4B5FD 100%); }
+.placeholder-Book        { background: linear-gradient(135deg, #10B981 0%, #6EE7B7 100%); }
+.placeholder-Movie       { background: linear-gradient(135deg, #3B82F6 0%, #93C5FD 100%); }
+.placeholder-Game        { background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%); }
+.placeholder-Visual-Art  { background: linear-gradient(135deg, #F97316 0%, #FDBA74 100%); }
 .placeholder-Shows  { background: linear-gradient(135deg, #8B5CF6 0%, #C4B5FD 100%); }
 .placeholder-Books  { background: linear-gradient(135deg, #10B981 0%, #6EE7B7 100%); }
 .placeholder-Movies { background: linear-gradient(135deg, #3B82F6 0%, #93C5FD 100%); }
-.placeholder-Games  { background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%); }
 
 /* Right content */
 .card-body {
@@ -1289,20 +1299,19 @@
   flex-shrink: 0;
 }
 
-/* Badge colors */
-.badge-Music-Album  { background: #FCE7F3; color: #BE185D; }
-.badge-Musician     { background: #FCE7F3; color: #BE185D; }
-.badge-Show         { background: #EDE9FE; color: #6D28D9; }
-.badge-Book         { background: #D1FAE5; color: #065F46; }
+/* Badge colors — current category names (state.js CATEGORIES, post-rename). */
+.badge-Albums       { background: #FCE7F3; color: #BE185D; }
+.badge-Series       { background: #EDE9FE; color: #6D28D9; }
+.badge-Literature   { background: #D1FAE5; color: #065F46; }
 .badge-Book-Author  { background: #D1FAE5; color: #065F46; }
-.badge-Movie        { background: #DBEAFE; color: #1E40AF; }
+.badge-Films        { background: #DBEAFE; color: #1E40AF; }
 .badge-Movie-Director { background: #DBEAFE; color: #1E40AF; }
 .badge-Show-Creator   { background: #EDE9FE; color: #6D28D9; }
-.badge-Game         { background: #FEF3C7; color: #92400E; }
+.badge-Games        { background: #FEF3C7; color: #92400E; }
 .badge-Game-Studio  { background: #FEF3C7; color: #92400E; }
-.badge-Visual-Art   { background: #FFEDD5; color: #9A3412; }
+.badge-Arts         { background: #FFEDD5; color: #9A3412; }
 .badge-Memes        { background: #FEE2E2; color: #991B1B; }
-.badge-Web-Links    { background: #CFFAFE; color: #155E75; }
+.badge-Sources      { background: #CFFAFE; color: #155E75; }
 
 /* Genre-tag badge (renderGrid.js's renderCard()) — now REPLACES the Musician/Music Album category
    badge on these cards rather than sitting beside it (see renderCard()'s own comment), so per
@@ -1319,32 +1328,47 @@
   color: #F9A8D4;
 }
 
-/* Legacy names kept for any un-migrated items */
+/* Legacy names (pre-rename: Web Links/Show/Musician/Music Album/Game/Movie/Book/Visual Art, plus
+   the older Shows/Books/Movies plural forms from before that) kept for any items the gated
+   one-time category-rename migration (storage.js) hasn't reached yet. */
+.badge-Web-Links    { background: #CFFAFE; color: #155E75; }
+.badge-Musician     { background: #FCE7F3; color: #BE185D; }
+.badge-Music-Album  { background: #FCE7F3; color: #BE185D; }
+.badge-Show         { background: #EDE9FE; color: #6D28D9; }
+.badge-Book         { background: #D1FAE5; color: #065F46; }
+.badge-Movie        { background: #DBEAFE; color: #1E40AF; }
+.badge-Game         { background: #FEF3C7; color: #92400E; }
+.badge-Visual-Art   { background: #FFEDD5; color: #9A3412; }
 .badge-Music  { background: #FCE7F3; color: #BE185D; }
 .badge-Shows  { background: #EDE9FE; color: #6D28D9; }
 .badge-Books  { background: #D1FAE5; color: #065F46; }
 .badge-Movies { background: #DBEAFE; color: #1E40AF; }
-.badge-Games  { background: #FEF3C7; color: #92400E; }
 .badge-Memes  { background: #FEE2E2; color: #991B1B; }
 
-[data-theme="dark"] .badge-Music-Album  { background: #4A1830; color: #F9A8D4; }
+[data-theme="dark"] .badge-Albums       { background: #4A1830; color: #F9A8D4; }
+[data-theme="dark"] .badge-Series       { background: #2E1A5E; color: #C4B5FD; }
+[data-theme="dark"] .badge-Literature   { background: #064E3B; color: #6EE7B7; }
+[data-theme="dark"] .badge-Films        { background: #1E3A5F; color: #93C5FD; }
+[data-theme="dark"] .badge-Movie-Director { background: #1E3A5F; color: #93C5FD; }
+[data-theme="dark"] .badge-Show-Creator   { background: #2E1A5E; color: #C4B5FD; }
+[data-theme="dark"] .badge-Games        { background: #4A2C00; color: #FCD34D; }
+[data-theme="dark"] .badge-Game-Studio  { background: #4A2C00; color: #FCD34D; }
+[data-theme="dark"] .badge-Arts         { background: #4A1A00; color: #FDBA74; }
+[data-theme="dark"] .badge-Memes        { background: #4A1010; color: #FCA5A5; }
+[data-theme="dark"] .badge-Sources      { background: #0E4B54; color: #67E8F9; }
+/* Legacy dark names (see the light-theme legacy comment above for what these mirror) */
+[data-theme="dark"] .badge-Web-Links    { background: #0E4B54; color: #67E8F9; }
 [data-theme="dark"] .badge-Musician     { background: #4A1830; color: #F9A8D4; }
+[data-theme="dark"] .badge-Music-Album  { background: #4A1830; color: #F9A8D4; }
 [data-theme="dark"] .badge-Show         { background: #2E1A5E; color: #C4B5FD; }
 [data-theme="dark"] .badge-Book         { background: #064E3B; color: #6EE7B7; }
 [data-theme="dark"] .badge-Movie        { background: #1E3A5F; color: #93C5FD; }
-[data-theme="dark"] .badge-Movie-Director { background: #1E3A5F; color: #93C5FD; }
-[data-theme="dark"] .badge-Show-Creator   { background: #2E1A5E; color: #C4B5FD; }
 [data-theme="dark"] .badge-Game         { background: #4A2C00; color: #FCD34D; }
-[data-theme="dark"] .badge-Game-Studio  { background: #4A2C00; color: #FCD34D; }
 [data-theme="dark"] .badge-Visual-Art   { background: #4A1A00; color: #FDBA74; }
-[data-theme="dark"] .badge-Memes        { background: #4A1010; color: #FCA5A5; }
-[data-theme="dark"] .badge-Web-Links    { background: #0E4B54; color: #67E8F9; }
-/* Legacy dark names */
 [data-theme="dark"] .badge-Music  { background: #4A1830; color: #F9A8D4; }
 [data-theme="dark"] .badge-Shows  { background: #2E1A5E; color: #C4B5FD; }
 [data-theme="dark"] .badge-Books  { background: #064E3B; color: #6EE7B7; }
 [data-theme="dark"] .badge-Movies { background: #1E3A5F; color: #93C5FD; }
-[data-theme="dark"] .badge-Games  { background: #4A2C00; color: #FCD34D; }
 [data-theme="dark"] .badge-Memes  { background: #4A1010; color: #FCA5A5; }
 
 /* Hover actions — right side of card */

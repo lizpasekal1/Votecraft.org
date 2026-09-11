@@ -96,14 +96,14 @@ export function getFilteredSortedItems() {
               base.authorHasMore = staticCreator.hasMore;
             }
           }
-          if (cat === 'Music Album') {
+          if (cat === 'Albums') {
             const meta = state.curatedAlbumMetaCache[i.id];
             if (meta) {
               if (!base.year && meta.year) base.year = meta.year;
               if (!base.collectionId && meta.collectionId) base.collectionId = meta.collectionId;
             }
           }
-          if (cat === 'Musician') {
+          if (cat === 'Music') {
             const wikiPhoto = state.artistBioCache[(base.title || '').trim().toLowerCase()]?.photoUrl;
             if (wikiPhoto && (!base.imageUrl || isItunesArtworkUrl(base.imageUrl))) base.imageUrl = wikiPhoto;
           }
@@ -135,26 +135,26 @@ export function getFilteredSortedItems() {
     const colonIdx = rest.indexOf(':');
     const cat  = rest.slice(0, colonIdx);
     const name = rest.slice(colonIdx + 1);
-    const relatedCats = cat === 'Musician' ? ['Musician', 'Music Album'] : [cat];
+    const relatedCats = cat === 'Music' ? ['Music', 'Albums'] : [cat];
     items = items.filter(i => relatedCats.includes(i.category) && i.author === name);
     // Also pull in matching curated Top 100 items — Music Album stashes the creator's name in
     // `.notes` (there's no dedicated creator field in the curated Firestore schema); Book/Movie/
     // Game/Show combine it into `.title` instead ("Title — Creator"), see
     // splitCuratedTitleCreator() below. Musician's related curated category is Music Album (a
     // different category); for Book/Movie/Game/Show the curated category is the page's own
-    // category. Keyed by the author-page's `cat` (e.g. 'Musician'), not `item.category` (e.g.
-    // 'Music Album') — a different axis than CURATED_NOTES_CATEGORIES above, so kept as its own
+    // category. Keyed by the author-page's `cat` (e.g. 'Music'), not `item.category` (e.g.
+    // 'Albums') — a different axis than CURATED_NOTES_CATEGORIES above, so kept as its own
     // local list.
-    const AUTHOR_PAGE_CURATED_NOTES_CATS = ['Musician', 'Book', 'Movie', 'Game', 'Show'];
+    const AUTHOR_PAGE_CURATED_NOTES_CATS = ['Music', 'Literature', 'Films', 'Games', 'Series'];
     if (AUTHOR_PAGE_CURATED_NOTES_CATS.includes(cat)) {
-      const curatedCat = cat === 'Musician' ? 'Music Album' : cat;
+      const curatedCat = cat === 'Music' ? 'Albums' : cat;
       const existingIds = new Set(items.map(i => i.id));
       // The same work is frequently curated separately for multiple genres (e.g. a movie in both
       // "Top 100" and "Thriller") — each is its own Firestore doc with its own id, so id-based
       // dedup alone lets the exact same title through twice when this loop crosses genres. Track
       // titles actually added here too so an author's page shows each work once.
       const seenTitles = new Set(items.map(i => i.title));
-      const matchesCreator = curatedCat === 'Music Album'
+      const matchesCreator = curatedCat === 'Albums'
         ? i => i.notes === name
         : i => resolveCuratedCreatorName(curatedCat, i) === name;
       for (const genre of Object.keys(CURATED_ITEMS)) {
@@ -179,7 +179,7 @@ export function getFilteredSortedItems() {
             seenTitles.add(merged.title);
             // Year/collectionId enrichment is Music Album-specific (iTunes track-list metadata) —
             // doesn't apply to the other categories' curated items.
-            if (curatedCat === 'Music Album') {
+            if (curatedCat === 'Albums') {
               const meta = state.curatedAlbumMetaCache[i.id];
               if (meta) {
                 if (!merged.year && meta.year) merged.year = meta.year;
@@ -192,12 +192,12 @@ export function getFilteredSortedItems() {
     }
   } else if (state.view.startsWith('musicgenre:')) {
     // Music landing page drill-in (renderGrid.js's renderMusicGenreLanding()) — same base set the
-    // plain 'Musician' category view uses, further narrowed to one of the 15 genre buckets (see
+    // plain 'Music' category view uses, further narrowed to one of the 15 genre buckets (see
     // bucketForMusicianItem, authors.js, and MUSIC_GENRE_BUCKET_MAP, state.js). Deliberately not
     // `genre:` — that prefix is SaveCraft's own unrelated curated-content-browsing concept
     // (handled above), so this uses a distinct `musicgenre:` prefix to avoid colliding with it.
     const bucket = state.view.slice(11);
-    items = items.filter(i => matchesPrimaryOrUnfoldered(i, 'Musician'));
+    items = items.filter(i => matchesPrimaryOrUnfoldered(i, 'Music'));
     // "All Music" (the landing grid's own pinned-first card, MUSIC_ALL_LABEL) isn't a real bucket
     // — every musician, no further narrowing — so every real bucket still routes through the same
     // one page/dropdown instead of a genuinely different destination (reported live: clicking it
@@ -281,7 +281,7 @@ export function getMusicGenreBucketCounts() {
   const counts = {};
   let total = 0;
   state.items
-    .filter(i => !isQueueDemoId(i.id) && matchesPrimaryOrUnfoldered(i, 'Musician') && matchesActiveSavedListScope(i))
+    .filter(i => !isQueueDemoId(i.id) && matchesPrimaryOrUnfoldered(i, 'Music') && matchesActiveSavedListScope(i))
     .forEach(i => {
       total++;
       const bucket = bucketForMusicianItem(i);
