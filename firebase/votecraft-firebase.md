@@ -47,7 +47,7 @@ Public read, no client writes. Managed via Firebase console.
 the nested `CURATED_ITEMS[genre][category]` shape in memory. Cached in
 `chrome.storage.local` with a 24-hour TTL.
 
-**Seed tool:** `Chrome Extensions/savecraft/scripts/seed-firestore.html`
+**Seed tool:** `Extensions/savecraft/scripts/seed-firestore.html`
 Open in Chrome, sign in, click Seed. Run after any bulk data changes.
 
 ---
@@ -221,7 +221,7 @@ To add or update curated items in bulk:
 
 **Seeder flow:**
 1. Temporarily set Firestore rules to `allow write: if request.auth != null` for curated collections
-2. Open `Chrome Extensions/savecraft/scripts/seed-firestore.html` in Chrome
+2. Open `Extensions/savecraft/scripts/seed-firestore.html` in Chrome
 3. Sign in → click Seed → wait for completion
 4. Revert rules to `allow write: if false`
 5. Users' 24hr cache clears automatically; or clear `savecraft_curated_data` from `chrome.storage.local`

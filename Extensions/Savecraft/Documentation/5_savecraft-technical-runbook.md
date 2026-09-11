@@ -11,7 +11,7 @@ for how the two environments are told apart at runtime.
 
 1. Install the Firebase CLI if you don't have it: `npm install -g firebase-tools`
 2. `firebase login` — sign in with the Google account that owns the `votecraft-789` project.
-3. From the Savecraft folder (`Chrome Extensions/Savecraft/`, where `firebase.json` and
+3. From the Savecraft folder (`Extensions/Savecraft/`, where `firebase.json` and
    `.firebaserc` now live), you're already pointed at the right project — `.firebaserc` has
    `votecraft-789` set as default, so no `firebase use` step is needed.
 
