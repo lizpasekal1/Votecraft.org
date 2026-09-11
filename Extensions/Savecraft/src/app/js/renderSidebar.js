@@ -104,28 +104,24 @@ const FOLDER_ID_TO_CURATED_CATEGORY = {
   // folder is being repurposed for short-form web creators with no curated bucket of its own yet.
   // Falls through to the folder's own id (below), same as Podcasts/Tutorials/Web Series — resolves
   // to a genuinely empty list rather than showing stale/unrelated content.
-  // Explicit (not FOLDER_SHOWS_FULL_CURATED_CATEGORY's cat-fallback, since this folder's own
-  // parentCategory is 'Albums' but it's displayed flattened into the Music section) — resolves
-  // straight to CURATED_ITEMS[genre]['Albums'], the real bucket key, same destination the old
-  // single hardcoded "Albums" sidebar link used to send this folder's click to.
-  'default-music-albums': 'Albums',
-  // Playlists has no curated-specific bucket of its own yet — falls through to its own id (below),
-  // same as every other folder with no curated data, correctly resolving to an empty list.
 };
 
 // Folders that represent "the whole category" closely enough to show the full curated Top
 // 100/genre list when browsing a curated genre (Books' "Books" folder, Movies' "Movies" folder,
 // Games' "Console Games" folder — curated Top 100 games are all console/PC titles, there's no
-// board/mobile game curated data). Every other regular folder (Videos, Series, Podcasts,
-// Webseries, Tutorials, Board Games, Mobile Games) has no curated-specific data at all and
-// correctly shows empty rather than duplicating a sibling folder's content. Shows no longer has
-// an entry here — its old "TV Shows" folder (which did) moved into Films as "Series", a regular
-// (not curated-backed) folder there, same as Videos/Directors.
+// board/mobile game curated data; Albums' "Albums" folder, same reasoning as Musicians below,
+// resolving to CURATED_ITEMS[genre]['Albums'] via its own parentCategory even though it's
+// displayed flattened into the Music sidebar section). Every other regular folder (Videos,
+// Series, Podcasts, Webseries, Tutorials, Board Games, Mobile Games, Playlists) has no curated-
+// specific data at all and correctly shows empty rather than duplicating a sibling folder's
+// content. Shows no longer has an entry here — its old "TV Shows" folder (which did) moved into
+// Films as "Series", a regular (not curated-backed) folder there, same as Videos/Directors.
 const FOLDER_SHOWS_FULL_CURATED_CATEGORY = new Set([
   'default-books-books',
   'default-movies-movies',
   'default-games-console',
   'default-musicians-musicians',
+  'default-music-albums',
 ]);
 
 export function renderSidebar() {
@@ -612,15 +608,19 @@ export function renderSidebar() {
   // what curatedLanding()'s own landing page renders as tabs either way. A genre with no config
   // at all (rows undefined) is left unrestricted rather than showing nothing.
   const enabledGenreCats = isCuratedGenre ? curatedLanding(curatedGenreBase)?.rows?.map(r => r.category) : null;
-  const sidebarCategoryList = CATEGORIES
-    .filter(cat => cat !== 'Albums')
-    .filter(cat => !enabledGenreCats || enabledGenreCats.includes(cat));
+  const sidebarCategoryList = CATEGORIES.filter(cat =>
+    cat !== 'Albums' && (!enabledGenreCats || enabledGenreCats.includes(cat))
+  );
+
+  // Top-level only — a folder's own subfolders (folder.parentFolderId) render recursively inside
+  // _renderFolderRow below, not flattened into this same list.
+  function topLevelFolders(cat) {
+    return sortFoldersForDisplay(state.folders.filter(f => f.parentCategory === cat && !f.parentFolderId), cat);
+  }
 
   const categorySections = sidebarCategoryList.map(cat => {
     const primaryId = PRIMARY_FOLDER_ID[cat];
-    // Top-level only here — a folder's own subfolders (folder.parentFolderId) render recursively
-    // inside _renderFolderRow below, not flattened into this same list.
-    let subfolders = sortFoldersForDisplay(state.folders.filter(f => f.parentCategory === cat && !f.parentFolderId), cat);
+    let subfolders = topLevelFolders(cat);
     // Music's section shows Albums' own folders (Albums, Playlists) as flat siblings of Musicians,
     // not nested under a separate "Albums" link — per direct request/report ("Music should be:
     // Musicians, Albums, Playlists" / "it looks like playlists is a subfolder of albums"). Albums
@@ -631,9 +631,7 @@ export function renderSidebar() {
     // Albums-then-Playlists, so concatenating after Music's own (already-sorted) folders lands
     // in exactly Musicians → Albums → Playlists with no custom order table needed.
     if (cat === 'Music') {
-      subfolders = subfolders.concat(
-        sortFoldersForDisplay(state.folders.filter(f => f.parentCategory === 'Albums' && !f.parentFolderId), 'Albums')
-      );
+      subfolders = subfolders.concat(topLevelFolders('Albums'));
     }
     if (folderScope) {
       const hadFolders = subfolders.length > 0;

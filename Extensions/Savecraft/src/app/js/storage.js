@@ -22,10 +22,8 @@ const _FIREBASE_API_KEY = 'AIzaSyArJ6pkXUDbZf4jcxRita0qcdr-hT46kI8';
 // Show->Series, Musician->Music, Music Album->Albums, Game->Games, Movie->Films, Book->Literature,
 // Visual Art->Arts) retags curated_items docs via scripts/migrate-category-names.html; bump so
 // clients drop the pre-rename cache instead of serving stale old category names for up to 24h.
-// 13 -> 14: the FairVote curated_items (28 docs, genre=fairvote) actually landed in Firestore for
-// real this time (an earlier attempt this session silently failed against Firestore rules) — same
-// "device with an already-warm cache" reasoning as 11 -> 12. 14 -> 15: added FairVote's 9-book
-// Literature reading list (curated-lists-payload.js), 28 -> 37 fairvote items.
+// 13 -> 15: FairVote's curated_items grew twice (28 docs, then 37 with its Literature reading
+// list added) — same "device with an already-warm cache" reasoning as 11 -> 12.
 const _CURATED_CACHE_VERSION = 15;
 
 const _CAT_NORMALIZE = {
@@ -283,11 +281,9 @@ export async function initCuratedItems() {
 // converter, NOT curated_items' string-only `fv` shortcut, because these docs carry arrays
 // (enabledCategories, topics, rows). Only `published` docs are kept. renderGrid.js merges a
 // published curated_lists doc over the hardcoded CURATED_GENRE_LANDING_CONTENT fallback. Bump to
-// force a fresh fetch after editing curated_lists/curated_topics content. 2 -> 3: the FairVote
-// curated_lists + curated_topics docs actually landed for real this time (scripts/seed-curated-
-// lists.html) — an already-warm client cache would otherwise keep showing zero nonprofit lists.
-// 3 -> 4: FairVote's curated_lists doc gained 'Literature' in enabledCategories/rows (the new
-// Books section) — an already-warm cache would otherwise keep hiding that tab.
+// force a fresh fetch after editing curated_lists/curated_topics content — an already-warm client
+// cache otherwise keeps serving the pre-edit version for up to 24h. 2 -> 4: FairVote's
+// curated_lists/curated_topics docs, then its enabledCategories/rows gaining 'Literature'.
 const _CURATED_CMS_CACHE_VERSION = 4;
 
 async function _loadCuratedCollection(collection) {

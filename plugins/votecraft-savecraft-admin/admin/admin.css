@@ -379,11 +379,9 @@
   gap: 4px;
   padding: 4px 0 4px 24px;
 }
-/* Real bug found and fixed: [hidden] and .vc-cat-folders are equal CSS specificity, so the
-   author rule above silently won the tie over the browser's own `[hidden] { display: none }` —
-   toggling the hidden property/attribute in JS never actually hid anything, just flipped the
-   (inert) attribute while display: flex kept the folder list visible regardless. This compound
-   selector outranks the plain class rule, so [hidden] wins again like it should everywhere else. */
+/* .vc-cat-folders[hidden] must outrank the plain .vc-cat-folders rule above on specificity, or
+   the browser's own [hidden] { display: none } loses the tie against display: flex and toggling
+   .hidden in JS has no visible effect. */
 .vc-cat-folders[hidden] {
   display: none;
 }

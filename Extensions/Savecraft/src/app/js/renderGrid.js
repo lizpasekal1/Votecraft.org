@@ -758,9 +758,9 @@ function renderCuratedCategoryFolderLanding(genre, category) {
   // this nonprofit's page shows — null/absent (any list saved before the field existed) means
   // unrestricted, same convention allowedFolderIds uses for personal Saved Lists.
   const enabledFolderIds = state.curatedLists?.[genre]?.enabledFolderIds;
-  const folders = state.folders
-    .filter(f => f.parentCategory === category)
-    .filter(f => !enabledFolderIds || enabledFolderIds.includes(f.id));
+  const folders = state.folders.filter(f =>
+    f.parentCategory === category && (!enabledFolderIds || enabledFolderIds.includes(f.id))
+  );
   const counts = getCuratedCategoryFolderCounts(genre, category);
 
   // The genre's own landing-page row content for this category (resolveGenreRowItems,

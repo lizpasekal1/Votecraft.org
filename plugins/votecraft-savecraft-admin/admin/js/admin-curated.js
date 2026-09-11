@@ -53,49 +53,57 @@
 
   /* ─────────────────────────── Curated Lists ─────────────────────────── */
 
-  function listFormHtml(list, isNew, items) {
+  // Whether category `c`'s checkbox should render checked — 'Music' checked also covers a legacy
+  // 'Albums'-only saved state (shouldn't occur going forward, since collectListForm always keeps
+  // them paired, but defensive against pre-merge data edited some other way).
+  function isCategoryChecked(enabled, c) {
+    return enabled.indexOf(c) !== -1 || (c === 'Music' && enabled.indexOf('Albums') !== -1);
+  }
+
+  // Builds the "Category tabs" accordion: one row per category (enabledCategories, unchanged)
+  // plus a nested folder checklist (enabledFolderIds) — mirrors the Profile page's Saved Lists
+  // folder-scoping accordion (profile.js's _buildSavedListCategoryTree), except the category
+  // checkbox here only ever means "this tab shows at all"; it does not also drive the folder
+  // checkboxes, since enabledCategories and enabledFolderIds are two independent fields. A
+  // category/folder starts checked+open only if it already has real content (items) or an
+  // explicit saved selection (enabledFolderIds) — per direct report: Games' folders all showed
+  // checked with zero curated Games items and Games itself unchecked, "for no reason".
+  //
+  // Music/Albums merge (per direct request/report: "Music should be: Musicians, Albums,
+  // Playlists" — matches the web app's own sidebar, which shows those three as flat folders
+  // under one Music section, renderSidebar.js). 'Albums' stays a real, independent
+  // enabledCategories value under the hood — the app's item.category/author/URL-pair/badge
+  // logic and this same screen's own Curated Items category dropdown all still need it as a
+  // distinct value — this only merges its ROW into Music's in this one checklist: no separate
+  // 'Albums' checkbox, and its two folders (Albums, Playlists) join Music's own (Musicians) in
+  // one combined accordion. Toggling the merged "Music" checkbox enables/disables both 'Music'
+  // and 'Albums' together (see collectListForm).
+  //
+  // Rendered as two independent, fixed columns (not CSS column-count) — per direct report,
+  // multi-column CSS *balances* height across columns, so opening one category's accordion
+  // (making it taller) could shove a later category from one visual column into the other.
+  // Splitting the array itself here and laying the two halves out as separate flex columns
+  // (admin.css's .vc-cat-tree-col) means a category's column is fixed by its position in
+  // CATEGORIES, never recalculated by content height.
+  function buildCategoryTree(list, items) {
     var enabled = list.enabledCategories || [];
-    var listTopics = list.topics || [];
-    // Which folder ids this list's own curated_items actually use — drives the "only checked/
-    // open if it has real content" default below (items is this list's live curated_items,
-    // fetched by the toggle handler / passed empty for a brand-new list).
+    // Which folder ids this list's own curated_items actually use (items is this list's live
+    // curated_items, fetched by the toggle handler / passed empty for a brand-new list).
     var itemFolderIds = {};
     (items || []).forEach(function (it) { if (it.folderId) itemFolderIds[it.folderId] = true; });
-    // null/undefined enabledFolderIds = not yet explicitly narrowed — defaults to "checked only
-    // where there's real content" (itemFolderIds) rather than "every folder checked", per direct
-    // report: Games' folders all showed checked with zero curated Games items and Games itself
-    // unchecked, "for no reason". Once an admin explicitly saves a folder selection (even an
-    // empty one), that explicit array always wins outright — this default only fills the gap
-    // before that first save.
+    // null/undefined enabledFolderIds = not yet explicitly narrowed — defaults to itemFolderIds.
+    // An explicit array (even an empty one), once saved, always wins outright.
     var enabledFolders = list.enabledFolderIds || null;
-    // Accordion: each category tab's own checkbox (enabledCategories, unchanged) plus a nested
-    // folder checklist (enabledFolderIds) — mirrors the Profile page's Saved Lists folder-scoping
-    // accordion (profile.js's _buildSavedListCategoryTree), except the category checkbox here
-    // only ever means "this tab shows at all"; it does not also drive the folder checkboxes,
-    // since enabledCategories and enabledFolderIds are two independent fields. Starts collapsed
-    // unless this category actually has content, in which case it opens by default too — same
-    // "unchecked+closed unless there's a real reason" rule as the folder checkboxes above.
-    //
-    // Music/Albums merge (per direct request/report: "Music should be: Musicians, Albums,
-    // Playlists" — matches the web app's own sidebar, which shows those three as flat folders
-    // under one Music section, renderSidebar.js). 'Albums' stays a real, independent
-    // enabledCategories value under the hood — the app's item.category/author/URL-pair/badge
-    // logic and this same screen's own Curated Items category dropdown all still need it as a
-    // distinct value — this only merges its ROW into Music's in this one checklist: no separate
-    // 'Albums' checkbox, and its two folders (Albums, Playlists) join Music's own (Musicians) in
-    // one combined accordion. Toggling the merged "Music" checkbox below enables/disables both
-    // 'Music' and 'Albums' together (see collectListForm).
-    // Rendered as two independent, fixed columns (not CSS column-count) — per direct report,
-    // multi-column CSS *balances* height across columns, so opening one category's accordion
-    // (making it taller) could shove a later category from one visual column into the other.
-    // Splitting the array itself in JS and laying the two halves out as separate flex columns
-    // (admin.css's .vc-cat-tree-col) means a category's column is fixed by its position in
-    // CATEGORIES, never recalculated by content height.
     var catList = CATEGORIES.filter(function (c) { return c !== 'Albums'; });
     var catBoxesHtml = catList.map(function (c) {
       var catFolders = (c === 'Music') ? Object.assign({}, FOLDERS['Music'], FOLDERS['Albums']) : (FOLDERS[c] || {});
       var folderIds = Object.keys(catFolders);
-      var catHasContent = folderIds.some(function (fid) { return itemFolderIds[fid]; });
+      // Same "enabledFolders wins outright once explicit" rule as each folder's own checked state
+      // below — once a list has a saved selection, whether to open its accordion no longer needs
+      // live item data at all (see wireLists' toggle handler, which skips the items fetch then).
+      var catHasContent = enabledFolders
+        ? folderIds.some(function (fid) { return enabledFolders.indexOf(fid) !== -1; })
+        : folderIds.some(function (fid) { return itemFolderIds[fid]; });
       var folderRows = folderIds.map(function (fid) {
         var checked = enabledFolders ? enabledFolders.indexOf(fid) !== -1 : !!itemFolderIds[fid];
         return '<label class="vc-cat-folder"><input type="checkbox" data-field="folder" value="' + esc(fid) + '"' +
@@ -106,18 +114,19 @@
           '<div class="vc-cat-row">' +
             (folderIds.length ? '<span class="vc-cat-arrow" data-action="toggle-cat-folders">' + (catHasContent ? '▼' : '▶') + '</span>' : '<span class="vc-cat-arrow vc-cat-arrow--empty"></span>') +
             '<label class="vc-inline"><input type="checkbox" data-field="cat" value="' + esc(c) + '"' +
-              // Music's box also reflects a stray 'Albums'-only state (shouldn't occur going
-              // forward — collectListForm always keeps them paired — but defensive against
-              // pre-merge data edited some other way).
-              ((enabled.indexOf(c) !== -1 || (c === 'Music' && enabled.indexOf('Albums') !== -1)) ? ' checked' : '') + '> ' + esc(CAT_LABELS[c] || c) + '</label>' +
+              (isCategoryChecked(enabled, c) ? ' checked' : '') + '> ' + esc(CAT_LABELS[c] || c) + '</label>' +
           '</div>' +
           (folderIds.length ? '<div class="vc-cat-folders"' + (catHasContent ? '' : ' hidden') + '>' + folderRows + '</div>' : '') +
         '</div>';
     });
     var catSplit = Math.ceil(catBoxesHtml.length / 2);
-    var catBoxes =
-      '<div class="vc-cat-tree-col">' + catBoxesHtml.slice(0, catSplit).join('') + '</div>' +
+    return '<div class="vc-cat-tree-col">' + catBoxesHtml.slice(0, catSplit).join('') + '</div>' +
       '<div class="vc-cat-tree-col">' + catBoxesHtml.slice(catSplit).join('') + '</div>';
+  }
+
+  function listFormHtml(list, isNew, items) {
+    var listTopics = list.topics || [];
+    var catBoxes = buildCategoryTree(list, items);
     var topicBoxes = topics.length ? topics.map(function (t) {
       return '<label class="vc-inline"><input type="checkbox" data-field="topic" value="' + esc(t.slug) + '"' +
         (listTopics.indexOf(t.slug) !== -1 ? ' checked' : '') + '> ' + esc(t.name || t.slug) + '</label>';
@@ -219,13 +228,22 @@
         if (!detail) return;
         if (detail.hidden) {
           var list = lists.filter(function (l) { return l.slug === toggle.dataset.slug; })[0] || {};
-          detail.innerHTML = '<p>Loading…</p>';
-          detail.hidden = false;
-          // Fetches this list's own curated_items so listFormHtml can default an unset folder
-          // checkbox to "has real content" instead of "checked" — see that function's own comment.
-          apiFetch('curated-items?list=' + encodeURIComponent(toggle.dataset.slug), { method: 'GET' })
-            .then(function (items) { detail.innerHTML = listFormHtml(list, false, Array.isArray(items) ? items : []); })
-            .catch(function () { detail.innerHTML = listFormHtml(list, false, []); });
+          if (list.enabledFolderIds) {
+            // Already has an explicit saved folder selection — buildCategoryTree derives both
+            // checked state and accordion-open state from enabledFolderIds itself in that case,
+            // so there's nothing live item data would add. Skips a full curated_items collection
+            // fetch on every open for the common (already-configured) case.
+            detail.innerHTML = listFormHtml(list, false, []);
+            detail.hidden = false;
+          } else {
+            detail.innerHTML = '<p>Loading…</p>';
+            detail.hidden = false;
+            // Not yet configured — fetch this list's own curated_items so buildCategoryTree can
+            // default to "has real content" instead of "checked" (see that function's comment).
+            apiFetch('curated-items?list=' + encodeURIComponent(toggle.dataset.slug), { method: 'GET' })
+              .then(function (items) { detail.innerHTML = listFormHtml(list, false, Array.isArray(items) ? items : []); })
+              .catch(function () { detail.innerHTML = listFormHtml(list, false, []); });
+          }
         } else {
           detail.hidden = true;
           detail.innerHTML = '';
