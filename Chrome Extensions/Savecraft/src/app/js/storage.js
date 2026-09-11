@@ -16,8 +16,10 @@ const _FIREBASE_PROJECT = 'votecraft-789';
 const _FIREBASE_API_KEY = 'AIzaSyArJ6pkXUDbZf4jcxRita0qcdr-hT46kI8';
 // 10 -> 11: forces a refetch after the Firestore curated-category cleanup + Shows->Movie/Series
 // retag (scripts/migrate-curated-categories.html) — otherwise clients keep serving the stale
-// pre-migration 24h cache.
-const _CURATED_CACHE_VERSION = 11;
+// pre-migration 24h cache. 11 -> 12: the FairVote demo seed (scripts/seed-curated-lists.html)
+// adds new curated_items docs; bump so a device with an already-warm cache picks them up now
+// instead of waiting out the 24h TTL.
+const _CURATED_CACHE_VERSION = 12;
 
 const _CAT_NORMALIZE = {
   'Movies': 'Movie', 'Books': 'Book', 'Games': 'Game',
@@ -246,6 +248,82 @@ async function _getCuratedItems() {
 // shared state.js CURATED_ITEMS live binding.
 export async function initCuratedItems() {
   setCuratedItems(await _getCuratedItems());
+}
+
+// ===== Curated CMS (curated_lists + curated_topics) — admin-editable via the WordPress plugin =====
+// Two small public-read Firestore collections that drive the "Cause Curated" pages:
+//   curated_lists/<partnerSlug>  — one per nonprofit page: hero profile, which category tabs are
+//     enabled, which topics it belongs to, publish flag, owner fields (Phase 2). Its curated_items
+//     carry genre == this slug.
+//   curated_topics/<topicSlug>   — one per shared cause: hero for the aggregate page that pools
+//     every published curated_lists doc whose `topics` includes this slug.
+// Same unauthenticated fetch shape as _loadCuratedFromFirestore / _fetchPublicDoc above — every
+// visitor (signed out included) reads these on first paint. Uses the full _fromFirestoreFields
+// converter, NOT curated_items' string-only `fv` shortcut, because these docs carry arrays
+// (enabledCategories, topics, rows). Only `published` docs are kept. renderGrid.js merges a
+// published curated_lists doc over the hardcoded CURATED_GENRE_LANDING_CONTENT fallback.
+const _CURATED_CMS_CACHE_VERSION = 1;
+
+async function _loadCuratedCollection(collection) {
+  const base = `https://firestore.googleapis.com/v1/projects/${_FIREBASE_PROJECT}/databases/(default)/documents/${collection}`;
+  let allDocs = [];
+  let pageToken = null;
+  do {
+    const url = new URL(base);
+    url.searchParams.set('pageSize', '300');
+    url.searchParams.set('key', _FIREBASE_API_KEY);
+    if (pageToken) url.searchParams.set('pageToken', pageToken);
+    const resp = await fetch(url.toString());
+    const data = await resp.json();
+    if (data.error) throw new Error(`Firestore error: ${data.error.message}`);
+    if (data.documents) allDocs = allDocs.concat(data.documents);
+    pageToken = data.nextPageToken || null;
+  } while (pageToken);
+
+  const bySlug = {};
+  for (const doc of allDocs) {
+    // doc.name is `.../documents/<collection>/<id>` — the last segment is the slug.
+    const id = doc.name.split('/').pop();
+    const fields = doc.fields ? _fromFirestoreFields(doc.fields) : {};
+    if (!fields.published) continue; // unpublished → app ignores it; hardcoded fallback stands
+    bySlug[id] = { ...fields, slug: fields.slug || id };
+  }
+  return bySlug;
+}
+
+async function _loadCuratedCmsFromFirestore() {
+  const [lists, topics] = await Promise.all([
+    _loadCuratedCollection('curated_lists'),
+    _loadCuratedCollection('curated_topics'),
+  ]);
+  return { lists, topics };
+}
+
+async function _getCuratedCms() {
+  return new Promise(resolve => {
+    storageLocal.get({ savecraft_curated_cms: null }, async cached => {
+      const c = cached.savecraft_curated_cms;
+      if (c?.data && c?.version === _CURATED_CMS_CACHE_VERSION && Date.now() - (c.fetchedAt || 0) < 24 * 60 * 60 * 1000) {
+        return resolve(c.data);
+      }
+      try {
+        const fresh = await _loadCuratedCmsFromFirestore();
+        storageLocal.set({ savecraft_curated_cms: { data: fresh, fetchedAt: Date.now(), version: _CURATED_CMS_CACHE_VERSION } });
+        resolve(fresh);
+      } catch {
+        resolve(c?.data || { lists: {}, topics: {} });
+      }
+    });
+  });
+}
+
+// Fetches the curated-list + topic configs (from cache if fresh, else Firestore) and installs them
+// into state.curatedLists / state.curatedTopics — called from main.js's init() alongside
+// initCuratedItems(), since a signed-out visitor landing on a curated page needs this on first paint.
+export async function initCuratedCms() {
+  const { lists, topics } = await _getCuratedCms();
+  state.curatedLists = lists;
+  state.curatedTopics = topics;
 }
 
 // ===== Dashboard demo-content config (admin-editable, WordPress plugin writes it) =====
@@ -544,44 +622,33 @@ export async function loadAll() {
         ];
         storageSync.set({ savecraft_saved_lists: state.savedLists });
       }
-      // "Curated Lists" row (Saved Lists' sibling under Dashboard) — seeded with two starter
-      // entries, "Votecraft" then "RCV" below it (two separate folders, not one combined entry —
-      // see the "default-votecraft-rcv" migration below); the user can add more via its own
-      // "+ New folder" prompt. Checked by id rather than gated purely on the key's existence
-      // (unlike savedLists' seed-if-missing above) since an install could already have this key
-      // set from adding its own custom row before these starter entries existed — the id checks
-      // re-add whatever's missing either way.
+      // "Curated Lists" row (Saved Lists' sibling under Dashboard) — the one hardcoded starter is
+      // "Votecraft" (genre: Top 100). Every other nonprofit page now comes from the curated_lists
+      // Firestore collection and is merged into this row by renderSidebar.js; shared-cause pages
+      // live in their own "Topics" row from curated_topics. So the old "RCV" seed (which pointed at
+      // a genre:RCV *list* that no longer exists — RCV is a topic now) is removed here, and
+      // stripped from any install that already stored it.
       if (data.savecraft_curated_lists_rows) {
         state.curatedListsRows = data.savecraft_curated_lists_rows;
         let changed = false;
-        // Splits the original single "Votecraft and RCV" entry (briefly shipped) into its own
-        // two rows, in place, so any install that already picked it up isn't stuck with the
-        // combined version forever.
-        const combinedIdx = state.curatedListsRows.findIndex(l => l.id === 'default-votecraft-rcv');
-        if (combinedIdx !== -1) {
-          state.curatedListsRows.splice(combinedIdx, 1, { id: 'default-votecraft', name: 'Votecraft', genre: 'Top 100' }, { id: 'default-rcv', name: 'RCV', genre: 'RCV' });
+        // Retire the briefly-shipped combined "Votecraft and RCV" entry and the standalone "RCV"
+        // row (id default-rcv / genre 'RCV') in place.
+        const before = state.curatedListsRows.length;
+        state.curatedListsRows = state.curatedListsRows.filter(l =>
+          l.id !== 'default-votecraft-rcv' && l.id !== 'default-rcv' && l.genre !== 'RCV');
+        if (state.curatedListsRows.length !== before) changed = true;
+        if (!state.curatedListsRows.some(l => l.id === 'default-votecraft')) {
+          state.curatedListsRows.unshift({ id: 'default-votecraft', name: 'Votecraft', genre: 'Top 100' });
           changed = true;
-        } else {
-          if (!state.curatedListsRows.some(l => l.id === 'default-rcv')) {
-            state.curatedListsRows.unshift({ id: 'default-rcv', name: 'RCV', genre: 'RCV' });
-            changed = true;
-          }
-          if (!state.curatedListsRows.some(l => l.id === 'default-votecraft')) {
-            state.curatedListsRows.unshift({ id: 'default-votecraft', name: 'Votecraft', genre: 'Top 100' });
-            changed = true;
-          }
         }
-        // Backfill for installs that already had these two rows seeded before `genre` existed on
-        // them at all (this field is what actually makes a curated-list row navigable — see
-        // renderSidebar.js's generalized click handler below) — without this, an existing "RCV"
-        // row would stay permanently inert even after this update ships.
+        // Backfill `genre` for installs that seeded default-votecraft before that field existed
+        // (it's what makes a curated-list row navigable — see renderSidebar.js's click handler).
         state.curatedListsRows.forEach(row => {
           if (row.id === 'default-votecraft' && !row.genre) { row.genre = 'Top 100'; changed = true; }
-          if (row.id === 'default-rcv' && !row.genre) { row.genre = 'RCV'; changed = true; }
         });
         if (changed) storageSync.set({ savecraft_curated_lists_rows: state.curatedListsRows });
       } else {
-        state.curatedListsRows = [{ id: 'default-votecraft', name: 'Votecraft', genre: 'Top 100' }, { id: 'default-rcv', name: 'RCV', genre: 'RCV' }];
+        state.curatedListsRows = [{ id: 'default-votecraft', name: 'Votecraft', genre: 'Top 100' }];
         storageSync.set({ savecraft_curated_lists_rows: state.curatedListsRows });
       }
       state.hiddenCurated = new Set(data.savecraft_hidden_curated || []);

@@ -1,7 +1,7 @@
 // ===== CURATED (TOP 100 / DIRECTORY / BARE-LIST) LANDING PAGE RENDERING =====
 
 import {
-  state, CURATED_ITEMS, CAT_EMOJI, CURATED_DIRECTORY_CONTENT, CURATED_GENRE_LANDING_CONTENT,
+  state, CURATED_ITEMS, CATEGORIES, CAT_LABEL, CAT_EMOJI, CURATED_DIRECTORY_CONTENT, CURATED_GENRE_LANDING_CONTENT,
   BOOKMARK_OUTLINE_SVG, BOOKMARK_FILLED_SVG,
 } from './state.js';
 import { escapeHtml, isItunesArtworkUrl } from './utils.js';
@@ -333,7 +333,11 @@ function resolveRowItemImage(i, category) {
 // content from the votecraft landing page into the carousel") — same resolution logic, not a
 // second, potentially-drifting copy of it.
 export function resolveGenreRowItems(genre, category) {
-  const row = CURATED_GENRE_LANDING_CONTENT[genre]?.rows?.find(r => r.category === category);
+  // A published curated_lists Firestore doc's rows (admin-editable) take precedence over the
+  // hardcoded CURATED_GENRE_LANDING_CONTENT fallback — same merge order renderGrid.js's
+  // curatedLanding() uses — so a partner list can hand-pick its own row order via `titles`.
+  const rows = state.curatedLists?.[genre]?.rows || CURATED_GENRE_LANDING_CONTENT[genre]?.rows;
+  const row = rows?.find(r => r.category === category);
   const categoryItems = CURATED_ITEMS[genre]?.[category] || [];
   const rawItems = row?.titles
     ? row.titles.map(t => categoryItems.find(i => i.title === t)).filter(i => i && !state.hiddenCurated.has(i.id))
@@ -458,6 +462,140 @@ export function renderCuratedGenreLanding(container, genre, content) {
   container.querySelectorAll('.top100-row-header').forEach(btn => {
     btn.addEventListener('click', () => {
       navigateToView(`genre:${btn.dataset.genre}:${btn.dataset.category}`);
+    });
+  });
+
+  wireQuickQueueButtons(container);
+}
+
+// Which contributing partner the topic page is currently filtered to (a curated_lists slug), or
+// null for "All". Session-only, reset when the page is left — same "display convenience, not real
+// state" reasoning as _bareListCategoryFilter above.
+let _topicPartnerFilter = null;
+
+// Partner slugs (curated_lists keys) whose `topics` array includes topicSlug — the nonprofits that
+// contribute to this shared-cause page.
+function _topicContributingSlugs(topicSlug) {
+  return Object.keys(state.curatedLists || {})
+    .filter(s => Array.isArray(state.curatedLists[s]?.topics) && state.curatedLists[s].topics.includes(topicSlug));
+}
+
+// Render-ready items for one category of a topic page: every contributing partner's items for that
+// category (via resolveGenreRowItems, so overrides + image fallback apply), de-duped by URL, each
+// tagged with its `_partnerSlug`. Honors the active partner filter.
+function _topicRowItems(topicSlug, category) {
+  const slugs = _topicContributingSlugs(topicSlug).filter(s => !_topicPartnerFilter || s === _topicPartnerFilter);
+  const seen = new Set();
+  const out = [];
+  for (const slug of slugs) {
+    for (const item of resolveGenreRowItems(slug, category)) {
+      const key = (item.url || item.id || '').trim().toLowerCase();
+      if (key && seen.has(key)) continue;
+      if (key) seen.add(key);
+      out.push({ ...item, _partnerSlug: slug });
+    }
+  }
+  return out;
+}
+
+// The shared-cause aggregate page (topic:<slug>). Same hero/carousel visual language as
+// renderCuratedGenreLanding, but each row pools items across every nonprofit tagged with this
+// topic, with filter chips to narrow to one contributor. Reached from renderGrid.js's
+// _renderGridBody when state.view is `topic:<slug>` and state.curatedTopics[slug] exists.
+export function renderCuratedTopicPage(container, topicSlug) {
+  container.className = 'cards-grid top100-landing';
+  document.getElementById('grid-title').style.display = 'none';
+  document.querySelector('.grid-header').style.display = 'none';
+
+  const content = state.curatedTopics[topicSlug] || {};
+  const contributingSlugs = _topicContributingSlugs(topicSlug);
+  // A stale filter (partner no longer tagged, or unpublished) silently falls back to "All".
+  if (_topicPartnerFilter && !contributingSlugs.includes(_topicPartnerFilter)) _topicPartnerFilter = null;
+
+  // Categories to show, in CATEGORIES order: any category that has ≥1 aggregated item right now.
+  const categories = CATEGORIES.filter(cat => _topicRowItems(topicSlug, cat).length > 0);
+
+  const allRowItems = [];
+  const rowsHtml = categories.map(category => {
+    const rowItems = _topicRowItems(topicSlug, category);
+    allRowItems.push(...rowItems);
+    const tripled = [...rowItems, ...rowItems, ...rowItems];
+    const cardsHtml = tripled.map(item => {
+      const art = item.imageUrl
+        ? `<img src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async">`
+        : `<span class="top100-row-card-fallback">${CAT_EMOJI[category] || '🎬'}</span>`;
+      const isQueued = !!state.items.find(i => i.id === item.id && i.queueStatus);
+      return `
+        <div class="top100-row-card" data-id="${escapeHtml(item.id)}" data-category="${escapeHtml(category)}">
+          <div class="top100-row-card-art">
+            ${art}
+            <button class="card-quick-queue-btn${isQueued ? ' card-quick-queue-btn--active' : ''}" data-id="${escapeHtml(item.id)}" title="${isQueued ? 'In your queue' : 'Add to queue'}">${isQueued ? BOOKMARK_FILLED_SVG : BOOKMARK_OUTLINE_SVG}</button>
+          </div>
+          <span class="top100-row-card-label">${escapeHtml(item.title || '')}</span>
+        </div>`;
+    }).join('');
+    return `
+      <div class="top100-row">
+        <div class="top100-row-header top100-row-header--static">
+          <span class="top100-row-title">${escapeHtml(CAT_LABEL[category] || category)}</span>
+        </div>
+        <div class="dash-carousel top100-carousel">
+          <button class="dash-carousel-prev" aria-label="Previous">‹</button>
+          <div class="dash-carousel-strip">${cardsHtml}</div>
+          <button class="dash-carousel-next" aria-label="Next">›</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  const iconBadgeHtml = content.iconUrl
+    ? `<div class="top100-icon-badge"><img src="${resourceUrl(content.iconUrl)}" alt=""></div>` : '';
+
+  // Filter chips — "All" plus one per contributing nonprofit (reuse the bare-list chip styling).
+  const chipsHtml = contributingSlugs.length > 1 ? `
+    <div class="topic-partner-chips">
+      <button class="bare-list-chip${_topicPartnerFilter === null ? ' bare-list-chip--active' : ''}" data-partner="">All</button>
+      ${contributingSlugs.map(slug => `
+        <button class="bare-list-chip${_topicPartnerFilter === slug ? ' bare-list-chip--active' : ''}" data-partner="${escapeHtml(slug)}">${escapeHtml(state.curatedLists[slug]?.name || slug)}</button>
+      `).join('')}
+    </div>` : '';
+
+  const emptyHtml = categories.length ? '' : `
+    <div class="landing-state-inner"><div class="landing-icon">📦</div>
+      <div class="landing-title">Nothing here yet</div>
+      <div class="landing-sub">No published nonprofit has added resources to this topic.</div></div>`;
+
+  container.innerHTML = `
+    <div class="top100-hero">
+      <div class="top100-hero-text">
+        <h2 class="top100-hero-title">${escapeHtml(content.headline || content.name || topicSlug)}</h2>
+        ${content.description ? `<p class="top100-hero-desc">${linkifyHeroDescription(content.description)}</p>` : ''}
+      </div>
+      ${iconBadgeHtml}
+    </div>
+    ${chipsHtml}
+    ${rowsHtml}
+    ${emptyHtml}
+  `;
+
+  fetchMissingCuratedImages(allRowItems);
+  fetchMissingCuratedMusicianPhotos(allRowItems);
+
+  container.querySelectorAll('.top100-carousel').forEach(carousel => {
+    const strip = carousel.querySelector('.dash-carousel-strip');
+    if (strip) _wireCarouselArrows(carousel, strip);
+  });
+
+  container.querySelectorAll('.top100-row-card').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = allRowItems.find(i => i.id === btn.dataset.id && i.category === btn.dataset.category);
+      if (item) openDetailModal(item);
+    });
+  });
+
+  container.querySelectorAll('.topic-partner-chips .bare-list-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      _topicPartnerFilter = chip.dataset.partner || null;
+      renderCuratedTopicPage(container, topicSlug);
     });
   });
 
