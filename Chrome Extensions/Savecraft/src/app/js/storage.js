@@ -712,6 +712,57 @@ export async function loadAll() {
       const legacyKeys = legacyIds.map(id => `folder_${id}`).filter(k => data[k]);
       state.folders = state.folders.filter(f => !legacyIds.includes(f.id));
 
+      // REAL BUG, found and fixed: every one-time item/folder migration below only ever rewrote
+      // storageSync (local). For a signed-in web user, Firestore is the real source of truth, and
+      // runInitialSync()'s _mergeCollection has cloud win deterministically whenever the same
+      // id exists in both ("cloud wins on this first merge", see that function's own comment). Left
+      // local-only, that silently reverted the very migration that just ran back to the stale
+      // pre-migration cloud copy on the very next sync. Pushing to Firestore fixed that in
+      // principle, but fire-and-forget (.catch() with no await) wasn't enough on its own either —
+      // main.js's init() calls loadAll() then immediately awaits runInitialSync() right after, so
+      // that cloud GET could still fire and see the still-stale doc before this migration's PUT had
+      // actually landed, same reversion, just one race narrower (reported live: "still there when i
+      // access the sidebar" even after the first fix). pendingFirestorePushes collects every
+      // migration's Firestore promise below; loadAll()'s own resolve (bottom of this callback) now
+      // genuinely awaits all of them first, so runInitialSync() can never observe stale cloud data
+      // for anything this callback already fixed locally. Signed-out users are unaffected either
+      // way (no Firestore involved).
+      //
+      // Declared here (before CAT_MIGRATION, not after it like the rest of this comment used to
+      // describe) for a second REAL BUG, found and fixed: CAT_MIGRATION below is unconditional and
+      // runs before the one-time savecraft_category_rename_migrated migration further down even
+      // gets to look at state.items — so by the time that one-time migration's own forEach ran,
+      // CAT_MIGRATION had already renamed every matching item to its NEW value in place, leaving
+      // nothing left for CATEGORY_RENAME_MAP (whose keys are all OLD values) to match. The one-time
+      // migration's own Firestore push (pushMigratedItemsToFirestore) never fired for items as a
+      // result — CAT_MIGRATION's local rename looked like it worked (state/local storage both
+      // showed the new name), but nothing ever reached Firestore, so the very next full sync's
+      // "cloud wins" rule quietly reverted it back to the stale old-named cloud copy. Confirmed live
+      // against production Firestore data after this rename shipped: 1006/1006 of one real account's
+      // items stayed on their old category names despite the one-time migration reporting nothing
+      // left to do. Giving CAT_MIGRATION its own push (below) closes this for good — any current or
+      // future entry added to that table now reaches Firestore the same way every other migration
+      // in this function already does.
+      const pendingFirestorePushes = [];
+      function pushMigratedItemsToFirestore(items) {
+        const user = getCurrentUser();
+        if (!user) return;
+        items.forEach(item => {
+          pendingFirestorePushes.push(
+            _firestoreUpsert(`savecraft_users/${user.uid}/items/${item.id}`, item).catch(_syncError)
+          );
+        });
+      }
+      // Same fix, for the folder-rename migrations further down (Music Albums->Albums,
+      // Films' Series->Shows, etc.) — those have the identical local-only gap.
+      function pushMigratedFolderToFirestore(folder) {
+        const user = getCurrentUser();
+        if (!user) return;
+        pendingFirestorePushes.push(
+          _firestoreUpsert(`savecraft_users/${user.uid}/folders/${folder.id}`, folder).catch(_syncError)
+        );
+      }
+
       // Migrate old category names to new ones
       const CAT_MIGRATION = {
         // Old plural/legacy forms -> the NEW final category name directly (this table is
@@ -750,6 +801,7 @@ export async function loadAll() {
         const toMigrate = {};
         migrated.forEach(item => { toMigrate[`item_${item.id}`] = item; });
         storageSync.set(toMigrate);
+        pushMigratedItemsToFirestore(migrated);
       }
 
       // Migrate the old folder-based "Favorites" mechanism to the new item.favorite boolean —
@@ -792,40 +844,9 @@ export async function loadAll() {
         storageSync.set(toMigrate);
       }
 
-      // REAL BUG, found and fixed: every one-time item/folder migration below only ever rewrote
-      // storageSync (local). For a signed-in web user, Firestore is the real source of truth, and
-      // runInitialSync()'s _mergeCollection has cloud win deterministically whenever the same
-      // id exists in both ("cloud wins on this first merge", see that function's own comment). Left
-      // local-only, that silently reverted the very migration that just ran back to the stale
-      // pre-migration cloud copy on the very next sync. Pushing to Firestore fixed that in
-      // principle, but fire-and-forget (.catch() with no await) wasn't enough on its own either —
-      // main.js's init() calls loadAll() then immediately awaits runInitialSync() right after, so
-      // that cloud GET could still fire and see the still-stale doc before this migration's PUT had
-      // actually landed, same reversion, just one race narrower (reported live: "still there when i
-      // access the sidebar" even after the first fix). pendingFirestorePushes collects every
-      // migration's Firestore promise below; loadAll()'s own resolve (bottom of this callback) now
-      // genuinely awaits all of them first, so runInitialSync() can never observe stale cloud data
-      // for anything this callback already fixed locally. Signed-out users are unaffected either
-      // way (no Firestore involved).
-      const pendingFirestorePushes = [];
-      function pushMigratedItemsToFirestore(items) {
-        const user = getCurrentUser();
-        if (!user) return;
-        items.forEach(item => {
-          pendingFirestorePushes.push(
-            _firestoreUpsert(`savecraft_users/${user.uid}/items/${item.id}`, item).catch(_syncError)
-          );
-        });
-      }
-      // Same fix, for the folder-rename migrations further down (Music Albums->Albums,
-      // Films' Series->Shows, etc.) — those have the identical local-only gap.
-      function pushMigratedFolderToFirestore(folder) {
-        const user = getCurrentUser();
-        if (!user) return;
-        pendingFirestorePushes.push(
-          _firestoreUpsert(`savecraft_users/${user.uid}/folders/${folder.id}`, folder).catch(_syncError)
-        );
-      }
+      // (pendingFirestorePushes / pushMigratedItemsToFirestore / pushMigratedFolderToFirestore are
+      // now declared above, before CAT_MIGRATION — see that comment for the full history and why
+      // it moved.)
 
       // One-time migration: TV Shows moved from the Shows category into Films — every item
       // already saved in Shows' old "TV Shows" folder (default-shows-shows) gets recategorized
