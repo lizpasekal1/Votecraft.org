@@ -39,6 +39,13 @@ service cloud.firestore {
     // admin_kanban_cards / dashboard_demo_config — so `write: if false` (Firebase-console-only)
     // became `if isSaveCraftAdmin()`. App clients never write this collection directly today; a
     // later phase adds a narrower per-list write for a partner org's own SaveCraft account.
+    //
+    // Reopened after briefly locking this to `if false` post-seed — that lockdown broke the
+    // FairVote curated-lists seed's own re-run (scripts/seed-curated-lists.html writes
+    // curated_topics + curated_lists + curated_items as ONE atomic batch, so blocking just this
+    // collection failed the whole batch, including the other two collections' otherwise-fine
+    // writes). Re-lock later with a per-collection rule instead if isolating curated_items
+    // specifically still matters, now that this failure mode is known.
     match /curated_items/{doc} {
       allow read:  if true;
       allow write: if isSaveCraftAdmin();

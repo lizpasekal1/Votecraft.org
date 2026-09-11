@@ -54,6 +54,21 @@ export function renderGrid() {
   updateAzIndexRail();
 }
 
+// A curated genre's landing config: a published `curated_lists` doc (admin-editable from the
+// WordPress plugin, see storage.js's initCuratedLists) wins over the hardcoded
+// CURATED_GENRE_LANDING_CONTENT fallback for that genre; a missing/unpublished doc leaves the
+// hardcoded object untouched. Shallow-merged so a Firestore doc that omits a rarely-set key
+// (e.g. categoryLogos) still inherits the hardcoded value. Returns undefined for a genre with
+// neither. Exported (moved out of _renderGridBody) so renderSidebar.js can filter its own curated-
+// genre category list by the exact same enabledCategories a genre's landing page actually uses,
+// instead of showing every app category regardless of what's checked in the WordPress admin.
+export function curatedLanding(genre) {
+  const fromFirestore = state.curatedLists?.[genre];
+  const hardcoded = CURATED_GENRE_LANDING_CONTENT[genre];
+  if (!fromFirestore) return hardcoded;
+  return { ...hardcoded, ...fromFirestore };
+}
+
 function _renderGridBody() {
   const container = document.getElementById('cards-grid');
   const gridTitle = document.getElementById('grid-title');
@@ -87,19 +102,6 @@ function _renderGridBody() {
   document.getElementById('board-info-popup')?.setAttribute('hidden', '');
   sortSelect.style.display = '';
   gridTitle.style.display = '';
-
-  // A curated genre's landing config: a published `curated_lists` doc (admin-editable from the
-  // WordPress plugin, see storage.js's initCuratedLists) wins over the hardcoded
-  // CURATED_GENRE_LANDING_CONTENT fallback for that genre; a missing/unpublished doc leaves the
-  // hardcoded object untouched. Shallow-merged so a Firestore doc that omits a rarely-set key
-  // (e.g. categoryLogos) still inherits the hardcoded value. Returns undefined for a genre with
-  // neither.
-  const curatedLanding = genre => {
-    const fromFirestore = state.curatedLists?.[genre];
-    const hardcoded = CURATED_GENRE_LANDING_CONTENT[genre];
-    if (!fromFirestore) return hardcoded;
-    return { ...hardcoded, ...fromFirestore };
-  };
 
   if (state.view === 'kanban') {
     renderKanbanBoard();
@@ -410,7 +412,7 @@ function _renderGridBody() {
     // A curated genre with its own landing config gets a richer, distinct landing page here
     // instead of the plain "Pick a category" empty state below. Config is a published
     // curated_lists Firestore doc (admin-editable) merged over the hardcoded
-    // CURATED_GENRE_LANDING_CONTENT fallback — see curatedLanding() near the top of this fn.
+    // CURATED_GENRE_LANDING_CONTENT fallback — see this file's own curatedLanding() above.
     const landingContent = isCuratedTop && !isSearch ? curatedLanding(genre) : null;
     if (landingContent) {
       renderCuratedGenreLanding(container, genre, landingContent);

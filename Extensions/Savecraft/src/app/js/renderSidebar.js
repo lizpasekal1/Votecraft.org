@@ -12,7 +12,7 @@ import { getCurrentUser } from './auth.js';
 import { persistItem, persistFolder, removeFolder, persistSavedLists } from './storage.js';
 import { closeSidebar } from './main.js';
 import { matchesPrimaryOrUnfoldered, matchesActiveSavedListScope } from './renderFilters.js';
-import { renderGrid } from './renderGrid.js';
+import { renderGrid, curatedLanding } from './renderGrid.js';
 import { storageSync } from './platform.js';
 import { navigateToView } from './navigation.js';
 import { openSwitchConfirm, confirmDialog } from './confirmModal.js';
@@ -601,7 +601,20 @@ export function renderSidebar() {
   // that's no longer true (RCV's own CURATED_GENRE_LANDING_CONTENT, state.js, has a Web Links
   // row), and an under-populated category elsewhere just shows an empty count/grid like any other
   // still-being-curated category — not actually broken.
-  const sidebarCategoryList = CATEGORIES.filter(cat => cat !== 'Albums');
+  //
+  // While actually browsing one curated genre, further narrowed to that genre's own enabled
+  // categories — per direct report: unchecking a category in the WordPress Admin Bridge's
+  // "Category tabs" screen (curated_lists.enabledCategories) wasn't actually hiding that tab from
+  // the curated sidebar, which showed every app category regardless. `rows` (not
+  // enabledCategories directly) is the source here since it's the one field both a real Firestore
+  // curated_lists doc AND the hardcoded CURATED_GENRE_LANDING_CONTENT fallback (Top 100, RCV —
+  // neither defines enabledCategories at all) always carry, so this stays in sync with exactly
+  // what curatedLanding()'s own landing page renders as tabs either way. A genre with no config
+  // at all (rows undefined) is left unrestricted rather than showing nothing.
+  const enabledGenreCats = isCuratedGenre ? curatedLanding(curatedGenreBase)?.rows?.map(r => r.category) : null;
+  const sidebarCategoryList = CATEGORIES
+    .filter(cat => cat !== 'Albums')
+    .filter(cat => !enabledGenreCats || enabledGenreCats.includes(cat));
 
   const categorySections = sidebarCategoryList.map(cat => {
     const primaryId = PRIMARY_FOLDER_ID[cat];

@@ -66,11 +66,12 @@ window.CURATED_LISTS_PAYLOAD = {
       wordmarkUrl: '',
       iconUrl: '',
       coverUrl: '',
-      enabledCategories: ['Films', 'Sources'],
+      enabledCategories: ['Films', 'Sources', 'Literature'],
       topics: ['ranked-choice-voting'],
       rows: [
         { category: 'Films', label: 'Videos' },
         { category: 'Sources', label: 'Resources' },
+        { category: 'Literature', label: 'Books' },
       ],
       published: true,
     },
@@ -113,6 +114,29 @@ window.CURATED_LISTS_PAYLOAD = {
     _src('improving-redistricting-with-proportional-representation', 'Improving redistricting with proportional representation', 'https://fairvote.org/improving-redistricting-with-proportional-representation/'),
     _src('voter-turnout', 'Voter turnout', 'https://fairvote.org/resources/voter-turnout/'),
     _src('glossary', 'Glossary of election reform terms', 'https://fairvote.org/resources/glossary/'),
+
+    // ── FairVote › Literature › Books ────────────────────────────────────────────────
+    //    Proportional representation / electoral reform reading list, per direct request.
+    //    No url/imageUrl supplied — cards fall back to a letter tile, same as the Sources
+    //    items above, until real purchase links/cover art are added.
+    _book('real-choices-new-voices', 'Real Choices/New Voices: How Proportional Representation Elections Could Revitalize American Democracy (Second Edition)', 'Douglas J. Amy',
+      'This remains the definitive book on the subject. This newly revised edition explains how PR would ensure fair representation for all voters, eradicate gerrymandering, encourage issue-oriented campaigns, break the two-party monopoly, give fairer representation for women and minorities, and encourage higher voter turnout. From Columbia University Press.'),
+    _book('fixing-elections', "Fixing Elections: The Failure of America's Winner-Take-All Politics", 'Steven Hill',
+      'An incisive, provocative, and very readable critique of single-member plurality elections. Hill chronicles all the various ways that this winner-take-all approach undermines democracy in the U.S. and identifies proportional representation as the most effective solution to these problems.'),
+    _book('electoral-reform-and-minority-representation', 'Electoral Reform and Minority Representation: Local Experiments with Alternative Elections', 'Shaun Bowler, Todd Donovan, and David Brockington',
+      'A very useful and well-done study published by Ohio State University Press. The authors examine the results of a semi-proportional form of elections — cumulative voting — which is now used in several dozen cities and counties in the U.S. Not surprisingly, they find that this alternative is a better way to ensure fair representation for racial and ethnic minorities than our current winner-take-all system.'),
+    _book('a-right-to-representation', 'A Right to Representation: Proportional Election Systems for the Twenty-first Century', 'Kathleen Barber',
+      'In this book, an outgrowth of her earlier Proportional Representation and Electoral Reform in Ohio, Barber explores the origins of PR systems, explains their use and adaptability, and supplies empirical evidence of how they actually work in practice.'),
+    _book('behind-the-ballot-box', "Behind the Ballot Box: A Citizen's Guide to Voting Systems", 'Douglas J. Amy',
+      'A comprehensive and objective guide to all voting systems, this book includes not only information about proportional representation voting systems, but also semi-proportional systems, and the plurality/majority voting systems that are currently used in the U.S. The book also includes a set of criteria for evaluating voting systems, an explanation of the workings of each system, and a discussion of their various political advantages and disadvantages.'),
+    _book('whose-vote-counts', 'Whose Vote Counts?', 'Robert Richie and Steven Hill',
+      'The authors, both from the Center for Voting and Democracy, argue that we need a new way of electing our representatives to combat voter apathy and the leveling of political views. That new way is proportional representation. Leading activists and scholars, including Cynthia McKinney, John Ferejohn, and Daniel Cantor, respond. Harvard law professor Lani Guinier writes the foreword.'),
+    _book('fair-and-effective-representation', 'Fair and Effective Representation? Debating Electoral Reform and Minority Rights', 'Mark E. Rush and Richard L. Engstrom',
+      'While the primary focus of this book is on the use of electoral reform to better represent racial and ethnic minorities, it turns into a wider debate about whether proportional representation is preferable to single-member district plurality elections in the United States.'),
+    _book('making-every-vote-count', "Making Every Vote Count: Reassessing Canada's Electoral System", 'Henry Milner (editor)',
+      "A collection of articles critically examining Canada's current first-past-the-post electoral system and the case made for switching to proportional representation."),
+    _book('citizenship-and-democracy', 'Citizenship and Democracy: A Case for Proportional Representation', 'Nick Loenen',
+      'Canada is another country burdened with the winner-take-all approach to elections. This book argues persuasively for the adoption of PR and considers the effect it might have on Canadian politics.'),
   ],
 };
 
@@ -143,5 +167,23 @@ function _src(slug, title, url) {
     url,
     imageUrl: '',
     notes: 'FairVote',
+  };
+}
+
+// One proportional-representation book → a FairVote › Literature › Books item. No `author` field
+// in this shape (matches the WordPress Admin Bridge's own curated_items field set — see this
+// file's SHAPES comment up top), so the author name is prefixed onto `notes` instead, same place
+// _yt()/_src() record their own source-org note.
+function _book(slug, title, author, blurb) {
+  return {
+    docId: 'fairvote-book-' + slug,
+    id: 'cur-fairvote-' + slug,
+    genre: 'fairvote',
+    category: 'Literature',
+    folderId: 'default-books-books',
+    title,
+    url: '',
+    imageUrl: '',
+    notes: author + ' — ' + blurb,
   };
 }

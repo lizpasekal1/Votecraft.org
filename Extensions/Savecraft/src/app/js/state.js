@@ -131,7 +131,7 @@ export const CURATED_DIRECTORY_CONTENT = {
       label: 'Voting & Democracy',
       orgs: [
         { name: 'Votecraft List', tagline: 'The essential picks behind every ballot conversation.', icon: '🗳️', imageUrl: 'images/logos/votecraft_icon_white.png', linkTo: 'genre:Top 100' },
-        { name: 'FairVote List', tagline: 'Ranked-choice voting, explained through story.', icon: '⚖️', imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/FairVote_logo_2022.svg/1280px-FairVote_logo_2022.svg.png' },
+        { name: 'FairVote List', tagline: 'Ranked-choice voting, explained through story.', icon: '⚖️', imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/FairVote_logo_2022.svg/1280px-FairVote_logo_2022.svg.png', linkTo: 'genre:fairvote' },
         { name: 'Represent-Us List', tagline: 'Pop culture with a civic pulse.', icon: '🎤', imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLN7Vhtsq9mGoooXabqvbP_J_LqfXhzUfXVqVQUGx01VMKYovqsPFRC43U&s=10' },
       ],
     },
