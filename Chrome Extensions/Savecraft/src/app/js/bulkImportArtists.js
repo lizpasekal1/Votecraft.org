@@ -205,7 +205,7 @@ export async function bulkImportMyArtists() {
   }
 
   const existingTitles = new Set(
-    state.items.filter(i => i.category === 'Musician').map(i => (i.title || '').trim().toLowerCase())
+    state.items.filter(i => i.category === 'Music').map(i => (i.title || '').trim().toLowerCase())
   );
   const toAdd = uniqueNames.filter(name => !existingTitles.has(name.toLowerCase()));
   const skippedAlreadySaved = uniqueNames.length - toAdd.length;
@@ -225,7 +225,7 @@ export async function bulkImportMyArtists() {
     const item = {
       id: `${Date.now()}_${idCounter++}`, url: null, title, author: null, summary: bio,
       imageUrl: photoUrl, youtubeUrl: null, description: null,
-      category: 'Musician', folderId: null, platforms: [], done: false,
+      category: 'Music', folderId: null, platforms: [], done: false,
       savedAt: Date.now(), favorite: true, savedListIds: [],
     };
     state.items.push(item);
@@ -267,9 +267,9 @@ export function resetArtistGenreCache() {
 // artists already done, it just picks up where it left off.
 export async function bulkImportAlbumsForMyArtists() {
   const albumAuthors = new Set(
-    state.items.filter(i => i.category === 'Music Album' && i.author).map(i => i.author.trim().toLowerCase())
+    state.items.filter(i => i.category === 'Albums' && i.author).map(i => i.author.trim().toLowerCase())
   );
-  const musicianItems = state.items.filter(i => i.category === 'Musician' && !albumAuthors.has((i.title || '').trim().toLowerCase()));
+  const musicianItems = state.items.filter(i => i.category === 'Music' && !albumAuthors.has((i.title || '').trim().toLowerCase()));
   console.log(`[bulkImportAlbumsForMyArtists] Importing albums for ${musicianItems.length} musicians with none yet...`);
 
   let processed = 0;
@@ -296,7 +296,7 @@ export async function bulkImportAlbumsForMyArtists() {
 // console cleanup instead of clicking delete on each one individually.
 export async function removeMusicianItemsByTitle(titles) {
   const wanted = new Set(titles.map(t => t.trim().toLowerCase()));
-  const toRemove = state.items.filter(i => i.category === 'Musician' && wanted.has((i.title || '').trim().toLowerCase()));
+  const toRemove = state.items.filter(i => i.category === 'Music' && wanted.has((i.title || '').trim().toLowerCase()));
   const foundKeys = new Set(toRemove.map(i => (i.title || '').trim().toLowerCase()));
   const notFound = [...wanted].filter(t => !foundKeys.has(t));
   if (notFound.length) console.log(`[removeMusicianItemsByTitle] Not found (already removed, or a typo?): ${notFound.join(', ')}`);

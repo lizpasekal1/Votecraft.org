@@ -148,7 +148,7 @@ function _sortNewestFirst(items) {
 // this to one tap.
 function _selectSectionSource(cat) {
   const items = cat === '__music__'
-    ? state.items.filter(i => matchesPrimaryOrUnfoldered(i, 'Musician') || matchesPrimaryOrUnfoldered(i, 'Music Album'))
+    ? state.items.filter(i => matchesPrimaryOrUnfoldered(i, 'Music') || matchesPrimaryOrUnfoldered(i, 'Albums'))
     : state.items.filter(i => matchesPrimaryOrUnfoldered(i, cat));
   _sourceViewKey = cat;
   _sourceLabel = cat === '__music__' ? 'Music' : (CAT_LABEL[cat] || cat);
@@ -298,9 +298,9 @@ function _wireAssetsPanel(container) {
 // without the wizard's own "Articles" shortcut (still reachable one level down, as an ordinary
 // folder under Sources) and with a "Custom Slider" tile appended last instead.
 function _buildCategoryPickerHtml() {
-  const tiles = CATEGORIES.filter(cat => cat !== 'Music Album').map(cat => cat === 'Musician' ? `
+  const tiles = CATEGORIES.filter(cat => cat !== 'Albums').map(cat => cat === 'Music' ? `
     <button type="button" class="step1-category-tile" data-category="__music__">
-      <span class="cat-icon">${CAT_EMOJI['Music Album'] || ''}</span>
+      <span class="cat-icon">${CAT_EMOJI['Albums'] || ''}</span>
       <span class="step1-category-tile-label">Music</span>
     </button>` : `
     <button type="button" class="step1-category-tile" data-category="${escapeHtml(cat)}">

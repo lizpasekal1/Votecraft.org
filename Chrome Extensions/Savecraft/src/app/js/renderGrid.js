@@ -155,13 +155,13 @@ function _renderGridBody() {
   }
 
   // Music landing page — replaces what used to be a flat A→Z Musician grid here, per direct
-  // request. 'Musician' itself is deliberately kept as this exact view string (rather than
+  // request. 'Music' itself is deliberately kept as this exact view string (rather than
   // introducing a new root view) so navigateToView/the sidebar's own active-state check
   // (state.view === cat, renderSidebar.js) both keep working unchanged; only the one-level-deeper
   // drill-in (musicgenre:<bucket>, below) is new. The sidebar's own plain "Musicians" row
   // (data-view=<primary folder id>) is untouched — still the unfiltered, all-musicians escape
   // hatch, exactly as it works today.
-  if (state.view === 'Musician') {
+  if (state.view === 'Music') {
     renderMusicGenreLanding();
     return;
   }
@@ -177,7 +177,7 @@ function _renderGridBody() {
   // folders (state.folders) instead of a fixed bucket taxonomy. The folder some(...) check is
   // defensive — every real category has folders today, but this falls through to the normal
   // item-list rendering below instead of showing an empty grid if that ever weren't true.
-  if (CATEGORIES.includes(state.view) && !['Musician', 'Music Album'].includes(state.view)
+  if (CATEGORIES.includes(state.view) && !['Music', 'Albums'].includes(state.view)
       && state.folders.some(f => f.parentCategory === state.view)) {
     renderCategoryFolderLanding(state.view);
     return;
@@ -209,7 +209,7 @@ function _renderGridBody() {
   // musicgenre: branch below, plus the picker card's and the dropdown's own click/change handlers),
   // so this function never needs to hide its own dropdown anymore — one shell, one behavior.
   const renderMusiciansDropdownShell = selectedBucket => {
-    gridTitle.innerHTML = `${CAT_EMOJI['Musician']} Musicians${scopedListSuffix}`;
+    gridTitle.innerHTML = `${CAT_EMOJI['Music']} Musicians${scopedListSuffix}`;
     musicGenreSelect.innerHTML = [MUSIC_ALL_LABEL, ...MUSIC_GENRE_BUCKETS]
       .map(b => `<option value="${escapeHtml(b)}"${b === selectedBucket ? ' selected' : ''}>${escapeHtml(b)}</option>`)
       .join('');
@@ -276,12 +276,12 @@ function _renderGridBody() {
   } else if (state.view.startsWith('musicgenre:')) {
     const bucket = state.view.slice(11);
     // "All Music" isn't a real bucket to filter by — it belongs on the actual Musicians page
-    // (PRIMARY_FOLDER_ID.Musician) instead, not this one. Redirects rather than rendering here so
+    // (PRIMARY_FOLDER_ID.Music) instead, not this one. Redirects rather than rendering here so
     // musicgenre:All Music can't be reached at all (typed/bookmarked URL, a stray old link, ...),
     // not just avoided by the picker card and dropdown's own handlers below — one canonical
     // "unfiltered" destination, not two that happen to show the same items differently.
     if (bucket === MUSIC_ALL_LABEL) {
-      navigateToView(PRIMARY_FOLDER_ID.Musician, { replace: true });
+      navigateToView(PRIMARY_FOLDER_ID.Music, { replace: true });
       return;
     }
     // Music landing page drill-in — same page shape as any other category (search/sort/cards all
@@ -290,7 +290,7 @@ function _renderGridBody() {
     // current bucket, same as sortSelect.value being set from state.sort elsewhere. Title stays
     // "Musicians" regardless of which bucket is active — per direct request/correction, the
     // dropdown itself is what shows/defines the current genre, not the page title (this used to
-    // swap the title to the bucket name, e.g. "Pop"). "Musicians" (not CAT_LABEL['Musician'], which
+    // swap the title to the bucket name, e.g. "Pop"). "Musicians" (not CAT_LABEL['Music'], which
     // stays "Music" for the sidebar's own category row) per a further direct request.
     renderMusiciansDropdownShell(bucket);
   } else if (state.view.startsWith('savedlist:')) {
@@ -311,7 +311,7 @@ function _renderGridBody() {
     gridTitle.innerHTML = `${CAT_EMOJI[state.view]} ${CAT_LABEL[state.view] || state.view}${scopedListSuffix}`;
   } else {
     const folder = state.folders.find(f => f.id === state.view);
-    // The sidebar's own plain "Musicians" accordion row (folder.id === PRIMARY_FOLDER_ID.Musician)
+    // The sidebar's own plain "Musicians" accordion row (folder.id === PRIMARY_FOLDER_ID.Music)
     // — confirmed a deliberately separate destination from the picker (see renderSidebar.js's own
     // comment: routes here via its own real folder id, not through the picker at all), but shares
     // the exact same "Musicians" title + genre-dropdown shell the musicgenre: pages use, and is now
@@ -321,7 +321,7 @@ function _renderGridBody() {
     // dropdown here hands off to the real musicgenre:<bucket> page rather than duplicating that
     // filtering logic on this view; the items shown before that happens are already the full
     // unfiltered set (matchesPrimaryOrUnfoldered, renderFilters.js).
-    if (folder && folder.id === PRIMARY_FOLDER_ID.Musician) {
+    if (folder && folder.id === PRIMARY_FOLDER_ID.Music) {
       renderMusiciansDropdownShell(MUSIC_ALL_LABEL);
     } else if (folder && folder.parentCategory === 'News') {
       // News outlet folders double as "publication profile pages" — a richer header (domain +
@@ -368,12 +368,12 @@ function _renderGridBody() {
       const [curatedGenre, curatedCat] = genreParts;
       // When this genre has a curated_lists doc with an enabledCategories array (a partner list
       // configured in the WordPress plugin), only its enabled categories get a tab/picker — so a
-      // list scoped to e.g. ["Web Links","Book"] doesn't surface pickers for the other six. A
+      // list scoped to e.g. ["Sources","Literature"] doesn't surface pickers for the other six. A
       // genre with no such doc (e.g. Top 100) keeps the old "any category that has folders" rule.
       const enabled = state.curatedLists?.[curatedGenre]?.enabledCategories;
       const categoryAllowed = Array.isArray(enabled) ? enabled.includes(curatedCat) : true;
       if (categoryAllowed
-          && CATEGORIES.includes(curatedCat) && !['Musician', 'Music Album'].includes(curatedCat)
+          && CATEGORIES.includes(curatedCat) && !['Music', 'Albums'].includes(curatedCat)
           && state.folders.some(f => f.parentCategory === curatedCat)) {
         renderCuratedCategoryFolderLanding(curatedGenre, curatedCat);
         return;
@@ -552,7 +552,7 @@ function _renderGridBody() {
   });
 }
 
-// Music landing page (state.view === 'Musician', called from renderGrid() above) — a fixed
+// Music landing page (state.view === 'Music', called from renderGrid() above) — a fixed
 // 15-card grid of genre buckets (icon + name + save count) instead of a flat item list, per
 // direct request. Structurally modeled on the savedlist: placeholder-landing branch above (no
 // items, no sort dropdown, its own container class) rather than the normal item-card path, since
@@ -564,7 +564,7 @@ function renderMusicGenreLanding() {
   const musicGenreSelect = document.getElementById('musicgenre-select');
 
   gridTitle.style.display = '';
-  gridTitle.innerHTML = `${CAT_EMOJI['Musician']} ${CAT_LABEL['Musician']}`;
+  gridTitle.innerHTML = `${CAT_EMOJI['Music']} ${CAT_LABEL['Music']}`;
   sortSelect.style.display = 'none';
   musicGenreSelect.style.display = 'none';
 
@@ -605,12 +605,12 @@ function renderMusicGenreLanding() {
   container.querySelectorAll('.musicgenre-card').forEach(card => {
     card.addEventListener('click', () => {
       const bucket = card.dataset.bucket;
-      // "All Music" goes straight to the real Musicians page (PRIMARY_FOLDER_ID.Musician) — REAL
+      // "All Music" goes straight to the real Musicians page (PRIMARY_FOLDER_ID.Music) — REAL
       // BUG, found and fixed: this used to route through musicgenre:All Music, a third
       // "unfiltered, every musician" destination of its own that only differed from the Musicians
       // page by lacking its genre dropdown (reported live as a confusing redundant state). Every
       // real bucket still goes to its own musicgenre:<bucket> page, unchanged.
-      navigateToView(bucket === MUSIC_ALL_LABEL ? PRIMARY_FOLDER_ID.Musician : `musicgenre:${bucket}`);
+      navigateToView(bucket === MUSIC_ALL_LABEL ? PRIMARY_FOLDER_ID.Music : `musicgenre:${bucket}`);
     });
   });
 
@@ -637,7 +637,7 @@ function renderMusicGenreLanding() {
 // ("for films, books, and games make the demo content match the votecraft landing page demo
 // content in these carousels") — the three categories with real, populated Top 100 rows today
 // (CURATED_GENRE_LANDING_CONTENT['Top 100'].rows, state.js).
-const CAROUSEL_DEMO_MATCHES_VOTECRAFT_LANDING = new Set(['Movie', 'Book', 'Game']);
+const CAROUSEL_DEMO_MATCHES_VOTECRAFT_LANDING = new Set(['Films', 'Literature', 'Games']);
 
 // Blends this category's own real saves with demo filler for its carousel — per direct request
 // ("the demo content for each category should still show in the empty slots till the user has
@@ -837,8 +837,8 @@ export function renderCard(item) {
   // genre-tag field); Music Album carries it directly on the item itself (item.genre, set at
   // import time — fetchAlbumsModal.js/addEditModal.js). Only once resolved — no placeholder badge
   // for one that hasn't backfilled yet.
-  const genreTag = item.category === 'Musician' ? findAuthor(item.title, 'Musician')?.genre
-    : item.category === 'Music Album' ? item.genre
+  const genreTag = item.category === 'Music' ? findAuthor(item.title, 'Music')?.genre
+    : item.category === 'Albums' ? item.genre
     : null;
   // REAL BUG, found and fixed: this used to render ALONGSIDE the category badge (MUSICIAN/ALBUM),
   // sharing the row's flush-right margin between the two. Per direct follow-up, the genre badge
@@ -857,14 +857,14 @@ export function renderCard(item) {
           ${(() => {
             const aName = item.author || (item.curated && CURATED_NOTES_CATEGORIES.includes(item.category) ? item.notes : null);
             // When the name comes from the curated `.notes` fallback (no item.author), the profile
-            // page to link to is 'Musician' for a Music Album (the one category whose
+            // page to link to is 'Music' for a Music Album (the one category whose
             // curated-notes creator isn't its own category) and item.category for everything else.
-            const aCat = item.author ? item.category : (item.category === 'Music Album' ? 'Musician' : item.category);
+            const aCat = item.author ? item.category : (item.category === 'Albums' ? 'Music' : item.category);
             if (!aName) return '';
             // A co-directed movie shows the lead director's name plus "…" to indicate collaborators
             // — display-only, never part of the name used to link to/match that director's page.
             const aDisplay = escapeHtml(aName) + (item.authorHasMore ? ' …' : '');
-            if ((item.category === 'Music Album' && isMusicAlbumsSectionView()) || isOwnAuthorPageView(aName)) {
+            if ((item.category === 'Albums' && isMusicAlbumsSectionView()) || isOwnAuthorPageView(aName)) {
               return `<div class="card-author-name">${aDisplay}</div>`;
             }
             return `<button class="card-author-link" data-author="${escapeHtml(aName)}" data-category="${escapeHtml(aCat)}">${aDisplay}</button>`;
@@ -881,9 +881,9 @@ export function renderCard(item) {
           })()}
           ${CREATOR_CARD_CATEGORY[item.category] && !isOwnAuthorPageView(item.title)
             ? `<button class="card-author-link card-title" data-author="${escapeHtml(item.title)}" data-category="${CREATOR_CARD_CATEGORY[item.category]}">${escapeHtml(item.title || '')}</button>`
-            : `<div class="card-title${item.category === 'Music Album' ? ' card-title--album' : ''}">${escapeHtml(item.title || '')}</div>`
+            : `<div class="card-title${item.category === 'Albums' ? ' card-title--album' : ''}">${escapeHtml(item.title || '')}</div>`
           }
-          ${item.category === 'Music Album' && item.year ? `<div class="card-album-year">${escapeHtml(item.year)}</div>` : ''}
+          ${item.category === 'Albums' && item.year ? `<div class="card-album-year">${escapeHtml(item.year)}</div>` : ''}
         </div>
         <div class="card-meta">
           ${genreBadgeHtml || `<span class="card-badge badge-${catClass(item.category)}" style="margin-left:auto">${escapeHtml(badgeText)}</span>`}

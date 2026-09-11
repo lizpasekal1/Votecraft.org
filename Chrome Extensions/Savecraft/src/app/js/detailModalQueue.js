@@ -46,7 +46,7 @@ export function setupQueue(item, { domain, isMusicAlbum }) {
   // MANUAL_LINK_FOLDER_IDS folders (Movie's Videos, Series' Short Form/Tutorials/Web Series) get
   // no category-wide streaming-platform list here — a swing-dance tutorial or a Reel has no
   // business showing Apple TV+/Disney+/Hulu/Netflix/etc. (Show's own shared platform list,
-  // CATEGORY_PLATFORMS['Show'] === CATEGORY_PLATFORMS['Movie']), per direct report ("do you see
+  // CATEGORY_PLATFORMS['Series'] === CATEGORY_PLATFORMS['Films']), per direct report ("do you see
   // how all these links are not necessary here... just leave the one youtube link"). Falls to the
   // !catConfig branch below (websiteBtn + youtubeBtn only — the item's own real saved link(s)).
   const catConfig = MANUAL_LINK_FOLDER_IDS.has(item.folderId) ? null : CATEGORY_PLATFORMS[item.category];
@@ -62,10 +62,10 @@ export function setupQueue(item, { domain, isMusicAlbum }) {
   // Steam search source duplicates the generic "Steam" platform-search link. Showing the raw
   // domain a second time is just clutter.
   const REDUNDANT_WEBSITE_DOMAINS = {
-    Movie: ['en.wikipedia.org'],
-    Book: ['en.wikipedia.org'],
-    Show: ['en.wikipedia.org', 'tv.apple.com'],
-    Game: ['en.wikipedia.org', 'store.steampowered.com'],
+    Films: ['en.wikipedia.org'],
+    Literature: ['en.wikipedia.org'],
+    Series: ['en.wikipedia.org', 'tv.apple.com'],
+    Games: ['en.wikipedia.org', 'store.steampowered.com'],
   };
   const isRedundantWebsiteLink = (REDUNDANT_WEBSITE_DOMAINS[item.category] || []).includes(domain);
   const websiteBtn = item.url && !isRedundantWebsiteLink
@@ -77,7 +77,7 @@ export function setupQueue(item, { domain, isMusicAlbum }) {
     ? `<a class="streaming-link-btn" href="${escapeHtml(item.youtubeUrl)}" target="_blank">YouTube</a>`
     : '';
 
-  const headerLabel = catConfig ? escapeHtml(catConfig.label) : 'Web Links';
+  const headerLabel = catConfig ? escapeHtml(catConfig.label) : 'Sources';
 
   function updateQueueLabel() {
     const liveItem = state.items.find(i => i.id === item.id);
