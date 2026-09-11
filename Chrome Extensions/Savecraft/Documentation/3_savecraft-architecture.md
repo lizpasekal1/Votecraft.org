@@ -1,6 +1,6 @@
 # SaveCraft — Project Overview
 
-*(See `savecraft-documentation.md` for what every file in this folder is for.)*
+*(See `1_savecraft-documentation.md` for what every file in this folder is for.)*
 
 SaveCraft is a Chrome extension that acts as a personal media library. Users save links to movies, shows, music, books, games, and other content they want to experience. Curated recommendations from Votecraft are surfaced alongside personal saves, and a Kanban board ("My Saves Queue") lets users track what they've watched, read, or listened to.
 
@@ -35,7 +35,7 @@ the full history. `_CURATED_CACHE_VERSION` bumped 12→13, `_CURATED_CMS_CACHE_V
 
 ## Recent Additions (Mobile Card Rendering / Editable Profile / Category-Carousel UX / Incremental Sync)
 
-Another extremely long session, three arcs. First, real mobile rendering bugs on cards: a
+Three arcs. First, real mobile rendering bugs on cards: a
 `transform: scale()` image-overlap bug, a CSS percentage-height circularity bug that made card
 thumbnails snap to random sizes matching each photo's own aspect ratio, an A-Z jump-index rail
 overlapping content, and font-size/line-wrap fixes — see `cards.css`'s `.card-image-crop` (now
@@ -55,13 +55,13 @@ durable fixes: sync failures now surface a visible on-page banner instead of fai
 soft-delete tombstones, replacing the old "re-list the entire items/folders/authors collections on
 every single page load" behavior that was the dominant read cost. A device's first sync (and a
 24h safety-net re-run after that) still does the original full listing; every sync in between is
-now cheap. See "Syncing" below and `session-context.md` for the full blow-by-blow.
+now cheap. See "Syncing" below and `2_savecraft-session-context.md` for the full blow-by-blow.
 
 ---
 
 ## Recent Additions (Curated Folder-Picker Landing Pages / TV-Shows-into-Films Taxonomy)
 
-An extremely long session, two major arcs. First, dozens of live-feedback polish rounds on the
+Two major arcs. First, dozens of live-feedback polish rounds on the
 category folder-picker landing pages/carousel built last session — sizing, edge-to-edge mobile
 layout, a gradient edge fade, three real bugs found and fixed along the way (a
 `-webkit-overflow-scrolling: touch` scroll-trap, a `flex:1;min-height:0` scroll-clamp bug hiding
@@ -74,14 +74,14 @@ moved from Shows into Films, several folder/tab renames, a Creators→Short Form
 significant real bug where one-time data migrations were being silently reverted by Firestore's
 own "cloud wins" sync — fixed by making every migration's Firestore write both real and genuinely
 awaited before the next sync step can run. Two new manual admin seed tools (same pattern as the
-existing `seed-firestore.html`) still need to be run by hand. See `session-context.md` for the full
+existing `seed-firestore.html`) still need to be run by hand. See `2_savecraft-session-context.md` for the full
 blow-by-blow.
 
 ---
 
 ## Recent Additions (Music Taxonomy Finalized / iTunes Rate-Limit Fixes / Global Search+Sort Dropdown / Folder-Picker Landing Pages)
 
-An exceptionally long session in two connected halves. First, closing out the Music genre-bucket
+Two connected halves. First, closing out the Music genre-bucket
 taxonomy (Alt/Indie rename, Metal merged into "Rock/Metal," a new Meditation bucket, Reggae moved
 into R&B/Soul), a one-time bulk import of 791 artists transcribed from Spotify screenshots into the
 user's own account, a real two-stage iTunes rate-limiting bug (a cache-poisoning bug, then a
@@ -96,13 +96,13 @@ page/state, and two major new features: a custom-styled sort dropdown with an em
 field paired with turning the header search icon into a true library-wide search, and — the
 largest single piece — folder-picker landing pages (with a demo center-emphasis carousel reusing
 the Dashboard's own infinite-loop mechanics and real "Recent Saves" demo content) for every
-top-level category except Music. See `session-context.md` for the full blow-by-blow.
+top-level category except Music. See `2_savecraft-session-context.md` for the full blow-by-blow.
 
 ---
 
 ## Recent Additions (Music Genre Taxonomy / Curated List Template / Bulk Artist Import)
 
-Another very long, live-feedback-driven session, three main arcs: Musician/Music polish (title
+Three main arcs: Musician/Music polish (title
 search, a genre tag, two real bugs — duplicate iTunes video-album cards, a Musician bio rendering
 twice) closing with an in-modal save-confirmation redesign; a new **Music landing page** (15
 curated genre-bucket cards with save counts, a genre dropdown, and a background backfill for
@@ -113,7 +113,7 @@ genuinely content-empty real instance proving the template holds. Also fixed a m
 sync bug (`savedLists` was write-only, never pulled back down from Firestore), made Saved Lists
 show their own real content instead of a placeholder, and closed with two separately-reported
 mobile horizontal-drag bugs on curated pages (one from an unwrapped title row, one from an
-invisible hover-tooltip inflating scrollable overflow). See `session-context.md` for the full
+invisible hover-tooltip inflating scrollable overflow). See `2_savecraft-session-context.md` for the full
 blow-by-blow.
 
 ---
@@ -130,15 +130,15 @@ own REST routes server-side, never exposing any Firestore credential to the brow
 merged with a concurrent session's own CSS work, pushed, and deployed. Phase 2 (viewing SaveCraft
 accounts from wp-admin) was fully designed but paused on a Blaze-billing decision — see
 "WordPress Admin Bridge" above and `/Users/lizpasekal/.claude/plans/can-we-separtarate-the-adaptive-breeze.md`.
-See `session-context.md` for the full blow-by-blow.
+See `2_savecraft-session-context.md` for the full blow-by-blow.
 
 ---
 
-*(Older session: a Profile page mobile pass (text sizes, Interests' checkbox grid, Connections rows restructured to stack), new Privacy Policy/Terms of Service pages, and a brand-new "Admin Kanban" board for tracking SaveCraft's own project tasks — closed by discovering that native HTML5 drag-and-drop never worked on iOS touch at all, on *either* kanban board, and fixing it for both. Same era, a separate pass fixed the mobile sidebar drawer, restructured the Curated bare-list page's mobile row layout, and fixed a real horizontal-centering bug on the Shared Saves page. Older still, spanned voice notes via the My Notes toolbar, a real My Notes Profile widget, a full sidebar reorganization, a new shared "You're opening X" confirm popup, a "Saved List scope" feature for browsing categories while scoped to a specific list, and — the largest single piece — dozens of live-feedback rounds rebuilding the Edit Item modal itself (sizing, a purple header bar, field reorganization). See `session-context.md` for the full blow-by-blow on all of the above.)*
+*(Older session: a Profile page mobile pass (text sizes, Interests' checkbox grid, Connections rows restructured to stack), new Privacy Policy/Terms of Service pages, and a brand-new "Admin Kanban" board for tracking SaveCraft's own project tasks — closed by discovering that native HTML5 drag-and-drop never worked on iOS touch at all, on *either* kanban board, and fixing it for both. Same era, a separate pass fixed the mobile sidebar drawer, restructured the Curated bare-list page's mobile row layout, and fixed a real horizontal-centering bug on the Shared Saves page. Older still, spanned voice notes via the My Notes toolbar, a real My Notes Profile widget, a full sidebar reorganization, a new shared "You're opening X" confirm popup, a "Saved List scope" feature for browsing categories while scoped to a specific list, and — the largest single piece — dozens of live-feedback rounds rebuilding the Edit Item modal itself (sizing, a purple header bar, field reorganization). See `2_savecraft-session-context.md` for the full blow-by-blow on all of the above.)*
 
 ---
 
-*(Older session: redesigned the Sponsored Statements partner-pitch page to connect it to VoteCraft Coin (VC) — each pricing tier gained an estimated VC bonus badge, a plain-language "VoteCraft Coin — a civic reward, not a cryptocurrency" section, styling deliberately kept in SaveCraft's own purple palette (not VC's teal), and a real bug fixed where `sponsored.js` crashed on the web build from an unconditional `chrome.runtime.getURL()` call. Older still, made SaveCraft dual-mode — the same `src/app/` codebase also runs as a plain web app at **savecraft.org** (Firebase Hosting, same `votecraft-789` Firestore project) via a new `src/app/js/platform.js` runtime shim — see "Architecture" → "Storage" below and `Documentation/savecraft-technical-runbook.md`. Same session, a full mobile-layout pass against a live iPhone 16 Pro fixed six real bugs: Dashboard not scrolling on mobile, the welcome banner collapsing to ~90px (a `height:100%`-of-`auto`-parent bug), the sign-in modal's buttons wrapping, a curated hero banner's icon badge overlapping its text, curated org-list rows squeezed to half-width, and the mobile sidebar drawer collapsing to 64px whenever desktop's own collapsed-sidebar preference was set. Earlier sessions: landed real Saved Lists sidebar navigation, rebuilt the Share modal (free-text Message → a Saved Lists picker + an on/off link-sharing toggle), broadened the sponsor pitch page to three offerings, and built a brand-new Embed Builder feature end to end (source picker, style panel, live carousel preview, shareable "Embed code" link) — two real bugs along the way (a CSS Grid track-blowout from an unbreakable URL string, a JS temporal-dead-zone crash from a `const` referenced before its own declaration line ran). Before that — added image/hyperlink support to the My Notes formatting toolbar, restructured category/sidebar navigation across four separate requests, and fixed three real bugs found live (a partial-highlight bug, a sidebar multi-tab-open bug, a toolbar spacing issue). Before that — rebuilt the detail modal's "My Notes"/Chapters/Song List from a plain textarea into a numbered-notes system with a formatting toolbar, focus mode, and per-row rename. Before that — replaced the Music Album gallery's single low-res iTunes cover with a real multi-image gallery sourced from MusicBrainz + the Cover Art Archive, plus several rounds of detail-modal visual polish. Before that — 214 more IMDb Top 250 movies seeded into curated Top 100, "Curated SaveCraft" reshaped into a two-tier browsing experience, and the previously-dead "Shared Saves" dropdown item wired up for the first time. See git history around those eras if needed.)*
+*(Older session: redesigned the Sponsored Statements partner-pitch page to connect it to VoteCraft Coin (VC) — each pricing tier gained an estimated VC bonus badge, a plain-language "VoteCraft Coin — a civic reward, not a cryptocurrency" section, styling deliberately kept in SaveCraft's own purple palette (not VC's teal), and a real bug fixed where `sponsored.js` crashed on the web build from an unconditional `chrome.runtime.getURL()` call. Older still, made SaveCraft dual-mode — the same `src/app/` codebase also runs as a plain web app at **savecraft.org** (Firebase Hosting, same `votecraft-789` Firestore project) via a new `src/app/js/platform.js` runtime shim — see "Architecture" → "Storage" below and `Documentation/5_savecraft-technical-runbook.md`. Same session, a full mobile-layout pass against a live iPhone 16 Pro fixed six real bugs: Dashboard not scrolling on mobile, the welcome banner collapsing to ~90px (a `height:100%`-of-`auto`-parent bug), the sign-in modal's buttons wrapping, a curated hero banner's icon badge overlapping its text, curated org-list rows squeezed to half-width, and the mobile sidebar drawer collapsing to 64px whenever desktop's own collapsed-sidebar preference was set. Earlier sessions: landed real Saved Lists sidebar navigation, rebuilt the Share modal (free-text Message → a Saved Lists picker + an on/off link-sharing toggle), broadened the sponsor pitch page to three offerings, and built a brand-new Embed Builder feature end to end (source picker, style panel, live carousel preview, shareable "Embed code" link) — two real bugs along the way (a CSS Grid track-blowout from an unbreakable URL string, a JS temporal-dead-zone crash from a `const` referenced before its own declaration line ran). Before that — added image/hyperlink support to the My Notes formatting toolbar, restructured category/sidebar navigation across four separate requests, and fixed three real bugs found live (a partial-highlight bug, a sidebar multi-tab-open bug, a toolbar spacing issue). Before that — rebuilt the detail modal's "My Notes"/Chapters/Song List from a plain textarea into a numbered-notes system with a formatting toolbar, focus mode, and per-row rename. Before that — replaced the Music Album gallery's single low-res iTunes cover with a real multi-image gallery sourced from MusicBrainz + the Cover Art Archive, plus several rounds of detail-modal visual polish. Before that — 214 more IMDb Top 250 movies seeded into curated Top 100, "Curated SaveCraft" reshaped into a two-tier browsing experience, and the previously-dead "Shared Saves" dropdown item wired up for the first time. See git history around those eras if needed.)*
 
 ---
 
@@ -156,7 +156,7 @@ The extension runs as an unpacked developer extension — it is not yet publishe
 
 To open the full library from the extension: click the toolbar icon → click **Open Library →** in the popup.
 
-**Running the web app instead:** same codebase, no separate setup — see `Documentation/savecraft-technical-runbook.md` for deploying/redeploying to Firebase Hosting (`votecraft-789.web.app` / `savecraft.org`). Locally, any static file server pointed at this folder works (e.g. `npx serve .`, then visit `/src/app/index.html`) — `platform.js` auto-detects it isn't running as the extension and switches to web mode (localStorage + a mandatory sign-in gate, since Firestore is the only real data store there).
+**Running the web app instead:** same codebase, no separate setup — see `Documentation/5_savecraft-technical-runbook.md` for deploying/redeploying to Firebase Hosting (`votecraft-789.web.app` / `savecraft.org`). Locally, any static file server pointed at this folder works (e.g. `npx serve .`, then visit `/src/app/index.html`) — `platform.js` auto-detects it isn't running as the extension and switches to web mode (localStorage + a mandatory sign-in gate, since Firestore is the only real data store there).
 
 ---
 
@@ -194,7 +194,7 @@ Savecraft/
 │       ├── js/                  — Library logic, split into ES modules (see below)
 │       └── css/                 — Library styles, split by feature area (see below)
 └── Documentation/
-    └── savecraft-documentation.md — Index of every file in this folder and what it's for; start there
+    └── 1_savecraft-documentation.md — Index of every file in this folder and what it's for; start there
 ```
 
 ### `src/app/js/` modules
@@ -211,7 +211,7 @@ The library used to be one ~3,700-line `app.js`. It's now split into several doz
 | `auth.js` | Email/password auth via the Firebase Auth REST API — no SDK, independent from any shared Votecraft account |
 | `authors.js` | Author/musician profile CRUD, navigation, album-metadata backfill, album art gallery cache (`getCachedAlbumArt`/`ensureAlbumArt`) |
 | `curatedCreatorLookup.js` | Logic that reads `curatedCreatorData.js` (below) — matches a curated Top 100 Movie/Show/Game title to its director/creator/studio name — plus the shared `splitCuratedTitleCreator()`/`getStaticCuratedCreator()` helpers, imported by `renderFilters.js`, `renderGrid.js`, and `storage.js` |
-| `curatedCreatorData.js` | Pure auto-generated data (no logic) backing the lookup above — sourced externally (Wikidata/Steam), regenerated via the scripts in `session-context.md` rather than hand-edited |
+| `curatedCreatorData.js` | Pure auto-generated data (no logic) backing the lookup above — sourced externally (Wikidata/Steam), regenerated via the scripts in `2_savecraft-session-context.md` rather than hand-edited |
 | `render.js` | Thin barrel re-exporting the public surface of the 7 modules below, so external `from './render.js'` imports didn't need to change when this got split (2026-07-29) |
 | `renderFilters.js` | `getFilteredSortedItems`, `matchesPrimaryOrUnfoldered` — item filtering/sorting for every view |
 | `renderSidebar.js` | `renderSidebar`, `promptAddFolder` — the left sidebar, curated genre picker, folder rows |
@@ -259,7 +259,7 @@ The original monolithic `app.js`/`app.css` have been deleted (2026-07-29) — se
 
 ## Architecture
 
-**Runtime:** Chrome Extension, Manifest V3 — **and** a plain web app at savecraft.org (Firebase Hosting), same `src/app/` codebase for both. `src/app/js/platform.js` detects which environment it's running in (`isExtension = typeof chrome !== 'undefined' && !!chrome.runtime?.id`) and every other file routes `chrome.storage`/`chrome.tabs.create`/`chrome.runtime.getURL` calls through it instead of calling `chrome.*` directly — see `Documentation/savecraft-technical-runbook.md` for the full deploy/hosting story. No bundler — plain HTML/CSS/JS either way.
+**Runtime:** Chrome Extension, Manifest V3 — **and** a plain web app at savecraft.org (Firebase Hosting), same `src/app/` codebase for both. `src/app/js/platform.js` detects which environment it's running in (`isExtension = typeof chrome !== 'undefined' && !!chrome.runtime?.id`) and every other file routes `chrome.storage`/`chrome.tabs.create`/`chrome.runtime.getURL` calls through it instead of calling `chrome.*` directly — see `Documentation/5_savecraft-technical-runbook.md` for the full deploy/hosting story. No bundler — plain HTML/CSS/JS either way.
 
 **Storage:**
 - `chrome.storage.sync` (extension) / `localStorage` (web, via `platform.js`) — user's personal saves, folders, authors, settings, Kanban config. In the extension this syncs across the user's Chrome devices automatically (up to ~100KB total); on web there's no such sync, so signing in is required there and Firestore is the real source of truth (`main.js`'s `requireWebSignIn()`).
@@ -269,7 +269,7 @@ The original monolithic `app.js`/`app.css` have been deleted (2026-07-29) — se
 
 **Extension-only, no web equivalent:** the right-click "Save to SaveCraft" capture (`src/background/background.js` + `src/content/content.js`) — web visitors add items through the Add modal only.
 
-**No build step.** Editing a `.js` or `.css` file and refreshing the extension in `chrome://extensions` (or just reloading the page, for web) is all that's needed to see changes. `src/app/js/main.js` is loaded as an ES module (`<script type="module">`), so `import`/`export` typos surface as console errors on the library tab, not silent failures — always check DevTools console after a reload when editing `js/`/`css/` files. Web app deploys via `firebase deploy --only hosting` (see `savecraft-technical-runbook.md`) — `firebase.json` sets `no-cache` on the app's own HTML/JS/CSS specifically, so a normal reload (no hard-refresh) always shows the latest deploy.
+**No build step.** Editing a `.js` or `.css` file and refreshing the extension in `chrome://extensions` (or just reloading the page, for web) is all that's needed to see changes. `src/app/js/main.js` is loaded as an ES module (`<script type="module">`), so `import`/`export` typos surface as console errors on the library tab, not silent failures — always check DevTools console after a reload when editing `js/`/`css/` files. Web app deploys via `firebase deploy --only hosting` (see `5_savecraft-technical-runbook.md`) — `firebase.json` sets `no-cache` on the app's own HTML/JS/CSS specifically, so a normal reload (no hard-refresh) always shows the latest deploy.
 
 **CSS Design Tokens** (`base.css`'s `:root`):
 ```css
@@ -386,7 +386,7 @@ All 4 widget cards stretch to equal height and fill the available vertical space
 - **Same visual system as the real board** — `.kcard` sizing, the circular expand button (per-column full-width toggle), empty-column drop hints — but a fixed white card background with black text regardless of theme (per direct request), and cards float a "+ Add card" button over the bottom of the column (not a normal flex sibling) so columns can reach the full height of the screen.
 - **Urgency rating** — an optional 1-10 field in the edit popup, shown as a colored dot (bottom-right) and a left-edge strip: blue 1-3, deep orange 4-7, red 8-10.
 - **Sort dropdown** — A→Z, Z→A, Newest→Oldest, Oldest→Newest, Urgency High→Low, Urgency Low→High, and Custom order (drag order) — one global sort across all four columns, rendered as the board's own content rather than reusing the shared `#sort-select` element (whose fixed option set belongs to the main items grid).
-- **Seeded once** with `Documentation/launch-requirements.md`'s checklist, one card per sub-task, pre-rated by urgency — gated on its own one-time flag (`savecraft_admin_kanban_seeded`) so it never re-adds a card the user deletes.
+- **Seeded once** with `Documentation/6_savecraft-launch-requirements.md`'s checklist, one card per sub-task, pre-rated by urgency — gated on its own one-time flag (`savecraft_admin_kanban_seeded`) so it never re-adds a card the user deletes.
 - **Touch drag-and-drop** — reimplemented manually (`touchstart`/`touchmove`/`touchend`) alongside the native mouse-based drag, since iOS Safari never fires HTML5 drag-and-drop events from touch at all; the real Queue Kanban board above got the identical fix in the same session.
 
 ### WordPress Admin Bridge
@@ -417,7 +417,7 @@ Every author/director/studio/creator name on a card or in a detail modal is a cl
 - Author profiles are stored in `chrome.storage.sync` under keys `author_<id>`
 - Navigating to an author auto-creates a stub profile if one doesn't exist yet
 - The URL view format is `author:<category>:<name>` (e.g. `author:Music:Gorillaz`, `author:Films:Bong Joon-ho`)
-- Visiting one of these pages while browsing a curated genre keeps the sidebar showing that genre's category tree (via `state.authorReturnView`) instead of resetting to the top-level genre picker — see `session-context.md`'s Sidebar Structure section for the mechanism.
+- Visiting one of these pages while browsing a curated genre keeps the sidebar showing that genre's category tree (via `state.authorReturnView`) instead of resetting to the top-level genre picker — see `2_savecraft-session-context.md`'s Sidebar Structure section for the mechanism.
 
 ### Auto-Save Musician
 When a user queues or saves any **Albums** item for the first time, the artist is automatically added to their **Music** saves. The `autoSaveMusician()` function pulls the artist's iTunes URL and cover art from the curated Firestore data if available.
@@ -446,7 +446,7 @@ A separate browsing mode (toggled via the sidebar options menu) that surfaces Vo
 - **Clicking a creator card** opens the detail popup; clicking the name navigates to their profile
 - **Curated cache** — data is cached in `chrome.storage.local` for 24 hours; cache is versioned so bumping `_CURATED_CACHE_VERSION` in `js/storage.js` forces a fresh fetch (currently `13`). The newer Curated Lists CMS (`curated_lists`/`curated_topics` — see "WordPress Admin Bridge" and `plugins/votecraft-savecraft-admin/`) has its own separate `_CURATED_CMS_CACHE_VERSION` (currently `2`).
 - **Top 100 lists** — the "Top 100" genre shows a source-attribution logo next to the section title, indicating which outlet curated that list: Rolling Stone (Music, Series, Literature), The New York Times (Films), Steam (Games). Hovering any logo shows a tooltip explaining the attribution. Curated categories are keyed by the same `CATEGORIES` name used everywhere else (e.g. `genre:Top 100:Music`) — before this session's category rename, the internal/display names differed and this was a real source of logo-matching bugs; now that the two are the same string, that whole class of bug is gone.
-- **Sidebar navigation while browsing a curated genre** — every subfolder click stays inside the current genre (routing to a dedicated creator bucket, the full parent category, or an inert empty state — see Recent Additions), only the actually-clicked folder highlights, and visiting an author/creator page no longer resets the sidebar. See `session-context.md`'s Sidebar Structure section for the full mechanism (`sidebarEffectiveView`, `state.activeCuratedFolderId`, `FOLDER_SHOWS_FULL_CURATED_CATEGORY`).
+- **Sidebar navigation while browsing a curated genre** — every subfolder click stays inside the current genre (routing to a dedicated creator bucket, the full parent category, or an inert empty state — see Recent Additions), only the actually-clicked folder highlights, and visiting an author/creator page no longer resets the sidebar. See `2_savecraft-session-context.md`'s Sidebar Structure section for the full mechanism (`sidebarEffectiveView`, `state.activeCuratedFolderId`, `FOLDER_SHOWS_FULL_CURATED_CATEGORY`).
 
 ### Item Detail Modal
 Clicking a card opens a detail modal. **Every category now shares the same accordion-based layout** (this used to be Musician/Music-Album-only, but was extended to all categories):

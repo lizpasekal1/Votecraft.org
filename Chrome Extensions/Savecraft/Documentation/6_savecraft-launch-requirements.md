@@ -1,6 +1,6 @@
 # SaveCraft — Launch Requirements for User Testing
 
-*(See `savecraft-documentation.md` for what every file in this folder is for.)*
+*(See `1_savecraft-documentation.md` for what every file in this folder is for.)*
 
 A working to-do list of what's outstanding before inviting real (non-team) users to test
 savecraft.org and/or the Chrome extension. Grounded in a review of the codebase — re-check items
@@ -32,7 +32,7 @@ instead of only their own.
 - [x] Manually verified: a real signed-in test account cannot read/write another account's
       `savecraft_users/{uid}` document (403, both before and after the fix)
 - [x] Confirmed `curated_items`/`curated_genres` reads are public; writes now correctly gated
-- [x] Updated `savecraft-profile-security.md`'s security-status section to reflect this
+- [x] Updated `4_savecraft-profile-security.md`'s security-status section to reflect this
 
 ### 2. Privacy policy & Terms of Service
 ✅ Drafted and live — `src/webpage/privacy-policy.html` and `src/webpage/terms-of-service.html`,
@@ -65,7 +65,7 @@ account).
 
 ### 4. savecraft.org requires signing in to use at all
 Unlike the extension (local-only browsing allowed), the website currently requires an account,
-with only a temporary "View Demo" as a workaround — see `savecraft-technical-runbook.md`'s own section on this for
+with only a temporary "View Demo" as a workaround — see `5_savecraft-technical-runbook.md`'s own section on this for
 exactly what removing it (vs. making it permanent) would touch.
 
 - [ ] Decide: should savecraft.org get the extension's account-optional local browsing too, or
@@ -74,7 +74,7 @@ exactly what removing it (vs. making it permanent) would touch.
       already exists, so this may mostly be gating logic in `main.js`'s `init()`)
 - [ ] If staying sign-in-required: decide what "View Demo" should permanently look/feel like for
       testers
-- [ ] Update `savecraft-profile-security.md` to reflect whichever decision is made
+- [ ] Update `4_savecraft-profile-security.md` to reflect whichever decision is made
 
 ### 5. No error/usage monitoring
 No Sentry, analytics, or error-tracking found anywhere in `src/`.
